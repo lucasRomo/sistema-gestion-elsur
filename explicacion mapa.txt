@@ -1,0 +1,121 @@
+2. El Flujo de Trabajo del Sistema (Workflow de GestaPro)
+Para entender las tablas, veamos cómo se usan cronológicamente en un día normal de trabajo.
+
+Paso 1: Apertura del Local y Seguridad
+Un trabajador llega al centro de copiado. Al iniciar sesión en el sistema, se consulta su Usuario, su Persona (datos personales), su Rol y los Permiso asociados para saber qué pantallas puede ver.
+
+Lo primero que debe hacer es abrir la caja. Se crea un registro en Turno con el monto_inicial (ej: $10.000 para dar vuelto). El estado del turno queda en 'ABIERTO'.
+
+Paso 2: El Repositorio Digital (La ventaja competitiva)
+Los institutos y escuelas (Institucion) envían sus apuntes. El administrador registra las materias o cursos en Area_Curso.
+
+Se suben los archivos PDF al sistema, creando registros en DocumentoDigital. Cada PDF se asocia a un Producto (ej: el PDF "Apunte de Ingreso" se asocia al producto "Folleto Anillado A4").
+
+Paso 3: Llega un Cliente y se genera un Pedido
+Un Cliente llega al mostrador o pide por la web.
+
+Se genera un Pedido (Estado: 'PENDIENTE'). Si el cliente quiere el apunte de ingreso, el sistema busca el DocumentoDigital, ve qué Producto requiere y calcula el precio base.
+
+Se llenan los registros de DetallePedido (ej: 1 unidad del Producto "Folleto Anillado A4" a $3500).
+
+Si el cliente paga una seña, se genera un ComprobantePago y un MovimientoCaja (Tipo: 'INGRESO') vinculado a ese Turno abierto.
+
+Paso 4: Producción y Consumo de Insumo
+El pedido pasa a estado 'EN PROCESO' (se registra el cambio en HistorialEstadoPedido) y se le asigna a un diseñador/operario en AsignacionPedido.
+
+El operario ve en la pantalla el producto. La tabla Producto le dice qué Maquina necesita usar (ej: "Fotocopiadora Ricoh Pro").
+
+Al imprimir, el sistema utiliza la tabla Producto_Insumo (la receta) para descontar del stock. Si la receta dice que 1 "Folleto Anillado" consume 80 "Hojas A4" y 5 ml de "Tóner", el sistema resta automáticamente esas cantidades de la tabla Insumo.
+
+Paso 5: Contingencias (Mermas e Incidencias)
+Caso A (Merma): Durante la impresión, la máquina traba el papel y se arruinan 20 hojas. El empleado registra una MermaInsumo indicando: Insumo (Hojas A4), Cantidad (20), Motivo ('Atasco de papel'), Máquina (Ricoh Pro). Esto descuenta del stock esas hojas perdidas que no se van a cobrar.
+
+Caso B (Incidencia): La máquina se rompe del todo. Se registra una Incidencia (Estado de la máquina pasa a 'FALLA'). El pedido se pausa y en HistorialEstadoPedido se vincula el id_incidencia_asociada para justificar por qué se demorará el pedido del cliente.
+
+Paso 6: Entrega y Cierre de Caja
+El pedido se termina, el cliente lo retira, se genera la Factura final y el resto del pago entra como otro MovimientoCaja.
+
+Al final del día, el empleado cierra el turno (Turno). Cuenta la plata física (monto_real_contado). El sistema compara lo que debería haber (monto_esperado_sistema sumando ingresos y restando egresos) y calcula la diferencia_arqueo (si falta o sobra plata). El turno pasa a 'CERRADO'.
+
+3. De qué se encarga Cada Tabla (Diccionario de Datos Corto)
+Para que lo tengas como guía de referencia al programar tus entidades en Java:
+
+Grupo 1: Base y Configuración
+UnidadMedida: Define cómo se miden las cosas (Hojas, Litros, Unidades).
+
+TipoDocumento: Tipos de identificación (DNI, CUIT, Pasaporte).
+
+Direccion: Direcciones físicas unificadas para clientes, empleados y proveedores.
+
+TipoPersona: Clasificador interno para saber el rol de la persona en la base de datos.
+
+Grupo 2: Seguridad y Usuarios
+Persona: Datos maestros de cualquier humano en el sistema (Nombre, Teléfono, Email). Evita duplicar datos si un empleado también es cliente.
+
+Rol: Roles del sistema (Admin, Operario, Cajero).
+
+Permiso: Acciones específicas (ej: CREAR_PRODUCTO, MODIFICAR_STOCK).
+
+Rol_Permiso: Tabla intermedia. Cruza qué permisos tiene cada rol.
+
+Usuario: Credenciales de acceso (Username, Password encriptada) asociadas a una Persona.
+
+Grupo 3: Gestión de Operativos (Turnos)
+Turno: Controla el ciclo de la caja de cobro (cuándo abrió, quién abrió, cuánto dinero hay). Previene fraudes.
+
+Grupo 4: Actores del Negocio (Stakeholders)
+Cliente: Datos financieros del cliente (si tiene cuenta corriente, saldos deudores, etc.).
+
+Empleado: Datos laborales (sueldo, cargo, fecha de ingreso).
+
+TipoProveedor: Clasifica proveedores (ej: 'Proveedor de Papelería', 'Servicio Técnico').
+
+Proveedor: Empresas a las que se les compran los insumos.
+
+Grupo 5: Inventario y Catálogo
+Maquina: El parque de maquinaria del local (Impresoras, Anilladoras, Guillotinas).
+
+Incidencia: Registro de roturas y reparaciones de las máquinas.
+
+Categoria: Clasificación de productos (ej: 'Fotocopias', 'Anillados', 'Librería').
+
+Insumo: La materia prima (Hojas A4, carpetas, tinta). Almacena el stock_actual.
+
+Producto: Lo que se le vende al cliente final (ej: "Impresión Color Láser").
+
+Producto_Insumo: La "receta". Dice qué insumos y en qué cantidad se necesitan para fabricar un producto.
+
+Grupo 6: Abastecimiento y Pérdidas
+MermaInsumo: Registro de desecho/pérdida de material (desperdicio justificado).
+
+CompraProveedor: Cabecera de la factura de compra al proveedor (Fecha, Total, Remito).
+
+DetalleCompraInsumo: Los renglones de la compra. Maneja la conversión de lo que vende el proveedor a lo que entra al stock.
+
+Grupo 7: Repositorio Educativo
+Institucion: Escuelas o facultades aliadas.
+
+Area_Curso: Carreras, materias o años lectivos de esa institución.
+
+DocumentoDigital: Los archivos PDF cargados que están listos para imprimirse inmediatamente cuando se soliciten.
+
+Grupo 8: Pedidos y Trazabilidad
+Pedido: El corazón comercial. Cabecera de la orden de trabajo (Fechas, estados, si es presupuesto).
+
+DetallePedido: Renglones del pedido (Qué lleva y a qué precio histórico se le cobró).
+
+AsignacionPedido: Vincula qué operario es el responsable de confeccionar el pedido.
+
+HistorialEstadoPedido: Auditoría de estados. Registra quién y cuándo pasó un pedido de 'PENDIENTE' a 'EN PROCESO' o 'TERMINADO'.
+
+Grupo 9: Finanzas
+MovimientoCaja: Cada entrada o salida de dinero real de la caja física.
+
+Factura: Comprobante legal/comercial emitido al cliente.
+
+ComprobantePago: Registro del método de pago (guarda la URL de la foto del comprobante si fue transferencia).
+
+Grupo 10: Auditoría
+RegistroActividad: El "Gran Hermano" del sistema. Utiliza campos JSONB para guardar qué datos modificó un usuario (guardando el estado anterior y el nuevo de cualquier registro sensible).
+
+Con este mapa mental claro, programar los controladores, servicios y repositorios en Java con Windsurf te va a resultar muchísimo más intuitivo, ya que sabes exactamente qué papel juega cada tabla en el negocio. ¿Por cuál sección o flujo te gustaría empezar a codificar ahora?

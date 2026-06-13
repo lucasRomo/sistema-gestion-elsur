@@ -1,0 +1,376 @@
+-- =============================================================================
+-- Base de Datos para "El Sur - Centro de Copiado" v3.2 (GestaPro)
+-- =============================================================================
+
+-- Limpieza de tablas (Orden estricto de dependencias por claves foráneas)
+DROP TABLE IF EXISTS RegistroActividad CASCADE;
+DROP TABLE IF EXISTS ComprobantePago CASCADE;
+DROP TABLE IF EXISTS Factura CASCADE;
+DROP TABLE IF EXISTS MovimientoCaja CASCADE;
+DROP TABLE IF EXISTS Turno CASCADE;
+DROP TABLE IF EXISTS HistorialEstadoPedido CASCADE;
+DROP TABLE IF EXISTS AsignacionPedido CASCADE;
+DROP TABLE IF EXISTS DetallePedido CASCADE;
+DROP TABLE IF EXISTS Pedido CASCADE;
+DROP TABLE IF EXISTS DocumentoDigital CASCADE;
+DROP TABLE IF EXISTS Area_Curso CASCADE;
+DROP TABLE IF EXISTS Institucion CASCADE;
+DROP TABLE IF EXISTS Producto_Insumo CASCADE;
+DROP TABLE IF EXISTS Producto CASCADE;
+DROP TABLE IF EXISTS MermaInsumo CASCADE;
+DROP TABLE IF EXISTS DetalleCompraInsumo CASCADE;
+DROP TABLE IF EXISTS CompraProveedor CASCADE;
+DROP TABLE IF EXISTS Insumo CASCADE;
+DROP TABLE IF EXISTS Categoria CASCADE;
+DROP TABLE IF EXISTS Maquina CASCADE;
+DROP TABLE IF EXISTS Incidencia CASCADE;
+DROP TABLE IF EXISTS Proveedor CASCADE;
+DROP TABLE IF EXISTS TipoProveedor CASCADE;
+DROP TABLE IF EXISTS Usuario CASCADE;
+DROP TABLE IF EXISTS Rol_Permiso CASCADE;
+DROP TABLE IF EXISTS Permiso CASCADE;
+DROP TABLE IF EXISTS Rol CASCADE;
+DROP TABLE IF EXISTS Empleado CASCADE;
+DROP TABLE IF EXISTS Cliente CASCADE;
+DROP TABLE IF EXISTS Persona CASCADE;
+DROP TABLE IF EXISTS TipoPersona CASCADE;
+DROP TABLE IF EXISTS Direccion CASCADE;
+DROP TABLE IF EXISTS TipoDocumento CASCADE;
+DROP TABLE IF EXISTS UnidadMedida CASCADE;
+
+-- =============================================================================
+-- 1. TABLAS BASE, CATEGORÍAS Y LOCALIZACIÓN
+-- =============================================================================
+
+CREATE TABLE UnidadMedida (
+    id_unidad INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre VARCHAR(45) NOT NULL,
+    abreviatura VARCHAR(10) NOT NULL
+);
+
+CREATE TABLE TipoDocumento (
+    id_tipo_documento INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_tipo VARCHAR(45) NOT NULL
+);
+
+CREATE TABLE Direccion (
+    id_direccion INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    calle VARCHAR(100) NOT NULL,
+    numero VARCHAR(10) NOT NULL,
+    piso VARCHAR(10),
+    departamento VARCHAR(10),
+    codigo_postal VARCHAR(10),
+    ciudad VARCHAR(45) NOT NULL,
+    provincia VARCHAR(45) NOT NULL,
+    pais VARCHAR(45) NOT NULL DEFAULT 'Argentina'
+);
+
+CREATE TABLE TipoPersona (
+    id_tipo_persona INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_tipo VARCHAR(45) NOT NULL -- 'CLIENTE', 'EMPLEADO', 'PROVEEDOR'
+);
+
+-- Se adelanta Categoria para permitir la vinculación comercial con Clientes y Productos
+CREATE TABLE Categoria (
+    id_categoria INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre VARCHAR(45) NOT NULL,
+    descuento_automatico DECIMAL(5,2) DEFAULT 0.00
+);
+
+-- =============================================================================
+-- 2. PERSONAS Y SEGURIDAD
+-- =============================================================================
+
+CREATE TABLE Persona (
+    id_persona INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre VARCHAR(45) NOT NULL,
+    apellido VARCHAR(45) NOT NULL,
+    numero_documento VARCHAR(20) NOT NULL UNIQUE,
+    telefono VARCHAR(20),
+    email VARCHAR(100),
+    id_tipo_documento INT REFERENCES TipoDocumento(id_tipo_documento),
+    id_direccion INT REFERENCES Direccion(id_direccion),
+    id_tipo_persona INT REFERENCES TipoPersona(id_tipo_persona)
+);
+
+CREATE TABLE Rol (
+    id_rol INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_rol VARCHAR(45) NOT NULL
+);
+
+CREATE TABLE Permiso (
+    id_permiso INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_permiso VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Rol_Permiso (
+    id_rol INT REFERENCES Rol(id_rol),
+    id_permiso INT REFERENCES Permiso(id_permiso),
+    PRIMARY KEY (id_rol, id_permiso)
+);
+
+CREATE TABLE Usuario (
+    id_usuario INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_usuario VARCHAR(45) NOT NULL UNIQUE,
+    contrasena VARCHAR(255) NOT NULL,
+    id_persona INT REFERENCES Persona(id_persona),
+    id_rol INT REFERENCES Rol(id_rol),
+    estado VARCHAR(20) 
+);
+
+-- =============================================================================
+-- 3. CONTROL DE TURNOS Y ARQUEO DE CAJA (RF31)
+-- =============================================================================
+
+CREATE TABLE Turno (
+    id_turno INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_usuario INT REFERENCES Usuario(id_usuario),
+    fecha_apertura TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_cierre TIMESTAMP,
+    monto_inicial DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    monto_esperado_sistema DECIMAL(10,2) DEFAULT 0.00,
+    monto_real_contado DECIMAL(10,2) DEFAULT 0.00,
+    diferencia_arqueo DECIMAL(10,2) DEFAULT 0.00,
+    estado VARCHAR(20) DEFAULT 'ABIERTO' -- 'ABIERTO', 'CERRADO'
+);
+
+-- =============================================================================
+-- 4. STAKEHOLDERS (CLIENTES, EMPLEADOS, PROVEEDORES)
+-- =============================================================================
+
+CREATE TABLE Cliente (
+    id_cliente INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    razon_social VARCHAR(100),
+    saldo_deudor DECIMAL(10,2) DEFAULT 0.00,
+    limite_credito DECIMAL(10,2) DEFAULT 0.00, 
+    id_categoria INT REFERENCES Categoria(id_categoria), -- [CORRECCIÓN RELACIÓN CATEGORÍA v3.2]
+    estado VARCHAR(20) NOT NULL DEFAULT 'Activo',
+    id_persona INT REFERENCES Persona(id_persona)
+);
+
+CREATE TABLE Empleado (
+    id_empleado INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fecha_contratacion DATE,
+    cargo VARCHAR(45),
+    salario DECIMAL(10,2),
+    estado VARCHAR(20) NOT NULL DEFAULT 'Activo',
+    id_persona INT REFERENCES Persona(id_persona)
+);
+
+CREATE TABLE TipoProveedor (
+    id_tipo_proveedor INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    descripcion VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Proveedor (
+    id_proveedor INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_comercial VARCHAR(100) NOT NULL,
+    contacto_nombre VARCHAR(100),
+    email_contacto VARCHAR(100),
+    estado VARCHAR(20) DEFAULT 'Activo',
+    id_direccion INT REFERENCES Direccion(id_direccion),
+    id_tipo_proveedor INT REFERENCES TipoProveedor(id_tipo_proveedor)
+);
+
+-- =============================================================================
+-- 5. PRODUCCIÓN E INVENTARIO
+-- =============================================================================
+
+CREATE TABLE Maquina (
+    id_maquina INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    estado VARCHAR(20) DEFAULT 'OPERATIVA' -- 'OPERATIVA', 'FALLA', 'MANTENIMIENTO'
+);
+
+CREATE TABLE Incidencia (
+    id_incidencia INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_maquina INT REFERENCES Maquina(id_maquina),
+    descripcion TEXT,
+    fecha_reporte TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id_empleado_reporta INT REFERENCES Empleado(id_empleado),
+    resolucion TEXT,
+    fecha_resolucion TIMESTAMP
+);
+
+CREATE TABLE Insumo (
+    id_insumo INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_insumo VARCHAR(100) NOT NULL,
+    stock_actual DECIMAL(10,2) DEFAULT 0.00,
+    stock_minimo DECIMAL(10,2) DEFAULT 0.00,
+    id_unidad INT REFERENCES UnidadMedida(id_unidad),
+    id_proveedor INT REFERENCES Proveedor(id_proveedor),
+    estado VARCHAR(20) DEFAULT 'Activo'
+);
+
+CREATE TABLE Producto (
+    id_producto INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_producto VARCHAR(100) NOT NULL,
+    precio_base DECIMAL(10,2) NOT NULL,
+    id_categoria INT REFERENCES Categoria(id_categoria),
+    id_maquina_necesaria INT REFERENCES Maquina(id_maquina),
+    estado VARCHAR(20) DEFAULT 'Activo'
+);
+
+CREATE TABLE Producto_Insumo (
+    id_producto INT REFERENCES Producto(id_producto),
+    id_insumo INT REFERENCES Insumo(id_insumo),
+    cantidad_consumo DECIMAL(10,4) NOT NULL,
+    PRIMARY KEY (id_producto, id_insumo)
+);
+
+-- =============================================================================
+-- 6. GESTIÓN DE COMPRAS Y MERMAS (CORRECCIÓN v3.1)
+-- =============================================================================
+
+CREATE TABLE MermaInsumo (
+    id_merma INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_insumo INT REFERENCES Insumo(id_insumo) ON DELETE RESTRICT,
+    id_empleado INT REFERENCES Empleado(id_empleado),
+    id_maquina_asociada INT REFERENCES Maquina(id_maquina) NULL,
+    cantidad_desperdiciada DECIMAL(10,2) NOT NULL,
+    motivo VARCHAR(255) NOT NULL, -- 'Error de impresión', 'Papel húmedo', etc.
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE CompraProveedor (
+    id_compra INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_proveedor INT REFERENCES Proveedor(id_proveedor),
+    id_usuario_receptor INT REFERENCES Usuario(id_usuario),
+    fecha_compra TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    monto_total_compra DECIMAL(10,2) NOT NULL,
+    numero_remito_factura VARCHAR(50)
+);
+
+CREATE TABLE DetalleCompraInsumo (
+    id_detalle_compra INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_compra INT REFERENCES CompraProveedor(id_compra) ON DELETE CASCADE,
+    id_insumo INT REFERENCES Insumo(id_insumo),
+    cantidad_comprada_unidad_proveedor DECIMAL(10,2) NOT NULL, -- Ej: 2 Resmas
+    factor_conversion_a_hojas DECIMAL(10,2) DEFAULT 1.00,       -- Ej: 500
+    cantidad_neta_ingresada DECIMAL(10,2) NOT NULL,           -- Ej: 1000 hojas
+    precio_unitario_compra DECIMAL(10,2) NOT NULL
+);
+
+-- =============================================================================
+-- 7. REPOSITORIO DIGITAL DE MATERIAL EDUCATIVO (US.25)
+-- =============================================================================
+
+CREATE TABLE Institucion (
+    id_institucion INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_institucion VARCHAR(150) NOT NULL UNIQUE,
+    tipo_institucion VARCHAR(50) -- Ej: 'Escuela', 'Instituto', 'Facultad'
+);
+
+CREATE TABLE Area_Curso (
+    id_area INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_area VARCHAR(100) NOT NULL,
+    id_institucion INT REFERENCES Institucion(id_institucion) ON DELETE CASCADE
+);
+
+CREATE TABLE DocumentoDigital (
+    id_documento INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    titulo VARCHAR(150) NOT NULL,
+    autor VARCHAR(100) DEFAULT 'Anónimo',
+    descripcion VARCHAR(255),
+    url_archivo_local VARCHAR(255) NOT NULL, 
+    id_area INT REFERENCES Area_Curso(id_area), 
+    id_producto INT REFERENCES Producto(id_producto), 
+    estado VARCHAR(20) DEFAULT 'Activo'
+);
+
+-- =============================================================================
+-- 8. OPERACIONES: PEDIDOS Y TRAZABILIDAD
+-- =============================================================================
+
+CREATE TABLE Pedido (
+    id_pedido INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_cliente INT REFERENCES Cliente(id_cliente),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_entrega_estimada TIMESTAMP,
+    fecha_finalizacion TIMESTAMP,
+    estado VARCHAR(45) NOT NULL DEFAULT 'PENDIENTE', -- 'PENDIENTE','EN PROCESO','TERMINADO','RETIRADO'
+    monto_total DECIMAL(10,2) NOT NULL,
+    monto_pago_adelantado DECIMAL(10,2) DEFAULT 0.00,
+    detalles TEXT,                    
+    ubicacion_estante VARCHAR(20),                
+    es_cuenta_corriente BOOLEAN DEFAULT FALSE,
+    es_presupuesto BOOLEAN DEFAULT FALSE -- [CORRECCIÓN PRESUPUESTOS v3.1]
+);
+
+CREATE TABLE DetallePedido (
+    id_detalle INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pedido INT REFERENCES Pedido(id_pedido),
+    id_producto INT REFERENCES Producto(id_producto),
+    cantidad INT NOT NULL,
+    precio_unitario_historico DECIMAL(10,2) NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL
+);
+
+CREATE TABLE AsignacionPedido (
+    id_asignacion INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fecha_asignacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id_pedido INT REFERENCES Pedido(id_pedido),
+    id_empleado INT REFERENCES Empleado(id_empleado)
+);
+
+CREATE TABLE HistorialEstadoPedido (
+    id_historial INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fecha_cambio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    estado_anterior VARCHAR(45),
+    estado_nuevo VARCHAR(45) NOT NULL,
+    id_pedido INT REFERENCES Pedido(id_pedido),
+    id_usuario_responsable INT REFERENCES Usuario(id_usuario),
+    observaciones TEXT, -- [CORRECCIÓN v3.1]
+    id_incidencia_asociada INT REFERENCES Incidencia(id_incidencia) NULL -- [CORRECCIÓN MOTIVO PAUSA v3.1]
+);
+
+-- =============================================================================
+-- 9. FINANZAS Y COMPROBANTES
+-- =============================================================================
+
+CREATE TABLE MovimientoCaja (
+    id_movimiento INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    monto DECIMAL(10,2) NOT NULL,
+    tipo_movimiento VARCHAR(20) NOT NULL, -- 'INGRESO', 'EGRESO'
+    descripcion VARCHAR(255),
+    id_usuario INT REFERENCES Usuario(id_usuario),
+    id_pedido INT REFERENCES Pedido(id_pedido),
+    id_turno INT REFERENCES Turno(id_turno) 
+);
+
+CREATE TABLE Factura (
+    id_factura INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pedido INT REFERENCES Pedido(id_pedido),
+    numero_factura VARCHAR(45) UNIQUE NOT NULL,
+    fecha_emision TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    monto_total DECIMAL(10,2) NOT NULL,
+    id_cliente INT REFERENCES Cliente(id_cliente)
+);
+
+CREATE TABLE ComprobantePago (
+    id_comprobante INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pedido INT REFERENCES Pedido(id_pedido),
+    tipo_pago VARCHAR(45) NOT NULL, -- 'EFECTIVO', 'TRANSFERENCIA', 'DEBITO'
+    monto_pago DECIMAL(10,2) NOT NULL,
+    url_archivo_comprobante VARCHAR(255),
+    fecha_carga TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =============================================================================
+-- 10. AUDITORÍA AVANZADA
+-- =============================================================================
+
+CREATE TABLE RegistroActividad (
+    id_reg_act INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id_usuario INT REFERENCES Usuario(id_usuario),
+    accion VARCHAR(100), 
+    tabla_afectada VARCHAR(50),
+    datos_anteriores JSONB, 
+    datos_nuevos JSONB
+);
+
+
+
+
