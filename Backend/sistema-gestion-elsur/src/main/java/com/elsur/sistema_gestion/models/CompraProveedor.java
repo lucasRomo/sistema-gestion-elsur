@@ -11,6 +11,7 @@ import java.time.LocalDate;
 public class CompraProveedor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_compra")
     private Long idCompra;
 
     @ManyToOne

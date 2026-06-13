@@ -31,5 +31,4 @@ public class Empleado {
     @JoinColumn(name = "id_persona")
     private Persona persona;
 
-    // ... otros campos y relaciones ...
 }

@@ -23,8 +23,8 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
         return movimientoCajaRepository.save(movimientoCaja);
     }
 
-    @Override
+   @Override
     public List<MovimientoCaja> listarMovimientosPorPedido(Integer idPedido) {
-        return movimientoCajaRepository.findByCajaId(idPedido);
+    return movimientoCajaRepository.buscarPorPedido(idPedido);
     }
 }
