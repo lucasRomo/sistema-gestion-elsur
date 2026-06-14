@@ -11,4 +11,7 @@ public interface UsuarioService {
     Optional<Usuario> buscarPorNombreUsuario(String nombreUsuario);
     void eliminar(Integer id);
     void cambiarPassword(Integer idUsuario, String nuevaPassword);
+
+    boolean emailExiste(String email);
+    boolean dniExiste(String dni);
 }

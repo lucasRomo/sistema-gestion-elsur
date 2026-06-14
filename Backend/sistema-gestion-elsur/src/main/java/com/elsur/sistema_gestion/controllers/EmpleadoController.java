@@ -8,7 +8,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/empleados")
-@CrossOrigin(origins = "*")
 public class EmpleadoController {
     @Autowired
     private EmpleadoService empleadoService;
@@ -18,4 +17,6 @@ public class EmpleadoController {
 
     @PostMapping
     public Empleado crear(@RequestBody Empleado empleado) { return empleadoService.guardar(empleado); }
+
+    
 }

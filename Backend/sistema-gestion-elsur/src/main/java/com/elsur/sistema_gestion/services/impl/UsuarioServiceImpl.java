@@ -56,4 +56,14 @@ public class UsuarioServiceImpl implements UsuarioService {
     public void eliminar(Integer id) {
         usuarioRepository.deleteById(id);
     }
+
+    @Override
+    public boolean emailExiste(String email) {
+        return usuarioRepository.existsByPersonaEmail(email);
+    }
+
+    @Override
+    public boolean dniExiste(String dni) {
+        return usuarioRepository.existsByPersonaNumeroDocumento(dni);
+    }
 }

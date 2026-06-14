@@ -35,25 +35,23 @@ public class EmpleadoServiceImpl implements EmpleadoService {
                 .orElseThrow(() -> new RuntimeException("Empleado no encontrado con id: " + id));
     }
 
-    @Override
-    @Transactional
-    public Empleado guardar(Empleado empleado) {
-        if (empleado.getPersona() != null) {
-            Persona persona = empleado.getPersona();
-            
-            // Guardamos la dirección si existe
-            if (persona.getDireccion() != null) {
-                direccionRepository.save(persona.getDireccion());
-            }
-            
-            // Guardamos los datos de la persona física
-            personaRepository.save(persona);
-        }
+   @Override
+@Transactional
+public Empleado guardar(Empleado empleado) {
+    if (empleado.getPersona() != null && empleado.getPersona().getIdPersona() != null) {
+        // Buscamos la persona real que ya existe en la base de datos
+        Persona personaExistente = personaRepository.findById(empleado.getPersona().getIdPersona())
+                .orElseThrow(() -> new RuntimeException("La persona con ID " + empleado.getPersona().getIdPersona() + " no existe."));
         
-        // Guardamos el legajo y datos laborales en la tabla Empleado
-        return empleadoRepository.save(empleado);
+        // Le asignamos esa persona recuperada al empleado para que no rompa las FK
+        empleado.setPersona(personaExistente);
+    } else {
+        throw new RuntimeException("No se puede crear un empleado sin asociarlo a una Persona válida.");
     }
-
+    
+    // Guardamos el legajo limpito
+    return empleadoRepository.save(empleado);
+}
     @Override
     @Transactional
     public void eliminar(Integer id) {

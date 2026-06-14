@@ -373,4 +373,14 @@ CREATE TABLE RegistroActividad (
 
 
 
+-- Cargar Tipos de Documento
+INSERT INTO tipo_documento (id_tipo_documento, nombre_tipo) VALUES (1, 'DNI') ON CONFLICT DO NOTHING;
+INSERT INTO tipo_documento (id_tipo_documento, nombre_tipo) VALUES (2, 'CUIL') ON CONFLICT DO NOTHING;
 
+-- Cargar Tipos de Persona
+INSERT INTO tipo_persona (id_tipo_persona, nombre_tipo) VALUES (1, 'Empleado') ON CONFLICT DO NOTHING;
+INSERT INTO tipo_persona (id_tipo_persona, nombre_tipo) VALUES (2, 'Cliente') ON CONFLICT DO NOTHING;
+
+-- Insertar los roles necesarios (asegúrate de que los IDs coincidan con los que envías desde el frontend)
+INSERT INTO rol (id_rol, nombre_rol) VALUES (1, 'ROLE_ADMIN') ON CONFLICT DO NOTHING;
+INSERT INTO rol (id_rol, nombre_rol) VALUES (2, 'ROLE_OPERARIO') ON CONFLICT DO NOTHING;

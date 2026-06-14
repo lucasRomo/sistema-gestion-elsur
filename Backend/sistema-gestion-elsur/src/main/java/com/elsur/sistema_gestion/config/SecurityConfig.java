@@ -1,14 +1,12 @@
 package com.elsur.sistema_gestion.config;
 
 import java.util.Arrays;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -20,47 +18,45 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            // 1. Habilitar CORS y deshabilitar CSRF
-            .cors(Customizer.withDefaults()) 
-            .csrf(csrf -> csrf.disable()) 
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable())
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        // Deshabilitamos absolutamente TODO lo que bloquea
+        .httpBasic(basic -> basic.disable())
+        .formLogin(form -> form.disable())
+        .logout(logout -> logout.disable())
+        
+        .authorizeHttpRequests(auth -> auth
+            // Abrimos los endpoints de base
+            .requestMatchers("/api/usuarios", "/api/usuarios/**").permitAll()
+            .requestMatchers("/api/empleados", "/api/empleados/**").permitAll()
             
-            .authorizeHttpRequests(auth -> auth
-                // Permisos para Clientes y Productos (lo que ya tenías)
-                .requestMatchers("/api/clientes/**").hasAuthority("ROLE_ADMIN")
-                .requestMatchers("/api/productos/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_OPERARIO")
-                .requestMatchers("/api/productos-insumos/**").hasAuthority("ROLE_ADMIN")
-                
-                // 2. Agregamos los nuevos controladores
-                .requestMatchers("/api/pedidos/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_OPERARIO")
-                .requestMatchers("/api/insumos/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_OPERARIO")
-                .requestMatchers("/api/incidencias/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_OPERARIO")
-                .requestMatchers("/api/facturas/**").hasAuthority("ROLE_ADMIN")
-                .requestMatchers("/api/caja/**").hasAuthority("ROLE_ADMIN")
-                
-                // El resto requiere estar logueado
-                .anyRequest().authenticated()
-            )
-            .httpBasic(Customizer.withDefaults())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            // Si después de esto sigue dando 403, comentá todas las líneas de abajo 
+            // para descartar que una de estas reglas esté bloqueando por error:
+            // .requestMatchers("/api/clientes/**").hasAuthority("ROLE_ADMIN")
+            // ... (comentá el resto de los hasAuthority)
+            
+            .anyRequest().permitAll() // ◄ ESTO DEBERÍA DEJAR PASAR TODO
+        )
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        return http.build();
-    }
-
+    return http.build();
+}
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Mantenemos texto plano por ahora como pediste, pero recordá cambiarlo a BCryptPasswordEncoder() al final
-        return org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance();
+        return NoOpPasswordEncoder.getInstance();
     }
 
-    // 3. Configuración básica de CORS para que React pueda conectar
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173")); // Puertos comunes de React/Vite
+        // Permitimos los orígenes de React
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

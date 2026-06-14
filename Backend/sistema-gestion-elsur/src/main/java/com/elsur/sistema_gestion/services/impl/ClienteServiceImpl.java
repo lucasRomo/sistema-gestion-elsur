@@ -4,7 +4,8 @@ import com.elsur.sistema_gestion.models.Cliente;
 import com.elsur.sistema_gestion.models.Persona;
 import com.elsur.sistema_gestion.repositories.ClienteRepository;
 import com.elsur.sistema_gestion.repositories.PersonaRepository;
-import com.elsur.sistema_gestion.repositories.DireccionRepository;
+import com.elsur.sistema_gestion.repositories.TipoDocumentoRepository;
+import com.elsur.sistema_gestion.repositories.TipoPersonaRepository;
 import com.elsur.sistema_gestion.services.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,8 +22,11 @@ public class ClienteServiceImpl implements ClienteService {
     @Autowired
     private PersonaRepository personaRepository;
 
-    @Autowired
-    private DireccionRepository direccionRepository;
+    @Autowired 
+    private TipoDocumentoRepository tipoDocumentoRepository;
+    
+    @Autowired 
+    private TipoPersonaRepository tipoPersonaRepository;
 
     @Override
     public List<Cliente> listarTodos() {
@@ -41,26 +45,27 @@ public class ClienteServiceImpl implements ClienteService {
         if (cliente.getPersona() != null) {
             Persona persona = cliente.getPersona();
             
-            // 1. Si la persona trae una dirección nueva, la guardamos primero
-            if (persona.getDireccion() != null) {
-                direccionRepository.save(persona.getDireccion());
+            // Rehidratamos las referencias con los nombres de propiedad correctos mapeados
+            if (persona.getTipoDocumento() != null && persona.getTipoDocumento().getIdTipoDocumento() != null) {
+                var tipoDoc = tipoDocumentoRepository.findById(persona.getTipoDocumento().getIdTipoDocumento())
+                    .orElseThrow(() -> new RuntimeException("Tipo documento no encontrado"));
+                persona.setTipoDocumento(tipoDoc);
             }
             
-            // 2. Guardamos/Actualizamos los datos de la Persona
-            personaRepository.save(persona);
+            if (persona.getTipoPersona() != null && persona.getTipoPersona().getIdTipoPersona() != null) {
+                var tipoPer = tipoPersonaRepository.findById(persona.getTipoPersona().getIdTipoPersona())
+                    .orElseThrow(() -> new RuntimeException("Tipo persona no encontrado"));
+                persona.setTipoPersona(tipoPer);
+            }
         }
         
-        // 3. Finalmente guardamos el Cliente vinculado a esa persona
         return clienteRepository.save(cliente);
     }
 
     @Override
     @Transactional
     public void eliminar(Integer id) {
-        // Buscamos el cliente para saber qué persona borrar también si fuera necesario
         Cliente cliente = buscarPorId(id);
         clienteRepository.delete(cliente);
-        // Opcional: podrías decidir si borrar la Persona física o dejarla en la BD
     }
-    
 }

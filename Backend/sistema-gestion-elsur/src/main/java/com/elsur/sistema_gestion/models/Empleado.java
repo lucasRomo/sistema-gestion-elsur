@@ -3,6 +3,9 @@ package com.elsur.sistema_gestion.models;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.math.BigDecimal;
 
 @Entity
@@ -15,6 +18,7 @@ public class Empleado {
     @Column(name = "id_empleado")
     private Integer idEmpleado;
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     @Column(name = "fecha_contratacion")
     private LocalDate fechaContratacion;
 

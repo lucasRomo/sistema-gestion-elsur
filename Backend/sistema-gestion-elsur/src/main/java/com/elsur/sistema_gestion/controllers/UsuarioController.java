@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -31,4 +32,34 @@ public class UsuarioController {
         usuarioService.cambiarPassword(id, newPassword);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/prueba-limpia")
+public ResponseEntity<String> pruebaLlimpia(@RequestBody String texto) {
+    return ResponseEntity.ok("El POST funciona perfecto: " + texto);
+}
+
+    // En UsuarioController.java
+@GetMapping("/exists")
+public ResponseEntity<Boolean> exists(@RequestParam(required = false) String email, 
+                                      @RequestParam(required = false) String dni) {
+    if (email != null) {
+        return ResponseEntity.ok(usuarioService.emailExiste(email)); // Debes crear este método en tu Service
+    }
+    if (dni != null) {
+        return ResponseEntity.ok(usuarioService.dniExiste(dni)); // Debes crear este método en tu Service
+    }
+    return ResponseEntity.badRequest().build();
+}
+
+@PostMapping("/login")
+public ResponseEntity<?> login(@RequestBody Usuario credenciales) {
+    Optional<Usuario> usuario = usuarioService.buscarPorNombreUsuario(credenciales.getNombreUsuario());
+
+    if (usuario.isPresent() && usuario.get().getPassword().equals(credenciales.getPassword())) {
+        return ResponseEntity.ok(usuario.get());
+    } else {
+        return ResponseEntity.status(401).body("Credenciales incorrectas");
+    }
+}
+
 }

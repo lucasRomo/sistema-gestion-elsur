@@ -35,5 +35,6 @@ public class Persona {
     @JoinColumn(name = "id_tipo_persona")
     private TipoPersona tipoPersona;
 
+    
 
 }

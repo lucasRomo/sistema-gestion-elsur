@@ -17,7 +17,7 @@ public class Usuario {
     @Column(name = "contrasena", nullable = false)
     private String password;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_persona")
     private Persona persona;
 

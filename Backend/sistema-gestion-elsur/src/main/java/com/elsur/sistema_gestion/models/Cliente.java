@@ -31,7 +31,13 @@ private Categoria categoria;
     @Column(name = "estado", nullable = false, length = 20)
     private String estado;
 
-    @ManyToOne
+    @Column(name = "personaDeContacto", nullable = false, length = 30)
+    private String personaDeContacto;
+
+    @Column(name = "condicionDePago", nullable = false, length = 20)
+    private String condicionDePago;
+
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_persona")
     private Persona persona;
 
