@@ -5,7 +5,7 @@ import com.elsur.sistema_gestion.services.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import com.elsur.sistema_gestion.services.JwtService;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,15 +51,28 @@ public ResponseEntity<Boolean> exists(@RequestParam(required = false) String ema
     return ResponseEntity.badRequest().build();
 }
 
-@PostMapping("/login")
-public ResponseEntity<?> login(@RequestBody Usuario credenciales) {
-    Optional<Usuario> usuario = usuarioService.buscarPorNombreUsuario(credenciales.getNombreUsuario());
+@Autowired
+    private JwtService jwtService; // ◄ Ahora se inyecta limpio usando el import de arriba
 
-    if (usuario.isPresent() && usuario.get().getPassword().equals(credenciales.getPassword())) {
-        return ResponseEntity.ok(usuario.get());
-    } else {
-        return ResponseEntity.status(401).body("Credenciales incorrectas");
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Usuario credenciales) {
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorNombreUsuario(credenciales.getNombreUsuario());
+
+        if (usuarioOpt.isPresent() && usuarioOpt.get().getPassword().equals(credenciales.getPassword())) {
+            Usuario usuario = usuarioOpt.get();
+            
+            // 1. Generamos el token JWT real
+            String token = jwtService.generarToken(usuario);
+            
+            // 2. Armamos la respuesta estructurada para el Frontend
+            java.util.Map<String, Object> respuesta = new java.util.HashMap<>();
+            respuesta.put("token", token);
+            respuesta.put("usuario", usuario);
+            
+            return ResponseEntity.ok(respuesta);
+        } else {
+            return ResponseEntity.status(401).body("Credenciales incorrectas");
+        }
     }
-}
 
 }

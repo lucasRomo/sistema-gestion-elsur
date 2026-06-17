@@ -25,7 +25,7 @@ public class Proveedor {
     @Column(name = "estado", length = 20)
     private String estado;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_direccion")
     private Direccion direccion;
 

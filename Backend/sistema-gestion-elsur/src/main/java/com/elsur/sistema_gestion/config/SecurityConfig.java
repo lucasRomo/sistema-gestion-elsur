@@ -18,31 +18,24 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     @Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-        .csrf(csrf -> csrf.disable())
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        // Deshabilitamos absolutamente TODO lo que bloquea
-        .httpBasic(basic -> basic.disable())
-        .formLogin(form -> form.disable())
-        .logout(logout -> logout.disable())
-        
-        .authorizeHttpRequests(auth -> auth
-            // Abrimos los endpoints de base
-            .requestMatchers("/api/usuarios", "/api/usuarios/**").permitAll()
-            .requestMatchers("/api/empleados", "/api/empleados/**").permitAll()
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
-            // Si después de esto sigue dando 403, comentá todas las líneas de abajo 
-            // para descartar que una de estas reglas esté bloqueando por error:
-            // .requestMatchers("/api/clientes/**").hasAuthority("ROLE_ADMIN")
-            // ... (comentá el resto de los hasAuthority)
+            .httpBasic(basic -> basic.disable())
+            .formLogin(form -> form.disable())
+            .logout(logout -> logout.disable())
             
-            .anyRequest().permitAll() // ◄ ESTO DEBERÍA DEJAR PASAR TODO
-        )
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/usuarios/**", "/api/empleados/**", "/api/pedidos/**").permitAll()
+                .anyRequest().permitAll() 
+            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-    return http.build();
-}
+        return http.build();
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
@@ -51,9 +44,12 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permitimos los orígenes de React
+        // Permitimos los orígenes
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        
+        // SOLUCIÓN: Agregamos "PATCH" a la lista de métodos permitidos
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         

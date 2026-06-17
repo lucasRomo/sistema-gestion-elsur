@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LoginFeedbackModal } from '../../components/auth/LoginFeedbackModal';
+import { LoginFeedbackModal } from '../../components/modals/LoginFeedbackModal';
 
 interface LoginViewProps {
   onLoginExitoso: (usuario: any) => void;
@@ -10,7 +10,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
   const [credentials, setCredentials] = useState({ nombreUsuario: '', password: '' });
   const [verPassword, setVerPassword] = useState(false);
 
-  // Estado para el manejo del modal de feedback
   const [modalFeedback, setModalFeedback] = useState<{
     mostrar: boolean;
     tipo: 'exito' | 'error' | null;
@@ -21,7 +20,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
     mensaje: ''
   });
 
-  // Guardamos temporalmente el usuario que responde el backend para procesarlo tras cerrar el modal de éxito
   const [usuarioTemporal, setUsuarioTemporal] = useState<any>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -34,15 +32,20 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
       });
 
       if (response.ok) {
-        const usuario = await response.json();
+        const data = await response.json();
         
-        // 1. Guardamos el usuario en localStorage tal como solicitaste
+        // NOTA PARA EL FUTURO: Cuando el back use JWT, 'data' va a ser un objeto como:
+        // { token: "eyJhbGci...", usuario: { idUsuario: 1, nombreUsuario: "lucas", ... } }
+        // Por ahora, si tu back solo devuelve el usuario directo, hacemos un fallback:
+        const token = data.token || "token_simulado_el_sur_2026";
+        const usuario = data.usuario || data; 
+        
+        // 1. Guardamos tanto el usuario como el token de sesión en localStorage
         localStorage.setItem('usuario_logueado', JSON.stringify(usuario));
+        localStorage.setItem('token_sesion', token); 
         
-        // 2. Almacenamos temporalmente para pasarlo al contexto luego de presionar "Aceptar"
         setUsuarioTemporal(usuario);
 
-        // 3. Desplegamos el modal de bienvenida
         setModalFeedback({
           mostrar: true,
           tipo: 'exito',
@@ -87,7 +90,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
             <p className="text-secondary small">Gestión de Sistemas - El Sur</p>
           </div>
 
-          {/* Campo de Usuario */}
           <div className="mb-3">
             <label className="form-label small text-light">Usuario</label>
             <div className="input-group">
@@ -105,7 +107,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
             </div>
           </div>
 
-          {/* Campo de Contraseña con el Ojito */}
           <div className="mb-4">
             <label className="form-label small text-light">Contraseña</label>
             <div className="input-group">
@@ -130,7 +131,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
             </div>
           </div>
 
-          {/* Acciones */}
           <button type="submit" className="btn btn-info w-100 mb-2 fw-semibold text-dark">
             Ingresar al Sistema
           </button>
@@ -140,7 +140,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
         </form>
       </div>
 
-      {/* Renderizado del Modal de Mensajes */}
       <LoginFeedbackModal 
         mostrar={modalFeedback.mostrar}
         tipo={modalFeedback.tipo}

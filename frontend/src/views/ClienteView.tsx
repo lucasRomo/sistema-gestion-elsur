@@ -11,7 +11,6 @@ export const ClienteView = () => {
   const [clienteConUbicacionSeleccionada, setClienteConUbicacionSeleccionada] = useState<any | null>(null);
   const [clienteAEditar, setClienteAEditar] = useState<any | null>(null);
   
-  // ESTADOS PARA LOS FILTROS
   const [filtroTexto, setFiltroTexto] = useState<string>('');
   const [filtroEstado, setFiltroEstado] = useState<string>('Sin Filtro');
 
@@ -22,7 +21,6 @@ export const ClienteView = () => {
     razonSocial: '', condicionDePago: 'Efectivo', limiteCredito: 0, personaDeContacto: ''
   });
 
-  // 1. Cargar datos para la tabla
   const cargarClientes = () => {
     fetch('http://localhost:8080/api/clientes')
       .then(res => res.json())
@@ -32,7 +30,6 @@ export const ClienteView = () => {
 
   useEffect(() => { cargarClientes(); }, []);
 
-  // 2. Lógica de registro final (Alta)
   const handleRegistrarFinal = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
@@ -76,7 +73,6 @@ export const ClienteView = () => {
     } catch (e) { alert("Error de conexión"); }
   };
 
-  // 3. Lógica para procesar la Actualización
   const handleConfirmarEdicion = async (clienteActualizado: any) => {
     try {
       const res = await fetch('http://localhost:8080/api/clientes', {
@@ -86,7 +82,7 @@ export const ClienteView = () => {
       });
 
       if (res.ok) {
-        alert("Cliente actualizado correctamente");
+        alert("Cliente updated correctamente");
         setClienteAEditar(null);
         setClienteConUbicacionSeleccionada(null);
         cargarClientes(); 
@@ -100,14 +96,11 @@ export const ClienteView = () => {
     }
   };
 
-  // LÓGICA DE FILTRADO COMBINADO
   const clientesFiltrados = clientes.filter((c: any) => {
-    // 1. Filtro por Estado (Corregido a Desactivado)
     if (filtroEstado !== 'Sin Filtro' && c.estado !== filtroEstado) {
       return false;
     }
 
-    // 2. Filtro por Texto (Busca en Nombre, Apellido, Documento o Razón Social)
     const busqueda = filtroTexto.toLowerCase().trim();
     if (busqueda !== '') {
       const nombre = (c.persona?.nombre || '').toLowerCase();
@@ -129,13 +122,16 @@ export const ClienteView = () => {
   return (
     <SidebarLayout activeItem="Clientes">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="text-white fw-bold m-0">Clientes</h2>
-        <div className="text-secondary fs-4" style={{ cursor: 'pointer' }}>
-          <i className="bi bi-question-circle"></i>
+          <div className="w-100 text-center position-relative">
+            <h1 className="fw-bold tracking-wider font-monospace m-0" style={{ fontSize: '2.5rem', color: '#ffffff' }}>
+              Clientes
+            </h1>
+            <div className="position-absolute end-0 top-50 translate-middle-y text-info fs-3" style={{ cursor: 'pointer' }}>
+              <i className="bi bi-question-circle"></i>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* FILTROS SUPERIORES VINCULADOS A LOS ESTADOS */}
       <div className="row g-3 mb-4 align-items-center text-white">
         <div className="col-md-6 d-flex align-items-center gap-2">
           <label className="text-nowrap m-0 small text-secondary">Filtrar por Nombre:</label>
@@ -171,7 +167,6 @@ export const ClienteView = () => {
         </div>
       </div>
 
-      {/* CONTENEDOR DE TABLA */}
       <div className="table-responsive rounded-3 border border-secondary mb-4" style={{ maxHeight: '65vh', overflowY: 'auto', backgroundColor: '#18181b' }}>
         <table className="table table-dark table-hover m-0 align-middle text-center" style={{ fontSize: '0.85rem' }}>
           <thead className="table-active sticky-top bg-dark text-secondary" style={{ zIndex: 1 }}>
@@ -199,12 +194,13 @@ export const ClienteView = () => {
                 <td>{c.persona?.tipoDocumento?.nombre || 'DNI'}</td>
                 <td>{c.persona?.numeroDocumento || '-'}</td>
                 <td>{c.persona?.telefono || '-'}</td>
-                <td className="text-truncate" style={{ maxWidth: '120px' }}>{c.persona?.email || '-'}</td>
+                <td className="text-truncate text-info" style={{ maxWidth: '120px' }}>{c.persona?.email || '-'}</td>
                 <td>{c.razonSocial || '-'}</td>
                 <td>{c.personaDeContacto || '-'}</td>
                 <td>{c.condicionDePago || '-'}</td>
                 <td>
-                  <span className={`badge ${c.estado === 'Activo' ? 'text-success' : 'text-danger'}`}>
+                  {/* Corregido: Ahora usa el estilo relleno sutil idéntico a Proveedores */}
+                  <span className={`badge px-2 py-1 fw-semibold ${c.estado === 'Activo' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
                     {c.estado}
                   </span>
                 </td>
@@ -233,7 +229,6 @@ export const ClienteView = () => {
         </table>
       </div>
 
-      {/* BARRA DE ACCIONES INFERIOR FIJA */}
       <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-3 border-top border-secondary">
         <div>
           <button className="btn btn-danger px-4 py-2 fw-semibold" style={{ backgroundColor: '#b91c1c', border: 'none' }}>Volver</button>
@@ -250,7 +245,6 @@ export const ClienteView = () => {
         </div>
       </div>
 
-      {/* MODALES DE REGISTRO */}
       {paso === 1 && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1050 }}>
            <div className="modal-dialog modal-lg modal-dialog-centered">
@@ -264,7 +258,6 @@ export const ClienteView = () => {
         <ClienteExtraForm formData={formData} setFormData={setFormData} onRegistrar={handleRegistrarFinal} onCerrar={() => setPaso(1)} />
       )}
 
-      {/* MODAL MODULARIZADO DE UBICACIÓN */}
       {clienteConUbicacionSeleccionada && (
         <UbicacionViewModal 
           cliente={clienteConUbicacionSeleccionada} 
@@ -273,7 +266,6 @@ export const ClienteView = () => {
         />
       )}
 
-      {/* MODAL MODULARIZADO DE EDICIÓN DATOS */}
       {clienteAEditar && (
         <ClienteEditModal cliente={clienteAEditar} onCerrar={() => setClienteAEditar(null)} onConfirmar={handleConfirmarEdicion} />
       )}

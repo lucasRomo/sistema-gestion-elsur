@@ -19,7 +19,13 @@ public class PedidoServiceImpl implements PedidoService {
     @Autowired private ProductoInsumoRepository productoInsumoRepository;
     @Autowired private MovimientoCajaRepository cajaRepository;
     @Autowired private HistorialEstadoPedidoRepository historialRepository;
+    @Autowired private ClienteRepository clienteRepository;
 
+    @Autowired
+    private DetallePedidoRepository detallePedidoRepository; // <--- AGREGÁ ESTO
+
+    @Autowired
+    private ProductoRepository productoRepository;
     @Override
     public List<Pedido> listarTodos() {
         return pedidoRepository.findAll();
@@ -31,87 +37,64 @@ public class PedidoServiceImpl implements PedidoService {
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
     }
 
-    @Override
-    @Transactional
-    public Pedido guardar(Pedido pedido) {
-        if (pedido.getDetalles() != null) {
-            pedido.getDetalles().forEach(detalle -> detalle.setPedido(pedido));
-        }
+   @Override
+@Transactional
+public Pedido guardar(Pedido pedido) {
+    // 1. Validar Cliente
+    Integer idCliente = (pedido.getCliente() != null && pedido.getCliente().getIdCliente() != null) 
+                        ? pedido.getCliente().getIdCliente() : 1;
+    pedido.setCliente(clienteRepository.findById(idCliente)
+        .orElseThrow(() -> new RuntimeException("Cliente no encontrado")));
 
-        // Si es un pedido nuevo, le ponemos estado PENDIENTE por defecto
-        if (pedido.getId_pedido() == null) {
-            pedido.setEstado("PENDIENTE");
-            pedido.setFecha_creacion(LocalDateTime.now());
-        }
-
-        Pedido pedidoGuardado = pedidoRepository.save(pedido);
-
-        // Registro inicial en el Historial (RF11)
-        // Pasamos el pedido guardado, el estado anterior ("NUEVO") y el nuevo ("PENDIENTE")
-        registrarHistorial(pedidoGuardado, "NUEVO", "PENDIENTE");
-
-        // Registro en caja
-        MovimientoCaja ingreso = new MovimientoCaja();
-        ingreso.setTipoMovimiento("INGRESO");
-        ingreso.setMonto(pedidoGuardado.getMonto_total());
-        ingreso.setDescripcion("Venta pedido Nro: " + pedidoGuardado.getId_pedido());
-        ingreso.setFecha(LocalDateTime.now());
-
-        // IMPORTANTE: Como tu modelo tiene el campo pedido, lo seteamos:
-        ingreso.setPedido(pedidoGuardado);
-
-        cajaRepository.save(ingreso);
-
-        return pedidoGuardado;
-    }
-
-    @Override
-    @Transactional
-    public void procesarDescuentoStock(Integer idPedido) {
-        Pedido pedido = buscarPorId(idPedido);
-        
-        // Asegúrate de que los detalles no sean null y no estén vacíos
-        if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) {
-            throw new RuntimeException("El pedido no tiene detalles");
-        }
-
+    // 2. IMPORTANTE: Vincular detalles al pedido padre
+    if (pedido.getDetalles() != null) {
         for (DetallePedido detalle : pedido.getDetalles()) {
-            Producto producto = detalle.getProducto();
-            
-            // Asegúrate de que el producto y la cantidad sean correctos
-            if (producto == null || detalle.getCantidad() <= 0) {
-                throw new RuntimeException("Datos incorrectos en el detalle del pedido");
-            }
-
-            int cantidadVendida = detalle.getCantidad();
-
-            List<ProductoInsumo> recetas = productoInsumoRepository.findByProducto(producto);
-
-            for (ProductoInsumo receta : recetas) {
-                Insumo insumo = receta.getInsumo();
-                
-                // Asegúrate de que la cantidad de consumo y el stock sean correctos
-                if (receta.getCantidadConsumo() == null || insumo.getStockActual() == null) {
-                    throw new RuntimeException("Datos incorrectos en las recetas del producto");
-                }
-
-                BigDecimal cantidadUsadaPorUnidad = receta.getCantidadConsumo();
-                BigDecimal cantidadVendidaBD = new BigDecimal(cantidadVendida);
-                BigDecimal cantidadADescontar = cantidadUsadaPorUnidad.multiply(cantidadVendidaBD);
-
-                BigDecimal nuevoStock = insumo.getStockActual().subtract(cantidadADescontar);
-                if (nuevoStock.compareTo(BigDecimal.ZERO) < 0) {
-                    throw new RuntimeException("No hay suficiente stock para el producto " + producto.getIdProducto());
-                }
-                insumo.setStockActual(nuevoStock);
-
-                insumoRepository.save(insumo);
+            detalle.setPedido(pedido); // Esto es lo que faltaba
+            // Aseguramos que el producto exista
+            if (detalle.getProducto() != null && detalle.getProducto().getIdProducto() != null) {
+                Producto prod = productoRepository.findById(detalle.getProducto().getIdProducto())
+                    .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                detalle.setProducto(prod);
             }
         }
-
-        // Al descontar stock, entendemos que el trabajo se hizo
-        actualizarEstado(idPedido, "FINALIZADO");
     }
+
+    // 3. Guardar y Volcar
+    Pedido p = pedidoRepository.save(pedido);
+    pedidoRepository.flush(); // Asegura que los IDs se generen
+    return p;
+}
+
+@Override
+@Transactional
+public void procesarDescuentoStock(Integer idPedido) {
+    Pedido pedido = pedidoRepository.findById(idPedido)
+        .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+    // Si sigue vacía, forzamos la carga por si el fetchType es LAZY
+    if (pedido.getDetalles().isEmpty()) {
+        List<DetallePedido> detalles = detallePedidoRepository.findByPedidoIdPedido(idPedido);
+        pedido.setDetalles(detalles);
+    }
+
+    if (pedido.getDetalles().isEmpty()) {
+        throw new RuntimeException("El pedido no tiene detalles registrados");
+    }
+
+    for (DetallePedido detalle : pedido.getDetalles()) {
+        Producto producto = detalle.getProducto();
+        // Lógica de stock
+        int nuevoStock = producto.getStock() - detalle.getCantidad();
+        if (nuevoStock < 0) throw new RuntimeException("Stock insuficiente para " + producto.getNombreProducto());
+        
+        producto.setStock(nuevoStock);
+        productoRepository.save(producto);
+    }
+    
+    pedido.setEstado("Finalizado");
+    pedido.setFecha_finalizacion(LocalDateTime.now());
+    pedidoRepository.save(pedido);
+}
 
     @Override
     @Transactional
@@ -127,15 +110,22 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     // Método auxiliar para que coincida con tu modelo de HistorialEstadoPedido
-    private void registrarHistorial(Pedido pedido, String anterior, String nuevo) {
-        HistorialEstadoPedido historial = new HistorialEstadoPedido();
-        historial.setPedido(pedido);
-        historial.setEstado_anterior(anterior);
-        historial.setEstado_nuevo(nuevo);
-        historial.setFecha_cambio(LocalDateTime.now());
-        // Si ya tuvieras el sistema de Login, acá iría: 
-        // historial.setUsuarioResponsable(usuarioActual);
+    @Autowired
+private UsuarioRepository usuarioRepository; // Asegúrate de inyectarlo
 
-        historialRepository.save(historial);
-    }
+private void registrarHistorial(Pedido pedido, String anterior, String nuevo) {
+    HistorialEstadoPedido historial = new HistorialEstadoPedido();
+    historial.setPedido(pedido);
+    historial.setEstado_anterior(anterior);
+    historial.setEstado_nuevo(nuevo);
+    historial.setFecha_cambio(LocalDateTime.now());
+    
+    // Busca el primer usuario que encuentre, sin importar el ID
+    Usuario usuario = usuarioRepository.findAll().stream()
+        .findFirst()
+        .orElseThrow(() -> new RuntimeException("Error: No existe ningún usuario en la base de datos para registrar el historial."));
+    
+    historial.setUsuarioResponsable(usuario);
+    historialRepository.save(historial);
+}
 }

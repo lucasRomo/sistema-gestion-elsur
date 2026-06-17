@@ -27,6 +27,10 @@ public class Producto {
     @ManyToOne
     @JoinColumn(name = "id_maquina_necesaria")
     private Maquina maquinaNecesaria;
+
+    // ... dentro de la clase Producto
+@Column(nullable = false)
+private Integer stock = 0; // Valor por defecto
     
     @Column(length = 20)
     private String estado;
