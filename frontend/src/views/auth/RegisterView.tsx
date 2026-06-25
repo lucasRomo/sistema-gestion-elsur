@@ -1,8 +1,8 @@
 // src/views/auth/RegisterView.tsx
 import React, { useState } from 'react';
-import { PersonaForm } from '../../components/auth/PersonaForm';
-import { EmpleadoModal } from '../../components//auth/EmpleadoModal';
-import { ExitoModal } from '../../components/auth/ExitoModal';
+import { PersonaForm } from '../../features/auth/PersonaForm';
+import { EmpleadoModal } from '../../features/auth/EmpleadoModal';
+import { ExitoModal } from '../../features/auth/ExitoModal';
 import type { Usuario } from '../../types/Usuario';
 import type { Empleado } from '../../types/Empleado';
 

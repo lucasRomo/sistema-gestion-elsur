@@ -1,25 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SidebarLayout } from '../components/layouts/SidebarLayout';
-import type { Producto } from '../types/Producto';
-import { ProductoTabla } from '../components/productos/ProductoTabla';
-import { ProductoRegistroModal } from '../components/productos/ProductoRegistroModal';
+import { ProductoTabla } from '../features/productos/ProductoTabla';
+import { ProductoRegistroModal } from '../features/productos/ProductoRegistroModal';
+import { useProductos } from '../hooks/useProductos'; // Tu hook
 
 export const Productos: React.FC = () => {
-  const [productos, setProductos] = useState<Producto[]>([]);
+  // Obtenemos todo lo que necesitamos del hook
+  const { productos, guardar, cargar } = useProductos();
+  
   const [showModal, setShowModal] = useState(false);
-  const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
+  const [productoEditando, setProductoEditando] = useState<any | null>(null);
   const navigate = useNavigate();
-
-  const cargarProductos = async () => {
-    try {
-      const res = await fetch('http://localhost:8080/api/productos');
-      const data = await res.json();
-      setProductos(data);
-    } catch (e) { console.error("Error cargando productos:", e); }
-  };
-
-  useEffect(() => { cargarProductos(); }, []);
 
   return (
     <SidebarLayout activeItem="Productos">
@@ -59,12 +51,16 @@ export const Productos: React.FC = () => {
           </button>
         </div>
 
+        {/* Aquí está la clave: 
+           Como el modal maneja internamente los datos del formulario, 
+           simplemente le pasas al onGuardar la ejecución de tu hook.
+        */}
         <ProductoRegistroModal 
           show={showModal}
           producto={productoEditando}
           onClose={() => setShowModal(false)}
-          onGuardar={() => {
-            cargarProductos();
+          onGuardar={async (data) => {
+            await guardar(data); // El hook guarda y recarga solo
             setShowModal(false);
           }}
         />

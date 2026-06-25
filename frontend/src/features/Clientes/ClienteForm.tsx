@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Cliente } from '../types/Cliente';
+import type { Cliente } from '../../types/Cliente';
 
 export const ClienteForm = ({ onGuardar, onVolver }: { onGuardar: () => void, onVolver: () => void }) => {
   const [paso, setPaso] = useState(1);

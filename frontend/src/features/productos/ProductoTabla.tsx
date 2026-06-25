@@ -15,7 +15,7 @@ export const ProductoTabla: React.FC<Props> = ({ productos, onEditar }) => (
           <th>Nombre</th>
           <th>Categoría</th>
           <th>Precio</th>
-          <th>Stock</th> {/* NUEVA COLUMNA */}
+          <th>Stock</th> 
           <th>Máquina</th>
           <th>Estado</th>
           <th>Opciones</th>
@@ -28,7 +28,7 @@ export const ProductoTabla: React.FC<Props> = ({ productos, onEditar }) => (
             <td className="fw-bold">{p.nombreProducto}</td>
             <td>{p.categoria?.nombre || '-'}</td>
             <td className="text-info">${Number(p.precioBase).toFixed(2)}</td>
-            {/* NUEVO DATO: Color rojo si no hay stock, verde si hay */}
+            
             <td className={p.stock > 0 ? "text-success fw-bold" : "text-danger fw-bold"}>
               {p.stock}
             </td>

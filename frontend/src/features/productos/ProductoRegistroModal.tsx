@@ -5,7 +5,7 @@ interface Props {
   show: boolean;
   producto: Producto | null;
   onClose: () => void;
-  onGuardar: () => void;
+  onGuardar: (data: any) => void; // Ya no es opcional, es obligatorio recibir el data
 }
 
 export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose, onGuardar }) => {
@@ -89,24 +89,22 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload = {
-      ...producto,
-      nombreProducto: formData.nombreProducto,
-      precioBase: parseFloat(formData.precioBase),
-      stock: parseInt(formData.stock) || 0, // ENVIAMOS EL STOCK AL BACKEND
-      categoria: { idCategoria: parseInt(formData.idCategoria) },
-      estado: formData.estado
-    };
-
-    await fetch('http://localhost:8080/api/productos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    onGuardar();
+  // Dentro de ProductoRegistroModal.tsx -> handleSubmit
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  const payload = {
+    ...producto,
+    nombreProducto: formData.nombreProducto,
+    precioBase: parseFloat(formData.precioBase),
+    stock: parseInt(formData.stock) || 0,
+    categoria: { idCategoria: parseInt(formData.idCategoria) },
+    estado: formData.estado
   };
+
+  // YA NO HAGAS FETCH AQUÍ. Solo llama a la función que viene de afuera:
+  await onGuardar(payload);
+};
 
   if (!show) return null;
 

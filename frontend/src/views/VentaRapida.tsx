@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { SidebarLayout } from '../components/layouts/SidebarLayout';
-import { SelectorProducto } from '../components/VentaRapida/SelectorProducto';
-import { CarritoLista } from '../components/VentaRapida/CarritoLista';
-import { ResumenVenta } from '../components/VentaRapida/ResumenVenta';
+import { SelectorProducto } from '../features/VentaRapida/SelectorProducto';
+import { CarritoLista } from '../features/VentaRapida/CarritoLista';
+import { ResumenVenta } from '../features/VentaRapida/ResumenVenta';
 import type { Producto } from '../types/Producto';
 import type { CartItem, Pedido } from '../types/Pedido';
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LoginFeedbackModal } from '../../components/modals/LoginFeedbackModal';
+import { LoginFeedbackModal } from '../../features/modals/LoginFeedbackModal';
 
 interface LoginViewProps {
   onLoginExitoso: (usuario: any) => void;

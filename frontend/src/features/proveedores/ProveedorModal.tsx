@@ -5,8 +5,8 @@ interface ProveedorModalProps {
   show: boolean;
   onClose: () => void;
   isEditing: boolean;
-  formState: Proveedor;
-  setFormState: React.Dispatch<React.SetStateAction<Proveedor>>;
+  formState: Proveedor | null; // Acepta null
+  setFormState: React.Dispatch<React.SetStateAction<Proveedor | null>>; // Acepta null
   onSave: (e: React.FormEvent) => void;
 }
 
@@ -67,8 +67,8 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
         method: 'DELETE'
       });
       if (res.ok) {
-        if (formState.tipoProveedor?.idTipoProveedor === id) {
-          setFormState(prev => ({ ...prev, tipoProveedor: undefined }));
+        if (formState?.tipoProveedor?.idTipoProveedor === id) {
+          setFormState(prev => prev ? { ...prev, tipoProveedor: undefined } : null);
         }
         cargarCategorias();
       }
@@ -77,7 +77,9 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     }
   };
 
-  if (!show) return null;
+  // Corrección crucial: Si no se debe mostrar o formState aún es null, no renderizamos.
+  // Esto evita que los inputs intenten leer propiedades de un 'null'.
+  if (!show || !formState) return null;
 
   return (
     <>
