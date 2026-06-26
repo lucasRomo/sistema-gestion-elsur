@@ -14,12 +14,12 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
     nombreUsuario: usuario.nombreUsuario || '',
     password: usuario.password || '',
     salario: usuario.salario || 0,
-    estado: usuario.estado || 'Activo',
+    estado: usuario.estado || 'Activo', // Si viene null, por defecto en el form se setea Activo
     rol: { 
-      idRol: usuario.rol?.idRol || 4 
+      idRol: usuario.rol?.idRol || 2 // Fallback al ID 2 (EMPLEADO) que sí existe en tu BD
     },
     persona: {
-      ...usuario.persona, // Mantenemos el resto de los datos de la persona intactos
+      ...usuario.persona, 
       nombre: usuario.persona?.nombre || '',
       apellido: usuario.persona?.apellido || '',
     }
@@ -28,12 +28,10 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
   useEffect(() => {
-    // Simulamos la carga de roles desde Spring Boot
+    // Sincronizado exactamente con los inserts de tu DataInitializer de Spring Boot
     setRoles([
-      { idRol: 1, nombre: 'Admin' },
-      { idRol: 2, nombre: 'Gerente' },
-      { idRol: 3, nombre: 'Mostrador' },
-      { idRol: 4, nombre: 'Operario' },
+      { idRol: 1, nombre: 'ADMIN' },
+      { idRol: 2, nombre: 'EMPLEADO' }
     ]);
   }, []);
 
@@ -71,7 +69,8 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
               <div style={{ maxHeight: '65vh', overflowY: 'auto', overflowX: 'hidden', paddingRight: '8px' }}>
                 
                 {/* SECCIÓN 1: DATOS DE ACCESO */}
-                <h5 className="border-bottom pb-2 mb-3 mt-2" style={{ color: '#e4e4e7', borderColor: '#3f3f46 !important', fontSize: '1.05rem', fontWeight: '600' }}>
+                {/* Corregido: Removido el !important del estilo inline de React */}
+                <h5 className="border-bottom pb-2 mb-3 mt-2" style={{ color: '#e4e4e7', borderColor: '#3f3f46', fontSize: '1.05rem', fontWeight: '600' }}>
                   1. Credenciales de Acceso
                 </h5>
                 <div className="row g-3 mb-4 mx-0">
@@ -86,7 +85,7 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
                 </div>
 
                 {/* SECCIÓN 2: DATOS DEL EMPLEADO */}
-                <h5 className="border-bottom pb-2 mb-3" style={{ color: '#e4e4e7', borderColor: '#3f3f46 !important', fontSize: '1.05rem', fontWeight: '600' }}>
+                <h5 className="border-bottom pb-2 mb-3" style={{ color: '#e4e4e7', borderColor: '#3f3f46', fontSize: '1.05rem', fontWeight: '600' }}>
                   2. Perfil y Permisos
                 </h5>
                 <div className="row g-3 mb-2 mx-0">
@@ -127,7 +126,7 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
                 </div>
               </div>
 
-              <div className="d-flex justify-content-end gap-2 mt-3 pt-3 border-top" style={{ borderColor: '#3f3f46 !important' }}>
+              <div className="d-flex justify-content-end gap-2 mt-3 pt-3 border-top" style={{ borderColor: '#3f3f46' }}>
                 <button type="button" className="btn btn-secondary px-4" style={{ borderRadius: '8px' }} onClick={onCerrar}>Cancelar</button>
                 <button type="submit" className="btn btn-info px-4 fw-semibold text-dark" style={{ borderRadius: '8px' }}>Guardar Cambios</button>
               </div>

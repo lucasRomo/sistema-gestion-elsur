@@ -1,105 +1,77 @@
-package com.elsur.sistema_gestion.config; // Ajustá al paquete real de tu proyecto
+package com.elsur.sistema_gestion.config; 
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import org.springframework.jdbc.core.JdbcTemplate;
+import java.math.BigDecimal;
+
+import com.elsur.sistema_gestion.models.*;
+import com.elsur.sistema_gestion.repositories.*;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
 
-    private static final String BASE_URL = "http://localhost:8080/api";
+    private final TipoDocumentoRepository tipoDocumentoRepository;
+    private final TipoPersonaRepository tipoPersonaRepository;
+    private final RolRepository rolRepository;
+    private final ClienteRepository clienteRepository;
+    private final JdbcTemplate jdbcTemplate; 
 
-    @Override
+    public DataInitializer(TipoDocumentoRepository tipoDocumentoRepository,
+                           TipoPersonaRepository tipoPersonaRepository,
+                           RolRepository rolRepository,
+                           ClienteRepository clienteRepository,
+                           JdbcTemplate jdbcTemplate) {
+        this.tipoDocumentoRepository = tipoDocumentoRepository;
+        this.tipoPersonaRepository = tipoPersonaRepository;
+        this.rolRepository = rolRepository;
+        this.clienteRepository = clienteRepository;
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    @Override 
     public void run(String... args) throws Exception {
-        // Esperamos a que Hibernate levante las tablas
-        Thread.sleep(2500);
-        
-        System.out.println("[DataInitializer] Iniciando verificación de datos maestros...");
+        System.out.println("[DataInitializer] Cargando datos maestros mediante SQL Nativo seguro...");
 
-        // 1. INICIALIZAR TIPOS DE DOCUMENTO (Si no existen en tu endpoint/DB)
-        // Nota: Si tenés repositorios, podés inyectarlos directamente y usar .save(). 
-        // Si no, lo hacemos por HTTP POST/SQL directo para asegurar consistencia:
-        inicializarMaestro("/tipos-documento", 1, "{\"idTipoDocumento\": 1, \"nombre\": \"DNI\"}");
-        inicializarMaestro("/tipos-documento", 2, "{\"idTipoDocumento\": 2, \"nombre\": \"CUIT\"}");
-        inicializarMaestro("/tipos-documento", 3, "{\"idTipoDocumento\": 3, \"nombre\": \"CUIL\"}");
-
-        // 2. INICIALIZAR TIPOS DE PERSONA
-        inicializarMaestro("/tipos-persona", 1, "{\"idTipoPersona\": 1, \"descripcion\": \"empleado\"}");
-        inicializarMaestro("/tipos-persona", 2, "{\"idTipoPersona\": 2, \"descripcion\": \"Cliente\"}");
-
-        // 3. INICIALIZAR ROLES DE USUARIO (Requerido por tu RegisterView idRol: 2)
-        inicializarMaestro("/roles", 1, "{\"idRol\": 1, \"nombre\": \"ADMIN\"}");
-        inicializarMaestro("/roles", 2, "{\"idRol\": 2, \"nombre\": \"EMPLEADO\"}");
-
-        // 4. CLIENTE CONSUMIDOR FINAL (Tu lógica previa)
-        inicializarConsumidorFinal();
-    }
-
-    private void inicializarMaestro(String endpoint, int id, String jsonPayload) {
-        try {
-            URL urlCheck = new URL(BASE_URL + endpoint + "/" + id);
-            HttpURLConnection connCheck = (HttpURLConnection) urlCheck.openConnection();
-            connCheck.setRequestMethod("GET");
-            
-            if (connCheck.getResponseCode() == 404) {
-                URL urlPost = new URL(BASE_URL + endpoint);
-                HttpURLConnection connPost = (HttpURLConnection) urlPost.openConnection();
-                connPost.setRequestMethod("POST");
-                connPost.setRequestProperty("Content-Type", "application/json");
-                connPost.setDoOutput(true);
-
-                try (OutputStream os = connPost.getOutputStream()) {
-                    os.write(jsonPayload.getBytes("utf-8"));
-                }
-                if (connPost.getResponseCode() == 200 || connPost.getResponseCode() == 201) {
-                    System.out.println("[DataInitializer] Registrado con éxito en " + endpoint + " ID: " + id);
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("[DataInitializer] Error en " + endpoint + ": " + e.getMessage());
+        // 1. TIPOS DE DOCUMENTO
+        if (tipoDocumentoRepository.count() == 0) {
+            jdbcTemplate.execute("INSERT INTO tipo_documento (id_tipo_documento, nombre_tipo) VALUES (1, 'DNI')");
+            jdbcTemplate.execute("INSERT INTO tipo_documento (id_tipo_documento, nombre_tipo) VALUES (2, 'CUIT')");
+            jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('tipo_documento', 'id_tipo_documento'), 2)");
+            System.out.println("[DataInitializer] -> Tipos de Documento insertados.");
         }
-    }
 
-    private void inicializarConsumidorFinal() {
-        try {
-            URL urlCheck = new URL(BASE_URL + "/clientes/1");
-            HttpURLConnection connCheck = (HttpURLConnection) urlCheck.openConnection();
-            connCheck.setRequestMethod("GET");
-
-            if (connCheck.getResponseCode() == 404) {
-                URL urlPost = new URL(BASE_URL + "/clientes");
-                HttpURLConnection connPost = (HttpURLConnection) urlPost.openConnection();
-                connPost.setRequestMethod("POST");
-                connPost.setRequestProperty("Content-Type", "application/json");
-                connPost.setDoOutput(true);
-
-                String jsonPayload = "{"
-                        + "\"idCliente\": 1,"
-                        + "\"razonSocial\": \"Consumidor Final\","
-                        + "\"saldoDeudor\": 0.0,"
-                        + "\"limiteCredito\": 0.0,"
-                        + "\"estado\": \"Activo\","
-                        + "\"personaDeContacto\": \"N/A\","
-                        + "\"condicionDePago\": \"Contado\","
-                        + "\"persona\": {"
-                        + "    \"nombre\": \"Consumidor\","
-                        + "    \"apellido\": \"Final\","
-                        + "    \"numeroDocumento\": \"99999999\","
-                        + "    \"tipoDocumento\": { \"idTipoDocumento\": 1 },"
-                        + "    \"tipoPersona\": { \"idTipoPersona\": 1 }"
-                        + "}"
-                        + "}";
-
-                try (OutputStream os = connPost.getOutputStream()) {
-                    os.write(jsonPayload.getBytes("utf-8"));
-                }
-                connPost.getResponseCode();
-                System.out.println("[DataInitializer] 'Consumidor Final' inicializado de manera segura.");
-            }
-        } catch (Exception e) {
-            System.err.println("[DataInitializer] Error al crear Consumidor Final: " + e.getMessage());
+        // 2. TIPOS DE PERSONA
+        if (tipoPersonaRepository.count() == 0) {
+            jdbcTemplate.execute("INSERT INTO tipo_persona (id_tipo_persona, nombre_tipo) VALUES (1, 'Física')");
+            jdbcTemplate.execute("INSERT INTO tipo_persona (id_tipo_persona, nombre_tipo) VALUES (2, 'Jurídica')");
+            jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('tipo_persona', 'id_tipo_persona'), 2)");
+            System.out.println("[DataInitializer] -> Tipos de Persona insertados.");
         }
+
+        // 3. ROLES
+        if (rolRepository.count() == 0) {
+            jdbcTemplate.execute("INSERT INTO rol (id_rol, nombre_rol) VALUES (1, 'ADMIN')");
+            jdbcTemplate.execute("INSERT INTO rol (id_rol, nombre_rol) VALUES (2, 'EMPLEADO')");
+            jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('rol', 'id_rol'), 2)");
+            System.out.println("[DataInitializer] -> Roles insertados.");
+        }
+
+        // 4. CLIENTE CONSUMIDOR FINAL (Carga por SQL Nativo para evitar fallos de ID)
+        if (clienteRepository.count() == 0) {
+            // Primero insertamos la Persona asociada (ID: 1)
+            jdbcTemplate.execute("INSERT INTO persona (id_persona, nombre, apellido, numero_documento, id_tipo_documento, id_tipo_persona) " +
+                    "VALUES (1, 'Consumidor', 'Final', '99999999', 1, 1)");
+            jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('persona', 'id_persona'), 1)");
+            System.out.println("[DataInitializer] -> Persona 'Consumidor Final' insertada.");
+
+            // Ahora insertamos el Cliente (ID: 1) apuntando a esa Persona
+            jdbcTemplate.execute("INSERT INTO cliente (id_cliente, razon_social, saldo_deudor, limite_credito, estado, condicion_de_pago, persona_de_contacto, id_persona) " +
+                    "VALUES (1, 'Consumidor Final', 0.00, 0.00, 'Activo', 'Contado', 'N/A', 1)");
+            jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('cliente', 'id_cliente'), 1)");
+            System.out.println("[DataInitializer] -> Cliente 'Consumidor Final' insertado exitosamente.");
+        }
+
+        System.out.println("[DataInitializer] ¡Sincronización terminada con éxito sin bloqueos de Hibernate!");
     }
 }

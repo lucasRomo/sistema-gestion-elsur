@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { SidebarLayout } from '../components/layouts/SidebarLayout';
 import { UsuarioEditModal } from '../features/modals/UsuarioEditModal';
-import { UbicacionViewModal } from '../features/modals/UbicacionViewModal';
 import { useUsuarios } from '../hooks/useUsuarios';
 
 export const GestionUsuariosView: React.FC = () => {
@@ -9,23 +8,26 @@ export const GestionUsuariosView: React.FC = () => {
   const [filtroTexto, setFiltroTexto] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Sin Filtro');
   const [usuarioAEditar, setUsuarioAEditar] = useState<any | null>(null);
-  const [usuarioConUbicacion, setUsuarioConUbicacion] = useState<any | null>(null);
 
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case 'Activo': return '#4ade80';
       case 'Desactivado': return '#f87171';
       case 'Pendiente': return '#facc15';
-      default: return '#fff';
+      default: return '#4ade80'; // Por defecto verde si pasa a ser Activo
     }
   };
 
   const usuariosFiltrados = usuarios.filter(u => {
     const busqueda = filtroTexto.toLowerCase();
+    
     const coincideTexto = u.nombreUsuario?.toLowerCase().includes(busqueda) ||
                           u.persona?.nombre?.toLowerCase().includes(busqueda) ||
                           u.persona?.apellido?.toLowerCase().includes(busqueda);
-    const coincideEstado = filtroEstado === 'Sin Filtro' || u.estado === filtroEstado;
+    
+    // Si el estado viene null o vacío de la DB, por defecto lo tratamos como 'Activo'
+    const estadoUsuario = u.estado || 'Activo';
+    const coincideEstado = filtroEstado === 'Sin Filtro' || estadoUsuario === filtroEstado;
     return coincideTexto && coincideEstado;
   });
 
@@ -79,7 +81,7 @@ export const GestionUsuariosView: React.FC = () => {
                 <th className="py-3 text-secondary fw-normal">Contraseña</th>
                 <th className="py-3 text-secondary fw-normal">Nombre</th>
                 <th className="py-3 text-secondary fw-normal">Apellido</th>
-                <th className="py-3 text-secondary fw-normal">Salario</th>
+                <th className="py-3 text-secondary fw-normal text-end pe-4">Salario</th>
                 <th className="py-3 text-secondary fw-normal text-center">Estado</th>
                 <th className="py-3 text-secondary fw-normal text-center">Opciones</th>
               </tr>
@@ -92,14 +94,17 @@ export const GestionUsuariosView: React.FC = () => {
                   <td className="py-3">{u.password}</td>
                   <td className="py-3">{u.persona?.nombre || '-'}</td>
                   <td className="py-3">{u.persona?.apellido || '-'}</td>
-                  <td className="py-3 text-end font-monospace">{u.salario?.toLocaleString('es-AR') || '0'}</td>
-                  <td className="py-3 text-center" style={{ color: getEstadoColor(u.estado) }}>{u.estado}</td>
+                  {/* Forzamos el casteo a Number por si viene como string desde la DB o el estado local */}
+                  <td className="py-3 text-end font-monospace pe-4">
+                    ${Number(u.salario || 0).toLocaleString('es-AR')}
+                  </td>
+                  {/* Si el estado es null o no existe, renderiza 'Activo' por defecto */}
+                  <td className="py-3 text-center" style={{ color: getEstadoColor(u.estado || 'Activo'), fontWeight: 'bold' }}>
+                    {u.estado || 'Activo'}
+                  </td>
                   <td className="py-3 text-center">
-                    <button className="btn btn-link p-0 me-2 text-info" onClick={() => setUsuarioAEditar(u)}>
+                    <button className="btn btn-link p-0 text-info" onClick={() => setUsuarioAEditar(u)}>
                       <i className="bi bi-pencil-square fs-5"></i>
-                    </button>
-                    <button className="btn btn-link p-0 text-warning" onClick={() => setUsuarioConUbicacion(u)}>
-                      <i className="bi bi-house-door fs-5"></i>
                     </button>
                   </td>
                 </tr>
@@ -120,15 +125,23 @@ export const GestionUsuariosView: React.FC = () => {
         <UsuarioEditModal 
           usuario={usuarioAEditar} 
           onCerrar={() => setUsuarioAEditar(null)} 
-          onConfirmar={async (u) => { await guardar(u); setUsuarioAEditar(null); cargar(); }} 
-        />
-      )}
-
-      {usuarioConUbicacion && (
-        <UbicacionViewModal 
-          cliente={usuarioConUbicacion} 
-          onCerrar={() => setUsuarioConUbicacion(null)} 
-          onConfirmar={async (u) => { await guardar(u); setUsuarioConUbicacion(null); }} 
+          onConfirmar={async (u) => { 
+            try {
+              // Formateamos los datos antes de enviarlos para asegurar compatibilidad con el backend
+              const usuarioFormateado = {
+                ...u,
+                salario: u.salario ? Number(u.salario) : 0, // Nos aseguramos que viaje un Number real
+                estado: u.estado || 'Activo'                // Si venía vacío, se guarda como 'Activo'
+              };
+              
+              await guardar(usuarioFormateado); 
+              setUsuarioAEditar(null); 
+              cargar(); 
+            } catch (error) {
+              alert("Error al guardar el usuario. Verificá los datos o los roles en el backend.");
+              console.error(error);
+            }
+          }} 
         />
       )}
     </SidebarLayout>
