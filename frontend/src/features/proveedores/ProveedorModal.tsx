@@ -95,6 +95,8 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
 
 
 
+  // Corrección crucial: Si no se debe mostrar o formState aún es null, no renderizamos.
+  // Esto evita que los inputs intenten leer propiedades de un 'null'.
   if (!show || !formState) return null;
 
   return (

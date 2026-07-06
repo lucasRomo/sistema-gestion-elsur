@@ -110,18 +110,22 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   return (
     <div className="d-flex vh-100" style={{ backgroundColor: '#1b1b1b', color: 'white' }}>
       
-      {/* Sidebar - MANTIENE d-print-none DE LUCAS Y COLOR DE LISANDRO */}
-      <div className="d-flex flex-column p-3 d-print-none" style={{ width: '260px', borderRight: '1px solid #2d2d30', backgroundColor: '#222122' }}>
+      {/* Sidebar */}
+      <div className="d-flex flex-column p-3" style={{ width: '260px', borderRight: '1px solid #2d2d30', backgroundColor: '#222122' }}>
         
-        {/* Header con el Logo de Lisandro */}
+        {/* Header del Sidebar */}
         <div className="d-flex justify-content-between align-items-center mb-4 ps-2">
-          <div className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
-            <img src={logoSur} alt="El SUR" style={{ width: '50px', height: 'auto', objectFit: 'contain' }} />
-            <span className="fw-bold font-monospace text-white" style={{ fontSize: '1.1rem', letterSpacing: '1px' }}>el SUR</span>
-          </div>
-        </div>
+        <div className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
+        <img src={logoSur} alt="El SUR" style={{ 
+         width: '50px',     
+         height: 'auto',    
+         objectFit: 'contain' 
+        }} />
+        <span className="fw-bold font-monospace text-white" style={{ fontSize: '1.1rem', letterSpacing: '1px' }}>el SUR</span>
+      </div>
+     </div>
 
-        {/* Info Usuario con estilo Morado de Lisandro */}
+        {/* Info Usuario */}
         <div className="mb-4 ps-2 py-2 rounded" style={{ backgroundColor: '#292829', borderLeft: '3px solid #8e45e0' }}>
           <div className="text-light small font-monospace" style={{ fontSize: '0.85rem' }}>
             Buenos Días: <span style={{ color: '#8e45e0' }} className="fw-bold">{nombrePersona.toUpperCase()}</span>
@@ -130,9 +134,10 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
             Fecha: <span className="text-white-50">{fechaActual}</span>
           </div>
           <div className="text-light small font-monospace mt-1" style={{ fontSize: '0.85rem' }}>
-            Rol: <span className="badge bg-dark ms-2" style={{ color: '#8e45e0', border: '1px solid #8e45e0' }}>{rolUsuario}</span>
-          </div>
+          Rol: <span className="badge bg-dark ms-2" style={{ color: '#8e45e0', border: '1px solid #8e45e0' }}> {rolUsuario}
+         </span>
         </div>
+      </div>
 
         <hr className="border-secondary mt-0 mb-4" style={{ opacity: 0.4 }} />
 

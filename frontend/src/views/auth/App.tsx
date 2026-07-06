@@ -8,9 +8,6 @@ import { Insumos } from '../Insumos';
 import { Productos } from '../Productos';
 import { VentaRapida } from '../VentaRapida';
 import { GestionUsuariosView } from '../GestionUsuariosView'; 
-import { CrearPedidoView } from '../CrearPedidoView'; 
-import { PedidosPendientesPage } from '../PedidosPendientesView'; 
-import { HistorialPedidosPage } from '../HistorialPedidosView'; // <-- Importamos la nueva página
 
 function App() {
   return (
