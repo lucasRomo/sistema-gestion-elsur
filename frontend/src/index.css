@@ -1,0 +1,19 @@
+.form-control:focus, 
+.form-select:focus {
+  border-color: #0d6efd !important; /* Azul */
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+  background-color: #222226 !important; /* Color oscuro base */
+  color: #ffffff !important;
+}
+
+.btn-truck-custom {
+  background-color: transparent !important;
+  border: 1px solid #a855f7 !important;
+  color: #a855f7 !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-truck-custom:hover {
+  background-color: #a855f7 !important;
+  color: #ffffff !important;
+}
