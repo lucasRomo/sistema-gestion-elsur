@@ -57,6 +57,7 @@ export const VentaRapida: React.FC = () => {
     monto_pago_adelantado: total,
     es_cuenta_corriente: false,
     es_presupuesto: false,
+    estado: "VENTA_RAPIDA",
     observaciones: "Venta Rápida",
     detalles: carrito.map(item => ({
       producto: { idProducto: item.producto.idProducto },

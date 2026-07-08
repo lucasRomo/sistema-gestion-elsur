@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Data
 @Entity
 @Table(name = "AsignacionPedido")
@@ -18,6 +20,7 @@ public class AsignacionPedido {
 
     @ManyToOne
     @JoinColumn(name = "id_pedido", nullable = false)
+    @JsonIgnoreProperties("asignaciones")
     private Pedido pedido;
 
     @ManyToOne

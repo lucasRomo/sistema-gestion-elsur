@@ -31,24 +31,27 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   const nombrePersona = usuario?.persona?.nombre || usuario?.nombreUsuario || 'Usuario';
   const rolUsuario = usuario?.rol?.nombre || 'Empleado';
 
-  // 1. Ítems Principales (Solo Panel Principal)
   const menuPrincipales = [
     { name: 'Panel Principal', icon: 'bi-grid-fill', path: '/dashboard' },
   ];
 
-  // 2. Ítems de Entidades
+  const menuProduccion = [
+    { name: 'Crear Pedido', icon: 'bi-pencil-square', path: '/crear-pedido' },
+    { name: 'Pedidos Pendientes', icon: 'bi-clipboard-check', path: '/pedidos-pendientes' },
+    { name: 'Historial de Pedidos', icon: 'bi-calendar-event', path: '/historial-pedidos' },
+    { name: 'Caja', icon: 'bi-wallet2', path: '/caja' },
+    { name: 'Repositorio Digital', icon: 'bi-download', path: '/repositorio' },
+  ];
+
+  const menuStock = [
+    { name: 'Inventario', icon: 'bi-box-seam', path: '/inventario' },
+    { name: 'Insumos', icon: 'bi-boxes', path: '/insumos' },
+    { name: 'Productos', icon: 'bi-archive', path: '/productos' }, // <-- ESTO ES LO QUE TE FALTABA
+  ];
+
   const menuEntidades = [
     { name: 'Clientes', icon: 'bi-person-fill', path: '/clientes' },
     { name: 'Proveedores', icon: 'bi-truck', path: '/proveedores' },
-    { name: 'Insumos', icon: 'bi-boxes', path: '/insumos' },
-    { name: 'Productos', icon: 'bi-box-seam', path: '/productos' },
-  ];
-
-  // 3. Ítems de Gerencia
-  const menuGerente = [
-    { name: 'Informes', icon: 'bi-file-earmark-text', path: '/informes' },
-    { name: 'Gestión de Usuarios', icon: 'bi-people', path: '/gestion-usuarios' },
-    { name: 'Historial de Actividad', icon: 'bi-clock-history', path: '/historial' },
   ];
 
   const handleCerrarSesion = () => {
@@ -95,10 +98,10 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   return (
     <div className="d-flex vh-100" style={{ backgroundColor: '#111113', color: 'white' }}>
       
-      {/* Sidebar */}
-      <div className="d-flex flex-column p-3" style={{ width: '260px', borderRight: '1px solid #2d2d30', backgroundColor: '#1a1a1c' }}>
+      {/* Sidebar - AGREGADA LA CLASE d-print-none PARA SELECCIÓN DE IMPRESIÓN */}
+      <div className="d-flex flex-column p-3 d-print-none" style={{ width: '260px', borderRight: '1px solid #2d2d30', backgroundColor: '#1a1a1c' }}>
         
-        {/* Header del Sidebar */}
+        {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
             <i className="bi bi-triangle-half text-info fs-4"></i>
@@ -121,24 +124,24 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
         <hr className="border-secondary mt-0 mb-4" style={{ opacity: 0.4 }} />
 
-        {/* Items del Menú */}
+        {/* Listado del Menú con Scroll Scannable */}
         <div className="flex-grow-1" style={{ overflowY: 'auto', overflowX: 'hidden', paddingRight: '4px' }}>
-          {/* Botones Principales */}
           {menuPrincipales.map(renderizarBotonMenu)}
 
-          {/* ETIQUETA SEPARADORA ENTIDADES */}
+          <div className="text-light-50 small fw-bold mt-4 mb-3 ps-2 font-monospace" style={{ fontSize: '0.75rem', letterSpacing: '1.5px', color: '#a1a1aa' }}>
+            — PRODUCCIÓN
+          </div>
+          {menuProduccion.map(renderizarBotonMenu)}
+
+          <div className="text-light-50 small fw-bold mt-4 mb-3 ps-2 font-monospace" style={{ fontSize: '0.75rem', letterSpacing: '1.5px', color: '#a1a1aa' }}>
+            — STOCK
+          </div>
+          {menuStock.map(renderizarBotonMenu)}
+
           <div className="text-light-50 small fw-bold mt-4 mb-3 ps-2 font-monospace" style={{ fontSize: '0.75rem', letterSpacing: '1.5px', color: '#a1a1aa' }}>
             — ADMINISTRACIÓN / ENTIDADES
           </div>
-          {/* Botones de Entidades */}
           {menuEntidades.map(renderizarBotonMenu)}
-
-          {/* ETIQUETA SEPARADORA GERENTE */}
-          <div className="text-light-50 small fw-bold mt-4 mb-3 ps-2 font-monospace" style={{ fontSize: '0.75rem', letterSpacing: '1.5px', color: '#a1a1aa' }}>
-            — OPCIONES DE GERENTE
-          </div>
-          {/* Botones de Gerencia */}
-          {menuGerente.map(renderizarBotonMenu)}
         </div>
 
         {/* Botón de Cerrar Sesión */}

@@ -5,6 +5,8 @@ import lombok.Data;
 import org.hibernate.annotations.ColumnDefault;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,8 +23,10 @@ public class Pedido {
 
     @ManyToOne
     @JoinColumn(name = "id_cliente", nullable = false)
+    @JsonProperty("cliente")
     private Cliente cliente;
 
+    
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetallePedido> detalles;
 
@@ -58,4 +62,20 @@ public class Pedido {
 
     @Column(nullable = false)
     private boolean es_presupuesto = false;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("pedido")
+    @JsonProperty("asignaciones") // Esto permitirá que el JSON traiga la lista
+    private List<AsignacionPedido> asignaciones;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("pedido")
+    @JsonProperty("comprobantes")
+    private List<ComprobantePago> comprobantes;
+
+    // ➔ NUEVA RELACIÓN AGREGADA: Mapeo bidireccional con el historial
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonIgnoreProperties("pedido") // Evita bucles infinitos en la serialización JSON
+    @JsonProperty("historiales")    // Permite que viaje en el JSON como "historiales"
+    private List<HistorialEstadoPedido> historiales;
 }

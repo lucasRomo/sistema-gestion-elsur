@@ -5,6 +5,8 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Entity
 @Table(name = "Cliente")
 @Data
@@ -13,6 +15,7 @@ public class Cliente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_cliente")
+    @JsonProperty("id_cliente")
     private Integer idCliente;
 
     @Column(name = "razon_social", nullable = false, length = 100)
@@ -37,7 +40,7 @@ private Categoria categoria;
     @Column(name = "condicionDePago", nullable = false, length = 20)
     private String condicionDePago;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL , fetch = FetchType.EAGER)
     @JoinColumn(name = "id_persona")
     private Persona persona;
 
