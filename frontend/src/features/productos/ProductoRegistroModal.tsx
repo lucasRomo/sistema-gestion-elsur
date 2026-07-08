@@ -120,13 +120,23 @@ const handleSubmit = async (e: React.FormEvent) => {
               <button className="btn-close btn-close-white" onClick={onClose}></button>
             </div>
             
+
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label small">Nombre del Producto</label>
-                  <input className="form-control bg-dark text-white border-secondary" value={formData.nombreProducto} onChange={e => setFormData({...formData, nombreProducto: e.target.value})} required />
+                  <input className="form-control bg-dark text-white border-secondary" 
+                   value={formData.nombreProducto} 
+                   onChange={e => setFormData({...formData, nombreProducto: e.target.value})} 
+                   required pattern="[A-Za-z0-9Á-Úá-ú\s]+"
+                   onInvalid={(e: any) => {
+                   if (e.target.validity.valueMissing) e.target.setCustomValidity("El nombre del producto es obligatorio");
+                   else if (e.target.validity.patternMismatch) e.target.setCustomValidity("Nombre inválido");
+                   }}
+                   onInput={(e: any) => e.target.setCustomValidity("")}/>
                 </div>
                 
+
                 {/* Agrupamos Precio y Stock en la misma fila para que no quede tan largo el modal */}
                 <div className="row mb-3">
                   <div className="col-6">
@@ -138,7 +148,17 @@ const handleSubmit = async (e: React.FormEvent) => {
                     <input className="form-control bg-dark text-white border-secondary" type="number" min="0" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} required />
                   </div>
                 </div>
-
+                <div className="mb-3">
+                <label className="form-label small">Estado del Producto</label>
+                <select 
+                className="form-select bg-dark text-white border-secondary"
+                value={formData.estado} 
+                onChange={e => setFormData({...formData, estado: e.target.value})}
+                >
+                <option value="Activo">Activo</option>
+                <option value="Desactivado">Desactivado</option>
+                </select>
+                </div>
                 <div className="mb-3">
                   <label className="form-label small">Categoría</label>
                   <div className="input-group">

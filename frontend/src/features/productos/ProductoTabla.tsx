@@ -7,41 +7,52 @@ interface Props {
 }
 
 export const ProductoTabla: React.FC<Props> = ({ productos, onEditar }) => (
-  <div className="table-responsive rounded-3 border border-secondary mb-4" style={{ backgroundColor: '#18181b' }}>
-    <table className="table table-dark table-hover align-middle text-center font-monospace" style={{ fontSize: '0.85rem' }}>
-      <thead className="table-active text-secondary">
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Categoría</th>
-          <th>Precio</th>
-          <th>Stock</th> 
-          <th>Máquina</th>
-          <th>Estado</th>
-          <th>Opciones</th>
+  <div className="table-responsive" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+    <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
+      <thead>
+        <tr style={{ borderBottom: '2px solid #3f3f46', textAlign: 'left' }}>
+          <th style={{ padding: '12px' }}>ID</th>
+          <th style={{ padding: '12px' }}>Nombre</th>
+          <th style={{ padding: '12px' }}>Categoría</th>
+          <th style={{ padding: '12px' }}>Precio</th>
+          <th style={{ padding: '12px' }}>Stock</th>
+          <th style={{ padding: '12px' }}>Máquina</th>
+          <th style={{ padding: '12px' }}>Estado</th>
+          <th style={{ padding: '12px', textAlign: 'center' }}>Opciones</th>
         </tr>
       </thead>
       <tbody>
         {productos.map(p => (
-          <tr key={p.idProducto}>
-            <td>{p.idProducto}</td>
-            <td className="fw-bold">{p.nombreProducto}</td>
-            <td>{p.categoria?.nombre || '-'}</td>
-            <td className="text-info">${Number(p.precioBase).toFixed(2)}</td>
-            
-            <td className={p.stock > 0 ? "text-success fw-bold" : "text-danger fw-bold"}>
+          <tr 
+            key={p.idProducto}
+            style={{ borderBottom: '1px solid #2d2d30' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#27272a'} 
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          >
+            <td style={{ padding: '12px' }}>{p.idProducto}</td>
+            <td style={{ padding: '12px' }} className="fw-bold">{p.nombreProducto}</td>
+            <td style={{ padding: '12px' }}>{p.categoria?.nombre || '-'}</td>
+            <td style={{ padding: '12px' }} className="text-info">${Number(p.precioBase).toFixed(2)}</td>
+            <td style={{ padding: '12px' }} className={p.stock > 0 ? "text-success fw-bold" : "text-danger fw-bold"}>
               {p.stock}
             </td>
-            <td className="text-warning">No disponible</td>
-            <td>
-              <span className={`badge ${p.estado === 'Activo' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
-                {p.estado}
+            <td style={{ padding: '12px' }} className="text-warning">No disponible</td>
+            <td style={{ padding: '12px' }}>
+              <span className={`badge ${p.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>
+              {p.estado}
               </span>
             </td>
-            <td>
-              <button className="btn btn-sm text-info" onClick={() => onEditar(p)}>
-                <i className="bi bi-pencil-square"></i>
-              </button>
+            <td style={{ padding: '12px' }}>
+              <div className="d-flex justify-content-center">
+                <button 
+                  className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
+                  style={{ width: '32px', height: '32px' }}
+                  onClick={() => onEditar(p)}
+                  title="Editar Producto"
+                >
+                  <i className="bi bi-pencil-square"></i>
+                </button>
+              </div>
             </td>
           </tr>
         ))}

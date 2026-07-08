@@ -14,7 +14,8 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
     nombreUsuario: usuario.nombreUsuario || '',
     password: usuario.password || '',
     salario: usuario.salario || 0,
-    estado: usuario.estado || 'Activo', // Si viene null, por defecto en el form se setea Activo
+    estado: usuario.estado || 'Activo',
+    cargo: usuario.cargo || '', 
     rol: { 
       idRol: usuario.rol?.idRol || 2 // Fallback al ID 2 (EMPLEADO) que sí existe en tu BD
     },
@@ -22,6 +23,7 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
       ...usuario.persona, 
       nombre: usuario.persona?.nombre || '',
       apellido: usuario.persona?.apellido || '',
+      documento: usuario.persona?.numeroDocumento || '',
     }
   });
 
@@ -88,17 +90,47 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
                 <h5 className="border-bottom pb-2 mb-3" style={{ color: '#e4e4e7', borderColor: '#3f3f46', fontSize: '1.05rem', fontWeight: '600' }}>
                   2. Perfil y Permisos
                 </h5>
+
+
                 <div className="row g-3 mb-2 mx-0">
                   <div className="col-md-6 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Nombre</label>
-                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.nombre} onChange={e => handlePersonaChange('nombre', e.target.value)} required />
+                    <input type="text" 
+                     className="form-control text-white" 
+                     style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                     value={editData.persona.nombre} 
+                     onChange={e => handlePersonaChange('nombre', e.target.value)} 
+                     required pattern="[A-Za-zÁ-Úá-ú\s]+"
+                     onInvalid={(e: any) => {
+                     if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre No puede Estar Vacío");
+                     else if (e.target.validity.patternMismatch) e.target.setCustomValidity("El Campo de Nombre solo puede contener letras");
+                     }}
+                     onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
+
+                  
                   <div className="col-md-6 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Apellido</label>
-                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.apellido} onChange={e => handlePersonaChange('apellido', e.target.value)} required />
+                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.apellido} onChange={e => handlePersonaChange('apellido', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+"
+                     onInvalid={(e: any) => {
+                     if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Apellido No puede Estar Vacío");
+                     else if (e.target.validity.patternMismatch) e.target.setCustomValidity("El Campo de Apellido solo puede contener letras");
+                     }}
+                     onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
+
+                  <div className="col-md-6 px-1 mt-3">
+                  <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Número de Documento</label>
+                  <input 
+                  type="text" 
+                  className="form-control text-white" 
+                  style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                  value={editData.persona.numeroDocumento} 
+                  onChange={e => handlePersonaChange('documento', e.target.value)} required />
+                  </div>
+
                   
-                  <div className="col-md-4 px-1">
+                  <div className="col-md-3 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Rol del Sistema</label>
                     <select 
                       className="form-select text-white" 
@@ -111,11 +143,48 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
                       ))}
                     </select>
                   </div>
-                  <div className="col-md-4 px-1">
+
+
+                  <div className="col-md-3 px-1">
+                    <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Cargo</label>
+                    <input 
+                      type="text" 
+                      className="form-control text-white" 
+                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                      placeholder="Ej: Programador"
+                      value={editData.cargo} 
+                      onChange={e => setEditData({ ...editData, cargo: e.target.value })} 
+                      required pattern="[A-Za-z\s]+"
+                      onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Cargo No puede Estar Vacío");
+                      else if (e.target.validity.patternMismatch) e.target.setCustomValidity("El Campo de Apellido solo debe contener letras");
+                      }} onInput={(e: any) => e.target.setCustomValidity("")}/>
+                    </div>
+
+
+                  <div className="col-md-3 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Salario ($)</label>
-                    <input type="number" className="form-control text-white font-monospace" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.salario} onChange={e => setEditData({...editData, salario: Number(e.target.value)})} />
+                    <input 
+                      type="text" 
+                      className="form-control text-white font-monospace" 
+                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                      placeholder="0"
+                      value={editData.salario === 0 ? '' : editData.salario} 
+                      onChange={e => {
+                        const valor = e.target.value;
+                        if (valor === '') {
+                          setEditData({ ...editData, salario: '' });
+                        } else {
+                          const numero = Number(valor);
+                          if (!isNaN(numero)) {
+                            setEditData({ ...editData, salario: numero });
+                          }
+                        }
+                      }}
+                    />
                   </div>
-                  <div className="col-md-4 px-1">
+
+                  <div className="col-md-3 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Estado</label>
                     <select className="form-select text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.estado} onChange={e => setEditData({ ...editData, estado: e.target.value })}>
                       <option value="Activo" style={{ backgroundColor: '#1a1a1c' }}>Activo</option>
@@ -138,13 +207,29 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
       {mostrarConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered" style={{ maxWidth: '400px' }}>
-            <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #3b82f6', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
-              <i className="bi bi-shield-lock text-info fs-1 mb-2"></i>
+            {/* Cambiamos el borde a violeta */}
+            <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
+              {/* Cambiamos el color del icono */}
+              <i className="bi bi-shield-lock fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">¿Actualizar Perfil?</h5>
               <p className="small" style={{ color: '#a1a1aa' }}>Se modificarán las credenciales y permisos de acceso para este usuario.</p>
+              
               <div className="d-flex justify-content-center gap-2 mt-3">
-                <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px' }} onClick={() => setMostrarConfirmacion(false)}>Revisar</button>
-                <button className="btn btn-info btn-sm px-3 text-dark fw-bold" style={{ borderRadius: '6px' }} onClick={handleGuardarDefinitivo}>Confirmar</button>
+                <button 
+                  className="btn btn-outline-light btn-sm px-3" 
+                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} 
+                  onClick={() => setMostrarConfirmacion(false)}
+                >
+                  Volver
+                </button>
+                {/* Cambiamos el color del botón Confirmar a violeta */}
+                <button 
+                  className="btn btn-sm px-3 text-white fw-bold" 
+                  style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} 
+                  onClick={handleGuardarDefinitivo}
+                >
+                  Confirmar
+                </button>
               </div>
             </div>
           </div>

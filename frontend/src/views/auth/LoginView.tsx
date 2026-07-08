@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { LoginFeedbackModal } from '../../features/modals/LoginFeedbackModal';
+import fondoImg from '../../assets/fondo-izq.png'; 
+import logoGesta from '../../assets/logo-gestapro.png';
+import logoSur from '../../assets/logo-elsur.png';
 
 interface LoginViewProps {
   onLoginExitoso: (usuario: any) => void;
@@ -77,75 +80,76 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
   };
 
   return (
-    <>
-      <div className="d-flex justify-content-center align-items-center vh-100" style={{ backgroundColor: '#18181b' }}>
-        <form 
-          onSubmit={handleLogin} 
-          className="p-4 rounded bg-dark border text-white" 
-          style={{ width: '360px', borderColor: '#27272a' }}
-        >
+    <div className="container-fluid min-vh-100 p-0 m-0 d-flex flex-column flex-md-row">
+      {/* IZQUIERDA: GESTAPRO */}
+      <div 
+        className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center"
+        style={{
+          backgroundColor: '#1a0b2e',
+          backgroundImage: `url(${fondoImg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          borderRight: '1px solid #4c1d95'
+        }}
+      >
+        <img src={logoGesta} alt="GestaPro" style={{ maxWidth: '500px' }} />
+      </div>
+
+      {/* DERECHA: LOGIN */}
+      <div 
+        className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center"
+        style={{ backgroundColor: '#1a1a1c' }}
+      >
+        <form onSubmit={handleLogin} style={{ width: '100%', maxWidth: '300px' }}>
+          
+          {/* Logo el SUR */}
           <div className="text-center mb-4">
-            <i className="bi bi-shield-lock-fill text-info fs-1 mb-2"></i>
-            <h3 className="fw-bold m-0">Iniciar Sesión</h3>
-            <p className="text-secondary small">Gestión de Sistemas - El Sur</p>
+            <img src={logoSur} alt="El SUR" className="mb-2" style={{ maxWidth: '200px' }} />
+            <h2 className="fs-3 fw-bold text-white m-0">el SUR</h2>
           </div>
 
+          {/* Inputs */}
           <div className="mb-3">
-            <label className="form-label small text-light">Usuario</label>
-            <div className="input-group">
-              <span className="input-group-text bg-zinc border-secondary text-secondary">
-                <i className="bi bi-person-fill"></i>
-              </span>
-              <input 
-                type="text"
-                className="form-control bg-dark border-secondary text-white" 
-                placeholder="Ingrese su usuario" 
-                required
-                value={credentials.nombreUsuario}
-                onChange={e => setCredentials({...credentials, nombreUsuario: e.target.value})} 
-              />
-            </div>
+            <label className="form-label text-white small">Usuario</label>
+            <input 
+              type="text" className="form-control bg-dark border-secondary text-white" 
+              placeholder="Ingrese el Nombre de Usuario" value={credentials.nombreUsuario}
+              onChange={e => setCredentials({...credentials, nombreUsuario: e.target.value})} required
+            />
           </div>
 
           <div className="mb-4">
-            <label className="form-label small text-light">Contraseña</label>
-            <div className="input-group">
-              <span className="input-group-text bg-zinc border-secondary text-secondary">
-                <i className="bi bi-lock-fill"></i>
-              </span>
-              <input 
-                type={verPassword ? 'text' : 'password'} 
-                className="form-control bg-dark border-secondary text-white" 
-                placeholder="Ingrese su contraseña" 
-                required
-                value={credentials.password}
-                onChange={e => setCredentials({...credentials, password: e.target.value})} 
-              />
-              <button 
-                type="button"
-                className="btn btn-outline-secondary border-secondary bg-dark text-secondary"
-                onClick={() => setVerPassword(!verPassword)}
-              >
-                <i className={`bi ${verPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
-              </button>
-            </div>
-          </div>
+          <label className="form-label text-white small">Contraseña</label>
+          <div className="input-group">
+          <input 
+          type={verPassword ? 'text' : 'password'} 
+          className="form-control bg-dark border-secondary text-white" 
+          placeholder="Ingrese la Contraseña" 
+          value={credentials.password}
+          onChange={e => setCredentials({...credentials, password: e.target.value})} 
+          required
+          />
+          <button 
+          type="button"
+          className="btn btn-outline-secondary border-secondary bg-dark text-secondary"
+          onClick={() => setVerPassword(!verPassword)}
+        >
+      <i className={`bi ${verPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
+    </button>
+  </div>
+</div>
 
-          <button type="submit" className="btn btn-info w-100 mb-2 fw-semibold text-dark">
-            Ingresar al Sistema
+          {/* Botones */}
+          <button type="submit" className="btn btn-outline-secondary w-100 mb-2 text-white" style={{ borderColor: '#4c1d95' }}>
+            Iniciar Sesión
           </button>
-          <button type="button" className="btn btn-outline-secondary w-100 text-white border-secondary" onClick={onVolver}>
+          <button type="button" className="btn btn-outline-secondary w-100 text-white" style={{ borderColor: '#4c1d95' }} onClick={onVolver}>
             Volver
           </button>
         </form>
       </div>
 
-      <LoginFeedbackModal 
-        mostrar={modalFeedback.mostrar}
-        tipo={modalFeedback.tipo}
-        mensaje={modalFeedback.mensaje}
-        onAceptar={handleCerrarModalFeedback}
-      />
-    </>
+      <LoginFeedbackModal {...modalFeedback} onAceptar={handleCerrarModalFeedback} />
+    </div>
   );
 };

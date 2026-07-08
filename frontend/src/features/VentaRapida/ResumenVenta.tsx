@@ -1,5 +1,4 @@
-import React from 'react';
-
+import React, { useState } from 'react';
 interface Props {
   total: number;
   onCancelar: () => void;
@@ -7,6 +6,11 @@ interface Props {
 }
 
 export const ResumenVenta: React.FC<Props> = ({ total, onCancelar, onCompletar }) => {
+
+  const handleCompletar = () => {
+    onCompletar();  
+  };
+
   return (
     <>
       <div className="mb-4">
@@ -27,7 +31,7 @@ export const ResumenVenta: React.FC<Props> = ({ total, onCancelar, onCompletar }
         <button 
           className="btn btn-success px-4" 
           style={{ backgroundColor: '#3d824b', border: 'none' }}
-          onClick={onCompletar}
+          onClick={handleCompletar}
         >
           Completar Venta Rápida
         </button>

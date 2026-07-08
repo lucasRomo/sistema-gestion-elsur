@@ -20,6 +20,9 @@ public class ProveedorServiceImpl implements ProveedorService {
 
     @Override
     public Proveedor guardar(Proveedor proveedor) {
+        if (proveedor.getEstado() == null || proveedor.getEstado().trim().isEmpty()) {
+            proveedor.setEstado("Activo");
+        }
         return proveedorRepository.save(proveedor);
     }
 

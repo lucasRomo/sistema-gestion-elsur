@@ -1,5 +1,6 @@
 // src/components/EmpleadoModal.tsx
 import React from 'react';
+import logoGesta from '../../assets/logo-gestaprog.png'; // Ajusta la ruta a tu carpeta de assets
 
 interface EmpleadoModalProps {
   formData: any;
@@ -18,9 +19,12 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
       <div className="modal-dialog w-100 p-3" style={{ maxWidth: '440px' }}>
         <div className="modal-content p-4 rounded-4 border-secondary position-relative" style={{ backgroundColor: '#1e1e22', border: '1px solid #3f3f46' }}>
           
+
           <div className="position-absolute top-50 start-50 translate-middle opacity-5 text-center pointer-events-none" style={{ zIndex: 0 }}>
-            <h1 style={{ fontSize: '6rem' }}>{"{G}"}</h1>
+            <img src={logoGesta} alt="GestaPro" style={{ width: '250px' }} 
+          />
           </div>
+
 
           <div className="position-relative" style={{ zIndex: 1 }}>
             <form onSubmit={onRegistrar}>
@@ -42,15 +46,26 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
                   <input type="date" className="form-control bg-dark text-white border-secondary" value={formData.fechaContratacion} onChange={e => handleChange('fechaContratacion', e.target.value)} required />
                 </div>
 
+
                 <div className="col-12">
                   <label className="form-label text-light small">Cargo:</label>
-                  <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Ingrese el Cargo" value={formData.cargo} onChange={e => handleChange('cargo', e.target.value)} required />
+                  <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Ingrese el Cargo" value={formData.cargo} onChange={e => handleChange('cargo', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+" 
+                  onInvalid={(e: any) => {
+                  if (e.target.validity.valueMissing) e.target.setCustomValidity("Completa este campo");
+                  else e.target.setCustomValidity("El Campo Cargo solo debe contener letras");
+                  }}
+                  onInput={(e: any) => e.target.setCustomValidity("")}/>
                 </div>
 
+
                 <div className="col-12 mb-4">
-                  <label className="form-label text-light small">Salario:</label>
-                  <input type="number" step="0.01" className="form-control bg-dark text-white border-secondary" placeholder="Ingrese el Salario" value={formData.salario} onChange={e => handleChange('salario', e.target.value)} required />
+                 <label className="form-label text-light small">Salario:</label>
+                 <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Ingrese el Salario" value={formData.salario} onChange={(e) => { const value = e.target.value;
+                 if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                 handleChange('salario', value);}}}
+                 required/>
                 </div>
+                
               </div>
 
               <div className="d-flex flex-column gap-2 mt-2">

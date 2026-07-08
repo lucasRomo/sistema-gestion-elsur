@@ -108,14 +108,29 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                 </h5>
                 
                 <div className="row g-3 mb-4 mx-0">
+
+
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Nombre/Empresa</label>
-                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.nombre} onChange={e => handlePersonaChange('nombre', e.target.value)} required />
+                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.nombre} onChange={e => handlePersonaChange('nombre', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+"
+                    onInvalid={(e: any) => {
+                    if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre No puede Estar Vacío");
+                    else e.target.setCustomValidity("El Campo de Nombre solo debe contener letras");
+                    }}
+                    onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
+
+                  
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Apellido</label>
-                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.apellido} onChange={e => handlePersonaChange('apellido', e.target.value)} required />
+                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.apellido} onChange={e => handlePersonaChange('apellido', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+"
+                    onInvalid={(e: any) => {
+                    if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Apellido No puede Estar Vacío");
+                    else e.target.setCustomValidity("El Campo de Apellido No puede Estar Vacío");
+                    }}
+                    onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
+
                   
                   {/* Selector dinámico de tipo de documento */}
                   <div className="col-md-4 px-1">
@@ -138,10 +153,21 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                     <label className="form-label small fw-medium font-monospace" style={{ color: '#a1a1aa' }}>N° Documento / CUIT</label>
                     <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.numeroDocumento} onChange={e => handlePersonaChange('numeroDocumento', e.target.value)} required />
                   </div>
+                  
+
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Teléfono</label>
-                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.telefono} onChange={e => handlePersonaChange('telefono', e.target.value)} />
+                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.telefono} onChange={e => handlePersonaChange('telefono', e.target.value)} required pattern="[0-9]+"
+                    onInvalid={(e: any) => {
+                    if (e.target.validity.valueMissing) {
+                    e.target.setCustomValidity("El Campo de Teléfono No puede Estar Vacío");
+                    } else if (e.target.validity.patternMismatch) {
+                    e.target.setCustomValidity("El Campo de Teléfono No puede Estar Vacío");
+                    }}}
+                    onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
+
+
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Email</label>
                     <input type="email" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.email} onChange={e => handlePersonaChange('email', e.target.value)} />
@@ -158,14 +184,25 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Razón Social</label>
                     <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.razonSocial} onChange={e => setEditData({ ...editData, razonSocial: e.target.value })} />
                   </div>
+
+
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Persona de Contacto</label>
-                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.personaDeContacto} onChange={e => setEditData({ ...editData, personaDeContacto: e.target.value })} />
+                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.personaDeContacto} onChange={e => setEditData({ ...editData, personaDeContacto: e.target.value })} required pattern="[A-Za-zÁ-Úá-ú\s]+"
+                    onInvalid={(e: any) => {
+                    if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Persona de Contacto No puede Estar Vacío");
+                    else e.target.setCustomValidity("El Campo persona de Contacto solo debe contener letras");
+                    }}
+                    onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
+
+
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Límite de Crédito</label>
                     <input type="number" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.limiteCredito} onChange={e => setEditData({ ...editData, limiteCredito: Number(e.target.value) })} />
                   </div>
+
+
                   <div className="col-md-6 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Condición de Pago</label>
                     <input 
@@ -174,9 +211,15 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                       style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }}
                       placeholder="Ej: Efectivo, Cuenta Corriente, 30 días..." 
                       value={editData.condicionDePago} 
-                      onChange={e => setEditData({ ...editData, condicionDePago: e.target.value })} 
-                    />
+                      onChange={e => setEditData({ ...editData, condicionDePago: e.target.value })} required pattern="[A-Za-zÁ-Úá-ú\s]+"
+                      onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Condición de Pago No puede Estar Vacío");
+                      else e.target.setCustomValidity("El Campo Condición de Pago solo debe contener letras");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")} />
                   </div>
+
+
                   <div className="col-md-6 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Estado</label>
                     <select className="form-select text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.estado} onChange={e => setEditData({ ...editData, estado: e.target.value })}>
@@ -202,13 +245,13 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
       {mostrarConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered" style={{ maxWidth: '400px' }}>
-            <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #eab308', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
-              <i className="bi bi-exclamation-triangle text-warning fs-1 mb-2"></i>
+            <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
+              <i className="bi bi-exclamation-triangle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">¿Confirmar Modificaciones?</h5>
               <p className="small" style={{ color: '#a1a1aa' }}>Se sobreescribirán de forma permanente los datos del cliente en la base de datos de El Sur.</p>
               <div className="d-flex justify-content-center gap-2 mt-3">
-                <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px' }} onClick={() => setMostrarConfirmacion(false)}>Revisar</button>
-                <button className="btn btn-warning btn-sm px-3 text-dark fw-bold" style={{ borderRadius: '6px' }} onClick={handleGuardarDefinitivo}>Confirmar</button>
+                <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
+                <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} onClick={handleGuardarDefinitivo}>Confirmar</button>
               </div>
             </div>
           </div>

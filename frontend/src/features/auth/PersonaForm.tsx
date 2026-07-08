@@ -5,9 +5,10 @@ interface PersonaFormProps {
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   onSiguiente: (e: React.FormEvent) => void;
   onVolver: () => void;
+  titulo?: string;
 }
 
-export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData, onSiguiente, onVolver }) => {
+export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData, onSiguiente, onVolver, titulo = "Registrar Nuevo Cliente" }) => {
   const [errores, setErrores] = useState<any>({});
   // Lista dinámica de tipos de documento traída de la API de Java
   const [tiposDocumento, setTiposDocumento] = useState<any[]>([]);
@@ -35,6 +36,19 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
     setFormData((prev: any) => ({ ...prev, [field]: value }));
     // Limpiar error al editar el campo correspondiente
     if (errores[field]) setErrores((prev: any) => ({ ...prev, [field]: null }));
+  };
+
+  const getMaxLength = () => {
+  const tipo = tiposDocumento.find(t => t.idTipoDocumento.toString() === formData.tipoDocumento);
+  if (!tipo) return 11;
+
+  switch (tipo.nombre.toUpperCase()) {
+    case 'DNI': return 8;
+    case 'PASAPORTE': return 9;
+    case 'CUIT':
+    case 'CUIL': return 11;
+    default: return 11;
+  }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,18 +82,33 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
   return (
     <form onSubmit={handleSubmit} className="p-1">
       <h3 className="text-white text-center mb-4 fw-bold text-info">
-        <i className="bi bi-person-plus-fill me-2"></i>Registrar Nuevo Cliente
+        <i className="bi bi-person-plus-fill me-2"></i>{titulo}
       </h3>
       
-      <div className="row g-3 mx-0">
+       <div className="row g-3 mx-0">
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Nombre:</label>
-          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Nombre" value={formData.nombre} onChange={e => handleChange('nombre', e.target.value)} required />
-        </div>
+          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Nombre" value={formData.nombre} onChange={e => handleChange('nombre', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+" 
+          onInvalid={(e: any) => {
+          if (e.target.validity.valueMissing) {
+          e.target.setCustomValidity("El Campo de Nombre No puede Estar Vacío");
+          } else {
+          e.target.setCustomValidity("El Campo de Nombre solo debe contener letras");
+          }}}
+          onInput={(e: any) => e.target.setCustomValidity("")}/>
+       </div>
+
+        
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Apellido:</label>
-          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Apellido" value={formData.apellido} onChange={e => handleChange('apellido', e.target.value)} required />
-        </div>
+          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Apellido" value={formData.apellido} onChange={e => handleChange('apellido', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+" 
+          onInvalid={(e: any) => {
+          if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Apellido No puede Estar Vacío");
+          else e.target.setCustomValidity("El Campo de Apellido solo debe contener letras");
+          }}
+          onInput={(e: any) => e.target.setCustomValidity("")}/>
+       </div>
+
 
         {/* Selector Dinámico Vinculado al idTipoDocumento */}
         <div className="col-md-6 px-1">
@@ -99,56 +128,135 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
           </select>
         </div>
         
-        <div className="col-md-6 px-1">
-          <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>N° de Documento / CUIT:</label>
-          <input type="text" className={`form-control bg-dark text-white border-secondary ${errores.numeroDocumento ? 'is-invalid' : ''}`} placeholder="N° de Documento" value={formData.numeroDocumento} onChange={e => handleChange('numeroDocumento', e.target.value)} required />
-          {errores.numeroDocumento && <div className="text-danger small mt-1"><i className="bi bi-exclamation-circle me-1"></i>{errores.numeroDocumento}</div>}
-        </div>
+      <div className="col-md-6 px-1">
+  <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>N° de Documento / CUIT:</label>
+  <input 
+    type="text" 
+    className={`form-control bg-dark text-white border-secondary ${errores.numeroDocumento ? 'is-invalid' : ''}`} 
+    placeholder="N° de Documento" 
+    value={formData.numeroDocumento || ""} 
+    onChange={e => handleChange('numeroDocumento', e.target.value)}
+    // Definimos el patrón basado en la longitud que definimos antes
+    pattern={`[0-9]{${getMaxLength()}}`}
+    onInvalid={(e: any) => {
+      const tipo = tiposDocumento.find(t => t.idTipoDocumento.toString() === formData.tipoDocumento);
+      const nombreTipo = tipo ? tipo.nombre : "documento";
+      const longitudRequerida = getMaxLength();
+
+      if (e.target.validity.patternMismatch) {
+        e.target.setCustomValidity(`El ${nombreTipo} debe tener ${longitudRequerida} números para continuar`);
+      } else if (e.target.validity.valueMissing) {
+        e.target.setCustomValidity("Este campo es obligatorio");
+      }
+    }}
+    onInput={(e: any) => e.target.setCustomValidity("")}
+    required 
+  />
+  {errores.numeroDocumento && <div className="text-danger small mt-1"><i className="bi bi-exclamation-circle me-1"></i>{errores.numeroDocumento}</div>}
+</div>
 
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Email:</label>
           <input type="email" className={`form-control bg-dark text-white border-secondary ${errores.email ? 'is-invalid' : ''}`} placeholder="Email@example.com" value={formData.email} onChange={e => handleChange('email', e.target.value)} required />
           {errores.email && <div className="text-danger small mt-1"><i className="bi bi-exclamation-circle me-1"></i>{errores.email}</div>}
         </div>
+
+
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Teléfono:</label>
-          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Teléfono" value={formData.telefono} onChange={e => handleChange('telefono', e.target.value)} />
+          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Teléfono" value={formData.telefono} onChange={e => handleChange('telefono', e.target.value)} required pattern="[0-9]+"
+          onInvalid={(e: any) => {
+          if (e.target.validity.valueMissing) {
+          e.target.setCustomValidity("El Campo de Teléfono No puede Estar Vacío");
+          } else if (e.target.validity.patternMismatch) {
+          e.target.setCustomValidity("En el Campo Telefono solo se permiten números");
+          }}}
+          onInput={(e: any) => e.target.setCustomValidity("")}/>
         </div>
+
 
         <div className="col-md-8 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Calle:</label>
-          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Calle" value={formData.calle} onChange={e => handleChange('calle', e.target.value)} required />
+          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Calle" value={formData.calle} onChange={e => handleChange('calle', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+" 
+          onInvalid={(e: any) => {
+          if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Calle No puede Estar Vacío");
+          else e.target.setCustomValidity("El Campo de Calle solo debe contener letras");
+          }}
+          onInput={(e: any) => e.target.setCustomValidity("")}/>
         </div>
+
+
         <div className="col-md-4 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Número:</label>
-          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Número" value={formData.numero} onChange={e => handleChange('numero', e.target.value)} required />
+          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Número" value={formData.numero} onChange={e => handleChange('numero', e.target.value)} required pattern="[0-9]+" 
+          onInvalid={(e: any) => {
+          if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Número No puede Estar Vacío");
+          else e.target.setCustomValidity("El Campo de Número solo debe contener Números");
+          }}
+          onInput={(e: any) => e.target.setCustomValidity("")}/>
         </div>
+
 
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Piso:</label>
           <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Piso (opcional)" value={formData.piso} onChange={e => handleChange('piso', e.target.value)} />
         </div>
+
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Departamento:</label>
           <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Departamento (Opcional)" value={formData.depto} onChange={e => handleChange('depto', e.target.value)} />
         </div>
 
+
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Cód. Postal:</label>
-          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Código Postal" value={formData.codPostal} onChange={e => handleChange('codPostal', e.target.value)} required />
+          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Código Postal" value={formData.codPostal} onChange={e => handleChange('codPostal', e.target.value)} required pattern="[0-9]+" 
+          onInvalid={(e: any) => {
+          if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Código Postal No puede Estar Vacío");
+          else e.target.setCustomValidity("El Campo de Código postal solo debe contener Números");
+          }}
+          onInput={(e: any) => e.target.setCustomValidity("")}/>
         </div>
+
+
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Ciudad:</label>
-          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Ciudad (Opcional)" value={formData.ciudad} onChange={e => handleChange('ciudad', e.target.value)} />
+          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Ciudad (Opcional)" value={formData.ciudad} onChange={e => handleChange('ciudad', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+" 
+          onInvalid={(e: any) => {
+          if (e.target.validity.valueMissing) {
+          e.target.setCustomValidity("El Campo de Ciudad No puede Estar Vacío");
+          } else if (e.target.validity.patternMismatch) {
+          e.target.setCustomValidity("El campo de Ciudad solo debe contener letras");
+          }}}
+          onInput={(e: any) => e.target.setCustomValidity("")} />
         </div>
+
 
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Provincia:</label>
-          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Provincia (Opcional)" value={formData.provincia} onChange={e => handleChange('provincia', e.target.value)} />
+          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Provincia (Opcional)" value={formData.provincia} onChange={e => handleChange('provincia', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+" 
+          onInvalid={(e: any) => {
+          if (e.target.validity.valueMissing) {
+          e.target.setCustomValidity("El Campo de Província No puede Estar Vacío");
+          } 
+          else if (e.target.validity.patternMismatch) {
+          e.target.setCustomValidity("El Campo de Província solo debe contener letras");
+          }}}
+          onInput={(e: any) => e.target.setCustomValidity("")}/>
         </div>
+
+
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>País:</label>
-          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="País (Opcional)" value={formData.pais} onChange={e => handleChange('pais', e.target.value)} />
+          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="País (Opcional)" value={formData.pais} onChange={e => handleChange('pais', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+" 
+          onInvalid={(e: any) => {
+          if (e.target.validity.valueMissing) {
+          e.target.setCustomValidity("El Campo de País No puede Estar Vacío");
+          } 
+          else if (e.target.validity.patternMismatch) {
+          e.target.setCustomValidity("El Campo de País solo debe contener letras");
+          }}}
+          onInput={(e: any) => e.target.setCustomValidity("")}/>
         </div>
       </div>
 

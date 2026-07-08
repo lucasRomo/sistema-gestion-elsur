@@ -37,7 +37,9 @@ public class DataInitializer implements CommandLineRunner {
         if (tipoDocumentoRepository.count() == 0) {
             jdbcTemplate.execute("INSERT INTO tipo_documento (id_tipo_documento, nombre_tipo) VALUES (1, 'DNI')");
             jdbcTemplate.execute("INSERT INTO tipo_documento (id_tipo_documento, nombre_tipo) VALUES (2, 'CUIT')");
-            jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('tipo_documento', 'id_tipo_documento'), 2)");
+            jdbcTemplate.execute("INSERT INTO tipo_documento (id_tipo_documento, nombre_tipo) VALUES (3, 'CUIL')");
+            jdbcTemplate.execute("INSERT INTO tipo_documento (id_tipo_documento, nombre_tipo) VALUES (4, 'Pasaporte')");
+            jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('tipo_documento', 'id_tipo_documento'), 4)");
             System.out.println("[DataInitializer] -> Tipos de Documento insertados.");
         }
 

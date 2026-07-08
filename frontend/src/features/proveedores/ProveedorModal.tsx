@@ -22,6 +22,8 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   const [showCategorias, setShowCategorias] = useState<boolean>(false);
   const [nuevaCategoria, setNuevaCategoria] = useState<string>('');
 
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+
   const cargarCategorias = async () => {
     try {
       const res = await fetch('http://localhost:8080/api/tipos-proveedor');
@@ -77,8 +79,22 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     }
   };
 
-  // Corrección crucial: Si no se debe mostrar o formState aún es null, no renderizamos.
-  // Esto evita que los inputs intenten leer propiedades de un 'null'.
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isEditing) {
+    setMostrarConfirmacion(true);
+  } else {
+    onSave(e);
+  }
+  };
+
+  const handleGuardarDefinitivo = (e: React.FormEvent) => {
+    onSave(e); // Ejecuta la función original que guarda
+    setMostrarConfirmacion(false);
+  };
+
+
+
   if (!show || !formState) return null;
 
   return (
@@ -94,39 +110,64 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
               <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
             </div>
 
-            <form onSubmit={onSave}>
+            <form onSubmit={handleFormSubmit}>
               <div className="modal-body">
                 
                 <h6 className="text-white-50 border-bottom border-dark pb-1 mb-3">1. Datos Comerciales</h6>
+
+                
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
                     <label className="form-label small">Nombre Comercial / Empresa</label>
                     <input 
-                      type="text" required className="form-control bg-dark text-white border-secondary"
+                      type="text" required pattern="[A-Za-zÁ-Úá-ú\s]+" 
+                      className="form-control bg-dark text-white border-secondary"
                       value={formState.nombreComercial || ''}
                       onChange={(e) => setFormState({ ...formState, nombreComercial: e.target.value })}
-                    />
+                      onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre Comercial No puede Estar Vacío");
+                      else if (e.target.validity.patternMismatch) e.target.setCustomValidity("El Campo de Nombre Comercial solo debe contener letras");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
+
+
                   <div className="col-md-6">
                     <label className="form-label small">Nombre del Contacto</label>
                     <input 
-                      type="text" className="form-control bg-dark text-white border-secondary"
+                      type="text" required pattern="[A-Za-zÁ-Úá-ú\s]+" 
+                      className="form-control bg-dark text-white border-secondary"
                       value={formState.contactoNombre || ''}
                       onChange={(e) => setFormState({ ...formState, contactoNombre: e.target.value })}
-                    />
+                      onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre de Contacto No puede Estar Vacío");
+                      else if (e.target.validity.patternMismatch) e.target.setCustomValidity("El Campo de Nombre de Contacto solo debe contener letras");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
                 </div>
+
 
                 <div className="row g-3 mb-4">
                   <div className="col-md-4">
                     <label className="form-label small">Email de Contacto</label>
                     <input 
-                      type="email" className="form-control bg-dark text-white border-secondary"
+                      type="email" 
+                      required 
+                      className="form-control bg-dark text-white border-secondary"
                       value={formState.emailContacto || ''}
                       onChange={(e) => setFormState({ ...formState, emailContacto: e.target.value })}
-                    />
+                      onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) {
+                      e.target.setCustomValidity("El Campo de Email No puede Estar Vacío");
+                      } 
+                      else if (e.target.validity.typeMismatch) {
+                      e.target.setCustomValidity("Ingresa un formato de email válido (ej: nombre@dominio.com)");
+                      }}}
+                      onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
                   
+
                   <div className="col-md-4">
                     <label className="form-label small">Tipo de Proveedor</label>
                     <div className="input-group">
@@ -171,29 +212,44 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
                   </div>
                 </div>
 
+                {!isEditing && (
+                <>
                 <h6 className="text-white-50 border-bottom border-dark pb-1 mb-3">2. Dirección / Localización</h6>
                 
+
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
                     <label className="form-label small">Calle</label>
                     <input 
-                      type="text" required className="form-control bg-dark text-white border-secondary"
+                      type="text" required pattern="[A-Za-zÁ-Úá-ú\s]+" className="form-control bg-dark text-white border-secondary"
                       value={formState.direccion?.calle || ''}
                       onChange={(e) => setFormState({
                         ...formState, direccion: { ...formState.direccion!, calle: e.target.value }
                       })}
-                    />
+                      onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Calle No puede Estar Vacío");
+                      else if (e.target.validity.patternMismatch) e.target.setCustomValidity("En el campo Calle solo se permiten letras");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
+
+
                   <div className="col-md-2">
                     <label className="form-label small">Número</label>
                     <input 
-                      type="text" required className="form-control bg-dark text-white border-secondary"
+                      type="text" required pattern="[0-9]+" className="form-control bg-dark text-white border-secondary"
                       value={formState.direccion?.numero || ''}
                       onChange={(e) => setFormState({
                         ...formState, direccion: { ...formState.direccion!, numero: e.target.value }
                       })}
-                    />
-                  </div>
+                      onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Número No puede Estar Vacío");
+                      else e.target.setCustomValidity("El Campo Número solo debe contener Números");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}/>
+                    </div>
+
+
                   <div className="col-md-2">
                     <label className="form-label small">Piso</label>
                     <input 
@@ -216,49 +272,85 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
                   </div>
                 </div>
 
+
                 <div className="row g-3">
                   <div className="col-md-3">
                     <label className="form-label small">Cód. Postal</label>
                     <input 
-                      type="text" required className="form-control bg-dark text-white border-secondary" placeholder="Ej: 3000"
+                      type="text" required pattern="[0-9]+" className="form-control bg-dark text-white border-secondary" placeholder="Ej: 3000"
                       value={formState.direccion?.codigoPostal || ''}
                       onChange={(e) => setFormState({
                         ...formState, direccion: { ...formState.direccion!, codigoPostal: e.target.value }
                       })}
-                    />
+                      onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Código Postal No puede Estar Vacío");
+                      else e.target.setCustomValidity("El Campo Código Postal solo debe contener Números");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
+
+
                   <div className="col-md-3">
                     <label className="form-label small">Ciudad</label>
                     <input 
-                      type="text" required className="form-control bg-dark text-white border-secondary"
+                      type="text" required pattern="[A-Za-zÁ-Úá-ú\s]+" className="form-control bg-dark text-white border-secondary"
                       value={formState.direccion?.ciudad || ''}
                       onChange={(e) => setFormState({
                         ...formState, direccion: { ...formState.direccion!, ciudad: e.target.value }
                       })}
-                    />
+                      onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) {
+                      e.target.setCustomValidity("El Campo de Ciudad No puede Estar Vacío");
+                      } else if (e.target.validity.patternMismatch) {
+                      e.target.setCustomValidity("En el campo Ciudad solo debe contener letras");
+                      }}}
+                      onInput={(e: any) => e.target.setCustomValidity("")} />
                   </div>
+
+
                   <div className="col-md-3">
                     <label className="form-label small">Provincia</label>
                     <input 
-                      type="text" required className="form-control bg-dark text-white border-secondary"
+                      type="text" required pattern="[A-Za-zÁ-Úá-ú\s]+" className="form-control bg-dark text-white border-secondary"
                       value={formState.direccion?.provincia || ''}
                       onChange={(e) => setFormState({
                         ...formState, direccion: { ...formState.direccion!, provincia: e.target.value }
                       })}
-                    />
+                      onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) {
+                      e.target.setCustomValidity("El Campo de Provincia No puede Estar Vacío");
+                      } 
+                      else if (e.target.validity.patternMismatch) {
+                      e.target.setCustomValidity("En el campo Provincia solo debe contener letras");
+                      }}}
+                      onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
+
+
                   <div className="col-md-3">
                     <label className="form-label small">País</label>
                     <input 
-                      type="text" required className="form-control bg-dark text-white border-secondary"
-                      value={formState.direccion?.pais || 'Argentina'}
+                      type="text" required pattern="[A-Za-zÁ-Úá-ú\s]+" className="form-control bg-dark text-white border-secondary"
+                      value={formState.direccion?.pais || ''}
                       onChange={(e) => setFormState({
                         ...formState, direccion: { ...formState.direccion!, pais: e.target.value }
                       })}
-                    />
+                      onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) {
+                      e.target.setCustomValidity("El Campo de País No puede Estar Vacío");
+                      } 
+                      else if (e.target.validity.patternMismatch) {
+                      e.target.setCustomValidity("En el campo País solo debe contener letras");
+                      }}}
+                      onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
-                </div>
 
+
+                </div>
+              </>
+              )}
+
+              
               </div>
               <div className="modal-footer border-top border-secondary">
                 <button style={{ backgroundColor: '#b91c1c', border: 'none' }} type="button" className="btn btn-secondary px-4" onClick={onClose}>Cancelar</button>
@@ -269,6 +361,24 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
           </div>
         </div>
       </div>
+
+      
+      {mostrarConfirmacion && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+            <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
+              <i className="bi bi-exclamation-triangle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
+              <h5 className="fw-bold">¿Confirmar Modificaciones?</h5>
+              <p className="small" style={{ color: '#a1a1aa' }}>Se sobreescribirán de forma permanente los datos del proveedor.</p>
+              <div className="d-flex justify-content-center gap-2 mt-3">
+                <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
+                <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} onClick={handleGuardarDefinitivo}>Confirmar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* SUB-MODAL GESTIÓN DE CATEGORÍAS */}
       {showCategorias && (
@@ -323,7 +433,6 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
               <div className="modal-footer border-top border-secondary py-2">
                 <button style={{ backgroundColor: '#b91c1c', border: 'none' }} type="button" className="btn btn-sm btn-secondary" onClick={() => setShowCategorias(false)}>Cerrar</button>
               </div>
-
             </div>
           </div>
         </div>

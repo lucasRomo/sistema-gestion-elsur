@@ -82,15 +82,16 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1055 }}>
       <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content text-white font-monospace" style={{ backgroundColor: '#18181b', border: '1px solid #16a34a' }}>
+        <div className="modal-content text-white font-monospace" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
           
           <div className="modal-header border-bottom border-secondary">
-            <h5 className="modal-title fw-bold" style={{ color: '#16a34a' }}>
+            <h5 className="modal-title fw-bold" style={{ color: '#0bc9f8' }}>
               <i className="bi bi-box-seam me-2"></i> 
               {insumoEditando ? 'Editar Insumo' : 'Registrar Nuevo Insumo'}
             </h5>
             <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
           </div>
+
 
           <form onSubmit={handleSubmit}>
             <div className="modal-body p-4">
@@ -102,10 +103,15 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   name="nombreInsumo" 
                   value={formData.nombreInsumo} 
                   onChange={handleChange} 
-                  required 
-                />
+                  required pattern="[A-Za-zÁ-Úá-ú\s]+"
+                  onInvalid={(e: any) => {
+                  if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre de Insumo No puede Estar Vacío");
+                  else if (e.target.validity.patternMismatch) e.target.setCustomValidity("El Campo de Nombre de Insumo solo debe contener Letras");
+                  }}
+                  onInput={(e: any) => e.target.setCustomValidity("")}/>
               </div>
               
+
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <label className="form-label text-white-50 small">Stock Actual</label>

@@ -9,55 +9,61 @@ interface InsumoTablaProps {
 
 export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onVerProveedores }) => {
   return (
-    <div className="table-responsive rounded-3 border border-secondary mb-4" style={{ maxHeight: '65vh', overflowY: 'auto', backgroundColor: '#18181b' }}>
-      <table className="table table-dark table-hover m-0 align-middle text-center font-monospace" style={{ fontSize: '0.85rem' }}>
-        <thead className="table-active sticky-top bg-dark text-secondary" style={{ zIndex: 1 }}>
-          <tr>
-            <th>ID</th>
-            <th>Nombre Insumo</th>
-            <th>Stock Mínimo</th>
-            <th>Stock Actual</th>
-            <th>Tipo de Proveedor</th>
-            <th>Estado</th>
-            <th>Opciones</th>
+    <div className="table-responsive" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
+        <thead>
+          <tr style={{ borderBottom: '2px solid #3f3f46', textAlign: 'left' }}>
+            <th style={{ padding: '12px' }}>ID</th>
+            <th style={{ padding: '12px' }}>Nombre Insumo</th>
+            <th style={{ padding: '12px' }}>Stock Mínimo</th>
+            <th style={{ padding: '12px' }}>Stock Actual</th>
+            <th style={{ padding: '12px' }}>Tipo de Proveedor</th>
+            <th style={{ padding: '12px' }}>Estado</th>
+            <th style={{ padding: '12px', textAlign: 'center' }}>Opciones</th>
           </tr>
         </thead>
         <tbody>
           {insumos.length === 0 ? (
             <tr>
-              <td colSpan={7} className="text-muted py-4">No se encontraron insumos.</td>
+              <td colSpan={7} className="text-center text-muted py-4">No se encontraron insumos.</td>
             </tr>
           ) : (
             insumos.map((i) => (
-              <tr key={i.idInsumo}>
-                <td>{i.idInsumo}</td>
-                <td className="fw-bold">{i.nombreInsumo}</td>
-                <td className="text-warning">{i.stockMinimo}</td>
-                <td className={`fw-bold ${i.stockActual <= i.stockMinimo ? 'text-danger' : 'text-success'}`}>
+              <tr 
+                key={i.idInsumo}
+                style={{ borderBottom: '1px solid #2d2d30' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#27272a'} 
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <td style={{ padding: '12px' }}>{i.idInsumo}</td>
+                <td style={{ padding: '12px' }} className="fw-bold">{i.nombreInsumo}</td>
+                <td style={{ padding: '12px' }} className="text-warning">{i.stockMinimo}</td>
+                <td style={{ padding: '12px' }} className={`fw-bold ${i.stockActual <= i.stockMinimo ? 'text-danger' : 'text-success'}`}>
                   {i.stockActual} {i.stockActual <= i.stockMinimo && <i className="bi bi-exclamation-circle-fill ms-1"></i>}
                 </td>
-                <td>{i.proveedor?.tipoProveedor?.descripcion || '-'}</td>
-                <td>
-                  <span className={`badge px-2 py-1 fw-semibold ${i.estado === 'Activo' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
-                    {i.estado}
+                <td style={{ padding: '12px' }}>{i.proveedor?.tipoProveedor?.descripcion || '-'}</td>
+                <td style={{ padding: '12px' }}>
+                  <span className={`badge ${i.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>
+              {i.estado}
                   </span>
                 </td>
-                <td>
-                  <div className="d-flex gap-2 justify-content-center">
+                <td style={{ padding: '12px' }}>
+                  <div className="d-flex justify-content-center gap-2">
+                    {/* Botones con el estilo que ya definimos globalmente */}
                     <button 
-                      className="btn btn-sm p-0 text-info fs-5" 
+                      className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
+                      style={{ width: '32px', height: '32px' }}
                       onClick={() => onEditar(i)} 
                       title="Editar Insumo"
                     >
                       <i className="bi bi-pencil-square"></i>
                     </button>
                     <button 
-                      className="btn btn-sm p-0 fs-5" 
-                      style={{ color: '#a855f7' }} 
-                      onClick={() => onVerProveedores(i)} 
-                      title="Ver Proveedores del rubro"
-                    >
-                      <i className="bi bi-truck"></i>
+                     className="btn btn-sm d-flex align-items-center justify-content-center btn-truck-custom" 
+                     style={{ width: '32px', height: '32px' }} 
+                     onClick={() => onVerProveedores(i)} 
+                     title="Ver Proveedores del rubro">
+                     <i className="bi bi-truck"></i>
                     </button>
                   </div>
                 </td>

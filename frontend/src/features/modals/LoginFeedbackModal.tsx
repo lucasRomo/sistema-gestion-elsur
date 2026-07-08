@@ -16,14 +16,14 @@ export const LoginFeedbackModal: React.FC<LoginFeedbackModalProps> = ({ mostrar,
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1100 }}>
       <div className="modal-dialog modal-sm modal-dialog-centered" style={{ maxWidth: '380px' }}>
         <div 
-          className={`modal-content bg-dark p-4 text-white text-center border-${esExito ? 'info' : 'danger'}`} 
-          style={{ border: '2px solid' }}
+          className="modal-content p-4 text-white text-center" 
+          style={{ backgroundColor: '#18181b', border: '2px solid #8e45e0' }} // Borde violeta fijo
         >
           <div className="mb-2">
             {esExito ? (
-              <i className="bi bi-check-circle-fill text-info fs-1"></i>
+              <i className="bi bi-check-circle-fill fs-1" style={{ color: '#8e45e0' }}></i>
             ) : (
-              <i className="bi bi-x-circle-fill text-danger fs-1"></i>
+              <i className="bi bi-x-circle-fill fs-1" style={{ color: '#8e45e0' }}></i>
             )}
           </div>
           
@@ -35,7 +35,8 @@ export const LoginFeedbackModal: React.FC<LoginFeedbackModalProps> = ({ mostrar,
           
           <div className="d-flex justify-content-center">
             <button 
-              className={`btn btn-${esExito ? 'info text-dark' : 'danger'} btn-sm px-4 fw-bold`} 
+              className="btn btn-sm px-4 fw-bold text-white" 
+              style={{ backgroundColor: '#8e45e0', borderColor: '#8e45e0' }} // Botón violeta
               onClick={onAceptar}
             >
               Aceptar

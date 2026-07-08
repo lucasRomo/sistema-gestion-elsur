@@ -11,6 +11,8 @@ export const VentaRapida: React.FC = () => {
   const [productoSeleccionado, setProductoSeleccionado] = useState<string>('');
   const [cantidad, setCantidad] = useState<string>('1');
   const [carrito, setCarrito] = useState<CartItem[]>([]);
+  const [confirmarCancelacion, setConfirmarCancelacion] = useState(false);
+  const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -47,7 +49,15 @@ export const VentaRapida: React.FC = () => {
   const calcularTotal = () => carrito.reduce((acc, item) => acc + item.subtotal, 0);
 
   const handleCompletarVenta = async () => {
-  if (carrito.length === 0) return alert("El carrito está vacío");
+  if (carrito.length === 0) {
+      setSuceso({
+        show: true,
+        titulo: "Carrito vacío",
+        mensaje: "Debes agregar al menos un producto antes de completar la venta.",
+        tipo: "error"
+      });
+      return;
+    }
   const total = calcularTotal();
 
   const payloadPedido = {
@@ -57,7 +67,6 @@ export const VentaRapida: React.FC = () => {
     monto_pago_adelantado: total,
     es_cuenta_corriente: false,
     es_presupuesto: false,
-    estado: "VENTA_RAPIDA",
     observaciones: "Venta Rápida",
     detalles: carrito.map(item => ({
       producto: { idProducto: item.producto.idProducto },
@@ -75,10 +84,7 @@ export const VentaRapida: React.FC = () => {
       body: JSON.stringify(payloadPedido)
     });
 
-    if (!resCrear.ok) {
-      const errorText = await resCrear.text();
-      throw new Error(errorText);
-    }
+    if (!resCrear.ok) throw new Error(await resCrear.text());
     
     const pedidoGuardado = await resCrear.json();
 
@@ -92,26 +98,46 @@ export const VentaRapida: React.FC = () => {
 
     // Si el backend responde con error (ej: 400 Bad Request), capturamos el mensaje de stock
     if (!resFinalizar.ok) {
-      const errorMensaje = await resFinalizar.text();
-      throw new Error(errorMensaje);
+      throw new Error(await resFinalizar.text());
     }
 
-    alert(`¡Venta rápida #${pedidoGuardado.id_pedido} completada!`);
     setCarrito([]);
+    setSuceso({
+      show: true,
+      titulo: "¡Éxito!",
+      mensaje: "Venta rápida realizada con éxito.",
+      tipo: "exito"
+    });
+    
   } catch (error: any) {
-    // Si ocurre un error, el mensaje de stock (o error de DB) se mostrará aquí
     console.error("Error en la venta:", error.message);
-    alert(error.message); 
+    setSuceso({
+      show: true,
+      titulo: "Algo ha ido mal",
+      mensaje: error.message || "No hay suficiente stock para completar la venta.", 
+      tipo: "error"
+    });
   }
 };
+
   const handleCancelar = () => {
-    if (confirm("¿Seguro que quieres cancelar la venta?")) {
-      setCarrito([]);
-      setProductoSeleccionado('');
-      setCantidad('1');
-    }
+  setConfirmarCancelacion(true);
   };
 
+  const ejecutarCancelacion = () => {
+  setCarrito([]);
+  setProductoSeleccionado('');
+  setCantidad('1');
+  setConfirmarCancelacion(false);
+  setSuceso({
+    show: true,
+    titulo: "¡Cancelado!",
+    mensaje: "El carrito ha sido borrado con éxito.",
+    tipo: "exito"
+  });
+  };
+
+  
   return (
     <SidebarLayout activeItem="Venta Rápida">
       <div className="container-fluid font-monospace text-white">
@@ -127,7 +153,54 @@ export const VentaRapida: React.FC = () => {
           </div>
         </div>
         
-        <div className="card p-4 shadow" style={{ backgroundColor: '#1e1e24', border: '1px solid #3f3f46', borderRadius: '12px' }}>
+
+        {suceso.show && (
+         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+           <div 
+            className="modal-content p-4 text-white text-center" 
+            style={{ 
+            border: `2px solid ${suceso.tipo === 'exito' ? '#8e45e0' : '#8e45e0'}`, 
+            backgroundColor: '#1a1a1c', 
+            borderRadius: '12px' 
+            }}
+            >
+             <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-x-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
+             <h5 className="fw-bold">{suceso.titulo}</h5>
+             <p className="small" style={{ color: '#a1a1aa' }}>{suceso.mensaje}</p>
+             <button 
+             className={`btn ${suceso.tipo === 'exito' ? 'btn-success' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold`}
+             onClick={() => setSuceso({ ...suceso, show: false })}
+            >
+            Cerrar
+            </button>
+           </div>
+          </div>
+         </div>
+        )}
+
+        {confirmarCancelacion && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+        <div className="modal-dialog modal-sm modal-dialog-centered">
+        <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
+        <i className="bi bi-exclamation-triangle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
+        <h5 className="fw-bold">¿Cancelar venta?</h5>
+        <p className="small" style={{ color: '#a1a1aa' }}>Esta acción vaciará el carrito. ¿Estás seguro?</p>
+        <div className="d-flex gap-2 justify-content-center mt-3">
+          <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} onClick={() => setConfirmarCancelacion(false)}>
+            Volver
+          </button>
+          <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} onClick={ejecutarCancelacion}>
+            Sí, cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
+        <div className="card p-4 shadow" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46', borderRadius: '12px' }}>
           <SelectorProducto 
             productos={productosDisponibles}
             productoId={productoSeleccionado}

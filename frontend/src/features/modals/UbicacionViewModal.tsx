@@ -74,7 +74,13 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                 <div className="col-md-8">
                   <label className="form-label small text-secondary m-0">Calle</label>
                   {modoEdicion ? (
-                    <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.calle} onChange={e => handleChange('calle', e.target.value)} required />
+                    <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.calle} onChange={e => handleChange('calle', e.target.value)} required 
+                     pattern="[A-Za-zÁ-Úá-ú\s]+"
+                     onInvalid={(e: any) => {
+                     if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo calle No puede Estar Vacío");
+                     else e.target.setCustomValidity("El Campo Calle solo debe Contener Letras");
+                     }}
+                     onInput={(e: any) => e.target.setCustomValidity("")} />
                   ) : (
                     <div className="p-2 rounded bg-black border border-secondary text-light">{dirData.calle || '—'}</div>
                   )}
@@ -84,7 +90,13 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                 <div className="col-md-4">
                   <label className="form-label small text-secondary m-0">Número</label>
                   {modoEdicion ? (
-                    <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.numero} onChange={e => handleChange('numero', e.target.value)} required />
+                    <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.numero} onChange={e => handleChange('numero', e.target.value)} required 
+                     pattern="[0-9]+" // Solo números
+                     onInvalid={(e: any) => {
+                     if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo Número No puede Estar Vacío");
+                     else e.target.setCustomValidity("En este campo Solo se permiten números");
+                     }}
+                     onInput={(e: any) => e.target.setCustomValidity("")}/>
                   ) : (
                     <div className="p-2 rounded bg-black border border-secondary text-light">{dirData.numero || '—'}</div>
                   )}
@@ -114,9 +126,15 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                 <div className="col-md-6">
                   <label className="form-label small text-secondary m-0">Código Postal</label>
                   {modoEdicion ? (
-                    <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.codigoPostal} onChange={e => handleChange('codigoPostal', e.target.value)} required />
+                    <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.codigoPostal} onChange={e => handleChange('codigoPostal', e.target.value)} required 
+                     pattern="[0-9]+" // Solo números
+                     onInvalid={(e: any) => {
+                     if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo Código Postal No puede Estar Vacío");
+                     else e.target.setCustomValidity("En el Campo Código Postal Solo se permiten números");
+                     }}
+                     onInput={(e: any) => e.target.setCustomValidity("")}/>
                   ) : (
-                    <div className="p-2 rounded bg-black border border-secondary text-light font-monospace">{dirData.codigoPostal || '—'}</div>
+                    <div className="p-2 rounded bg-black border border-secondary text-light">{dirData.codigoPostal || '—'}</div>
                   )}
                 </div>
 
@@ -124,7 +142,13 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                 <div className="col-md-4">
                   <label className="form-label small text-secondary m-0">Ciudad</label>
                   {modoEdicion ? (
-                    <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.ciudad} onChange={e => handleChange('ciudad', e.target.value)} required />
+                    <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.ciudad} onChange={e => handleChange('ciudad', e.target.value)} required 
+                     pattern="[A-Za-zÁ-Úá-ú\s]+"
+                     onInvalid={(e: any) => {
+                     if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo Ciudad No puede Estar Vacío");
+                     else e.target.setCustomValidity("El Campo Ciudad solo debe Contener Letras");
+                     }}
+                     onInput={(e: any) => e.target.setCustomValidity("")} />
                   ) : (
                     <div className="p-2 rounded bg-black border border-secondary text-light">{dirData.ciudad || '—'}</div>
                   )}
@@ -134,7 +158,13 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                 <div className="col-md-4">
                   <label className="form-label small text-secondary m-0">Provincia</label>
                   {modoEdicion ? (
-                    <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.provincia} onChange={e => handleChange('provincia', e.target.value)} required />
+                    <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.provincia} onChange={e => handleChange('provincia', e.target.value)} required 
+                     pattern="[A-Za-zÁ-Úá-ú\s]+"
+                     onInvalid={(e: any) => {
+                     if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo Provincia No puede Estar Vacío");
+                     else e.target.setCustomValidity("El Campo Provincia solo debe Contener Letras");
+                     }}
+                     onInput={(e: any) => e.target.setCustomValidity("")} />
                   ) : (
                     <div className="p-2 rounded bg-black border border-secondary text-light">{dirData.provincia || '—'}</div>
                   )}
@@ -144,7 +174,13 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                 <div className="col-md-4">
                   <label className="form-label small text-secondary m-0">País</label>
                   {modoEdicion ? (
-                    <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.pais} onChange={e => handleChange('pais', e.target.value)} required />
+                    <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.pais} onChange={e => handleChange('pais', e.target.value)} required 
+                     pattern="[A-Za-zÁ-Úá-ú\s]+"
+                     onInvalid={(e: any) => {
+                     if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo Provincia No puede Estar Vacío");
+                     else e.target.setCustomValidity("El Campo Provincia solo debe Contener Letras");
+                     }}
+                     onInput={(e: any) => e.target.setCustomValidity("")} />
                   ) : (
                     <div className="p-2 rounded bg-black border border-secondary text-light">{dirData.pais || '—'}</div>
                   )}
@@ -180,13 +216,13 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
       {mostrarConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered" style={{ maxWidth: '400px' }}>
-            <div className="modal-content bg-dark border-info p-4 text-white text-center" style={{ border: '2px solid #0dcaf0' }}>
-              <i className="bi bi-exclamation-circle text-info fs-1 mb-2"></i>
+            <div className="modal-content p-4 text-white text-center" style={{ backgroundColor: '#1a1a1c', border: '2px solid #8e45e0', borderRadius: '12px' }}>
+              <i className="bi bi-exclamation-circle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">¿Modificar Ubicación?</h5>
-              <p className="small text-secondary">Se actualizará la dirección asociada a este cliente de forma permanente.</p>
+              <p className="small text-secondary">Se actualizará la dirección asociada de forma permanente.</p>
               <div className="d-flex justify-content-center gap-2 mt-3">
-                <button className="btn btn-outline-secondary btn-sm px-3 text-white" onClick={() => setMostrarConfirmacion(false)}>Revisar</button>
-                <button className="btn btn-info btn-sm px-3 text-dark fw-bold" onClick={handleGuardarDefinitivo}>Guardar</button>
+                <button className="btn btn-outline-light btn-sm px-3" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#8d1414'}} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
+                <button className="btn text-white btn-sm px-3 fw-bold" style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} onClick={handleGuardarDefinitivo}>Guardar</button>
               </div>
             </div>
           </div>

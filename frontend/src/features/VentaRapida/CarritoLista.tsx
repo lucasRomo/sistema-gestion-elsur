@@ -20,7 +20,7 @@ export const CarritoLista: React.FC<Props> = ({ carrito, onEliminar }) => {
       {/* Contenedor de filas con scroll */}
       <div style={{ minHeight: '150px', maxHeight: '250px', overflowY: 'auto' }}>
         {carrito.length === 0 ? (
-          <div className="text-center text-muted mt-4">No hay productos en la lista.</div>
+          <div className="text-center text-light mt-4">No hay productos en la lista.</div>
         ) : (
           carrito.map((item, index) => (
             <div key={index} className="d-flex align-items-center mb-2 text-white border-bottom border-dark pb-1">

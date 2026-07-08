@@ -7,6 +7,7 @@ import { ProveedorModal } from '../features/proveedores/ProveedorModal';
 import { ProveedorUbicacionModal } from '../features/proveedores/ProveedorUbicacionModal';
 import { useProveedores } from '../hooks/useProveedores';
 import type { Proveedor } from '../types/Proveedor';
+import { SuccesModal } from '../components/layouts/SuccesModal';
 
 export const Proveedores: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +21,10 @@ export const Proveedores: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState<Proveedor | null>(null);
+  const [showUbicacionModal, setShowUbicacionModal] = useState(false);
+
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Lógica de filtrado
   const proveedoresFiltrados = proveedores.filter((p) => {
@@ -54,7 +59,10 @@ export const Proveedores: React.FC = () => {
         <ProveedorTabla 
           proveedores={proveedoresFiltrados}
           onEditar={(prov) => { setIsEditing(true); setProveedorSeleccionado(prov); setShowModal(true); }}
-          onVerUbicacion={(prov) => setProveedorSeleccionado(prov)}
+          onVerUbicacion={(prov) => { 
+            setProveedorSeleccionado(prov); 
+            setShowUbicacionModal(true);
+          }}
         />
 
         <div className="d-flex justify-content-between align-items-center mt-4">
@@ -62,12 +70,18 @@ export const Proveedores: React.FC = () => {
           <div className="d-flex gap-2">
             <button 
               onClick={() => { setIsEditing(false); setProveedorSeleccionado(null); setShowModal(true); }} 
-              className="btn btn-success fw-bold px-4"
+              className="btn btn-success mt-4"
             >
               Registrar Nuevo Proveedor
             </button>
           </div>
         </div>
+
+        <SuccesModal 
+        show={showSuccess} 
+        message={successMessage} 
+        onClose={() => setShowSuccess(false)} 
+        />
 
         {/* Modal Datos Generales */}
         <ProveedorModal 
@@ -76,21 +90,28 @@ export const Proveedores: React.FC = () => {
           formState={proveedorSeleccionado || {} as Proveedor} // Asegurar que pase un objeto inicial si es null
           setFormState={setProveedorSeleccionado}
           onClose={() => setShowModal(false)}
-          onSave={async (e) => {
-            if(e) e.preventDefault();
+          onSave={async () => {
             await guardar(proveedorSeleccionado!);
             setShowModal(false);
+            setSuccessMessage("Proveedor guardado correctamente");
+            setShowSuccess(true);
           }}
         />
 
         {/* Modal Localización */}
         <ProveedorUbicacionModal 
-          show={proveedorSeleccionado !== null && !showModal}
+          show={showUbicacionModal} // ◄ Ahora depende de este estado manual
           proveedor={proveedorSeleccionado}
-          onClose={() => setProveedorSeleccionado(null)}
+          onClose={() => {
+            setProveedorSeleccionado(null);
+            setShowUbicacionModal(false); // ◄ Cerramos explícitamente
+          }}
           onSaveUbicacion={async (prov) => {
             await guardar(prov);
             setProveedorSeleccionado(null);
+            setShowUbicacionModal(false); // ◄ Cerramos explícitamente
+            setSuccessMessage("Ubicación actualizada correctamente");
+            setShowSuccess(true);
           }}
         />
       </div>

@@ -25,5 +25,12 @@ public class Usuario {
     @JoinColumn(name = "id_rol")
     private Rol rol;
 
-    //falta estado
+    @Transient
+    private java.math.BigDecimal salario;
+// Esto
+    @Transient
+    private String estado;
+
+    @Transient
+    private String cargo;
 }

@@ -2,21 +2,18 @@ import React, { useState } from 'react';
 import { SidebarLayout } from '../components/layouts/SidebarLayout';
 import { UsuarioEditModal } from '../features/modals/UsuarioEditModal';
 import { useUsuarios } from '../hooks/useUsuarios';
+import { UbicacionViewModal } from '../features/modals/UbicacionViewModal';
+import { SuccesModal } from '../components/layouts/SuccesModal';
+import { UsuariosFiltros } from '../features/auth/UsuariosFiltros';
 
 export const GestionUsuariosView: React.FC = () => {
   const { usuarios, guardar, cargar } = useUsuarios();
   const [filtroTexto, setFiltroTexto] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Sin Filtro');
   const [usuarioAEditar, setUsuarioAEditar] = useState<any | null>(null);
-
-  const getEstadoColor = (estado: string) => {
-    switch (estado) {
-      case 'Activo': return '#4ade80';
-      case 'Desactivado': return '#f87171';
-      case 'Pendiente': return '#facc15';
-      default: return '#4ade80'; // Por defecto verde si pasa a ser Activo
-    }
-  };
+  const [usuarioConUbicacion, setUsuarioConUbicacion] = useState<any | null>(null);
+  const [mostrarExito, setMostrarExito] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState('');
 
   const usuariosFiltrados = usuarios.filter(u => {
     const busqueda = filtroTexto.toLowerCase();
@@ -43,75 +40,75 @@ export const GestionUsuariosView: React.FC = () => {
           </div>
         </div>
 
-        <div className="d-flex gap-4 mb-4 align-items-end">
-          <div className="flex-grow-1" style={{ maxWidth: '600px' }}>
-            <label className="form-label small text-secondary fw-bold">Filtrar por Nombre:</label>
-            <div className="input-group">
-              <input 
-                type="text" 
-                className="form-control bg-white text-dark border-0" 
-                placeholder="Filtrar por Usuario, Nombre o Apellido..." 
-                value={filtroTexto}
-                onChange={(e) => setFiltroTexto(e.target.value)}
-              />
-              <span className="input-group-text bg-white border-0"><i className="bi bi-search text-secondary"></i></span>
-            </div>
-          </div>
-          <div style={{ width: '200px' }}>
-            <label className="form-label small text-secondary fw-bold">Filtrar por Estado:</label>
-            <select 
-              className="form-select bg-white text-dark border-0"
-              value={filtroEstado}
-              onChange={(e) => setFiltroEstado(e.target.value)}
-            >
-              <option value="Sin Filtro">Sin Filtro</option>
-              <option value="Activo">Activo</option>
-              <option value="Desactivado">Desactivado</option>
-              <option value="Pendiente">Pendiente</option>
-            </select>
-          </div>
-        </div>
+        <UsuariosFiltros 
+        filtroTexto={filtroTexto}
+        setFiltroTexto={setFiltroTexto}
+        filtroEstado={filtroEstado}
+        setFiltroEstado={setFiltroEstado}
+        />
 
-        <div className="flex-grow-1 overflow-auto rounded" style={{ backgroundColor: '#1a1a1c', border: '1px solid #3f3f46' }}>
-          <table className="table table-dark table-hover m-0">
-            <thead style={{ borderBottom: '2px solid #3f3f46' }}>
-              <tr>
-                <th className="py-3 px-3 text-secondary fw-normal">Id</th>
-                <th className="py-3 text-secondary fw-normal">Usuario</th>
-                <th className="py-3 text-secondary fw-normal">Contraseña</th>
-                <th className="py-3 text-secondary fw-normal">Nombre</th>
-                <th className="py-3 text-secondary fw-normal">Apellido</th>
-                <th className="py-3 text-secondary fw-normal text-end pe-4">Salario</th>
-                <th className="py-3 text-secondary fw-normal text-center">Estado</th>
-                <th className="py-3 text-secondary fw-normal text-center">Opciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuariosFiltrados.map((u) => (
-                <tr key={u.idUsuario} style={{ borderBottom: '1px solid #2d2d30' }}>
-                  <td className="py-3 px-3">{u.idUsuario}</td>
-                  <td className="py-3">{u.nombreUsuario}</td>
-                  <td className="py-3">{u.password}</td>
-                  <td className="py-3">{u.persona?.nombre || '-'}</td>
-                  <td className="py-3">{u.persona?.apellido || '-'}</td>
-                  {/* Forzamos el casteo a Number por si viene como string desde la DB o el estado local */}
-                  <td className="py-3 text-end font-monospace pe-4">
-                    ${Number(u.salario || 0).toLocaleString('es-AR')}
-                  </td>
-                  {/* Si el estado es null o no existe, renderiza 'Activo' por defecto */}
-                  <td className="py-3 text-center" style={{ color: getEstadoColor(u.estado || 'Activo'), fontWeight: 'bold' }}>
-                    {u.estado || 'Activo'}
-                  </td>
-                  <td className="py-3 text-center">
-                    <button className="btn btn-link p-0 text-info" onClick={() => setUsuarioAEditar(u)}>
-                      <i className="bi bi-pencil-square fs-5"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <div className="table-responsive" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+         <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
+         <thead>
+      <tr style={{ borderBottom: '2px solid #3f3f46', textAlign: 'left' }}>
+        <th style={{ padding: '12px' }}>Id</th>
+        <th style={{ padding: '12px' }}>Usuario</th>
+        <th style={{ padding: '12px' }}>Contraseña</th>
+        <th style={{ padding: '12px' }}>Nombre</th>
+        <th style={{ padding: '12px' }}>Apellido</th>
+        <th style={{ padding: '12px' }}>Documento</th>
+        <th style={{ padding: '12px', textAlign: 'left' }}>Cargo</th>
+        <th style={{ padding: '12px', textAlign: 'right' }}>Salario</th>
+        <th style={{ padding: '12px', textAlign: 'center' }}>Estado</th>
+        <th style={{ padding: '12px', textAlign: 'center' }}>Opciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {usuariosFiltrados.map((u) => (
+        <tr 
+          key={u.idUsuario} 
+          style={{ borderBottom: '1px solid #2d2d30' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#27272a'} 
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+        >
+          <td style={{ padding: '12px' }}>{u.idUsuario}</td>
+          <td style={{ padding: '12px' }}>{u.nombreUsuario}</td>
+          <td style={{ padding: '12px' }}>{u.password}</td>
+          <td style={{ padding: '12px' }}>{u.persona?.nombre || '-'}</td>
+          <td style={{ padding: '12px' }}>{u.persona?.apellido || '-'}</td>
+          <td style={{ padding: '12px' }}>{u.persona?.numeroDocumento || '-'}</td>
+          <td style={{ padding: '12px' }}>{u.cargo || '-'}</td>
+          <td style={{ padding: '12px', textAlign: 'right' }}>${Number(u.salario || 0).toLocaleString('es-AR')}</td>
+          <td style={{ padding: '12px', textAlign: 'center' }}>
+            <span className={`badge ${u.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>
+              {u.estado}
+            </span>
+          </td>
+          <td style={{ padding: '12px' }}>
+            <div className="d-flex justify-content-center gap-2">
+              <button 
+                className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
+                style={{ width: '32px', height: '32px' }}
+                onClick={() => setUsuarioAEditar(u)}
+                title="Editar Usuario"
+              >
+                <i className="bi bi-pencil-square"></i>
+              </button>
+              <button 
+                className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
+                style={{ width: '32px', height: '32px', color: '#ffc107', borderColor: '#ffc107' }}
+                onClick={() => setUsuarioConUbicacion(u)}
+                title="Ver Ubicación"
+              >
+                <i className="bi bi-house-door"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
 
         <div className="d-flex justify-content-between mt-4">
           <button className="btn btn-danger px-5 py-2">Volver</button>
@@ -136,7 +133,9 @@ export const GestionUsuariosView: React.FC = () => {
               
               await guardar(usuarioFormateado); 
               setUsuarioAEditar(null); 
-              cargar(); 
+              cargar();
+              setMensajeExito(u.idUsuario ? 'Usuario modificado correctamente' : 'Usuario creado correctamente');
+              setMostrarExito(true); 
             } catch (error) {
               alert("Error al guardar el usuario. Verificá los datos o los roles en el backend.");
               console.error(error);
@@ -144,6 +143,34 @@ export const GestionUsuariosView: React.FC = () => {
           }} 
         />
       )}
+
+      {usuarioConUbicacion && (
+        <UbicacionViewModal 
+          cliente={usuarioConUbicacion} // Le pasamos el usuario actual (reutiliza la estructura .persona.direccion)
+          onCerrar={() => setUsuarioConUbicacion(null)}
+          onConfirmar={async (usuarioActualizado) => {
+            try {
+              await guardar(usuarioActualizado); // Guarda los cambios de dirección en el backend
+              setUsuarioConUbicacion(null);
+              cargar(); // Recarga la tabla de usuarios
+              setMensajeExito('Usuario modificado correctamente');
+              setMostrarExito(true);
+            } catch (error) {
+              alert("Error al actualizar la ubicación en el servidor.");
+              console.error(error);
+            }
+          }}
+        />
+      )}
+      
+      {mostrarExito && (
+        <SuccesModal 
+          show={mostrarExito} 
+          onClose={() => setMostrarExito(false)} 
+          message={mensajeExito} 
+        />
+      )}
+
     </SidebarLayout>
   );
 };

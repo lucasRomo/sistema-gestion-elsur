@@ -9,17 +9,18 @@ interface ProveedorTablaProps {
 
 export const ProveedorTabla: React.FC<ProveedorTablaProps> = ({ proveedores, onEditar, onVerUbicacion }) => {
   return (
-    <div className="table-responsive rounded" style={{ border: '1px solid #2d2d30', backgroundColor: '#1a1a1c' }}>
-      <table className="table table-dark table-hover mb-0 align-middle">
-        <thead style={{ backgroundColor: '#222226' }}>
-          <tr className="font-monospace text-white-50" style={{ fontSize: '0.9rem' }}>
-            <th className="ps-3">ID</th>
-            <th>Nombre Comercial</th>
-            <th>Contacto</th>
-            <th>Email</th>
-            <th>Estado</th>
-            <th>Tipo de Proveedor</th>
-            <th className="text-center">Opciones</th>
+    <div className="table-responsive" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+      {/* Eliminamos el background color del thead y aseguramos el mismo padding */}
+      <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
+        <thead>
+          <tr style={{ borderBottom: '2px solid #3f3f46', textAlign: 'left' }}>
+            <th style={{ padding: '12px' }}>ID</th>
+            <th style={{ padding: '12px' }}>Nombre Comercial</th>
+            <th style={{ padding: '12px' }}>Contacto</th>
+            <th style={{ padding: '12px' }}>Email</th>
+            <th style={{ padding: '12px' }}>Estado</th>
+            <th style={{ padding: '12px' }}>Tipo de Proveedor</th>
+            <th style={{ padding: '12px', textAlign: 'center' }}>Opciones</th>
           </tr>
         </thead>
         <tbody>
@@ -31,20 +32,24 @@ export const ProveedorTabla: React.FC<ProveedorTablaProps> = ({ proveedores, onE
             </tr>
           ) : (
             proveedores.map((prov) => (
-              <tr key={prov.idProveedor} style={{ borderBottom: '1px solid #2d2d30' }}>
-                <td className="ps-3 fw-bold text-white-50">{prov.idProveedor}</td>
-                <td className="fw-semibold text-white">{prov.nombreComercial}</td>
-                <td>{prov.contactoNombre || '—'}</td>
-                <td className="text-info">{prov.emailContacto || '—'}</td>
-                <td>
-                  <span className={`badge ${prov.estado === 'Activo' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} border`}>
-                    {prov.estado}
-                  </span>
+              <tr 
+                key={prov.idProveedor} 
+                style={{ borderBottom: '1px solid #2d2d30' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#27272a'} 
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <td style={{ padding: '12px' }} className="fw-bold text-white-50">{prov.idProveedor}</td>
+                <td style={{ padding: '12px' }} className="fw-semibold text-white">{prov.nombreComercial}</td>
+                <td style={{ padding: '12px' }}>{prov.contactoNombre || '—'}</td>
+                <td style={{ padding: '12px' }} className="text-info">{prov.emailContacto || '—'}</td>
+                <td style={{ padding: '12px' }}>
+                  <span className={`badge ${prov.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>
+              {prov.estado}
+            </span>
                 </td>
-                <td>{prov.tipoProveedor?.descripcion || 'General'}</td>
-                <td className="text-center">
+                <td style={{ padding: '12px' }}>{prov.tipoProveedor?.descripcion || 'General'}</td>
+                <td style={{ padding: '12px' }}>
                   <div className="d-flex justify-content-center gap-2">
-                    {/* Botón de Modificar */}
                     <button 
                       onClick={() => onEditar(prov)}
                       className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center"
@@ -53,7 +58,6 @@ export const ProveedorTabla: React.FC<ProveedorTablaProps> = ({ proveedores, onE
                     >
                       <i className="bi bi-pencil-square"></i>
                     </button>
-                    {/* NUEVO: Botón de Ubicación igual a Clientes */}
                     <button 
                       onClick={() => onVerUbicacion(prov)}
                       className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center"

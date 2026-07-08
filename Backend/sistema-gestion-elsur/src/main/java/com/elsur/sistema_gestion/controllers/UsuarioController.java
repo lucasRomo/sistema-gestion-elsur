@@ -27,6 +27,15 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.guardar(usuario));
     }
 
+//Esto
+@PutMapping("/{id}")
+    public ResponseEntity<Usuario> actualizar(@PathVariable Integer id, @RequestBody Usuario usuario) {
+        // Nos aseguramos de que el ID de la URL sea el que se asigne al objeto a guardar
+        usuario.setIdUsuario(id);
+        return ResponseEntity.ok(usuarioService.guardar(usuario));
+    }
+//Esto
+
     @PutMapping("/{id}/password")
     public ResponseEntity<Void> cambiarPassword(@PathVariable Integer id, @RequestBody String newPassword) {
         usuarioService.cambiarPassword(id, newPassword);
