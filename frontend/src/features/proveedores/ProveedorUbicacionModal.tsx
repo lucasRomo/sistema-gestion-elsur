@@ -131,8 +131,8 @@ export const ProveedorUbicacionModal: React.FC<ProveedorUbicacionModalProps> = (
               <h5 className="fw-bold">¿Modificar Ubicación?</h5>
               <p className="small text-secondary">Se actualizará la dirección asociada de forma permanente.</p>
               <div className="d-flex justify-content-center gap-2 mt-3">
-                <button className="btn btn-outline-light btn-sm px-3" onClick={() => setMostrarConfirmacion(false)}>Volver</button>
-                <button className="btn btn-sm px-3 text-white fw-bold" style={{ backgroundColor: '#2e9225' }} onClick={() => { if (datosAEnviar) onSaveUbicacion(datosAEnviar); setMostrarConfirmacion(false); onClose(); }}>Guardar</button>
+                <button className="btn btn-outline-light btn-sm px-3" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#8d1414'}} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
+                <button className="btn btn-sm px-3 text-white fw-bold" style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} onClick={() => { if (datosAEnviar) onSaveUbicacion(datosAEnviar); setMostrarConfirmacion(false); onClose(); }}>Guardar</button>
               </div>
             </div>
           </div>
