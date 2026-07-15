@@ -30,15 +30,42 @@ export const useRegistrarPedido = () => {
     cargarDatosIniciales();
   }, []);
 
-  // Ahora recibe un payload explícito con pedido e idEmpleado
-  const enviarPedido = async (payload: { pedido: Pedido; idEmpleado: number }) => {
+  // ➔ Ahora "enviarPedido" acepta el archivo opcional "fileComprobante"
+  const enviarPedido = async (
+    payload: { pedido: Pedido; idEmpleado: number; idUsuario?: number | null },
+    fileComprobante?: File | null
+  ) => {
     setCargando(true);
     try {
-      const respuesta = await fetch(`${API_BASE_URL}/pedidos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      let respuesta;
+
+      // 1. Si el usuario adjuntó un archivo de comprobante, usamos FormData
+      if (fileComprobante) {
+        const formData = new FormData();
+        
+        // Adjuntamos el JSON estructurado como un Blob con su respectivo tipo
+        formData.append(
+          'payload', 
+          new Blob([JSON.stringify(payload)], { type: 'application/json' })
+        );
+        
+        // Adjuntamos el archivo físico del comprobante
+        formData.append('comprobante', fileComprobante);
+
+        respuesta = await fetch(`${API_BASE_URL}/pedidos`, {
+          method: 'POST',
+          // NOTA: No seteamos 'Content-Type' manualmente al usar FormData.
+          // El navegador lo calculará automáticamente incluyendo la frontera (boundary) correcta.
+          body: formData
+        });
+      } else {
+        // 2. Si no hay archivo, seguimos enviando JSON puro como siempre
+        respuesta = await fetch(`${API_BASE_URL}/pedidos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
 
       if (!respuesta.ok) {
         const errorTexto = await respuesta.text();
@@ -47,8 +74,7 @@ export const useRegistrarPedido = () => {
 
       return true;
     } catch (error: any) {
-      console.error("Error en enviarPedido:", error.message);
-      alert(`No se pudo registrar: ${error.message}`);
+      console.error("Error en enviarPedido:", error.message);     
       throw error;
     } finally {
       setCargando(false);

@@ -2,8 +2,14 @@ package com.elsur.sistema_gestion.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Data
 @Entity
@@ -16,10 +22,13 @@ public class ComprobantePago {
 
     @ManyToOne
     @JoinColumn(name = "id_pedido", nullable = false)
+    @JsonIgnoreProperties("comprobantes")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Pedido pedido;
 
     @Column(length = 45, nullable = false)
-    private String tipoPago; // 'EFECTIVO', 'TRANSFERENCIA', 'DEBITO'
+    private String tipoPago;
 
     @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal montoPago;

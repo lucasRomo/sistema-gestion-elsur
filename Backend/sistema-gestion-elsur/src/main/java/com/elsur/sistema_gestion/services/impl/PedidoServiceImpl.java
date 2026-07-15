@@ -4,8 +4,14 @@ import com.elsur.sistema_gestion.models.*;
 import com.elsur.sistema_gestion.repositories.*;
 import com.elsur.sistema_gestion.services.PedidoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,8 +30,15 @@ public class PedidoServiceImpl implements PedidoService {
     @Autowired private EmpleadoRepository empleadoRepository;
     @Autowired private AsignacionPedidoRepository asignacionRepository;
 
+    @Autowired private TurnoRepository TurnoRepository;
+
     @Autowired
-    private DetallePedidoRepository detallePedidoRepository; // <--- AGREGÁ ESTO
+    private DetallePedidoRepository detallePedidoRepository;
+
+    @Autowired private UsuarioRepository UsuarioRepository;
+
+    @Autowired
+    private ComprobantePagoRepository comprobantePagoRepository;
 
     @Autowired
     private ProductoRepository productoRepository;
@@ -52,48 +65,172 @@ public Pedido buscarPorId(Integer id) {
 }
 
    @Override
-@Transactional
-public Pedido guardar(Pedido pedido, Integer idEmpleado) {
+   @Transactional
+    public Pedido guardar(Pedido pedido, Integer idEmpleado, Integer idUsuario, String tipoPago, MultipartFile comprobante) {
+    boolean existeCajaAbierta = TurnoRepository.existsByEstadoAndFechaAperturaToday(EstadoTurno.ABIERTO);
+    if (!existeCajaAbierta) { 
+        throw new RuntimeException("La Caja No está Abierta. Por favor, inicie turno antes de continuar.");
+    }
+
     // 1. Validar Cliente
-    Integer idCliente = (pedido.getCliente() != null && pedido.getCliente().getIdCliente() != null) 
-                        ? pedido.getCliente().getIdCliente() : 1;
-    pedido.setCliente(clienteRepository.findById(idCliente)
+    Integer idCliente = (pedido.getCliente() != null && pedido.getCliente().getIdCliente() != null)  
+                        ? pedido.getCliente().getIdCliente() : 1; 
+    pedido.setCliente(clienteRepository.findById(idCliente) 
         .orElseThrow(() -> new RuntimeException("Cliente no encontrado")));
 
     // 2. Vincular detalles del carrito de productos
-    if (pedido.getDetalles() != null) {
-        for (DetallePedido detalle : pedido.getDetalles()) {
+    if (pedido.getDetalles() != null) { 
+        for (DetallePedido detalle : pedido.getDetalles()) { 
             detalle.setPedido(pedido);
-            if (detalle.getProducto() != null && detalle.getProducto().getIdProducto() != null) {
-                Producto prod = productoRepository.findById(detalle.getProducto().getIdProducto())
+            if (detalle.getProducto() != null && detalle.getProducto().getIdProducto() != null) { 
+                Producto prod = productoRepository.findById(detalle.getProducto().getIdProducto()) 
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
-                detalle.setProducto(prod);
+                detalle.setProducto(prod); 
             }
         }
     }
 
     // 3. Forzar el flag booleano si la cadena de estado es PRESUPUESTO
-    if ("PRESUPUESTO".equalsIgnoreCase(pedido.getEstado())) {
+    if ("PRESUPUESTO".equalsIgnoreCase(pedido.getEstado())) { 
         pedido.setEs_presupuesto(true);
     }
 
-    // 4. Guardar Pedido en Postgres
+    // 4. Guardar Pedido en Postgres para que genere su ID autoincremental
     Pedido p = pedidoRepository.save(pedido);
     pedidoRepository.flush(); 
 
-    // 5. Crear la Asignación en la tabla intermedia (Aplica tanto a pedidos como a presupuestos confeccionados)
-    if (idEmpleado != null) {
-        Empleado emp = empleadoRepository.findById(idEmpleado)
+    // 5. Vincular empleado asignado si existe
+    if (idEmpleado != null) { 
+        Empleado emp = empleadoRepository.findById(idEmpleado) 
             .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
-            
-        AsignacionPedido asignacion = new AsignacionPedido();
-        asignacion.setPedido(p);
-        asignacion.setEmpleado(emp);
-        asignacion.setFecha_asignacion(LocalDateTime.now());
-        asignacionRepository.save(asignacion);
+        AsignacionPedido asignacion = new AsignacionPedido(); 
+        asignacion.setPedido(p); 
+        asignacion.setEmpleado(emp); 
+        asignacion.setFecha_asignacion(LocalDateTime.now()); 
+        asignacionRepository.save(asignacion); 
+    }
+
+        BigDecimal seña = p.getMonto_pago_adelantado();
+        if (seña != null && seña.compareTo(BigDecimal.ZERO) > 0) {
+        
+        if (p.getComprobantes() == null) {
+            p.setComprobantes(new java.util.ArrayList<>());
+        }
+        
+        ComprobantePago nuevoCobro = new ComprobantePago();
+        nuevoCobro.setPedido(p);
+        
+        String urlDeImagen = null;
+        
+        // ➔ LA CLAVE ESTÁ ACÁ: Establecemos el método según lo que seleccionó el usuario
+        String tipoDePagoFinal = "EFECTIVO";
+        
+        if (tipoPago != null) {
+            if (tipoPago.equalsIgnoreCase("Tarjeta / Transferencia") || tipoPago.equalsIgnoreCase("TRANSFERENCIA")) {
+                tipoDePagoFinal = "TRANSFERENCIA";
+            } else if (tipoPago.equalsIgnoreCase("Cuenta Corriente")) {
+                tipoDePagoFinal = "CUENTA_CORRIENTE";
+            }
+        }
+
+        // Si mandaron archivo, guardamos la imagen física y aseguramos que sea Transferencia
+        if (comprobante != null && !comprobante.isEmpty()) {
+            urlDeImagen = guardarArchivoFisico(comprobante);
+            tipoDePagoFinal = "TRANSFERENCIA";
+        }
+
+        nuevoCobro.setTipoPago(tipoDePagoFinal); 
+        nuevoCobro.setMontoPago(seña);
+        nuevoCobro.setFechaCarga(LocalDateTime.now());
+        nuevoCobro.setUrlArchivoComprobante(urlDeImagen);
+        
+        p.getComprobantes().add(nuevoCobro);
+
+        // B. Registrar el ingreso automático en Caja
+        try {
+            MovimientoCaja movimiento = new MovimientoCaja();
+            movimiento.setTipoMovimiento("INGRESO"); 
+            movimiento.setMonto(seña);
+            movimiento.setMetodoPago(tipoDePagoFinal); // Usa el tipo correcto corregido
+            movimiento.setFecha(LocalDateTime.now());
+            movimiento.setPedido(p);
+            movimiento.setDescripcion("Seña/Adelanto inicial - Pedido #" + p.getId_pedido());
+
+            Turno turnoActivo = TurnoRepository.findAll().stream()
+                .filter(t -> t.getEstado() == EstadoTurno.ABIERTO)
+                .findFirst()
+                .orElse(null);
+            movimiento.setTurno(turnoActivo);
+
+            Usuario usuarioResponsable = null;
+            if (idUsuario != null) { 
+                usuarioResponsable = usuarioRepository.findById(idUsuario).orElse(null);
+            }
+            if (usuarioResponsable == null) {
+                usuarioResponsable = usuarioRepository.findAll().stream() 
+                    .findFirst() 
+                    .orElseThrow(() -> new RuntimeException("No existe usuario para asignar a la caja."));
+            }
+            movimiento.setUsuario(usuarioResponsable);
+
+            cajaRepository.save(movimiento);
+        } catch (Exception e) {
+            System.err.println("Error al registrar movimiento automático de seña en caja: " + e.getMessage());
+            e.printStackTrace(); 
+        }
     }
     
-    return p;
+    return pedidoRepository.save(p);
+    }
+
+    @Override
+    public void asignarEmpleado(Integer idPedido, Integer idEmpleado) {
+    // 1. Buscar el pedido
+    Pedido pedido = pedidoRepository.findById(idPedido)
+        .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+    // 2. Buscar el empleado
+    Empleado empleado = empleadoRepository.findById(idEmpleado)
+        .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+
+    // 3. Crear la nueva asignación
+    AsignacionPedido nuevaAsignacion = new AsignacionPedido();
+    nuevaAsignacion.setPedido(pedido);
+    nuevaAsignacion.setEmpleado(empleado);
+    nuevaAsignacion.setFecha_asignacion(LocalDateTime.now());
+
+    // 4. Agregar a la lista de asignaciones del pedido
+    pedido.getAsignaciones().add(nuevaAsignacion);
+
+    // 5. Guardar el pedido (al tener CascadeType.ALL, guardará la asignación automáticamente)
+    pedidoRepository.save(pedido);
+}
+
+@Override
+@Transactional
+public Pedido eliminarArchivoDeComprobante(Integer idComprobante) {
+    ComprobantePago comprobante = comprobantePagoRepository.findById(idComprobante)
+        .orElseThrow(() -> new RuntimeException("Comprobante no encontrado"));
+
+    String urlArchivo = comprobante.getUrlArchivoComprobante();
+    
+  
+    if (urlArchivo != null && !urlArchivo.isEmpty()) {
+        try {
+            String nombreArchivo = urlArchivo.replace("/uploads/", "");
+            java.nio.file.Path ruta = java.nio.file.Paths.get("uploads").resolve(nombreArchivo);
+            java.nio.file.Files.deleteIfExists(ruta);
+        } catch (Exception e) {
+            System.err.println("No se pudo borrar el archivo físico: " + e.getMessage());
+        }
+    }
+
+    comprobante.setUrlArchivoComprobante(null);
+    
+   
+    comprobantePagoRepository.saveAndFlush(comprobante); 
+
+    return comprobante.getPedido();
 }
 
 @Override
@@ -219,58 +356,148 @@ public Pedido cambiarEstadoPedido(Integer idPedido, String nuevoEstado, String o
     return pedido;
 }
 
-    @Override
-@Transactional
-public Pedido agregarPago(Integer idPedido, Double monto, String tipoPago, String urlComprobante) {
-    Pedido pedido = buscarPorId(idPedido);
+   @Transactional
+public Pedido agregarPago(Integer idPedido, Double monto, String tipoPago, String urlComprobante, Integer idUsuario) {
+    // 1. Lógica del Pedido
+    Pedido pedido = pedidoRepository.findById(idPedido)
+        .orElseThrow(() -> new RuntimeException("No se encontró el pedido"));
 
-    // 1. Validar y actualizar montos acumulados en el pedido numérico
-    if (monto != null && monto > 0) {
-        BigDecimal nuevoAdelantado = pedido.getMonto_pago_adelantado().add(BigDecimal.valueOf(monto));
-        if (nuevoAdelantado.compareTo(pedido.getMonto_total()) > 0) {
-            throw new RuntimeException("El monto ingresado supera el saldo total del pedido.");
+    BigDecimal montoBD = BigDecimal.valueOf(monto);
+    pedido.setMonto_pago_adelantado(pedido.getMonto_pago_adelantado().add(montoBD));
+    pedidoRepository.save(pedido);
+
+    // 2. Registro en Caja
+    Turno turnoActivo = TurnoRepository.findTurnoAbiertoHoy();
+
+    if (turnoActivo != null) {
+        MovimientoCaja mov = new MovimientoCaja();
+        
+        mov.setTipoMovimiento("INGRESO"); 
+        mov.setMonto(montoBD);
+        mov.setMetodoPago(tipoPago);    
+        mov.setFecha(LocalDateTime.now());
+        mov.setTurno(turnoActivo);
+
+        // --- MODIFICACIÓN AQUÍ: Lógica para la descripción ---
+        String descripcion;
+        if (pedido.getObservaciones() != null && pedido.getObservaciones().contains("Venta Rápida")) {
+            descripcion = "Venta Rápida";
+        } else {
+            // Puedes ajustar este mensaje si quieres diferenciar "Seña" de "Pago"
+            descripcion = "Cobro Pendiente de Pedido #" + idPedido;
         }
-        pedido.setMonto_pago_adelantado(nuevoAdelantado);
+        mov.setDescripcion(descripcion);
+        // ----------------------------------------------------
+
+        // Usuario
+        Usuario usuario = usuarioRepository.findById(idUsuario != null ? idUsuario : 1)
+                            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        mov.setUsuario(usuario);
+
+        cajaRepository.save(mov); 
+    }
+
+    return pedido;
+}
+
+    private String guardarArchivoFisico(MultipartFile archivo) {
+        if (archivo == null || archivo.isEmpty()) {
+            return null;
+        }
+        try {
+            String carpetaDestino = "uploads/"; 
+            java.io.File directorio = new java.io.File(carpetaDestino);
+            
+            if (!directorio.exists()) {
+                directorio.mkdirs();
+            }
+
+            String nombreOriginal = archivo.getOriginalFilename();
+            String nombreSeguro = System.currentTimeMillis() + "_" + (nombreOriginal != null ? nombreOriginal.replaceAll("\\s+", "_") : "comprobante.png");
+            
+            java.nio.file.Path rutaCompleta = java.nio.file.Paths.get(carpetaDestino + nombreSeguro);
+            java.nio.file.Files.write(rutaCompleta, archivo.getBytes());
+
+            return "/uploads/" + nombreSeguro;
+            
+        } catch (Exception e) {
+            System.err.println("Error al guardar el comprobante físico: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    @Transactional
+    public Pedido asociarArchivoAComprobanteExistente(Integer idComprobante, MultipartFile comprobante) {
+        // Buscamos el comprobante por su ID directamente
+        ComprobantePago comprobantePago = comprobantePagoRepository.findById(idComprobante)
+            .orElseThrow(() -> new RuntimeException("Comprobante no encontrado"));
+            
+        if (comprobante != null && !comprobante.isEmpty()) {
+            String urlArchivo = guardarArchivoFisico(comprobante); // Guarda en tu directorio uploads/
+            comprobantePago.setUrlArchivoComprobante(urlArchivo);
+            comprobantePagoRepository.save(comprobantePago);
+        }
         
-        // ====================================================================
-        // CREACIÓN Y GUARDADO DEL COMPROBANTE INDIVIDUAL (Mapeo exacto a tu entidad)
-        // ====================================================================
+        // Retornamos el pedido asociado actualizado para refrescar el frontend
+        return comprobantePago.getPedido();
+    }
+
+    @Override
+    @Transactional
+    public Pedido agregarPagoConArchivo(Integer idPedido, Double monto, String tipoPago, Integer idUsuario, MultipartFile comprobante) {
+        // 1. Buscamos el Pedido
+        Pedido pedido = pedidoRepository.findById(idPedido)
+            .orElseThrow(() -> new RuntimeException("No se encontró el pedido"));
         
-        // Inicializamos la lista por las dudas para evitar NullPointerException
+        BigDecimal montoBD = BigDecimal.valueOf(monto);
+        pedido.setMonto_pago_adelantado(pedido.getMonto_pago_adelantado().add(montoBD));
+
+        // 2. Procesamos el archivo físico si viene adjunto
+        String urlDeImagen = null;
+        if (comprobante != null && !comprobante.isEmpty()) {
+            urlDeImagen = guardarArchivoFisico(comprobante); // Guarda en la carpeta uploads/
+        }
+
+        // 3. Crear el Comprobante de Pago asociado
         if (pedido.getComprobantes() == null) {
             pedido.setComprobantes(new java.util.ArrayList<>());
         }
-
-        // Instanciamos el nuevo comprobante usando los atributos exactos de tu @Entity
+        
         ComprobantePago nuevoCobro = new ComprobantePago();
         nuevoCobro.setPedido(pedido);
-        nuevoCobro.setTipoPago(tipoPago != null ? tipoPago.toUpperCase() : "EFECTIVO");
-        nuevoCobro.setMontoPago(BigDecimal.valueOf(monto)); // Coincide con tu 'private BigDecimal montoPago;'
-        nuevoCobro.setFechaCarga(LocalDateTime.now());       // Coincide con tu 'private LocalDateTime fechaCarga;'
+        nuevoCobro.setTipoPago(tipoPago); 
+        nuevoCobro.setMontoPago(montoBD);
+        nuevoCobro.setFechaCarga(LocalDateTime.now());
+        nuevoCobro.setUrlArchivoComprobante(urlDeImagen); // Aquí guardamos la URL para que aparezca el botón de visualización
         
-        // Si viene la URL de la transferencia (el archivo), se guarda acá
-        if (urlComprobante != null && !urlComprobante.trim().isEmpty()) {
-            nuevoCobro.setUrlArchivoComprobante(urlComprobante);
-        } else {
-            nuevoCobro.setUrlArchivoComprobante(null);
-        }
-
-        // Lo metemos al array del pedido para que el CascadeType.ALL haga el insert automático en la BD
         pedido.getComprobantes().add(nuevoCobro);
-    }
+        pedidoRepository.save(pedido);
 
-    // 2. Registrar opcionalmente la entrada en Caja
-    try {
-        if (monto != null && monto > 0) {
-            MovimientoCaja movimiento = new MovimientoCaja();
-            // Tu lógica de caja actual si la usás...
-            // cajaRepository.save(movimiento);
+        // 4. Registro del movimiento en Caja
+        Turno turnoActivo = TurnoRepository.findTurnoAbiertoHoy();
+        if (turnoActivo != null) {
+            MovimientoCaja mov = new MovimientoCaja();
+            mov.setTipoMovimiento("INGRESO"); 
+            mov.setMonto(montoBD);
+            mov.setMetodoPago(tipoPago);
+            mov.setFecha(LocalDateTime.now());
+            mov.setTurno(turnoActivo);
+
+            String descripcion = "Cobro Pendiente de Pedido #" + idPedido;
+            if (pedido.getObservaciones() != null && pedido.getObservaciones().contains("Venta Rápida")) {
+                descripcion = "Venta Rápida";
+            }
+            mov.setDescripcion(descripcion);
+
+            Usuario usuario = usuarioRepository.findById(idUsuario != null ? idUsuario : 1)
+                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            mov.setUsuario(usuario);
+
+            cajaRepository.save(mov); 
         }
-    } catch (Exception e) {
-        System.err.println("Error al registrar movimiento de caja: " + e.getMessage());
-    }
 
-    // Guardamos el pedido (esto persiste el saldo actualizado y mete la nueva fila en la tabla ComprobantePago)
-    return pedidoRepository.save(pedido);
-}
+        return pedido;
+    }
 }

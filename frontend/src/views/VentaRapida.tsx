@@ -49,7 +49,7 @@ export const VentaRapida: React.FC = () => {
   const calcularTotal = () => carrito.reduce((acc, item) => acc + item.subtotal, 0);
 
   const handleCompletarVenta = async () => {
-  if (carrito.length === 0) {
+    if (carrito.length === 0) {
       setSuceso({
         show: true,
         titulo: "Carrito vacío",
@@ -59,30 +59,45 @@ export const VentaRapida: React.FC = () => {
       return;
     }
   const total = calcularTotal();
+  const idUsuarioLogueado = (() => {
+  const usuarioJson = localStorage.getItem('usuario_logueado');
+  if (usuarioJson) {
+    try {
+      const usuarioObj = JSON.parse(usuarioJson);
+      return usuarioObj.idUsuario ? parseInt(usuarioObj.idUsuario) : null;
+    } catch (e) {
+      console.error("Error al parsear el usuario_logueado desde localStorage:", e);
+    }
+  }
+  return null;
+})();
 
-  const payloadPedido = {
-    cliente: { idCliente: 1 },
-    fecha_entrega_estimada: new Date().toISOString(),
-    monto_total: total,
-    monto_pago_adelantado: total,
-    es_cuenta_corriente: false,
-    es_presupuesto: false,
-    observaciones: "Venta Rápida",
-    detalles: carrito.map(item => ({
-      producto: { idProducto: item.producto.idProducto },
-      cantidad: item.cantidad,
-      precioUnitario: item.producto.precioBase,
-      subtotal: item.subtotal
-    }))
-  };
+  const payloadParaBackend = {
+      pedido: {
+        cliente: { id_cliente: 1 }, 
+        fecha_entrega_estimada: new Date().toISOString(),
+        monto_total: total,
+        monto_pago_adelantado: 0,
+        es_cuenta_corriente: false,
+        es_presupuesto: false,
+        observaciones: "Venta Rápida",
+        detalles: carrito.map(item => ({
+          producto: { idProducto: item.producto.idProducto },
+          cantidad: item.cantidad,
+          precioUnitario: item.producto.precioBase,
+          subtotal: item.subtotal
+        }))
+      },
+      idEmpleado: idUsuarioLogueado
+    };
 
   try {
     // 1. Intentar crear el pedido
     const resCrear = await fetch('http://localhost:8080/api/pedidos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payloadPedido)
-    });
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payloadParaBackend) // ➔ Enviamos el objeto correcto
+      });
 
     if (!resCrear.ok) throw new Error(await resCrear.text());
     
@@ -90,26 +105,34 @@ export const VentaRapida: React.FC = () => {
 
     // 2. Esperar a que la DB procese (Hotfix de concurrencia)
     await new Promise(resolve => setTimeout(resolve, 500));
-
-    // 3. Intentar finalizar el pedido y descontar stock
-    const resFinalizar = await fetch(`http://localhost:8080/api/pedidos/${pedidoGuardado.id_pedido}/finalizar`, {
-      method: 'PATCH'
+    
+    // MODIFICACIÓN: Ya no pasamos parámetros en la URL, pasamos el objeto en el body
+    const resPago = await fetch(`http://localhost:8080/api/pedidos/${pedidoGuardado.id_pedido}/pagos`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({
+          monto: total,
+          tipoPago: 'EFECTIVO',
+          idUsuario: idUsuarioLogueado
+        })
     });
 
-    // Si el backend responde con error (ej: 400 Bad Request), capturamos el mensaje de stock
-    if (!resFinalizar.ok) {
-      throw new Error(await resFinalizar.text());
+    if (!resPago.ok) {
+        const errorText = await resPago.text();
+        throw new Error(errorText || "Error al registrar el cobro en el sistema de caja.");
     }
 
+    // Si todo salió bien, limpiamos el carrito e informamos del éxito
     setCarrito([]);
     setSuceso({
       show: true,
       titulo: "¡Éxito!",
-      mensaje: "Venta rápida realizada con éxito.",
+      mensaje: "Venta rápida realizada con éxito y registrada en Caja.",
       tipo: "exito"
     });
-    
-  } catch (error: any) {
+    } catch (error: any) {
     console.error("Error en la venta:", error.message);
     setSuceso({
       show: true,
@@ -117,8 +140,7 @@ export const VentaRapida: React.FC = () => {
       mensaje: error.message || "No hay suficiente stock para completar la venta.", 
       tipo: "error"
     });
-  }
-};
+  }};
 
   const handleCancelar = () => {
   setConfirmarCancelacion(true);

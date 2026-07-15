@@ -19,22 +19,26 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+    http
+        .csrf(csrf -> csrf.disable())
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        
+        .httpBasic(basic -> basic.disable())
+        .formLogin(form -> form.disable())
+        .logout(logout -> logout.disable())
+        
+        .authorizeHttpRequests(auth -> auth
+            // ➔ 1. Permitimos de forma explícita el acceso a la carpeta de uploads/imágenes
+            .requestMatchers("/uploads/**", "/images/**", "/static/**").permitAll()
             
-            .httpBasic(basic -> basic.disable())
-            .formLogin(form -> form.disable())
-            .logout(logout -> logout.disable())
-            
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/usuarios/**", "/api/empleados/**", "/api/pedidos/**").permitAll()
-                .anyRequest().permitAll() 
-            )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            // ➔ 2. Tus endpoints de la API
+            .requestMatchers("/api/usuarios/**", "/api/empleados/**", "/api/pedidos/**", "/api/turnos/**").permitAll()
+            .anyRequest().permitAll() 
+        )
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        return http.build();
-    }
+    return http.build();
+}
 
     @Bean
     public PasswordEncoder passwordEncoder() {

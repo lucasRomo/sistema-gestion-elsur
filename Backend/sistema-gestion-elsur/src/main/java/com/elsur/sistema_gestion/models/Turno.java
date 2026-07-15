@@ -40,5 +40,6 @@ public class Turno {
     private Double diferenciaArqueo;
 
     @Column(name = "estado", nullable = false, length = 20)
-    private String estado;
+    @Enumerated(EnumType.STRING)
+    private EstadoTurno estado;
 }

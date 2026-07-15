@@ -41,7 +41,9 @@ export const ProveedorTabla: React.FC<ProveedorTablaProps> = ({ proveedores, onE
                 <td style={{ padding: '12px' }} className="fw-bold text-white-50">{prov.idProveedor}</td>
                 <td style={{ padding: '12px' }} className="fw-semibold text-white">{prov.nombreComercial}</td>
                 <td style={{ padding: '12px' }}>{prov.contactoNombre || '—'}</td>
-                <td style={{ padding: '12px' }} className="text-info">{prov.emailContacto || '—'}</td>
+                <td style={{ padding: '12px' }}>{prov.emailContacto ? ( <a href={`mailto:${prov.emailContacto}`} 
+                className="text-info text-decoration-none d-inline-flex align-items-center gap-1" title={`Enviar correo a ${prov.nombreComercial}`}>
+                <i className="bi bi-envelope small"></i> {prov.emailContacto} </a> ) : ( <span className="text-muted">—</span> )} </td>
                 <td style={{ padding: '12px' }}>
                   <span className={`badge ${prov.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>
               {prov.estado}

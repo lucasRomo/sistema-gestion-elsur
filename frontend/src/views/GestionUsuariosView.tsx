@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SidebarLayout } from '../components/layouts/SidebarLayout';
 import { UsuarioEditModal } from '../features/modals/UsuarioEditModal';
 import { useUsuarios } from '../hooks/useUsuarios';
 import { UbicacionViewModal } from '../features/modals/UbicacionViewModal';
 import { SuccesModal } from '../components/layouts/SuccesModal';
 import { UsuariosFiltros } from '../features/auth/UsuariosFiltros';
+import { RegisterView } from '../views/auth/RegisterView';
 
 export const GestionUsuariosView: React.FC = () => {
   const { usuarios, guardar, cargar } = useUsuarios();
@@ -14,6 +16,8 @@ export const GestionUsuariosView: React.FC = () => {
   const [usuarioConUbicacion, setUsuarioConUbicacion] = useState<any | null>(null);
   const [mostrarExito, setMostrarExito] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
+  const [vistaActual, setVistaActual] = useState<'gestion' | 'registro'>('gestion');
+  const navigate = useNavigate();
 
   const usuariosFiltrados = usuarios.filter(u => {
     const busqueda = filtroTexto.toLowerCase();
@@ -30,6 +34,7 @@ export const GestionUsuariosView: React.FC = () => {
 
   return (
     <SidebarLayout activeItem="Gestión de Usuarios">
+      {vistaActual === 'gestion' ? (
       <div className="container-fluid text-white h-100 d-flex flex-column">
         
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -111,12 +116,26 @@ export const GestionUsuariosView: React.FC = () => {
 </div>
 
         <div className="d-flex justify-content-between mt-4">
-          <button className="btn btn-danger px-5 py-2">Volver</button>
+          <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-5 py-2">Volver</button>
           <div className="d-flex gap-3">
-            <button className="btn btn-success px-4 py-2">Crear Nuevo Usuario</button>
+            <button 
+              onClick={() => setVistaActual('registro')} 
+              className="btn btn-success px-4 py-2"
+            >
+              Crear Nuevo Usuario
+            </button>
           </div>
         </div>
       </div>
+      ) : (
+      <div className="transparente-registro" style={{ minHeight: '80vh' }}>
+        <RegisterView 
+        onVolver={() => {
+        setVistaActual('gestion'); 
+        cargar();                  
+        }}/>
+      </div>
+      )}
 
       {usuarioAEditar && (
         <UsuarioEditModal 
