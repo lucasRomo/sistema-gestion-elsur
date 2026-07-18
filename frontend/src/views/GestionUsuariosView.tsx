@@ -85,9 +85,8 @@ export const GestionUsuariosView: React.FC = () => {
           <td style={{ padding: '12px' }}>{u.cargo || '-'}</td>
           <td style={{ padding: '12px', textAlign: 'right' }}>${Number(u.salario || 0).toLocaleString('es-AR')}</td>
           <td style={{ padding: '12px', textAlign: 'center' }}>
-            <span className={`badge ${u.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>
-              {u.estado}
-            </span>
+            <span className={`badge ${ u.estado === 'Activo' ? 'bg-success' : u.estado === 'Pendiente' ? 'bg-warning text-dark' : 'bg-danger'}`}>
+            {u.estado}</span>
           </td>
           <td style={{ padding: '12px' }}>
             <div className="d-flex justify-content-center gap-2">

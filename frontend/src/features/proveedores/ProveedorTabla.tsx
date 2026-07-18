@@ -4,7 +4,7 @@ import type { Proveedor } from '../../types/Proveedor';
 interface ProveedorTablaProps {
   proveedores: Proveedor[];
   onEditar: (proveedor: Proveedor) => void;
-  onVerUbicacion: (proveedor: Proveedor) => void; // Cambiado para manejar la ubicación
+  onVerUbicacion: (proveedor: Proveedor) => void; 
 }
 
 export const ProveedorTabla: React.FC<ProveedorTablaProps> = ({ proveedores, onEditar, onVerUbicacion }) => {
@@ -26,7 +26,7 @@ export const ProveedorTabla: React.FC<ProveedorTablaProps> = ({ proveedores, onE
         <tbody>
           {proveedores.length === 0 ? (
             <tr>
-              <td colSpan={7} className="text-center text-muted py-4">
+              <td colSpan={7} className="text-center py-4">
                 No se encontraron proveedores registrados en el sistema.
               </td>
             </tr>

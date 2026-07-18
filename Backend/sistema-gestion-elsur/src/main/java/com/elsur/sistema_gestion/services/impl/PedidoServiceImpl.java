@@ -356,49 +356,48 @@ public Pedido cambiarEstadoPedido(Integer idPedido, String nuevoEstado, String o
     return pedido;
 }
 
-   @Transactional
-public Pedido agregarPago(Integer idPedido, Double monto, String tipoPago, String urlComprobante, Integer idUsuario) {
-    // 1. Lógica del Pedido
-    Pedido pedido = pedidoRepository.findById(idPedido)
-        .orElseThrow(() -> new RuntimeException("No se encontró el pedido"));
+   @Override
+    @Transactional
+    public Pedido agregarPago(Integer idPedido, Double monto, String tipoPago, String urlComprobante, Integer idUsuario) {
+        // ➔ VALIDACIÓN: Verificar si la caja está abierta antes de tocar nada
+        Turno turnoActivo = TurnoRepository.findTurnoAbiertoHoy();
+        if (turnoActivo == null) {
+            throw new RuntimeException("La Caja No está Abierta. Por favor, inicie turno antes de registrar el cobro.");
+        }
 
-    BigDecimal montoBD = BigDecimal.valueOf(monto);
-    pedido.setMonto_pago_adelantado(pedido.getMonto_pago_adelantado().add(montoBD));
-    pedidoRepository.save(pedido);
+        // 1. Lógica del Pedido
+        Pedido pedido = pedidoRepository.findById(idPedido)
+            .orElseThrow(() -> new RuntimeException("No se encontró el pedido"));
 
-    // 2. Registro en Caja
-    Turno turnoActivo = TurnoRepository.findTurnoAbiertoHoy();
+        BigDecimal montoBD = BigDecimal.valueOf(monto);
+        pedido.setMonto_pago_adelantado(pedido.getMonto_pago_adelantado().add(montoBD));
+        pedidoRepository.save(pedido);
 
-    if (turnoActivo != null) {
+        // 2. Registro en Caja
         MovimientoCaja mov = new MovimientoCaja();
         
         mov.setTipoMovimiento("INGRESO"); 
         mov.setMonto(montoBD);
         mov.setMetodoPago(tipoPago);    
         mov.setFecha(LocalDateTime.now());
-        mov.setTurno(turnoActivo);
+        mov.setTurno(turnoActivo); // Ya sabemos que no es null
 
-        // --- MODIFICACIÓN AQUÍ: Lógica para la descripción ---
         String descripcion;
         if (pedido.getObservaciones() != null && pedido.getObservaciones().contains("Venta Rápida")) {
             descripcion = "Venta Rápida";
         } else {
-            // Puedes ajustar este mensaje si quieres diferenciar "Seña" de "Pago"
             descripcion = "Cobro Pendiente de Pedido #" + idPedido;
         }
         mov.setDescripcion(descripcion);
-        // ----------------------------------------------------
 
-        // Usuario
         Usuario usuario = usuarioRepository.findById(idUsuario != null ? idUsuario : 1)
                             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         mov.setUsuario(usuario);
 
         cajaRepository.save(mov); 
-    }
 
-    return pedido;
-}
+        return pedido;
+    }
 
     private String guardarArchivoFisico(MultipartFile archivo) {
         if (archivo == null || archivo.isEmpty()) {
@@ -447,6 +446,12 @@ public Pedido agregarPago(Integer idPedido, Double monto, String tipoPago, Strin
     @Override
     @Transactional
     public Pedido agregarPagoConArchivo(Integer idPedido, Double monto, String tipoPago, Integer idUsuario, MultipartFile comprobante) {
+        // ➔ VALIDACIÓN: Verificar si la caja está abierta antes de tocar nada
+        Turno turnoActivo = TurnoRepository.findTurnoAbiertoHoy();
+        if (turnoActivo == null) {
+            throw new RuntimeException("La Caja No está Abierta. Por favor, inicie turno antes de registrar el cobro.");
+        }
+
         // 1. Buscamos el Pedido
         Pedido pedido = pedidoRepository.findById(idPedido)
             .orElseThrow(() -> new RuntimeException("No se encontró el pedido"));
@@ -457,7 +462,7 @@ public Pedido agregarPago(Integer idPedido, Double monto, String tipoPago, Strin
         // 2. Procesamos el archivo físico si viene adjunto
         String urlDeImagen = null;
         if (comprobante != null && !comprobante.isEmpty()) {
-            urlDeImagen = guardarArchivoFisico(comprobante); // Guarda en la carpeta uploads/
+            urlDeImagen = guardarArchivoFisico(comprobante);
         }
 
         // 3. Crear el Comprobante de Pago asociado
@@ -470,33 +475,30 @@ public Pedido agregarPago(Integer idPedido, Double monto, String tipoPago, Strin
         nuevoCobro.setTipoPago(tipoPago); 
         nuevoCobro.setMontoPago(montoBD);
         nuevoCobro.setFechaCarga(LocalDateTime.now());
-        nuevoCobro.setUrlArchivoComprobante(urlDeImagen); // Aquí guardamos la URL para que aparezca el botón de visualización
+        nuevoCobro.setUrlArchivoComprobante(urlDeImagen);
         
         pedido.getComprobantes().add(nuevoCobro);
         pedidoRepository.save(pedido);
 
         // 4. Registro del movimiento en Caja
-        Turno turnoActivo = TurnoRepository.findTurnoAbiertoHoy();
-        if (turnoActivo != null) {
-            MovimientoCaja mov = new MovimientoCaja();
-            mov.setTipoMovimiento("INGRESO"); 
-            mov.setMonto(montoBD);
-            mov.setMetodoPago(tipoPago);
-            mov.setFecha(LocalDateTime.now());
-            mov.setTurno(turnoActivo);
+        MovimientoCaja mov = new MovimientoCaja();
+        mov.setTipoMovimiento("INGRESO"); 
+        mov.setMonto(montoBD);
+        mov.setMetodoPago(tipoPago);
+        mov.setFecha(LocalDateTime.now());
+        mov.setTurno(turnoActivo); // Ya sabemos que no es null
 
-            String descripcion = "Cobro Pendiente de Pedido #" + idPedido;
-            if (pedido.getObservaciones() != null && pedido.getObservaciones().contains("Venta Rápida")) {
-                descripcion = "Venta Rápida";
-            }
-            mov.setDescripcion(descripcion);
-
-            Usuario usuario = usuarioRepository.findById(idUsuario != null ? idUsuario : 1)
-                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            mov.setUsuario(usuario);
-
-            cajaRepository.save(mov); 
+        String descripcion = "Cobro Pendiente de Pedido #" + idPedido;
+        if (pedido.getObservaciones() != null && pedido.getObservaciones().contains("Venta Rápida")) {
+            descripcion = "Venta Rápida";
         }
+        mov.setDescripcion(descripcion);
+
+        Usuario usuario = usuarioRepository.findById(idUsuario != null ? idUsuario : 1)
+                            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        mov.setUsuario(usuario);
+
+        cajaRepository.save(mov); 
 
         return pedido;
     }

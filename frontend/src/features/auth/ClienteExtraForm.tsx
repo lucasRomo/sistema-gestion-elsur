@@ -19,12 +19,7 @@ export const ClienteExtraForm = ({ formData, setFormData, onRegistrar, onCerrar 
 
             <div className="mb-3">
               <label className="text-light">Persona de Contacto:</label>
-              <input className="form-control" value={formData.personaDeContacto} onChange={e => handleChange('personaDeContacto', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+"
-                      onInvalid={(e: any) => {
-                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Persona de Contacto No puede Estar Vacío");
-                      else e.target.setCustomValidity("El Campo Persona de Contacto solo debe contener letras");
-                      }}
-                      onInput={(e: any) => e.target.setCustomValidity("")} />
+              <input className="form-control" value={formData.personaDeContacto} onChange={e => handleChange('personaDeContacto', e.target.value)} />
                   </div>
 
 

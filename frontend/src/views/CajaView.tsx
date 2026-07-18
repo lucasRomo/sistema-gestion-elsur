@@ -278,13 +278,10 @@ export const CajaView: React.FC = () => {
                   {cajaAbierta && movimientos.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart
-                        data={[...movimientos]
-                          .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-                          .map(m => ({
-                            hora: new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }),
-                            monto: m.monto
-                          }))
-                        }
+                        data={[...movimientos] .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+                        .map(m => ({
+                        hora: new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                        monto: m.tipoMovimiento === 'EGRESO' ? -Math.abs(m.monto) : m.monto}))}
                         margin={{ top: 10, right: 15, left: -15, bottom: 5 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
@@ -307,9 +304,9 @@ export const CajaView: React.FC = () => {
                         <Line 
                           type="linear" 
                           dataKey="monto" 
-                          stroke="#198754" 
+                          stroke="#6c0beb" 
                           strokeWidth={4} 
-                          dot={{ fill: '#ffffff', stroke: '#198754', strokeWidth: 2, r: 4 }}
+                          dot={{ fill: '#ffffff', stroke: '#ffffff', strokeWidth: 2, r: 4 }}
                           activeDot={{ r: 6 }}
                         />
                       </LineChart>
