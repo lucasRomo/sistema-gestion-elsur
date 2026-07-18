@@ -106,18 +106,20 @@ export const VentaRapida: React.FC = () => {
     // 2. Esperar a que la DB procese (Hotfix de concurrencia)
     await new Promise(resolve => setTimeout(resolve, 500));
     
+    const formDataPago = new FormData();
+    const payloadPago = {
+        monto: total,
+        tipoPago: 'EFECTIVO',
+        idUsuario: idUsuarioLogueado
+      };
+
+    formDataPago.append("payload", JSON.stringify(payloadPago));
+
     // MODIFICACIÓN: Ya no pasamos parámetros en la URL, pasamos el objeto en el body
     const resPago = await fetch(`http://localhost:8080/api/pedidos/${pedidoGuardado.id_pedido}/pagos`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify({
-          monto: total,
-          tipoPago: 'EFECTIVO',
-          idUsuario: idUsuarioLogueado
-        })
-    });
+        body: formDataPago
+      });
 
     if (!resPago.ok) {
         const errorText = await resPago.text();
