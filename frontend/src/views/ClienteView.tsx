@@ -83,7 +83,7 @@ export const ClienteView = () => {
 });
 
   return (
-    <SidebarLayout activeItem="Clientes">
+    <>
       <div className="d-flex justify-content-center align-items-center mb-4 position-relative">
   <h1 className="fw-bold text-white font-monospace">Clientes</h1>
 </div>
@@ -154,6 +154,6 @@ export const ClienteView = () => {
       {paso === 2 && <ClienteExtraForm formData={formData} setFormData={setFormData} onRegistrar={handleRegistrarFinal} onCerrar={() => setPaso(1)} />}
       {clienteAEditar && <ClienteEditModal cliente={clienteAEditar} onCerrar={() => setClienteAEditar(null)} onConfirmar={handleConfirmarEdicion} />}
       {clienteConUbicacionSeleccionada && <UbicacionViewModal cliente={clienteConUbicacionSeleccionada} onCerrar={() => setClienteConUbicacionSeleccionada(null)} onConfirmar={handleConfirmarEdicion} />}
-    </SidebarLayout>
+    </>
   );
 };

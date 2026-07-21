@@ -27,7 +27,7 @@ export const Productos: React.FC = () => {
 });
 
   return (
-    <SidebarLayout activeItem="Productos">
+    <>
       <div className="container-fluid px-0">
 
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -127,6 +127,6 @@ export const Productos: React.FC = () => {
   />
 )}
       </div>
-    </SidebarLayout>
+    </>
   );
 };

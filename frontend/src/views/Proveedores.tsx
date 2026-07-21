@@ -39,7 +39,7 @@ export const Proveedores: React.FC = () => {
   const tiposUnicos = Array.from(new Set(proveedores.map(p => p.tipoProveedor?.descripcion).filter(Boolean))) as string[];
 
   return (
-    <SidebarLayout activeItem="Proveedores">
+    <>
       <div className="container-fluid px-0">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div className="w-100 text-center position-relative">
@@ -115,6 +115,6 @@ export const Proveedores: React.FC = () => {
           }}
         />
       </div>
-    </SidebarLayout>
+    </>
   );
 };

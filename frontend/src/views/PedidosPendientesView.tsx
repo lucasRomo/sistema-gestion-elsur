@@ -101,7 +101,7 @@ export const PedidosPendientesPage: React.FC = () => {
   });
 
   return (
-    <SidebarLayout activeItem="Pedidos Pendientes">
+    <>
       <div className="container-fluid px-2">
         <div className="d-flex justify-content-between align-items-center mb-4 d-print-none">
           <h1 className="fw-bold tracking-tight">
@@ -190,6 +190,6 @@ export const PedidosPendientesPage: React.FC = () => {
           onClose={() => setVerTicketPedido(null)}
         />
       )}
-    </SidebarLayout>
+    </>
   );
 };

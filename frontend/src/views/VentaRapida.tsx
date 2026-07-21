@@ -139,7 +139,7 @@ export const VentaRapida: React.FC = () => {
 
   
   return (
-    <SidebarLayout activeItem="Venta Rápida">
+    <>
       <div className="container-fluid font-monospace text-white">
 
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -213,6 +213,6 @@ export const VentaRapida: React.FC = () => {
           <ResumenVenta total={calcularTotal()} onCancelar={handleCancelar} onCompletar={handleCompletarVenta} />
         </div>
       </div>
-    </SidebarLayout>
+    </>
   );
 };

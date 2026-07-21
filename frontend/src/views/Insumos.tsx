@@ -28,7 +28,7 @@ export const Insumos: React.FC = () => {
   });
 
   return (
-    <SidebarLayout activeItem="Insumos">
+    <>
       {/* Mantenemos tu estructura intacta */}
       <div className="container-fluid px-0">
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -125,6 +125,6 @@ export const Insumos: React.FC = () => {
 />
 )}
       </div>
-    </SidebarLayout>
+   </>
   );
 };

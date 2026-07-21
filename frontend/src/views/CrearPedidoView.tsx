@@ -30,7 +30,7 @@ export const CrearPedidoView: React.FC = () => {
   };
 
   return (
-    <SidebarLayout activeItem="Crear Pedido">
+    <>
       <div className="container-fluid min-vh-100 d-flex flex-column py-2">
         {paso === 1 ? (
           <SelectorProductosForm 
@@ -51,6 +51,6 @@ export const CrearPedidoView: React.FC = () => {
           />
         )}
       </div>
-    </SidebarLayout>
+    </>
   );
 };

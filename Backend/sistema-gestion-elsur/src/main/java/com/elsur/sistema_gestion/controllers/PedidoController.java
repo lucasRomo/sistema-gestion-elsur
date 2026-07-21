@@ -26,20 +26,23 @@ public class PedidoController {
 
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody Map<String, Object> payload) {
-    try {
-        // 1. Extraemos el objeto Pedido y el idEmpleado
-        ObjectMapper mapper = new ObjectMapper();
-        Pedido pedido = mapper.convertValue(payload.get("pedido"), Pedido.class);
-        Integer idEmpleado = payload.get("idEmpleado") != null ? 
-                             Integer.valueOf(payload.get("idEmpleado").toString()) : null;
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            
+            // Si el JSON viene envuelto en una clave "pedido", lo extraemos, 
+            // de lo contrario, mapeamos directamente todo el payload.
+            Object datosPedido = payload.containsKey("pedido") ? payload.get("pedido") : payload;
+            Pedido pedido = mapper.convertValue(datosPedido, Pedido.class);
+            
+            Integer idEmpleado = payload.get("idEmpleado") != null ? 
+                                 Integer.valueOf(payload.get("idEmpleado").toString()) : null;
 
-        // 2. Llamamos al servicio pasando ambos
-        Pedido guardado = pedidoService.guardar(pedido, idEmpleado);
-        return ResponseEntity.ok(guardado);
-    } catch (Exception e) {
-        return ResponseEntity.badRequest().body("Error al guardar pedido: " + e.getMessage());
+            Pedido guardado = pedidoService.guardar(pedido, idEmpleado);
+            return ResponseEntity.ok(guardado);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al guardar pedido: " + e.getMessage());
+        }
     }
-}
 
     @PatchMapping("/{id}/finalizar")
     public ResponseEntity<?> finalizarPedido(@PathVariable Integer id) {

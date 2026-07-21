@@ -83,7 +83,7 @@ export const HistorialPedidosPage: React.FC = () => {
   });
 
   return (
-    <SidebarLayout activeItem="Historial de Pedidos">
+    <>
       <div className="container-fluid px-2">
         <div className="d-flex justify-content-between align-items-center mb-4 d-print-none">
           <h1 className="fw-bold tracking-tight">Historial de Pedidos</h1>
@@ -158,6 +158,6 @@ export const HistorialPedidosPage: React.FC = () => {
           onClose={() => setVerTicketPedido(null)}
         />
       )}
-    </SidebarLayout>
+    </>
   );
 };
