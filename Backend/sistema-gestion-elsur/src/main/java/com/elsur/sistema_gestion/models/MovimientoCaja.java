@@ -37,4 +37,7 @@ public class MovimientoCaja {
     @ManyToOne
     @JoinColumn(name = "id_turno", nullable = true)
     private Turno turno;
+
+    @Column(length = 20, nullable = true) 
+    private String metodoPago;
 }

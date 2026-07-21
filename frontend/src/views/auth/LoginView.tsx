@@ -140,10 +140,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
 </div>
 
           {/* Botones */}
-          <button type="submit" className="btn btn-outline-secondary w-100 mb-2 text-white" style={{ borderColor: '#4c1d95' }}>
+          <button type="submit" className="btn btn-outline-secondary w-100 mb-2 text-white" style={{ borderColor: '#4c1d95' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4c1d95'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
             Iniciar Sesión
           </button>
-          <button type="button" className="btn btn-outline-secondary w-100 text-white" style={{ borderColor: '#4c1d95' }} onClick={onVolver}>
+          <button type="button" className="btn btn-outline-secondary w-100 text-white" style={{ borderColor: '#4c1d95' }} onClick={onVolver}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4c1d95'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
             Volver
           </button>
         </form>

@@ -2,10 +2,14 @@ package com.elsur.sistema_gestion.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 import org.hibernate.annotations.ColumnDefault;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
@@ -28,6 +32,9 @@ public class Pedido {
 
     
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("pedido")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private List<DetallePedido> detalles;
 
     @Column(nullable = false, updatable = false)
@@ -75,7 +82,9 @@ public class Pedido {
 
     // ➔ NUEVA RELACIÓN AGREGADA: Mapeo bidireccional con el historial
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JsonIgnoreProperties("pedido") // Evita bucles infinitos en la serialización JSON
-    @JsonProperty("historiales")    // Permite que viaje en el JSON como "historiales"
+    @JsonIgnoreProperties("pedido") 
+    @JsonProperty("historiales")    
     private List<HistorialEstadoPedido> historiales;
+
+    
 }

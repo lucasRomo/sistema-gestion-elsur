@@ -10,3 +10,4 @@ export interface Empleado {
     estado: string;
     persona: Persona;
 }
+

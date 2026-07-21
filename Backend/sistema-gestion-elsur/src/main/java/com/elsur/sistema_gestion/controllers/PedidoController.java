@@ -6,8 +6,12 @@ import com.elsur.sistema_gestion.services.PedidoService;
 import tools.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+
 import java.util.List;
 import java.util.Map;
 
@@ -24,24 +28,80 @@ public class PedidoController {
         return pedidoService.listarTodos();
     }
 
-    @PostMapping
-    public ResponseEntity<?> crear(@RequestBody Map<String, Object> payload) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            
-            // Si el JSON viene envuelto en una clave "pedido", lo extraemos, 
-            // de lo contrario, mapeamos directamente todo el payload.
-            Object datosPedido = payload.containsKey("pedido") ? payload.get("pedido") : payload;
-            Pedido pedido = mapper.convertValue(datosPedido, Pedido.class);
-            
-            Integer idEmpleado = payload.get("idEmpleado") != null ? 
-                                 Integer.valueOf(payload.get("idEmpleado").toString()) : null;
+    @PostMapping(consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> crearJson(@RequestBody Map<String, Object> payload) {
+        return procesarYGuardarPedido(payload, null);
+    }
 
-            Pedido guardado = pedidoService.guardar(pedido, idEmpleado);
-            return ResponseEntity.ok(guardado);
+    /**
+     * RUTA B: Creación de pedido con comprobante físico adjunto.
+     * Se activa cuando Content-Type es 'multipart/form-data'.
+     */
+    @PostMapping(consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> crearMultipart(
+        @RequestPart("payload") String payloadJson,
+        @RequestPart(value = "comprobante", required = false) MultipartFile comprobante
+    ) {
+        try {
+            ObjectMapper mapper = new ObjectMapper(); 
+            Map<String, Object> payload = mapper.readValue(payloadJson, Map.class);
+            return procesarYGuardarPedido(payload, comprobante);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al guardar pedido: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error al parsear el JSON del pedido: " + e.getMessage());
         }
+    }
+
+    @PostMapping(value = "/comprobantes/{idComprobante}/archivo", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> vincularArchivoAComprobante(
+        @PathVariable Integer idComprobante,
+        @RequestPart("comprobante") MultipartFile comprobante
+    ) {
+        try {
+            Pedido pedidoActualizado = pedidoService.asociarArchivoAComprobanteExistente(idComprobante, comprobante);
+            return ResponseEntity.ok(pedidoActualizado);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+
+    @DeleteMapping("/comprobantes/{idComprobante}/archivo")
+    public ResponseEntity<?> eliminarArchivoDeComprobante(@PathVariable Integer idComprobante) {
+        try {
+            // Buscamos el comprobante
+            Pedido pedidoActualizado = pedidoService.eliminarArchivoDeComprobante(idComprobante);
+            return ResponseEntity.ok(pedidoActualizado);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    /**
+     * MÁSTRE MÉTODO AUXILIAR: Mantiene tu lógica original idéntica y centralizada.
+     */
+    private ResponseEntity<?> procesarYGuardarPedido(Map<String, Object> payload, MultipartFile comprobante) {
+    try {
+        ObjectMapper mapper = new ObjectMapper();
+        Pedido pedido = mapper.convertValue(payload.get("pedido"), Pedido.class); 
+        
+        Integer idEmpleado = payload.get("idEmpleado") != null ?  
+                             Integer.valueOf(payload.get("idEmpleado").toString()) : null;
+                             
+        Integer idUsuario = payload.get("idUsuario") != null ?
+                            Integer.valueOf(payload.get("idUsuario").toString()) : null;
+
+        // ➔ LEEMOS EL TIPO DE PAGO ENVIADO DESDE EL FRONT (Por defecto "Efectivo" si no viene)
+        String tipoPago = payload.get("tipoPago") != null ? 
+                          payload.get("tipoPago").toString() : "Efectivo";
+
+        // ➔ PASAMOS 'tipoPago' COMO CUARTO PARÁMETRO AL SERVICIO:
+        Pedido guardado = pedidoService.guardar(pedido, idEmpleado, idUsuario, tipoPago, comprobante);
+        return ResponseEntity.ok(guardado); 
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
     }
 
     @PatchMapping("/{id}/finalizar")
@@ -75,17 +135,28 @@ public ResponseEntity<?> cambiarEstado(@PathVariable Integer id, @RequestBody Ma
 }
 
     // ➔ NUEVO MÉTODO: Registrar Pago / Entrega de Dinero
-    @PostMapping("/{id}/pagos")
-    public ResponseEntity<?> registrarPago(@PathVariable Integer id, @RequestBody Map<String, Object> payload) {
+    @PostMapping(value = "/{id}/pagos", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> agregarPago(
+        @PathVariable Integer id,
+        @RequestPart("payload") String payloadJson,
+        @RequestPart(value = "comprobante", required = false) MultipartFile comprobante
+    ) {
         try {
-            Double monto = Double.valueOf(payload.get("monto").toString());
-            String tipoPago = (String) payload.get("tipoPago");
-            String urlComprobante = (String) payload.get("urlComprobante");
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> payload = mapper.readValue(payloadJson, Map.class);
 
-            Pedido actualizado = pedidoService.agregarPago(id, monto, tipoPago, urlComprobante);
-            return ResponseEntity.ok(actualizado);
+            Double monto = Double.valueOf(payload.get("monto").toString());
+            String tipoPago = payload.get("tipoPago").toString();
+            Integer idUsuario = null;
+            if (payload.get("idUsuario") != null) {
+                idUsuario = Double.valueOf(payload.get("idUsuario").toString()).intValue();
+            }
+
+            // Procesamos el pago pasándole el archivo del comprobante
+            Pedido pedidoActualizado = pedidoService.agregarPagoConArchivo(id, monto, tipoPago, idUsuario, comprobante);
+            return ResponseEntity.ok(pedidoActualizado);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al registrar el pago: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
@@ -104,5 +175,12 @@ public ResponseEntity<?> cambiarEstado(@PathVariable Integer id, @RequestBody Ma
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al buscar el pedido: " + e.getMessage());
         }
+    }
+
+    @PutMapping("/{idPedido}/asignar-empleado") 
+    public ResponseEntity<?> asignarEmpleado(@PathVariable Integer idPedido, @RequestBody Map<String, String> request) {
+        Integer idEmpleado = Integer.parseInt(request.get("idEmpleado"));
+        pedidoService.asignarEmpleado(idPedido, idEmpleado); 
+        return ResponseEntity.ok().build();
     }
 }

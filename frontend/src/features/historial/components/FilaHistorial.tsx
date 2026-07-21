@@ -47,22 +47,24 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
     : null;
 
   return (
-    <tr className="border-bottom border-dark">
-      <td className="fw-bold text-secondary">#{p.id_pedido}</td>
-      <td>
-        <div className="fw-semibold text-white">{nombreCliente}</div>
-        {p.observaciones && (
-          <small className="text-muted d-block text-truncate" style={{ maxWidth: '200px', fontSize: '0.75rem' }}>
-            {p.observaciones}
-          </small>
-        )}
+    <tr style={{ borderBottom: '1px solid #27272a', backgroundColor: '#1d1d1d', transition: 'background 0.2s' }} 
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#18181b'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1d1d1d'}>
+      <td className="fw-bold text-secondary" style={{ padding: '12px 12px 12px 12px' }}>#{p.id_pedido}</td>
+      <td style={{ padding: '15px 20px' }}>
+      <span className="fw-semibold text-white">{nombreCliente}</span>
       </td>
       <td>
         <div className="d-flex gap-1">
           {p.cliente?.persona?.telefono && (
             <a href={`https://wa.me/${p.cliente.persona.telefono}`} target="_blank" rel="noreferrer" className="btn btn-sm text-success p-1">
               <i className="bi bi-whatsapp"></i>
-            </a>
+          </a>
+          )}
+          {p.cliente?.persona?.email && (
+          <a href={`mailto:${p.cliente.persona.email}`} className="btn btn-sm text-danger p-1">
+          <i className="bi bi-envelope"></i>
+          </a>
           )}
         </div>
       </td>
@@ -80,70 +82,26 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
           {p.estado}
         </span>
       </td>
-      <td className="fw-bold text-muted">${Number(p.monto_total).toFixed(2)}</td>
+      <td className="text-light mt-4">${Number(p.monto_total).toFixed(2)}</td>
       <td className="text-success fw-bold">${Number(p.monto_pago_adelantado).toFixed(2)}</td>
       <td>
         <div className="d-flex justify-content-center gap-3 align-items-center">
-          
-          {/* CONTROL DE COMPROBANTE DIGITAL */}
-          {tieneComprobante && urlUltimoComprobante ? (
-            <div className="d-flex gap-2 align-items-center">
-              <button 
-                className="btn btn-sm p-0 text-info" 
-                title="Ver comprobante"
-                onClick={() => window.open(urlUltimoComprobante, '_blank')}
-              >
-                <i className="bi bi-eye-fill fs-5"></i>
-              </button>
-              <button 
-                className="btn btn-sm p-0 text-danger" 
-                title="Eliminar comprobante"
-                onClick={() => onEliminarComprobante(p.id_pedido)}
-              >
-                <i className="bi bi-trash-fill fs-6"></i>
-              </button>
-            </div>
-          ) : (
-            <div className="position-relative">
-              <label 
-                htmlFor={`file-historial-${p.id_pedido}`} 
-                className="btn btn-sm p-0 text-light opacity-50 m-0" 
-                style={{ cursor: 'pointer' }}
-                title="Cargar comprobante"
-              >
-                <i className="bi bi-cloud-upload-fill fs-5"></i>
-              </label>
-              <input 
-                id={`file-historial-${p.id_pedido}`}
-                type="file" 
-                className="d-none"
-                accept="image/*,application/pdf"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    onSubirArchivo(p.id_pedido, e.target.files[0]);
-                  }
-                }}
-              />
-            </div>
-          )}
 
-          {/* BOTÓN DE AUDITORÍA DE CAMBIOS */}
-          <button 
-            className="btn btn-sm border-0 bg-transparent p-0 text-info" 
-            title="Ver Auditoría e Historial de Cambios"
-            onClick={() => onAbrirAuditoria(p.id_pedido)}
-          >
-            <i className="bi bi-currency-dollar fs-4 text-warning"></i>
-          </button>
+        <button 
+         className="rounded d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', border: '0.8px solid #1a8140', backgroundColor: 'transparent', transition: '0.2s' }}
+         onClick={() => onAbrirAuditoria(p.id_pedido)}
+         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1a8140'; e.currentTarget.querySelector('i')!.style.color = '#000'; }}
+         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.querySelector('i')!.style.color = '#1a8140'; }}>
+         <i className="bi bi-currency-dollar" style={{ color: '#1a8140' }}></i>
+        </button>
 
-          {/* REIMPRESIÓN DE COMPROBANTES DE ENTREGA */}
-          <button 
-            className="btn btn-sm p-0 text-secondary" 
-            title="Reimprimir Ticket"
-            onClick={() => onSelectTicket(p)}
-          >
-            <i className="bi bi-printer fs-5"></i>
-          </button>
+        <button 
+         className="rounded d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', border: '0.8px solid #ffc107', backgroundColor: 'transparent', transition: '0.2s' }}
+         onClick={() => onSelectTicket(p)}
+         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#ffc107'; e.currentTarget.querySelector('i')!.style.color = '#000'; }}
+         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.querySelector('i')!.style.color = '#ffc107'; }}>
+         <i className="bi bi-printer" style={{ color: '#ffc107' }}></i>
+        </button>
         </div>
       </td>
     </tr>

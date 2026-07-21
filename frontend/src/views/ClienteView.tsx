@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SidebarLayout } from '../components/layouts/SidebarLayout';
 import { PersonaForm } from '../features/auth/PersonaForm';
 import { ClienteExtraForm } from '../features/auth/ClienteExtraForm';
@@ -17,6 +18,7 @@ export const ClienteView = () => {
   const [filtroEstado, setFiltroEstado] = useState<string>('Sin Filtro');
   const [showSuccess, setShowSuccess] = useState(false);
   const [msgSuccess, setMsgSuccess] = useState('');
+  const navigate = useNavigate();
 
 
 
@@ -47,7 +49,7 @@ export const ClienteView = () => {
     try { 
       await registrar(payload); 
       setMsgSuccess("El Cliente ha sido registrado con éxito");
-      setShowSuccess(true); // <--- CAMBIO: Dispara el modal centralizado
+      setShowSuccess(true); 
       setPaso(0); 
     } 
     catch (e: any) { alert("Error: " + e.message); }
@@ -57,7 +59,7 @@ export const ClienteView = () => {
     try { 
       await registrar(data); 
       setMsgSuccess("Cambios guardados correctamente");
-      setShowSuccess(true); // <--- CAMBIO: Dispara el modal centralizado
+      setShowSuccess(true); 
       setClienteAEditar(null); 
       setClienteConUbicacionSeleccionada(null); 
       cargar(); 
@@ -67,7 +69,7 @@ export const ClienteView = () => {
 
   const clientesFiltrados = clientes.filter((c: any) => {
 
-  if (c.idCliente === 1) return false;
+  if (c.id_cliente === 1) return false;
 
   if (filtroEstado !== 'Sin Filtro' && c.estado !== filtroEstado) return false;
   
@@ -118,12 +120,12 @@ export const ClienteView = () => {
     <tbody>
       {clientesFiltrados.map((c: any) => (
         <tr 
-          key={c.idCliente} 
+          key={c.id_cliente} 
           style={{ borderBottom: '1px solid #2d2d30' }}
           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#27272a'} 
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
         >
-          <td style={{ padding: '12px' }}>{c.idCliente}</td>
+          <td style={{ padding: '12px' }}>{c.id_cliente}</td>
           <td style={{ padding: '12px' }}>{c.persona?.nombre}</td>
           <td style={{ padding: '12px' }}>{c.persona?.apellido}</td>
           <td style={{ padding: '12px' }}>{c.persona?.numeroDocumento}</td>
@@ -148,7 +150,11 @@ export const ClienteView = () => {
   </table>
 </div>
 
-      <button className="btn btn-success mt-4" onClick={() => setPaso(1)}>Registrar Nuevo Cliente</button>
+    <div className="d-flex justify-content-between align-items-center w-100 mt-4">
+      <button onClick={() => navigate('/dashboard')} className="btn btn-success" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }}>Volver</button>
+      <button className="btn btn-success" onClick={() => setPaso(1)}>Registrar Nuevo Cliente</button>
+    </div>
+
 
       {paso === 1 && <div className="modal d-block" style={{background:'rgba(0,0,0,0.8)'}}><div className="modal-dialog"><div className="modal-content bg-dark text-white p-4"><PersonaForm formData={formData} setFormData={setFormData} onSiguiente={() => setPaso(2)} onVolver={() => setPaso(0)} /></div></div></div>}
       {paso === 2 && <ClienteExtraForm formData={formData} setFormData={setFormData} onRegistrar={handleRegistrarFinal} onCerrar={() => setPaso(1)} />}

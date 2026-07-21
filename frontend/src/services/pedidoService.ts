@@ -12,6 +12,22 @@ export const pedidoService = {
     return null;
   },
 
+  asignarEmpleado: async (idPedido: number, idEmpleado: string) => {
+    const response = await fetch(`http://localhost:8080/api/pedidos/${idPedido}/asignar-empleado`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idEmpleado })
+    });
+
+    if (!response.ok) throw new Error('Error al asignar el empleado');
+
+    // AQUÍ ESTÁ LA CORRECCIÓN:
+    // Verificamos si la respuesta tiene contenido antes de intentar convertirla a JSON
+    const text = await response.text();
+    return text ? JSON.parse(text) : null; 
+  },
+
+
   /**
    * Sube una captura o imagen física de comprobante al backend
    */

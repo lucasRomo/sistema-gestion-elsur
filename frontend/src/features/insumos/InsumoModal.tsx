@@ -103,8 +103,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   name="nombreInsumo" 
                   value={formData.nombreInsumo} 
                   onChange={handleChange} 
-                  required pattern="[A-Za-zÁ-Úá-ú\s]+"
-                  onInvalid={(e: any) => {
+                  required onInvalid={(e: any) => {
                   if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre de Insumo No puede Estar Vacío");
                   else if (e.target.validity.patternMismatch) e.target.setCustomValidity("El Campo de Nombre de Insumo solo debe contener Letras");
                   }}

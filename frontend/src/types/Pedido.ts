@@ -8,6 +8,14 @@ export interface DetallePedido {
   subtotal: number;
 }
 
+export interface Pago {
+  id_pago?: number;
+  monto: number;
+  tipoPago: string;
+  urlComprobante?: string; 
+  fecha_pago?: string;
+}
+
 export interface HistorialEstadoPedido {
   id_historial: number;
   fecha_cambio: string;

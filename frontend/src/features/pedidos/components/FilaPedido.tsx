@@ -2,20 +2,26 @@ import React from 'react';
 
 interface FilaPedidoProps {
   pedido: any;
+  empleados: any[];
   onCambioEstado: (pedido: any, estadoDestino: string) => void;
   onSelectPago: (pedido: any) => void;
   onSelectTicket: (pedido: any) => void;
   onSubirArchivo: (idPedido: number, file: File) => void;
   onEliminarComprobante: (idPedido: number) => void;
+  onCambioEmpleado: (idPedido: number, idEmpleado: string) => void;
+  onSelectComprobantes: (pedido: any) => void;
 }
 
 export const FilaPedido: React.FC<FilaPedidoProps> = ({
   pedido: p,
+  empleados: e,
   onCambioEstado,
+  onCambioEmpleado,
   onSelectPago,
   onSelectTicket,
   onSubirArchivo,
-  onEliminarComprobante
+  onEliminarComprobante,
+  onSelectComprobantes
 }) => {
   
   // Cálculo de Nombre del Cliente
@@ -43,25 +49,37 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
     : '-';
 
   // Validación de documentos
-  const tieneComprobante = p.comprobantes && p.comprobantes.length > 0;
-  const urlUltimoComprobante = tieneComprobante 
-    ? p.comprobantes[p.comprobantes.length - 1].urlArchivoComprobante 
-    : null;
+  const urlUltimoComprobante = (() => {
+    // 1. Buscamos primero en el array de comprobantes directos del pedido
+    if (p.comprobantes && p.comprobantes.length > 0) {
+      const ultimo = p.comprobantes[p.comprobantes.length - 1];
+      if (ultimo?.urlArchivoComprobante) return ultimo.urlArchivoComprobante;
+    }
+    
+    // 2. Si no hay, buscamos en los pagos/adelantos asociados al pedido
+    if (p.pagos && p.pagos.length > 0) {
+      // Buscamos el último pago que tenga un campo 'urlComprobante' o similar no vacío
+      const pagosConComprobante = p.pagos.filter((pago: any) => pago.urlComprobante || pago.urlArchivoComprobante);
+      if (pagosConComprobante.length > 0) {
+        const ultimoPago = pagosConComprobante[pagosConComprobante.length - 1];
+        return ultimoPago.urlComprobante || ultimoPago.urlArchivoComprobante;
+      }
+    }
+    
+    return null;
+  })();
 
-  // Lógica de color de saldo ($)
-  const getColorSignoPesos = (total: number, adelantado: number) => {
-    if (adelantado === 0) return 'text-secondary';
-    if (adelantado < total) return 'text-danger';
-    return 'text-success';
-  };
+  const tieneComprobante = urlUltimoComprobante !== null;
 
   return (
-    <tr className="border-bottom border-dark">
-      <td className="fw-bold text-info">#{p.id_pedido}</td>
+    <tr style={{ borderBottom: '1px solid #1d1d1d', backgroundColor: '#1d1d1d', transition: 'background-color 0.2s'}}
+     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#18181b'}
+     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1d1d1d'}>
+      <td style={{ padding: '10px 2px 12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start',  color: '#00d2ff', fontFamily: 'monospace', fontWeight: 'bold',height: '100%'}} className="fw-bold text-info">#{p.id_pedido}</td>
       <td>
         <div className="fw-semibold text-white">{nombreCliente}</div>
         {p.observaciones && (
-          <small className="text-warning d-block font-monospace bg-black p-1 rounded mt-1 border-start border-warning border-2" style={{ fontSize: '0.78rem' }}>
+          <small className="text-warning d-block font-monospace bg-black p-1 rounded mt-1 border-start border-warning border-2" style={{ fontSize: '0.80rem', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
             <strong>Obs:</strong> {p.observaciones}
           </small>
         )}
@@ -86,11 +104,34 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
         </div>
       </td>
       <td>
-        <span className="text-light">
-          <i className="bi bi-person-badge text-secondary me-1"></i>
-          {nombreEmpleado}
-        </span>
-      </td>
+  <select 
+    className="form-select form-select-sm bg-black text-light border-secondary font-monospace"
+    style={{ width: '160px', fontSize: '0.85rem', cursor: 'pointer' }}
+    value={ultimaAsignacion?.empleado?.idEmpleado || ''}
+    onChange={(e) => onCambioEmpleado(p.id_pedido, e.target.value)}
+  >
+
+    {/* 1. Opción del empleado actual (por si no está en la lista general) */}
+    {ultimaAsignacion?.empleado && (
+      <option value={ultimaAsignacion.empleado.idEmpleado}>
+        {ultimaAsignacion.empleado.persona 
+          ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
+          : ultimaAsignacion.empleado.nombre} 
+      </option>
+    )}
+
+    {/* 2. Lista de todos los demás operadores */}
+    {e && e
+      // Filtramos para no duplicar el que ya es el "Actual"
+      .filter(emp => emp.idEmpleado !== ultimaAsignacion?.empleado?.idEmpleado)
+      .map((emp) => (
+        <option key={emp.idEmpleado} value={emp.idEmpleado}>
+          {emp.persona ? `${emp.persona.nombre} ${emp.persona.apellido}` : emp.nombre}
+        </option>
+      ))
+    }
+  </select>
+</td>
       <td className="font-monospace text-secondary" style={{ fontSize: '0.82rem' }}>
         {fechaAsignacionFormateada}
       </td>
@@ -101,7 +142,6 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
           value={p.estado}
           onChange={(e) => onCambioEstado(p, e.target.value)}
         >
-          <option value="PRESUPUESTO">PRESUPUESTO</option>
           <option value="PENDIENTE">PENDIENTE</option>
           <option value="EN PROCESO">EN PROCESO</option>
           <option value="PAUSADO">PAUSADO</option>
@@ -113,67 +153,63 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
       <td className="fw-bold">${Number(p.monto_total).toFixed(2)}</td>
       <td className="text-info">${Number(p.monto_pago_adelantado).toFixed(2)}</td>
       <td>
-        <div className="d-flex justify-content-center gap-3 align-items-center">
+        <div className="d-flex justify-content-center gap-3 align-items-center">  
           
-          {/* Lógica de visualización del archivo adjunto */}
-          {tieneComprobante && urlUltimoComprobante ? (
-            <div className="d-flex gap-2 align-items-center">
-              <button 
-                className="btn btn-sm p-0 text-info" 
-                title="Ver archivo de comprobante físico"
-                onClick={() => window.open(urlUltimoComprobante, '_blank')}
-              >
-                <i className="bi bi-eye-fill fs-5"></i>
-              </button>
-              <button 
-                className="btn btn-sm p-0 text-danger" 
-                title="Eliminar Comprobante Físico"
-                onClick={() => onEliminarComprobante(p.id_pedido)}
-              >
-                <i className="bi bi-trash-fill fs-5"></i>
-              </button>
-            </div>
-          ) : (
-            <div className="position-relative">
-              <label 
-                htmlFor={`file-input-${p.id_pedido}`} 
-                className="btn btn-sm p-0 text-light opacity-50 m-0 d-flex align-items-center" 
-                style={{ cursor: 'pointer' }}
-                title="Seleccionar archivo o arrastrar comprobante"
-              >
-                <i className="bi bi-cloud-upload-fill fs-5"></i>
-              </label>
-              <input 
-                id={`file-input-${p.id_pedido}`}
-                type="file" 
-                className="d-none"
-                accept="image/*,application/pdf"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    onSubirArchivo(p.id_pedido, e.target.files[0]);
-                  }
-                }}
-              />
-            </div>
-          )}
+          <button 
+            className="rounded d-flex align-items-center justify-content-center" 
+            style={{ 
+              width: '32px', 
+              height: '32px', 
+              cursor: 'pointer', 
+              backgroundColor: 'transparent', 
+              transition: 'all 0.2s ease',
+              border: '1px solid #00d2ff'
+            }}
+            onMouseEnter={(e) => { 
+              e.currentTarget.style.backgroundColor = '#00d2ff';
+              const icon = e.currentTarget.querySelector('i') as HTMLElement;
+              if (icon) icon.style.color = '#000000';
+            }} 
+            onMouseLeave={(e) => { 
+              e.currentTarget.style.backgroundColor = 'transparent';
+              const icon = e.currentTarget.querySelector('i') as HTMLElement;
+              if (icon) icon.style.color = '#00d2ff'; 
+            }}
+            onClick={() => onSelectComprobantes(p)} 
+            title="Gestionar Comprobantes de Pago"
+          >
+            <i className="bi bi-file-earmark-text" style={{ fontSize: '16px', color: '#00d2ff', transition: '0.2s' }}></i>
+          </button>
 
           {/* Botón de Pagos */}
-          <button 
-            className={`btn btn-sm border-0 bg-transparent p-0 transition-all ${getColorSignoPesos(p.monto_total, p.monto_pago_adelantado)}`} 
-            title="Registrar Entrega de Dinero / Saldo"
-            onClick={() => onSelectPago(p)}
-            disabled={p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO'}
+          <button className="rounded d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', cursor: 'pointer', backgroundColor: 'transparent', transition: 'all 0.2s ease',
+           border: `0.8px solid ${p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? '#22c55e' : '#a72828'}`, opacity: p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? 0.5 : 1}}
+           onMouseEnter={(e) => { const isLocked = (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO'); e.currentTarget.style.backgroundColor = isLocked ? '#22c55e' : '#a72828';
+           const icon = e.currentTarget.querySelector('i') as HTMLElement;
+           if (icon) icon.style.color = '#000000';}}
+           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent';
+           const isLocked = (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO');
+           const icon = e.currentTarget.querySelector('i') as HTMLElement;
+           if (icon) icon.style.color = isLocked ? '#22c55e' : '#a72828'; }}
+           onClick={() => onSelectPago(p)}
+           title={p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? "Ya no quedaron mas Señas/Montos por Asignar" : "Registrar Nuevo Monto/Seña"}
+           disabled={p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO'}
           >
-            <i className="bi bi-currency-dollar fs-4"></i>
+            <i className="bi bi-currency-dollar" style={{ fontSize: '16px', color: (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO') ? '#22c55e' : '#a72828', transition: '0.2s' }}></i>
           </button>
 
           {/* Botón de Impresión de Tickets */}
           <button 
-            className="btn btn-sm p-0 text-warning" 
-            title="Imprimir Comprobante de Entrega"
-            onClick={() => onSelectTicket(p)}
+           className="rounded d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', cursor: 'pointer', backgroundColor: 'transparent', transition: 'all 0.2s ease', border: '0.8px solid #ffc107'}}
+           onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#ffc107';
+           const icon = e.currentTarget.querySelector('i') as HTMLElement;
+           if (icon) icon.style.color = '#000000'; }}
+           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent';
+           const icon = e.currentTarget.querySelector('i') as HTMLElement; if (icon) icon.style.color = '#ffc107'; }}
+           onClick={() => onSelectTicket(p)}
+           title="Imprimir Ticket"
           >
-            <i className="bi bi-printer fs-5"></i>
+            <i className="bi bi-printer" style={{ fontSize: '16px', color: '#ffc107', transition: '0.2s' }}></i>
           </button>
         </div>
       </td>

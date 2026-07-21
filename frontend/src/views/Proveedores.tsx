@@ -83,11 +83,10 @@ export const Proveedores: React.FC = () => {
         onClose={() => setShowSuccess(false)} 
         />
 
-        {/* Modal Datos Generales */}
         <ProveedorModal 
           show={showModal}
           isEditing={isEditing}
-          formState={proveedorSeleccionado || {} as Proveedor} // Asegurar que pase un objeto inicial si es null
+          formState={proveedorSeleccionado || {} as Proveedor} 
           setFormState={setProveedorSeleccionado}
           onClose={() => setShowModal(false)}
           onSave={async () => {

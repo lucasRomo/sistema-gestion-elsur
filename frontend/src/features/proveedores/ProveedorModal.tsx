@@ -95,6 +95,8 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
 
 
 
+  // Corrección crucial: Si no se debe mostrar o formState aún es null, no renderizamos.
+  // Esto evita que los inputs intenten leer propiedades de un 'null'.
   if (!show || !formState) return null;
 
   return (
@@ -326,25 +328,15 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
                       onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
 
-
                   <div className="col-md-3">
-                    <label className="form-label small">País</label>
-                    <input 
-                      type="text" required pattern="[A-Za-zÁ-Úá-ú\s]+" className="form-control bg-dark text-white border-secondary"
-                      value={formState.direccion?.pais || ''}
-                      onChange={(e) => setFormState({
-                        ...formState, direccion: { ...formState.direccion!, pais: e.target.value }
-                      })}
-                      onInvalid={(e: any) => {
-                      if (e.target.validity.valueMissing) {
-                      e.target.setCustomValidity("El Campo de País No puede Estar Vacío");
-                      } 
-                      else if (e.target.validity.patternMismatch) {
-                      e.target.setCustomValidity("En el campo País solo debe contener letras");
-                      }}}
-                      onInput={(e: any) => e.target.setCustomValidity("")}/>
+                  <label className="form-label small">País (Opcional)</label>
+                  <input type="text" pattern="^$|[A-Za-zÁ-Úá-ú\s]+" className="form-control bg-dark text-white border-secondary" value={formState.direccion?.pais || ''}
+                  onChange={(e) => setFormState({...formState, direccion: { ...formState.direccion!, pais: e.target.value }})}
+                  onInvalid={(e: any) => {
+                  if (e.target.validity.patternMismatch) { e.target.setCustomValidity("En el campo País solo debe contener letras");
+                  }}}
+                  onInput={(e: any) => e.target.setCustomValidity("")}/>
                   </div>
-
 
                 </div>
               </>

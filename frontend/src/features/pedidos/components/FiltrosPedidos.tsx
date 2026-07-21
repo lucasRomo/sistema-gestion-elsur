@@ -5,6 +5,7 @@ interface FiltrosPedidosProps {
   setFiltroCliente: (value: string) => void;
   filtroEstado: string;
   setFiltroEstado: (value: string) => void;
+  
 }
 
 export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
@@ -14,7 +15,7 @@ export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
   setFiltroEstado,
 }) => {
   return (
-    <div className="row g-3 mb-4 p-3 rounded d-print-none" style={{ backgroundColor: '#1a1a1c', border: '1px solid #2d2d30' }}>
+    <div className="row g-3 mb-4 p-3 rounded d-print-none" style={{ backgroundColor: '#1d1d1d', border: '1px solid #2d2d30' }}>
       <div className="col-md-6">
         <label className="form-label small text-secondary fw-bold">Buscar por Cliente:</label>
         <input 

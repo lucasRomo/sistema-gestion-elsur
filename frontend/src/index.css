@@ -17,3 +17,7 @@
   background-color: #a855f7 !important;
   color: #ffffff !important;
 }
+
+.transparente-registro > div {
+  background: transparent !important;
+}

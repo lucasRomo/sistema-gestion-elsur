@@ -40,9 +40,8 @@ export const SelectorProductosForm: React.FC<Props> = ({
   const total = carrito.reduce((sum, item) => sum + item.subtotal, 0);
 
   return (
-    <div className="card text-white p-4 mx-auto rounded" style={{ backgroundColor: '#1a1a1c', border: '1px solid #3f3f46', maxWidth: '800px' }}>
+    <div className="card text-white p-4 w-100 rounded" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46' }}>
       <h3 className="text-center mb-4 fw-normal font-monospace">Tabla para Calcular y Elegir Productos</h3>
-      
       {/* selectores */}
       <div className="row g-3 mb-4 align-items-end">
         <div className="col-md-7">
@@ -90,7 +89,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
         
         <div style={{ minHeight: '150px', maxHeight: '250px', overflowY: 'auto' }}>
           {carrito.length === 0 ? (
-            <div className="text-center text-muted mt-4">No hay productos en la lista.</div>
+            <div className="text-center text-light mt-4">No hay productos en la lista.</div>
           ) : (
             carrito.map((item, index) => (
               <div key={index} className="d-flex align-items-center mb-2 text-white border-bottom border-dark pb-1">
@@ -123,12 +122,9 @@ export const SelectorProductosForm: React.FC<Props> = ({
       {/* Acciones del pie */}
       <div className="d-flex justify-content-between mt-3">
         <button className="btn btn-danger px-4" style={{ backgroundColor: '#a63333', border: 'none' }} onClick={onCancelar}>
-          Cancelar
+          Volver
         </button>
         <div>
-          <button className="btn btn-secondary px-4 me-2" disabled style={{ opacity: 0.5 }}>
-            Generar Ticket Técnico
-          </button>
           <button className="btn btn-success px-5" style={{ backgroundColor: '#3d824b', border: 'none' }} onClick={onSiguiente} disabled={carrito.length === 0}>
             Siguiente
           </button>

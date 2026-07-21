@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Data
 @Entity
@@ -15,9 +17,10 @@ public class DetallePedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_detalle;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Optimiza la carga
+    @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "id_pedido", nullable = false)
-    @JsonIgnore // Importante para evitar bucles infinitos en JSON
+    @JsonIgnoreProperties("detalles")
+    @JsonIgnore 
     private Pedido pedido;
 
     @ManyToOne

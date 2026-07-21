@@ -54,20 +54,18 @@ export const Productos: React.FC = () => {
             }} 
         />
 
-        <div className="d-flex gap-3 pt-3 border-top border-secondary font-monospace">
-          <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4">Volver</button>
-          <button className="btn btn-info text-dark fw-bold">Modificar Varios Precios</button>
-          <button className="btn btn-warning fw-bold">Calculo de Gastos</button>
-          <button 
-            className="btn btn-success fw-bold" 
-            onClick={() => {
-              setProductoEditando(null);
-              setShowModal(true);
-            }}
-          >
-            Registrar Nuevo Producto
-          </button>
-        </div>
+    <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary font-monospace">
+      <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-5 py-2">Volver</button>
+     <div className="d-flex gap-3">
+     <button className="btn px-4 py-2 text-white fw-normal" style={{ backgroundColor: '#17a2b8', borderColor: '#0e5a66' }}>Modificar Varios Precios</button>
+     <button className="btn px-4 py-2 text-white fw-normal" style={{ backgroundColor: '#ca9e1b', borderColor: '#94720c' }}>Calculo de Gastos</button>
+     <button className="btn px-4 py-2 text-white fw-normal" style={{ backgroundColor: '#156e45', borderColor: '#0b3320' }} 
+      onClick={() => {
+        setProductoEditando(null);
+        setShowModal(true);
+      }}>Registrar Nuevo Producto</button>
+     </div>
+    </div>
 
         <ProductoRegistroModal 
         show={showModal}
@@ -75,8 +73,8 @@ export const Productos: React.FC = () => {
         onClose={() => setShowModal(false)}
         onGuardar={async (data) => {
         if (productoEditando) {
-        setProductoEditando(data); // Actualizamos el estado temporal con los cambios
-        setMostrarConfirmacion(true); // Disparamos la confirmación
+        setProductoEditando(data); 
+        setMostrarConfirmacion(true);
         } else {
         await guardar(data);
         setShowModal(false);
