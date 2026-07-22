@@ -11,13 +11,15 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
   const [tiposDocumento, setTiposDocumento] = useState<any[]>([]);
   
   const [editData, setEditData] = useState<any>({
-    idCliente: cliente.idCliente,
+    // 🟢 CLAVE PARA EL ERROR: Enviar id_cliente coincide con @JsonProperty("id_cliente") en Java
+    id_cliente: cliente.id_cliente || cliente.idCliente,
+    idCliente: cliente.idCliente || cliente.id_cliente,
     razonSocial: cliente.razonSocial || '',
     limiteCredito: cliente.limiteCredito || 0,
     saldoDeudor: cliente.saldoDeudor ?? 0,
     personaDeContacto: cliente.personaDeContacto || '',
     condicionDePago: cliente.condicionDePago || '',
-    estado: cliente.estado === 'Desactivo' ? 'Desactivado' : (cliente.estado || 'Activo'),
+    estado: cliente.estado || 'Activo',
     persona: {
       idPersona: cliente.persona?.idPersona,
       nombre: cliente.persona?.nombre || '',
@@ -37,19 +39,18 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
 
   // Cargamos los tipos de documentos disponibles al montar el modal
   useEffect(() => {
-    fetch('http://localhost:8080/api/tipos-documento') // Ajustá este endpoint según tu backend de Java
+    fetch('http://localhost:8080/api/tipos-documento')
       .then(res => {
         if (!res.ok) throw new Error();
         return res.json();
       })
       .then(data => setTiposDocumento(data))
       .catch(() => {
-        // Fallback estático de emergencia por si el endpoint no está creado todavía
-        setTiposDocumento([
-          { idTipoDocumento: 1, nombre: 'DNI' },
-          { idTipoDocumento: 2, nombre: 'CUIT' },
-          { idTipoDocumento: 3, nombre: 'CUIL' },
-          { idTipoDocumento: 4, nombre: 'PASAPORTE' }
+       setTiposDocumento([
+       { idTipoDocumento: 1, nombreTipo: 'DNI', nombre: 'DNI' },
+       { idTipoDocumento: 2, nombreTipo: 'CUIT', nombre: 'CUIT' },
+       { idTipoDocumento: 3, nombreTipo: 'CUIL', nombre: 'CUIL' },
+       { idTipoDocumento: 4, nombreTipo: 'PASAPORTE', nombre: 'PASAPORTE' }
         ]);
       });
   }, []);
@@ -108,69 +109,97 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                 </h5>
                 
                 <div className="row g-3 mb-4 mx-0">
-
-
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Nombre/Empresa</label>
-                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.nombre} onChange={e => handlePersonaChange('nombre', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+"
-                    onInvalid={(e: any) => {
-                    if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre No puede Estar Vacío");
-                    else e.target.setCustomValidity("El Campo de Nombre solo debe contener letras");
-                    }}
-                    onInput={(e: any) => e.target.setCustomValidity("")}/>
+                    <input 
+                      type="text" 
+                      className="form-control text-white" 
+                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                      value={editData.persona.nombre} 
+                      onChange={e => handlePersonaChange('nombre', e.target.value)} 
+                      required 
+                      pattern="[A-Za-zÁ-Úá-ú\s]+"
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre No puede Estar Vacío");
+                        else e.target.setCustomValidity("El Campo de Nombre solo debe contener letras");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
+                    />
                   </div>
 
-                  
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Apellido</label>
-                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.apellido} onChange={e => handlePersonaChange('apellido', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+"
-                    onInvalid={(e: any) => {
-                    if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Apellido No puede Estar Vacío");
-                    else e.target.setCustomValidity("El Campo de Apellido No puede Estar Vacío");
-                    }}
-                    onInput={(e: any) => e.target.setCustomValidity("")}/>
+                    <input 
+                      type="text" 
+                      className="form-control text-white" 
+                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                      value={editData.persona.apellido} 
+                      onChange={e => handlePersonaChange('apellido', e.target.value)} 
+                      required 
+                      pattern="[A-Za-zÁ-Úá-ú\s]+"
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Apellido No puede Estar Vacío");
+                        else e.target.setCustomValidity("El Campo de Apellido solo debe contener letras");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
+                    />
                   </div>
 
-                  
                   {/* Selector dinámico de tipo de documento */}
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Tipo de Doc.</label>
                     <select 
-                      className="form-select text-white" 
-                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }}
-                      value={editData.persona.tipoDocumento.idTipoDocumento}
-                      onChange={e => handleTipoDocChange(Number(e.target.value))}
-                    >
-                      {tiposDocumento.map((t: any) => (
-                        <option key={t.idTipoDocumento} value={t.idTipoDocumento} style={{ backgroundColor: '#1a1a1c' }}>
-                          {t.nombre}
-                        </option>
-                      ))}
+                     className="form-select bg-dark text-white border-secondary" 
+                     value={editData.persona?.idTipoDocumento || ""} 
+                     onChange={e => handlePersonaChange('idTipoDocumento', e.target.value)}>
+                    <option value="" style={{ backgroundColor: '#1a1a1c' }}>Seleccione Un Tipo</option>
+                    {tiposDocumento.map((t: any) => ( <option key={t.idTipoDocumento} value={t.idTipoDocumento} style={{ backgroundColor: '#1a1a1c' }}> 
+                    {t.nombreTipo || t.nombre} </option>))}
                     </select>
                   </div>
 
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium font-monospace" style={{ color: '#a1a1aa' }}>N° Documento / CUIT</label>
-                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.numeroDocumento} onChange={e => handlePersonaChange('numeroDocumento', e.target.value)} required />
+                    <input 
+                      type="text" 
+                      className="form-control text-white" 
+                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                      value={editData.persona.numeroDocumento} 
+                      onChange={e => handlePersonaChange('numeroDocumento', e.target.value)} 
+                      required 
+                    />
                   </div>
-                  
 
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Teléfono</label>
-                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.telefono} onChange={e => handlePersonaChange('telefono', e.target.value)} required pattern="[0-9]+"
-                    onInvalid={(e: any) => {
-                    if (e.target.validity.valueMissing) {
-                    e.target.setCustomValidity("El Campo de Teléfono No puede Estar Vacío");
-                    } else if (e.target.validity.patternMismatch) {
-                    e.target.setCustomValidity("El Campo de Teléfono No puede Estar Vacío");
-                    }}}
-                    onInput={(e: any) => e.target.setCustomValidity("")}/>
+                    <input 
+                      type="text" 
+                      className="form-control text-white" 
+                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                      value={editData.persona.telefono} 
+                      onChange={e => handlePersonaChange('telefono', e.target.value)} 
+                      required 
+                      pattern="[0-9]+"
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) {
+                          e.target.setCustomValidity("El Campo de Teléfono No puede Estar Vacío");
+                        } else if (e.target.validity.patternMismatch) {
+                          e.target.setCustomValidity("El teléfono solo debe contener números");
+                        }
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
+                    />
                   </div>
-
 
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Email</label>
-                    <input type="email" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.persona.email} onChange={e => handlePersonaChange('email', e.target.value)} />
+                    <input 
+                      type="email" 
+                      className="form-control text-white" 
+                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                      value={editData.persona.email} 
+                      onChange={e => handlePersonaChange('email', e.target.value)} 
+                    />
                   </div>
                 </div>
 
@@ -182,26 +211,43 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                 <div className="row g-3 mb-2 mx-0">
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Razón Social</label>
-                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.razonSocial} onChange={e => setEditData({ ...editData, razonSocial: e.target.value })} />
+                    <input 
+                      type="text" 
+                      className="form-control text-white" 
+                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                      value={editData.razonSocial} 
+                      onChange={e => setEditData({ ...editData, razonSocial: e.target.value })} 
+                    />
                   </div>
-
 
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Persona de Contacto</label>
-                    <input type="text" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.personaDeContacto} onChange={e => setEditData({ ...editData, personaDeContacto: e.target.value })} required pattern="[A-Za-zÁ-Úá-ú\s]+"
-                    onInvalid={(e: any) => {
-                    if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Persona de Contacto No puede Estar Vacío");
-                    else e.target.setCustomValidity("El Campo persona de Contacto solo debe contener letras");
-                    }}
-                    onInput={(e: any) => e.target.setCustomValidity("")}/>
+                    <input 
+                      type="text" 
+                      className="form-control text-white" 
+                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                      value={editData.personaDeContacto} 
+                      onChange={e => setEditData({ ...editData, personaDeContacto: e.target.value })} 
+                      required 
+                      pattern="[A-Za-zÁ-Úá-ú\s]+"
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Persona de Contacto No puede Estar Vacío");
+                        else e.target.setCustomValidity("El Campo persona de Contacto solo debe contener letras");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
+                    />
                   </div>
-
 
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Límite de Crédito</label>
-                    <input type="number" className="form-control text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.limiteCredito} onChange={e => setEditData({ ...editData, limiteCredito: Number(e.target.value) })} />
+                    <input 
+                      type="number" 
+                      className="form-control text-white" 
+                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                      value={editData.limiteCredito} 
+                      onChange={e => setEditData({ ...editData, limiteCredito: Number(e.target.value) })} 
+                    />
                   </div>
-
 
                   <div className="col-md-6 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Condición de Pago</label>
@@ -211,18 +257,25 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                       style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }}
                       placeholder="Ej: Efectivo, Cuenta Corriente, 30 días..." 
                       value={editData.condicionDePago} 
-                      onChange={e => setEditData({ ...editData, condicionDePago: e.target.value })} required pattern="[A-Za-zÁ-Úá-ú\s]+"
+                      onChange={e => setEditData({ ...editData, condicionDePago: e.target.value })} 
+                      required 
+                      pattern="[A-Za-z0-9Á-Úá-ú\s]+"
                       onInvalid={(e: any) => {
-                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Condición de Pago No puede Estar Vacío");
-                      else e.target.setCustomValidity("El Campo Condición de Pago solo debe contener letras");
+                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Condición de Pago No puede Estar Vacío");
+                        else e.target.setCustomValidity("La Condición de Pago contiene caracteres no válidos");
                       }}
-                      onInput={(e: any) => e.target.setCustomValidity("")} />
+                      onInput={(e: any) => e.target.setCustomValidity("")} 
+                    />
                   </div>
-
 
                   <div className="col-md-6 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Estado</label>
-                    <select className="form-select text-white" style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} value={editData.estado} onChange={e => setEditData({ ...editData, estado: e.target.value })}>
+                    <select 
+                      className="form-select text-white" 
+                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
+                      value={editData.estado} 
+                      onChange={e => setEditData({ ...editData, estado: e.target.value })}
+                    >
                       <option value="Activo" style={{ backgroundColor: '#1a1a1c' }}>Activo</option>
                       <option value="Desactivado" style={{ backgroundColor: '#1a1a1c' }}>Desactivado</option>
                     </select>

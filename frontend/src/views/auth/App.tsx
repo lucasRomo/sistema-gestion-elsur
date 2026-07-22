@@ -78,27 +78,21 @@ function App() {
           } />
 
           <Route path="/pedidos-pendientes" element={
-            <ProtectedRoute permisoRequerido="Pedidos Pendientes">
-              <SidebarLayout activeItem="Pedidos Pendientes">
-                <PedidosPendientesPage />
-              </SidebarLayout>
-            </ProtectedRoute>
+           <ProtectedRoute permisoRequerido="Pedidos Pendientes">
+            <PedidosPendientesPage />
+           </ProtectedRoute>
           } />
 
           <Route path="/historial-pedidos" element={
-            <ProtectedRoute permisoRequerido="Historial de Pedidos">
-              <SidebarLayout activeItem="Historial de Pedidos">
-                <HistorialPedidosPage />
-              </SidebarLayout>
+           <ProtectedRoute permisoRequerido="Historial de Pedidos">
+            <HistorialPedidosPage />
             </ProtectedRoute>
           } />
 
           <Route path="/caja" element={
-            <ProtectedRoute permisoRequerido="Caja">
-              <SidebarLayout activeItem="Caja">
-                <CajaView />
-              </SidebarLayout>
-            </ProtectedRoute>
+           <ProtectedRoute permisoRequerido="Caja">
+            <CajaView />
+           </ProtectedRoute>
           } />
 
           <Route path="/configuracion" element={
@@ -127,11 +121,9 @@ function App() {
           } />
  
           <Route path="/gestion-usuarios" element={
-            <ProtectedRoute soloAdmin={true}>
-              <SidebarLayout activeItem="Gestión de Usuarios">
-                <GestionUsuariosView />
-              </SidebarLayout>
-            </ProtectedRoute>
+           <ProtectedRoute soloAdmin={true}>
+            <GestionUsuariosView />
+           </ProtectedRoute>
           } />
 
           <Route path="*" element={<Navigate to="/" />} />

@@ -255,22 +255,27 @@ const ejecutarEliminarComprobante = async () => {
     }
   };
 
-  // Filtrado lógico en memoria reactivo
+  
   const pedidosFiltrados = pedidos.filter(p => {
-    const nombreCliente = p.cliente?.persona 
-      ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
-      : (p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
+  const esVentaRapida = 
+    p.observaciones?.toLowerCase().includes('venta rápida') || 
+    p.observacion?.toLowerCase().includes('venta rápida') ||
+    p.estante === 'Venta Rápida';
 
-    const cumpleCliente = nombreCliente.toLowerCase().includes(filtroCliente.toLowerCase());
-    
-    if (filtroEstado === 'PRESUPUESTO') {
-      if (p.estado !== 'PRESUPUESTO') return false;
-    } else {
-      if (p.estado === 'PRESUPUESTO') return false;
-      if (filtroEstado !== '' && p.estado !== filtroEstado) return false;
-    }
-    return cumpleCliente;
-  });
+  if (esVentaRapida) return false;
+  const nombreCliente = p.cliente?.persona 
+    ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
+    : (p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
+  const cumpleCliente = nombreCliente.toLowerCase().includes(filtroCliente.toLowerCase());
+  if (filtroEstado === 'PRESUPUESTO') {
+    if (p.estado !== 'PRESUPUESTO') return false;
+  } else {
+    if (p.estado === 'PRESUPUESTO') return false;
+    if (filtroEstado !== '' && p.estado !== filtroEstado) return false;
+  }
+
+  return cumpleCliente;
+});
 
   return (
     <SidebarLayout activeItem="Pedidos Pendientes">
@@ -383,6 +388,7 @@ const ejecutarEliminarComprobante = async () => {
 
       {pedidoPagoSel && (
         <ModalRegistrarPago 
+          show={true}
           pedido={pedidoPagoSel}
           onClose={() => setPedidoPagoSel(null)}
           onConfirm={confirmarPago}

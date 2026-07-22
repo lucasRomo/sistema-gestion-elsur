@@ -187,6 +187,6 @@ export const GestionUsuariosView: React.FC = () => {
       />
     )}
 
-  </div>
+  </SidebarLayout>
   );
 };

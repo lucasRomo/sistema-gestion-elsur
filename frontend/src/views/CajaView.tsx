@@ -53,27 +53,33 @@ export const CajaView: React.FC = () => {
   };
 
   useEffect(() => {
-    const inicializarCaja = async () => {
-      try {
-        const res = await fetch('http://localhost:8080/api/turnos/estado-caja');
-        const data = await res.json();
-        if (res.ok) {
-          if (data && data.estado === "ABIERTO") {
-            setCajaAbierta(true);
-            setTurnoActual(data);
-            fetchMovimientosHoy();
-            fetchTotalesCaja();
-          } else {
-            setCajaAbierta(false);
-            setTurnoActual(null);
-          }
+  const inicializarCaja = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/api/turnos/estado-caja');
+      
+      if (res.ok) {
+        // 1. Leemos la respuesta como texto primero para evitar el choque de JSON vacío
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : null;
+
+        // 2. Evaluamos los datos
+        if (data && data.estado === "ABIERTO") {
+          setCajaAbierta(true);
+          setTurnoActual(data);
+          fetchMovimientosHoy();
+          fetchTotalesCaja();
+        } else {
+          setCajaAbierta(false);
+          setTurnoActual(null);
         }
-      } catch (error) {
-        console.error("Error:", error);
       }
-    };
-    inicializarCaja();
-  }, [setCajaAbierta]);
+    } catch (error) {
+      console.error("Error al inicializar la caja:", error);
+    }
+  };
+
+  inicializarCaja();
+}, [setCajaAbierta]);
 
   // --- CONTROLADORES DE APERTURA ---
   const handleAbrirAperturaModal = () => {
@@ -370,7 +376,7 @@ export const CajaView: React.FC = () => {
                             </div>
                           </td>
                           <td>{m.usuario?.idUsuario || m.usuario?.id_usuario || '1'}</td>
-                          <td>{m.descripcion.includes('Pedido #') ? m.descripcion.split('#')[1] : '-'}</td>
+                          <td>{m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1] : '-'}</td>
                         </tr>
                       ))
                     )}

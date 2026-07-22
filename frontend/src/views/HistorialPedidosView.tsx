@@ -218,6 +218,6 @@ export const HistorialPedidosPage: React.FC = () => {
           onClose={() => setVerTicketPedido(null)}
         />
       )}
-    </>
+    </SidebarLayout>
   );
 };

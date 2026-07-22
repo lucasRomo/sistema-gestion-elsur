@@ -10,7 +10,6 @@ interface PersonaFormProps {
 
 export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData, onSiguiente, onVolver, titulo = "Registrar Nuevo Cliente" }) => {
   const [errores, setErrores] = useState<any>({});
-  // Lista dinámica de tipos de documento traída de la API de Java
   const [tiposDocumento, setTiposDocumento] = useState<any[]>([]);
 
   // Cargamos la lista al montar el componente de registro
@@ -22,34 +21,34 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
       })
       .then(data => setTiposDocumento(data))
       .catch(() => {
-        // Fallback de emergencia idéntico al del modal de edición
+        // Fallback dinámico con ambas claves por compatibilidad
         setTiposDocumento([
-          { idTipoDocumento: 1, nombre: 'DNI' },
-          { idTipoDocumento: 2, nombre: 'CUIT' },
-          { idTipoDocumento: 3, nombre: 'CUIL' },
-          { idTipoDocumento: 4, nombre: 'PASAPORTE' }
+          { idTipoDocumento: 1, nombreTipo: 'DNI', nombre: 'DNI' },
+          { idTipoDocumento: 2, nombreTipo: 'CUIT', nombre: 'CUIT' },
+          { idTipoDocumento: 3, nombreTipo: 'CUIL', nombre: 'CUIL' },
+          { idTipoDocumento: 4, nombreTipo: 'PASAPORTE', nombre: 'PASAPORTE' }
         ]);
       });
   }, []);
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [field]: value }));
-    // Limpiar error al editar el campo correspondiente
     if (errores[field]) setErrores((prev: any) => ({ ...prev, [field]: null }));
   };
 
   const getMaxLength = () => {
-  const tipo = tiposDocumento.find(t => t.idTipoDocumento.toString() === formData.tipoDocumento);
+  const tipo = tiposDocumento.find(t => t.idTipoDocumento.toString() === formData.tipoDocumento?.toString());
   if (!tipo) return 11;
 
-  switch (tipo.nombre.toUpperCase()) {
+  const nombreStr = (tipo.nombreTipo || tipo.nombre || '').toUpperCase();
+  switch (nombreStr) {
     case 'DNI': return 8;
     case 'PASAPORTE': return 9;
     case 'CUIT':
     case 'CUIL': return 11;
     default: return 11;
   }
-  };
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,7 +110,7 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
 
 
         {/* Selector Dinámico Vinculado al idTipoDocumento */}
-        <div className="col-md-6 px-1">
+         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Tipo de Documento:</label>
           <select 
             className="form-select bg-dark text-white border-secondary" 
@@ -122,7 +121,7 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
             <option value="" style={{ backgroundColor: '#1a1a1c' }}>Seleccione Un Tipo</option>
             {tiposDocumento.map((t: any) => (
               <option key={t.idTipoDocumento} value={t.idTipoDocumento} style={{ backgroundColor: '#1a1a1c' }}>
-                {t.nombre}
+                {t.nombreTipo || t.nombre}
               </option>
             ))}
           </select>
@@ -139,8 +138,8 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
     // Definimos el patrón basado en la longitud que definimos antes
     pattern={`[0-9]{${getMaxLength()}}`}
     onInvalid={(e: any) => {
-      const tipo = tiposDocumento.find(t => t.idTipoDocumento.toString() === formData.tipoDocumento);
-      const nombreTipo = tipo ? tipo.nombre : "documento";
+      const tipo = tiposDocumento.find(t => t.idTipoDocumento.toString() === formData.tipoDocumento?.toString());
+      const nombreTipo = tipo ? (tipo.nombreTipo || tipo.nombre) : "documento";
       const longitudRequerida = getMaxLength();
 
       if (e.target.validity.patternMismatch) {
