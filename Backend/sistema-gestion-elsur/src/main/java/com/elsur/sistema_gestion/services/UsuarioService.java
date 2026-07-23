@@ -14,4 +14,5 @@ public interface UsuarioService {
 
     boolean emailExiste(String email);
     boolean dniExiste(String dni);
+    boolean usuarioExiste(String nombreUsuario);
 }

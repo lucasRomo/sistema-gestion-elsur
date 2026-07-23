@@ -141,12 +141,6 @@ public Usuario buscarPorId(Integer id) {
 
         return usuarioGuardado;
     }
-//ESTO
-
-
-
-
-
 
     @Override
     @Transactional
@@ -171,4 +165,9 @@ public Usuario buscarPorId(Integer id) {
     public boolean dniExiste(String dni) {
         return usuarioRepository.existsByPersonaNumeroDocumento(dni);
     }
+
+    @Override
+    public boolean usuarioExiste(String nombreUsuario) {
+    return usuarioRepository.findByNombreUsuario(nombreUsuario).isPresent();
+}
 }

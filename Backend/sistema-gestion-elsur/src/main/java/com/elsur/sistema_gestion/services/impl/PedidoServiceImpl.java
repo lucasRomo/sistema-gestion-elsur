@@ -184,25 +184,57 @@ public Pedido buscarPorId(Integer id) {
     }
 
     @Override
+    @Transactional
     public void asignarEmpleado(Integer idPedido, Integer idEmpleado) {
     // 1. Buscar el pedido
     Pedido pedido = pedidoRepository.findById(idPedido)
         .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
-    // 2. Buscar el empleado
-    Empleado empleado = empleadoRepository.findById(idEmpleado)
+    // 2. Buscar el nuevo empleado
+    Empleado empleadoNuevo = empleadoRepository.findById(idEmpleado)
         .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
 
-    // 3. Crear la nueva asignación
+    // 3. Determinar el empleado anterior buscando la última asignación que no sea la nueva
+    String nombreEmpleadoAnterior = "Sin Asignar";
+    if (pedido.getAsignaciones() != null && !pedido.getAsignaciones().isEmpty()) {
+        AsignacionPedido ultima = pedido.getAsignaciones().get(pedido.getAsignaciones().size() - 1);
+        if (ultima.getEmpleado() != null && ultima.getEmpleado().getPersona() != null) {
+            nombreEmpleadoAnterior = ultima.getEmpleado().getPersona().getNombre() + " " +
+                                     ultima.getEmpleado().getPersona().getApellido();
+        }
+    }
+
+    String nombreEmpleadoNuevo = (empleadoNuevo.getPersona() != null)
+        ? empleadoNuevo.getPersona().getNombre() + " " + empleadoNuevo.getPersona().getApellido()
+        : "Empleado #" + idEmpleado;
+
+    // 4. Crear la nueva asignación
     AsignacionPedido nuevaAsignacion = new AsignacionPedido();
     nuevaAsignacion.setPedido(pedido);
-    nuevaAsignacion.setEmpleado(empleado);
+    nuevaAsignacion.setEmpleado(empleadoNuevo);
     nuevaAsignacion.setFecha_asignacion(LocalDateTime.now());
 
-    // 4. Agregar a la lista de asignaciones del pedido
+    if (pedido.getAsignaciones() == null) {
+        pedido.setAsignaciones(new java.util.ArrayList<>());
+    }
     pedido.getAsignaciones().add(nuevaAsignacion);
 
-    // 5. Guardar el pedido (al tener CascadeType.ALL, guardará la asignación automáticamente)
+    // 5. Registrar en el Historial de Auditoría
+    HistorialEstadoPedido historial = new HistorialEstadoPedido();
+    historial.setPedido(pedido);
+    historial.setFecha_cambio(LocalDateTime.now());
+    historial.setEstado_anterior("ASIGNADO: " + nombreEmpleadoAnterior);
+    historial.setEstado_nuevo("ASIGNADO: " + nombreEmpleadoNuevo);
+    historial.setObservaciones("Reasignación de operario de taller");
+
+    Usuario usuario = usuarioRepository.findAll().stream()
+        .findFirst()
+        .orElseThrow(() -> new RuntimeException("Error: No existe ningún usuario para registrar el historial."));
+    historial.setUsuarioResponsable(usuario);
+
+    historialRepository.save(historial);
+
+    // 6. Guardar cambios en el pedido
     pedidoRepository.save(pedido);
 }
 

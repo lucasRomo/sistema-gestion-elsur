@@ -14,6 +14,29 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
     setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
+  const handleValidarUsuario = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const valor = input.value.trim();
+
+    if (valor.length > 0) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/usuarios/exists?nombreUsuario=${encodeURIComponent(valor)}`);
+        if (response.ok) {
+          const existe = await response.json();
+          if (existe) {
+            // Asignamos el mensaje personalizado y mostramos el globito flotante
+            input.setCustomValidity("Usuario ya Registrado, Intente con uno Nuevo");
+            input.reportValidity();
+          } else {
+            input.setCustomValidity("");
+          }
+        }
+      } catch (error) {
+        console.error("Error al validar nombre de usuario:", error);
+      }
+    }
+  };
+
   return (
     <div className="modal d-block position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1040 }}>
       <div className="modal-dialog w-100 p-3" style={{ maxWidth: '440px' }}>
@@ -33,7 +56,18 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
               <div className="row g-3">
                 <div className="col-12">
                   <label className="form-label text-light small">Usuario:</label>
-                  <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Ingrese un Nombre de Usuario" value={formData.nombreUsuario} onChange={e => handleChange('nombreUsuario', e.target.value)} required />
+                  <input 
+                    type="text" 
+                    className="form-control bg-dark text-white border-secondary" 
+                    placeholder="Ingrese un Nombre de Usuario" 
+                    value={formData.nombreUsuario} 
+                    onChange={e => {
+                      e.target.setCustomValidity("");
+                      handleChange('nombreUsuario', e.target.value);
+                    }} 
+                    onBlur={handleValidarUsuario}
+                    required 
+                  />
                 </div>
 
                 <div className="col-12">

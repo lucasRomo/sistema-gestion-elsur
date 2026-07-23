@@ -228,13 +228,6 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                       style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
                       value={editData.personaDeContacto} 
                       onChange={e => setEditData({ ...editData, personaDeContacto: e.target.value })} 
-                      required 
-                      pattern="[A-Za-zÁ-Úá-ú\s]+"
-                      onInvalid={(e: any) => {
-                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Persona de Contacto No puede Estar Vacío");
-                        else e.target.setCustomValidity("El Campo persona de Contacto solo debe contener letras");
-                      }}
-                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
 

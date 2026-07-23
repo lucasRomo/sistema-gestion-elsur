@@ -60,13 +60,17 @@ export const PedidosPendientesPage: React.FC = () => {
 
   // Handler para asignar empleado
   const handleCambioEmpleado = async (idPedido: number, idEmpleado: string) => {
-    try {
-      await (pedidoService as any).asignarEmpleado(idPedido, idEmpleado);
-      setModalNotif({ show: true, msg: "El empleado ha sido asignado correctamente." });
-    } catch (error) {
-      console.error("Error al asignar:", error);
-      alert("Error al asignar el empleado.");
-    }
+  try {
+    const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
+    const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
+    
+    await (pedidoService as any).asignarEmpleado(idPedido, idEmpleado, idUsuarioActivo);
+    
+    setModalNotif({ show: true, msg: "El empleado ha sido asignado correctamente." });
+  } catch (error) {
+    console.error("Error al asignar:", error);
+    alert("Error al asignar el empleado.");
+  }
   };
 
   const confirmarCambioEstado = async (observaciones: string) => {

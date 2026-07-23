@@ -37,13 +37,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
       if (response.ok) {
         const data = await response.json();
         
-        // NOTA PARA EL FUTURO: Cuando el back use JWT, 'data' va a ser un objeto como:
-        // { token: "eyJhbGci...", usuario: { idUsuario: 1, nombreUsuario: "lucas", ... } }
-        // Por ahora, si tu back solo devuelve el usuario directo, hacemos un fallback:
         const token = data.token || "token_simulado_el_sur_2026";
         const usuario = data.usuario || data; 
         
-        // 1. Guardamos tanto el usuario como el token de sesión en localStorage
         localStorage.setItem('usuario_logueado', JSON.stringify(usuario));
         localStorage.setItem('token_sesion', token); 
         
@@ -55,12 +51,19 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
           mensaje: `Sesión iniciada correctamente como ${usuario.persona?.nombre || credentials.nombreUsuario}.`
         });
       } else {
-        setModalFeedback({
-          mostrar: true,
-          tipo: 'error',
-          mensaje: 'El usuario o la contraseña ingresados son incorrectos. Por favor, verifique los datos.'
-        });
-      }
+  
+    let mensajeError = 'El usuario o la contraseña ingresados son incorrectos. Por favor, verifique los datos.';
+
+    if (response.status === 403) {
+     mensajeError = 'La cuenta que usted ingresó está en estado de Pendiente y/o Desactivado y necesita ser Activada para continuar, por favor contáctese con el administrador.';
+    }
+
+    setModalFeedback({
+    mostrar: true,
+    tipo: 'error',
+    mensaje: mensajeError
+  });
+  }
     } catch (error) {
       setModalFeedback({
         mostrar: true,

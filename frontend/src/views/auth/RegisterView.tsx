@@ -76,7 +76,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
           fechaContratacion: fechaISO,
           cargo: empleadoData.cargo || 'OPERARIO',
           salario: parseFloat(empleadoData.salario) || 0.0,
-          estado: 'Activo',
+          estado: 'Pendiente',
           persona: { idPersona: usuarioGuardado.persona?.idPersona }
         };
 
@@ -102,12 +102,20 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
           alert('Usuario creado, pero falló el alta del legajo de empleado.');
         }
       } else {
-        alert('Error al registrar el usuario en el backend.');
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Error de red con el puerto 8080.');
+    // 🛑 AQUÍ LEEMOS EL MENSAJE QUE MANDA SPRING BOOT CON EL CÓDIGO 409
+    const mensajeError = await responseUsuario.text();
+
+    if (responseUsuario.status === 409) {
+      // Si querés que salga con el cartel exacto que pediste:
+      alert(mensajeError); // Mostrará: "Usuario ya Registrado, Intente con uno Nuevo"
+    } else {
+      alert('Error al registrar el usuario en el backend.');
     }
+  }
+} catch (error) {
+  console.error(error);
+  alert('Error de red con el puerto 8080.');
+}
   };
 
   return (

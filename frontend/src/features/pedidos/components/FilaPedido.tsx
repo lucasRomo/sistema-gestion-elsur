@@ -30,9 +30,9 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
     : (p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
 
   // Cálculos de Asignaciones
-  const ultimaAsignacion = p.asignaciones && p.asignaciones.length > 0 
-    ? p.asignaciones[p.asignaciones.length - 1] 
-    : null;
+  const ultimaAsignacion = p.asignaciones && p.asignaciones.length > 0
+  ? p.asignaciones[p.asignaciones.length - 1]
+  : null;
 
   const nombreEmpleado = ultimaAsignacion?.empleado?.persona
     ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
@@ -104,34 +104,31 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
         </div>
       </td>
       <td>
-  <select 
-    className="form-select form-select-sm bg-black text-light border-secondary font-monospace"
-    style={{ width: '160px', fontSize: '0.85rem', cursor: 'pointer' }}
-    value={ultimaAsignacion?.empleado?.idEmpleado || ''}
-    onChange={(e) => onCambioEmpleado(p.id_pedido, e.target.value)}
-  >
+      <select 
+       className="form-select form-select-sm bg-black text-light border-secondary font-monospace"
+       style={{ width: '160px', fontSize: '0.85rem', cursor: 'pointer' }}
+       value={
+       ultimaAsignacion?.empleado?.idEmpleado || 
+       ultimaAsignacion?.empleado?.id_empleado || 
+       ''}
+       onChange={(e) => onCambioEmpleado(p.id_pedido, e.target.value)}>
+       <option value="" disabled>
+       {nombreEmpleado !== 'Sin Asignar' ? nombreEmpleado : 'Seleccionar Operario'}
+       </option>
+      {e && e.map((emp) => {
+      const idEmp = emp.idEmpleado || emp.id_empleado;
+      const nombreEmp = emp.persona 
+        ? `${emp.persona.nombre} ${emp.persona.apellido}` 
+        : (emp.nombre || `Empleado #${idEmp}`);
 
-    {/* 1. Opción del empleado actual (por si no está en la lista general) */}
-    {ultimaAsignacion?.empleado && (
-      <option value={ultimaAsignacion.empleado.idEmpleado}>
-        {ultimaAsignacion.empleado.persona 
-          ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
-          : ultimaAsignacion.empleado.nombre} 
-      </option>
-    )}
-
-    {/* 2. Lista de todos los demás operadores */}
-    {e && e
-      // Filtramos para no duplicar el que ya es el "Actual"
-      .filter(emp => emp.idEmpleado !== ultimaAsignacion?.empleado?.idEmpleado)
-      .map((emp) => (
-        <option key={emp.idEmpleado} value={emp.idEmpleado}>
-          {emp.persona ? `${emp.persona.nombre} ${emp.persona.apellido}` : emp.nombre}
+      return (
+        <option key={`emp-opt-${idEmp}`} value={idEmp}>
+          {nombreEmp}
         </option>
-      ))
-    }
-  </select>
-</td>
+      );
+    })}
+    </select>
+    </td>
       <td className="font-monospace text-secondary" style={{ fontSize: '0.82rem' }}>
         {fechaAsignacionFormateada}
       </td>
