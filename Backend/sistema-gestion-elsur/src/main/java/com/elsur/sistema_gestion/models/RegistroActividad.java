@@ -4,31 +4,49 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.sql.Timestamp;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Data
 @Entity
-@Table(name = "RegistroActividad")
+@Table(name = "registro_actividad") 
 public class RegistroActividad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_reg_act")
     private Integer idRegAct;
 
-    @Column(columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "fecha", insertable = false, updatable = false)
     private Timestamp fecha;
 
-    @ManyToOne
-    @JoinColumn(name = "id_usuario", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_usuario")
+    @JsonIgnoreProperties({"registrosActividad", "password"}) 
     private Usuario usuario;
 
-    @Column(length = 100, nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "accion")
     private String accion;
 
-    @Column(length = 50, nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "tabla_afectada")
     private String tablaAfectada;
 
-    @Column(columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "columna_afectada")
+    private String columnaAfectada;
+
+    @Column(name = "id_registro_mod")
+    private Integer idRegistroMod;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "datos_anteriores")
     private String datosAnteriores;
 
-    @Column(columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.JSON) 
+    @Column(name = "datos_nuevos")
     private String datosNuevos;
 }

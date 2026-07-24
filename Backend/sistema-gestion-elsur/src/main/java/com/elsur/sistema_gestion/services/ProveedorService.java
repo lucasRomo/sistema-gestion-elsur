@@ -5,6 +5,6 @@ import java.util.List;
 
 public interface ProveedorService {
     List<Proveedor> listarTodos();
-    Proveedor guardar(Proveedor proveedor);
+    Proveedor guardar(Proveedor proveedor, Integer idUsuario);
     void eliminar(Integer id);
 }

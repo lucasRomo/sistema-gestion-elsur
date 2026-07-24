@@ -18,6 +18,7 @@ import { MatrizPermisosView } from '../admin/MatrizPermisosView';
 import { ConfiguracionView } from '../config/ConfiguracionView';
 import { InformesView } from '../informes/InformesView';
 import { TurnoProvider } from '../../Context/TurnoContext';
+import { HistorialActividadView } from '../HistorialActividadView';
 
 function App() {
   return (
@@ -108,6 +109,14 @@ function App() {
             <ProtectedRoute soloAdmin={true}>
               <SidebarLayout activeItem="Matriz de Permisos">
                 <MatrizPermisosView />
+              </SidebarLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/historial" element={
+            <ProtectedRoute soloAdmin={true}>
+              <SidebarLayout activeItem="Historial de Actividad">
+                <HistorialActividadView /> 
               </SidebarLayout>
             </ProtectedRoute>
           } />

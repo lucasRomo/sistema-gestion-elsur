@@ -50,7 +50,7 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
     <tr style={{ borderBottom: '1px solid #27272a', backgroundColor: '#1d1d1d', transition: 'background 0.2s' }} 
         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#18181b'}
         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1d1d1d'}>
-      <td className="fw-bold text-secondary" style={{ padding: '12px 12px 12px 12px' }}>#{p.id_pedido}</td>
+      <td className="fw-bold" style={{ color:'#0fdae9', padding: '12px 12px 12px 12px' }}>#{p.id_pedido}</td>
       <td style={{ padding: '15px 20px' }}>
       <span className="fw-semibold text-white">{nombreCliente}</span>
       </td>
@@ -74,7 +74,7 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
           {nombreEmpleado}
         </span>
       </td>
-      <td className="font-monospace text-secondary" style={{ fontSize: '0.82rem' }}>
+      <td className="font-monospace" style={{ color:'#afafaf', fontSize: '0.82rem' }}>
         {fechaCierreFormateada}
       </td>
       <td className="text-center">

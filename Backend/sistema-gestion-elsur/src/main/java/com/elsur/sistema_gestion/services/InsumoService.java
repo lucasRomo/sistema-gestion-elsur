@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface InsumoService {
     List<Insumo> listarTodos();
-    Insumo guardar(Insumo insumo);
+    Insumo guardar(Insumo insumo, Integer idUsuario);
     Insumo buscarPorId(Integer id);
     void eliminar(Integer id);
     List<Insumo> listarInsumosBajoStock();

@@ -129,7 +129,7 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
     })}
     </select>
     </td>
-      <td className="font-monospace text-secondary" style={{ fontSize: '0.82rem' }}>
+      <td className="font-monospace" style={{ color: '#a9a9aa', fontSize: '0.82rem' }}>
         {fechaAsignacionFormateada}
       </td>
       <td>
@@ -141,10 +141,10 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
         >
           <option value="PENDIENTE">PENDIENTE</option>
           <option value="EN PROCESO">EN PROCESO</option>
-          <option value="PAUSADO">PAUSADO</option>
-          <option value="CANCELADO">CANCELADO</option>
           <option value="FINALIZADO">FINALIZADO</option>
           <option value="ENTREGADO">ENTREGADO ➔</option>
+          <option value="PAUSADO">PAUSADO</option>
+          <option value="CANCELADO">CANCELADO</option>
         </select>
       </td>
       <td className="fw-bold">${Number(p.monto_total).toFixed(2)}</td>

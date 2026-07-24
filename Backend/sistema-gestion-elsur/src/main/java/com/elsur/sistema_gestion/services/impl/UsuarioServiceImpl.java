@@ -1,5 +1,7 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.models.Direccion;
+import com.elsur.sistema_gestion.models.Persona;
 import com.elsur.sistema_gestion.models.Rol;
 import com.elsur.sistema_gestion.models.Usuario;
 import com.elsur.sistema_gestion.repositories.UsuarioRepository;
@@ -7,9 +9,12 @@ import com.elsur.sistema_gestion.services.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.elsur.sistema_gestion.services.RegistroActividadService;
 
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
+import java.util.Objects;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
@@ -20,13 +25,36 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Autowired
     private com.elsur.sistema_gestion.services.EmpleadoService empleadoService;
 
-
+    @Autowired
+    private RegistroActividadService registroActividadService;
 
     @Override
-public List<Usuario> listarTodos() {
-    List<Usuario> usuarios = usuarioRepository.findAll();
-    
-    for (Usuario u : usuarios) {
+    public List<Usuario> listarTodos() {
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        
+        for (Usuario u : usuarios) {
+            if (u.getPersona() != null && u.getPersona().getIdPersona() != null) {
+                Integer idPersonaBuscada = u.getPersona().getIdPersona();
+                
+                empleadoService.listarTodos().stream()
+                    .filter(emp -> emp.getPersona() != null && emp.getPersona().getIdPersona() != null && 
+                                   emp.getPersona().getIdPersona().equals(idPersonaBuscada))
+                    .findFirst()
+                    .ifPresent(empleado -> {
+                        u.setSalario(empleado.getSalario());
+                        u.setEstado(empleado.getEstado());
+                        u.setCargo(empleado.getCargo()); 
+                    });
+            }
+        }
+        return usuarios;
+    }
+
+    @Override
+    public Usuario buscarPorId(Integer id) {
+        Usuario u = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                
         if (u.getPersona() != null && u.getPersona().getIdPersona() != null) {
             Integer idPersonaBuscada = u.getPersona().getIdPersona();
             
@@ -40,77 +68,119 @@ public List<Usuario> listarTodos() {
                     u.setCargo(empleado.getCargo()); 
                 });
         }
+        return u;
     }
-    return usuarios;
-}
-
-
-
-
-    @Override
-public Usuario buscarPorId(Integer id) {
-    Usuario u = usuarioRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            
-    if (u.getPersona() != null && u.getPersona().getIdPersona() != null) {
-        Integer idPersonaBuscada = u.getPersona().getIdPersona();
-        
-        empleadoService.listarTodos().stream()
-            .filter(emp -> emp.getPersona() != null && emp.getPersona().getIdPersona() != null && 
-                           emp.getPersona().getIdPersona().equals(idPersonaBuscada))
-            .findFirst()
-            .ifPresent(empleado -> {
-                u.setSalario(empleado.getSalario());
-                u.setEstado(empleado.getEstado());
-                u.setCargo(empleado.getCargo()); 
-            });
-    }
-    return u;
-}
-
-
-
 
     @Override
     public Optional<Usuario> buscarPorNombreUsuario(String nombreUsuario) {
         return usuarioRepository.findByNombreUsuario(nombreUsuario);
     }
 
-
-
-
-//eSTO
-
     @Override
     @Transactional
-    public Usuario guardar(Usuario usuario) {
-        // Validación de nombre de usuario existente
+    public Usuario guardar(Usuario usuario, Integer idUsuarioOperador) {
         Optional<Usuario> existente = usuarioRepository.findByNombreUsuario(usuario.getNombreUsuario());
         if (existente.isPresent() && !existente.get().getIdUsuario().equals(usuario.getIdUsuario())) {
             throw new RuntimeException("El nombre de usuario ya está en uso");
         }
 
-        // --- NUEVA LÓGICA: Asignación de Rol por defecto / Primer Usuario ---
+        // Asignación de Rol por defecto / Primer Usuario
         if (usuarioRepository.count() == 0) {
             Rol rolAdmin = new Rol();
-            rolAdmin.setIdRol(1); // Asegurate que el ID 1 corresponde a ADMIN en tu BD
+            rolAdmin.setIdRol(1);
             usuario.setRol(rolAdmin);
         } else if (usuario.getRol() == null || usuario.getRol().getIdRol() == null) {
             Rol rolEmpleado = new Rol();
-            rolEmpleado.setIdRol(2); // Asegurate que el ID 2 corresponde a EMPLEADO en tu BD
+            rolEmpleado.setIdRol(2);
             usuario.setRol(rolEmpleado);
         }
-        // ---------------------------------------------------------------------
 
-        // 1. Guardamos el usuario (esto actualiza Persona por cascada)
+        // --- LÓGICA DE AUDITORÍA EN EDICIÓN ---
+        if (usuario.getIdUsuario() != null && usuarioRepository.existsById(usuario.getIdUsuario())) {
+            Usuario usuarioViejo = buscarPorId(usuario.getIdUsuario()); // Carga con campos transients rellenados
+
+            if (usuarioViejo != null) {
+                Usuario operadorActual = null;
+                if (idUsuarioOperador != null) {
+                    operadorActual = usuarioRepository.findById(idUsuarioOperador).orElse(null);
+                }
+                if (operadorActual == null) {
+                    operadorActual = usuarioRepository.findAll().stream().findFirst().orElse(null);
+                }
+
+                // 1. Auditoría campos de Usuario
+                compararYRegistrar(operadorActual, "Usuario", "nombreUsuario", usuario.getIdUsuario(),
+                        usuarioViejo.getNombreUsuario(), usuario.getNombreUsuario());
+
+                compararYRegistrar(operadorActual, "Usuario", "salario", usuario.getIdUsuario(),
+                        usuarioViejo.getSalario(), usuario.getSalario());
+
+                compararYRegistrar(operadorActual, "Usuario", "estado", usuario.getIdUsuario(),
+                        usuarioViejo.getEstado(), usuario.getEstado());
+
+                compararYRegistrar(operadorActual, "Usuario", "cargo", usuario.getIdUsuario(),
+                        usuarioViejo.getCargo(), usuario.getCargo());
+
+                // 2. Auditoría campos de Persona y Dirección asociada
+                if (usuarioViejo.getPersona() != null && usuario.getPersona() != null) {
+                    Persona pVieja = usuarioViejo.getPersona();
+                    Persona pNueva = usuario.getPersona();
+
+                    compararYRegistrar(operadorActual, "Persona", "nombre", usuario.getIdUsuario(),
+                            pVieja.getNombre(), pNueva.getNombre());
+
+                    compararYRegistrar(operadorActual, "Persona", "apellido", usuario.getIdUsuario(),
+                            pVieja.getApellido(), pNueva.getApellido());
+
+                    compararYRegistrar(operadorActual, "Persona", "numeroDocumento", usuario.getIdUsuario(),
+                            pVieja.getNumeroDocumento(), pNueva.getNumeroDocumento());
+
+                    compararYRegistrar(operadorActual, "Persona", "telefono", usuario.getIdUsuario(),
+                            pVieja.getTelefono(), pNueva.getTelefono());
+
+                    compararYRegistrar(operadorActual, "Persona", "email", usuario.getIdUsuario(),
+                            pVieja.getEmail(), pNueva.getEmail());
+
+                    // ⬇️ SECCIÓN AGREGADA: Auditoría de Dirección ⬇️
+                    if (pVieja.getDireccion() != null && pNueva.getDireccion() != null) {
+                        Direccion dVieja = pVieja.getDireccion();
+                        Direccion dNueva = pNueva.getDireccion();
+
+                        compararYRegistrar(operadorActual, "Direccion", "calle", usuario.getIdUsuario(),
+                                dVieja.getCalle(), dNueva.getCalle());
+
+                        compararYRegistrar(operadorActual, "Direccion", "numero", usuario.getIdUsuario(),
+                                dVieja.getNumero(), dNueva.getNumero());
+
+                        compararYRegistrar(operadorActual, "Direccion", "piso", usuario.getIdUsuario(),
+                                dVieja.getPiso(), dNueva.getPiso());
+
+                        compararYRegistrar(operadorActual, "Direccion", "departamento", usuario.getIdUsuario(),
+                                dVieja.getDepartamento(), dNueva.getDepartamento());
+
+                        compararYRegistrar(operadorActual, "Direccion", "codigoPostal", usuario.getIdUsuario(),
+                                dVieja.getCodigoPostal(), dNueva.getCodigoPostal());
+
+                        compararYRegistrar(operadorActual, "Direccion", "ciudad", usuario.getIdUsuario(),
+                                dVieja.getCiudad(), dNueva.getCiudad());
+
+                        compararYRegistrar(operadorActual, "Direccion", "provincia", usuario.getIdUsuario(),
+                                dVieja.getProvincia(), dNueva.getProvincia());
+
+                        compararYRegistrar(operadorActual, "Direccion", "pais", usuario.getIdUsuario(),
+                                dVieja.getPais(), dNueva.getPais());
+                    }
+                }
+            }
+        }
+
+        // Guardamos el usuario
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
-        // 2. Sincronizamos el salario y estado en la tabla Empleado de forma ultra-segura
+        // Sincronización en tabla Empleado
         if (usuario.getSalario() != null && usuarioGuardado.getPersona() != null) {
-            
             Integer idPersonaBuscada = usuarioGuardado.getPersona().getIdPersona();
 
-            // Buscamos comparando estrictamente el ID numérico de la persona
             Optional<com.elsur.sistema_gestion.models.Empleado> empleadoExistente = empleadoService.listarTodos().stream()
                 .filter(emp -> emp.getPersona() != null && emp.getPersona().getIdPersona() != null && 
                                emp.getPersona().getIdPersona().equals(idPersonaBuscada))
@@ -119,23 +189,17 @@ public Usuario buscarPorId(Integer id) {
             com.elsur.sistema_gestion.models.Empleado empleado;
 
             if (empleadoExistente.isPresent()) {
-                // Si ya existía, usamos ese mismo registro para actualizarlo (NO creamos uno nuevo)
                 empleado = empleadoExistente.get();
             } else {
-                // Si es un usuario nuevo de verdad, creamos su registro de empleado por única vez
                 empleado = new com.elsur.sistema_gestion.models.Empleado();
                 empleado.setPersona(usuarioGuardado.getPersona());
                 empleado.setFechaContratacion(java.time.LocalDate.now());
             }
 
-            // Asignamos los datos reales del JSON
             empleado.setSalario(usuario.getSalario());
             empleado.setCargo(usuario.getCargo() != null && !usuario.getCargo().isEmpty() ? usuario.getCargo() : "Empleado");
-            
-            // Tomamos el estado real elegido en el modal ("Activo" o "Desactivado")
             empleado.setEstado(usuario.getEstado() != null ? usuario.getEstado() : "Activo");
 
-            // Guardamos el registro consolidado
             empleadoService.guardar(empleado);
         }
 
@@ -146,7 +210,7 @@ public Usuario buscarPorId(Integer id) {
     @Transactional
     public void cambiarPassword(Integer idUsuario, String nuevaPassword) {
         Usuario user = buscarPorId(idUsuario);
-        user.setPassword(nuevaPassword); // Por ahora texto plano, luego BCrypt
+        user.setPassword(nuevaPassword);
         usuarioRepository.save(user);
     }
 
@@ -168,6 +232,38 @@ public Usuario buscarPorId(Integer id) {
 
     @Override
     public boolean usuarioExiste(String nombreUsuario) {
-    return usuarioRepository.findByNombreUsuario(nombreUsuario).isPresent();
-}
+        return usuarioRepository.findByNombreUsuario(nombreUsuario).isPresent();
+    }
+
+    private void compararYRegistrar(Usuario usuarioOperador, String tabla, String columna, Integer idReg, Object viejoVal, Object nuevoVal) {
+        if (viejoVal == null && nuevoVal == null) return;
+
+        boolean sonIguales = false;
+
+        if (viejoVal instanceof Number || nuevoVal instanceof Number) {
+            try {
+                BigDecimal bdViejo = viejoVal != null ? new BigDecimal(viejoVal.toString()) : BigDecimal.ZERO;
+                BigDecimal bdNuevo = nuevoVal != null ? new BigDecimal(nuevoVal.toString()) : BigDecimal.ZERO;
+                sonIguales = bdViejo.compareTo(bdNuevo) == 0;
+            } catch (Exception e) {
+                sonIguales = Objects.equals(viejoVal, nuevoVal);
+            }
+        } else {
+            String stringViejo = viejoVal != null ? viejoVal.toString().trim() : "";
+            String stringNuevo = nuevoVal != null ? nuevoVal.toString().trim() : "";
+            sonIguales = Objects.equals(stringViejo, stringNuevo);
+        }
+
+        if (!sonIguales) {
+            registroActividadService.registrarCambio(
+                usuarioOperador,
+                "UPDATE",
+                tabla,
+                columna,
+                idReg,
+                viejoVal != null ? viejoVal.toString() : "",
+                nuevoVal != null ? nuevoVal.toString() : ""
+            );
+        }
+    }
 }

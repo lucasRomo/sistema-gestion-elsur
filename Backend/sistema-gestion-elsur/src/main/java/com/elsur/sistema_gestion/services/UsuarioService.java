@@ -6,7 +6,7 @@ import java.util.Optional;
 
 public interface UsuarioService {
     List<Usuario> listarTodos();
-    Usuario guardar(Usuario usuario);
+    Usuario guardar(Usuario usuario, Integer idUsuarioOperador);
     Usuario buscarPorId(Integer id);
     Optional<Usuario> buscarPorNombreUsuario(String nombreUsuario);
     void eliminar(Integer id);

@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface ClienteService {
     List<Cliente> listarTodos();
-    Cliente guardar(Cliente cliente);
+    Cliente guardar(Cliente cliente, Integer idUsuario);
     Cliente buscarPorId(Integer id);
     void eliminar(Integer id);
     

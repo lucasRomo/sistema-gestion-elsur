@@ -20,8 +20,10 @@ public class ClienteController {
     }
 
     @PostMapping
-    public Cliente crear(@RequestBody Cliente cliente) {
-        return clienteService.guardar(cliente);
+    public Cliente crear(
+            @RequestBody Cliente cliente,
+            @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
+        return clienteService.guardar(cliente, idUsuario);
     }
 
     @GetMapping("/{id}")
