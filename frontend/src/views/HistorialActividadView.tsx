@@ -125,18 +125,21 @@ export const HistorialActividadView: React.FC = () => {
           </div>
         </div>
 
-        {/* Tabla */}
-        <div className="table-responsive">
+        {/* Tabla con Scroll Interno y Cabecera Fija */}
+        <div 
+          className="table-responsive" 
+          style={{ maxHeight: '60vh', overflowY: 'auto' }}
+        >
           <table className="table table-borderless text-white align-middle mb-0" style={{ '--bs-table-bg': '#1d1d1d', '--bs-table-color': '#ffffff' } as React.CSSProperties}>
-            <thead>
+            <thead className="sticky-top" style={{ backgroundColor: '#1d1d1d', zIndex: 1 }}>
               <tr className="border-bottom border-secondary text-secondary" style={{ fontSize: '0.8rem', letterSpacing: '0.3px' }}>
-                <th className="py-3 fw-bold" style={{ width: '18%' }}>FECHA Y HORA</th>
-                <th className="py-3 fw-bold" style={{ width: '18%' }}>USUARIO RESPONSIBLE</th>
-                <th className="py-3 fw-bold" style={{ width: '15%' }}>TABLA AFECTADA</th>
-                <th className="py-3 fw-bold" style={{ width: '15%' }}>COLUMNA AFECTADA</th>
-                <th className="py-3 fw-bold text-center" style={{ width: '10%' }}>ID ITEM MODIF.</th>
-                <th className="py-3 fw-bold text-start" style={{ width: '12%' }}>DATO PREVIO</th>
-                <th className="py-3 fw-bold text-start" style={{ width: '12%' }}>DATO MODIF.</th>
+                <th className="py-3 fw-bold" style={{ width: '18%', backgroundColor: '#1d1d1d' }}>FECHA Y HORA</th>
+                <th className="py-3 fw-bold" style={{ width: '18%', backgroundColor: '#1d1d1d' }}>USUARIO RESPONSIBLE</th>
+                <th className="py-3 fw-bold" style={{ width: '15%', backgroundColor: '#1d1d1d' }}>TABLA AFECTADA</th>
+                <th className="py-3 fw-bold" style={{ width: '15%', backgroundColor: '#1d1d1d' }}>COLUMNA AFECTADA</th>
+                <th className="py-3 fw-bold text-center" style={{ width: '10%', backgroundColor: '#1d1d1d' }}>ID ITEM MODIF.</th>
+                <th className="py-3 fw-bold text-start" style={{ width: '12%', backgroundColor: '#1d1d1d' }}>DATO PREVIO</th>
+                <th className="py-3 fw-bold text-start" style={{ width: '12%', backgroundColor: '#1d1d1d' }}>DATO MODIF.</th>
               </tr>
             </thead>
             <tbody style={{ fontSize: '0.88rem' }}>
@@ -181,7 +184,7 @@ export const HistorialActividadView: React.FC = () => {
         </div>
       </div>
 
-      {/* Botón Volver a la Izquierda y de Tamaño Normal */}
+      {/* Botón Volver */}
       <div className="d-flex justify-content-start mb-3">
         <button 
           className="btn btn-danger px-4 fw-semibold rounded-2 shadow-sm"
