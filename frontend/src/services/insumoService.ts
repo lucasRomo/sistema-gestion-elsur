@@ -1,4 +1,4 @@
-// src/services/insumoService.ts
+import type { Insumo } from '../types/Insumo';
 const API_URL = 'http://localhost:8080/api/insumos';
 
 const obtenerIdUsuarioLogueado = (): number | null => {
@@ -36,4 +36,17 @@ export const guardarInsumo = async (insumo: any) => {
     throw new Error(err);
   }
   return res.json();
+};
+
+export const getInsumosBajoStock = async (): Promise<Insumo[]> => {
+  try {
+    const res = await fetch(`${API_URL}/bajo-stock`);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn("Falló endpoint /bajo-stock, aplicando filtro local de respaldo", e);
+  }
+  const todos = await getInsumos();
+  return todos.filter((i: Insumo) => i.stockActual <= i.stockMinimo);
 };

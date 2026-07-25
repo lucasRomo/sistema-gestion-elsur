@@ -1,3 +1,4 @@
+import type { Pedido } from '../types/Pedido';
 const BASE_URL = 'http://localhost:8080/api/pedidos';
 
 export const pedidoService = {
@@ -50,5 +51,12 @@ export const pedidoService = {
       method: 'DELETE',
     });
     return response.ok;
+  },
+
+  obtenerTodos: async (): Promise<Pedido[]> => {
+    const response = await fetch(BASE_URL);
+    if (!response.ok) throw new Error('Error al obtener la lista de pedidos');
+    return await response.json();
   }
+
 };

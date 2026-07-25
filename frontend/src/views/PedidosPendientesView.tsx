@@ -22,7 +22,7 @@ export const PedidosPendientesPage: React.FC = () => {
   const { cajaAbierta } = useTurno();
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
   const [pedidoGestionComprobanteSel, setPedidoGestionComprobanteSel] = useState<any | null>(null);
-
+  const [filtroEmpleado, setFiltroEmpleado] = useState('');
   // Controles de Modales
   const [pedidoEstadoSel, setPedidoEstadoSel] = useState<any>(null);
   const [nuevoEstadoPendiente, setNuevoEstadoPendiente] = useState<string>('');
@@ -261,25 +261,47 @@ const ejecutarEliminarComprobante = async () => {
 
   
   const pedidosFiltrados = pedidos.filter(p => {
-  const esVentaRapida = 
-    p.observaciones?.toLowerCase().includes('venta rápida') || 
-    p.observacion?.toLowerCase().includes('venta rápida') ||
-    p.estante === 'Venta Rápida';
+    // 1. Excluir Venta Rápida
+    const esVentaRapida = 
+      p.observaciones?.toLowerCase().includes('venta rápida') || 
+      p.observacion?.toLowerCase().includes('venta rápida') ||
+      p.estante === 'Venta Rápida';
 
-  if (esVentaRapida) return false;
-  const nombreCliente = p.cliente?.persona 
-    ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
-    : (p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
-  const cumpleCliente = nombreCliente.toLowerCase().includes(filtroCliente.toLowerCase());
-  if (filtroEstado === 'PRESUPUESTO') {
-    if (p.estado !== 'PRESUPUESTO') return false;
-  } else {
-    if (p.estado === 'PRESUPUESTO') return false;
-    if (filtroEstado !== '' && p.estado !== filtroEstado) return false;
-  }
+    if (esVentaRapida) return false;
 
-  return cumpleCliente;
-});
+    // 2. Filtro por Cliente
+    const nombreCliente = p.cliente?.persona 
+      ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
+      : (p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
+    const cumpleCliente = nombreCliente.toLowerCase().includes(filtroCliente.toLowerCase());
+    if (!cumpleCliente) return false;
+
+    // 3. Filtro por Estado
+    if (filtroEstado === 'PRESUPUESTO') {
+      if (p.estado !== 'PRESUPUESTO') return false;
+    } else {
+      if (p.estado === 'PRESUPUESTO') return false;
+      if (filtroEstado !== '' && p.estado !== filtroEstado) return false;
+    }
+
+    // 4. Filtro por Empleado Asignado (Mapeado usando ultimaAsignacion)
+    if (filtroEmpleado !== '') {
+      const ultimaAsignacion = p.asignaciones && p.asignaciones.length > 0
+        ? p.asignaciones[p.asignaciones.length - 1]
+        : null;
+
+      const idEmpleadoAsignado = ultimaAsignacion?.empleado?.idEmpleado || 
+                                 ultimaAsignacion?.empleado?.id_empleado;
+
+      if (filtroEmpleado === 'SIN_ASIGNAR') {
+        if (idEmpleadoAsignado) return false;
+      } else {
+        if (String(idEmpleadoAsignado) !== String(filtroEmpleado)) return false;
+      }
+    }
+
+    return true;
+  });
 
   return (
     <SidebarLayout activeItem="Pedidos Pendientes">
@@ -304,6 +326,9 @@ const ejecutarEliminarComprobante = async () => {
             setFiltroCliente={setFiltroCliente}
             filtroEstado={filtroEstado}
             setFiltroEstado={setFiltroEstado}
+            filtroEmpleado={filtroEmpleado}
+            setFiltroEmpleado={setFiltroEmpleado}
+            empleados={empleados}
           />
         </div>
 
