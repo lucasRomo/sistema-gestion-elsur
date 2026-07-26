@@ -51,8 +51,16 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}/password")
-    public ResponseEntity<Void> cambiarPassword(@PathVariable Integer id, @RequestBody String newPassword) {
-        usuarioService.cambiarPassword(id, newPassword);
+    public ResponseEntity<?> cambiarPassword(
+            @PathVariable Integer id, 
+            @RequestBody com.elsur.sistema_gestion.dto.CambioPasswordDTO dto,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+        
+        if (dto.getPasswordNueva() == null || dto.getPasswordNueva().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("La nueva contraseña no puede estar vacía.");
+        }
+
+        usuarioService.cambiarPassword(id, dto.getPasswordNueva());
         return ResponseEntity.ok().build();
     }
 

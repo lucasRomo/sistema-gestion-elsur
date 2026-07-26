@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Data
@@ -19,8 +17,9 @@ public class DetallePedido {
 
     @ManyToOne(fetch = FetchType.LAZY) 
     @JoinColumn(name = "id_pedido", nullable = false)
-    @JsonIgnoreProperties("detalles")
-    @JsonIgnore 
+    // ❌ QUITAR @JsonIgnore (esto hacía que 'pedido' fuera siempre null)
+    // ✅ USAR @JsonIgnoreProperties para prevenir bucles de serialización
+    @JsonIgnoreProperties({"detalles", "asignaciones", "comprobantes", "historiales"})
     private Pedido pedido;
 
     @ManyToOne

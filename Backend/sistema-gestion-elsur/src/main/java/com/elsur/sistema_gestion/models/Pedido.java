@@ -7,9 +7,7 @@ import lombok.ToString;
 
 import org.hibernate.annotations.ColumnDefault;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
@@ -30,7 +28,6 @@ public class Pedido {
     @JsonProperty("cliente")
     private Cliente cliente;
 
-    
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("pedido")
     @EqualsAndHashCode.Exclude
@@ -48,14 +45,14 @@ public class Pedido {
     private LocalDateTime fecha_finalizacion;
 
     @Column(length = 45, nullable = false)
-    @ColumnDefault("'PENDIENTE'") // Formato correcto de string default para Postgres
+    @ColumnDefault("'PENDIENTE'")
     private String estado = "PENDIENTE";
 
     @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal monto_total;
 
     @Column(precision = 10, scale = 2, nullable = false)
-    @ColumnDefault("0.00") // Formato correcto numérico default para Postgres
+    @ColumnDefault("0.00")
     private BigDecimal monto_pago_adelantado = BigDecimal.ZERO;
 
     @Column(columnDefinition = "TEXT")
@@ -72,19 +69,22 @@ public class Pedido {
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("pedido")
-    @JsonProperty("asignaciones") // Esto permitirá que el JSON traiga la lista
+    @JsonProperty("asignaciones")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private List<AsignacionPedido> asignaciones;
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties("pedido")
     @JsonProperty("comprobantes")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private List<ComprobantePago> comprobantes;
 
-    // ➔ NUEVA RELACIÓN AGREGADA: Mapeo bidireccional con el historial
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonIgnoreProperties("pedido") 
-    @JsonProperty("historiales")    
+    @JsonProperty("historiales")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private List<HistorialEstadoPedido> historiales;
-
-    
 }

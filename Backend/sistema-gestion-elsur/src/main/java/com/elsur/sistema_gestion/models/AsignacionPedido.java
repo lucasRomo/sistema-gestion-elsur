@@ -19,9 +19,9 @@ public class AsignacionPedido {
     @Column(columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime fecha_asignacion;
 
-    @ManyToOne
-    @JoinColumn(name = "id_pedido", nullable = false)
-    @JsonIgnoreProperties("asignaciones")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "id_pedido", nullable = false) // O el nombre exacto de tu FK
+    @JsonIgnoreProperties({"detalles", "asignaciones", "comprobantes", "historiales"})
     private Pedido pedido;
 
     @ManyToOne

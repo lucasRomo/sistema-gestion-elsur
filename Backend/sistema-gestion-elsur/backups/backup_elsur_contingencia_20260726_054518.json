@@ -1,0 +1,2670 @@
+{
+  "_sistema" : "El Sur - Centro de Copiado",
+  "datos" : {
+    "Institucion" : [ ],
+    "Usuario" : [ {
+      "idUsuario" : 1,
+      "nombreUsuario" : "mesi",
+      "password" : "123",
+      "persona" : {
+        "idPersona" : 2,
+        "nombre" : "sandro",
+        "apellido" : "argento",
+        "numeroDocumento" : "45591544",
+        "telefono" : "03541318154",
+        "email" : "lucasroasmo22@gmail.com",
+        "tipoDocumento" : {
+          "idTipoDocumento" : 1,
+          "nombreTipo" : "DNI"
+        },
+        "direccion" : {
+          "idDireccion" : 1,
+          "calle" : "paraguay",
+          "numero" : "400",
+          "piso" : null,
+          "departamento" : null,
+          "codigoPostal" : "5152",
+          "ciudad" : "Carlos paz",
+          "provincia" : "Córdoba",
+          "pais" : "Argentina"
+        },
+        "tipoPersona" : {
+          "idTipoPersona" : 1,
+          "nombreTipo" : "Física"
+        }
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "salario" : null,
+      "estado" : null,
+      "cargo" : null
+    }, {
+      "idUsuario" : 2,
+      "nombreUsuario" : "mes",
+      "password" : "\"abcd\"",
+      "persona" : {
+        "idPersona" : 3,
+        "nombre" : "sandro",
+        "apellido" : "argento",
+        "numeroDocumento" : "21345312",
+        "telefono" : "03541318154",
+        "email" : "lucasroasmsdo22@gmail.com",
+        "tipoDocumento" : {
+          "idTipoDocumento" : 1,
+          "nombreTipo" : "DNI"
+        },
+        "direccion" : {
+          "idDireccion" : 2,
+          "calle" : "paraguay",
+          "numero" : "400",
+          "piso" : null,
+          "departamento" : null,
+          "codigoPostal" : "5152",
+          "ciudad" : "Carlos paz",
+          "provincia" : "Córdoba",
+          "pais" : "Argentina"
+        },
+        "tipoPersona" : {
+          "idTipoPersona" : 1,
+          "nombreTipo" : "Física"
+        }
+      },
+      "rol" : {
+        "idRol" : 3,
+        "nombreRol" : "CAJERO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "salario" : null,
+      "estado" : null,
+      "cargo" : null
+    } ],
+    "Persona" : [ {
+      "idPersona" : 1,
+      "nombre" : "Consumidor",
+      "apellido" : "Final",
+      "numeroDocumento" : "99999999",
+      "telefono" : null,
+      "email" : null,
+      "tipoDocumento" : {
+        "idTipoDocumento" : 1,
+        "nombreTipo" : "DNI"
+      },
+      "direccion" : null,
+      "tipoPersona" : {
+        "idTipoPersona" : 1,
+        "nombreTipo" : "Física"
+      }
+    }, {
+      "idPersona" : 2,
+      "nombre" : "sandro",
+      "apellido" : "argento",
+      "numeroDocumento" : "45591544",
+      "telefono" : "03541318154",
+      "email" : "lucasroasmo22@gmail.com",
+      "tipoDocumento" : {
+        "idTipoDocumento" : 1,
+        "nombreTipo" : "DNI"
+      },
+      "direccion" : {
+        "idDireccion" : 1,
+        "calle" : "paraguay",
+        "numero" : "400",
+        "piso" : null,
+        "departamento" : null,
+        "codigoPostal" : "5152",
+        "ciudad" : "Carlos paz",
+        "provincia" : "Córdoba",
+        "pais" : "Argentina"
+      },
+      "tipoPersona" : {
+        "idTipoPersona" : 1,
+        "nombreTipo" : "Física"
+      }
+    }, {
+      "idPersona" : 3,
+      "nombre" : "sandro",
+      "apellido" : "argento",
+      "numeroDocumento" : "21345312",
+      "telefono" : "03541318154",
+      "email" : "lucasroasmsdo22@gmail.com",
+      "tipoDocumento" : {
+        "idTipoDocumento" : 1,
+        "nombreTipo" : "DNI"
+      },
+      "direccion" : {
+        "idDireccion" : 2,
+        "calle" : "paraguay",
+        "numero" : "400",
+        "piso" : null,
+        "departamento" : null,
+        "codigoPostal" : "5152",
+        "ciudad" : "Carlos paz",
+        "provincia" : "Córdoba",
+        "pais" : "Argentina"
+      },
+      "tipoPersona" : {
+        "idTipoPersona" : 1,
+        "nombreTipo" : "Física"
+      }
+    }, {
+      "idPersona" : 4,
+      "nombre" : "sandrosg",
+      "apellido" : "argento",
+      "numeroDocumento" : "41423456",
+      "telefono" : "03541318154",
+      "email" : "lucasromodf22@gmail.com",
+      "tipoDocumento" : {
+        "idTipoDocumento" : 1,
+        "nombreTipo" : "DNI"
+      },
+      "direccion" : {
+        "idDireccion" : 3,
+        "calle" : "paraguay",
+        "numero" : "400",
+        "piso" : null,
+        "departamento" : null,
+        "codigoPostal" : "5152",
+        "ciudad" : "Carlos paz",
+        "provincia" : "Córdoba",
+        "pais" : "Argentina"
+      },
+      "tipoPersona" : {
+        "idTipoPersona" : 1,
+        "nombreTipo" : "Física"
+      }
+    } ],
+    "Producto" : [ {
+      "idProducto" : 1,
+      "nombreProducto" : "dsdasd",
+      "precioBase" : 200.00,
+      "categoria" : {
+        "idCategoria" : 1,
+        "nombre" : "dsa",
+        "descuentoAutomatico" : 0.00
+      },
+      "maquinaNecesaria" : null,
+      "stock" : 344,
+      "estado" : "Activo"
+    } ],
+    "RegistroActividad" : [ ],
+    "RolPermiso" : [ {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 1
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 1,
+        "nombrePermiso" : "Panel Principal"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 2
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 2,
+        "nombrePermiso" : "Crear Pedido"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 3
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 3,
+        "nombrePermiso" : "Pedidos Pendientes"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 4
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 4,
+        "nombrePermiso" : "Historial de Pedidos"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 5
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 5,
+        "nombrePermiso" : "Caja"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 6
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 6,
+        "nombrePermiso" : "Repositorio Digital"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 7
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 7,
+        "nombrePermiso" : "Inventario"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 8
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 8,
+        "nombrePermiso" : "Insumos"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 9
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 9,
+        "nombrePermiso" : "Productos"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 10
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 10,
+        "nombrePermiso" : "Clientes"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 11
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 11,
+        "nombrePermiso" : "Proveedores"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 12
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 12,
+        "nombrePermiso" : "Informes"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 13
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 13,
+        "nombrePermiso" : "Matriz de Permisos"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 14
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 14,
+        "nombrePermiso" : "Gestión de Usuarios"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 15
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 15,
+        "nombrePermiso" : "Historial de Actividad"
+      }
+    }, {
+      "id" : {
+        "idRol" : 1,
+        "idPermiso" : 16
+      },
+      "rol" : {
+        "idRol" : 1,
+        "nombreRol" : "ADMIN",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 12,
+          "nombrePermiso" : "Informes"
+        }, {
+          "idPermiso" : 13,
+          "nombrePermiso" : "Matriz de Permisos"
+        }, {
+          "idPermiso" : 14,
+          "nombrePermiso" : "Gestión de Usuarios"
+        }, {
+          "idPermiso" : 15,
+          "nombrePermiso" : "Historial de Actividad"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 16,
+        "nombrePermiso" : "Configuración"
+      }
+    }, {
+      "id" : {
+        "idRol" : 3,
+        "idPermiso" : 1
+      },
+      "rol" : {
+        "idRol" : 3,
+        "nombreRol" : "CAJERO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 1,
+        "nombrePermiso" : "Panel Principal"
+      }
+    }, {
+      "id" : {
+        "idRol" : 3,
+        "idPermiso" : 3
+      },
+      "rol" : {
+        "idRol" : 3,
+        "nombreRol" : "CAJERO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 3,
+        "nombrePermiso" : "Pedidos Pendientes"
+      }
+    }, {
+      "id" : {
+        "idRol" : 3,
+        "idPermiso" : 10
+      },
+      "rol" : {
+        "idRol" : 3,
+        "nombreRol" : "CAJERO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 10,
+        "nombrePermiso" : "Clientes"
+      }
+    }, {
+      "id" : {
+        "idRol" : 3,
+        "idPermiso" : 16
+      },
+      "rol" : {
+        "idRol" : 3,
+        "nombreRol" : "CAJERO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 16,
+        "nombrePermiso" : "Configuración"
+      }
+    }, {
+      "id" : {
+        "idRol" : 2,
+        "idPermiso" : 1
+      },
+      "rol" : {
+        "idRol" : 2,
+        "nombreRol" : "OPERARIO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 1,
+        "nombrePermiso" : "Panel Principal"
+      }
+    }, {
+      "id" : {
+        "idRol" : 2,
+        "idPermiso" : 2
+      },
+      "rol" : {
+        "idRol" : 2,
+        "nombreRol" : "OPERARIO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 2,
+        "nombrePermiso" : "Crear Pedido"
+      }
+    }, {
+      "id" : {
+        "idRol" : 2,
+        "idPermiso" : 3
+      },
+      "rol" : {
+        "idRol" : 2,
+        "nombreRol" : "OPERARIO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 3,
+        "nombrePermiso" : "Pedidos Pendientes"
+      }
+    }, {
+      "id" : {
+        "idRol" : 2,
+        "idPermiso" : 4
+      },
+      "rol" : {
+        "idRol" : 2,
+        "nombreRol" : "OPERARIO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 4,
+        "nombrePermiso" : "Historial de Pedidos"
+      }
+    }, {
+      "id" : {
+        "idRol" : 2,
+        "idPermiso" : 5
+      },
+      "rol" : {
+        "idRol" : 2,
+        "nombreRol" : "OPERARIO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 5,
+        "nombrePermiso" : "Caja"
+      }
+    }, {
+      "id" : {
+        "idRol" : 2,
+        "idPermiso" : 6
+      },
+      "rol" : {
+        "idRol" : 2,
+        "nombreRol" : "OPERARIO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 6,
+        "nombrePermiso" : "Repositorio Digital"
+      }
+    }, {
+      "id" : {
+        "idRol" : 2,
+        "idPermiso" : 7
+      },
+      "rol" : {
+        "idRol" : 2,
+        "nombreRol" : "OPERARIO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 7,
+        "nombrePermiso" : "Inventario"
+      }
+    }, {
+      "id" : {
+        "idRol" : 2,
+        "idPermiso" : 8
+      },
+      "rol" : {
+        "idRol" : 2,
+        "nombreRol" : "OPERARIO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 8,
+        "nombrePermiso" : "Insumos"
+      }
+    }, {
+      "id" : {
+        "idRol" : 2,
+        "idPermiso" : 9
+      },
+      "rol" : {
+        "idRol" : 2,
+        "nombreRol" : "OPERARIO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 9,
+        "nombrePermiso" : "Productos"
+      }
+    }, {
+      "id" : {
+        "idRol" : 2,
+        "idPermiso" : 10
+      },
+      "rol" : {
+        "idRol" : 2,
+        "nombreRol" : "OPERARIO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 10,
+        "nombrePermiso" : "Clientes"
+      }
+    }, {
+      "id" : {
+        "idRol" : 2,
+        "idPermiso" : 11
+      },
+      "rol" : {
+        "idRol" : 2,
+        "nombreRol" : "OPERARIO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 11,
+        "nombrePermiso" : "Proveedores"
+      }
+    }, {
+      "id" : {
+        "idRol" : 2,
+        "idPermiso" : 16
+      },
+      "rol" : {
+        "idRol" : 2,
+        "nombreRol" : "OPERARIO",
+        "permisos" : [ {
+          "idPermiso" : 1,
+          "nombrePermiso" : "Panel Principal"
+        }, {
+          "idPermiso" : 2,
+          "nombrePermiso" : "Crear Pedido"
+        }, {
+          "idPermiso" : 3,
+          "nombrePermiso" : "Pedidos Pendientes"
+        }, {
+          "idPermiso" : 4,
+          "nombrePermiso" : "Historial de Pedidos"
+        }, {
+          "idPermiso" : 5,
+          "nombrePermiso" : "Caja"
+        }, {
+          "idPermiso" : 6,
+          "nombrePermiso" : "Repositorio Digital"
+        }, {
+          "idPermiso" : 7,
+          "nombrePermiso" : "Inventario"
+        }, {
+          "idPermiso" : 8,
+          "nombrePermiso" : "Insumos"
+        }, {
+          "idPermiso" : 9,
+          "nombrePermiso" : "Productos"
+        }, {
+          "idPermiso" : 10,
+          "nombrePermiso" : "Clientes"
+        }, {
+          "idPermiso" : 11,
+          "nombrePermiso" : "Proveedores"
+        }, {
+          "idPermiso" : 16,
+          "nombrePermiso" : "Configuración"
+        } ]
+      },
+      "permiso" : {
+        "idPermiso" : 16,
+        "nombrePermiso" : "Configuración"
+      }
+    } ],
+    "Empleado" : [ {
+      "idEmpleado" : 1,
+      "fechaContratacion" : "2026-07-01",
+      "cargo" : "dsad",
+      "salario" : 222.00,
+      "estado" : "Activo",
+      "persona" : {
+        "idPersona" : 2,
+        "nombre" : "sandro",
+        "apellido" : "argento",
+        "numeroDocumento" : "45591544",
+        "telefono" : "03541318154",
+        "email" : "lucasroasmo22@gmail.com",
+        "tipoDocumento" : {
+          "idTipoDocumento" : 1,
+          "nombreTipo" : "DNI"
+        },
+        "direccion" : {
+          "idDireccion" : 1,
+          "calle" : "paraguay",
+          "numero" : "400",
+          "piso" : null,
+          "departamento" : null,
+          "codigoPostal" : "5152",
+          "ciudad" : "Carlos paz",
+          "provincia" : "Córdoba",
+          "pais" : "Argentina"
+        },
+        "tipoPersona" : {
+          "idTipoPersona" : 1,
+          "nombreTipo" : "Física"
+        }
+      }
+    }, {
+      "idEmpleado" : 2,
+      "fechaContratacion" : "2026-07-08",
+      "cargo" : "empleado",
+      "salario" : 2313.00,
+      "estado" : "Activo",
+      "persona" : {
+        "idPersona" : 3,
+        "nombre" : "sandro",
+        "apellido" : "argento",
+        "numeroDocumento" : "21345312",
+        "telefono" : "03541318154",
+        "email" : "lucasroasmsdo22@gmail.com",
+        "tipoDocumento" : {
+          "idTipoDocumento" : 1,
+          "nombreTipo" : "DNI"
+        },
+        "direccion" : {
+          "idDireccion" : 2,
+          "calle" : "paraguay",
+          "numero" : "400",
+          "piso" : null,
+          "departamento" : null,
+          "codigoPostal" : "5152",
+          "ciudad" : "Carlos paz",
+          "provincia" : "Córdoba",
+          "pais" : "Argentina"
+        },
+        "tipoPersona" : {
+          "idTipoPersona" : 1,
+          "nombreTipo" : "Física"
+        }
+      }
+    } ],
+    "MovimientoCaja" : [ ],
+    "Categoria" : [ {
+      "idCategoria" : 1,
+      "nombre" : "dsa",
+      "descuentoAutomatico" : 0.00
+    } ],
+    "Direccion" : [ {
+      "idDireccion" : 1,
+      "calle" : "paraguay",
+      "numero" : "400",
+      "piso" : null,
+      "departamento" : null,
+      "codigoPostal" : "5152",
+      "ciudad" : "Carlos paz",
+      "provincia" : "Córdoba",
+      "pais" : "Argentina"
+    }, {
+      "idDireccion" : 2,
+      "calle" : "paraguay",
+      "numero" : "400",
+      "piso" : null,
+      "departamento" : null,
+      "codigoPostal" : "5152",
+      "ciudad" : "Carlos paz",
+      "provincia" : "Córdoba",
+      "pais" : "Argentina"
+    }, {
+      "idDireccion" : 3,
+      "calle" : "paraguay",
+      "numero" : "400",
+      "piso" : null,
+      "departamento" : null,
+      "codigoPostal" : "5152",
+      "ciudad" : "Carlos paz",
+      "provincia" : "Córdoba",
+      "pais" : "Argentina"
+    } ],
+    "Insumo" : [ ],
+    "AsignacionPedido" : [ {
+      "id_asignacion" : 1,
+      "fecha_asignacion" : "2026-07-21T00:24:17.95098",
+      "pedido" : {
+        "id_pedido" : 2,
+        "fecha_creacion" : "2026-07-21T00:24:17.936259",
+        "fecha_entrega_estimada" : "2026-07-16T00:00:00",
+        "fecha_finalizacion" : null,
+        "estado" : "PENDIENTE",
+        "monto_total" : 200.00,
+        "monto_pago_adelantado" : 0.00,
+        "observaciones" : "",
+        "ubicacion_estante" : null,
+        "es_cuenta_corriente" : false,
+        "es_presupuesto" : false,
+        "cliente" : {
+          "razonSocial" : "Consumidor Final",
+          "saldoDeudor" : 0.00,
+          "limiteCredito" : 0.00,
+          "categoria" : null,
+          "estado" : "Activo",
+          "personaDeContacto" : "N/A",
+          "condicionDePago" : "Contado",
+          "persona" : {
+            "idPersona" : 1,
+            "nombre" : "Consumidor",
+            "apellido" : "Final",
+            "numeroDocumento" : "99999999",
+            "telefono" : null,
+            "email" : null,
+            "tipoDocumento" : {
+              "idTipoDocumento" : 1,
+              "nombreTipo" : "DNI"
+            },
+            "direccion" : null,
+            "tipoPersona" : {
+              "idTipoPersona" : 1,
+              "nombreTipo" : "Física"
+            }
+          },
+          "id_cliente" : 1
+        }
+      },
+      "empleado" : {
+        "idEmpleado" : 1,
+        "fechaContratacion" : "2026-07-01",
+        "cargo" : "dsad",
+        "salario" : 222.00,
+        "estado" : "Activo",
+        "persona" : {
+          "idPersona" : 2,
+          "nombre" : "sandro",
+          "apellido" : "argento",
+          "numeroDocumento" : "45591544",
+          "telefono" : "03541318154",
+          "email" : "lucasroasmo22@gmail.com",
+          "tipoDocumento" : {
+            "idTipoDocumento" : 1,
+            "nombreTipo" : "DNI"
+          },
+          "direccion" : {
+            "idDireccion" : 1,
+            "calle" : "paraguay",
+            "numero" : "400",
+            "piso" : null,
+            "departamento" : null,
+            "codigoPostal" : "5152",
+            "ciudad" : "Carlos paz",
+            "provincia" : "Córdoba",
+            "pais" : "Argentina"
+          },
+          "tipoPersona" : {
+            "idTipoPersona" : 1,
+            "nombreTipo" : "Física"
+          }
+        }
+      }
+    } ],
+    "Cliente" : [ {
+      "razonSocial" : "Consumidor Final",
+      "saldoDeudor" : 0.00,
+      "limiteCredito" : 0.00,
+      "categoria" : null,
+      "estado" : "Activo",
+      "personaDeContacto" : "N/A",
+      "condicionDePago" : "Contado",
+      "persona" : {
+        "idPersona" : 1,
+        "nombre" : "Consumidor",
+        "apellido" : "Final",
+        "numeroDocumento" : "99999999",
+        "telefono" : null,
+        "email" : null,
+        "tipoDocumento" : {
+          "idTipoDocumento" : 1,
+          "nombreTipo" : "DNI"
+        },
+        "direccion" : null,
+        "tipoPersona" : {
+          "idTipoPersona" : 1,
+          "nombreTipo" : "Física"
+        }
+      },
+      "id_cliente" : 1
+    }, {
+      "razonSocial" : "sad",
+      "saldoDeudor" : 0.00,
+      "limiteCredito" : 0.00,
+      "categoria" : null,
+      "estado" : "Activo",
+      "personaDeContacto" : "sad",
+      "condicionDePago" : "Efectivo",
+      "persona" : {
+        "idPersona" : 4,
+        "nombre" : "sandrosg",
+        "apellido" : "argento",
+        "numeroDocumento" : "41423456",
+        "telefono" : "03541318154",
+        "email" : "lucasromodf22@gmail.com",
+        "tipoDocumento" : {
+          "idTipoDocumento" : 1,
+          "nombreTipo" : "DNI"
+        },
+        "direccion" : {
+          "idDireccion" : 3,
+          "calle" : "paraguay",
+          "numero" : "400",
+          "piso" : null,
+          "departamento" : null,
+          "codigoPostal" : "5152",
+          "ciudad" : "Carlos paz",
+          "provincia" : "Córdoba",
+          "pais" : "Argentina"
+        },
+        "tipoPersona" : {
+          "idTipoPersona" : 1,
+          "nombreTipo" : "Física"
+        }
+      },
+      "id_cliente" : 2
+    } ],
+    "Area_Curso" : [ ],
+    "Turno" : [ ],
+    "Pedido" : [ {
+      "id_pedido" : 1,
+      "detalles" : [ {
+        "id_detalle" : 1,
+        "producto" : {
+          "idProducto" : 1,
+          "nombreProducto" : "dsdasd",
+          "precioBase" : 200.00,
+          "categoria" : {
+            "idCategoria" : 1,
+            "nombre" : "dsa",
+            "descuentoAutomatico" : 0.00
+          },
+          "maquinaNecesaria" : null,
+          "stock" : 344,
+          "estado" : "Activo"
+        },
+        "cantidad" : 1,
+        "precioUnitario" : 200.00,
+        "subtotal" : 200.00
+      } ],
+      "fecha_creacion" : "2026-07-21T00:23:38.352514",
+      "fecha_entrega_estimada" : "2026-07-21T03:23:38.258",
+      "fecha_finalizacion" : "2026-07-21T00:23:39.105308",
+      "estado" : "VENTA_RAPIDA",
+      "monto_total" : 200.00,
+      "monto_pago_adelantado" : 200.00,
+      "observaciones" : "Venta Rápida",
+      "ubicacion_estante" : null,
+      "es_cuenta_corriente" : false,
+      "es_presupuesto" : false,
+      "cliente" : {
+        "razonSocial" : "Consumidor Final",
+        "saldoDeudor" : 0.00,
+        "limiteCredito" : 0.00,
+        "categoria" : null,
+        "estado" : "Activo",
+        "personaDeContacto" : "N/A",
+        "condicionDePago" : "Contado",
+        "persona" : {
+          "idPersona" : 1,
+          "nombre" : "Consumidor",
+          "apellido" : "Final",
+          "numeroDocumento" : "99999999",
+          "telefono" : null,
+          "email" : null,
+          "tipoDocumento" : {
+            "idTipoDocumento" : 1,
+            "nombreTipo" : "DNI"
+          },
+          "direccion" : null,
+          "tipoPersona" : {
+            "idTipoPersona" : 1,
+            "nombreTipo" : "Física"
+          }
+        },
+        "id_cliente" : 1
+      },
+      "asignaciones" : [ ],
+      "comprobantes" : [ ],
+      "historiales" : [ ]
+    }, {
+      "id_pedido" : 2,
+      "detalles" : [ {
+        "id_detalle" : 2,
+        "producto" : {
+          "idProducto" : 1,
+          "nombreProducto" : "dsdasd",
+          "precioBase" : 200.00,
+          "categoria" : {
+            "idCategoria" : 1,
+            "nombre" : "dsa",
+            "descuentoAutomatico" : 0.00
+          },
+          "maquinaNecesaria" : null,
+          "stock" : 344,
+          "estado" : "Activo"
+        },
+        "cantidad" : 1,
+        "precioUnitario" : 200.00,
+        "subtotal" : 200.00
+      } ],
+      "fecha_creacion" : "2026-07-21T00:24:17.936259",
+      "fecha_entrega_estimada" : "2026-07-16T00:00:00",
+      "fecha_finalizacion" : null,
+      "estado" : "PENDIENTE",
+      "monto_total" : 200.00,
+      "monto_pago_adelantado" : 0.00,
+      "observaciones" : "",
+      "ubicacion_estante" : null,
+      "es_cuenta_corriente" : false,
+      "es_presupuesto" : false,
+      "cliente" : {
+        "razonSocial" : "Consumidor Final",
+        "saldoDeudor" : 0.00,
+        "limiteCredito" : 0.00,
+        "categoria" : null,
+        "estado" : "Activo",
+        "personaDeContacto" : "N/A",
+        "condicionDePago" : "Contado",
+        "persona" : {
+          "idPersona" : 1,
+          "nombre" : "Consumidor",
+          "apellido" : "Final",
+          "numeroDocumento" : "99999999",
+          "telefono" : null,
+          "email" : null,
+          "tipoDocumento" : {
+            "idTipoDocumento" : 1,
+            "nombreTipo" : "DNI"
+          },
+          "direccion" : null,
+          "tipoPersona" : {
+            "idTipoPersona" : 1,
+            "nombreTipo" : "Física"
+          }
+        },
+        "id_cliente" : 1
+      },
+      "asignaciones" : [ {
+        "id_asignacion" : 1,
+        "fecha_asignacion" : "2026-07-21T00:24:17.95098",
+        "empleado" : {
+          "idEmpleado" : 1,
+          "fechaContratacion" : "2026-07-01",
+          "cargo" : "dsad",
+          "salario" : 222.00,
+          "estado" : "Activo",
+          "persona" : {
+            "idPersona" : 2,
+            "nombre" : "sandro",
+            "apellido" : "argento",
+            "numeroDocumento" : "45591544",
+            "telefono" : "03541318154",
+            "email" : "lucasroasmo22@gmail.com",
+            "tipoDocumento" : {
+              "idTipoDocumento" : 1,
+              "nombreTipo" : "DNI"
+            },
+            "direccion" : {
+              "idDireccion" : 1,
+              "calle" : "paraguay",
+              "numero" : "400",
+              "piso" : null,
+              "departamento" : null,
+              "codigoPostal" : "5152",
+              "ciudad" : "Carlos paz",
+              "provincia" : "Córdoba",
+              "pais" : "Argentina"
+            },
+            "tipoPersona" : {
+              "idTipoPersona" : 1,
+              "nombreTipo" : "Física"
+            }
+          }
+        }
+      } ],
+      "comprobantes" : [ ],
+      "historiales" : [ ]
+    } ],
+    "Proveedor" : [ ],
+    "DetalleCompraInsumo" : [ ],
+    "HistorialEstadoPedido" : [ ],
+    "Rol" : [ {
+      "idRol" : 1,
+      "nombreRol" : "ADMIN",
+      "permisos" : [ {
+        "idPermiso" : 1,
+        "nombrePermiso" : "Panel Principal"
+      }, {
+        "idPermiso" : 2,
+        "nombrePermiso" : "Crear Pedido"
+      }, {
+        "idPermiso" : 3,
+        "nombrePermiso" : "Pedidos Pendientes"
+      }, {
+        "idPermiso" : 4,
+        "nombrePermiso" : "Historial de Pedidos"
+      }, {
+        "idPermiso" : 5,
+        "nombrePermiso" : "Caja"
+      }, {
+        "idPermiso" : 6,
+        "nombrePermiso" : "Repositorio Digital"
+      }, {
+        "idPermiso" : 7,
+        "nombrePermiso" : "Inventario"
+      }, {
+        "idPermiso" : 8,
+        "nombrePermiso" : "Insumos"
+      }, {
+        "idPermiso" : 9,
+        "nombrePermiso" : "Productos"
+      }, {
+        "idPermiso" : 10,
+        "nombrePermiso" : "Clientes"
+      }, {
+        "idPermiso" : 11,
+        "nombrePermiso" : "Proveedores"
+      }, {
+        "idPermiso" : 12,
+        "nombrePermiso" : "Informes"
+      }, {
+        "idPermiso" : 13,
+        "nombrePermiso" : "Matriz de Permisos"
+      }, {
+        "idPermiso" : 14,
+        "nombrePermiso" : "Gestión de Usuarios"
+      }, {
+        "idPermiso" : 15,
+        "nombrePermiso" : "Historial de Actividad"
+      }, {
+        "idPermiso" : 16,
+        "nombrePermiso" : "Configuración"
+      } ]
+    }, {
+      "idRol" : 3,
+      "nombreRol" : "CAJERO",
+      "permisos" : [ {
+        "idPermiso" : 1,
+        "nombrePermiso" : "Panel Principal"
+      }, {
+        "idPermiso" : 3,
+        "nombrePermiso" : "Pedidos Pendientes"
+      }, {
+        "idPermiso" : 10,
+        "nombrePermiso" : "Clientes"
+      }, {
+        "idPermiso" : 16,
+        "nombrePermiso" : "Configuración"
+      } ]
+    }, {
+      "idRol" : 2,
+      "nombreRol" : "OPERARIO",
+      "permisos" : [ {
+        "idPermiso" : 1,
+        "nombrePermiso" : "Panel Principal"
+      }, {
+        "idPermiso" : 2,
+        "nombrePermiso" : "Crear Pedido"
+      }, {
+        "idPermiso" : 3,
+        "nombrePermiso" : "Pedidos Pendientes"
+      }, {
+        "idPermiso" : 4,
+        "nombrePermiso" : "Historial de Pedidos"
+      }, {
+        "idPermiso" : 5,
+        "nombrePermiso" : "Caja"
+      }, {
+        "idPermiso" : 6,
+        "nombrePermiso" : "Repositorio Digital"
+      }, {
+        "idPermiso" : 7,
+        "nombrePermiso" : "Inventario"
+      }, {
+        "idPermiso" : 8,
+        "nombrePermiso" : "Insumos"
+      }, {
+        "idPermiso" : 9,
+        "nombrePermiso" : "Productos"
+      }, {
+        "idPermiso" : 10,
+        "nombrePermiso" : "Clientes"
+      }, {
+        "idPermiso" : 11,
+        "nombrePermiso" : "Proveedores"
+      }, {
+        "idPermiso" : 16,
+        "nombrePermiso" : "Configuración"
+      } ]
+    } ],
+    "DocumentoDigital" : [ ],
+    "ComprobantePago" : [ ],
+    "Permiso" : [ {
+      "idPermiso" : 1,
+      "nombrePermiso" : "Panel Principal"
+    }, {
+      "idPermiso" : 2,
+      "nombrePermiso" : "Crear Pedido"
+    }, {
+      "idPermiso" : 3,
+      "nombrePermiso" : "Pedidos Pendientes"
+    }, {
+      "idPermiso" : 4,
+      "nombrePermiso" : "Historial de Pedidos"
+    }, {
+      "idPermiso" : 5,
+      "nombrePermiso" : "Caja"
+    }, {
+      "idPermiso" : 6,
+      "nombrePermiso" : "Repositorio Digital"
+    }, {
+      "idPermiso" : 7,
+      "nombrePermiso" : "Inventario"
+    }, {
+      "idPermiso" : 8,
+      "nombrePermiso" : "Insumos"
+    }, {
+      "idPermiso" : 9,
+      "nombrePermiso" : "Productos"
+    }, {
+      "idPermiso" : 10,
+      "nombrePermiso" : "Clientes"
+    }, {
+      "idPermiso" : 11,
+      "nombrePermiso" : "Proveedores"
+    }, {
+      "idPermiso" : 12,
+      "nombrePermiso" : "Informes"
+    }, {
+      "idPermiso" : 13,
+      "nombrePermiso" : "Matriz de Permisos"
+    }, {
+      "idPermiso" : 14,
+      "nombrePermiso" : "Gestión de Usuarios"
+    }, {
+      "idPermiso" : 15,
+      "nombrePermiso" : "Historial de Actividad"
+    }, {
+      "idPermiso" : 16,
+      "nombrePermiso" : "Configuración"
+    } ],
+    "TipoDocumento" : [ {
+      "idTipoDocumento" : 1,
+      "nombreTipo" : "DNI"
+    }, {
+      "idTipoDocumento" : 2,
+      "nombreTipo" : "CUIT"
+    }, {
+      "idTipoDocumento" : 3,
+      "nombreTipo" : "CUIL"
+    }, {
+      "idTipoDocumento" : 4,
+      "nombreTipo" : "Pasaporte"
+    } ],
+    "Maquina" : [ ],
+    "DetallePedido" : [ {
+      "id_detalle" : 1,
+      "pedido" : {
+        "id_pedido" : 1,
+        "fecha_creacion" : "2026-07-21T00:23:38.352514",
+        "fecha_entrega_estimada" : "2026-07-21T03:23:38.258",
+        "fecha_finalizacion" : "2026-07-21T00:23:39.105308",
+        "estado" : "VENTA_RAPIDA",
+        "monto_total" : 200.00,
+        "monto_pago_adelantado" : 200.00,
+        "observaciones" : "Venta Rápida",
+        "ubicacion_estante" : null,
+        "es_cuenta_corriente" : false,
+        "es_presupuesto" : false,
+        "cliente" : {
+          "razonSocial" : "Consumidor Final",
+          "saldoDeudor" : 0.00,
+          "limiteCredito" : 0.00,
+          "categoria" : null,
+          "estado" : "Activo",
+          "personaDeContacto" : "N/A",
+          "condicionDePago" : "Contado",
+          "persona" : {
+            "idPersona" : 1,
+            "nombre" : "Consumidor",
+            "apellido" : "Final",
+            "numeroDocumento" : "99999999",
+            "telefono" : null,
+            "email" : null,
+            "tipoDocumento" : {
+              "idTipoDocumento" : 1,
+              "nombreTipo" : "DNI"
+            },
+            "direccion" : null,
+            "tipoPersona" : {
+              "idTipoPersona" : 1,
+              "nombreTipo" : "Física"
+            }
+          },
+          "id_cliente" : 1
+        }
+      },
+      "producto" : {
+        "idProducto" : 1,
+        "nombreProducto" : "dsdasd",
+        "precioBase" : 200.00,
+        "categoria" : {
+          "idCategoria" : 1,
+          "nombre" : "dsa",
+          "descuentoAutomatico" : 0.00
+        },
+        "maquinaNecesaria" : null,
+        "stock" : 344,
+        "estado" : "Activo"
+      },
+      "cantidad" : 1,
+      "precioUnitario" : 200.00,
+      "subtotal" : 200.00
+    }, {
+      "id_detalle" : 2,
+      "pedido" : {
+        "id_pedido" : 2,
+        "fecha_creacion" : "2026-07-21T00:24:17.936259",
+        "fecha_entrega_estimada" : "2026-07-16T00:00:00",
+        "fecha_finalizacion" : null,
+        "estado" : "PENDIENTE",
+        "monto_total" : 200.00,
+        "monto_pago_adelantado" : 0.00,
+        "observaciones" : "",
+        "ubicacion_estante" : null,
+        "es_cuenta_corriente" : false,
+        "es_presupuesto" : false,
+        "cliente" : {
+          "razonSocial" : "Consumidor Final",
+          "saldoDeudor" : 0.00,
+          "limiteCredito" : 0.00,
+          "categoria" : null,
+          "estado" : "Activo",
+          "personaDeContacto" : "N/A",
+          "condicionDePago" : "Contado",
+          "persona" : {
+            "idPersona" : 1,
+            "nombre" : "Consumidor",
+            "apellido" : "Final",
+            "numeroDocumento" : "99999999",
+            "telefono" : null,
+            "email" : null,
+            "tipoDocumento" : {
+              "idTipoDocumento" : 1,
+              "nombreTipo" : "DNI"
+            },
+            "direccion" : null,
+            "tipoPersona" : {
+              "idTipoPersona" : 1,
+              "nombreTipo" : "Física"
+            }
+          },
+          "id_cliente" : 1
+        }
+      },
+      "producto" : {
+        "idProducto" : 1,
+        "nombreProducto" : "dsdasd",
+        "precioBase" : 200.00,
+        "categoria" : {
+          "idCategoria" : 1,
+          "nombre" : "dsa",
+          "descuentoAutomatico" : 0.00
+        },
+        "maquinaNecesaria" : null,
+        "stock" : 344,
+        "estado" : "Activo"
+      },
+      "cantidad" : 1,
+      "precioUnitario" : 200.00,
+      "subtotal" : 200.00
+    } ],
+    "UnidadMedida" : [ ],
+    "TipoProveedor" : [ ],
+    "ProductoInsumo" : [ ],
+    "MermaInsumo" : [ ],
+    "Incidencia" : [ ],
+    "CompraProveedor" : [ ],
+    "Factura" : [ ],
+    "TipoPersona" : [ {
+      "idTipoPersona" : 1,
+      "nombreTipo" : "Física"
+    }, {
+      "idTipoPersona" : 2,
+      "nombreTipo" : "Jurídica"
+    } ]
+  },
+  "_fechaGeneracion" : "2026-07-26T05:45:18.273720700",
+  "_generadoPor" : "mesi",
+  "_version" : "1.0.0"
+}
