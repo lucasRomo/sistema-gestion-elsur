@@ -29,7 +29,7 @@ public class Cliente {
 
     @ManyToOne
 @JoinColumn(name = "id_categoria")
-private Categoria categoria;
+private Categoria categoriaCliente;
 
     @Column(name = "estado", nullable = false, length = 20)
     private String estado;
