@@ -106,33 +106,33 @@ function App() {
 
           {/* RUTAS EXCLUSIVAS DE GERENTE / ADMIN */}
           <Route path="/matriz-permisos" element={
-            <ProtectedRoute soloAdmin={true}>
-              <SidebarLayout activeItem="Matriz de Permisos">
-                <MatrizPermisosView />
-              </SidebarLayout>
-            </ProtectedRoute>
+           <ProtectedRoute permisoRequerido="Matriz de Permisos">
+            <SidebarLayout activeItem="Matriz de Permisos">
+             <MatrizPermisosView />
+            </SidebarLayout>
+          </ProtectedRoute>
           } />
 
           <Route path="/historial" element={
-            <ProtectedRoute soloAdmin={true}>
-              <SidebarLayout activeItem="Historial de Actividad">
-                <HistorialActividadView /> 
-              </SidebarLayout>
-            </ProtectedRoute>
+           <ProtectedRoute permisoRequerido="Historial de Actividad">
+             <SidebarLayout activeItem="Historial de Actividad">
+            <HistorialActividadView /> 
+           </SidebarLayout>
+          </ProtectedRoute>
           } />
 
           <Route path="/informes" element={
-            <ProtectedRoute soloAdmin={true}>
-              <SidebarLayout activeItem="Informes">
-                <InformesView />
-              </SidebarLayout>
-            </ProtectedRoute>
+           <ProtectedRoute permisoRequerido="Informes">
+            <SidebarLayout activeItem="Informes">
+            <InformesView />
+           </SidebarLayout>
+          </ProtectedRoute>
           } />
- 
+
           <Route path="/gestion-usuarios" element={
-           <ProtectedRoute soloAdmin={true}>
-            <GestionUsuariosView />
-           </ProtectedRoute>
+           <ProtectedRoute permisoRequerido="Gestión de Usuarios">
+             <GestionUsuariosView />
+          </ProtectedRoute>
           } />
 
           <Route path="*" element={<Navigate to="/" />} />

@@ -19,7 +19,18 @@ interface Usuario {
     idRol: number;
     nombreRol: string;
   };
+  tienePermisosPersonalizados?: boolean;
 }
+
+// Estructura para agrupar las ventanas igual que en el Sidebar
+const CATEGORIAS_SIDEBAR: { [categoria: string]: string[] } = {
+  'GENERAL': ['Panel Principal'],
+  'PRODUCCIÓN': ['Crear Pedido', 'Pedidos Pendientes', 'Historial de Pedidos', 'Caja', 'Repositorio Digital'],
+  'STOCK': ['Inventario', 'Insumos', 'Productos'],
+  'ADMINISTRACIÓN / ENTIDADES': ['Clientes', 'Proveedores'],
+  'OPCIONES DE GERENTE': ['Informes', 'Matriz de Permisos', 'Gestión de Usuarios', 'Historial de Actividad'],
+  'MI CUENTA': ['Configuración']
+};
 
 export const MatrizPermisosView: React.FC = () => {
   const navigate = useNavigate();
@@ -27,16 +38,20 @@ export const MatrizPermisosView: React.FC = () => {
   const [rolSeleccionado, setRolSeleccionado] = useState<number>(2); 
   const [modulos, setModulos] = useState<ModuloPermiso[]>([]);
   
-  // Estados para la gestión de usuarios y asignación
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<number | ''>('');
-  const [mostrarSeccionAsignacion, setMostrarSeccionAsignacion] = useState<boolean>(false);
+  const [rolSeleccionadoEnUsuario, setRolSeleccionadoEnUsuario] = useState<number | null>(null);
 
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [busquedaUsuario, setBusquedaUsuario] = useState<string>('');
+  const [usuarioEditar, setUsuarioEditar] = useState<Usuario | null>(null);
+
+  // Modales
   const [mostrarModalConfirmacion, setMostrarModalConfirmacion] = useState<boolean>(false);
   const [mostrarModalExito, setMostrarModalExito] = useState<boolean>(false);
   const [mensajeExitoTexto, setMensajeExitoTexto] = useState<string>('¡Guardado exitosamente!');
   
-  // Estados para crear un nuevo rol
+  const [mostrarModalBloqueo, setMostrarModalBloqueo] = useState<boolean>(false);
+  const [mensajeBloqueoTexto, setMensajeBloqueoTexto] = useState<string>('');
+
   const [mostrarModalNuevoRol, setMostrarModalNuevoRol] = useState<boolean>(false);
   const [nuevoRolNombre, setNuevoRolNombre] = useState<string>('');
 
@@ -51,7 +66,9 @@ export const MatrizPermisosView: React.FC = () => {
       if (rolesRes.ok && permisosRes.ok) {
         const rolesData = await rolesRes.json();
         const permisosData = await permisosRes.json();
-        setRoles(rolesData);
+
+        const rolesGlobales = rolesData.filter((r: any) => !r.nombreRol.startsWith('PERFIL_'));
+        setRoles(rolesGlobales);
         
         const permisosBase = permisosData.map((p: any) => ({
           idPermiso: p.idPermiso,
@@ -75,53 +92,177 @@ export const MatrizPermisosView: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchPermisosDelRol = async () => {
+    const fetchPermisos = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/api/permisos/rol/${rolSeleccionado}`);
+        let idRolAConsultar = rolSeleccionado;
+
+        if (usuarioEditar) {
+          if (rolSeleccionadoEnUsuario !== null) {
+            idRolAConsultar = rolSeleccionadoEnUsuario;
+          } else if (usuarioEditar.rol?.idRol) {
+            idRolAConsultar = usuarioEditar.rol.idRol;
+          } else {
+            return;
+          }
+        }
+
+        const res = await fetch(`http://localhost:8080/api/permisos/rol/${idRolAConsultar}`);
         if (res.ok) {
           const idsActivos: number[] = await res.json(); 
-          setModulos(prev => prev.map(mod => ({
-            ...mod,
-            activo: idsActivos.includes(mod.idPermiso)
-          })));
+          
+          setModulos(prev => prev.map(mod => {
+            const esProtegido = usuarioEditar?.idUsuario === 1 && 
+              ['Matriz de Permisos', 'Configuración', 'Gestión de Usuarios'].includes(mod.nombrePermiso);
+
+            return {
+              ...mod,
+              activo: esProtegido ? true : idsActivos.includes(mod.idPermiso)
+            };
+          }));
         }
       } catch (error) {
         console.error("Error al traer permisos activos", error);
       }
     };
 
-    if (rolSeleccionado && modulos.length > 0) {
-      fetchPermisosDelRol();
+    if (modulos.length > 0) {
+      fetchPermisos();
     }
-  }, [rolSeleccionado]);
+  }, [rolSeleccionado, usuarioEditar, rolSeleccionadoEnUsuario]);
 
-  const togglePermiso = (id: number) => {
+  const handleCambioPerfilSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const nuevoRolId = Number(e.target.value);
+
+    if (usuarioEditar?.idUsuario === 1) {
+      setMensajeBloqueoTexto("El Administrador Principal no puede cambiar su perfil global para evitar bloqueos del sistema.");
+      setMostrarModalBloqueo(true);
+      return;
+    }
+
+    setRolSeleccionado(nuevoRolId);
+
+    if (usuarioEditar) {
+      setRolSeleccionadoEnUsuario(nuevoRolId);
+    }
+  };
+
+  const esPermisoProtegido = (nombrePermiso: string) => {
+    if (usuarioEditar?.idUsuario !== 1) return false;
+    const permisosProtegidos = ['Matriz de Permisos', 'Configuración', 'Gestión de Usuarios'];
+    return permisosProtegidos.includes(nombrePermiso);
+  };
+
+  const togglePermiso = (id: number, nombrePermiso: string) => {
+    if (esPermisoProtegido(nombrePermiso)) {
+      setMensajeBloqueoTexto("Este permiso está protegido para el Administrador Principal y no se puede desactivar.");
+      setMostrarModalBloqueo(true);
+      return;
+    }
+
     setModulos(modulos.map(mod => mod.idPermiso === id ? { ...mod, activo: !mod.activo } : mod));
+  };
+
+  const seleccionarUsuarioParaPermisos = (u: Usuario) => {
+    setUsuarioEditar(u);
+    setRolSeleccionadoEnUsuario(null);
+  };
+
+  const volverAModoGlobal = () => {
+    setUsuarioEditar(null);
+    setRolSeleccionadoEnUsuario(null);
   };
 
   const handleGuardar = () => setMostrarModalConfirmacion(true);
 
   const confirmarGuardado = async () => {
     setMostrarModalConfirmacion(false);
-    const permisosActivosIds = modulos.filter(m => m.activo).map(m => m.idPermiso);
+
+    const modulosAsegurados = modulos.map(mod => {
+      if (usuarioEditar?.idUsuario === 1 && esPermisoProtegido(mod.nombrePermiso)) {
+        return { ...mod, activo: true };
+      }
+      return mod;
+    });
+
+    const permisosActivosIds = modulosAsegurados.filter(m => m.activo).map(m => m.idPermiso);
 
     try {
-      const res = await fetch(`http://localhost:8080/api/permisos/rol/${rolSeleccionado}/actualizar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(permisosActivosIds)
-      });
-      if (res.ok) {
-        setMensajeExitoTexto('¡Permisos actualizados correctamente!');
-        setMostrarModalExito(true);
+      if (usuarioEditar) {
+        if (rolSeleccionadoEnUsuario !== null && usuarioEditar.idUsuario !== 1) {
+          await fetch(`http://localhost:8080/api/usuarios/${usuarioEditar.idUsuario}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...usuarioEditar,
+              rol: { idRol: rolSeleccionadoEnUsuario }
+            })
+          });
+
+          setMensajeExitoTexto(`¡Se asignó el perfil global a ${usuarioEditar.nombreUsuario}!`);
+        } 
+        else {
+          let idRolDestino = usuarioEditar.rol?.idRol;
+
+          if (!usuarioEditar.rol?.nombreRol.startsWith('PERFIL_')) {
+            const nombreNuevoPerfil = `PERFIL_${usuarioEditar.nombreUsuario.toUpperCase()}`;
+            
+            const rolRes = await fetch('http://localhost:8080/api/permisos/roles', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ nombreRol: nombreNuevoPerfil })
+            });
+
+            if (rolRes.ok) {
+              const rolCreado = await rolRes.json();
+              idRolDestino = rolCreado.idRol;
+
+              await fetch(`http://localhost:8080/api/usuarios/${usuarioEditar.idUsuario}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  ...usuarioEditar,
+                  rol: { idRol: idRolDestino }
+                })
+              });
+            }
+          }
+
+          if (idRolDestino) {
+            await fetch(`http://localhost:8080/api/permisos/rol/${idRolDestino}/actualizar`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(permisosActivosIds)
+            });
+          }
+
+          setMensajeExitoTexto(`¡Permisos personalizados de ${usuarioEditar.nombreUsuario} actualizados!`);
+        }
+      } else {
+        await fetch(`http://localhost:8080/api/permisos/rol/${rolSeleccionado}/actualizar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(permisosActivosIds)
+        });
+
+        setMensajeExitoTexto('¡Permisos de perfil global actualizados!');
       }
+
+      setRolSeleccionadoEnUsuario(null);
+      setMostrarModalExito(true);
+      await fetchInicial();
     } catch (error) {
-      alert("Error de conexión");
+      console.error(error);
+      setMensajeBloqueoTexto("Error de conexión al guardar los datos");
+      setMostrarModalBloqueo(true);
     }
   };
 
   const handleCrearRol = async () => {
-    if (!nuevoRolNombre.trim()) return alert("El nombre no puede estar vacío");
+    if (!nuevoRolNombre.trim()) {
+      setMensajeBloqueoTexto("El nombre no puede estar vacío");
+      setMostrarModalBloqueo(true);
+      return;
+    }
     try {
       const res = await fetch('http://localhost:8080/api/permisos/roles', {
         method: 'POST',
@@ -136,13 +277,15 @@ export const MatrizPermisosView: React.FC = () => {
         setNuevoRolNombre('');
       }
     } catch (error) {
-      alert("Error al crear el perfil");
+      setMensajeBloqueoTexto("Error al crear el perfil");
+      setMostrarModalBloqueo(true);
     }
   };
 
   const handleEliminarRol = async () => {
     if (rolSeleccionado === 1 || rolSeleccionado === 2) {
-      alert("No se pueden eliminar los perfiles principales del sistema.");
+      setMensajeBloqueoTexto("No se pueden eliminar los perfiles principales del sistema.");
+      setMostrarModalBloqueo(true);
       return;
     }
 
@@ -154,90 +297,68 @@ export const MatrizPermisosView: React.FC = () => {
       });
       
       if (res.ok) {
-        alert("Perfil eliminado con éxito.");
+        setMensajeExitoTexto("Perfil eliminado con éxito.");
+        setMostrarModalExito(true);
         await fetchInicial();
         setRolSeleccionado(1); 
       } else {
         const errorData = await res.json();
-        alert(errorData.error || "No se pudo eliminar el perfil.");
+        setMensajeBloqueoTexto(errorData.error || "No se pudo eliminar el perfil.");
+        setMostrarModalBloqueo(true);
       }
     } catch (error) {
-      alert("Error de conexión al intentar eliminar el perfil.");
+      setMensajeBloqueoTexto("Error de conexión al intentar eliminar el perfil.");
+      setMostrarModalBloqueo(true);
     }
   };
 
-  // Función para asignar el rol actual a un empleado seleccionado
-  const handleAsignarRolAEmpleado = async () => {
-    if (!usuarioSeleccionado) {
-      alert("Por favor selecciona un empleado de la lista.");
-      return;
-    }
-
-    const usuarioObj = usuarios.find(u => u.idUsuario === Number(usuarioSeleccionado));
-    if (!usuarioObj) return;
-
-    // Estructura requerida por UsuarioController (PUT /api/usuarios/{id})
-    const usuarioActualizado = {
-      ...usuarioObj,
-      rol: {
-        idRol: rolSeleccionado
-      }
-    };
-
-    try {
-      const res = await fetch(`http://localhost:8080/api/usuarios/${usuarioSeleccionado}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(usuarioActualizado)
-      });
-
-      if (res.ok) {
-        setMensajeExitoTexto('¡Perfil asignado al empleado correctamente!');
-        setMostrarModalExito(true);
-        await fetchInicial(); // Recargar usuarios
-        setUsuarioSeleccionado('');
-      } else {
-        alert("No se pudo actualizar el rol del usuario.");
-      }
-    } catch (error) {
-      alert("Error de conexión al asignar el rol.");
-    }
-  };
-
-  const rolActualObj = roles.find(r => r.idRol === rolSeleccionado);
+  const usuariosFiltrados = usuarios.filter(u => {
+    const completo = `${u.persona?.nombre || ''} ${u.persona?.apellido || ''} ${u.nombreUsuario}`.toLowerCase();
+    return completo.includes(busquedaUsuario.toLowerCase());
+  });
 
   return (
-    <div className="container-fluid text-white font-monospace py-3">
-      <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary" style={{ borderColor: '#2d2d30 !important' }}>
+    <div className="container-fluid text-white font-monospace py-2 px-3">
+      {/* HEADER COMPACTO */}
+      <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
         <div>
-          <h2 className="fw-bold mb-1" style={{ color: '#ffffff' }}>Matriz de Permisos por Perfil</h2>
-          <p className="text-white-50 mb-0 small">Configuración dinámica de acceso a ventanas y asignación de personal</p>
+          <h3 className="fw-bold mb-0" style={{ color: '#ffffff', fontSize: '1.4rem' }}>Matriz de Permisos por Perfil</h3>
+          <p className="text-white-50 mb-0 small" style={{ fontSize: '0.75rem' }}>Configuración dinámica de acceso a ventanas y asignación de personal</p>
         </div>
-        <div className="d-flex align-items-center gap-2 flex-wrap">
+        
+        <div className="d-flex align-items-center gap-2">
           <button 
             onClick={() => setMostrarModalNuevoRol(true)}
             className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1"
-            style={{ backgroundColor: '#2b7a3e', border: '1px solid #20c997' }}
+            style={{ backgroundColor: '#2b7a3e', border: '1px solid #20c997', fontSize: '0.8rem' }}
           >
             <i className="bi bi-plus-lg"></i> Nuevo Perfil
           </button>
 
-          {rolSeleccionado > 2 && (
+          {!usuarioEditar && rolSeleccionado > 2 && (
             <button 
               onClick={handleEliminarRol}
               className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1"
-              style={{ backgroundColor: '#a52a2a', border: '1px solid #dc3545' }}
+              style={{ backgroundColor: '#a52a2a', border: '1px solid #dc3545', fontSize: '0.8rem' }}
               title="Eliminar perfil seleccionado"
             >
-              <i className="bi bi-trash"></i> Eliminar
+              <i className="bi bi-trash"></i>
             </button>
           )}
 
           <select 
-            className="form-select bg-dark text-white fw-bold px-3 py-2" 
-            style={{ border: '1px solid #8e45e0', borderRadius: '8px', width: '220px', cursor: 'pointer' }}
+            className="form-select form-select-sm bg-dark text-white fw-bold px-2 py-1" 
+            style={{ 
+              border: '1px solid #8e45e0', 
+              borderRadius: '6px', 
+              width: '200px', 
+              fontSize: '0.8rem',
+              cursor: usuarioEditar?.idUsuario === 1 ? 'not-allowed' : 'pointer',
+              opacity: usuarioEditar?.idUsuario === 1 ? 0.6 : 1 
+            }}
             value={rolSeleccionado}
-            onChange={(e) => setRolSeleccionado(Number(e.target.value))}
+            onChange={handleCambioPerfilSelect}
+            disabled={usuarioEditar?.idUsuario === 1}
           >
             {roles.map(rol => (
               <option key={rol.idRol} value={rol.idRol}>PERFIL: {rol.nombreRol}</option>
@@ -246,133 +367,228 @@ export const MatrizPermisosView: React.FC = () => {
         </div>
       </div>
 
-      <div className="p-4 rounded-4 mb-4" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', maxWidth: '850px', margin: '0 auto' }}>
-        
-        {/* PANEL DESPLEGABLE DE ASIGNACIÓN DE EMPLEADOS */}
-        <div className="mb-4 p-3 rounded" style={{ backgroundColor: '#222122', border: '1px solid #3f3f46' }}>
-          <div className="d-flex justify-content-between align-items-center">
-            <span className="fw-bold small text-white-50">
-              <i className="bi bi-person-badge me-2 text-warning"></i>
-              Asignación rápida de este perfil ({rolActualObj?.nombreRol || 'Seleccionado'}) a Empleados
-            </span>
-            <button 
-              onClick={() => setMostrarSeccionAsignacion(!mostrarSeccionAsignacion)}
-              className="btn btn-sm text-white fw-bold"
-              style={{ backgroundColor: '#8e45e0', fontSize: '0.8rem' }}
-            >
-              {mostrarSeccionAsignacion ? 'Ocultar Asignación' : 'Asignar a Empleado'}
-            </button>
+      <div className="row g-3">
+        {/* PANEL IZQUIERDO: LISTA DE USUARIOS */}
+        <div className="col-md-3">
+          <div className="p-3 rounded-4" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h6 className="fw-bold mb-0 text-white small">
+                <i className="bi bi-people-fill text-warning me-2"></i>Usuarios
+              </h6>
+              <span className="badge bg-secondary" style={{ fontSize: '0.7rem' }}>{usuarios.length}</span>
+            </div>
+
+            <div className="mb-2">
+              <input 
+                type="text" 
+                className="form-control form-control-sm bg-dark text-white border-secondary"
+                style={{ fontSize: '0.75rem' }}
+                placeholder="Buscar..."
+                value={busquedaUsuario}
+                onChange={(e) => setBusquedaUsuario(e.target.value)}
+              />
+            </div>
+
+            <div className="d-flex flex-column gap-1" style={{ maxHeight: '560px', overflowY: 'auto' }}>
+              {usuariosFiltrados.map(u => {
+                const esSeleccionado = usuarioEditar?.idUsuario === u.idUsuario;
+                const iniciales = u.persona 
+                  ? `${u.persona.nombre[0]}${u.persona.apellido[0]}`.toUpperCase()
+                  : u.nombreUsuario.substring(0, 2).toUpperCase();
+
+                const nombreRolMostrar = (u.rol?.nombreRol.startsWith('PERFIL_') || u.tienePermisosPersonalizados)
+                  ? 'PERSONALIZADO' 
+                  : (u.rol?.nombreRol || 'SIN ROL');
+
+                return (
+                  <div 
+                    key={u.idUsuario}
+                    className="p-2 rounded d-flex justify-content-between align-items-center"
+                    style={{ 
+                      backgroundColor: esSeleccionado ? '#2b213a' : '#222122',
+                      border: esSeleccionado ? '1px solid #8e45e0' : '1px solid #2d2d30'
+                    }}
+                  >
+                    <div className="d-flex align-items-center gap-2">
+                      <div 
+                        className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                        style={{ width: '28px', height: '28px', backgroundColor: '#8e45e0', fontSize: '0.7rem' }}
+                      >
+                        {iniciales}
+                      </div>
+                      <div style={{ lineHeight: '1.1' }}>
+                        <p className="mb-0 fw-bold text-white" style={{ fontSize: '0.75rem' }}>
+                          {u.persona ? `${u.persona.nombre} ${u.persona.apellido}` : u.nombreUsuario}
+                        </p>
+                        <span className="text-white-50" style={{ fontSize: '0.65rem' }}>
+                          @{u.nombreUsuario}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="d-flex align-items-center gap-1">
+                      <span className="badge bg-dark border border-secondary text-info" style={{ fontSize: '0.6rem', padding: '3px 5px' }}>
+                        {nombreRolMostrar}
+                      </span>
+                      <button 
+                        onClick={() => seleccionarUsuarioParaPermisos(u)}
+                        className="btn btn-sm text-white p-0 px-1"
+                        style={{ backgroundColor: esSeleccionado ? '#8e45e0' : 'transparent', border: '1px solid #8e45e0', fontSize: '0.7rem' }}
+                        title="Configurar permisos"
+                      >
+                        <i className="bi bi-sliders"></i>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
+        </div>
 
-          {mostrarSeccionAsignacion && (
-            <div className="mt-3 pt-3 border-top border-secondary animate__animated animate__fadeIn">
-              <div className="row g-2 align-items-center">
-                <div className="col-md-8">
-                  <select
-                    className="form-select bg-dark text-white small"
-                    style={{ border: '1px solid #3f3f46' }}
-                    value={usuarioSeleccionado}
-                    onChange={(e) => setUsuarioSeleccionado(e.target.value ? Number(e.target.value) : '')}
-                  >
-                    <option value="">-- Seleccione un Empleado / Usuario --</option>
-                    {usuarios.map(u => (
-                      <option key={u.idUsuario} value={u.idUsuario}>
-                        {u.persona ? `${u.persona.nombre} ${u.persona.apellido}` : u.nombreUsuario} 
-                        {u.rol ? ` (Rol actual: ${u.rol.nombreRol})` : ''}
-                      </option>
-                    ))}
-                  </select>
+        {/* PANEL DERECHO: MATRIZ CON ESPACIEDO OPTIMIZADO */}
+        <div className="col-md-9">
+          <div className="p-3 rounded-4" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+            
+            {usuarioEditar ? (
+              <div className="p-2 px-3 mb-3 rounded d-flex justify-content-between align-items-center" style={{ backgroundColor: '#132e27', border: '1px solid #20c997' }}>
+                <div>
+                  <span className="badge bg-success mb-0 me-2" style={{ fontSize: '0.7rem' }}>EMPLEADO</span>
+                  <span className="fw-bold text-white">
+                    Permisos de: <span style={{ color: '#20c997' }}>"{usuarioEditar.persona ? `${usuarioEditar.persona.nombre} ${usuarioEditar.persona.apellido}` : usuarioEditar.nombreUsuario}"</span>
+                  </span>
+                  {usuarioEditar.idUsuario === 1 && <span className="badge bg-warning text-dark ms-2" style={{ fontSize: '0.7rem' }}>ADMIN PRINCIPAL</span>}
                 </div>
-                <div className="col-md-4">
-                  <button 
-                    onClick={handleAsignarRolAEmpleado}
-                    className="btn w-100 btn-sm text-white fw-bold py-2"
-                    style={{ backgroundColor: '#2b7a3e', border: '1px solid #20c997' }}
-                  >
-                    Confirmar Asignación
-                  </button>
-                </div>
+                <button onClick={volverAModoGlobal} className="btn btn-sm btn-outline-light py-1 px-2" style={{ fontSize: '0.75rem' }}>
+                  <i className="bi bi-x-circle me-1"></i> Volver a Perfiles Globales
+                </button>
               </div>
+            ) : (
+              <div className="p-2 px-3 mb-3 rounded" style={{ backgroundColor: '#222122', border: '1px solid #8e45e0' }}>
+                <span className="badge me-2" style={{ backgroundColor: '#8e45e0', fontSize: '0.7rem' }}>PERFIL GLOBAL</span>
+                <span className="fw-bold text-white">
+                  Permisos del perfil: <span style={{ color: '#8e45e0' }}>{roles.find(r => r.idRol === rolSeleccionado)?.nombreRol}</span>
+                </span>
+              </div>
+            )}
+
+            {/* CONTENEDOR MULTI-COLUMNA AMPLIA */}
+            <div style={{ columnCount: 2, columnGap: '0.75rem' }}>
+              {Object.entries(CATEGORIAS_SIDEBAR).map(([catNombre, ventanasList]) => {
+                const modulosDeCategoria = modulos.filter(m => ventanasList.includes(m.nombrePermiso));
+                if (modulosDeCategoria.length === 0) return null;
+
+                return (
+                  <div 
+                    key={catNombre} 
+                    className="p-2 px-3 rounded mb-3" 
+                    style={{ 
+                      backgroundColor: '#141416', 
+                      border: '1px solid #2d2d30',
+                      breakInside: 'avoid'
+                    }}
+                  >
+                    <h6 className="fw-bold text-white-50 mb-2 border-bottom border-secondary pb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>
+                      — {catNombre}
+                    </h6>
+                    <div className="d-flex flex-column gap-2">
+                      {modulosDeCategoria.map(mod => {
+                        const bloqueado = esPermisoProtegido(mod.nombrePermiso);
+
+                        return (
+                          <div 
+                            key={mod.idPermiso}
+                            onClick={() => togglePermiso(mod.idPermiso, mod.nombrePermiso)}
+                            className="d-flex justify-content-between align-items-center px-3 py-2 rounded transition-all"
+                            style={{ 
+                              backgroundColor: mod.activo ? 'rgba(142, 69, 224, 0.12)' : '#222122', 
+                              border: mod.activo ? '1px solid #8e45e0' : '1px solid #2d2d30',
+                              cursor: bloqueado ? 'not-allowed' : 'pointer',
+                              opacity: bloqueado ? 0.75 : 1
+                            }}
+                          >
+                            <div className="d-flex align-items-center gap-1">
+                              <span className="fw-semibold text-white" style={{ fontSize: '0.85rem' }}>{mod.nombrePermiso}</span>
+                              {bloqueado && (
+                                <i className="bi bi-lock-fill text-warning ms-1" style={{ fontSize: '0.8rem' }} title="Protegido para Administrador Principal"></i>
+                              )}
+                            </div>
+                            <span 
+                              className="badge px-2 py-1 fw-bold" 
+                              style={{ 
+                                backgroundColor: mod.activo ? 'rgba(25, 135, 84, 0.2)' : 'rgba(220, 53, 69, 0.2)',
+                                color: mod.activo ? '#20c997' : '#ff6b6b',
+                                border: mod.activo ? '1px solid #198754' : '1px solid #dc3545',
+                                fontSize: '0.7rem',
+                                letterSpacing: '0.5px'
+                              }}
+                            >
+                              {mod.activo ? 'ACTIVO' : 'DESACTIVADO'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          )}
-        </div>
 
-        <h5 className="text-center fw-bold mb-4 py-2 rounded" style={{ backgroundColor: '#222122', border: '1px solid #2d2d30', color: '#8e45e0' }}>
-          Ventanas que el perfil seleccionado tiene permitido ingresar
-        </h5>
-
-        <div className="px-3 py-2" style={{ maxHeight: '420px', overflowY: 'auto' }}>
-          {modulos.map((mod) => (
-            <div 
-              key={mod.idPermiso} 
-              onClick={() => togglePermiso(mod.idPermiso)}
-              className="d-flex justify-content-between align-items-center p-3 mb-2 rounded transition-all"
-              style={{ 
-                backgroundColor: mod.activo ? 'rgba(142, 69, 224, 0.05)' : '#222122', 
-                border: mod.activo ? '1px solid #8e45e0' : '1px solid transparent',
-                cursor: 'pointer'
-              }}
-            >
-              <span className="fw-semibold" style={{ fontSize: '0.95rem' }}>{mod.nombrePermiso}</span>
-              <span 
-                className="badge px-3 py-2 fw-bold" 
-                style={{ 
-                  backgroundColor: mod.activo ? 'rgba(25, 135, 84, 0.2)' : 'rgba(220, 53, 69, 0.2)',
-                  color: mod.activo ? '#20c997' : '#ff6b6b',
-                  border: mod.activo ? '1px solid #198754' : '1px solid #dc3545',
-                  letterSpacing: '1px'
-                }}
-              >
-                {mod.activo ? 'ACTIVO' : 'DESACTIVADO'}
-              </span>
+            {/* BOTONES DE ACCIÓN */}
+            <div className="d-flex justify-content-between mt-3 pt-2 border-top border-secondary">
+              <button onClick={() => navigate('/dashboard')} className="btn btn-sm px-3 py-1 fw-bold text-white" style={{ backgroundColor: '#a52a2a', borderRadius: '6px', fontSize: '0.85rem' }}>
+                Volver
+              </button>
+              <button onClick={handleGuardar} className="btn btn-sm px-4 py-1 fw-bold text-white shadow" style={{ backgroundColor: '#2b7a3e', borderRadius: '6px', fontSize: '0.85rem' }}>
+                Guardar Cambios
+              </button>
             </div>
-          ))}
-        </div>
 
-        <div className="d-flex justify-content-between mt-4 pt-3 border-top border-secondary" style={{ borderColor: '#2d2d30 !important' }}>
-          <button onClick={() => navigate('/dashboard')} className="btn px-4 py-2 fw-bold text-white" style={{ backgroundColor: '#a52a2a', borderRadius: '8px' }}>Volver</button>
-          <button onClick={handleGuardar} className="btn px-5 py-2 fw-bold text-white shadow" style={{ backgroundColor: '#2b7a3e', borderRadius: '8px' }}>Guardar Cambios</button>
+          </div>
         </div>
       </div>
 
-      {/* MODAL CREAR NUEVO ROL */}
+      {/* MODALES */}
       {mostrarModalNuevoRol && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content text-white p-4" style={{ backgroundColor: '#18181b', border: '1px solid #8e45e0', borderRadius: '16px' }}>
-              <h4 className="fw-bold mb-3 text-center" style={{ color: '#8e45e0' }}>Crear Nuevo Perfil</h4>
-              <div className="mb-4">
-                <label className="text-white-50 mb-2">Nombre del Perfil (Ej: CAJERO, SUPERVISOR)</label>
+          <div className="modal-dialog modal-dialog-centered modal-sm">
+            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #8e45e0', borderRadius: '12px' }}>
+              <h5 className="fw-bold mb-3 text-center" style={{ color: '#8e45e0', fontSize: '1rem' }}>Crear Nuevo Perfil Global</h5>
+              <div className="mb-3">
+                <label className="text-white-50 mb-1 small" style={{ fontSize: '0.75rem' }}>Nombre del Perfil (Ej: CAJERO)</label>
                 <input 
                   type="text" 
-                  className="form-control bg-dark text-white" 
+                  className="form-control form-control-sm bg-dark text-white" 
                   style={{ border: '1px solid #3f3f46' }}
                   value={nuevoRolNombre}
                   onChange={(e) => setNuevoRolNombre(e.target.value)}
                   placeholder="Escriba aquí..."
                 />
               </div>
-              <div className="d-flex justify-content-between gap-3">
-                <button className="btn w-50 fw-bold text-white" style={{ backgroundColor: '#a52a2a' }} onClick={() => setMostrarModalNuevoRol(false)}>Cancelar</button>
-                <button className="btn w-50 fw-bold text-white" style={{ backgroundColor: '#2b7a3e' }} onClick={handleCrearRol}>Crear</button>
+              <div className="d-flex justify-content-between gap-2">
+                <button className="btn btn-sm w-50 fw-bold text-white" style={{ backgroundColor: '#a52a2a' }} onClick={() => setMostrarModalNuevoRol(false)}>Cancelar</button>
+                <button className="btn btn-sm w-50 fw-bold text-white" style={{ backgroundColor: '#2b7a3e' }} onClick={handleCrearRol}>Crear</button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL DE CONFIRMACIÓN */}
       {mostrarModalConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content text-white font-monospace p-3" style={{ backgroundColor: '#18181b', border: '1px solid #8e45e0', borderRadius: '16px' }}>
-              <div className="modal-body text-center py-4">
-                <i className="bi bi-exclamation-triangle-fill text-warning" style={{ fontSize: '3rem' }}></i>
-                <h4 className="mt-3 fw-bold">¡Atención!</h4>
-                <p className="text-white-50 mt-2">Estás a punto de modificar los permisos de este perfil.</p>
-                <div className="d-flex justify-content-center gap-3 mt-4">
-                  <button className="btn px-4 py-2 fw-bold text-white w-50" style={{ backgroundColor: '#a52a2a' }} onClick={() => setMostrarModalConfirmacion(false)}>Cancelar</button>
-                  <button className="btn px-4 py-2 fw-bold text-white w-50" style={{ backgroundColor: '#2b7a3e' }} onClick={confirmarGuardado}>Guardar</button>
+          <div className="modal-dialog modal-dialog-centered modal-sm">
+            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #8e45e0', borderRadius: '12px' }}>
+              <div className="modal-body text-center py-2">
+                <i className="bi bi-exclamation-triangle-fill text-warning" style={{ fontSize: '2.5rem' }}></i>
+                <h5 className="mt-2 fw-bold">¡Atención!</h5>
+                <p className="text-white-50 mt-1 small" style={{ fontSize: '0.75rem' }}>
+                  {usuarioEditar 
+                    ? `Estás modificando la configuración de permisos para ${usuarioEditar.nombreUsuario}.`
+                    : `Estás modificando la plantilla del Perfil Global.`}
+                </p>
+                <div className="d-flex justify-content-center gap-2 mt-3">
+                  <button className="btn btn-sm px-3 fw-bold text-white w-50" style={{ backgroundColor: '#a52a2a' }} onClick={() => setMostrarModalConfirmacion(false)}>Cancelar</button>
+                  <button className="btn btn-sm px-3 fw-bold text-white w-50" style={{ backgroundColor: '#2b7a3e' }} onClick={confirmarGuardado}>Confirmar</button>
                 </div>
               </div>
             </div>
@@ -380,15 +596,36 @@ export const MatrizPermisosView: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL DE ÉXITO */}
       {mostrarModalExito && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content text-white font-monospace p-3" style={{ backgroundColor: '#18181b', border: '1px solid #20c997', borderRadius: '16px' }}>
-              <div className="modal-body text-center py-4">
-                <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '3.5rem' }}></i>
-                <h4 className="mt-3 fw-bold">{mensajeExitoTexto}</h4>
-                <button className="btn px-5 py-2 fw-bold text-white mt-3" style={{ backgroundColor: '#a52a2a' }} onClick={() => setMostrarModalExito(false)}>Cerrar</button>
+          <div className="modal-dialog modal-dialog-centered modal-sm">
+            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #20c997', borderRadius: '12px' }}>
+              <div className="modal-body text-center py-3">
+                <div className="d-flex justify-content-center mb-2">
+                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', backgroundColor: '#132e27', border: '2px solid #20c997' }}>
+                    <i className="bi bi-check-lg text-success" style={{ fontSize: '2rem' }}></i>
+                  </div>
+                </div>
+                <h6 className="fw-bold my-2 text-white">{mensajeExitoTexto}</h6>
+                <button className="btn btn-sm px-4 fw-bold text-white mt-2" style={{ backgroundColor: '#a52a2a', borderRadius: '6px' }} onClick={() => setMostrarModalExito(false)}>Cerrar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {mostrarModalBloqueo && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
+          <div className="modal-dialog modal-dialog-centered modal-sm">
+            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #ffc107', borderRadius: '12px' }}>
+              <div className="modal-body text-center py-2">
+                <div className="d-flex justify-content-center mb-2">
+                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', backgroundColor: 'rgba(255, 193, 7, 0.1)', border: '2px solid #ffc107' }}>
+                    <i className="bi bi-lock-fill text-warning" style={{ fontSize: '1.8rem' }}></i>
+                  </div>
+                </div>
+                <p className="fw-bold mb-2 text-white px-1 small" style={{ fontSize: '0.8rem' }}>{mensajeBloqueoTexto}</p>
+                <button className="btn btn-sm px-4 fw-bold text-white mt-1" style={{ backgroundColor: '#a52a2a', borderRadius: '6px' }} onClick={() => setMostrarModalBloqueo(false)}>Cerrar</button>
               </div>
             </div>
           </div>

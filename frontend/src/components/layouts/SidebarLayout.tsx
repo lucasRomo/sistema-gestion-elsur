@@ -40,15 +40,30 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
   const nombrePersona = usuario?.persona?.nombre || usuario?.nombreUsuario || 'Usuario';
   const rolUsuario = usuario?.rol?.nombreRol || usuario?.rol?.nombre || 'Empleado';
+
+  // Verificamos si es administrador explícito
   const esAdmin = rolUsuario.toUpperCase().includes('ADMIN') || rolUsuario.toUpperCase().includes('GERENTE');
 
   const tienePermiso = (nombreModulo: string) => {
+    // El Panel Principal/Dashboard debe estar accesible para cualquier usuario autenticado
+    if (nombreModulo.toLowerCase() === 'panel principal') return true;
+    
+    // Si es admin o gerente, tiene acceso a todo de fábrica
     if (esAdmin) return true;
+
+    // Extraer array de permisos del objeto usuario (soporta varios formatos de DTO)
     const permisos: any[] = usuario?.permisos || usuario?.rol?.permisos || [];
-    return permisos.some((p: any) => 
-      (typeof p === 'string' && p.toLowerCase() === nombreModulo.toLowerCase()) ||
-      (p.nombrePermiso && p.nombrePermiso.toLowerCase() === nombreModulo.toLowerCase())
-    );
+
+    return permisos.some((p: any) => {
+      if (typeof p === 'string') {
+        return p.toLowerCase() === nombreModulo.toLowerCase();
+      }
+      if (p && typeof p === 'object') {
+        const nombre = p.nombrePermiso || p.nombre || p.nombreModulo;
+        return nombre && nombre.toLowerCase() === nombreModulo.toLowerCase();
+      }
+      return false;
+    });
   };
 
   const menuPrincipales = [
@@ -74,12 +89,13 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
     { name: 'Proveedores', icon: 'bi-truck', path: '/proveedores' },
   ].filter(item => tienePermiso(item.name));
 
+  // CORREGIDO: Ahora las opciones del gerente pasan por tienePermiso
   const menuGerente = [
     { name: 'Informes', icon: 'bi-file-earmark-bar-graph-fill', path: '/informes' },
     { name: 'Matriz de Permisos', icon: 'bi-shield-lock-fill', path: '/matriz-permisos' },
     { name: 'Gestión de Usuarios', icon: 'bi-people', path: '/gestion-usuarios' },
     { name: 'Historial de Actividad', icon: 'bi-clock-history', path: '/historial' },
-  ];
+  ].filter(item => tienePermiso(item.name));
 
   const menuConfiguracion = [
     { name: 'Configuración', icon: 'bi-gear-fill', path: '/configuracion' },
@@ -156,7 +172,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   return (
     <div className="d-flex vh-100" style={{ backgroundColor: '#1b1b1b', color: 'white', overflow: 'hidden' }}>
       
-      {/* Oculta la barra de scroll visualmente manteniendo la función de desplazamiento */}
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -185,7 +200,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         
         {/* BLOQUE SUPERIOR */}
         <div>
-          {/* Header del Sidebar */}
           <div className="d-flex justify-content-between align-items-center mb-2 ps-1" style={{ minHeight: '34px' }}>
             {!colapsado ? (
               <div 
@@ -263,7 +277,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           <hr className="border-secondary mb-2 mt-2" style={{ opacity: 0.3 }} />
         </div>
 
-        {/* LISTA NAVEGACIÓN (Acomodado hacia arriba con scroll auto sin barra visible) */}
+        {/* LISTA NAVEGACIÓN */}
         <div 
           ref={scrollContainerRef} 
           className="flex-grow-1 d-flex flex-column justify-content-start gap-2 py-1 no-scrollbar" 
@@ -311,7 +325,8 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
             </div>
           )}
 
-          {esAdmin && (
+          {/* CORREGIDO: Evaluamos menuGerente.length > 0 en lugar de esAdmin */}
+          {menuGerente.length > 0 && (
             <div>
               {colapsado ? <hr className="border-secondary my-1" style={{ opacity: 0.2 }} /> : (
                 <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
