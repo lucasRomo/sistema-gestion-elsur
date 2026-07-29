@@ -67,5 +67,8 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
     
     return totales;
 }
-    
+    @Override
+    public List<MovimientoCaja> obtenerTodos() {
+        return movimientoCajaRepository.findAll();
+    }
 }

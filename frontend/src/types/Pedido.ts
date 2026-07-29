@@ -1,4 +1,4 @@
-import type { Producto } from './Producto';
+import type { Producto, } from './Producto';
 
 export interface DetallePedido {
   id_detalle?: number;

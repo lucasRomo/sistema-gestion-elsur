@@ -46,5 +46,9 @@ public class MovimientoCajaController {
     Map<String, Double> totales = movimientoService.calcularTotalesDelDia(); 
     return ResponseEntity.ok(totales);
 }
-
+    @GetMapping
+    public ResponseEntity<List<MovimientoCaja>> obtenerTodos() {
+        List<MovimientoCaja> movimientos = movimientoCajaService.obtenerTodos();
+        return ResponseEntity.ok(movimientos);
+    }
 }
