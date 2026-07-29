@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SelectorProductosForm } from '../features/pedidos/SelectorProductosForm';
 import { DetallesPedidoForm } from '../features/pedidos/DetallesPedidoForm';
 import { useRegistrarPedido } from '../hooks/useRegistrarPedido';
 import type { CartItem } from '../types/Pedido';
+import type { CategoriaCliente } from '../types/CategoriaCliente';
 
 export const CrearPedidoView: React.FC = () => {
   const navigate = useNavigate();
@@ -12,13 +13,51 @@ export const CrearPedidoView: React.FC = () => {
   
   const [paso, setPaso] = useState<number>(1);
   const [carrito, setCarrito] = useState<CartItem[]>([]);
+  const [categoriaSeleccionadaId, setCategoriaSeleccionadaId] = useState<string>('');
+  const [categorias, setCategorias] = useState<CategoriaCliente[]>([]);
+  
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
   const [confirmarGuardado, setConfirmarGuardado] = useState(false);
   
   const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string } | null>(null);
   const [fileTemporal, setFileTemporal] = useState<File | null>(null);
 
-  const totalCarrito = carrito.reduce((sum, item) => sum + item.subtotal, 0);
+  // Cargar categorías en el nivel superior para compartirlas entre los pasos
+  useEffect(() => {
+    const fetchCategorias = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/categorias-cliente');
+        if (response.ok) {
+          const data = await response.json();
+          const categoriasNormalizadas = data.map((cat: any) => ({
+            idCategoriaCliente: cat.idCategoria ?? cat.id_categoria ?? cat.idCategoriaCliente ?? cat.id,
+            nombreCategoria: cat.nombre ?? cat.nombreCategoria ?? cat.nombre_categoria ?? 'Categoría',
+            porcentajeDescuento: Number(cat.descuentoAutomatico ?? cat.descuento_automatico ?? cat.porcentajeDescuento ?? cat.descuento ?? 0)
+          }));
+          setCategorias(categoriasNormalizadas);
+        }
+      } catch (error) {
+        console.error("Error al obtener categorías:", error);
+      }
+    };
+
+    fetchCategorias();
+  }, []);
+
+  // CÁLCULO DEL TOTAL CON DESCUENTO REAL
+  const subtotalCarrito = carrito.reduce((sum, item) => sum + item.subtotal, 0);
+
+  const catActual = categorias.find(c => {
+    const id = c.idCategoriaCliente ?? (c as any).idCategoria ?? (c as any).id_categoria ?? (c as any).id;
+    return id?.toString() === categoriaSeleccionadaId;
+  });
+
+  const porcentajeDescuento = catActual 
+    ? Number(catActual.porcentajeDescuento ?? (catActual as any).descuentoAutomatico ?? (catActual as any).descuento_automatico ?? 0) 
+    : 0;
+
+  const montoDescuento = (subtotalCarrito * porcentajeDescuento) / 100;
+  const totalConDescuento = subtotalCarrito - montoDescuento;
 
   const handlePreGuardar = async (payloadEstructurado: { 
     pedido: any; 
@@ -91,6 +130,9 @@ export const CrearPedidoView: React.FC = () => {
             productos={productos}
             carrito={carrito}
             setCarrito={setCarrito}
+            categorias={categorias}
+            categoriaSeleccionadaId={categoriaSeleccionadaId}
+            setCategoriaSeleccionadaId={setCategoriaSeleccionadaId}
             onSiguiente={() => setPaso(2)}
             onCancelar={() => navigate('/dashboard')}
           />
@@ -98,7 +140,8 @@ export const CrearPedidoView: React.FC = () => {
           <DetallesPedidoForm 
             clientes={clientes}
             empleados={empleados}
-            total={totalCarrito}
+            total={totalConDescuento}
+            porcentajeDescuento={porcentajeDescuento}
             carrito={carrito}
             onVolver={() => setPaso(1)}
             onGuardar={handlePreGuardar}

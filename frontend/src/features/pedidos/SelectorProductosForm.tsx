@@ -1,17 +1,28 @@
 import React, { useState } from 'react';
 import type { Producto } from '../../types/Producto';
 import type { CartItem } from '../../types/Pedido';
+import type { CategoriaCliente } from '../../types/CategoriaCliente';
 
 interface Props {
   productos: Producto[];
   carrito: CartItem[];
   setCarrito: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  categorias: CategoriaCliente[];
+  categoriaSeleccionadaId: string;
+  setCategoriaSeleccionadaId: (id: string) => void;
   onSiguiente: () => void;
   onCancelar: () => void;
 }
 
 export const SelectorProductosForm: React.FC<Props> = ({ 
-  productos, carrito, setCarrito, onSiguiente, onCancelar 
+  productos, 
+  carrito, 
+  setCarrito, 
+  categorias,
+  categoriaSeleccionadaId,
+  setCategoriaSeleccionadaId,
+  onSiguiente, 
+  onCancelar 
 }) => {
   const [productoId, setProductoId] = useState('');
   const [cantidad, setCantidad] = useState('1');
@@ -37,12 +48,26 @@ export const SelectorProductosForm: React.FC<Props> = ({
     setCarrito(carrito.filter((_, i) => i !== index));
   };
 
-  const total = carrito.reduce((sum, item) => sum + item.subtotal, 0);
+  // CÁLCULOS DE DESCUENTO
+  const subtotal = carrito.reduce((sum, item) => sum + item.subtotal, 0);
+
+  const catActual = categorias.find(c => {
+    const id = c.idCategoriaCliente ?? (c as any).idCategoria ?? (c as any).id_categoria ?? (c as any).id;
+    return id?.toString() === categoriaSeleccionadaId;
+  });
+
+  const porcentajeDescuento = catActual 
+    ? Number(catActual.porcentajeDescuento ?? (catActual as any).descuentoAutomatico ?? (catActual as any).descuento_automatico ?? 0) 
+    : 0;
+
+  const montoDescuento = (subtotal * porcentajeDescuento) / 100;
+  const totalFinal = subtotal - montoDescuento;
 
   return (
     <div className="card text-white p-4 w-100 rounded" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46' }}>
       <h3 className="text-center mb-4 fw-normal font-monospace">Tabla para Calcular y Elegir Productos</h3>
-      {/* selectores */}
+      
+      {/* SELECTOR DE PRODUCTOS */}
       <div className="row g-3 mb-4 align-items-end">
         <div className="col-md-7">
           <label className="form-label small text-secondary fw-bold">Producto:</label>
@@ -78,7 +103,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* tabla interna */}
+      {/* TABLA DE PRODUCTOS EN CARRITO */}
       <div className="mb-4">
         <div className="d-flex text-secondary border-bottom border-secondary pb-2 mb-2 small fw-bold">
           <div style={{ width: '40%' }}>Lista de Productos:</div>
@@ -101,25 +126,66 @@ export const SelectorProductosForm: React.FC<Props> = ({
                 </div>
                 <div style={{ width: '20%' }}>{item.cantidad}</div>
                 <div style={{ width: '20%' }}>${item.producto.precioBase}</div>
-                <div style={{ width: '20%' }} className="fw-bold text-info">${item.subtotal}</div>
+                <div style={{ width: '20%' }} className="fw-bold text-info">${item.subtotal.toFixed(2)}</div>
               </div>
             ))
           )}
         </div>
       </div>
 
-      {/* Input de Total bloqueado */}
+      {/* SELECTOR DE CATEGORÍA DE CLIENTE / DESCUENTO */}
       <div className="mb-4">
-        <label className="form-label small text-secondary fw-bold">Precio Total:</label>
-        <input 
-          type="text" 
-          className="form-control bg-white text-dark fw-bold fs-5" 
-          readOnly 
-          value={`$${total.toLocaleString('es-AR')}`} 
-        />
+        <label className="form-label small text-light fw-bold d-flex align-items-center justify-content-between">
+          <span><i className="bi bi-tags-fill text-info me-1"></i> Categoría de Cliente / Descuento:</span>
+          {porcentajeDescuento > 0 && (
+            <span className="badge bg-success font-monospace fs-6">
+              ¡{porcentajeDescuento}% OFF APLICADO!
+            </span>
+          )}
+        </label>
+        <select 
+          className="form-select bg-dark text-white border-info font-monospace"
+          value={categoriaSeleccionadaId}
+          onChange={(e) => setCategoriaSeleccionadaId(e.target.value)}
+        >
+          <option value="">Sin Categoría (Consumidor Final - 0% Desc.)</option>
+          {categorias.map((cat: any) => {
+            const id = cat.idCategoriaCliente ?? cat.idCategoria ?? cat.id_categoria ?? cat.id;
+            const nombre = cat.nombreCategoria ?? cat.nombre ?? cat.nombre_categoria ?? 'Categoría';
+            const porcentajeDesc = cat.porcentajeDescuento ?? cat.descuentoAutomatico ?? cat.descuento_automatico ?? 0;
+
+            return (
+              <option key={id} value={id}>
+                {nombre} — ({porcentajeDesc}% Descuento)
+              </option>
+            );
+          })}
+        </select>
       </div>
 
-      {/* Acciones del pie */}
+      {/* DESGLOSE VISUAL Y TOTAL FINAL */}
+      <div className="p-3 rounded mb-4" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+        <div className="d-flex justify-content-between text-light mb-1 small">
+          <span>Subtotal Productos:</span>
+          <span className="fw-bold">${subtotal.toFixed(2)}</span>
+        </div>
+
+        {porcentajeDescuento > 0 && (
+          <div className="d-flex justify-content-between text-success mb-1 small">
+            <span>Descuento Aplicado ({porcentajeDescuento}%):</span>
+            <span className="fw-bold">-${montoDescuento.toFixed(2)}</span>
+          </div>
+        )}
+
+        <hr className="my-2 border-secondary" />
+
+        <div className="d-flex justify-content-between align-items-center text-white">
+          <span className="fw-bold fs-5">Precio Total Final:</span>
+          <span className="fw-bold fs-3 text-info font-monospace">${totalFinal.toFixed(2)}</span>
+        </div>
+      </div>
+
+      {/* BOTONES DE ACCIÓN */}
       <div className="d-flex justify-content-between mt-3">
         <button className="btn btn-danger px-4" style={{ backgroundColor: '#a63333', border: 'none' }} onClick={onCancelar}>
           Volver

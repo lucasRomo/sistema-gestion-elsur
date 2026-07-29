@@ -5,12 +5,21 @@ interface Props {
   clientes: any[];
   empleados: any[]; 
   total: number;
+  porcentajeDescuento?: number;
   carrito: CartItem[];
   onVolver: () => void;
   onGuardar: (payload: { pedido: Pedido; idEmpleado: number; tipoPago: string; fileComprobante?: File | null }) => void;
 }
 
-export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total, carrito, onVolver, onGuardar }) => {
+export const DetallesPedidoForm: React.FC<Props> = ({ 
+  clientes, 
+  empleados, 
+  total, 
+  porcentajeDescuento = 0,
+  carrito, 
+  onVolver, 
+  onGuardar 
+}) => {
   const [clienteId, setClienteId] = useState<string>('');
   const [empleadoId, setEmpleadoId] = useState<string>(''); 
   const [estado, setEstado] = useState('PENDIENTE');
@@ -94,6 +103,8 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
       ? `${fechaEntrega}T00:00:00` 
       : `${new Date().toISOString().split('T')[0]}T00:00:00`;
 
+    const textoDescuento = porcentajeDescuento > 0 ? ` [Descuento aplicado: ${porcentajeDescuento}%]` : '';
+
     const nuevoPedido: Pedido = {
       cliente: { id_cliente: Number(clienteId) },
       detalles: detallesFormateados,
@@ -101,7 +112,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
       estado: estado,
       monto_total: total,
       monto_pago_adelantado: Number(montoEntregado),
-      observaciones: observaciones,
+      observaciones: `${observaciones}${textoDescuento}`.trim(),
       es_cuenta_corriente: esCuentaCorriente,
       es_presupuesto: esPresupuesto,
     };
@@ -212,8 +223,18 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
 
         {/* Monto Total Cotizado */}
         <div className="col-md-6">
-          <label className="form-label small text-secondary fw-bold">Monto Total Cotizado:</label>
-          <input type="text" className="form-control bg-light text-dark fw-bold" readOnly value={`$${total}`} />
+          <label className="form-label small text-secondary fw-bold d-flex justify-content-between">
+            <span>Monto Total Cotizado:</span>
+            {porcentajeDescuento > 0 && (
+              <span className="text-success font-monospace">({porcentajeDescuento}% OFF aplicado)</span>
+            )}
+          </label>
+          <input 
+            type="text" 
+            className="form-control bg-dark text-info fw-bold font-monospace fs-5 border-secondary" 
+            readOnly 
+            value={`$${total.toFixed(2)}`} 
+          />
         </div>
 
         {/* Seña / Adelanto Recibido */}
