@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SidebarLayout } from '../components/layouts/SidebarLayout';
 import { SelectorProductosForm } from '../features/pedidos/SelectorProductosForm';
 import { DetallesPedidoForm } from '../features/pedidos/DetallesPedidoForm';
 import { useRegistrarPedido } from '../hooks/useRegistrarPedido';
@@ -16,55 +15,47 @@ export const CrearPedidoView: React.FC = () => {
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
   const [confirmarGuardado, setConfirmarGuardado] = useState(false);
   
-  // Estados para almacenar temporalmente el payload y el archivo seleccionado antes de confirmar
-  const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null } | null>(null);
+  const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string } | null>(null);
   const [fileTemporal, setFileTemporal] = useState<File | null>(null);
 
   const totalCarrito = carrito.reduce((sum, item) => sum + item.subtotal, 0);
 
   const handlePreGuardar = async (payloadEstructurado: { 
-  pedido: any; 
-  idEmpleado: number; 
-  tipoPago: string; 
-  fileComprobante?: File | null; 
-}) => {
-  // 1. Obtenemos el ID de usuario desde localStorage
-  const idUsuarioLogueado = (() => {
-    const usuarioJson = localStorage.getItem('usuario_logueado');
-    if (usuarioJson) {
-      try {
-        const usuarioObj = JSON.parse(usuarioJson);
-        return usuarioObj.idUsuario ? parseInt(usuarioObj.idUsuario) : null;
-      } catch (e) {
-        console.error("Error al parsear el usuario_logueado desde localStorage:", e);
+    pedido: any; 
+    idEmpleado: number; 
+    tipoPago: string; 
+    fileComprobante?: File | null; 
+  }) => {
+    const idUsuarioLogueado = (() => {
+      const usuarioJson = localStorage.getItem('usuario_logueado');
+      if (usuarioJson) {
+        try {
+          const usuarioObj = JSON.parse(usuarioJson);
+          return usuarioObj.idUsuario ? parseInt(usuarioObj.idUsuario) : null;
+        } catch (e) {
+          console.error("Error al parsear el usuario_logueado desde localStorage:", e);
+        }
       }
-    }
-    return null;
-  })();
+      return null;
+    })();
 
-  // 2. Acoplamos de forma segura el usuario y el TIPO DE PAGO al payload que va al service
-  const payloadConUsuario = {
-    pedido: payloadEstructurado.pedido,
-    idEmpleado: payloadEstructurado.idEmpleado,
-    idUsuario: idUsuarioLogueado,
-    tipoPago: payloadEstructurado.tipoPago // ➔ AGREGAMOS ESTA LÍNEA CLAVE
+    const payloadConUsuario = {
+      pedido: payloadEstructurado.pedido,
+      idEmpleado: payloadEstructurado.idEmpleado,
+      idUsuario: idUsuarioLogueado,
+      tipoPago: payloadEstructurado.tipoPago
+    };
+
+    setPayloadTemporal(payloadConUsuario); 
+    setFileTemporal(payloadEstructurado.fileComprobante || null);
+    setConfirmarGuardado(true); 
   };
 
-  // Guardamos el estado temporal para que se lo envíe a ejecutarGuardadoFinal
-  setPayloadTemporal(payloadConUsuario); 
-  
-  // Guardamos el archivo físico temporalmente
-  setFileTemporal(payloadEstructurado.fileComprobante || null);
-  setConfirmarGuardado(true); 
-};
-
-  // 2. Segundo paso: Al confirmar en el modal, se ejecuta el envío real a la API
   const ejecutarGuardadoFinal = async () => {
     if (!payloadTemporal) return;
     setConfirmarGuardado(false); 
 
     try {
-      // ➔ Modificamos enviarPedido para que acepte tanto el payload como el archivo opcional
       const exito = await enviarPedido(payloadTemporal, fileTemporal);
       if (exito) {
         setSuceso({
@@ -133,10 +124,7 @@ export const CrearPedidoView: React.FC = () => {
                 <button 
                   className="btn btn-sm px-3 text-white" 
                   style={{ borderRadius: '6px', backgroundColor: '#e22e2e', border: '1px solid #e22e2e' }} 
-                  onClick={() => {
-                    setConfirmarGuardado(false);
-                    // No limpiamos el fileTemporal por si decide apretar volver y después confirmar sin cambiar nada
-                  }}
+                  onClick={() => setConfirmarGuardado(false)}
                 >
                   Volver
                 </button>

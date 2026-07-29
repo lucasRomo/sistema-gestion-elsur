@@ -8,7 +8,6 @@ import { SuccesModal } from '../components/layouts/SuccesModal';
 import { useTurno } from '../Context/TurnoContext';
 import { ModalGestionarComprobantes } from '../features/pedidos/ModalGestionarComprobantes';
 
-
 // Importación de Componentes Extraídos e Internos
 import { FiltrosPedidos } from '../features/pedidos/components/FiltrosPedidos';
 import { FilaPedido } from '../features/pedidos/components/FilaPedido'; 
@@ -23,6 +22,7 @@ export const PedidosPendientesPage: React.FC = () => {
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
   const [pedidoGestionComprobanteSel, setPedidoGestionComprobanteSel] = useState<any | null>(null);
   const [filtroEmpleado, setFiltroEmpleado] = useState('');
+
   // Controles de Modales
   const [pedidoEstadoSel, setPedidoEstadoSel] = useState<any>(null);
   const [nuevoEstadoPendiente, setNuevoEstadoPendiente] = useState<string>('');
@@ -32,9 +32,34 @@ export const PedidosPendientesPage: React.FC = () => {
   const [empleados, setEmpleados] = useState<any[]>([]);
   const [modalNotif, setModalNotif] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
   const [confirmarDesvincular, setConfirmarDesvincular] = useState<{ show: boolean; idComprobante: number | null }>({
-  show: false,
-  idComprobante: null
-});
+    show: false,
+    idComprobante: null
+  });
+
+  // Modal de Advertencia por Deuda / Saldo Pendiente al Entregar o Finalizar
+  const [modalAdvertenciaDeuda, setModalAdvertenciaDeuda] = useState<{
+    show: boolean;
+    pedido: any;
+    nuevoEstado: string;
+    observaciones: string;
+    saldoPendiente: number;
+    deudaPrevia: number;
+    deudaTotal: number;
+    limiteCredito: number;
+  }>({
+    show: false,
+    pedido: null,
+    nuevoEstado: '',
+    observaciones: '',
+    saldoPendiente: 0,
+    deudaPrevia: 0,
+    deudaTotal: 0,
+    limiteCredito: 0
+  });
+
+  // Estado para el nuevo límite de crédito a ingresar en el modal
+  const [nuevoLimiteInput, setNuevoLimiteInput] = useState<string>('');
+  const [guardandoLimite, setGuardandoLimite] = useState<boolean>(false);
 
   // Filtros de búsqueda estatales
   const [filtroCliente, setFiltroCliente] = useState('');
@@ -60,29 +85,29 @@ export const PedidosPendientesPage: React.FC = () => {
 
   // Handler para asignar empleado
   const handleCambioEmpleado = async (idPedido: number, idEmpleado: string) => {
-  try {
-    const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
-    const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
-    
-    await (pedidoService as any).asignarEmpleado(idPedido, idEmpleado, idUsuarioActivo);
-    
-    setModalNotif({ show: true, msg: "El empleado ha sido asignado correctamente." });
-  } catch (error) {
-    console.error("Error al asignar:", error);
-    alert("Error al asignar el empleado.");
-  }
+    try {
+      const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
+      const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
+      
+      await (pedidoService as any).asignarEmpleado(idPedido, idEmpleado, idUsuarioActivo);
+      
+      setModalNotif({ show: true, msg: "El empleado ha sido asignado correctamente." });
+    } catch (error) {
+      console.error("Error al asignar:", error);
+      alert("Error al asignar el empleado.");
+    }
   };
 
-  const confirmarCambioEstado = async (observaciones: string) => {
-    if (!pedidoEstadoSel) return;
+  // Función interna para ejecutar el cambio de estado en el backend
+  const ejecutarCambioEstado = async (idPedido: number, nuevoEst: string, estadoAnt: string, observaciones: string) => {
     const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
     const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id;
 
     try {
       await actualizarEstado(
-        pedidoEstadoSel.id_pedido,
-        nuevoEstadoPendiente,
-        pedidoEstadoSel.estado,
+        idPedido,
+        nuevoEst,
+        estadoAnt,
         observaciones,
         idUsuarioActivo
       );
@@ -103,6 +128,146 @@ export const PedidosPendientesPage: React.FC = () => {
     } finally {
       setPedidoEstadoSel(null);
       setNuevoEstadoPendiente('');
+      setModalAdvertenciaDeuda({
+        show: false,
+        pedido: null,
+        nuevoEstado: '',
+        observaciones: '',
+        saldoPendiente: 0,
+        deudaPrevia: 0,
+        deudaTotal: 0,
+        limiteCredito: 0
+      });
+    }
+  };
+
+  // Confirmación desde ModalCambioEstado con chequeo exacto contra Cliente.java
+  const confirmarCambioEstado = async (observaciones: string) => {
+    if (!pedidoEstadoSel) return;
+
+    const cliente = pedidoEstadoSel.cliente || {};
+
+    // 1. Monto total del pedido
+    const totalPedido = Number(
+      pedidoEstadoSel.monto_total ?? 
+      pedidoEstadoSel.montoTotal ?? 
+      pedidoEstadoSel.total ?? 
+      0
+    );
+
+    // 2. Monto abonado/seña del pedido
+    const pagadoPedido = Number(
+      pedidoEstadoSel.monto_pago_adelantado ?? 
+      pedidoEstadoSel.montoPagoAdelantado ?? 
+      pedidoEstadoSel.monto_abonado ?? 
+      pedidoEstadoSel.montoAbonado ?? 
+      pedidoEstadoSel.pagoAdelantado ?? 
+      0
+    );
+
+    // Saldo pendiente de este pedido
+    const saldoPendientePedido = Math.max(0, totalPedido - pagadoPedido);
+
+    // 3. Deuda previa del cliente (mapeado directo de Cliente.java: saldoDeudor)
+    const deudaPreviaCliente = Number(
+      cliente.saldoDeudor ?? 
+      cliente.saldo_deudor ?? 
+      0
+    );
+
+    // 4. Límite de crédito del cliente (mapeado directo de Cliente.java: limiteCredito)
+    const limiteCredito = Number(
+      cliente.limiteCredito ?? 
+      cliente.limite_credito ?? 
+      0
+    );
+
+    // Deuda total proyectada
+    const deudaTotalProyectada = deudaPreviaCliente + saldoPendientePedido;
+
+    const estadoNormalizado = (nuevoEstadoPendiente || '').toUpperCase().trim();
+    const esEntregaOFinalizacion = [
+      'ENTREGADO', 
+      'FINALIZADO', 
+      'COMPLETADO', 
+      'TERMINADO', 
+      'LISTO PARA ENTREGAR'
+    ].includes(estadoNormalizado);
+
+    // Se activa si hay saldo pendiente y (no tiene límite o la deuda supera el límite actual)
+    const superaLimite = limiteCredito > 0 
+      ? deudaTotalProyectada > limiteCredito 
+      : saldoPendientePedido > 0;
+
+    if (esEntregaOFinalizacion && superaLimite) {
+      // Sugerimos como nuevo límite por defecto la deuda proyectada para facilitar la carga rápida
+      setNuevoLimiteInput(deudaTotalProyectada.toString());
+
+      setModalAdvertenciaDeuda({
+        show: true,
+        pedido: pedidoEstadoSel,
+        nuevoEstado: nuevoEstadoPendiente,
+        observaciones: observaciones,
+        saldoPendiente: saldoPendientePedido,
+        deudaPrevia: deudaPreviaCliente,
+        deudaTotal: deudaTotalProyectada,
+        limiteCredito: limiteCredito
+      });
+      setPedidoEstadoSel(null);
+      return;
+    }
+
+    // Procesar cambio si no supera los límites
+    await ejecutarCambioEstado(
+      pedidoEstadoSel.id_pedido,
+      nuevoEstadoPendiente,
+      pedidoEstadoSel.estado,
+      observaciones
+    );
+  };
+
+  // Función para actualizar límite de crédito en la BD y entregar inmediatamente
+  const handleActualizarLimiteYEntregar = async () => {
+    const nuevoLimiteNum = Number(nuevoLimiteInput);
+    if (isNaN(nuevoLimiteNum) || nuevoLimiteNum < 0) {
+      alert("Por favor, ingresá un monto de límite de crédito válido.");
+      return;
+    }
+
+    const cliente = modalAdvertenciaDeuda.pedido?.cliente || {};
+    const idCliente = cliente.idCliente ?? cliente.id_cliente;
+
+    if (!idCliente) {
+      alert("No se pudo identificar el ID del cliente para actualizar su límite.");
+      return;
+    }
+
+    setGuardandoLimite(true);
+    try {
+      // Llamada al endpoint de Spring Boot de CuentaCorrienteController
+      const response = await fetch(`http://localhost:8080/api/cuentas-corrientes/cliente/${idCliente}/limite`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limiteCredito: nuevoLimiteNum })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Error al actualizar el límite de crédito en el servidor.");
+      }
+
+      // Límite actualizado en backend con éxito, procedemos a cambiar el estado del pedido
+      await ejecutarCambioEstado(
+        modalAdvertenciaDeuda.pedido.id_pedido,
+        modalAdvertenciaDeuda.nuevoEstado,
+        modalAdvertenciaDeuda.pedido.estado,
+        modalAdvertenciaDeuda.observaciones
+      );
+    } catch (error: any) {
+      console.error("Error actualizando límite de crédito:", error);
+      alert(`Error: ${error.message || "No se pudo actualizar el límite de crédito."}`);
+    } finally {
+      setGuardandoLimite(false);
     }
   };
 
@@ -110,24 +275,20 @@ export const PedidosPendientesPage: React.FC = () => {
     try {
       const formData = new FormData();
       
-      // Creamos el JSON payload con la información
       const payload = {
         monto: monto,
         tipoPago: tipoPago,
-        idUsuario: 1 // Cambia por tu usuario logueado dinámico si corresponde
+        idUsuario: 1 
       };
 
-      // Adjuntamos el JSON como un blob de tipo application/json
       formData.append("payload", new Blob([JSON.stringify(payload)], { type: "application/json" }));
 
-      // Si seleccionaron un archivo, lo adjuntamos al FormData
       if (archivo) {
         formData.append("comprobante", archivo);
       }
 
       const response = await fetch(`http://localhost:8080/api/pedidos/${pedidoPagoSel.id_pedido}/pagos`, {
         method: 'POST',
-        // ¡IMPORTANTE!: No ponemos 'Content-Type' manual. El navegador se encarga.
         body: formData,
       });
 
@@ -144,8 +305,6 @@ export const PedidosPendientesPage: React.FC = () => {
       });
       
       setPedidoPagoSel(null);
-      // Opcional: Ejecuta la función que recargue la lista de pedidos en vez de recargar la pestaña entera
-      
 
     } catch (error: any) {
       console.error(error);
@@ -158,75 +317,63 @@ export const PedidosPendientesPage: React.FC = () => {
     }
   };
 
-const handleVincularComprobante = async (idComprobante: number, archivo: File) => {
-  try {
-    const formData = new FormData();
-    formData.append("comprobante", archivo);
+  const handleVincularComprobante = async (idComprobante: number, archivo: File) => {
+    try {
+      const formData = new FormData();
+      formData.append("comprobante", archivo);
 
-    const response = await fetch(`http://localhost:8080/api/pedidos/comprobantes/${idComprobante}/archivo`, {
-      method: 'POST',
-      body: formData
+      const response = await fetch(`http://localhost:8080/api/pedidos/comprobantes/${idComprobante}/archivo`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) throw new Error("No se pudo subir el archivo.");
+
+      const pedidoActualizado = await response.json();
+      setPedidoGestionComprobanteSel(pedidoActualizado);
+      setSuceso({ show: true, titulo: "Éxito", mensaje: "Comprobante vinculado", tipo: "exito" });
+    } catch (error: any) {
+      setSuceso({ show: true, titulo: "Error", mensaje: error.message, tipo: "error" });
+    }
+  };
+
+  const handleEliminarComprobante = async (idComprobante: number) => {
+    setConfirmarDesvincular({
+      show: true,
+      idComprobante
     });
+  };
 
-    if (!response.ok) throw new Error("No se pudo subir el archivo.");
+  const ejecutarEliminarComprobante = async () => {
+    const idComprobante = confirmarDesvincular.idComprobante;
+    if (!idComprobante) return;
 
-    const pedidoActualizado = await response.json();
+    setConfirmarDesvincular({ show: false, idComprobante: null });
 
-    
-    setPedidoGestionComprobanteSel(pedidoActualizado);
+    try {
+      const response = await fetch(`http://localhost:8080/api/pedidos/comprobantes/${idComprobante}/archivo`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error("No se pudo eliminar el archivo.");
 
-    
+      const pedidoActualizado = await response.json();
+      setPedidoGestionComprobanteSel(pedidoActualizado);
 
-    setSuceso({ show: true, titulo: "Éxito", mensaje: "Comprobante vinculado", tipo: "exito" });
-  } catch (error: any) {
-    setSuceso({ show: true, titulo: "Error", mensaje: error.message, tipo: "error" });
-  }
-};
-
-// Función para eliminar el comprobante (poner en null la url del archivo)
-const handleEliminarComprobante = async (idComprobante: number) => {
-  setConfirmarDesvincular({
-    show: true,
-    idComprobante
-  });
-};
-
-// 2. Esta función se ejecuta cuando el usuario presiona "Desvincular" en tu nuevo modal
-const ejecutarEliminarComprobante = async () => {
-  const idComprobante = confirmarDesvincular.idComprobante;
-  if (!idComprobante) return;
-
-  // Cerramos el modal de confirmación inmediatamente
-  setConfirmarDesvincular({ show: false, idComprobante: null });
-
-  try {
-    const response = await fetch(`http://localhost:8080/api/pedidos/comprobantes/${idComprobante}/archivo`, {
-      method: 'DELETE'
-    });
-    if (!response.ok) throw new Error("No se pudo eliminar el archivo.");
-
-    const pedidoActualizado = await response.json();
-    
-    // Actualizamos el estado del modal de atrás
-    setPedidoGestionComprobanteSel(pedidoActualizado);
-
-    // Mostramos el modal de éxito final
-    setSuceso({ 
-      show: true, 
-      titulo: "Éxito", 
-      mensaje: "Comprobante desvinculado correctamente", 
-      tipo: "exito" 
-    });
-  } catch (error: any) {
-    setSuceso({ 
-      show: true, 
-      titulo: "Error", 
-      mensaje: error.message, 
-      tipo: "error" 
-    });
-  }
-};
-
+      setSuceso({ 
+        show: true, 
+        titulo: "Éxito", 
+        mensaje: "Comprobante desvinculado correctamente", 
+        tipo: "exito" 
+      });
+    } catch (error: any) {
+      setSuceso({ 
+        show: true, 
+        titulo: "Error", 
+        mensaje: error.message, 
+        tipo: "error" 
+      });
+    }
+  };
 
   const handleSubirArchivoFisico = async (idPedido: number, file: File) => {
     try {
@@ -259,9 +406,7 @@ const ejecutarEliminarComprobante = async () => {
     }
   };
 
-  
   const pedidosFiltrados = pedidos.filter(p => {
-    // 1. Excluir Venta Rápida
     const esVentaRapida = 
       p.observaciones?.toLowerCase().includes('venta rápida') || 
       p.observacion?.toLowerCase().includes('venta rápida') ||
@@ -269,14 +414,12 @@ const ejecutarEliminarComprobante = async () => {
 
     if (esVentaRapida) return false;
 
-    // 2. Filtro por Cliente
     const nombreCliente = p.cliente?.persona 
       ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
-      : (p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
+      : (p.cliente?.razonSocial || p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
     const cumpleCliente = nombreCliente.toLowerCase().includes(filtroCliente.toLowerCase());
     if (!cumpleCliente) return false;
 
-    // 3. Filtro por Estado
     if (filtroEstado === 'PRESUPUESTO') {
       if (p.estado !== 'PRESUPUESTO') return false;
     } else {
@@ -284,7 +427,6 @@ const ejecutarEliminarComprobante = async () => {
       if (filtroEstado !== '' && p.estado !== filtroEstado) return false;
     }
 
-    // 4. Filtro por Empleado Asignado (Mapeado usando ultimaAsignacion)
     if (filtroEmpleado !== '') {
       const ultimaAsignacion = p.asignaciones && p.asignaciones.length > 0
         ? p.asignaciones[p.asignaciones.length - 1]
@@ -305,13 +447,10 @@ const ejecutarEliminarComprobante = async () => {
 
   return (
     <SidebarLayout activeItem="Pedidos Pendientes">
-      {/* Contenedor adaptado para ocupar el 100% real sin desbordar el viewport del navegador */}
       <div 
         className="container-fluid px-2 d-flex flex-column pt-3" 
         style={{ height: 'calc(100vh - 45px)', overflow: 'hidden' }}
       >
-        
-        {/* Título Principal - Con margen controlado y limpio */}
         <div className="d-flex justify-content-between align-items-center mb-2 d-print-none">
           <h1 className="fw-bold tracking-tight text-white m-0" style={{ fontSize: '1.85rem' }}>
             {filtroEstado === 'PRESUPUESTO' ? 'Presupuestos / Cotizaciones' : 'Cola de Producción Taller'}
@@ -319,7 +458,6 @@ const ejecutarEliminarComprobante = async () => {
           <span className="badge bg-dark border border-info text-info font-monospace">Datos en Tiempo Real</span>
         </div>
 
-        {/* Panel de Filtros: Añadimos separación superior para que el título respire */}
         <div className="mt-3 mb-3">
           <FiltrosPedidos 
             filtroCliente={filtroCliente}
@@ -332,7 +470,6 @@ const ejecutarEliminarComprobante = async () => {
           />
         </div>
 
-        {/* Tabla Principal: Maximiza su tamaño de forma controlada */}
         <div 
           className="d-flex flex-column flex-grow-1 overflow-hidden mb-2" 
           style={{ backgroundColor: '#1d1d1d', height: 'calc(100vh - 210px)' }}
@@ -345,10 +482,7 @@ const ejecutarEliminarComprobante = async () => {
               className="table-dark table-hover m-0 align-middle"
               style={{ width: '100%', borderCollapse: 'collapse', color: '#e4e4e7', backgroundColor: '#121214' }}
             >
-              {/* thead con sticky top */}
-              <thead 
-                style={{ position: 'sticky', top: 0, backgroundColor: '#1d1d1d', zIndex: 1 }}
-              >
+              <thead style={{ position: 'sticky', top: 0, backgroundColor: '#1d1d1d', zIndex: 1 }}>
                 <tr style={{ backgroundColor: '#1d1d1d', borderBottom: '2px solid #27272a', color: '#a1a1aa', fontFamily: 'monospace', fontSize: '0.85rem', textTransform: 'uppercase' }}>
                   <th style={{ padding: '12px 12px 12px 24px' }}>ID</th>
                   <th>Cliente</th>
@@ -396,13 +530,12 @@ const ejecutarEliminarComprobante = async () => {
           </div>
         </div>
 
-        {/* Botón Volver - Ajustado abajo al límite de la pantalla */}
         <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-2 border-top border-secondary pb-1 mt-auto">
           <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2">Volver</button>
         </div>
       </div>
 
-      {/* Renderizado Condicional de Modales */}
+      {/* MODAL CAMBIO DE ESTADO */}
       {pedidoEstadoSel && (
         <ModalCambioEstado 
           pedido={pedidoEstadoSel}
@@ -415,6 +548,160 @@ const ejecutarEliminarComprobante = async () => {
         />
       )}
 
+      {/* MODAL ADVERTENCIA DE DEUDA / LÍMITE DE CRÉDITO SUPERADO O INEXISTENTE */}
+      {modalAdvertenciaDeuda.show && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '480px' }}>
+            <div 
+              className="modal-content text-white" 
+              style={{ 
+                backgroundColor: '#1a1a1c', 
+                border: '2px solid #f59e0b', 
+                borderRadius: '12px', 
+                padding: '24px'
+              }}
+            >
+              <div className="text-center mb-3">
+                <div 
+                  className="d-inline-flex align-items-center justify-content-center mb-2"
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                    border: '2px solid #f59e0b'
+                  }}
+                >
+                  <i className="bi bi-exclamation-triangle-fill fs-2" style={{ color: '#f59e0b' }}></i>
+                </div>
+                <h5 className="fw-bold m-0" style={{ color: '#ffffff' }}>
+                  {modalAdvertenciaDeuda.limiteCredito === 0 
+                    ? 'Cliente sin Límite de Crédito' 
+                    : 'Límite de Crédito Superado'}
+                </h5>
+              </div>
+
+              <div className="p-3 mb-3 rounded" style={{ backgroundColor: '#121214', border: '1px solid #27272a', fontSize: '0.9rem' }}>
+                <div className="d-flex justify-content-between mb-1">
+                  <span className="text-muted">Pedido #:</span>
+                  <span className="fw-bold text-white">{modalAdvertenciaDeuda.pedido?.id_pedido}</span>
+                </div>
+                <div className="d-flex justify-content-between mb-1">
+                  <span className="text-muted">Deuda Previa (Saldo Deudor):</span>
+                  <span className="fw-bold text-light">${(modalAdvertenciaDeuda.deudaPrevia || 0).toFixed(2)}</span>
+                </div>
+                <div className="d-flex justify-content-between mb-1">
+                  <span className="text-muted">Saldo Pendiente del Pedido:</span>
+                  <span className="fw-bold text-light">${(modalAdvertenciaDeuda.saldoPendiente || 0).toFixed(2)}</span>
+                </div>
+                <hr className="my-2 border-secondary" />
+                <div className="d-flex justify-content-between mb-1">
+                  <span className="text-white fw-bold">Deuda Total Proyectada:</span>
+                  <span className="fw-bold text-warning">${(modalAdvertenciaDeuda.deudaTotal || 0).toFixed(2)}</span>
+                </div>
+                <div className="d-flex justify-content-between">
+                  <span className="text-muted">Límite Actual Asignado:</span>
+                  <span className={`fw-bold ${modalAdvertenciaDeuda.limiteCredito === 0 ? 'text-danger' : 'text-info'}`}>
+                    ${modalAdvertenciaDeuda.limiteCredito.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* OPCIÓN PARA ACTUALIZAR EL LÍMITE DE CRÉDITO DIRECTO */}
+              <div className="p-3 mb-3 rounded" style={{ backgroundColor: '#232326', border: '1px solid #3f3f46' }}>
+                <label className="form-label text-warning small fw-bold mb-1">
+                  <i className="bi bi-pencil-square me-1"></i>
+                  {modalAdvertenciaDeuda.limiteCredito === 0 
+                    ? 'Asignar Nuevo Límite de Crédito al Cliente ($):' 
+                    : 'Actualizar Límite de Crédito ($):'}
+                </label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  min="0"
+                  className="form-control bg-dark text-white border-secondary font-monospace"
+                  placeholder="Ingrese el nuevo límite..."
+                  value={nuevoLimiteInput}
+                  onChange={(e) => setNuevoLimiteInput(e.target.value)}
+                />
+              </div>
+
+              <div className="d-flex flex-column gap-2">
+                {/* BOTÓN 1: Actualizar Límite en BD y Entregar */}
+                <button 
+                  type="button" 
+                  className="btn btn-primary fw-bold py-2"
+                  disabled={guardandoLimite}
+                  onClick={handleActualizarLimiteYEntregar}
+                >
+                  <i className="bi bi-save me-1"></i> 
+                  {guardandoLimite ? 'Guardando...' : 'Actualizar Límite y Entregar'}
+                </button>
+
+                {/* BOTÓN 2: Autorizar Excepcionalmente por esta vez */}
+                <button 
+                  type="button" 
+                  className="btn btn-warning fw-bold py-2"
+                  style={{ backgroundColor: '#d97706', border: 'none', color: '#fff' }}
+                  onClick={() => {
+                    ejecutarCambioEstado(
+                      modalAdvertenciaDeuda.pedido.id_pedido,
+                      modalAdvertenciaDeuda.nuevoEstado,
+                      modalAdvertenciaDeuda.pedido.estado,
+                      modalAdvertenciaDeuda.observaciones
+                    );
+                  }}
+                >
+                  <i className="bi bi-check-circle me-1"></i> Autorizar Solo Esta Vez
+                </button>
+
+                {/* BOTÓN 3: Ir a Cobrar */}
+                <button 
+                  type="button" 
+                  className="btn btn-success fw-bold py-2"
+                  style={{ backgroundColor: '#15803d', border: 'none' }}
+                  onClick={() => {
+                    const pedidoParaCobro = modalAdvertenciaDeuda.pedido;
+                    setModalAdvertenciaDeuda({
+                      show: false,
+                      pedido: null,
+                      nuevoEstado: '',
+                      observaciones: '',
+                      saldoPendiente: 0,
+                      deudaPrevia: 0,
+                      deudaTotal: 0,
+                      limiteCredito: 0
+                    });
+                    setPedidoPagoSel(pedidoParaCobro);
+                  }}
+                >
+                  <i className="bi bi-currency-dollar me-1"></i> Registrar Cobro Ahora
+                </button>
+
+                {/* BOTÓN 4: Cancelar */}
+                <button 
+                  type="button" 
+                  className="btn btn-outline-secondary py-2 mt-1"
+                  onClick={() => setModalAdvertenciaDeuda({
+                    show: false,
+                    pedido: null,
+                    nuevoEstado: '',
+                    observaciones: '',
+                    saldoPendiente: 0,
+                    deudaPrevia: 0,
+                    deudaTotal: 0,
+                    limiteCredito: 0
+                  })}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REGISTRO DE PAGOS */}
       {pedidoPagoSel && (
         <ModalRegistrarPago 
           show={true}
@@ -424,6 +711,7 @@ const ejecutarEliminarComprobante = async () => {
         />
       )}
 
+      {/* VISTA PREVIA TICKET */}
       {verTicketPedido && (
         <VistaTicketModal 
           pedido={verTicketPedido}
@@ -431,114 +719,114 @@ const ejecutarEliminarComprobante = async () => {
         />
       )}
 
+      {/* GESTION DE COMPROBANTES */}
       {pedidoGestionComprobanteSel && (
-  <ModalGestionarComprobantes
-    pedido={pedidoGestionComprobanteSel}
-    onClose={() => setPedidoGestionComprobanteSel(null)}
-    onVincularComprobante={handleVincularComprobante}
-    onEliminarComprobante={handleEliminarComprobante} 
-  />
-)}
+        <ModalGestionarComprobantes
+          pedido={pedidoGestionComprobanteSel}
+          onClose={() => setPedidoGestionComprobanteSel(null)}
+          onVincularComprobante={handleVincularComprobante}
+          onEliminarComprobante={handleEliminarComprobante} 
+        />
+      )}
 
+      {/* MODAL ERROR STOCK */}
       {sucesoError.show && (
-  <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
-    <div className="modal-dialog modal-sm modal-dialog-centered">
-      <div 
-        className="modal-content p-4 text-white text-center" 
-        style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px', fontFamily: 'monospace' }}
-      >
-        <i className="bi bi-x-circle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
-        <h5 className="fw-bold">Error por Falta de Stock</h5>
-        <p className="small" style={{ color: '#a1a1aa' }}>{sucesoError.mensaje}</p>
-        <button 
-          className="btn btn-danger btn-sm px-4 mt-3 fw-bold"
-          style={{ borderRadius: '6px' }}
-          onClick={() => {
-            setSucesoError({ show: false, mensaje: '' });
-            window.location.reload();
-          }}
-        >
-          Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-{confirmarDesvincular.show && (
-  <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.95)', zIndex: 1100 }}>
-    <div className="modal-dialog modal-sm modal-dialog-centered">
-      <div 
-        className="modal-content p-4 text-white text-center" 
-        style={{ 
-          border: '2px solid #dc3545', // Borde rojo de advertencia/peligro
-          backgroundColor: '#1a1a1c', 
-          borderRadius: '12px',
-          fontFamily: 'monospace'
-        }}
-      >
-        {/* Cruz de advertencia grande en lugar de tilde */}
-        <i className="bi bi-x-circle fs-1 mb-2" style={{ color: '#dc3545' }}></i>
-        
-        <h5 className="fw-bold">¿Desvincular Comprobante?</h5>
-        <p className="small" style={{ fontSize: '0.85rem' }}>
-          ¿Estás seguro que querés desvincular este comprobante a este pedido?
-        </p>
-
-        <div className="d-flex gap-2 justify-content-center mt-3">
-          <button 
-            className="btn btn-sm btn-secondary fw-bold px-3"
-            style={{ borderRadius: '6px' }}
-            onClick={() => setConfirmarDesvincular({ show: false, idComprobante: null })}
-          >
-            Cancelar
-          </button>
-          <button 
-            className="btn btn-sm btn-danger fw-bold px-3"
-            style={{ borderRadius: '6px' }}
-            onClick={ejecutarEliminarComprobante}
-          >
-            Desvincular
-          </button>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+            <div 
+              className="modal-content p-4 text-white text-center" 
+              style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px', fontFamily: 'monospace' }}
+            >
+              <i className="bi bi-x-circle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
+              <h5 className="fw-bold">Error por Falta de Stock</h5>
+              <p className="small" style={{ color: '#a1a1aa' }}>{sucesoError.mensaje}</p>
+              <button 
+                className="btn btn-danger btn-sm px-4 mt-3 fw-bold"
+                style={{ borderRadius: '6px' }}
+                onClick={() => {
+                  setSucesoError({ show: false, mensaje: '' });
+                  window.location.reload();
+                }}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
+      {/* MODAL CONFIRMAR DESVINCULAR COMPROBANTE */}
+      {confirmarDesvincular.show && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.95)', zIndex: 1100 }}>
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+            <div 
+              className="modal-content p-4 text-white text-center" 
+              style={{ 
+                border: '2px solid #dc3545', 
+                backgroundColor: '#1a1a1c', 
+                borderRadius: '12px',
+                fontFamily: 'monospace'
+              }}
+            >
+              <i className="bi bi-x-circle fs-1 mb-2" style={{ color: '#dc3545' }}></i>
+              <h5 className="fw-bold">¿Desvincular Comprobante?</h5>
+              <p className="small" style={{ fontSize: '0.85rem' }}>
+                ¿Estás seguro que querés desvincular este comprobante de este pedido?
+              </p>
+
+              <div className="d-flex gap-2 justify-content-center mt-3">
+                <button 
+                  className="btn btn-sm btn-secondary fw-bold px-3"
+                  style={{ borderRadius: '6px' }}
+                  onClick={() => setConfirmarDesvincular({ show: false, idComprobante: null })}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  className="btn btn-sm btn-danger fw-bold px-3"
+                  style={{ borderRadius: '6px' }}
+                  onClick={ejecutarEliminarComprobante}
+                >
+                  Desvincular
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL NOTIFICACION GENÉRICA */}
       {suceso.show && (
-  <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
-    <div className="modal-dialog modal-sm modal-dialog-centered">
-      <div 
-        className="modal-content p-4 text-white text-center" 
-        style={{ 
-          border: `2px solid ${suceso.tipo === 'exito' ? '#8e45e0' : '#8e45e0'}`, 
-          backgroundColor: '#1a1a1c', 
-          borderRadius: '12px' 
-        }}
-      >
-        <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-x-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
-        <h5 className="fw-bold">{suceso.titulo}</h5>
-        <p className="small" style={{ color: '#a1a1aa' }}>{suceso.mensaje}</p>
-        <button 
-          className={`btn ${suceso.tipo === 'exito' ? 'btn-success' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold`}
-          onClick={() => {
-            // 1. Cerramos el modal en el estado
-            setSuceso({ ...suceso, show: false });
-            
-            // 2. Si la operación fue un éxito, recargamos la ventana para sincronizar todo
-            if (suceso.tipo === 'exito') {
-              window.location.reload();
-            }
-          }}
-        >
-          Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+            <div 
+              className="modal-content p-4 text-white text-center" 
+              style={{ 
+                border: '2px solid #8e45e0', 
+                backgroundColor: '#1a1a1c', 
+                borderRadius: '12px' 
+              }}
+            >
+              <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-x-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
+              <h5 className="fw-bold">{suceso.titulo}</h5>
+              <p className="small" style={{ color: '#a1a1aa' }}>{suceso.mensaje}</p>
+              <button 
+                className={`btn ${suceso.tipo === 'exito' ? 'btn-success' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold`}
+                onClick={() => {
+                  setSuceso({ ...suceso, show: false });
+                  if (suceso.tipo === 'exito') {
+                    window.location.reload();
+                  }
+                }}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* SUCCESS MODAL DE ASIGNACION */}
       {modalNotif.show && (
         <SuccesModal 
           show={modalNotif.show} 

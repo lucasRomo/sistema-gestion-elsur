@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.MediaType;
 
 import java.util.List;
 import java.util.Map;
@@ -33,10 +32,6 @@ public class PedidoController {
         return procesarYGuardarPedido(payload, null);
     }
 
-    /**
-     * RUTA B: Creación de pedido con comprobante físico adjunto.
-     * Se activa cuando Content-Type es 'multipart/form-data'.
-     */
     @PostMapping(consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> crearMultipart(
         @RequestPart("payload") String payloadJson,
@@ -65,11 +60,9 @@ public class PedidoController {
         }
     }
 
-
     @DeleteMapping("/comprobantes/{idComprobante}/archivo")
     public ResponseEntity<?> eliminarArchivoDeComprobante(@PathVariable Integer idComprobante) {
         try {
-            // Buscamos el comprobante
             Pedido pedidoActualizado = pedidoService.eliminarArchivoDeComprobante(idComprobante);
             return ResponseEntity.ok(pedidoActualizado);
         } catch (Exception e) {
@@ -77,31 +70,26 @@ public class PedidoController {
         }
     }
 
-    /**
-     * MÁSTRE MÉTODO AUXILIAR: Mantiene tu lógica original idéntica y centralizada.
-     */
     private ResponseEntity<?> procesarYGuardarPedido(Map<String, Object> payload, MultipartFile comprobante) {
-    try {
-        ObjectMapper mapper = new ObjectMapper();
-        Pedido pedido = mapper.convertValue(payload.get("pedido"), Pedido.class); 
-        
-        Integer idEmpleado = payload.get("idEmpleado") != null ?  
-                             Integer.valueOf(payload.get("idEmpleado").toString()) : null;
-                             
-        Integer idUsuario = payload.get("idUsuario") != null ?
-                            Integer.valueOf(payload.get("idUsuario").toString()) : null;
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            Pedido pedido = mapper.convertValue(payload.get("pedido"), Pedido.class); 
+            
+            Integer idEmpleado = payload.get("idEmpleado") != null ?  
+                                 Integer.valueOf(payload.get("idEmpleado").toString()) : null;
+                                 
+            Integer idUsuario = payload.get("idUsuario") != null ?
+                                Integer.valueOf(payload.get("idUsuario").toString()) : null;
 
-        // ➔ LEEMOS EL TIPO DE PAGO ENVIADO DESDE EL FRONT (Por defecto "Efectivo" si no viene)
-        String tipoPago = payload.get("tipoPago") != null ? 
-                          payload.get("tipoPago").toString() : "Efectivo";
+            String tipoPago = payload.get("tipoPago") != null ? 
+                              payload.get("tipoPago").toString() : "Efectivo";
 
-        // ➔ PASAMOS 'tipoPago' COMO CUARTO PARÁMETRO AL SERVICIO:
-        Pedido guardado = pedidoService.guardar(pedido, idEmpleado, idUsuario, tipoPago, comprobante);
-        return ResponseEntity.ok(guardado); 
-    } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    }
+            Pedido guardado = pedidoService.guardar(pedido, idEmpleado, idUsuario, tipoPago, comprobante);
+            return ResponseEntity.ok(guardado); 
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @PatchMapping("/{id}/finalizar")
@@ -114,27 +102,24 @@ public class PedidoController {
         }
     }
 
-    // ➔ NUEVO MÉTODO: Cambiar estado genérico (PUT o PATCH)
     @PutMapping("/{id}/cambiar-estado")
-public ResponseEntity<?> cambiarEstado(@PathVariable Integer id, @RequestBody Map<String, Object> payload) {
-    try {
-        String nuevoEstado = payload.get("nuevoEstado") != null ? payload.get("nuevoEstado").toString() : null;
-        String observaciones = payload.get("observaciones") != null ? payload.get("observaciones").toString() : "";
-        
-        // Conversión segura a Integer sin importar si viene como String o Number de JS
-        Integer idUsuario = 1; 
-        if (payload.get("idUsuario") != null) {
-            idUsuario = Double.valueOf(payload.get("idUsuario").toString()).intValue();
+    public ResponseEntity<?> cambiarEstado(@PathVariable Integer id, @RequestBody Map<String, Object> payload) {
+        try {
+            String nuevoEstado = payload.get("nuevoEstado") != null ? payload.get("nuevoEstado").toString() : null;
+            String observaciones = payload.get("observaciones") != null ? payload.get("observaciones").toString() : "";
+            
+            Integer idUsuario = 1; 
+            if (payload.get("idUsuario") != null) {
+                idUsuario = Double.valueOf(payload.get("idUsuario").toString()).intValue();
+            }
+
+            Pedido actualizado = pedidoService.cambiarEstadoPedido(id, nuevoEstado, observaciones, idUsuario);
+            return ResponseEntity.ok(actualizado);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al cambiar estado: " + e.getMessage());
         }
-
-        Pedido actualizado = pedidoService.cambiarEstadoPedido(id, nuevoEstado, observaciones, idUsuario);
-        return ResponseEntity.ok(actualizado);
-    } catch (Exception e) {
-        return ResponseEntity.badRequest().body("Error al cambiar estado: " + e.getMessage());
     }
-}
 
-    // ➔ NUEVO MÉTODO: Registrar Pago / Entrega de Dinero
     @PostMapping(value = "/{id}/pagos", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> agregarPago(
         @PathVariable Integer id,
@@ -152,7 +137,6 @@ public ResponseEntity<?> cambiarEstado(@PathVariable Integer id, @RequestBody Ma
                 idUsuario = Double.valueOf(payload.get("idUsuario").toString()).intValue();
             }
 
-            // Procesamos el pago pasándole el archivo del comprobante
             Pedido pedidoActualizado = pedidoService.agregarPagoConArchivo(id, monto, tipoPago, idUsuario, comprobante);
             return ResponseEntity.ok(pedidoActualizado);
         } catch (Exception e) {
@@ -163,10 +147,7 @@ public ResponseEntity<?> cambiarEstado(@PathVariable Integer id, @RequestBody Ma
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
         try {
-            // Nota: Asegurate de tener este método implementado en tu pedidoService.
-            // Si tu servicio devuelve un Optional, podés usar .orElse(null) o manejar el error.
             Pedido pedido = pedidoService.buscarPorId(id); 
-            
             if (pedido != null) {
                 return ResponseEntity.ok(pedido);
             } else {

@@ -11,7 +11,7 @@ interface ModalRegistrarPagoProps {
 export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, onClose, onConfirm }) => {
   const [tipoPago, setTipoPago] = useState('EFECTIVO');
   const [monto, setMonto] = useState('');
-  const [archivo, setArchivo] = useState<File | null>(null); // Estado para el archivo del comprobante
+  const [archivo, setArchivo] = useState<File | null>(null);
   const [cajaAbierta, setCajaAbierta] = useState<boolean | null>(null);
   const [errorCajaModal, setErrorCajaModal] = useState({ show: false, mensaje: "" });
   const [stockError, setStockError] = useState({ show: false, mensaje: "" });
@@ -19,33 +19,34 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   const saldoPendiente = pedido.monto_total - pedido.monto_pago_adelantado;
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Verificación de Consumidor Final
+  const esConsumidorFinal = 
+    pedido?.cliente?.id_cliente === 1 || 
+    pedido?.cliente?.idCliente === 1 || 
+    pedido?.cliente?.razonSocial?.toLowerCase() === 'consumidor final';
+
   useEffect(() => {
-  const verificarCaja = async () => {
-    try {
-      const res = await fetch('http://localhost:8080/api/turnos/estado-caja');
-      
-      if (res.ok) {
-        // ➔ MODIFICACIÓN: Leer el texto de la respuesta primero
-        const text = await res.text(); 
-        
-        // Si el cuerpo está vacío, asumimos que no hay un turno activo (null)
-        if (!text || text.trim() === "") {
-          setCajaAbierta(false);
+    const verificarCaja = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/turnos/estado-caja');
+        if (res.ok) {
+          const text = await res.text(); 
+          if (!text || text.trim() === "") {
+            setCajaAbierta(false);
+          } else {
+            const turno = JSON.parse(text);
+            setCajaAbierta(turno !== null);
+          }
         } else {
-          // Si tiene contenido, recién ahí lo parseamos como JSON seguro
-          const turno = JSON.parse(text);
-          setCajaAbierta(turno !== null);
+          setCajaAbierta(false);
         }
-      } else {
+      } catch (error) {
+        console.error("Error al comprobar el estado de la caja:", error);
         setCajaAbierta(false);
       }
-    } catch (error) {
-      console.error("Error al comprobar el estado de la caja:", error);
-      setCajaAbierta(false);
-    }
-  };
-  verificarCaja();
-}, []);
+    };
+    verificarCaja();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,16 +70,14 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
     
     try {
       await onConfirm(tipoPago, montoNum, archivo);
-      onClose(); // Si sale bien, cerramos directo
+      onClose();
     } catch (err: any) {
-      // ➔ AQUÍ CAPTURAMOS EL ERROR: Si el backend/padre avisa que es un tema de Stock
       if (err.message && err.message.toLowerCase().includes('stock')) {
         setStockError({
           show: true,
-          mensaje: err.message // "No hay stock suficiente para los artículos del pedido"
+          mensaje: err.message
         });
       } else {
-        // Errores comunes van al diseño estándar
         setErrorCajaModal({
           show: true,
           mensaje: err.message || "Error al procesar el cobro."
@@ -121,12 +120,17 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                   value={tipoPago}
                   onChange={(e) => {
                     setTipoPago(e.target.value);
-                    if (e.target.value === 'EFECTIVO') setArchivo(null); // Reseteamos si vuelve a Efectivo
+                    if (e.target.value === 'EFECTIVO' || e.target.value === 'CUENTA_CORRIENTE') {
+                      setArchivo(null);
+                    }
                   }}
                 >
                   <option value="EFECTIVO">EFECTIVO</option>
                   <option value="TRANSFERENCIA">TRANSFERENCIA</option>
                   <option value="DEBITO">DÉBITO</option>
+                  <option value="CUENTA_CORRIENTE" disabled={esConsumidorFinal}>
+                    CUENTA CORRIENTE {esConsumidorFinal ? '(Deshabilitado - Consumidor Final)' : ''}
+                  </option>
                 </select>
               </div>
 
@@ -144,12 +148,10 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                 />
               </div>
 
-              {/* INPUT DINÁMICO PARA SUBIR EL SEGUNDO COMPROBANTE */}
-             {tipoPago !== 'EFECTIVO' && (
+              {tipoPago !== 'EFECTIVO' && tipoPago !== 'CUENTA_CORRIENTE' && (
                 <div className="mb-4">
                   <label className="form-label small text-white mb-2 d-block">Comprobante de Respaldo:</label>
                   
-                  {/* Input real oculto */}
                   <input 
                     type="file" 
                     ref={fileInputRef}
@@ -159,31 +161,23 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                   />
 
                   {!archivo ? (
-                    /* Botón personalizado estilo Cian */
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       className="btn w-100 d-flex align-items-center justify-content-center gap-2 py-2"
                       style={{
                         backgroundColor: 'transparent',
-                        border: '1px solid #00b4d8', // Borde cian fino
-                        color: '#00b4d8',             // Texto e icono cian
+                        border: '1px solid #00b4d8',
+                        color: '#00b4d8',
                         borderRadius: '8px',
                         fontSize: '0.95rem',
                         transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 180, 216, 0.08)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
                       <i className="bi bi-cloud-arrow-up fs-5"></i>
                       <span>Vincular Comprobante (Opcional)</span>
                     </button>
                   ) : (
-                    /* Feedback cuando se sube el archivo */
                     <div 
                       className="d-flex align-items-center justify-content-between p-2 rounded" 
                       style={{ backgroundColor: '#121214', border: '1px solid #3f3f46' }}
@@ -205,7 +199,8 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                   )}
                 </div>
               )}
-           </div>
+            </div>
+
             <div className="modal-footer border-0 pt-0">
               <button type="button" className="btn btn-danger px-4" onClick={onClose}>Cancelar</button>
               <button 
@@ -221,7 +216,6 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
         </div>
       </div>
 
-      {/* MODAL 1: Error de Caja o Importes (Carmesí/Violeta original) */}
       <SuccesModal 
         show={errorCajaModal.show} 
         title="¡Error!"                           
@@ -251,7 +245,6 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                 boxShadow: '0 0 20px rgba(0,0,0,0.5)'
               }}
             >
-              {/* Círculo con signo de interrogación morado */}
               <div className="d-flex justify-content-center mb-4">
                 <div 
                   className="d-flex align-items-center justify-content-center"
@@ -269,17 +262,14 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                 </div>
               </div>
 
-              {/* Título */}
               <h4 className="fw-bold mb-3" style={{ fontSize: '1.3rem', color: '#ffffff' }}>
                 ¿Estás seguro?
               </h4>
               
-              {/* Mensaje */}
               <p className="px-1 mb-4" style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.4' }}>
                 Se registrará el ingreso del cobro para este pedido.
               </p>
 
-              {/* Acciones: Volver o Confirmar */}
               <div className="d-flex gap-2">
                 <button 
                   type="button"
@@ -294,8 +284,8 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                   className="btn w-50 py-2 text-white fw-bold" 
                   style={{ backgroundColor: '#15803d', border: 'none', borderRadius: '6px', fontSize: '0.95rem' }}
                   onClick={(e) => {
-                    setShowConfirm(false); // Cierra este modal de confirmación
-                    handleSubmit(e);       // Ejecuta el flujo de guardado real
+                    setShowConfirm(false);
+                    handleSubmit(e);
                   }}
                 >
                   Sí, ingresar

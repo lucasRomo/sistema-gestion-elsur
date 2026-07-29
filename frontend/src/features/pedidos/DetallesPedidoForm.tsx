@@ -7,7 +7,6 @@ interface Props {
   total: number;
   carrito: CartItem[];
   onVolver: () => void;
-  // ➔ Agregamos el archivo opcional al payload para que el padre pueda consumirlo
   onGuardar: (payload: { pedido: Pedido; idEmpleado: number; tipoPago: string; fileComprobante?: File | null }) => void;
 }
 
@@ -20,11 +19,9 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
   const [montoEntregado, setMontoEntregado] = useState('0');
   const [observaciones, setObservaciones] = useState('');
 
-  // ➔ Estados para controlar el archivo de comprobante opcional
   const [comprobanteFile, setComprobanteFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Seteo inicial seguro de cliente
   useEffect(() => {
     if (clientes && clientes.length > 0) {
       const primerCliente = clientes[0];
@@ -33,7 +30,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
     }
   }, [clientes]);
 
-  // Seteo inicial seguro de empleado
   useEffect(() => {
     if (empleados && empleados.length > 0) {
       const primerEmpleado = empleados[0];
@@ -42,7 +38,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
     }
   }, [empleados]);
 
-  // Si eligen el estado PRESUPUESTO, limpiamos la seña por defecto y el archivo
   useEffect(() => {
     if (estado === 'PRESUPUESTO') {
       setMontoEntregado('0');
@@ -50,9 +45,11 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
     }
   }, [estado]);
 
-  // Si cambian el método comercial y deja de ser Transferencia, limpiamos el archivo
   useEffect(() => {
-    if (tipoPago !== 'Tarjeta / Transferencia') {
+    if (tipoPago === 'Cuenta Corriente') {
+      setMontoEntregado('0');
+      setComprobanteFile(null);
+    } else if (tipoPago !== 'Tarjeta / Transferencia') {
       setComprobanteFile(null);
     }
   }, [tipoPago]);
@@ -91,28 +88,30 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
     }));
 
     const esPresupuesto = estado === 'PRESUPUESTO';
+    const esCuentaCorriente = tipoPago === 'Cuenta Corriente';
+
     const fechaFinalEntrega = fechaEntrega 
       ? `${fechaEntrega}T00:00:00` 
       : `${new Date().toISOString().split('T')[0]}T00:00:00`;
 
     const nuevoPedido: Pedido = {
-    cliente: { id_cliente: Number(clienteId) },
-    detalles: detallesFormateados,
-    fecha_entrega_estimada: fechaFinalEntrega,
-    estado: estado,
-    monto_total: total,
-    monto_pago_adelantado: Number(montoEntregado),
-    observaciones: observaciones,
-    es_cuenta_corriente: tipoPago === 'Cuenta Corriente',
-    es_presupuesto: esPresupuesto,
+      cliente: { id_cliente: Number(clienteId) },
+      detalles: detallesFormateados,
+      fecha_entrega_estimada: fechaFinalEntrega,
+      estado: estado,
+      monto_total: total,
+      monto_pago_adelantado: Number(montoEntregado),
+      observaciones: observaciones,
+      es_cuenta_corriente: esCuentaCorriente,
+      es_presupuesto: esPresupuesto,
     };
 
     const payloadFinal = {
-     pedido: nuevoPedido,
-     idEmpleado: Number(empleadoId),
-     tipoPago: tipoPago, 
-     fileComprobante: comprobanteFile 
-  };
+      pedido: nuevoPedido,
+      idEmpleado: Number(empleadoId),
+      tipoPago: tipoPago, 
+      fileComprobante: comprobanteFile 
+    };
 
     onGuardar(payloadFinal);
   };
@@ -219,7 +218,9 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
 
         {/* Seña / Adelanto Recibido */}
         <div className="col-md-6">
-          <label className="form-label small text-secondary fw-bold">Seña / Adelanto Recibido:</label>
+          <label className="form-label small text-secondary fw-bold">
+            Seña / Adelanto Recibido: {tipoPago === 'Cuenta Corriente' && <span className="text-info">(Opcional para Cuenta Corriente)</span>}
+          </label>
           <input 
             type="number" 
             className="form-control bg-dark text-white border-secondary" 
@@ -243,8 +244,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
 
         {/* Fila de Botones Inferior */}
         <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 w-100">
-          
-          {/* Botón Volver (Izquierda) */}
           <button 
             type="button" 
             className="btn btn-danger px-4" 
@@ -254,7 +253,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
             Volver al Carrito
           </button>
 
-          {/* Área Central: Botón Vincular Comprobante (Sólo si es Tarjeta / Transferencia) */}
           <div className="d-flex align-items-center gap-2">
             {tipoPago === 'Tarjeta / Transferencia' && estado !== 'PRESUPUESTO' && (
               <>
@@ -295,7 +293,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
             )}
           </div>
 
-          {/* Botón Guardar / Confirmar (Derecha) */}
           <button 
             type="submit" 
             className="btn btn-success px-4" 
@@ -303,7 +300,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({ clientes, empleados, total
           >
             {estado === 'PRESUPUESTO' ? 'Guardar Presupuesto' : 'Confirmar Pedido'}
           </button>
-
         </div>
       </form>
     </div>
