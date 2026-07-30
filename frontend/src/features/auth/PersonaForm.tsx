@@ -176,7 +176,7 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
 
         <div className="col-md-8 px-1">
           <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Calle:</label>
-          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Calle" value={formData.calle} onChange={e => handleChange('calle', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+" 
+          <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Calle" value={formData.calle} onChange={e => handleChange('calle', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s\.]+" 
           onInvalid={(e: any) => {
           if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Calle No puede Estar Vacío");
           else e.target.setCustomValidity("El Campo de Calle solo debe contener letras");

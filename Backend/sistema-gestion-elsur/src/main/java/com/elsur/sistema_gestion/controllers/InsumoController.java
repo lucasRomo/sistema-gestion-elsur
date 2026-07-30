@@ -20,6 +20,11 @@ public class InsumoController {
         return insumoService.listarTodos();
     }
 
+    @GetMapping("/bajo-stock")
+    public List<Insumo> listarBajoStock() {
+        return insumoService.listarInsumosBajoStock();
+    }
+
     @PostMapping
     public ResponseEntity<Insumo> crear(
             @RequestBody Insumo insumo,

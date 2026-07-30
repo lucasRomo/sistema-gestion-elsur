@@ -75,7 +75,7 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   <label className="form-label small text-secondary m-0">Calle</label>
                   {modoEdicion ? (
                     <input type="text" className="form-control form-control-sm bg-dark border-secondary text-white" value={dirData.calle} onChange={e => handleChange('calle', e.target.value)} required 
-                     pattern="[A-Za-zÁ-Úá-ú\s]+"
+                     pattern="[A-Za-zÁ-Úá-ú\s\.]+"
                      onInvalid={(e: any) => {
                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo calle No puede Estar Vacío");
                      else e.target.setCustomValidity("El Campo Calle solo debe Contener Letras");

@@ -310,8 +310,13 @@ export const InformesView: React.FC = () => {
   }, []);
 
   
-  const procesarMetricas = (fDesde: string, fHasta: string) => {
-    const parseFechaLocal = (fechaStr: string) => {
+  const procesarMetricas = (
+  fDesde: string, 
+  fHasta: string, 
+  pedidosLista = pedidosRaw, 
+  cajaLista = movimientosCaja
+  ) => {
+  const parseFechaLocal = (fechaStr: string) => {
     if (!fechaStr) return new Date();
     const [year, month, day] = fechaStr.split('-').map(Number);
     return new Date(year, month - 1, day);
@@ -323,7 +328,7 @@ export const InformesView: React.FC = () => {
   const hasta = parseFechaLocal(fHasta);
   hasta.setHours(23, 59, 59, 999);
 
-  const movimientosEnRango = movimientosCaja.filter((m) => {
+  const movimientosEnRango = cajaLista.filter((m) => {
     if (!m.fecha) return false;
     const fechaMov = new Date(m.fecha);
     return fechaMov >= desde && fechaMov <= hasta;
@@ -355,9 +360,9 @@ export const InformesView: React.FC = () => {
       return esEgreso ? acc - montoAbs : acc + montoAbs;
     }, 0);
 
-    const pedidosEnRango = (pedidosRaw || []).filter((p) => {
-      const fechaPedido = new Date(p.fecha_creacion || p.fechaCreacion || p.fecha);
-      return fechaPedido >= desde && fechaPedido <= hasta;
+    const pedidosEnRango = (pedidosLista || []).filter((p) => {
+    const fechaPedido = new Date(p.fecha_creacion || p.fechaCreacion || p.fecha);
+    return fechaPedido >= desde && fechaPedido <= hasta;
     });
 
     const pedidosPendientes = pedidosEnRango.filter((p) => (p.estado || '').toUpperCase() === 'PENDIENTE');
@@ -643,68 +648,140 @@ export const InformesView: React.FC = () => {
       }));
     }
 
+    // --- 3. LOS CLIENTES CON MÁS INGRESOS (CON EXTRACCIÓN DE NOMBRE MEJORADA Y SIN EGRESOS) ---
     const mapaClientes: { [key: string]: { nombre: string; totalGastado: number; cantidadPedidos: number } } = {};
 
-  pedidosEnRango.forEach((p: any) => {
-  const estado = (p.estado || '').toUpperCase();
-  if (estado === 'CANCELADO') return;
+    // Helper robusto para obtener y formatear el nombre real del cliente
+    const obtenerNombreCliente = (clienteObj: any, fallbackStr?: string): string => {
+      let clienteNombre = '';
 
-  // 1. Extraemos el nombre posible según las estructuras comunes del backend
-  let clienteNombre = '';
+      if (typeof clienteObj === 'string' && clienteObj.trim()) {
+        clienteNombre = clienteObj;
+      } else if (clienteObj && typeof clienteObj === 'object') {
+        if (clienteObj.razonSocial && clienteObj.razonSocial.trim()) {
+          clienteNombre = clienteObj.razonSocial;
+        } else if (clienteObj.persona) {
+          const { nombre = '', apellido = '' } = clienteObj.persona;
+          clienteNombre = `${nombre} ${apellido}`.trim();
+        } else if (clienteObj.nombre) {
+          const apellido = clienteObj.apellido || '';
+          clienteNombre = `${clienteObj.nombre} ${apellido}`.trim();
+        }
+      }
 
-  if (p.cliente) {
-    if (typeof p.cliente === 'string') {
-      clienteNombre = p.cliente;
-    } else if (p.cliente.razonSocial) {
-      clienteNombre = p.cliente.razonSocial;
-    } else if (p.cliente.persona) {
-      const { nombre = '', apellido = '' } = p.cliente.persona;
-      clienteNombre = `${nombre} ${apellido}`.trim();
-    } else if (p.cliente.nombre) {
-      clienteNombre = p.cliente.nombre;
-    }
-  } else if (p.clienteNombre || p.nombreCliente) {
-    clienteNombre = p.clienteNombre || p.nombreCliente;
-  }
+      if (!clienteNombre && fallbackStr && typeof fallbackStr === 'string') {
+        clienteNombre = fallbackStr;
+      }
 
-  // 2. Normalizamos para detectar si es 'ninguna', 'null', vacío o indescifrable
-  const nombreLimpio = clienteNombre.trim().toLowerCase();
+      const nombreLimpio = clienteNombre.trim().toLowerCase();
 
-  if (
-    !nombreLimpio || 
-    nombreLimpio === 'ninguna' || 
-    nombreLimpio === 'ninguno' || 
-    nombreLimpio === 'null' || 
-    nombreLimpio === 'undefined'
-  ) {
-    clienteNombre = 'Venta Rápida / Caja';
-  }
+      // Solo si realmente el texto dice explícitamente venta rápida, caja o está totalmente vacío, es Consumidor Final
+      if (
+        !nombreLimpio || 
+        nombreLimpio === 'ninguna' || 
+        nombreLimpio === 'ninguno' || 
+        nombreLimpio === 'null' || 
+        nombreLimpio === 'undefined' ||
+        nombreLimpio.includes('venta rápida') ||
+        nombreLimpio.includes('venta rapida') ||
+        nombreLimpio === 'caja'
+      ) {
+        return 'Consumidor Final';
+      }
 
-  // 3. Monto del pedido
-  const monto = Number(p.monto_total || p.montoTotal || p.total || p.precioTotal || p.monto_abonado || 0);
+      // Retorna el nombre formateado manteniendo mayúsculas/minúsculas originales
+      return clienteNombre;
+    };
 
-  if (!mapaClientes[clienteNombre]) {
-    mapaClientes[clienteNombre] = { nombre: clienteNombre, totalGastado: 0, cantidadPedidos: 0 };
-  }
+    const idsPedidosProcesados = new Set<string | number>();
 
-  mapaClientes[clienteNombre].totalGastado += monto;
-  mapaClientes[clienteNombre].cantidadPedidos += 1;
-});
+    // 1. Procesar Pedidos en Rango
+    pedidosEnRango.forEach((p: any) => {
+      const estado = (p.estado || '').toUpperCase();
+      if (estado === 'CANCELADO') return;
 
-// Ordenamos, tomamos Top 5 y asignamos colores
-const topClientesFormateados = Object.values(mapaClientes)
-  .sort((a, b) => b.totalGastado - a.totalGastado)
-  .filter((item) => item.totalGastado > 0)
-  .slice(0, 5)
-  .map((item, index) => ({
-    name: `Top ${index + 1}`,
-    nombreReal: item.nombre,
-    totalGastado: item.totalGastado,
-    cantidadPedidos: item.cantidadPedidos,
-    color: COLORES_TORTA[index % COLORES_TORTA.length]
-  }));
+      const idPedido = p.idPedido || p.id_pedido || p.id;
+      if (idPedido) {
+        idsPedidosProcesados.add(idPedido);
+        idsPedidosProcesados.add(String(idPedido));
+      }
 
-setTopClientes(topClientesFormateados);
+      // Se verifica cliente en el pedido (p.cliente), en el nombre explícito o en campos anidados
+      const clienteNombre = obtenerNombreCliente(p.cliente, p.clienteNombre || p.nombreCliente || p.nombre_cliente);
+      const monto = Number(p.monto_total || p.montoTotal || p.total || p.precioTotal || p.monto_abonado || 0);
+
+      if (!mapaClientes[clienteNombre]) {
+        mapaClientes[clienteNombre] = { nombre: clienteNombre, totalGastado: 0, cantidadPedidos: 0 };
+      }
+
+      mapaClientes[clienteNombre].totalGastado += monto;
+      mapaClientes[clienteNombre].cantidadPedidos += 1;
+    });
+
+    // 2. Procesar Movimientos de Caja (Filtrando EGRESOS)
+    ingresosCaja.forEach((m: any) => {
+      // FILTRO CLAVE: Verificar si es un EGRESO/GASTO para NO sumarlo como ingreso
+      const tipoMovimiento = (m.tipo || m.tipoMovimiento || '').toUpperCase();
+      const montoOriginal = Number(m.monto || 0);
+
+      if (tipoMovimiento === 'EGRESO' || tipoMovimiento === 'GASTO' || montoOriginal < 0) {
+        return; // Omitir egresos por completo
+      }
+
+      const idPed = m.idPedido || m.id_pedido || m.pedido?.id || m.pedido?.idPedido;
+      const descripcion = (m.descripcion || m.concepto || '').toLowerCase();
+
+      // Descartar si está vinculado a un pedido existente
+      if (idPed && idPed !== '-' && idPed !== '0' && idPed !== 0) {
+        if (idsPedidosProcesados.has(idPed) || idsPedidosProcesados.has(String(idPed))) {
+          return;
+        }
+      }
+
+      // Descartar descripciones referentes a pedidos/señas
+      if (
+        descripcion.includes('pedido') || 
+        descripcion.includes('seña') || 
+        descripcion.includes('sena') || 
+        descripcion.includes('adelanto')
+      ) {
+        return;
+      }
+
+      // Descartar Venta Rápida duplicada
+      if (descripcion.includes('venta rápida') || descripcion.includes('venta rapida')) {
+        const coincideConPedido = pedidosEnRango.some((p: any) => {
+          const montoPed = Number(p.monto_total || p.montoTotal || p.total || 0);
+          return Math.abs(montoPed - montoOriginal) < 0.01;
+        });
+
+        if (coincideConPedido) return;
+      }
+
+      const clienteNombre = obtenerNombreCliente(m.cliente || m.pedido?.cliente, m.clienteNombre);
+
+      if (!mapaClientes[clienteNombre]) {
+        mapaClientes[clienteNombre] = { nombre: clienteNombre, totalGastado: 0, cantidadPedidos: 0 };
+      }
+
+      mapaClientes[clienteNombre].totalGastado += montoOriginal;
+      mapaClientes[clienteNombre].cantidadPedidos += 1;
+    });
+
+    // 3. Top 5 Formateado
+    const topClientesFormateados = Object.values(mapaClientes)
+      .sort((a, b) => b.totalGastado - a.totalGastado)
+      .filter((item) => item.totalGastado > 0)
+      .slice(0, 5)
+      .map((item, index) => ({
+        name: `Top ${index + 1}`,
+        nombreReal: item.nombre,
+        totalGastado: item.totalGastado,
+        cantidadPedidos: item.cantidadPedidos,
+        color: COLORES_TORTA[index % COLORES_TORTA.length]
+      }));
+
+    setTopClientes(topClientesFormateados);
 
 
     const mockIncongruenciasArqueo = [
@@ -779,10 +856,11 @@ setTopClientes(topClientesFormateados);
     // --- DISTRIBUCIÓN POR ESTADOS ---
     const mapaEstados: { [key: string]: number } = {};
     pedidosEnRango.forEach((p) => {
-      const estado = p.estado || 'PENDIENTE';
-      mapaEstados[estado] = (mapaEstados[estado] || 0) + 1;
-    });
-
+    let estado = (p.estado || 'PENDIENTE').toUpperCase();
+    const descripcion = (p.descripcion || p.observaciones || p.tipo || '').toUpperCase();
+    if (descripcion.includes('VENTA RÁPIDA') || descripcion.includes('VENTA RAPIDA') || p.esVentaRapida) {
+    estado = 'FINALIZADO';}
+    mapaEstados[estado] = (mapaEstados[estado] || 0) + 1;});
     const distribucionEstados = Object.keys(mapaEstados).map((key) => ({ name: key, value: mapaEstados[key] }));
 
     setMetricas({
@@ -809,15 +887,19 @@ setTopClientes(topClientesFormateados);
     try {
       const [dataPedidos, dataCaja, dataProductos] = await Promise.all([
         pedidoService.obtenerTodos(),
-        cajaService.obtenerTodos(), // 👈 Cambiado a obtenerTodos()
+        cajaService.obtenerTodos(),
         getProductos()
       ]);
 
-      setPedidosRaw(dataPedidos || []);
-      setMovimientosCaja(dataCaja || []);
+      const pedidosValidos = dataPedidos || [];
+      const cajaValida = dataCaja || [];
+
+      setPedidosRaw(pedidosValidos);
+      setMovimientosCaja(cajaValida);
       setListaProductos(dataProductos || []);
 
-      procesarMetricas(fechaDesdeInput, fechaHastaInput);
+      // Pasamos los datos directos sin esperar el re-render
+      procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida);
     } catch (error) {
       console.error("Error al cargar los informes iniciales:", error);
     } finally {
@@ -826,7 +908,7 @@ setTopClientes(topClientesFormateados);
   };
 
   cargarDatosIniciales();
-}, []);
+  }, []);
 
  const handleAnalizar = async () => {
   setCargando(true);
@@ -836,13 +918,16 @@ setTopClientes(topClientesFormateados);
 
     const [nuevosPedidos, nuevosMovimientos] = await Promise.all([
       pedidoService.obtenerTodos(),
-      cajaService.obtenerTodos() // 👈 Cambiado a obtenerTodos()
+      cajaService.obtenerTodos()
     ]);
 
-    setPedidosRaw(nuevosPedidos || []);
-    setMovimientosCaja(nuevosMovimientos || []);
+    const pedidosValidos = nuevosPedidos || [];
+    const cajaValida = nuevosMovimientos || [];
 
-    procesarMetricas(fechaDesdeInput, fechaHastaInput);
+    setPedidosRaw(pedidosValidos);
+    setMovimientosCaja(cajaValida);
+
+    procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida);
   } catch (error) {
     console.error("Error al recalcular informes:", error);
   } finally {
