@@ -65,7 +65,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
   return (
     <div className="card text-white p-4 w-100 rounded" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46' }}>
-      <h3 className="text-center mb-4 fw-normal font-monospace">Tabla para Calcular y Elegir Productos</h3>
+      <h2 className="text-center mb-4 fw-bold">Tabla para Calcular y Elegir Productos</h2>
       
       {/* SELECTOR DE PRODUCTOS */}
       <div className="row g-3 mb-4 align-items-end">

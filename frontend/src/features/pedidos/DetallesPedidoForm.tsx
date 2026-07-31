@@ -129,7 +129,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
 
   return (
     <div className="card text-white p-4 w-100 rounded" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46', maxWidth: '1570px' }}>
-      <h3 className="text-center mb-4 fw-normal font-monospace">Configurar Parámetros del Comprobante</h3>
+      <h2 className="text-center mb-4 fw-bold">Configurar Parámetros del Comprobante</h2>
       
       <form onSubmit={handleSubmit} className="row g-3">
         {/* Selector de Cliente */}

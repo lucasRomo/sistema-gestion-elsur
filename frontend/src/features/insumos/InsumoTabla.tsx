@@ -25,7 +25,7 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
         <tbody>
           {insumos.length === 0 ? (
             <tr>
-              <td colSpan={7} className="text-center text-muted py-4">No se encontraron insumos.</td>
+              <td colSpan={7} className="text-center py-4">No se han registrado o encontrado insumos en el sistema.</td>
             </tr>
           ) : (
             insumos.map((i) => (

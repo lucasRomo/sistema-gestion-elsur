@@ -61,12 +61,12 @@ export const ProveedorTabla: React.FC<ProveedorTablaProps> = ({ proveedores, onE
                       <i className="bi bi-pencil-square"></i>
                     </button>
                     <button 
-                      onClick={() => onVerUbicacion(prov)}
-                      className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center"
-                      style={{ width: '32px', height: '32px', color: '#ffc107', borderColor: '#ffc107' }}
-                      title="Ver Ubicación"
+                     onClick={() => onVerUbicacion(prov)}
+                     className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center"
+                     style={{ width: '32px', height: '32px' }}
+                     title="Ver Ubicación"
                     >
-                      <i className="bi bi-house-door"></i>
+                    <i className="bi bi-house-door"></i>
                     </button>
                   </div>
                 </td>

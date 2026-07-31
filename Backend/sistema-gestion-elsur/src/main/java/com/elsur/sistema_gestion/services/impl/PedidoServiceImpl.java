@@ -3,6 +3,9 @@ package com.elsur.sistema_gestion.services.impl;
 import com.elsur.sistema_gestion.models.*;
 import com.elsur.sistema_gestion.repositories.*;
 import com.elsur.sistema_gestion.services.PedidoService;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +59,16 @@ public class PedidoServiceImpl implements PedidoService {
         }
 
         return pedido;
+    }
+
+    @Override
+     @Transactional
+    public void actualizarUbicacion(Integer idPedido, String nuevaUbicacion) {
+    Pedido pedido = pedidoRepository.findById(idPedido)
+            .orElseThrow(() -> new EntityNotFoundException("Pedido no encontrado con ID: " + idPedido));
+    
+    pedido.setUbicacion_estante(nuevaUbicacion);
+    pedidoRepository.save(pedido);
     }
 
     @Override

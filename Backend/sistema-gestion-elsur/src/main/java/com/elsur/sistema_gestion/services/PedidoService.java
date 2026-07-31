@@ -17,4 +17,5 @@ public interface PedidoService {
     Pedido agregarPagoConArchivo(Integer idPedido, Double monto, String tipoPago, Integer idUsuario, MultipartFile comprobante);
     Pedido asociarArchivoAComprobanteExistente(Integer idComprobante, MultipartFile comprobante);
     Pedido eliminarArchivoDeComprobante(Integer idComprobante);
+    void actualizarUbicacion(Integer idPedido, String nuevaUbicacion);
 }

@@ -375,6 +375,23 @@ export const PedidosPendientesPage: React.FC = () => {
     }
   };
 
+  const handleCambioUbicacion = async (idPedido: number, nuevaUbicacion: string) => {
+    try {
+      await pedidoService.actualizarUbicacion(idPedido, nuevaUbicacion);
+      setSuceso({ 
+        show: true, 
+        titulo: "Éxito", 
+        mensaje: `Ubicación actualizada a "${nuevaUbicacion}"`, 
+        tipo: "exito" 
+      });
+    } catch (error) {
+      console.error("Error al actualizar la ubicación:", error);
+      setSucesoError({
+        show: true,
+        mensaje: "No se pudo actualizar la ubicación del pedido en el servidor."
+      });
+    }};
+
   const handleSubirArchivoFisico = async (idPedido: number, file: File) => {
     try {
       const ok = await pedidoService.subirComprobanteFisico(idPedido, file);
@@ -451,11 +468,10 @@ export const PedidosPendientesPage: React.FC = () => {
         className="container-fluid px-2 d-flex flex-column pt-3" 
         style={{ height: 'calc(100vh - 45px)', overflow: 'hidden' }}
       >
-        <div className="d-flex justify-content-between align-items-center mb-2 d-print-none">
-          <h1 className="fw-bold tracking-tight text-white m-0" style={{ fontSize: '1.85rem' }}>
-            {filtroEstado === 'PRESUPUESTO' ? 'Presupuestos / Cotizaciones' : 'Cola de Producción Taller'}
-          </h1>
-          <span className="badge bg-dark border border-info text-info font-monospace">Datos en Tiempo Real</span>
+        <div className="d-flex justify-content-center align-items-center mb-2 position-relative d-print-none">
+        <h1 className="fw-bold tracking-tight text-white m-0 text-center" style={{ fontSize: '1.85rem' }}>
+         {filtroEstado === 'PRESUPUESTO' ? 'Presupuestos / Cotizaciones' : 'Cola de Producción Taller'}</h1>
+        <span className="badge bg-dark border border-info text-info font-monospace position-absolute end-0">Datos en Tiempo Real</span>
         </div>
 
         <div className="mt-3 mb-3">
@@ -499,13 +515,13 @@ export const PedidosPendientesPage: React.FC = () => {
               <tbody>
                 {cargando ? (
                   <tr>
-                    <td colSpan={10} className="text-center py-5 text-muted font-monospace">
-                      Consultando la base de datos PostgreSQL...
+                    <td colSpan={10} className="text-center py-5 font-monospace">
+                      No se han encontrado Pedidos Pendientes en la Base de Datos
                     </td>
                   </tr>
                 ) : pedidosFiltrados.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="text-center py-5 text-muted">
+                    <td colSpan={10} className="text-center py-5">
                       No se encontraron registros bajo este filtro.
                     </td>
                   </tr>
@@ -515,6 +531,7 @@ export const PedidosPendientesPage: React.FC = () => {
                       key={`pedido-row-${pedido.id_pedido}`}
                       pedido={pedido}
                       onCambioEstado={handleCambioEstadoCombo}
+                      onCambioUbicacion={handleCambioUbicacion}
                       onSelectPago={setPedidoPagoSel}
                       onSelectTicket={setVerTicketPedido}
                       onSubirArchivo={handleSubirArchivoFisico}

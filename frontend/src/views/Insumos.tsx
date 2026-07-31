@@ -39,7 +39,6 @@ export const Insumos: React.FC = () => {
 
         {/* Filtros */}
         <div className="row g-3 mb-4 align-items-center text-white font-monospace">
-           {/* ... Tus inputs de filtro originales ... */}
         </div>
 
         {/* Filtros */}

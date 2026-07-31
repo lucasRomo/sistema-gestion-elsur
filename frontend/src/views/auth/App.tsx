@@ -104,7 +104,6 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* RUTAS EXCLUSIVAS DE GERENTE / ADMIN */}
           <Route path="/matriz-permisos" element={
            <ProtectedRoute permisoRequerido="Matriz de Permisos">
             <SidebarLayout activeItem="Matriz de Permisos">

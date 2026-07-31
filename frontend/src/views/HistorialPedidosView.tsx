@@ -113,20 +113,15 @@ export const HistorialPedidosPage: React.FC = () => {
 
   return (
     <SidebarLayout activeItem="Historial de Pedidos">
-      {/* Contenedor adaptado para ocupar el 100% real sin desbordar el viewport */}
       <div 
         className="container-fluid px-2 d-flex flex-column pt-3" 
         style={{ height: 'calc(100vh - 45px)', overflow: 'hidden' }}
       >
         
         {/* Título Principal */}
-        <div className="d-flex justify-content-between align-items-center mb-2 d-print-none">
-          <h1 className="fw-bold tracking-tight text-white m-0" style={{ fontSize: '1.85rem' }}>
-            Historial de Pedidos
-          </h1>
-          <span className="badge bg-dark border border-secondary text-secondary font-monospace">
-            Registros Históricos
-          </span>
+        <div className="d-flex justify-content-center align-items-center mb-2 position-relative d-print-none">
+        <h1 className="fw-bold tracking-tight text-white m-0 text-center" style={{ fontSize: '1.85rem' }}>Historial de Pedidos</h1>
+        <span className="badge bg-dark border border-secondary text-secondary font-monospace position-absolute end-0">Registros Históricos</span>
         </div>
 
         {/* Panel de Filtros Componentizado */}
@@ -171,13 +166,13 @@ export const HistorialPedidosPage: React.FC = () => {
               <tbody>
                 {cargando ? (
                   <tr>
-                    <td colSpan={9} className="text-center py-4 text-muted font-monospace">
-                      Buscando registros históricos en PostgreSQL...
+                    <td colSpan={9} className="text-center py-4 font-monospace">
+                      No se han registrado o encontrado Pedidos Pendientes en el sistema.
                     </td>
                   </tr>
                 ) : pedidosFiltrados.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="text-center py-4 text-muted">
+                    <td colSpan={9} className="text-center py-4">
                       No se encontraron órdenes en el historial bajo estos filtros.
                     </td>
                   </tr>

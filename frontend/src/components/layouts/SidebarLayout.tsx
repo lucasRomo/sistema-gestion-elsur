@@ -79,7 +79,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   ].filter(item => tienePermiso(item.name));
 
   const menuStock = [
-    { name: 'Inventario', icon: 'bi-box-seam', path: '/inventario' },
     { name: 'Insumos', icon: 'bi-boxes', path: '/insumos' },
     { name: 'Productos', icon: 'bi-archive', path: '/productos' },
   ].filter(item => tienePermiso(item.name));
@@ -388,7 +387,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           minWidth: 0,
           width: '100%',
           overflowX: 'hidden',
-          overflowY: 'auto'
+          overflowY: 'hidden'
         }}
       >
         <div className="p-4" style={{ width: '100%', maxWidth: '100%' }}>

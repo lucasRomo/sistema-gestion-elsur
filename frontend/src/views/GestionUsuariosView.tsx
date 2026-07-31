@@ -68,47 +68,56 @@ export const GestionUsuariosView: React.FC = () => {
       </tr>
     </thead>
     <tbody>
-      {usuariosFiltrados.map((u) => (
-        <tr 
-          key={u.idUsuario} 
-          style={{ borderBottom: '1px solid #2d2d30' }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#27272a'} 
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-        >
-          <td style={{ padding: '12px' }}>{u.idUsuario}</td>
-          <td style={{ padding: '12px' }}>{u.nombreUsuario}</td>
-          <td style={{ padding: '12px' }}>{u.password}</td>
-          <td style={{ padding: '12px' }}>{u.persona?.nombre || '-'}</td>
-          <td style={{ padding: '12px' }}>{u.persona?.apellido || '-'}</td>
-          <td style={{ padding: '12px' }}>{u.persona?.numeroDocumento || '-'}</td>
-          <td style={{ padding: '12px' }}>{u.cargo || '-'}</td>
-          <td style={{ padding: '12px', textAlign: 'right' }}>${Number(u.salario || 0).toLocaleString('es-AR')}</td>
-          <td style={{ padding: '12px', textAlign: 'center' }}>
-            <span className={`badge ${ u.estado === 'Activo' ? 'bg-success' : u.estado === 'Pendiente' ? 'bg-warning text-dark' : 'bg-danger'}`}>
-            {u.estado}</span>
-          </td>
-          <td style={{ padding: '12px' }}>
-            <div className="d-flex justify-content-center gap-2">
-              <button 
-                className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
-                style={{ width: '32px', height: '32px' }}
-                onClick={() => setUsuarioAEditar(u)}
-                title="Editar Usuario"
-              >
-                <i className="bi bi-pencil-square"></i>
-              </button>
-              <button 
-                className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
-                style={{ width: '32px', height: '32px', color: '#ffc107', borderColor: '#ffc107' }}
-                onClick={() => setUsuarioConUbicacion(u)}
-                title="Ver Ubicación"
-              >
+      {usuariosFiltrados && usuariosFiltrados.length > 0 ? (
+        usuariosFiltrados.map((u) => (
+          <tr 
+            key={u.idUsuario} 
+            style={{ borderBottom: '1px solid #2d2d30' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#27272a'} 
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          >
+            <td style={{ padding: '12px' }}>{u.idUsuario}</td>
+            <td style={{ padding: '12px' }}>{u.nombreUsuario}</td>
+            <td style={{ padding: '12px' }}>{u.password}</td>
+            <td style={{ padding: '12px' }}>{u.persona?.nombre || '-'}</td>
+            <td style={{ padding: '12px' }}>{u.persona?.apellido || '-'}</td>
+            <td style={{ padding: '12px' }}>{u.persona?.numeroDocumento || '-'}</td>
+            <td style={{ padding: '12px' }}>{u.cargo || '-'}</td>
+            <td style={{ padding: '12px', textAlign: 'right' }}>${Number(u.salario || 0).toLocaleString('es-AR')}</td>
+            <td style={{ padding: '12px', textAlign: 'center' }}>
+              <span className={`badge ${ u.estado === 'Activo' ? 'bg-success' : u.estado === 'Pendiente' ? 'bg-warning text-dark' : 'bg-danger'}`}>
+              {u.estado}</span>
+            </td>
+            <td style={{ padding: '12px' }}>
+              <div className="d-flex justify-content-center gap-2">
+                <button 
+                  className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
+                  style={{ width: '32px', height: '32px' }}
+                  onClick={() => setUsuarioAEditar(u)}
+                  title="Editar Usuario"
+                >
+                  <i className="bi bi-pencil-square"></i>
+                </button>
+                <button 
+                 className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
+                 style={{ width: '32px', height: '32px' }}
+                 onClick={() => setUsuarioConUbicacion(u)}
+                 title="Ver Ubicación"
+                >
                 <i className="bi bi-house-door"></i>
-              </button>
-            </div>
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan={10} className="text-center text-white py-5">
+            <i className="bi display-6 d-block mb-2 text-secondary"></i>
+            No se encontraron usuarios registrados o no coinciden con la búsqueda.
           </td>
         </tr>
-      ))}
+      )}
     </tbody>
   </table>
 </div>

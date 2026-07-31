@@ -77,8 +77,8 @@ export const HistorialActividadView: React.FC = () => {
     <div className="container-fluid text-white p-3 font-sans" style={{ minHeight: '100vh' }}>
       
       {/* Título Superior */}
-      <div className="d-flex align-items-center mb-4">
-        <h2 className="fw-bold fs-2 text-white m-0">Historial de Actividad</h2>
+      <div className="d-flex justify-content-center align-items-center mb-4">
+      <h2 className="fw-bold fs-2 text-white m-0 text-center">Historial de Actividad</h2>
       </div>
 
       {/* Tarjeta Contenedora Principal */}
@@ -174,7 +174,7 @@ export const HistorialActividadView: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="py-5 text-center text-secondary">
+                  <td colSpan={7} className="py-5 text-center text-white">
                     No se registraron movimientos en el sistema.
                   </td>
                 </tr>

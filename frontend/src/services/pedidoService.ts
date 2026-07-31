@@ -57,6 +57,21 @@ export const pedidoService = {
     const response = await fetch(BASE_URL);
     if (!response.ok) throw new Error('Error al obtener la lista de pedidos');
     return await response.json();
+  },
+
+  actualizarUbicacion: async (idPedido: number, nuevaUbicacion: string) => {
+  const response = await fetch(`${BASE_URL}/${idPedido}/ubicacion`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ubicacionEstante: nuevaUbicacion })
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al actualizar la ubicación del pedido');
+  }
+
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
   }
 
 };
