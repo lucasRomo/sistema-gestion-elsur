@@ -505,7 +505,8 @@ export const PedidosPendientesPage: React.FC = () => {
                   <th style={{ padding: '3px' }}>Estante</th>
                   <th style={{ textAlign: 'left' }}>Contacto</th>
                   <th>Empleado Asignado</th> 
-                  <th>Fecha Asignación</th>  
+                  <th>Fecha Creación</th>  
+                  <th className="text-warning">Entrega Estimada</th>
                   <th>Estado</th>
                   <th>Monto Total</th>
                   <th>Monto Abonado</th>

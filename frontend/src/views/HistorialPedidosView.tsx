@@ -64,7 +64,7 @@ export const HistorialPedidosPage: React.FC = () => {
     }
   };
 
-  // Filtrado de registros en memoria (Buscador unificado de tres campos)
+  // Filtrado de registros en memoria
   const pedidosFiltrados = pedidos.filter(p => {
     const busquedaTermino = filtroTexto.toLowerCase().trim();
 
@@ -80,19 +80,23 @@ export const HistorialPedidosPage: React.FC = () => {
       ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
       : 'Sistema';
 
-    const fechaCierre = p.fecha_modificacion || ultimaAsignacion?.fecha_asignacion;
-    let fechaFormateadaParaBuscar = '';
-    
-    if (fechaCierre) {
-      const objetoFecha = new Date(fechaCierre);
-      const fechaLocal = objetoFecha.toLocaleDateString('es-AR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-      const fechaISO = objetoFecha.toISOString().split('T')[0];
-      fechaFormateadaParaBuscar = `${fechaLocal} ${fechaISO}`; 
-    }
+    const formatearFechaString = (fechaIso: string | null | undefined) => {
+      if (!fechaIso) return '';
+      const [fecha, horaCompleta] = fechaIso.split('T');
+      if (!fecha) return fechaIso;
+      const [anio, mes, dia] = fecha.split('-');
+      if (!horaCompleta) return `${dia}/${mes}/${anio}`;
+      const partesHora = horaCompleta.split('.')[0].split(':');
+      let horas = parseInt(partesHora[0], 10);
+      const minutos = partesHora[1];
+      const ampm = horas >= 12 ? 'p. m.' : 'a. m.';
+      horas = horas % 12 || 12;
+      const horasStr = horas < 10 ? `0${horas}` : `${horas}`;
+      return `${dia}/${mes}/${anio} ${horasStr}:${minutos} ${ampm}`;
+    };
+
+    const fechaCierre = p.fecha_finalizacion || p.fecha_modificacion || ultimaAsignacion?.fecha_asignacion;
+    const fechaFormateadaParaBuscar = formatearFechaString(fechaCierre);
 
     const cumpleBusquedaGeneral = 
       nombreCliente.toLowerCase().includes(busquedaTermino) ||
@@ -120,8 +124,8 @@ export const HistorialPedidosPage: React.FC = () => {
         
         {/* Título Principal */}
         <div className="d-flex justify-content-center align-items-center mb-2 position-relative d-print-none">
-        <h1 className="fw-bold tracking-tight text-white m-0 text-center" style={{ fontSize: '1.85rem' }}>Historial de Pedidos</h1>
-        <span className="badge bg-dark border border-secondary text-secondary font-monospace position-absolute end-0">Registros Históricos</span>
+          <h1 className="fw-bold tracking-tight text-white m-0 text-center" style={{ fontSize: '1.85rem' }}>Historial de Pedidos</h1>
+          <span className="badge bg-dark border border-secondary text-secondary font-monospace position-absolute end-0">Registros Históricos</span>
         </div>
 
         {/* Panel de Filtros Componentizado */}
@@ -134,7 +138,7 @@ export const HistorialPedidosPage: React.FC = () => {
           />
         </div>
 
-        {/* Tabla del Historial con Scroll Interno y Alto Dinámico */}
+        {/* Tabla del Historial */}
         <div 
           className="d-flex flex-column flex-grow-1 overflow-hidden mb-2" 
           style={{ backgroundColor: '#1d1d1d', height: 'calc(100vh - 210px)' }}
@@ -147,32 +151,33 @@ export const HistorialPedidosPage: React.FC = () => {
               className="table-dark table-hover m-0 align-middle" 
               style={{ width: '100%', borderCollapse: 'collapse', color: '#e4e4e7', backgroundColor: '#121214' }}
             >
-              {/* thead con sticky top */}
               <thead 
                 style={{ position: 'sticky', top: 0, backgroundColor: '#1d1d1d', zIndex: 1 }}
               >
                 <tr style={{ backgroundColor: '#1d1d1d', borderBottom: '2px solid #27272a', color: '#a1a1aa', fontFamily: 'monospace', fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                  <th style={{ padding: '12px 12px 12px 24px' }}>ID</th>
-                  <th style={{ padding: '12px 12px 12px 19px' }}>Cliente</th>
-                  <th>Contacto</th>
-                  <th>Operador de Cierre</th> 
-                  <th>Fecha de Cierre</th>  
-                  <th className="text-center">Estado Final</th>
-                  <th>Monto Total</th>
-                  <th>Monto Cobrado</th>
-                  <th className="text-center">Auditoría / Acciones</th>
-                </tr>
+                 <th style={{ padding: '12px 12px 12px 24px' }}>ID</th>
+                 <th style={{ padding: '12px 12px 12px 19px' }}>Cliente</th>
+                 <th style={{ padding: '12px 12px' }}>Contacto</th>
+                 <th style={{ padding: '12px 12px' }}>Operador de Cierre</th> 
+                 <th style={{ padding: '12px 24px 12px 12px' }}>Fecha Creación</th>
+                 <th style={{ padding: '12px 24px 12px 12px' }}>Fecha de Entrega Estimada</th>
+                 <th style={{ padding: '12px 24px 12px 12px' }}>Fecha de Entrega Final</th>  
+                 <th className="text-center" style={{ padding: '12px 12px' }}>Estado Final</th>
+                 <th style={{ padding: '12px 12px' }}>Monto Total</th>
+                 <th style={{ padding: '12px 12px' }}>Monto Cobrado</th>
+                 <th className="text-center" style={{ padding: '12px 8px' }}>Acciones</th>
+                 </tr>
               </thead>
               <tbody>
                 {cargando ? (
                   <tr>
-                    <td colSpan={9} className="text-center py-4 font-monospace">
-                      No se han registrado o encontrado Pedidos Pendientes en el sistema.
+                    <td colSpan={11} className="text-center py-4 font-monospace">
+                      Cargando historial de pedidos...
                     </td>
                   </tr>
                 ) : pedidosFiltrados.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="text-center py-4">
+                    <td colSpan={11} className="text-center py-4">
                       No se encontraron órdenes en el historial bajo estos filtros.
                     </td>
                   </tr>
@@ -193,7 +198,7 @@ export const HistorialPedidosPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Botón Volver - Ajustado abajo al límite de la pantalla */}
+        {/* Botón Volver */}
         <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-2 border-top border-secondary pb-1 mt-auto">
           <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2">Volver</button>
         </div>

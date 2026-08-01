@@ -1,8 +1,8 @@
-import React, { useState, useEffect} from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import React, { useState, useEffect } from 'react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
 import { pedidoService } from '../../services/pedidoService';
 import { cajaService, type MovimientoCaja } from '../../services/cajaService';
-import type { Pedido, DetallePedido } from '../../types/Pedido';
+import type { Pedido } from '../../types/Pedido';
 import { getProductos } from '../../services/productoService';
 
 // --- MOCK DATA TEMPORAL DE MERMAS Y AVERÍAS ---
@@ -19,6 +19,8 @@ const AVERIAS_MOCK = [
   { id: 2, fecha: new Date(Date.now() - 3600000 * 3).toISOString(), cantidad: 1, maquina: 'Guillotina Industrial', detalle: 'Fallo en sensor de seguridad' },
   { id: 3, fecha: new Date(Date.now() - 86400000 * 1).toISOString(), cantidad: 2, maquina: 'Impresora Ricoh C7200', detalle: 'Sobrecalentamiento en fusor' }
 ];
+
+const COLORES_TORTA = ['#8e45e0', '#20c997', '#e22e2e', '#0dcaf0', '#ffc107'];
 
 // Tooltip para Evolución de Caja
 const CustomAreaTooltip = ({ active, payload, label, esMismoDia }: any) => {
@@ -91,7 +93,6 @@ const CustomMermaTooltip = ({ active, payload, esMismoDia }: any) => {
           {data.ejeX} - {data.cantidad} un. desperdiciadas
         </div>
 
-        {/* Solo mostramos el desglose si la consulta es de UN SOLO DÍA */}
         {esMismoDia && (
           <div className="mt-2">
             {data.insumo && (
@@ -154,8 +155,8 @@ const CustomEmpleadoTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-  const CustomArqueoTooltip = ({ active, payload }: any) => {
-   if (active && payload && payload.length) {
+const CustomArqueoTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
       <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #f43f5e', color: '#fff', fontSize: '0.85rem' }}>
@@ -172,9 +173,9 @@ const CustomEmpleadoTooltip = ({ active, payload }: any) => {
     );
   }
   return null;
-  };
+};
 
-  function agruparPorPeriodo<T>(
+function agruparPorPeriodo<T>(
   items: T[],
   desde: Date,
   hasta: Date,
@@ -184,7 +185,7 @@ const CustomEmpleadoTooltip = ({ active, payload }: any) => {
   esPorAnios: boolean,
   getFecha: (item: T) => Date,
   getValor: (item: T) => number
-  ): { name: string; valor: number }[] {
+): { name: string; valor: number }[] {
   const obtenerEtiqueta = (fecha: Date): string => {
     if (esUnSoloDia) {
       return fecha.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -201,7 +202,6 @@ const CustomEmpleadoTooltip = ({ active, payload }: any) => {
       const numeroSemana = Math.ceil((dias + primerDiaAno.getDay() + 1) / 7);
       return `Sem ${numeroSemana} (${fecha.getFullYear()})`;
     }
-    // Por Días
     return fecha.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
   };
 
@@ -250,7 +250,7 @@ const CustomEmpleadoTooltip = ({ active, payload }: any) => {
     name: key,
     valor: mapa[key]
   }));
-  }
+}
 
 export const InformesView: React.FC = () => {
   const hoy = new Date().toLocaleDateString('sv-SE');
@@ -264,7 +264,7 @@ export const InformesView: React.FC = () => {
   const [pedidosRaw, setPedidosRaw] = useState<any[]>([]);
   const [movimientosCaja, setMovimientosCaja] = useState<MovimientoCaja[]>([]);
   const [cargando, setCargando] = useState(false);
-  const [listaProductos, setListaProductos] = useState<any[]>([]);
+  const [, setListaProductos] = useState<any[]>([]);
   const [topClientes, setTopClientes] = useState<any[]>([]);
   const [incongruenciasArqueo, setIncongruenciasArqueo] = useState<any[]>([]);
 
@@ -281,58 +281,40 @@ export const InformesView: React.FC = () => {
     mermasPorPeriodo: [],
     averiasPorPeriodo: [],
     productosMasVendidos: [],
-    categoriasMasVendidas: []
+    categoriasMasVendidas: [],
+    ventasPorCategoriaCliente: []
   });
 
-
-  
-  useEffect(() => {
-    const cargarDatos = async () => {
-      setCargando(true);
-      try {
-        const [dataPedidos, dataCaja, dataProductos] = await Promise.all([
-          pedidoService.obtenerTodos(),
-          cajaService.obtenerMovimientosDia(),
-          getProductos()
-        ]);
-
-        setPedidosRaw(dataPedidos || []);
-        setMovimientosCaja(dataCaja || []);
-        setListaProductos(dataProductos || []);
-      } catch (error) {
-        console.error("Error al sincronizar datos para Informes:", error);
-      } finally {
-        setCargando(false);
-      }
-    };
-
-    cargarDatos();
-  }, []);
-
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
   
   const procesarMetricas = (
-  fDesde: string, 
-  fHasta: string, 
-  pedidosLista = pedidosRaw, 
-  cajaLista = movimientosCaja
+    fDesde: string, 
+    fHasta: string, 
+    pedidosLista = pedidosRaw, 
+    cajaLista = movimientosCaja
   ) => {
-  const parseFechaLocal = (fechaStr: string) => {
-    if (!fechaStr) return new Date();
-    const [year, month, day] = fechaStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  };
+    const parseFechaLocal = (fechaStr: string) => {
+      if (!fechaStr) return new Date();
+      const [year, month, day] = fechaStr.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    };
 
-  const desde = parseFechaLocal(fDesde);
-  desde.setHours(0, 0, 0, 0);
+    const desde = parseFechaLocal(fDesde);
+    desde.setHours(0, 0, 0, 0);
 
-  const hasta = parseFechaLocal(fHasta);
-  hasta.setHours(23, 59, 59, 999);
+    const hasta = parseFechaLocal(fHasta);
+    hasta.setHours(23, 59, 59, 999);
 
-  const movimientosEnRango = cajaLista.filter((m) => {
-    if (!m.fecha) return false;
-    const fechaMov = new Date(m.fecha);
-    return fechaMov >= desde && fechaMov <= hasta;
-  });
+    const movimientosEnRango = cajaLista.filter((m) => {
+      if (!m.fecha) return false;
+      const fechaMov = new Date(m.fecha);
+      return fechaMov >= desde && fechaMov <= hasta;
+    });
 
     const esMovimientoEgreso = (m: any) => {
       const tipo = (m.tipoMovimiento || m.tipo || m.tipo_movimiento || '').toString().toUpperCase();
@@ -361,8 +343,8 @@ export const InformesView: React.FC = () => {
     }, 0);
 
     const pedidosEnRango = (pedidosLista || []).filter((p) => {
-    const fechaPedido = new Date(p.fecha_creacion || p.fechaCreacion || p.fecha);
-    return fechaPedido >= desde && fechaPedido <= hasta;
+      const fechaPedido = new Date(p.fecha_creacion || p.fechaCreacion || p.fecha);
+      return fechaPedido >= desde && fechaPedido <= hasta;
     });
 
     const pedidosPendientes = pedidosEnRango.filter((p) => (p.estado || '').toUpperCase() === 'PENDIENTE');
@@ -380,22 +362,47 @@ export const InformesView: React.FC = () => {
 
     const cantidadMovimientos = movimientosEnRango.length;
 
-   // --- 5. PRODUCTOS MÁS VENDIDOS Y CATEGORÍAS MÁS VENDIDAS ---
+    // --- PRODUCTOS MÁS VENDIDOS Y CATEGORÍAS MÁS VENDIDAS ---
     const mapaProductos: { [key: string]: { cantidad: number; nombre: string } } = {};
     const mapaCategorias: { [key: string]: number } = {};
+    const mapaCategoriasCliente: { [key: string]: { cantidad: number; monto: number } } = {};
 
-    pedidosEnRango.forEach((p: Pedido) => {
+    pedidosEnRango.forEach((p: any) => {
+      // 1. Extraer la categoría desde el objeto cliente si existe
+      const clienteObj = p.cliente;
+      const catClienteObj = clienteObj?.categoriaCliente || clienteObj?.categoria || p.categoriaCliente;
+      let nombreCatCliente = catClienteObj?.nombreCategoria || catClienteObj?.nombre;
+
+      // 2. Si no tiene categoría asignada (null), buscamos si hay un descuento en las observaciones
+      if (!nombreCatCliente) {
+        const obs = p.observaciones || '';
+        const matchDescuento = obs.match(/\[Descuento aplicado:\s*([^\]]+)\]/i);
+
+        if (matchDescuento && matchDescuento[1]) {
+          const descTexto = matchDescuento[1].trim(); // Ejemplo: "15%"
+          nombreCatCliente = `Estudiante (${descTexto})`;
+        } else {
+          nombreCatCliente = 'Sin Categoría / General';
+        }
+      }
+
+      const montoPedido = Number(p.monto_total || p.montoTotal || p.total || 0);
+
+      if (!mapaCategoriasCliente[nombreCatCliente]) {
+        mapaCategoriasCliente[nombreCatCliente] = { cantidad: 0, monto: 0 };
+      }
+      mapaCategoriasCliente[nombreCatCliente].cantidad += 1;
+      mapaCategoriasCliente[nombreCatCliente].monto += montoPedido;
+
       const detalles = p.detalles || [];
 
       if (Array.isArray(detalles) && detalles.length > 0) {
         detalles.forEach((item: any) => {
           const prodObj = item.producto;
 
-          // 1. Extraemos el ID y el Nombre usando exactamente las claves de tu API
           const idProd = prodObj?.idProducto || item.idProducto;
           const nombreReal = prodObj?.nombreProducto || prodObj?.nombre || prodObj?.descripcion;
 
-          // Fallback en caso de que no venga el nombre
           const nombreFinal = nombreReal || (idProd ? `Producto #${idProd}` : 'Producto Sin Nombre');
           const key = String(idProd || nombreFinal);
           const cantidad = Number(item.cantidad || 1);
@@ -405,28 +412,23 @@ export const InformesView: React.FC = () => {
           }
           mapaProductos[key].cantidad += cantidad;
 
-          // Categoría
           let nombreCat = prodObj?.categoria?.nombre || 'General';
           mapaCategorias[nombreCat] = (mapaCategorias[nombreCat] || 0) + cantidad;
         });
       }
     });
 
-    // Ordenamos de mayor a menor ventas y tomamos el Top 5
     const top5Productos = Object.values(mapaProductos)
       .sort((a, b) => b.cantidad - a.cantidad)
       .slice(0, 5);
 
-    // Formateamos para el gráfico: el 'name' para la leyenda dirá "Top 1", "Top 2", etc.
-    // y guardamos 'nombreReal' para mostrarlo en el tooltip/hover.
     const productosMasVendidos = top5Productos.map((item, index) => ({
-      name: `Top ${index + 1}`,      // Para la leyenda de abajo (Top 1, Top 2, etc.)
-      nombreReal: item.nombre,       // Nombre verdadero del producto
-      value: item.cantidad,           // Cantidad vendida
+      name: `Top ${index + 1}`,
+      nombreReal: item.nombre,
+      value: item.cantidad,
       color: COLORES_TORTA[index % COLORES_TORTA.length]     
     }));
 
-    // Categorías
     const categoriasMasVendidas = Object.keys(mapaCategorias)
       .map((nombre) => ({
         name: nombre,
@@ -434,6 +436,11 @@ export const InformesView: React.FC = () => {
       }))
       .sort((a, b) => b.ventas - a.ventas);
 
+    const ventasPorCategoriaCliente = Object.keys(mapaCategoriasCliente).map((nombreCat) => ({
+      name: nombreCat,
+      ventas: mapaCategoriasCliente[nombreCat].cantidad,
+      montoTotal: mapaCategoriasCliente[nombreCat].monto
+    }));
 
     // --- RECAUDACIÓN REAL + TRABAJOS PENDIENTES POR OPERARIO ---
     const mapaEmpleados: { [key: string]: { ventas: number; pedidos: number } } = {};
@@ -449,7 +456,6 @@ export const InformesView: React.FC = () => {
     pedidosEnRango.forEach((p) => {
       const idPed = p.idPedido || p.id_pedido || p.id;
       const estado = (p.estado || '').toUpperCase();
-      
 
       if (estado === 'ENTREGADO' || estado === 'COMPLETADO' || estado === 'FINALIZADO') {
         const ultimaAsignacion = p.asignaciones && p.asignaciones.length > 0
@@ -466,7 +472,6 @@ export const InformesView: React.FC = () => {
       }
     });
 
-    // Sumamos la recaudación de caja e incrementamos pedidos de caja si no fueron contados antes
     ingresosCaja.forEach((m: any) => {
       let nombreEmp = "Sin Asignar";
 
@@ -486,17 +491,15 @@ export const InformesView: React.FC = () => {
 
       mapaEmpleados[nombreEmp].ventas += Math.abs(Number(m.monto || 0));
 
-      // Si el movimiento proviene de un pedido y no lo habíamos contado desde la lista general:
       const idPed = m.idPedido || m.id_pedido || m.pedido?.id || m.pedido?.idPedido;
       if (idPed && !pedidosContados.has(idPed)) {
         mapaEmpleados[nombreEmp].pedidos += 1;
         pedidosContados.add(idPed);
       } else if (!idPed && m.descripcion?.toUpperCase().includes('PEDIDO')) {
-        // Si no trae ID explícito pero es una venta/pedido directa de caja
         mapaEmpleados[nombreEmp].pedidos += 1;
       }
     });
-    // Sumamos los montos pendientes
+
     pedidosPendientes.forEach((p) => {
       const ultimaAsignacion = p.asignaciones && p.asignaciones.length > 0
         ? p.asignaciones[p.asignaciones.length - 1]
@@ -522,17 +525,11 @@ export const InformesView: React.FC = () => {
     const diffAnios = hasta.getFullYear() - desde.getFullYear();
 
     const esUnSoloDia = fDesde === fHasta;
-    
-    // Si hay más de 365 días (o más de 1 año de diferencia), agrupa por años
     const esPorAnios = diffAnios >= 1 && diffDias > 365; 
-    
-    // Si hay más de 2 meses y menos de 1 año, agrupa por meses
     const esPorMeses = !esPorAnios && (diffMeses >= 2 || diffDias > 60); 
-    
-    // Si hay entre 14 y 60 días, agrupa por semanas
     const esPorSemanas = !esPorAnios && !esPorMeses && diffDias > 14;
 
-    // --- 1. EVOLUCIÓN DE INGRESOS ---
+    // --- EVOLUCIÓN DE INGRESOS ---
     let ventasPorPeriodo: any[] = [];
 
     if (esUnSoloDia) {
@@ -567,17 +564,17 @@ export const InformesView: React.FC = () => {
       if (ventasPorPeriodo.length === 0) {
         ventasPorPeriodo = [{ name: '00:00', ventas: 0, esEgreso: false, montoMovimiento: 0 }];
       }
-      } else {
+    } else {
       const datosAgrupados = agruparPorPeriodo(
-      movimientosEnRango,
-      desde,
-      hasta,
-      esUnSoloDia,
-      esPorSemanas, // 👈 AÑADIR ESTE PARÁMETRO
-      esPorMeses,
-      esPorAnios,
-      (m) => new Date(m.fecha),
-      (m) => (esMovimientoEgreso(m) ? -Math.abs(Number(m.monto || 0)) : Math.abs(Number(m.monto || 0)))
+        movimientosEnRango,
+        desde,
+        hasta,
+        esUnSoloDia,
+        esPorSemanas,
+        esPorMeses,
+        esPorAnios,
+        (m) => new Date(m.fecha),
+        (m) => (esMovimientoEgreso(m) ? -Math.abs(Number(m.monto || 0)) : Math.abs(Number(m.monto || 0)))
       );
 
       ventasPorPeriodo = datosAgrupados.map((item) => ({
@@ -588,7 +585,7 @@ export const InformesView: React.FC = () => {
       }));
     }
 
-    // --- 2. DETALLE DE EGRESOS ---
+    // --- DETALLE DE EGRESOS ---
     let detalleEgresos: { ejeX: string; monto: number; descripcion?: string }[] = [];
 
     if (esUnSoloDia) {
@@ -648,10 +645,9 @@ export const InformesView: React.FC = () => {
       }));
     }
 
-    // --- 3. LOS CLIENTES CON MÁS INGRESOS (CON EXTRACCIÓN DE NOMBRE MEJORADA Y SIN EGRESOS) ---
+    // --- LOS CLIENTES CON MÁS INGRESOS ---
     const mapaClientes: { [key: string]: { nombre: string; totalGastado: number; cantidadPedidos: number } } = {};
 
-    // Helper robusto para obtener y formatear el nombre real del cliente
     const obtenerNombreCliente = (clienteObj: any, fallbackStr?: string): string => {
       let clienteNombre = '';
 
@@ -675,7 +671,6 @@ export const InformesView: React.FC = () => {
 
       const nombreLimpio = clienteNombre.trim().toLowerCase();
 
-      // Solo si realmente el texto dice explícitamente venta rápida, caja o está totalmente vacío, es Consumidor Final
       if (
         !nombreLimpio || 
         nombreLimpio === 'ninguna' || 
@@ -689,13 +684,11 @@ export const InformesView: React.FC = () => {
         return 'Consumidor Final';
       }
 
-      // Retorna el nombre formateado manteniendo mayúsculas/minúsculas originales
       return clienteNombre;
     };
 
     const idsPedidosProcesados = new Set<string | number>();
 
-    // 1. Procesar Pedidos en Rango
     pedidosEnRango.forEach((p: any) => {
       const estado = (p.estado || '').toUpperCase();
       if (estado === 'CANCELADO') return;
@@ -706,7 +699,6 @@ export const InformesView: React.FC = () => {
         idsPedidosProcesados.add(String(idPedido));
       }
 
-      // Se verifica cliente en el pedido (p.cliente), en el nombre explícito o en campos anidados
       const clienteNombre = obtenerNombreCliente(p.cliente, p.clienteNombre || p.nombreCliente || p.nombre_cliente);
       const monto = Number(p.monto_total || p.montoTotal || p.total || p.precioTotal || p.monto_abonado || 0);
 
@@ -718,27 +710,23 @@ export const InformesView: React.FC = () => {
       mapaClientes[clienteNombre].cantidadPedidos += 1;
     });
 
-    // 2. Procesar Movimientos de Caja (Filtrando EGRESOS)
     ingresosCaja.forEach((m: any) => {
-      // FILTRO CLAVE: Verificar si es un EGRESO/GASTO para NO sumarlo como ingreso
       const tipoMovimiento = (m.tipo || m.tipoMovimiento || '').toUpperCase();
       const montoOriginal = Number(m.monto || 0);
 
       if (tipoMovimiento === 'EGRESO' || tipoMovimiento === 'GASTO' || montoOriginal < 0) {
-        return; // Omitir egresos por completo
+        return;
       }
 
       const idPed = m.idPedido || m.id_pedido || m.pedido?.id || m.pedido?.idPedido;
       const descripcion = (m.descripcion || m.concepto || '').toLowerCase();
 
-      // Descartar si está vinculado a un pedido existente
       if (idPed && idPed !== '-' && idPed !== '0' && idPed !== 0) {
         if (idsPedidosProcesados.has(idPed) || idsPedidosProcesados.has(String(idPed))) {
           return;
         }
       }
 
-      // Descartar descripciones referentes a pedidos/señas
       if (
         descripcion.includes('pedido') || 
         descripcion.includes('seña') || 
@@ -748,7 +736,6 @@ export const InformesView: React.FC = () => {
         return;
       }
 
-      // Descartar Venta Rápida duplicada
       if (descripcion.includes('venta rápida') || descripcion.includes('venta rapida')) {
         const coincideConPedido = pedidosEnRango.some((p: any) => {
           const montoPed = Number(p.monto_total || p.montoTotal || p.total || 0);
@@ -768,7 +755,6 @@ export const InformesView: React.FC = () => {
       mapaClientes[clienteNombre].cantidadPedidos += 1;
     });
 
-    // 3. Top 5 Formateado
     const topClientesFormateados = Object.values(mapaClientes)
       .sort((a, b) => b.totalGastado - a.totalGastado)
       .filter((item) => item.totalGastado > 0)
@@ -783,7 +769,6 @@ export const InformesView: React.FC = () => {
 
     setTopClientes(topClientesFormateados);
 
-
     const mockIncongruenciasArqueo = [
       { empleado: 'Pepe', montoDiferencia: 1500, cantidadIncongruencias: 2 },
       { empleado: 'Martina', montoDiferencia: 850, cantidadIncongruencias: 1 },
@@ -793,7 +778,7 @@ export const InformesView: React.FC = () => {
 
     setIncongruenciasArqueo(mockIncongruenciasArqueo);
 
-    // --- 4. MÉTRICA MOCK: MÁQUINAS AVERIADAS ---
+    // --- MÁQUINAS AVERIADAS ---
     const averiasEnRango = AVERIAS_MOCK.filter((item) => {
       const f = new Date(item.fecha);
       return f >= desde && f <= hasta;
@@ -846,96 +831,97 @@ export const InformesView: React.FC = () => {
     const distribucionMediosPago = Object.keys(mapaPagos).map((key) => ({ name: key, value: mapaPagos[key] }));
 
     const pedidosCompletadosPorEmpleado = rendimientoEmpleados
-    .filter((emp) => emp.pedidosCompletados > 0)
-    .map((emp, index) => ({
-    name: emp.name,
-    value: emp.pedidosCompletados,
-    color: COLORES_TORTA[index % COLORES_TORTA.length]
-    }));
+      .filter((emp) => emp.pedidosCompletados > 0)
+      .map((emp, index) => ({
+        name: emp.name,
+        value: emp.pedidosCompletados,
+        color: COLORES_TORTA[index % COLORES_TORTA.length]
+      }));
 
     // --- DISTRIBUCIÓN POR ESTADOS ---
     const mapaEstados: { [key: string]: number } = {};
     pedidosEnRango.forEach((p) => {
-    let estado = (p.estado || 'PENDIENTE').toUpperCase();
-    const descripcion = (p.descripcion || p.observaciones || p.tipo || '').toUpperCase();
-    if (descripcion.includes('VENTA RÁPIDA') || descripcion.includes('VENTA RAPIDA') || p.esVentaRapida) {
-    estado = 'FINALIZADO';}
-    mapaEstados[estado] = (mapaEstados[estado] || 0) + 1;});
+      let estado = (p.estado || 'PENDIENTE').toUpperCase();
+      const descripcion = (p.descripcion || p.observaciones || p.tipo || '').toUpperCase();
+      if (descripcion.includes('VENTA RÁPIDA') || descripcion.includes('VENTA RAPIDA') || p.esVentaRapida) {
+        estado = 'FINALIZADO';
+      }
+      mapaEstados[estado] = (mapaEstados[estado] || 0) + 1;
+    });
     const distribucionEstados = Object.keys(mapaEstados).map((key) => ({ name: key, value: mapaEstados[key] }));
 
     setMetricas({
-    ventasTotales: saldoNetoCaja,
-    ticketsGenerados: ticketsFinales,
-    ticketPromedio,
-    cantidadMovimientos,
-    ventasPorPeriodo,
-    distribucionMediosPago: distribucionMediosPago.length > 0 ? distribucionMediosPago : [{ name: 'EFECTIVO', value: totalIngresosBrutos }],
-    distribucionEstados: distribucionEstados.length > 0 ? distribucionEstados : [{ name: 'Sin datos', value: 1 }],
-    rendimientoEmpleados: rendimientoEmpleados.length > 0 ? rendimientoEmpleados : [{ name: 'Sin datos', ventas: 0 }],
-    pedidosCompletadosPorEmpleado: pedidosCompletadosPorEmpleado.length > 0 ? pedidosCompletadosPorEmpleado : [{ name: 'Sin datos', value: 0 }], // 👈 Métrica agregada
-    detalleEgresos,
-    mermasPorPeriodo,
-    averiasPorPeriodo,
-    productosMasVendidos: productosMasVendidos.length > 0 ? productosMasVendidos : [{ name: 'Sin datos', value: 1 }],
-    categoriasMasVendidas: categoriasMasVendidas.length > 0 ? categoriasMasVendidas : [{ name: 'Sin datos', ventas: 0 }]
+      ventasTotales: saldoNetoCaja,
+      ticketsGenerados: ticketsFinales,
+      ticketPromedio,
+      cantidadMovimientos,
+      ventasPorPeriodo,
+      distribucionMediosPago: distribucionMediosPago.length > 0 ? distribucionMediosPago : [{ name: 'EFECTIVO', value: totalIngresosBrutos }],
+      distribucionEstados: distribucionEstados.length > 0 ? distribucionEstados : [{ name: 'Sin datos', value: 1 }],
+      rendimientoEmpleados: rendimientoEmpleados.length > 0 ? rendimientoEmpleados : [{ name: 'Sin datos', ventas: 0 }],
+      pedidosCompletadosPorEmpleado: pedidosCompletadosPorEmpleado.length > 0 ? pedidosCompletadosPorEmpleado : [{ name: 'Sin datos', value: 0 }],
+      detalleEgresos,
+      mermasPorPeriodo,
+      averiasPorPeriodo,
+      productosMasVendidos: productosMasVendidos.length > 0 ? productosMasVendidos : [{ name: 'Sin datos', value: 1 }],
+      categoriasMasVendidas: categoriasMasVendidas.length > 0 ? categoriasMasVendidas : [{ name: 'Sin datos', ventas: 0 }],
+      ventasPorCategoriaCliente: ventasPorCategoriaCliente.length > 0 ? ventasPorCategoriaCliente : [{ name: 'Sin datos', ventas: 0, montoTotal: 0 }]
     });
   };
 
   useEffect(() => {
-  const cargarDatosIniciales = async () => {
+    const cargarDatosIniciales = async () => {
+      setCargando(true);
+      try {
+        const [dataPedidos, dataCaja, dataProductos] = await Promise.all([
+          pedidoService.obtenerTodos(),
+          cajaService.obtenerTodos(),
+          getProductos()
+        ]);
+
+        const pedidosValidos = dataPedidos || [];
+        const cajaValida = dataCaja || [];
+
+        setPedidosRaw(pedidosValidos);
+        setMovimientosCaja(cajaValida);
+        setListaProductos(dataProductos || []);
+
+        procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida);
+      } catch (error) {
+        console.error("Error al cargar los informes iniciales:", error);
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    cargarDatosIniciales();
+  }, []);
+
+  const handleAnalizar = async () => {
     setCargando(true);
     try {
-      const [dataPedidos, dataCaja, dataProductos] = await Promise.all([
+      setFechaDesde(fechaDesdeInput);
+      setFechaHasta(fechaHastaInput);
+
+      const [nuevosPedidos, nuevosMovimientos] = await Promise.all([
         pedidoService.obtenerTodos(),
-        cajaService.obtenerTodos(),
-        getProductos()
+        cajaService.obtenerTodos()
       ]);
 
-      const pedidosValidos = dataPedidos || [];
-      const cajaValida = dataCaja || [];
+      const pedidosValidos = nuevosPedidos || [];
+      const cajaValida = nuevosMovimientos || [];
 
       setPedidosRaw(pedidosValidos);
       setMovimientosCaja(cajaValida);
-      setListaProductos(dataProductos || []);
 
-      // Pasamos los datos directos sin esperar el re-render
       procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida);
     } catch (error) {
-      console.error("Error al cargar los informes iniciales:", error);
+      console.error("Error al recalcular informes:", error);
     } finally {
       setCargando(false);
     }
   };
 
-  cargarDatosIniciales();
-  }, []);
-
- const handleAnalizar = async () => {
-  setCargando(true);
-  try {
-    setFechaDesde(fechaDesdeInput);
-    setFechaHasta(fechaHastaInput);
-
-    const [nuevosPedidos, nuevosMovimientos] = await Promise.all([
-      pedidoService.obtenerTodos(),
-      cajaService.obtenerTodos()
-    ]);
-
-    const pedidosValidos = nuevosPedidos || [];
-    const cajaValida = nuevosMovimientos || [];
-
-    setPedidosRaw(pedidosValidos);
-    setMovimientosCaja(cajaValida);
-
-    procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida);
-  } catch (error) {
-    console.error("Error al recalcular informes:", error);
-  } finally {
-    setCargando(false);
-  }
-};
-
-  const COLORES_TORTA = ['#8e45e0', '#20c997', '#e22e2e', '#0dcaf0', '#ffc107'];
   const esMismoDia = fechaDesde === fechaHasta;
 
   if (cargando && movimientosCaja.length === 0) {
@@ -949,6 +935,27 @@ export const InformesView: React.FC = () => {
 
   return (
     <div className="container-fluid text-white font-monospace pb-5">
+      <style>{`
+        .btn-shortcut-nav {
+          background-color: #18181b;
+          border: 1px solid #3f3f46;
+          border-radius: 8px;
+          font-size: 0.75rem;
+          letter-spacing: 0.5px;
+          transition: all 0.2s ease-in-out;
+        }
+        .btn-shortcut-nav:hover {
+          background-color: #27272a !important;
+          border-color: #52525b !important;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+        .btn-shortcut-nav:active {
+          transform: translateY(0) scale(0.97);
+          box-shadow: none;
+        }
+      `}</style>
+
       {/* HEADER CONTROLES */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom border-secondary gap-3" style={{ borderColor: '#2d2d30 !important' }}>
         <div>
@@ -984,8 +991,36 @@ export const InformesView: React.FC = () => {
         </div>
       </div>
 
+      {/* NAV / ACCESOS DIRECTOS DE SECCIONES */}
+      <div className="d-flex align-items-center gap-3 mb-4 pb-2 border-bottom border-secondary" style={{ borderColor: '#2d2d30 !important' }}>
+        <span 
+          className="fw-extrabold text-white font-monospace" 
+          style={{ fontSize: '0.9rem', letterSpacing: '1.2px' }}
+        >
+          SECCIONES:
+        </span>
+        <div className="d-flex flex-wrap gap-2">
+          {[
+            { label: 'FINANZAS Y CAJA', id: 'sec-finanzas', icon: 'bi-wallet2', color: '#8e45e0' },
+            { label: 'VENTAS Y PRODUCTOS', id: 'sec-ventas', icon: 'bi-bag-check-fill', color: '#20c997' },
+            { label: 'OPERACIONES Y RRHH', id: 'sec-operaciones', icon: 'bi-people-fill', color: '#0dcaf0' },
+            { label: 'CLIENTES', id: 'sec-clientes', icon: 'bi-trophy-fill', color: '#ffc107' },
+            { label: 'CONTROL INTERNO', id: 'sec-control', icon: 'bi-shield-check', color: '#f43f5e' }
+          ].map((btn) => (
+            <button
+              key={btn.id}
+              onClick={() => scrollToSection(btn.id)}
+              className="btn btn-shortcut-nav text-white font-monospace d-flex align-items-center gap-2 px-3 py-2"
+            >
+              <i className={`bi ${btn.icon}`} style={{ color: btn.color }}></i>
+              {btn.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* KPI CARDS GLOBALES */}
-      <div className="row g-3 mb-4">
+      <div className="row g-3 mb-5">
         {[
           { label: 'INGRESOS TOTALES', val: `$${metricas.ventasTotales.toLocaleString('es-AR')}`, color: '#8e45e0', icon: 'bi-currency-dollar' },
           { label: 'TICKETS GENERADOS', val: metricas.ticketsGenerados, color: '#20c997', icon: 'bi-receipt' },
@@ -1002,8 +1037,17 @@ export const InformesView: React.FC = () => {
         ))}
       </div>
 
-      {/* SECCIÓN PRINCIPAL DE GRÁFICOS */}
-      <div className="row g-4 mb-4">
+      {/* ========================================== */}
+      {/* 1. SECCIÓN: FINANZAS Y CAJA                */}
+      {/* ========================================== */}
+      <div id="sec-finanzas" className="d-flex align-items-center gap-2 mb-3" style={{ scrollMarginTop: '20px' }}>
+        <span className="text-uppercase fw-bold text-white-50 font-monospace" style={{ fontSize: '0.8rem', letterSpacing: '1px' }}>
+          — FINANZAS Y CAJA
+        </span>
+        <div className="flex-grow-1 border-bottom" style={{ borderColor: '#2d2d30' }}></div>
+      </div>
+
+      <div className="row g-4 mb-5">
         <div className="col-12 col-xl-8">
           <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
             <h5 className="fw-bold mb-4" style={{ color: '#a1a1aa' }}>
@@ -1035,7 +1079,7 @@ export const InformesView: React.FC = () => {
               <i className="bi bi-pie-chart-fill me-2" style={{ color: '#20c997' }}></i>Tipos / Medios de Pago
             </h5>
             <div style={{ height: '300px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-              <ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={metricas.distribucionMediosPago} cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none">
                     {metricas.distribucionMediosPago.map((_: any, index: number) => (
@@ -1049,17 +1093,50 @@ export const InformesView: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* EGRESOS DETALLADOS */}
+        <div className="col-12">
+          <div className="p-4 rounded-4 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-arrow-down-right-circle-fill me-2" style={{ color: '#e22e2e' }}></i>Egresos y Salidas de Caja Detallados
+            </h5>
+            {metricas.detalleEgresos && metricas.detalleEgresos.length > 0 ? (
+              <div style={{ height: '250px', width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={metricas.detalleEgresos} margin={{ top: 10, right: 30, left: 20, bottom: 10 }} barSize={35}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                    <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />
+                    <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
+                    <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEgresoTooltip esMismoDia={esMismoDia} />} />
+                    <Bar dataKey="monto" fill="#e22e2e" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="text-white-50 text-center py-4">No hay egresos registrados en el período seleccionado.</div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* SECCIÓN INFERIOR: ESTADOS Y OPERARIOS */}
-      <div className="row g-4 mb-4">
+      {/* ========================================== */}
+      {/* 2. SECCIÓN: VENTAS Y PRODUCTOS             */}
+      {/* ========================================== */}
+      <div id="sec-ventas" className="d-flex align-items-center gap-2 mb-3" style={{ scrollMarginTop: '20px' }}>
+        <span className="text-uppercase fw-bold text-white-50 font-monospace" style={{ fontSize: '0.8rem', letterSpacing: '1px' }}>
+          — VENTAS Y PRODUCTOS
+        </span>
+        <div className="flex-grow-1 border-bottom" style={{ borderColor: '#2d2d30' }}></div>
+      </div>
+
+      <div className="row g-4 mb-5">
         <div className="col-12 col-xl-4">
           <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
             <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
               <i className="bi bi-diagram-3-fill me-2" style={{ color: '#ffc107' }}></i>Distribución por Estados
             </h5>
             <div style={{ height: '250px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-              <ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={metricas.distribucionEstados} cx="50%" cy="45%" innerRadius={50} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
                     {metricas.distribucionEstados.map((_: any, index: number) => (
@@ -1074,56 +1151,13 @@ export const InformesView: React.FC = () => {
           </div>
         </div>
 
-        <div className="col-12 col-xl-8">
-          <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-person-badge-fill me-2" style={{ color: '#0dcaf0' }}></i>Recaudación de Empleado por Pago Completado
-            </h5>
-            <div style={{ height: '250px', width: '100%' }}>
-              <ResponsiveContainer>
-                <BarChart data={metricas.rendimientoEmpleados} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                  <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
-                  <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
-                  <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEmpleadoTooltip />} />
-                  <Bar dataKey="ventas" fill="#0dcaf0" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* SECCIÓN CATEGORÍAS (IZQ) Y PRODUCTOS (DER) */}
-      <div className="row g-4 mb-4">
-        {/* Categorías Más Vendidas (Izquierda - col-xl-8) */}
-        <div className="col-12 col-xl-8">
-          <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-tags-fill me-2" style={{ color: '#8e45e0' }}></i>Categorías Más Vendidas
-            </h5>
-            <div style={{ height: '250px', width: '100%' }}>
-              <ResponsiveContainer>
-                <BarChart data={metricas?.categoriasMasVendidas || []} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                  <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
-                  <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <RechartsTooltip cursor={{ fill: '#222122' }} contentStyle={{ backgroundColor: '#18181b', borderColor: '#8e45e0', borderRadius: '8px', color: '#fff' }} />
-                  <Bar dataKey="ventas" fill="#8e45e0" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* Productos Más Vendidos (Derecha - col-xl-4) */}
         <div className="col-12 col-xl-4">
           <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
             <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
               <i className="bi bi-box-seam-fill me-2" style={{ color: '#20c997' }}></i>Productos Más Vendidos
             </h5>
             <div style={{ height: '250px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-              <ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie 
                     data={metricas?.productosMasVendidos || []} 
@@ -1139,36 +1173,117 @@ export const InformesView: React.FC = () => {
                       <Cell key={`cell-prod-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
                     ))}
                   </Pie>
-                  
-                  {/* Tooltip personalizado: Lee 'nombreReal' guardado en procesarMetricas */}
                   <RechartsTooltip 
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         const data = payload[0].payload;
-                        const colorSlice = data.color || '#20c997'; // Color por defecto de respaldo
+                        const colorSlice = data.color || '#20c997';
 
                         return (
-                          <div 
-                            className="p-2 rounded-3 shadow-lg" 
-                            style={{ 
-                              backgroundColor: '#222122', 
-                              border: `1px solid ${colorSlice}`, // 👈 Borde del color de la porción
-                              color: '#fff' 
-                            }}
-                          >
-                            <p className="fw-bold mb-1" style={{ color: colorSlice }}> {/* 👈 Texto del color de la porción */}
-                              {data.nombreReal || data.name}
-                            </p>
-                            <p className="small mb-0">
-                              {data.name} — Unidades vendidas: <span className="text-white fw-bold">{data.value}</span>
-                            </p>
+                          <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
+                            <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.nombreReal || data.name}</p>
+                            <p className="small mb-0">{data.name} — Unidades vendidas: <span className="text-white fw-bold">{data.value}</span></p>
                           </div>
                         );
                       }
                       return null;
                     }}
                   />
-                  
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-xl-4">
+          <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-tags-fill me-2" style={{ color: '#8e45e0' }}></i>Categorías Más Vendidas
+            </h5>
+            <div style={{ height: '250px', width: '100%' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={metricas?.categoriasMasVendidas || []} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                  <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <RechartsTooltip cursor={{ fill: '#222122' }} contentStyle={{ backgroundColor: '#18181b', borderColor: '#8e45e0', borderRadius: '8px', color: '#fff' }} />
+                  <Bar dataKey="ventas" fill="#8e45e0" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================== */}
+      {/* 3. SECCIÓN: OPERACIONES Y RECURSOS HUMANOS */}
+      {/* ========================================== */}
+      <div id="sec-operaciones" className="d-flex align-items-center gap-2 mb-3" style={{ scrollMarginTop: '20px' }}>
+        <span className="text-uppercase fw-bold text-white-50 font-monospace" style={{ fontSize: '0.8rem', letterSpacing: '1px' }}>
+          — OPERACIONES Y RECURSOS HUMANOS
+        </span>
+        <div className="flex-grow-1 border-bottom" style={{ borderColor: '#2d2d30' }}></div>
+      </div>
+
+      <div className="row g-4 mb-5">
+        <div className="col-12 col-xl-8">
+          <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-person-badge-fill me-2" style={{ color: '#0dcaf0' }}></i>Recaudación de Empleado por Pago Completado
+            </h5>
+            <div style={{ height: '250px', width: '100%' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={metricas.rendimientoEmpleados} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                  <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
+                  <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEmpleadoTooltip />} />
+                  <Bar dataKey="ventas" fill="#0dcaf0" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-xl-4">
+          <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-check2-square me-2" style={{ color: '#0dcaf0' }}></i>Pedidos Completados por Empleado
+            </h5>
+            <div style={{ height: '250px', width: '100%', display: 'flex', justifyContent: 'center' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={metricas.pedidosCompletadosPorEmpleado}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {(metricas.pedidosCompletadosPorEmpleado || []).map((_: any, index: number) => (
+                      <Cell key={`cell-emp-completado-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        const colorSlice = data.color || '#0dcaf0';
+
+                        return (
+                          <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff', fontSize: '0.85rem' }}>
+                            <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.name}</p>
+                            <p className="small mb-0 text-white">Pedidos finalizados: <span className="fw-bold">{data.value}</span></p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
                   <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -1177,129 +1292,26 @@ export const InformesView: React.FC = () => {
         </div>
       </div>
 
-      {/* SECCIÓN PEDIDOS COMPLETADOS Y EGRESOS */}
-<div className="row g-4 mb-4">
-  {/* 1. IZQUIERDA: Pedidos Completados por Empleado (col-xl-4) */}
-  <div className="col-12 col-xl-4">
-    <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-      <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-        <i className="bi bi-check2-square me-2" style={{ color: '#0dcaf0' }}></i>Pedidos Completados por Empleado
-      </h5>
-      <div style={{ height: '250px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-        <ResponsiveContainer>
-          <PieChart>
-            <Pie
-              data={metricas.pedidosCompletadosPorEmpleado}
-              cx="50%"
-              cy="45%"
-              innerRadius={50}
-              outerRadius={80}
-              paddingAngle={5}
-              dataKey="value"
-              stroke="none"
-            >
-              {(metricas.pedidosCompletadosPorEmpleado || []).map((_: any, index: number) => (
-                <Cell key={`cell-emp-completado-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
-              ))}
-            </Pie>
-            <RechartsTooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const data = payload[0].payload;
-                  const colorSlice = data.color || '#0dcaf0';
-
-                  return (
-                    <div
-                      className="p-2 rounded-3 shadow-lg"
-                      style={{
-                        backgroundColor: '#222122',
-                        border: `1px solid ${colorSlice}`,
-                        color: '#fff',
-                        fontSize: '0.85rem'
-                      }}
-                    >
-                      <p className="fw-bold mb-1" style={{ color: colorSlice }}>
-                        {data.name}
-                      </p>
-                      <p className="small mb-0 text-white">
-                        Pedidos finalizados: <span className="fw-bold">{data.value}</span>
-                      </p>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-          </PieChart>
-        </ResponsiveContainer>
+     {/* ========================================== */}
+      {/* 4. SECCIÓN: CLIENTES                       */}
+      {/* ========================================== */}
+      <div id="sec-clientes" className="d-flex align-items-center gap-2 mb-3" style={{ scrollMarginTop: '20px' }}>
+        <span className="text-uppercase fw-bold text-white-50 font-monospace" style={{ fontSize: '0.8rem', letterSpacing: '1px' }}>
+          — CLIENTES
+        </span>
+        <div className="flex-grow-1 border-bottom" style={{ borderColor: '#2d2d30' }}></div>
       </div>
-    </div>
-  </div>
 
-  {/* 2. DERECHA: Egresos y Salidas de Caja Detallados (col-xl-8) */}
-  <div className="col-12 col-xl-8">
-    <div className="p-4 rounded-4 shadow-sm h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-      <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-        <i className="bi bi-arrow-down-right-circle-fill me-2" style={{ color: '#e22e2e' }}></i>Egresos y Salidas de Caja Detallados
-      </h5>
-      {metricas.detalleEgresos && metricas.detalleEgresos.length > 0 ? (
-        <div style={{ height: '250px', width: '100%' }}>
-          <ResponsiveContainer>
-            <BarChart data={metricas.detalleEgresos} margin={{ top: 10, right: 30, left: 20, bottom: 10 }} barSize={35}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-              <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />
-              <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
-              <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEgresoTooltip esMismoDia={esMismoDia} />} />
-              <Bar dataKey="monto" fill="#e22e2e" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <div className="text-white-50 text-center py-4">No hay egresos registrados en el período seleccionado.</div>
-      )}
-    </div>
-  </div>
-</div>
-
-      {/* SECCIÓN ARQUEOS Y TOP CLIENTES */}
-      <div className="row g-4 mb-4">
-        <div className="col-12 col-xl-8">
-          <div className="p-4 rounded-4 shadow-sm h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                <i className="bi bi-exclamation-triangle-fill me-2" style={{ color: '#f43f5e' }}></i>Diferencias de Arqueo por Empleado
-              </h5>
-              <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK DATA</span>
-            </div>
-
-            {incongruenciasArqueo && incongruenciasArqueo.length > 0 ? (
-              <div style={{ height: '250px', width: '100%' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={incongruenciasArqueo} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                    <XAxis dataKey="empleado" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
-                    <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val}`} />
-                    <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomArqueoTooltip />} />
-                    <Bar dataKey="montoDiferencia" fill="#f43f5e" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="text-white-50 text-center py-4">Sin datos de arqueos registrados.</div>
-            )}
-          </div>
-        </div>
-
-        {/* PIE CHART CORREGIDO DE TOP 5 CLIENTES */}
-        <div className="col-12 col-xl-4">
+      <div className="row g-4 mb-5">
+        {/* CLIENTES MÁS ACTIVOS */}
+        <div className="col-12 col-xl-6">
           <div className="p-4 rounded-4 shadow-sm h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
             <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-trophy-fill me-2" style={{ color: '#ffc107' }}></i>Los Clientas con Mas Ingresos
+              <i className="bi bi-trophy-fill me-2" style={{ color: '#ffc107' }}></i>Clientes Más Activos
             </h5>
             
             {topClientes && topClientes.length > 0 ? (
-              <div style={{ height: '250px', width: '100%', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ height: '260px', width: '100%', display: 'flex', justifyContent: 'center' }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -1323,23 +1335,10 @@ export const InformesView: React.FC = () => {
                           const colorSlice = data.color || '#ffc107';
 
                           return (
-                            <div 
-                              className="p-2 rounded-3 shadow-lg" 
-                              style={{ 
-                                backgroundColor: '#222122', 
-                                border: `1px solid ${colorSlice}`, 
-                                color: '#fff' 
-                              }}
-                            >
-                              <p className="fw-bold mb-1" style={{ color: colorSlice }}>
-                                {data.nombreReal || data.name}
-                              </p>
-                              <p className="small mb-1 text-white">
-                                Total Pagado: <span className="fw-bold">${Number(data.totalGastado).toLocaleString('es-AR')}</span>
-                              </p>
-                              <p className="small mb-0 text-white-50">
-                                Pedidos creados: {data.cantidadPedidos}
-                              </p>
+                            <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
+                              <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.nombreReal || data.name}</p>
+                              <p className="small mb-1 text-white">Total Pagado: <span className="fw-bold">${Number(data.totalGastado).toLocaleString('es-AR')}</span></p>
+                              <p className="small mb-0 text-white-50">Pedidos creados: {data.cantidadPedidos}</p>
                             </div>
                           );
                         }
@@ -1355,22 +1354,98 @@ export const InformesView: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* VENTAS POR CATEGORÍA DE CLIENTE (NUEVO) */}
+        <div className="col-12 col-xl-6">
+          <div className="p-4 rounded-4 shadow-sm h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-person-vcard-fill me-2" style={{ color: '#20c997' }}></i>Ventas por Categoría de Cliente
+            </h5>
+            
+            {metricas.ventasPorCategoriaCliente && metricas.ventasPorCategoriaCliente.length > 0 ? (
+              <div style={{ height: '260px', width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={metricas.ventasPorCategoriaCliente} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                    <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <RechartsTooltip 
+                      cursor={{ fill: '#222122' }} 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #20c997', color: '#fff' }}>
+                              <p className="fw-bold mb-1 text-success">{data.name}</p>
+                              <p className="small mb-1 text-white">Pedidos solicitados: <span className="fw-bold">{data.ventas}</span></p>
+                              <p className="small mb-0 text-white-50">Monto total: <span className="fw-bold text-white">${Number(data.montoTotal || 0).toLocaleString('es-AR')}</span></p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Bar dataKey="ventas" fill="#20c997" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="text-white-50 text-center py-4">Sin registros de categorías de clientes.</div>
+            )}
+          </div>
+        </div>
+      </div>
+      {/* ========================================== */}
+      {/* 5. SECCIÓN: CONTROL INTERNO Y TALLER       */}
+      {/* ========================================== */}
+      <div id="sec-control" className="d-flex align-items-center gap-2 mb-3" style={{ scrollMarginTop: '20px' }}>
+        <span className="text-uppercase fw-bold text-white-50 font-monospace" style={{ fontSize: '0.8rem', letterSpacing: '1px' }}>
+          — CONTROL INTERNO Y TALLER
+        </span>
+        <div className="flex-grow-1 border-bottom" style={{ borderColor: '#2d2d30' }}></div>
       </div>
 
-      {/* SECCIÓN MERMAS Y AVERÍAS EN LA MISMA LÍNEA */}
       <div className="row g-4">
+        {/* DIFERENCIAS DE ARQUEO */}
+        <div className="col-12 col-xl-4">
+          <div className="p-4 rounded-4 shadow-sm h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+                <i className="bi bi-exclamation-triangle-fill me-2" style={{ color: '#f43f5e' }}></i>Arqueos por Empleado
+              </h5>
+              <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
+            </div>
+
+            {incongruenciasArqueo && incongruenciasArqueo.length > 0 ? (
+              <div style={{ height: '220px', width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={incongruenciasArqueo} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                    <XAxis dataKey="empleado" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
+                    <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val}`} />
+                    <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomArqueoTooltip />} />
+                    <Bar dataKey="montoDiferencia" fill="#f43f5e" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="text-white-50 text-center py-4">Sin datos de arqueos registrados.</div>
+            )}
+          </div>
+        </div>
+
         {/* MERMAS GENERADAS */}
-        <div className="col-12 col-xl-6">
+        <div className="col-12 col-xl-4">
           <div className="p-4 rounded-4 shadow-sm h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
             <div className="d-flex align-items-center justify-content-between mb-3">
               <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
                 <i className="bi bi-trash3-fill me-2" style={{ color: '#ffc107' }}></i>Mermas Generadas
               </h5>
-              <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK DATA</span>
+              <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
             </div>
             {metricas.mermasPorPeriodo && metricas.mermasPorPeriodo.length > 0 ? (
               <div style={{ height: '220px', width: '100%' }}>
-                <ResponsiveContainer>
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={metricas.mermasPorPeriodo} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barSize={35}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
                     <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />
@@ -1387,17 +1462,17 @@ export const InformesView: React.FC = () => {
         </div>
 
         {/* MÁQUINAS AVERIADAS */}
-        <div className="col-12 col-xl-6">
+        <div className="col-12 col-xl-4">
           <div className="p-4 rounded-4 shadow-sm h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
             <div className="d-flex align-items-center justify-content-between mb-3">
               <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
                 <i className="bi bi-tools me-2" style={{ color: '#fd7e14' }}></i>Máquinas Averiadas
               </h5>
-              <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK DATA</span>
+              <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
             </div>
             {metricas.averiasPorPeriodo && metricas.averiasPorPeriodo.length > 0 ? (
               <div style={{ height: '220px', width: '100%' }}>
-                <ResponsiveContainer>
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={metricas.averiasPorPeriodo} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barSize={35}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
                     <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />

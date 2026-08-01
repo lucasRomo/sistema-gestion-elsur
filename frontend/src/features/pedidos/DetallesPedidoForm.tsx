@@ -99,9 +99,20 @@ export const DetallesPedidoForm: React.FC<Props> = ({
     const esPresupuesto = estado === 'PRESUPUESTO';
     const esCuentaCorriente = tipoPago === 'Cuenta Corriente';
 
-    const fechaFinalEntrega = fechaEntrega 
-      ? `${fechaEntrega}T00:00:00` 
-      : `${new Date().toISOString().split('T')[0]}T00:00:00`;
+    let fechaFinalEntrega: string;
+
+    if (fechaEntrega) {
+      fechaFinalEntrega = fechaEntrega.length === 16 ? `${fechaEntrega}:00` : fechaEntrega;
+    } else {
+      // Si no seleccionó fecha, se toma la fecha/hora actual en formato ISO
+      const ahorita = new Date();
+      const anio = ahorita.getFullYear();
+      const mes = String(ahorita.getMonth() + 1).padStart(2, '0');
+      const dia = String(ahorita.getDate()).padStart(2, '0');
+      const hora = String(ahorita.getHours()).padStart(2, '0');
+      const min = String(ahorita.getMinutes()).padStart(2, '0');
+      fechaFinalEntrega = `${anio}-${mes}-${dia}T${hora}:${min}:00`;
+    }
 
     const textoDescuento = porcentajeDescuento > 0 ? ` [Descuento aplicado: ${porcentajeDescuento}%]` : '';
 
@@ -207,13 +218,13 @@ export const DetallesPedidoForm: React.FC<Props> = ({
           </select>
         </div>
 
-        {/* Fecha de Entrega Estimada */}
+       {/* Fecha y Hora de Entrega Estimada */}
         <div className="col-12">
           <label className="form-label small text-secondary fw-bold">
-            Fecha de Entrega Estimada: {estado === 'PRESUPUESTO' && <span className="text-muted">(Opcional para presupuestos)</span>}
+            Fecha y Hora de Entrega Estimada: {estado === 'PRESUPUESTO' && <span className="text-muted">(Opcional para presupuestos)</span>}
           </label>
           <input 
-            type="date" 
+            type="datetime-local" 
             className="form-control bg-dark text-white border-secondary" 
             required={estado !== 'PRESUPUESTO'} 
             value={fechaEntrega} 

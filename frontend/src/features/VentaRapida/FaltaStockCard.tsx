@@ -1,4 +1,3 @@
-// src/features/VentaRapida/FaltaStockCard.tsx
 import React, { useEffect, useState } from 'react';
 import type { Insumo } from '../../types/Insumo';
 import { getInsumosBajoStock } from '../../services/insumoService';
@@ -37,7 +36,7 @@ export const FaltaStockCard: React.FC = () => {
       </h6>
 
       {cargando ? (
-        <div className="text-center py-3 text-secondary small font-monospace">
+        <div className="text-center py-3 text-secondary small font-monospace my-auto">
           Cargando insumos...
         </div>
       ) : insumosCriticos.length === 0 ? (
@@ -45,18 +44,25 @@ export const FaltaStockCard: React.FC = () => {
           <i className="bi bi-check-circle me-1"></i> Todo el stock está en niveles óptimos
         </div>
       ) : (
-        /* Le damos un poco más de altura máxima de scroll interno para aprovechar la card */
-        <div className="d-flex flex-column gap-2 flex-grow-1 overflow-auto pe-1" style={{ maxHeight: '220px' }}>
+        /* 🚀 Ajustado a 140px para igualar la tarjeta de Pedidos Pendientes */
+        <div 
+          className="d-flex flex-column gap-2 pe-1" 
+          style={{ 
+            maxHeight: '140px', 
+            overflowY: 'auto', 
+            overflowX: 'hidden' 
+          }}
+        >
           {insumosCriticos.map((insumo) => (
             <div 
               key={insumo.idInsumo} 
-              className="d-flex justify-content-between align-items-center px-3 py-2 rounded"
+              className="d-flex justify-content-between align-items-center px-3 py-2 rounded flex-shrink-0"
               style={{ backgroundColor: '#27272a', fontSize: '0.85rem' }}
             >
-              <span className="text-white font-monospace fw-semibold">
+              <span className="text-white font-monospace fw-semibold text-truncate me-2">
                 {insumo.nombreInsumo}
               </span>
-              <div className="d-flex gap-3">
+              <div className="d-flex gap-3 flex-shrink-0">
                 <span className="text-secondary font-monospace">
                   Límite: <strong className="text-light">{insumo.stockMinimo}</strong>
                 </span>

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { ContadorTiempo } from './ContadorTiempo';
 
 interface FilaPedidoProps {
   pedido: any;
   empleados: any[];
   onCambioEstado: (pedido: any, estadoDestino: string) => void;
-  onCambioUbicacion?: (idPedido: number, nuevaUbicacion: string) => void; // Callback para actualizar la ubicación
+  onCambioUbicacion?: (idPedido: number, nuevaUbicacion: string) => void;
   onSelectPago: (pedido: any) => void;
   onSelectTicket: (pedido: any) => void;
   onSubirArchivo: (idPedido: number, file: File) => void;
@@ -39,22 +40,38 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
     ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
     : (ultimaAsignacion?.empleado?.nombre ?? 'Sin Asignar');
 
-  const fechaAsignacionFormateada = ultimaAsignacion?.fecha_asignacion
-    ? new Date(ultimaAsignacion.fecha_asignacion).toLocaleDateString('es-AR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    : '-';
+  const formatearFechaString = (fechaIso: string | null | undefined, incluirHora = true) => {
+    if (!fechaIso) return '-';
+    const [fecha, horaCompleta] = fechaIso.split('T');
+    if (!fecha) return fechaIso;
+
+    const [anio, mes, dia] = fecha.split('-');
+    if (!horaCompleta || !incluirHora) return `${dia}/${mes}/${anio}`;
+
+    const [hhStr, mm] = horaCompleta.split('.')[0].split(':');
+    let hh = parseInt(hhStr, 10);
+    const ampm = hh >= 12 ? 'p. m.' : 'a. m.';
+    hh = hh % 12 || 12;
+    const hhFormat = hh < 10 ? `0${hh}` : `${hh}`;
+
+    return `${dia}/${mes}/${anio}, ${hhFormat}:${mm} ${ampm}`;
+  };
+
+  // Formateo de Fechas
+  const fechaCreacionRaw = p.fecha_creacion || ultimaAsignacion?.fecha_asignacion;
+  const fechaCreacionFormateada = formatearFechaString(fechaCreacionRaw, true);
+  const fechaEntregaFormateada = formatearFechaString(p.fecha_entrega_estimada, true);
 
   return (
     <>
       <tr style={{ borderBottom: '1px solid #1d1d1d', backgroundColor: '#1d1d1d', transition: 'background-color 0.2s'}}
        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#18181b'}
        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1d1d1d'}>
-        <td style={{ padding: '10px 2px 12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start',  color: '#00d2ff', fontFamily: 'monospace', fontWeight: 'bold',height: '100%'}} className="fw-bold text-info">#{p.id_pedido}</td>
+        <td style={{ padding: '10px 2px 12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#00d2ff', fontFamily: 'monospace', fontWeight: 'bold', height: '100%'}} className="fw-bold text-info">
+          #{p.id_pedido}
+        </td>
+
+        {/* CLIENTE */}
         <td>
           <div className="d-flex align-items-center gap-2">
             <span className="fw-semibold text-white">{nombreCliente}</span>
@@ -70,6 +87,8 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
             )}
           </div>
         </td>
+
+        {/* ESTANTE / UBICACIÓN */}
         <td>
           {p.estado === 'PRESUPUESTO' ? (
             <span className="badge bg-black text-warning border border-warning-subtle font-monospace">
@@ -87,6 +106,8 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
             </select>
           )}
         </td>
+
+        {/* CONTACTO */}
         <td>
           <div className="d-flex gap-1">
             {p.cliente?.persona?.telefono && (
@@ -101,6 +122,8 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
             )}
           </div>
         </td>
+
+        {/* EMPLEADO ASIGNADO */}
         <td>
           <select 
             className="form-select form-select-sm bg-black text-light border-secondary font-monospace"
@@ -129,9 +152,23 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
             })}
           </select>
         </td>
+
+        {/* FECHA ASIGNACIÓN */}
         <td className="font-monospace" style={{ color: '#a9a9aa', fontSize: '0.82rem' }}>
-          {fechaAsignacionFormateada}
+          {fechaCreacionFormateada}
         </td>
+
+        {/* ENTREGA ESTIMADA + CONTADOR (Unificados en la misma celda) */}
+        <td className="font-monospace" style={{ fontSize: '0.82rem' }}>
+          <div className="d-flex flex-column align-items-start gap-1">
+            <span className="text-warning fw-semibold">
+              {fechaEntregaFormateada}
+            </span>
+            <ContadorTiempo fechaEstimadaIso={p.fecha_entrega_estimada} />
+          </div>
+        </td>
+
+        {/* ESTADO */}
         <td>
           <select 
             className="form-select form-select-sm bg-black text-white border-secondary font-monospace"
@@ -147,10 +184,17 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
             <option value="CANCELADO">CANCELADO</option>
           </select>
         </td>
+
+        {/* MONTO TOTAL */}
         <td className="fw-bold">${Number(p.monto_total).toFixed(2)}</td>
+
+        {/* MONTO ABONADO */}
         <td className="text-info">${Number(p.monto_pago_adelantado).toFixed(2)}</td>
+
+        {/* ACCIONES */}
         <td>
           <div className="d-flex justify-content-center gap-3 align-items-center">  
+            {/* Botón Comprobantes */}
             <button 
               className="rounded d-flex align-items-center justify-content-center" 
               style={{ 
@@ -208,7 +252,7 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
               <i className="bi bi-currency-dollar" style={{ fontSize: '16px', color: (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO') ? '#22c55e' : '#a72828', transition: '0.2s' }}></i>
             </button>
 
-            {/* Botón de Impresión de Tickets */}
+            {/* Botón Impresión Ticket */}
             <button 
               className="rounded d-flex align-items-center justify-content-center" 
               style={{ width: '32px', height: '32px', cursor: 'pointer', backgroundColor: 'transparent', transition: 'all 0.2s ease', border: '0.8px solid #ffc107'}}
@@ -231,7 +275,7 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
         </td>
       </tr>
 
-      {/* Modal para leer las Observaciones Completas */}
+      {/* Modal para Observaciones */}
       {mostrarObsModal && (
         <div 
           className="modal d-block" 

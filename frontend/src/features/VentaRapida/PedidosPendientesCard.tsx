@@ -104,7 +104,14 @@ export const PedidosPendientesCard: React.FC = () => {
           <i className="bi bi-check-all me-1"></i> No hay pedidos pendientes
         </div>
       ) : (
-        <div className="d-flex flex-column gap-2 flex-grow-1 overflow-auto pe-1" style={{ maxHeight: '220px' }}>
+        <div 
+  className="d-flex flex-column gap-2 pe-1" 
+  style={{ 
+    maxHeight: '140px', 
+    overflowY: 'auto',
+    overflowX: 'hidden'
+  }}
+>
           {pedidos.map((pedido: any) => {
             const id = pedido.id_pedido || pedido.idPedido;
             const clienteNombre = pedido.cliente?.persona 
@@ -114,7 +121,7 @@ export const PedidosPendientesCard: React.FC = () => {
             return (
               <div 
                 key={id} 
-                className="d-flex justify-content-between align-items-center px-3 py-2 rounded"
+                className="d-flex justify-content-between align-items-center px-3 py-2 rounded flex-shrink-0"
                 style={{ backgroundColor: '#27272a', fontSize: '0.85rem' }}
               >
                 <div className="d-flex flex-column">

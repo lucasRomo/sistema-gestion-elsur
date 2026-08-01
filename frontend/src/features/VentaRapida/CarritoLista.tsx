@@ -8,22 +8,22 @@ interface Props {
 
 export const CarritoLista: React.FC<Props> = ({ carrito, onEliminar }) => {
   return (
-    <div className="mb-4">
-      {/* Cabecera de la tabla con texto claro */}
-      <div className="d-flex text-light border-bottom border-secondary pb-2 mb-2 small fw-bold">
+    <div className="mb-2">
+      {/* 🚀 Cabecera alineada: agregamos pe-3 para compensar la barra de scroll */}
+      <div className="d-flex text-light border-bottom border-secondary pb-2 mb-2 small fw-bold pe-3">
         <div style={{ width: '40%' }}>Lista de Productos:</div>
         <div style={{ width: '20%' }}>Cantidad:</div>
         <div style={{ width: '20%' }}>Precio Unitario:</div>
         <div style={{ width: '20%' }}>SubTotal:</div>
       </div>
       
-      {/* Contenedor de filas con scroll */}
-      <div style={{ minHeight: '150px', maxHeight: '250px', overflowY: 'auto' }}>
+      {/* Contenedor con altura ajustada a 140px */}
+      <div style={{ maxHeight: '140px', overflowY: 'auto', overflowX: 'hidden' }} className="pe-1">
         {carrito.length === 0 ? (
-          <div className="text-center text-light mt-4">No hay productos en la lista.</div>
+          <div className="text-center text-light py-3">No hay productos en la lista.</div>
         ) : (
           carrito.map((item, index) => (
-            <div key={index} className="d-flex align-items-center mb-2 text-white border-bottom border-dark pb-1">
+            <div key={index} className="d-flex align-items-center mb-2 text-white border-bottom border-dark pb-1 flex-shrink-0">
               {/* Columna Nombre */}
               <div style={{ width: '40%' }} className="d-flex align-items-center">
                 <button 
@@ -33,7 +33,7 @@ export const CarritoLista: React.FC<Props> = ({ carrito, onEliminar }) => {
                 >
                   <i className="bi bi-x-circle-fill"></i>
                 </button>
-                <span className="text-light">{item.producto.nombreProducto}</span>
+                <span className="text-light text-truncate">{item.producto.nombreProducto}</span>
               </div>
               
               {/* Columnas Datos */}
