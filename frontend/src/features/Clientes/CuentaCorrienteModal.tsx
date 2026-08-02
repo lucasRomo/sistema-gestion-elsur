@@ -67,6 +67,8 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
     }
   };
 
+  
+
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}>
       <div className="modal-dialog modal-xl">
@@ -84,9 +86,30 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
               <div className="col-md-4">
                 <div className="p-3 bg-secondary bg-opacity-10 border border-secondary rounded">
                   <small className="text-white-50 font-monospace">Saldo Deudor Actual</small>
-                  <h3 className={`fw-bold mb-0 ${cliente.saldoDeudor > 0 ? 'text-danger' : 'text-success'}`}>
-                    ${Number(cliente.saldoDeudor || 0).toFixed(2)}
-                  </h3>
+                  {(() => {
+                    const saldo = Math.abs(Number(cliente.saldoDeudor || 0));
+                    const limite = Number(cliente.limiteCredito || 0);
+                    let colorClase = 'text-success';
+                    if (saldo > 0) {
+                      if (limite > 0) {
+                        const porcentaje = (saldo / limite) * 100;
+                        if (porcentaje >= 100) {
+                          colorClase = 'text-danger'; 
+                        } else if (porcentaje >= 75) {
+                          colorClase = 'text-warning'; 
+                        } else {
+                          colorClase = 'text-success';
+                        }
+                      } else {
+                        colorClase = 'text-danger';
+                      }
+                    }
+                    return (
+                      <h3 className={`fw-bold mb-0 ${colorClase}`}>
+                        ${Number(cliente.saldoDeudor || 0).toFixed(2)}
+                      </h3>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -166,7 +189,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                   ))}
                   {movimientos.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="text-center text-muted">No existen movimientos registrados en la cuenta corriente.</td>
+                      <td colSpan={4} className="text-center">No existen movimientos registrados en la cuenta corriente.</td>
                     </tr>
                   )}
                 </tbody>

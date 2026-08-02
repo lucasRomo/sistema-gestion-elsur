@@ -7,6 +7,8 @@ import type { Producto } from '../types/Producto';
 import type { CartItem } from '../types/Pedido';
 import type { CategoriaCliente } from '../types/CategoriaCliente';
 import { PedidosPendientesCard } from '../features/VentaRapida/PedidosPendientesCard';
+import { VistaTicketModal } from '../features/pedidos/VistaTicketModal';
+import { NotificacionesCard } from '../features/VentaRapida/NotificacionesCard';
 
 export const VentaRapida: React.FC = () => {
   const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([]);
@@ -18,6 +20,14 @@ export const VentaRapida: React.FC = () => {
   const [carrito, setCarrito] = useState<CartItem[]>([]);
   const [confirmarCancelacion, setConfirmarCancelacion] = useState(false);
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
+
+  // RECUPERAR ÚLTIMO PEDIDO DE LOCALSTORAGE AL INICIALIZAR EL ESTADO
+  const [ultimoPedidoRealizado, setUltimoPedidoRealizado] = useState<any | null>(() => {
+    const guardado = localStorage.getItem('ultimo_pedido_venta_rapida');
+    return guardado ? JSON.parse(guardado) : null;
+  });
+
+  const [verTicketPedido, setVerTicketPedido] = useState<any | null>(null);
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -37,7 +47,6 @@ export const VentaRapida: React.FC = () => {
         const response = await fetch('http://localhost:8080/api/categorias-cliente');
         if (response.ok) {
           const data = await response.json();
-          // Mapeo reconociendo las propiedades del Backend: idCategoria, nombre, descuentoAutomatico
           const categoriasNormalizadas = data.map((cat: any) => ({
             idCategoriaCliente: cat.idCategoria ?? cat.id_categoria ?? cat.idCategoriaCliente ?? cat.id,
             nombreCategoria: cat.nombre ?? cat.nombreCategoria ?? cat.nombre_categoria ?? 'Sin nombre',
@@ -71,7 +80,6 @@ export const VentaRapida: React.FC = () => {
     setCarrito(nuevoCarrito);
   };
 
-  // CÁLCULOS DE PRECIO Y DESCUENTO
   const subtotalVenta = carrito.reduce((acc, item) => acc + item.subtotal, 0);
   
   const categoriaActual = categorias.find(c => {
@@ -160,6 +168,10 @@ export const VentaRapida: React.FC = () => {
         throw new Error(errorText || "Error al registrar el cobro en el sistema de caja.");
       }
 
+      // GUARDAR EN ESTADO Y PERSISTIR EN LOCALSTORAGE
+      setUltimoPedidoRealizado(pedidoGuardado);
+      localStorage.setItem('ultimo_pedido_venta_rapida', JSON.stringify(pedidoGuardado));
+
       setCarrito([]);
       setCategoriaSeleccionadaId('');
       setSuceso({
@@ -210,14 +222,17 @@ export const VentaRapida: React.FC = () => {
         </div>
       </div>
 
-      <div className="row mb-3 g-3 flex-grow-0" style={{ minHeight: '220px' }}>
-        <div className="col-12 col-md-6">
-          <PedidosPendientesCard />
-        </div>
-        <div className="col-12 col-md-6">
-          <FaltaStockCard />
-        </div>
+    <div className="row mb-3 g-3 flex-grow-0" style={{ minHeight: '220px' }}>
+      <div className="col-12 col-md-4">
+      <PedidosPendientesCard />
       </div>
+      <div className="col-12 col-md-4">
+      <NotificacionesCard />
+      </div>
+      <div className="col-12 col-md-4">
+      <FaltaStockCard />
+      </div>
+    </div>
 
       {/* --- PANEL INFERIOR --- */}
       <div 
@@ -246,8 +261,18 @@ export const VentaRapida: React.FC = () => {
           onSeleccionarCategoria={setCategoriaSeleccionadaId}
           onCancelar={handleCancelar} 
           onCompletar={handleCompletarVenta} 
+          ultimoPedido={ultimoPedidoRealizado}
+          onImprimirTicket={() => setVerTicketPedido(ultimoPedidoRealizado)}
         />
       </div>
+
+      {/* MODAL DE VISTA PREVIA DEL TICKET */}
+      {verTicketPedido && (
+        <VistaTicketModal 
+          pedido={verTicketPedido}
+          onClose={() => setVerTicketPedido(null)}
+        />
+      )}
 
       {/* Modales Suceso & Confirmación */}
       {suceso.show && (
@@ -257,9 +282,24 @@ export const VentaRapida: React.FC = () => {
               <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-x-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">{suceso.titulo}</h5>
               <p className="small" style={{ color: '#a1a1aa' }}>{suceso.mensaje}</p>
-              <button className="btn btn-success btn-sm px-4 mt-3 fw-bold" onClick={() => setSuceso({ ...suceso, show: false })}>
-                Cerrar
-              </button>
+              
+              <div className="d-flex flex-column gap-2 mt-3">
+                {suceso.tipo === 'exito' && suceso.titulo === '¡Éxito!' && ultimoPedidoRealizado && (
+                  <button 
+                    className="btn fw-bold text-dark btn-sm px-3 py-2" 
+                    style={{ backgroundColor: '#eab308' }}
+                    onClick={() => {
+                      setSuceso({ ...suceso, show: false });
+                      setVerTicketPedido(ultimoPedidoRealizado);
+                    }}
+                  >
+                    <i className="bi bi-printer-fill me-1"></i> Imprimir Ticket
+                  </button>
+                )}
+                <button style={{ backgroundColor: 'rgb(175, 58, 50)', border: 'none' }} className="btn btn-secondary btn-sm px-4 fw-bold" onClick={() => setSuceso({ ...suceso, show: false })}>
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
         </div>

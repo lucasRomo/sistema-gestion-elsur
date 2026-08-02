@@ -90,6 +90,23 @@ export const ClienteView = () => {
     );
   });
 
+  const obtenerColorSaldo = (saldoDeudor: number, limiteCredito: number) => {
+  const saldo = Math.abs(Number(saldoDeudor || 0));
+  const limite = Number(limiteCredito || 0);
+  if (saldo === 0) return 'text-success';
+  if (limite <= 0) return 'text-danger';
+
+  const porcentaje = (saldo / limite) * 100;
+
+  if (porcentaje >= 100) {
+    return 'text-danger'; 
+  } else if (porcentaje >= 75) { 
+    return 'text-warning'; 
+  } else {
+    return 'text-success'; 
+  }
+  };
+
   return (
     <>
       <div className="d-flex justify-content-center align-items-center mb-4 position-relative">
@@ -155,9 +172,9 @@ export const ClienteView = () => {
                     </td>
 
                     <td style={{ padding: '12px' }}>
-                      <span className={`fw-bold ${Number(c.saldoDeudor || 0) > 0 ? 'text-danger' : 'text-success'}`}>
-                        ${Number(c.saldoDeudor || 0).toFixed(2)}
-                      </span>
+                    <span className={`fw-bold ${obtenerColorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
+                    ${Number(c.saldoDeudor || 0).toFixed(2)}
+                    </span>
                     </td>
                     <td style={{ padding: '12px' }}>
                       <span className={`badge ${c.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>

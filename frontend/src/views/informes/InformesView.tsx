@@ -252,8 +252,12 @@ function agruparPorPeriodo<T>(
   }));
 }
 
+type SeccionInforme = 'MENU' | 'finanzas' | 'ventas' | 'operaciones' | 'clientes' | 'control';
+
 export const InformesView: React.FC = () => {
   const hoy = new Date().toLocaleDateString('sv-SE');
+
+  const [seccionActiva, setSeccionActiva] = useState<SeccionInforme>('MENU');
 
   const [fechaDesdeInput, setFechaDesdeInput] = useState(hoy);
   const [fechaHastaInput, setFechaHastaInput] = useState(hoy);
@@ -285,13 +289,6 @@ export const InformesView: React.FC = () => {
     ventasPorCategoriaCliente: []
   });
 
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-  
   const procesarMetricas = (
     fDesde: string, 
     fHasta: string, 
@@ -368,18 +365,16 @@ export const InformesView: React.FC = () => {
     const mapaCategoriasCliente: { [key: string]: { cantidad: number; monto: number } } = {};
 
     pedidosEnRango.forEach((p: any) => {
-      // 1. Extraer la categoría desde el objeto cliente si existe
       const clienteObj = p.cliente;
       const catClienteObj = clienteObj?.categoriaCliente || clienteObj?.categoria || p.categoriaCliente;
       let nombreCatCliente = catClienteObj?.nombreCategoria || catClienteObj?.nombre;
 
-      // 2. Si no tiene categoría asignada (null), buscamos si hay un descuento en las observaciones
       if (!nombreCatCliente) {
         const obs = p.observaciones || '';
         const matchDescuento = obs.match(/\[Descuento aplicado:\s*([^\]]+)\]/i);
 
         if (matchDescuento && matchDescuento[1]) {
-          const descTexto = matchDescuento[1].trim(); // Ejemplo: "15%"
+          const descTexto = matchDescuento[1].trim();
           nombreCatCliente = `Estudiante (${descTexto})`;
         } else {
           nombreCatCliente = 'Sin Categoría / General';
@@ -933,561 +928,637 @@ export const InformesView: React.FC = () => {
     );
   }
 
+  // Lista de secciones para renderizar las tarjetas del menú
+  const seccionesMenu: { id: SeccionInforme; label: string; desc: string; icon: string; color: string }[] = [
+    { id: 'finanzas', label: 'FINANZAS Y CAJA', desc: 'Evolución de caja, egresos detallados y medios de pago', icon: 'bi-wallet2', color: '#8e45e0' },
+    { id: 'ventas', label: 'VENTAS Y PRODUCTOS', desc: 'Estados de pedidos, productos y categorías con más rotación', icon: 'bi-bag-check-fill', color: '#20c997' },
+    { id: 'operaciones', label: 'OPERACIONES Y RRHH', desc: 'Recaudación y pedidos finalizados por empleado', icon: 'bi-people-fill', color: '#0dcaf0' },
+    { id: 'clientes', label: 'CLIENTES', desc: 'Clientes más activos y desglose por categorías', icon: 'bi-trophy-fill', color: '#ffc107' },
+    { id: 'control', label: 'CONTROL INTERNO', desc: 'Reportes de mermas, diferencias de arqueo y fallas de máquinas', icon: 'bi-shield-check', color: '#f43f5e' }
+  ];
+
   return (
     <div className="container-fluid text-white font-monospace pb-5">
       <style>{`
-        .btn-shortcut-nav {
+        .card-menu-item {
           background-color: #18181b;
           border: 1px solid #3f3f46;
-          border-radius: 8px;
-          font-size: 0.75rem;
-          letter-spacing: 0.5px;
-          transition: all 0.2s ease-in-out;
+          border-radius: 12px;
+          transition: all 0.25s ease-in-out;
+          cursor: pointer;
         }
-        .btn-shortcut-nav:hover {
+        .card-menu-item:hover {
           background-color: #27272a !important;
           border-color: #52525b !important;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+          transform: translateY(-4px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
         }
-        .btn-shortcut-nav:active {
-          transform: translateY(0) scale(0.97);
-          box-shadow: none;
+        .card-menu-item:active {
+          transform: translateY(0);
+        }
+        .btn-volver {
+          background-color: #27272a;
+          border: 1px solid #3f3f46;
+          color: #fff;
+          transition: all 0.2s ease;
+        }
+        .btn-volver:hover {
+          background-color: #3f3f46;
+          color: #fff;
         }
       `}</style>
 
-      {/* HEADER CONTROLES */}
+      {/* HEADER CONTROLES DE FECHA (SIEMPRE VISIBLE) */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom border-secondary gap-3" style={{ borderColor: '#2d2d30 !important' }}>
         <div>
           <div className="d-flex align-items-center gap-2">
-            <span className="badge px-2 py-1 small" style={{ backgroundColor: '#8e45e0' }}>BUSINESS INTELLIGENCE</span>
             <h2 className="fw-bold mb-0" style={{ color: '#ffffff' }}>Métricas e Informes</h2>
           </div>
           <p className="text-white-50 mb-0 small mt-1">Análisis consolidado de caja, producción y recursos</p>
         </div>
 
+        {/* SELECTOR DE FECHAS */}
         <div className="d-flex align-items-center gap-2 p-2 rounded-3 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-          <i className="bi bi-calendar-range ms-2 text-muted"></i>
-          <input 
-            type="date" 
-            className="form-control form-control-sm bg-dark text-white border-0 font-monospace" 
-            value={fechaDesdeInput} 
-            onChange={(e) => setFechaDesdeInput(e.target.value)} 
-          />
-          <span className="text-muted">→</span>
-          <input 
-            type="date" 
-            className="form-control form-control-sm bg-dark text-white border-0 font-monospace" 
-            value={fechaHastaInput} 
-            onChange={(e) => setFechaHastaInput(e.target.value)} 
-          />
+  <i className="bi bi-calendar-range ms-2 text-white"></i>
+  <input 
+    type="date" 
+    className="form-control form-control-sm bg-dark text-white border-0 font-monospace" 
+    style={{ colorScheme: 'dark' }}
+    value={fechaDesdeInput} 
+    onChange={(e) => setFechaDesdeInput(e.target.value)} 
+  />
+  <span className="text-muted">→</span>
+  <input 
+    type="date" 
+    className="form-control form-control-sm bg-dark text-white border-0 font-monospace" 
+    style={{ colorScheme: 'dark' }}
+    value={fechaHastaInput} 
+    onChange={(e) => setFechaHastaInput(e.target.value)} 
+  />
+  <button 
+    onClick={handleAnalizar} 
+    className="btn btn-sm px-3 fw-bold text-white ms-1" 
+    style={{ backgroundColor: '#8e45e0', borderRadius: '6px' }}
+  >
+    Analizar
+  </button>
+</div>
+      </div>
+
+      {/* BOTÓN VOLVER (SI ESTAMOS EN UNA SECCIÓN) */}
+      {seccionActiva !== 'MENU' && (
+        <div className="mb-4 d-flex align-items-center justify-content-between">
           <button 
-            onClick={handleAnalizar} 
-            className="btn btn-sm px-3 fw-bold text-white ms-1" 
-            style={{ backgroundColor: '#8e45e0', borderRadius: '6px' }}
+            onClick={() => setSeccionActiva('MENU')} 
+            className="btn btn-volver btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-2 rounded-3"
           >
-            Analizar
+            <i className="bi bi-arrow-left"></i> Volver al Menú Principal
           </button>
+          <span className="text-white-50 small">
+            Período: <strong>{fechaDesde}</strong> al <strong>{fechaHasta}</strong>
+          </span>
         </div>
-      </div>
+      )}
 
-      {/* NAV / ACCESOS DIRECTOS DE SECCIONES */}
-      <div className="d-flex align-items-center gap-3 mb-4 pb-2 border-bottom border-secondary" style={{ borderColor: '#2d2d30 !important' }}>
-        <span 
-          className="fw-extrabold text-white font-monospace" 
-          style={{ fontSize: '0.9rem', letterSpacing: '1.2px' }}
-        >
-          SECCIONES:
-        </span>
-        <div className="d-flex flex-wrap gap-2">
-          {[
-            { label: 'FINANZAS Y CAJA', id: 'sec-finanzas', icon: 'bi-wallet2', color: '#8e45e0' },
-            { label: 'VENTAS Y PRODUCTOS', id: 'sec-ventas', icon: 'bi-bag-check-fill', color: '#20c997' },
-            { label: 'OPERACIONES Y RRHH', id: 'sec-operaciones', icon: 'bi-people-fill', color: '#0dcaf0' },
-            { label: 'CLIENTES', id: 'sec-clientes', icon: 'bi-trophy-fill', color: '#ffc107' },
-            { label: 'CONTROL INTERNO', id: 'sec-control', icon: 'bi-shield-check', color: '#f43f5e' }
-          ].map((btn) => (
-            <button
-              key={btn.id}
-              onClick={() => scrollToSection(btn.id)}
-              className="btn btn-shortcut-nav text-white font-monospace d-flex align-items-center gap-2 px-3 py-2"
-            >
-              <i className={`bi ${btn.icon}`} style={{ color: btn.color }}></i>
-              {btn.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* ========================================================= */}
+      {/* VISTA 0: MENÚ PRINCIPAL                                  */}
+      {/* ========================================================= */}
+      {seccionActiva === 'MENU' && (
+        <div>
+          {/* KPI CARDS GLOBALES */}
+          <div className="row g-3 mb-4">
+            {[
+              { label: 'INGRESOS TOTALES', val: `$${metricas.ventasTotales.toLocaleString('es-AR')}`, color: '#8e45e0', icon: 'bi-currency-dollar' },
+              { label: 'TICKETS GENERADOS', val: metricas.ticketsGenerados, color: '#20c997', icon: 'bi-receipt' },
+              { label: 'TICKET PROMEDIO', val: `$${metricas.ticketPromedio}`, color: '#0dcaf0', icon: 'bi-graph-up-arrow' },
+              { label: 'MOVIMIENTOS DE CAJA', val: `${metricas.cantidadMovimientos} reg`, color: '#ffc107', icon: 'bi-wallet2' }
+            ].map((card, idx) => (
+              <div className="col-12 col-sm-6 col-xl-3" key={idx}>
+                <div className="p-3 rounded-4 position-relative overflow-hidden h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderTop: `4px solid ${card.color}` }}>
+                  <div className="text-white-50 small mb-1 fw-semibold">{card.label}</div>
+                  <h2 className="fw-bold mb-0 text-white" style={{ fontSize: '1.8rem' }}>{card.val}</h2>
+                  <i className={`bi ${card.icon} position-absolute end-0 bottom-0 mb-1 me-3`} style={{ fontSize: '3.5rem', color: card.color, opacity: 0.15 }}></i>
+                </div>
+              </div>
+            ))}
+          </div>
 
-      {/* KPI CARDS GLOBALES */}
-      <div className="row g-3 mb-5">
-        {[
-          { label: 'INGRESOS TOTALES', val: `$${metricas.ventasTotales.toLocaleString('es-AR')}`, color: '#8e45e0', icon: 'bi-currency-dollar' },
-          { label: 'TICKETS GENERADOS', val: metricas.ticketsGenerados, color: '#20c997', icon: 'bi-receipt' },
-          { label: 'TICKET PROMEDIO', val: `$${metricas.ticketPromedio}`, color: '#0dcaf0', icon: 'bi-graph-up-arrow' },
-          { label: 'MOVIMIENTOS DE CAJA', val: `${metricas.cantidadMovimientos} reg`, color: '#ffc107', icon: 'bi-wallet2' }
-        ].map((card, idx) => (
-          <div className="col-12 col-sm-6 col-xl-3" key={idx}>
-            <div className="p-3 rounded-4 position-relative overflow-hidden h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderTop: `4px solid ${card.color}` }}>
-              <div className="text-white-50 small mb-1 fw-semibold">{card.label}</div>
-              <h2 className="fw-bold mb-0 text-white" style={{ fontSize: '1.8rem' }}>{card.val}</h2>
-              <i className={`bi ${card.icon} position-absolute end-0 bottom-0 mb-1 me-3`} style={{ fontSize: '3.5rem', color: card.color, opacity: 0.15 }}></i>
+          <h5 className="fw-bold mb-3 text-white-50 font-monospace" style={{ fontSize: '0.9rem', letterSpacing: '1px' }}>
+            SELECCIONÁ UN MÓDULO PARA VER SUS INFORMES DETALLADOS:
+          </h5>
+
+          {/* TARJETAS DE SECCIÓN Y DESCARGA DE PDF (FILAS IGUALADAS CON ALIGN-ITEMS-STRETCH) */}
+          <div className="row g-4 align-items-stretch">
+            {seccionesMenu.map((sec) => (
+              <div className="col-12 col-md-6 col-xl-4 d-flex" key={sec.id}>
+                <div 
+                  onClick={() => setSeccionActiva(sec.id)}
+                  className="card-menu-item p-4 w-100 d-flex flex-column justify-content-between"
+                  style={{ borderLeft: `5px solid ${sec.color}` }}
+                >
+                  <div>
+                    <div className="d-flex align-items-center justify-content-between mb-3">
+                      <i className={`bi ${sec.icon}`} style={{ fontSize: '2rem', color: sec.color }}></i>
+                      <span className="badge bg-dark text-white-50 border border-secondary px-2 py-1">Ver Reportes →</span>
+                    </div>
+                    <h4 className="fw-bold text-white mb-2">{sec.label}</h4>
+                    <p className="text-white-50 small mb-0">{sec.desc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* SEXTA TARJETA: BOTÓN DESCARGAR INFORMES EN PDF */}
+            <div className="col-12 col-md-6 col-xl-4 d-flex">
+              <div 
+                onClick={() => alert("Función de descarga en PDF en desarrollo.")}
+                className="card-menu-item p-4 w-100 d-flex flex-column justify-content-between"
+                style={{ borderLeft: '5px solid #e22e2e' }}
+              >
+                <div>
+                  <div className="d-flex align-items-center justify-content-between mb-3">
+                    <i className="bi bi-file-earmark-pdf-fill" style={{ fontSize: '2rem', color: '#e22e2e' }}></i>
+                    <span className="badge bg-danger text-white px-2 py-1">Próximamente</span>
+                  </div>
+                  <h4 className="fw-bold text-white mb-2">EXPORTAR INFORMES</h4>
+                  <p className="text-white-50 small mb-0">Generar y descargar un documento consolidado con las métricas del período</p>
+                </div>
+
+                <button 
+                  type="button"
+                  className="btn btn-sm text-white fw-bold w-100 mt-4 d-flex align-items-center justify-content-center gap-2 py-2"
+                  style={{ backgroundColor: '#e22e2e', borderRadius: '8px' }}
+                >
+                  <i className="bi bi-file-earmark-arrow-down-fill fs-6"></i>
+                  Descargar Informes en un PDF
+                </button>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
       {/* ========================================== */}
       {/* 1. SECCIÓN: FINANZAS Y CAJA                */}
       {/* ========================================== */}
-      <div id="sec-finanzas" className="d-flex align-items-center gap-2 mb-3" style={{ scrollMarginTop: '20px' }}>
-        <span className="text-uppercase fw-bold text-white-50 font-monospace" style={{ fontSize: '0.8rem', letterSpacing: '1px' }}>
-          — FINANZAS Y CAJA
-        </span>
-        <div className="flex-grow-1 border-bottom" style={{ borderColor: '#2d2d30' }}></div>
-      </div>
-
-      <div className="row g-4 mb-5">
-        <div className="col-12 col-xl-8">
-          <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <h5 className="fw-bold mb-4" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-activity me-2" style={{ color: '#8e45e0' }}></i>Evolución de Ingresos a Caja
-            </h5>
-            <div style={{ height: '300px', width: '100%' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={metricas.ventasPorPeriodo} margin={{ top: 10, right: 35, left: 0, bottom: 15 }}>
-                  <defs>
-                    <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8e45e0" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#8e45e0" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                  <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={15} />
-                  <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
-                  <RechartsTooltip content={<CustomAreaTooltip esMismoDia={esMismoDia} />} />
-                  <Area type="monotone" dataKey="ventas" stroke="#8e45e0" strokeWidth={3} fillOpacity={1} fill="url(#colorVentas)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+      {seccionActiva === 'finanzas' && (
+        <>
+          <div className="d-flex align-items-center gap-2 mb-4">
+            <h3 className="fw-bold mb-0" style={{ color: '#8e45e0' }}>
+              <i className="bi bi-wallet2 me-2"></i>Finanzas y Caja
+            </h3>
           </div>
-        </div>
 
-        <div className="col-12 col-xl-4">
-          <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <h5 className="fw-bold mb-4" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-pie-chart-fill me-2" style={{ color: '#20c997' }}></i>Tipos / Medios de Pago
-            </h5>
-            <div style={{ height: '300px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={metricas.distribucionMediosPago} cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none">
-                    {metricas.distribucionMediosPago.map((_: any, index: number) => (
-                      <Cell key={`cell-pago-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip contentStyle={{ backgroundColor: '#222122', borderColor: '#3f3f46', borderRadius: '8px' }} />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* EGRESOS DETALLADOS */}
-        <div className="col-12">
-          <div className="p-4 rounded-4 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-arrow-down-right-circle-fill me-2" style={{ color: '#e22e2e' }}></i>Egresos y Salidas de Caja Detallados
-            </h5>
-            {metricas.detalleEgresos && metricas.detalleEgresos.length > 0 ? (
-              <div style={{ height: '250px', width: '100%' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={metricas.detalleEgresos} margin={{ top: 10, right: 30, left: 20, bottom: 10 }} barSize={35}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                    <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />
-                    <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
-                    <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEgresoTooltip esMismoDia={esMismoDia} />} />
-                    <Bar dataKey="monto" fill="#e22e2e" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+          <div className="row g-4 mb-4 align-items-stretch">
+            <div className="col-12 col-xl-8">
+              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+                  <i className="bi bi-activity me-2" style={{ color: '#8e45e0' }}></i>Evolución de Ingresos a Caja
+                </h5>
+                <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={metricas.ventasPorPeriodo} margin={{ top: 10, right: 35, left: 0, bottom: 15 }}>
+                      <defs>
+                        <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#8e45e0" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#8e45e0" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                      <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={15} />
+                      <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
+                      <RechartsTooltip content={<CustomAreaTooltip esMismoDia={esMismoDia} />} />
+                      <Area type="monotone" dataKey="ventas" stroke="#8e45e0" strokeWidth={3} fillOpacity={1} fill="url(#colorVentas)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-            ) : (
-              <div className="text-white-50 text-center py-4">No hay egresos registrados en el período seleccionado.</div>
-            )}
+            </div>
+
+            <div className="col-12 col-xl-4">
+              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+                  <i className="bi bi-pie-chart-fill me-2" style={{ color: '#20c997' }}></i>Tipos / Medios de Pago
+                </h5>
+                <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={metricas.distribucionMediosPago} cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none">
+                        {metricas.distribucionMediosPago.map((_: any, index: number) => (
+                          <Cell key={`cell-pago-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip contentStyle={{ backgroundColor: '#222122', borderColor: '#3f3f46', borderRadius: '8px' }} />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-12">
+              <div className="p-4 rounded-4 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+                  <i className="bi bi-arrow-down-right-circle-fill me-2" style={{ color: '#e22e2e' }}></i>Egresos y Salidas de Caja Detallados
+                </h5>
+                {metricas.detalleEgresos && metricas.detalleEgresos.length > 0 ? (
+                  <div style={{ height: '280px', width: '100%' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={metricas.detalleEgresos} margin={{ top: 10, right: 30, left: 20, bottom: 10 }} barSize={35}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                        <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />
+                        <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
+                        <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEgresoTooltip esMismoDia={esMismoDia} />} />
+                        <Bar dataKey="monto" fill="#e22e2e" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="text-white-50 text-center py-4">No hay egresos registrados en el período seleccionado.</div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* ========================================== */}
       {/* 2. SECCIÓN: VENTAS Y PRODUCTOS             */}
       {/* ========================================== */}
-      <div id="sec-ventas" className="d-flex align-items-center gap-2 mb-3" style={{ scrollMarginTop: '20px' }}>
-        <span className="text-uppercase fw-bold text-white-50 font-monospace" style={{ fontSize: '0.8rem', letterSpacing: '1px' }}>
-          — VENTAS Y PRODUCTOS
-        </span>
-        <div className="flex-grow-1 border-bottom" style={{ borderColor: '#2d2d30' }}></div>
-      </div>
+      {seccionActiva === 'ventas' && (
+        <>
+          <div className="d-flex align-items-center gap-2 mb-4">
+            <h3 className="fw-bold mb-0" style={{ color: '#20c997' }}>
+              <i className="bi bi-bag-check-fill me-2"></i>Ventas y Productos
+            </h3>
+          </div>
 
-      <div className="row g-4 mb-5">
-        <div className="col-12 col-xl-4">
-          <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-diagram-3-fill me-2" style={{ color: '#ffc107' }}></i>Distribución por Estados
-            </h5>
-            <div style={{ height: '250px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={metricas.distribucionEstados} cx="50%" cy="45%" innerRadius={50} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
-                    {metricas.distribucionEstados.map((_: any, index: number) => (
-                      <Cell key={`cell-estado-${index}`} fill={COLORES_TORTA[(index + 2) % COLORES_TORTA.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip contentStyle={{ backgroundColor: '#222122', borderColor: '#3f3f46', borderRadius: '8px' }} />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-                </PieChart>
-              </ResponsiveContainer>
+          <div className="row g-4 mb-4 align-items-stretch">
+            <div className="col-12 col-xl-4">
+              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+                  <i className="bi bi-diagram-3-fill me-2" style={{ color: '#ffc107' }}></i>Distribución por Estados
+                </h5>
+                <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={metricas.distribucionEstados} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none">
+                        {metricas.distribucionEstados.map((_: any, index: number) => (
+                          <Cell key={`cell-estado-${index}`} fill={COLORES_TORTA[(index + 2) % COLORES_TORTA.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip contentStyle={{ backgroundColor: '#222122', borderColor: '#3f3f46', borderRadius: '8px' }} />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-12 col-xl-4">
+              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+                  <i className="bi bi-box-seam-fill me-2" style={{ color: '#20c997' }}></i>Productos Más Vendidos
+                </h5>
+                <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie 
+                        data={metricas?.productosMasVendidos || []} 
+                        cx="50%" 
+                        cy="45%" 
+                        innerRadius={60} 
+                        outerRadius={95} 
+                        paddingAngle={5} 
+                        dataKey="value" 
+                        stroke="none"
+                      >
+                        {(metricas?.productosMasVendidos || []).map((_: any, index: number) => (
+                          <Cell key={`cell-prod-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip 
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            const colorSlice = data.color || '#20c997';
+
+                            return (
+                              <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
+                                <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.nombreReal || data.name}</p>
+                                <p className="small mb-0">{data.name} — Unidades vendidas: <span className="text-white fw-bold">{data.value}</span></p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-12 col-xl-4">
+              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+                  <i className="bi bi-tags-fill me-2" style={{ color: '#8e45e0' }}></i>Categorías Más Vendidas
+                </h5>
+                <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={metricas?.categoriasMasVendidas || []} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                      <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
+                      <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <RechartsTooltip cursor={{ fill: '#222122' }} contentStyle={{ backgroundColor: '#18181b', borderColor: '#8e45e0', borderRadius: '8px', color: '#fff' }} />
+                      <Bar dataKey="ventas" fill="#8e45e0" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="col-12 col-xl-4">
-          <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-box-seam-fill me-2" style={{ color: '#20c997' }}></i>Productos Más Vendidos
-            </h5>
-            <div style={{ height: '250px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie 
-                    data={metricas?.productosMasVendidos || []} 
-                    cx="50%" 
-                    cy="45%" 
-                    innerRadius={50} 
-                    outerRadius={80} 
-                    paddingAngle={5} 
-                    dataKey="value" 
-                    stroke="none"
-                  >
-                    {(metricas?.productosMasVendidos || []).map((_: any, index: number) => (
-                      <Cell key={`cell-prod-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        const colorSlice = data.color || '#20c997';
-
-                        return (
-                          <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
-                            <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.nombreReal || data.name}</p>
-                            <p className="small mb-0">{data.name} — Unidades vendidas: <span className="text-white fw-bold">{data.value}</span></p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-12 col-xl-4">
-          <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-tags-fill me-2" style={{ color: '#8e45e0' }}></i>Categorías Más Vendidas
-            </h5>
-            <div style={{ height: '250px', width: '100%' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={metricas?.categoriasMasVendidas || []} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                  <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
-                  <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <RechartsTooltip cursor={{ fill: '#222122' }} contentStyle={{ backgroundColor: '#18181b', borderColor: '#8e45e0', borderRadius: '8px', color: '#fff' }} />
-                  <Bar dataKey="ventas" fill="#8e45e0" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* ========================================== */}
       {/* 3. SECCIÓN: OPERACIONES Y RECURSOS HUMANOS */}
       {/* ========================================== */}
-      <div id="sec-operaciones" className="d-flex align-items-center gap-2 mb-3" style={{ scrollMarginTop: '20px' }}>
-        <span className="text-uppercase fw-bold text-white-50 font-monospace" style={{ fontSize: '0.8rem', letterSpacing: '1px' }}>
-          — OPERACIONES Y RECURSOS HUMANOS
-        </span>
-        <div className="flex-grow-1 border-bottom" style={{ borderColor: '#2d2d30' }}></div>
-      </div>
+      {seccionActiva === 'operaciones' && (
+        <>
+          <div className="d-flex align-items-center gap-2 mb-4">
+            <h3 className="fw-bold mb-0" style={{ color: '#0dcaf0' }}>
+              <i className="bi bi-people-fill me-2"></i>Operaciones y Recursos Humanos
+            </h3>
+          </div>
 
-      <div className="row g-4 mb-5">
-        <div className="col-12 col-xl-8">
-          <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-person-badge-fill me-2" style={{ color: '#0dcaf0' }}></i>Recaudación de Empleado por Pago Completado
-            </h5>
-            <div style={{ height: '250px', width: '100%' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={metricas.rendimientoEmpleados} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                  <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
-                  <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
-                  <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEmpleadoTooltip />} />
-                  <Bar dataKey="ventas" fill="#0dcaf0" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+          <div className="row g-4 mb-4 align-items-stretch">
+            <div className="col-12 col-xl-8">
+              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+                  <i className="bi bi-person-badge-fill me-2" style={{ color: '#0dcaf0' }}></i>Recaudación de Empleado por Pago Completado
+                </h5>
+                <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={metricas.rendimientoEmpleados} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                      <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
+                      <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
+                      <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEmpleadoTooltip />} />
+                      <Bar dataKey="ventas" fill="#0dcaf0" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-12 col-xl-4">
+              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+                  <i className="bi bi-check2-square me-2" style={{ color: '#0dcaf0' }}></i>Pedidos Completados por Empleado
+                </h5>
+                <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={metricas.pedidosCompletadosPorEmpleado}
+                        cx="50%"
+                        cy="45%"
+                        innerRadius={60}
+                        outerRadius={95}
+                        paddingAngle={5}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {(metricas.pedidosCompletadosPorEmpleado || []).map((_: any, index: number) => (
+                          <Cell key={`cell-emp-completado-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            const colorSlice = data.color || '#0dcaf0';
+
+                            return (
+                              <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff', fontSize: '0.85rem' }}>
+                                <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.name}</p>
+                                <p className="small mb-0 text-white">Pedidos finalizados: <span className="fw-bold">{data.value}</span></p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </>
+      )}
 
-        <div className="col-12 col-xl-4">
-          <div className="p-4 rounded-4 h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-check2-square me-2" style={{ color: '#0dcaf0' }}></i>Pedidos Completados por Empleado
-            </h5>
-            <div style={{ height: '250px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={metricas.pedidosCompletadosPorEmpleado}
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {(metricas.pedidosCompletadosPorEmpleado || []).map((_: any, index: number) => (
-                      <Cell key={`cell-emp-completado-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        const colorSlice = data.color || '#0dcaf0';
-
-                        return (
-                          <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff', fontSize: '0.85rem' }}>
-                            <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.name}</p>
-                            <p className="small mb-0 text-white">Pedidos finalizados: <span className="fw-bold">{data.value}</span></p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-      </div>
-
-     {/* ========================================== */}
+      {/* ========================================== */}
       {/* 4. SECCIÓN: CLIENTES                       */}
       {/* ========================================== */}
-      <div id="sec-clientes" className="d-flex align-items-center gap-2 mb-3" style={{ scrollMarginTop: '20px' }}>
-        <span className="text-uppercase fw-bold text-white-50 font-monospace" style={{ fontSize: '0.8rem', letterSpacing: '1px' }}>
-          — CLIENTES
-        </span>
-        <div className="flex-grow-1 border-bottom" style={{ borderColor: '#2d2d30' }}></div>
-      </div>
-
-      <div className="row g-4 mb-5">
-        {/* CLIENTES MÁS ACTIVOS */}
-        <div className="col-12 col-xl-6">
-          <div className="p-4 rounded-4 shadow-sm h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-trophy-fill me-2" style={{ color: '#ffc107' }}></i>Clientes Más Activos
-            </h5>
-            
-            {topClientes && topClientes.length > 0 ? (
-              <div style={{ height: '260px', width: '100%', display: 'flex', justifyContent: 'center' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={topClientes}
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={50}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="totalGastado"
-                      stroke="none"
-                    >
-                      {topClientes.map((_: any, index: number) => (
-                        <Cell key={`cell-cliente-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload;
-                          const colorSlice = data.color || '#ffc107';
-
-                          return (
-                            <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
-                              <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.nombreReal || data.name}</p>
-                              <p className="small mb-1 text-white">Total Pagado: <span className="fw-bold">${Number(data.totalGastado).toLocaleString('es-AR')}</span></p>
-                              <p className="small mb-0 text-white-50">Pedidos creados: {data.cantidadPedidos}</p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="text-white-50 text-center py-4">Sin datos de clientes en este período.</div>
-            )}
+      {seccionActiva === 'clientes' && (
+        <>
+          <div className="d-flex align-items-center gap-2 mb-4">
+            <h3 className="fw-bold mb-0" style={{ color: '#ffc107' }}>
+              <i className="bi bi-trophy-fill me-2"></i>Clientes
+            </h3>
           </div>
-        </div>
 
-        {/* VENTAS POR CATEGORÍA DE CLIENTE (NUEVO) */}
-        <div className="col-12 col-xl-6">
-          <div className="p-4 rounded-4 shadow-sm h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
-              <i className="bi bi-person-vcard-fill me-2" style={{ color: '#20c997' }}></i>Ventas por Categoría de Cliente
-            </h5>
-            
-            {metricas.ventasPorCategoriaCliente && metricas.ventasPorCategoriaCliente.length > 0 ? (
-              <div style={{ height: '260px', width: '100%' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={metricas.ventasPorCategoriaCliente} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                    <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                    <RechartsTooltip 
-                      cursor={{ fill: '#222122' }} 
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload;
-                          return (
-                            <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #20c997', color: '#fff' }}>
-                              <p className="fw-bold mb-1 text-success">{data.name}</p>
-                              <p className="small mb-1 text-white">Pedidos solicitados: <span className="fw-bold">{data.ventas}</span></p>
-                              <p className="small mb-0 text-white-50">Monto total: <span className="fw-bold text-white">${Number(data.montoTotal || 0).toLocaleString('es-AR')}</span></p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Bar dataKey="ventas" fill="#20c997" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+          <div className="row g-4 mb-4 align-items-stretch">
+            <div className="col-12 col-xl-6">
+              <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+                  <i className="bi bi-trophy-fill me-2" style={{ color: '#ffc107' }}></i>Clientes Más Activos
+                </h5>
+                
+                {topClientes && topClientes.length > 0 ? (
+                  <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={topClientes}
+                          cx="50%"
+                          cy="45%"
+                          innerRadius={60}
+                          outerRadius={95}
+                          paddingAngle={5}
+                          dataKey="totalGastado"
+                          stroke="none"
+                        >
+                          {topClientes.map((_: any, index: number) => (
+                            <Cell key={`cell-cliente-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              const colorSlice = data.color || '#ffc107';
+
+                              return (
+                                <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
+                                  <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.nombreReal || data.name}</p>
+                                  <p className="small mb-1 text-white">Total Pagado: <span className="fw-bold">${Number(data.totalGastado).toLocaleString('es-AR')}</span></p>
+                                  <p className="small mb-0 text-white-50">Pedidos creados: {data.cantidadPedidos}</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="text-white-50 text-center py-4 my-auto">Sin datos de clientes en este período.</div>
+                )}
               </div>
-            ) : (
-              <div className="text-white-50 text-center py-4">Sin registros de categorías de clientes.</div>
-            )}
+            </div>
+
+            <div className="col-12 col-xl-6">
+              <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <h5 className="fw-bold mb-3" style={{ color: '#a1a1aa' }}>
+                  <i className="bi bi-person-vcard-fill me-2" style={{ color: '#20c997' }}></i>Ventas por Categoría de Cliente
+                </h5>
+                
+                {metricas.ventasPorCategoriaCliente && metricas.ventasPorCategoriaCliente.length > 0 ? (
+                  <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={metricas.ventasPorCategoriaCliente} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                        <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
+                        <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <RechartsTooltip 
+                          cursor={{ fill: '#222122' }} 
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              return (
+                                <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #20c997', color: '#fff' }}>
+                                  <p className="fw-bold mb-1 text-success">{data.name}</p>
+                                  <p className="small mb-1 text-white">Pedidos solicitados: <span className="fw-bold">{data.ventas}</span></p>
+                                  <p className="small mb-0 text-white-50">Monto total: <span className="fw-bold text-white">${Number(data.montoTotal || 0).toLocaleString('es-AR')}</span></p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Bar dataKey="ventas" fill="#20c997" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="text-white-50 text-center py-4 my-auto">Sin registros de categorías de clientes.</div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
+
       {/* ========================================== */}
       {/* 5. SECCIÓN: CONTROL INTERNO Y TALLER       */}
       {/* ========================================== */}
-      <div id="sec-control" className="d-flex align-items-center gap-2 mb-3" style={{ scrollMarginTop: '20px' }}>
-        <span className="text-uppercase fw-bold text-white-50 font-monospace" style={{ fontSize: '0.8rem', letterSpacing: '1px' }}>
-          — CONTROL INTERNO Y TALLER
-        </span>
-        <div className="flex-grow-1 border-bottom" style={{ borderColor: '#2d2d30' }}></div>
-      </div>
+      {seccionActiva === 'control' && (
+        <>
+          <div className="d-flex align-items-center gap-2 mb-4">
+            <h3 className="fw-bold mb-0" style={{ color: '#f43f5e' }}>
+              <i className="bi bi-shield-check me-2"></i>Control Interno y Taller
+            </h3>
+          </div>
 
-      <div className="row g-4">
-        {/* DIFERENCIAS DE ARQUEO */}
-        <div className="col-12 col-xl-4">
-          <div className="p-4 rounded-4 shadow-sm h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                <i className="bi bi-exclamation-triangle-fill me-2" style={{ color: '#f43f5e' }}></i>Arqueos por Empleado
-              </h5>
-              <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
+          <div className="row g-4 align-items-stretch">
+            <div className="col-12 col-xl-4">
+              <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+                    <i className="bi bi-exclamation-triangle-fill me-2" style={{ color: '#f43f5e' }}></i>Arqueos por Empleado
+                  </h5>
+                  <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
+                </div>
+
+                {incongruenciasArqueo && incongruenciasArqueo.length > 0 ? (
+                  <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={incongruenciasArqueo} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                        <XAxis dataKey="empleado" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
+                        <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val}`} />
+                        <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomArqueoTooltip />} />
+                        <Bar dataKey="montoDiferencia" fill="#f43f5e" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="text-white-50 text-center py-4 my-auto">Sin datos de arqueos registrados.</div>
+                )}
+              </div>
             </div>
 
-            {incongruenciasArqueo && incongruenciasArqueo.length > 0 ? (
-              <div style={{ height: '220px', width: '100%' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={incongruenciasArqueo} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                    <XAxis dataKey="empleado" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
-                    <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val}`} />
-                    <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomArqueoTooltip />} />
-                    <Bar dataKey="montoDiferencia" fill="#f43f5e" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+            <div className="col-12 col-xl-4">
+              <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+                    <i className="bi bi-trash3-fill me-2" style={{ color: '#ffc107' }}></i>Mermas Generadas
+                  </h5>
+                  <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
+                </div>
+                {metricas.mermasPorPeriodo && metricas.mermasPorPeriodo.length > 0 ? (
+                  <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={metricas.mermasPorPeriodo} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barSize={35}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                        <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />
+                        <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomMermaTooltip esMismoDia={esMismoDia} />}/>
+                        <Bar dataKey="cantidad" fill="#ffc107" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="text-white-50 text-center py-4 my-auto">No se registraron mermas en el período seleccionado.</div>
+                )}
               </div>
-            ) : (
-              <div className="text-white-50 text-center py-4">Sin datos de arqueos registrados.</div>
-            )}
-          </div>
-        </div>
-
-        {/* MERMAS GENERADAS */}
-        <div className="col-12 col-xl-4">
-          <div className="p-4 rounded-4 shadow-sm h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                <i className="bi bi-trash3-fill me-2" style={{ color: '#ffc107' }}></i>Mermas Generadas
-              </h5>
-              <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
             </div>
-            {metricas.mermasPorPeriodo && metricas.mermasPorPeriodo.length > 0 ? (
-              <div style={{ height: '220px', width: '100%' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={metricas.mermasPorPeriodo} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barSize={35}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                    <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />
-                    <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                    <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomMermaTooltip esMismoDia={esMismoDia} />}/>
-                    <Bar dataKey="cantidad" fill="#ffc107" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="text-white-50 text-center py-4">No se registraron mermas en el período seleccionado.</div>
-            )}
-          </div>
-        </div>
 
-        {/* MÁQUINAS AVERIADAS */}
-        <div className="col-12 col-xl-4">
-          <div className="p-4 rounded-4 shadow-sm h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                <i className="bi bi-tools me-2" style={{ color: '#fd7e14' }}></i>Máquinas Averiadas
-              </h5>
-              <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
-            </div>
-            {metricas.averiasPorPeriodo && metricas.averiasPorPeriodo.length > 0 ? (
-              <div style={{ height: '220px', width: '100%' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={metricas.averiasPorPeriodo} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barSize={35}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                    <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />
-                    <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                    <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomAveriaTooltip esMismoDia={esMismoDia} />} />
-                    <Bar dataKey="cantidad" fill="#fd7e14" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+            <div className="col-12 col-xl-4">
+              <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+                    <i className="bi bi-tools me-2" style={{ color: '#fd7e14' }}></i>Máquinas Averiadas
+                  </h5>
+                  <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
+                </div>
+                {metricas.averiasPorPeriodo && metricas.averiasPorPeriodo.length > 0 ? (
+                  <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={metricas.averiasPorPeriodo} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barSize={35}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                        <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />
+                        <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomAveriaTooltip esMismoDia={esMismoDia} />} />
+                        <Bar dataKey="cantidad" fill="#fd7e14" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="text-white-50 text-center py-4 my-auto">No se registraron averías de máquinas en el período seleccionado.</div>
+                )}
               </div>
-            ) : (
-              <div className="text-white-50 text-center py-4">No se registraron averías de máquinas en el período seleccionado.</div>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 };

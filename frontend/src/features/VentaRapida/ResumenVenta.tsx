@@ -10,6 +10,8 @@ interface Props {
   onSeleccionarCategoria: (id: string) => void;
   onCancelar: () => void;
   onCompletar: () => void;
+  ultimoPedido?: any;
+  onImprimirTicket?: () => void;
 }
 
 export const ResumenVenta: React.FC<Props> = ({ 
@@ -20,7 +22,9 @@ export const ResumenVenta: React.FC<Props> = ({
   categoriaSeleccionadaId, 
   onSeleccionarCategoria, 
   onCancelar, 
-  onCompletar 
+  onCompletar,
+  ultimoPedido,
+  onImprimirTicket
 }) => {
   const catActual = categorias.find(c => {
     const id = c.idCategoriaCliente ?? (c as any).idCategoria ?? (c as any).id_categoria ?? (c as any).id;
@@ -85,18 +89,41 @@ export const ResumenVenta: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* --- BOTONES DE ACCIÓN --- */}
-      <div className="d-flex justify-content-between">
+      {/* --- BOTONES DE ACCIÓN (IGUALES EN TAMAÑO Y PERFECTAMENTE ALINEADOS) --- */}
+      <div className="d-flex justify-content-between align-items-center gap-3 w-100">
         <button 
-          className="btn btn-danger px-4 font-monospace" 
-          style={{ backgroundColor: '#a63333', border: 'none' }}
+          type="button"
+          className="btn btn-danger font-monospace py-2 text-center" 
+          style={{ backgroundColor: '#a63333', border: 'none', flex: 1 }}
           onClick={onCancelar}
         >
           Cancelar
         </button>
+
         <button 
-          className="btn btn-success px-4 font-monospace fw-bold" 
-          style={{ backgroundColor: '#3d824b', border: 'none' }}
+          type="button" 
+          className="btn fw-bold py-2 text-dark font-monospace d-flex align-items-center justify-content-center gap-2"
+          style={{ 
+            backgroundColor: '#eab308', 
+            border: 'none', 
+            borderRadius: '6px',
+            opacity: ultimoPedido ? 1 : 0.4,
+            cursor: ultimoPedido ? 'pointer' : 'not-allowed',
+            flex: 1
+          }}
+          disabled={!ultimoPedido}
+          onClick={onImprimirTicket}
+        >
+          <i className="bi bi-printer-fill fs-6"></i>
+          <span className="text-truncate">
+            {ultimoPedido ? `Imprimir Ticket #${ultimoPedido.id_pedido}` : 'Imprimir Ticket'}
+          </span>
+        </button>
+
+        <button 
+          type="button"
+          className="btn btn-success font-monospace fw-bold py-2 text-center" 
+          style={{ backgroundColor: '#3d824b', border: 'none', flex: 1 }}
           onClick={onCompletar}
         >
           Completar Venta Rápida

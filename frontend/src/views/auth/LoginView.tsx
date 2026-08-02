@@ -137,7 +137,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
           className="btn btn-outline-secondary border-secondary bg-dark text-secondary"
           onClick={() => setVerPassword(!verPassword)}
         >
-      <i className={`bi ${verPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
+      <i className={`bi ${verPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'} text-white`}></i>
     </button>
   </div>
 </div>

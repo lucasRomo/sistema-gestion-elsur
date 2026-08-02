@@ -229,6 +229,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
             required={estado !== 'PRESUPUESTO'} 
             value={fechaEntrega} 
             onChange={(e) => setFechaEntrega(e.target.value)} 
+            style={{ colorScheme: 'dark' }}
           />
         </div>
 

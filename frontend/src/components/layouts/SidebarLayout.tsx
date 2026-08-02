@@ -45,13 +45,9 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   const esAdmin = rolUsuario.toUpperCase().includes('ADMIN') || rolUsuario.toUpperCase().includes('GERENTE');
 
   const tienePermiso = (nombreModulo: string) => {
-    // El Panel Principal/Dashboard debe estar accesible para cualquier usuario autenticado
     if (nombreModulo.toLowerCase() === 'panel principal') return true;
-    
-    // Si es admin o gerente, tiene acceso a todo de fábrica
     if (esAdmin) return true;
 
-    // Extraer array de permisos del objeto usuario (soporta varios formatos de DTO)
     const permisos: any[] = usuario?.permisos || usuario?.rol?.permisos || [];
 
     return permisos.some((p: any) => {
@@ -88,7 +84,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
     { name: 'Proveedores', icon: 'bi-truck', path: '/proveedores' },
   ].filter(item => tienePermiso(item.name));
 
-  // CORREGIDO: Ahora las opciones del gerente pasan por tienePermiso
   const menuGerente = [
     { name: 'Informes', icon: 'bi-file-earmark-bar-graph-fill', path: '/informes' },
     { name: 'Matriz de Permisos', icon: 'bi-shield-lock-fill', path: '/matriz-permisos' },
@@ -123,7 +118,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
       <button
         key={item.name}
         onClick={() => handleNavegacion(item.path)}
-        className="btn d-flex align-items-center w-100 mb-1 px-2 py-1 transition-all"
+        className="btn d-flex align-items-center w-100 transition-all"
         style={{
           backgroundColor: isActive ? '#2d2d30' : 'transparent', 
           color: isActive ? '#8e45e0' : '#d4d4d8', 
@@ -133,17 +128,17 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           fontSize: '0.78rem',
           fontWeight: isActive ? '600' : '400',
           justifyContent: colapsado ? 'center' : 'flex-start',
-          paddingLeft: colapsado ? '0px' : '0.55rem',
-          paddingRight: colapsado ? '0px' : '0.55rem'
+          padding: colapsado ? '0.4rem 0px' : '0.25rem 0.55rem',
+          marginBottom: colapsado ? '0px' : '0.25rem'
         }}
         onMouseEnter={(e) => {
-          if(!isActive) {
-            e.currentTarget.style.backgroundColor = '#222226';
-            e.currentTarget.style.color = '#ffffff';
+          if (!isActive) {
+            e.currentTarget.style.backgroundColor = '#3b1d61';
+            e.currentTarget.style.color = '#e9d5ff';
           }
         }}
         onMouseLeave={(e) => {
-          if(!isActive) {
+          if (!isActive) {
             e.currentTarget.style.backgroundColor = 'transparent';
             e.currentTarget.style.color = '#d4d4d8';
           }
@@ -199,79 +194,85 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         
         {/* BLOQUE SUPERIOR */}
         <div>
-          <div className="d-flex justify-content-between align-items-center mb-2 ps-1" style={{ minHeight: '34px' }}>
-            {!colapsado ? (
-              <div 
-                className="d-flex align-items-center gap-2" 
-                style={{ cursor: 'pointer' }} 
-                onClick={() => navigate('/dashboard')}
-              >
-                <img 
-                  src={logoSur} 
-                  alt="El SUR" 
-                  style={{ 
-                    width: '32px',    
-                    height: 'auto',    
-                    objectFit: 'contain' 
-                  }} 
-                />
+          {/* Cabecera Logo */}
+          <div className="d-flex align-items-center mb-2 ps-1" style={{ minHeight: '34px' }}>
+            <div 
+              className="d-flex align-items-center gap-2" 
+              style={{ cursor: 'pointer' }} 
+              onClick={() => navigate('/dashboard')}
+            >
+              <img 
+                src={logoSur} 
+                alt="El SUR" 
+                style={{ 
+                  width: '32px',    
+                  height: 'auto',    
+                  objectFit: 'contain' 
+                }} 
+              />
+              {!colapsado && (
                 <span className="fw-bold font-monospace text-white" style={{ fontSize: '1rem', letterSpacing: '1px' }}>
                   el SUR
                 </span>
-              </div>
-            ) : (
-              <div style={{ flexGrow: 1 }} />
+              )}
+            </div>
+
+            {/* Botón de colapsar (solo visible cuando está expandido) */}
+            {!colapsado && (
+              <button 
+                className="btn text-white p-1 border-0 ms-auto d-flex align-items-center justify-content-center" 
+                onClick={() => setColapsado(true)}
+                style={{ backgroundColor: 'transparent' }}
+                title="Colapsar menú"
+              >
+                <i className="bi bi-chevron-left fs-6" style={{ color: '#8e45e0' }}></i>
+              </button>
             )}
+          </div>
 
-            <button 
-              className="btn text-white p-1 border-0 d-flex align-items-center justify-content-center" 
-              onClick={() => setColapsado(!colapsado)}
-              style={{ backgroundColor: 'transparent', margin: colapsado ? '0 auto' : '0' }}
-              title={colapsado ? "Expandir menú" : "Colapsar menú"}
+          {/* Área de Info de Usuario / Botón Desplegar al estar colapsado */}
+          {!colapsado ? (
+            <div 
+              className="mb-2 py-2 rounded" 
+              style={{ 
+                backgroundColor: '#292829', 
+                borderLeft: '3px solid #8e45e0',
+                paddingLeft: '0.95rem',
+                paddingRight: '0.5rem',
+                minHeight: '82px'
+              }}
             >
-              <i className={`bi ${colapsado ? 'bi-chevron-right' : 'bi-chevron-left'} fs-6`} style={{ color: '#8e45e0' }}></i>
-            </button>
-          </div>
-
-          {/* Info Usuario */}
-          <div 
-            className="mb-2 py-2 rounded" 
-            style={{ 
-              backgroundColor: '#292829', 
-              borderLeft: '3px solid #8e45e0',
-              paddingLeft: colapsado ? '0px' : '0.95rem',
-              paddingRight: colapsado ? '0px' : '0.5rem',
-              transition: 'all 0.2s'
-            }}
-          >
-            <div className="text-light small font-monospace" style={{ fontSize: '0.8rem' }}>
-              {!colapsado ? (
-                <>Buenos Días: <span style={{ color: '#8e45e0' }} className="fw-bold">{nombrePersona.toUpperCase()}</span></>
-              ) : (
-                <div className="text-center" style={{ width: '100%' }}>
-                  <span style={{ color: '#8e45e0' }} className="fw-bold fs-6">{nombrePersona.substring(0, 1).toUpperCase()}</span>
-                </div>
-              )}
+              <div className="text-light small font-monospace" style={{ fontSize: '0.8rem' }}>
+                Buenos Días: <span style={{ color: '#8e45e0' }} className="fw-bold">{nombrePersona.toUpperCase()}</span>
+              </div>
+              <div className="text-light small font-monospace mt-1" style={{ fontSize: '0.8rem' }}>
+                Fecha: <span className="text-white-50">{fechaActual}</span>
+              </div>
+              <div className="text-light small font-monospace mt-1" style={{ fontSize: '0.8rem' }}>
+                Rol: <span className="badge bg-dark ms-2" style={{ color: '#8e45e0', border: '1px solid #8e45e0', fontSize: '0.68rem' }}>{rolUsuario}</span>
+              </div>
             </div>
-            <div className="text-light small font-monospace mt-1" style={{ fontSize: '0.8rem' }}>
-              {!colapsado ? (
-                <>Fecha: <span className="text-white-50">{fechaActual}</span></>
-              ) : (
-                <div className="text-center" style={{ width: '100%' }}>
-                  <i className="bi bi-calendar-event" style={{ color: '#a1a1aa' }}></i>
-                </div>
-              )}
+          ) : (
+            /* Botón para desplegar */
+            <div 
+              className="mb-2 rounded d-flex align-items-center justify-content-center" 
+              style={{ 
+                backgroundColor: '#292829', 
+                minHeight: '40px',
+                height: '40px',
+                borderLeft: '3px solid #8e45e0'
+              }}
+            >
+              <button 
+                className="btn text-white p-1 border-0 w-100 h-100 d-flex align-items-center justify-content-center" 
+                onClick={() => setColapsado(false)}
+                style={{ backgroundColor: 'transparent' }}
+                title="Desplegar menú"
+              >
+                <i className="bi bi-chevron-right fs-6" style={{ color: '#8e45e0' }}></i>
+              </button>
             </div>
-            <div className="text-light small font-monospace mt-1" style={{ fontSize: '0.8rem' }}>
-              {!colapsado ? (
-                <>Rol: <span className="badge bg-dark ms-2" style={{ color: '#8e45e0', border: '1px solid #8e45e0', fontSize: '0.68rem' }}>{rolUsuario}</span></>
-              ) : (
-                <div className="text-center" style={{ width: '100%' }}>
-                  <i className="bi bi-person-badge" style={{ color: '#8e45e0' }}></i>
-                </div>
-              )}
-            </div>
-          </div>
+          )}
 
           <hr className="border-secondary mb-2 mt-2" style={{ opacity: 0.3 }} />
         </div>
@@ -279,72 +280,88 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         {/* LISTA NAVEGACIÓN */}
         <div 
           ref={scrollContainerRef} 
-          className="flex-grow-1 d-flex flex-column justify-content-start gap-2 py-1 no-scrollbar" 
+          className="flex-grow-1 d-flex flex-column py-1 no-scrollbar" 
           style={{ 
             overflowY: 'auto', 
-            overflowX: 'hidden' 
+            overflowX: 'hidden',
+            justifyContent: colapsado ? 'space-evenly' : 'flex-start',
+            gap: colapsado ? '0px' : '0.25rem'
           }}
         >
           {menuPrincipales.length > 0 && (
-            <div>
+            <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
               {menuPrincipales.map(renderizarBotonMenu)}
             </div>
           )}
 
           {menuProduccion.length > 0 && (
-            <div>
-              {colapsado ? <hr className="border-secondary my-1" style={{ opacity: 0.2 }} /> : (
-                <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
-                  — PRODUCCIÓN
-                </div>
-              )}
-              {menuProduccion.map(renderizarBotonMenu)}
-            </div>
+            <>
+              {colapsado && <hr className="border-secondary w-100 my-0" style={{ opacity: 0.2 }} />}
+              <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
+                {!colapsado && (
+                  <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
+                    — PRODUCCIÓN
+                  </div>
+                )}
+                {menuProduccion.map(renderizarBotonMenu)}
+              </div>
+            </>
           )}
 
           {menuStock.length > 0 && (
-            <div>
-              {colapsado ? <hr className="border-secondary my-1" style={{ opacity: 0.2 }} /> : (
-                <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
-                  — STOCK
-                </div>
-              )}
-              {menuStock.map(renderizarBotonMenu)}
-            </div>
+            <>
+              {colapsado && <hr className="border-secondary w-100 my-0" style={{ opacity: 0.2 }} />}
+              <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
+                {!colapsado && (
+                  <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
+                    — STOCK
+                  </div>
+                )}
+                {menuStock.map(renderizarBotonMenu)}
+              </div>
+            </>
           )}
 
           {menuEntidades.length > 0 && (
-            <div>
-              {colapsado ? <hr className="border-secondary my-1" style={{ opacity: 0.2 }} /> : (
-                <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
-                  — ADMINISTRACIÓN / ENTIDADES
-                </div>
-              )}
-              {menuEntidades.map(renderizarBotonMenu)}
-            </div>
+            <>
+              {colapsado && <hr className="border-secondary w-100 my-0" style={{ opacity: 0.2 }} />}
+              <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
+                {!colapsado && (
+                  <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
+                    — ADMINISTRACIÓN / ENTIDADES
+                  </div>
+                )}
+                {menuEntidades.map(renderizarBotonMenu)}
+              </div>
+            </>
           )}
 
-          {/* CORREGIDO: Evaluamos menuGerente.length > 0 en lugar de esAdmin */}
           {menuGerente.length > 0 && (
-            <div>
-              {colapsado ? <hr className="border-secondary my-1" style={{ opacity: 0.2 }} /> : (
-                <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
-                  — OPCIONES DE GERENTE
-                </div>
-              )}
-              {menuGerente.map(renderizarBotonMenu)}
-            </div>
+            <>
+              {colapsado && <hr className="border-secondary w-100 my-0" style={{ opacity: 0.2 }} />}
+              <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
+                {!colapsado && (
+                  <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
+                    — OPCIONES DE GERENTE
+                  </div>
+                )}
+                {menuGerente.map(renderizarBotonMenu)}
+              </div>
+            </>
           )}
 
           {menuConfiguracion.length > 0 && (
-            <div>
-              {colapsado ? <hr className="border-secondary my-1" style={{ opacity: 0.2 }} /> : (
-                <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
-                  — MI CUENTA
-                </div>
-              )}
-              {menuConfiguracion.map(renderizarBotonMenu)}
-            </div>
+            <>
+              {colapsado && <hr className="border-secondary w-100 my-0" style={{ opacity: 0.2 }} />}
+              <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
+                {!colapsado && (
+                  <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
+                    — MI CUENTA
+                  </div>
+                )}
+                {menuConfiguracion.map(renderizarBotonMenu)}
+              </div>
+            </>
           )}
         </div>
 

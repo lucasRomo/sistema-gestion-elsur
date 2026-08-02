@@ -375,22 +375,20 @@ export const ConfiguracionView: React.FC = () => {
                           <td><span className="badge bg-secondary">{resp.tamanio}</span></td>
                           <td><b>@{resp.usuarioOperador}</b></td>
                           <td className="text-center">
-                            <div className="btn-group btn-group-sm">
-                              <button 
-                                onClick={() => handleDescargarRespaldoHistorial(resp.idRespaldo, resp.nombreArchivo)}
-                                className="btn btn-outline-info"
-                                title="Descargar este respaldo"
-                              >
-                                <i className="bi bi-download"></i>
-                              </button>
-                              <button 
-                                onClick={() => handleEliminarRespaldo(resp.idRespaldo)}
-                                className="btn btn-outline-danger"
-                                title="Eliminar respaldo"
-                              >
-                                <i className="bi bi-trash"></i>
-                              </button>
-                            </div>
+                          <div className="d-flex justify-content-center gap-2">
+                          <button 
+                           onClick={() => handleDescargarRespaldoHistorial(resp.idRespaldo, resp.nombreArchivo)}
+                           className="btn btn-outline-info btn-sm"
+                           title="Descargar este respaldo">
+                           <i className="bi bi-download"></i>
+                          </button>
+                          <button 
+                           onClick={() => handleEliminarRespaldo(resp.idRespaldo)}
+                           className="btn btn-outline-danger btn-sm"
+                           title="Eliminar respaldo">
+                           <i className="bi bi-trash"></i>
+                          </button>
+                          </div>
                           </td>
                         </tr>
                       ))
