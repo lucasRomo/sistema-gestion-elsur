@@ -321,9 +321,9 @@ export const MatrizPermisosView: React.FC = () => {
     <div className="container-fluid text-white font-monospace py-2 px-3">
       {/* HEADER COMPACTO */}
       <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
-        <div>
-          <h3 className="fw-bold mb-0" style={{ color: '#ffffff', fontSize: '1.4rem' }}>Matriz de Permisos por Perfil</h3>
-          <p className="text-white-50 mb-0 small" style={{ fontSize: '0.75rem' }}>Configuración dinámica de acceso a ventanas y asignación de personal</p>
+        <div style={{ width: '335px' }}></div>
+        <div className="text-center">
+          <h3 className="fw-bold mb-0" style={{ color: '#ffffff', fontSize: '1.8rem' }}>Matriz de Permisos por Perfil</h3>
         </div>
         
         <div className="d-flex align-items-center gap-2">

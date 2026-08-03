@@ -24,6 +24,9 @@ export const ConfiguracionView: React.FC = () => {
   const [archivoSeleccionado, setArchivoSeleccionado] = useState<File | null>(null);
   const [cargandoRestaurar, setCargandoRestaurar] = useState(false);
 
+  // ESTADO PARA EL MODAL PERSONALIZADO DE RESTAURACIÓN
+  const [mostrarModalConfirmacion, setMostrarModalConfirmacion] = useState(false);
+
   const usuarioGuardado = localStorage.getItem('usuario_logueado');
   const usuario = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
   const token = localStorage.getItem('token');
@@ -177,22 +180,26 @@ export const ConfiguracionView: React.FC = () => {
     }
   };
 
-  const handleRestaurarRespaldo = async (e: React.FormEvent) => {
+  // Intercepta el submit para mostrar el modal en lugar del window.confirm
+  const handleRestaurarRespaldoClick = (e: React.FormEvent) => {
     e.preventDefault();
     if (!archivoSeleccionado) {
       setMensajeRespaldo({ texto: 'Por favor selecciona un archivo JSON de respaldo.', tipo: 'error' });
       return;
     }
+    setMostrarModalConfirmacion(true);
+  };
 
-    if (!window.confirm("¡ATENCIÓN! La restauración sobrescribirá/actualizará los datos existentes con la copia cargada. ¿Deseas continuar?")) {
-      return;
-    }
-
+  // Ejecuta la restauración real al confirmar en el modal
+  const ejecutarRestauracion = async () => {
+    setMostrarModalConfirmacion(false);
     setCargandoRestaurar(true);
     setMensajeRespaldo(null);
 
     const formData = new FormData();
-    formData.append('archivo', archivoSeleccionado);
+    if (archivoSeleccionado) {
+      formData.append('archivo', archivoSeleccionado);
+    }
 
     try {
       const response = await fetch('http://localhost:8080/api/respaldos/restaurar', {
@@ -221,8 +228,9 @@ export const ConfiguracionView: React.FC = () => {
   return (
     <div className="container-fluid text-white font-monospace pb-5">
       <div className="mb-4 pb-3 border-bottom border-secondary" style={{ borderColor: '#2d2d30 !important' }}>
-        <h2 className="fw-bold mb-1"><i className="bi bi-gear-fill me-2 text-info"></i>Configuración y Respaldo</h2>
-        <p className="text-white-50 mb-0 small">Administración de credenciales personales y contingencia de datos para mostrador</p>
+        <div className="text-center">
+          <h3 className="fw-bold mb-0" style={{ color: '#ffffff', fontSize: '1.8rem' }}>Configuración y Respaldo</h3>
+        </div>
       </div>
 
       <div className="row g-4 mt-2">
@@ -327,7 +335,7 @@ export const ConfiguracionView: React.FC = () => {
               <h6 className="fw-bold text-warning mb-2 small">
                 <i className="bi bi-upload me-2"></i>Cargar / Restaurar Copia de Seguridad JSON
               </h6>
-              <form onSubmit={handleRestaurarRespaldo} className="d-flex gap-2">
+              <form onSubmit={handleRestaurarRespaldoClick} className="d-flex gap-2">
                 <input 
                   type="file" 
                   accept=".json"
@@ -375,20 +383,22 @@ export const ConfiguracionView: React.FC = () => {
                           <td><span className="badge bg-secondary">{resp.tamanio}</span></td>
                           <td><b>@{resp.usuarioOperador}</b></td>
                           <td className="text-center">
-                          <div className="d-flex justify-content-center gap-2">
-                          <button 
-                           onClick={() => handleDescargarRespaldoHistorial(resp.idRespaldo, resp.nombreArchivo)}
-                           className="btn btn-outline-info btn-sm"
-                           title="Descargar este respaldo">
-                           <i className="bi bi-download"></i>
-                          </button>
-                          <button 
-                           onClick={() => handleEliminarRespaldo(resp.idRespaldo)}
-                           className="btn btn-outline-danger btn-sm"
-                           title="Eliminar respaldo">
-                           <i className="bi bi-trash"></i>
-                          </button>
-                          </div>
+                            <div className="d-flex justify-content-center gap-2">
+                              <button 
+                                onClick={() => handleDescargarRespaldoHistorial(resp.idRespaldo, resp.nombreArchivo)}
+                                className="btn btn-outline-info btn-sm"
+                                title="Descargar este respaldo"
+                              >
+                                <i className="bi bi-download"></i>
+                              </button>
+                              <button 
+                                onClick={() => handleEliminarRespaldo(resp.idRespaldo)}
+                                className="btn btn-outline-danger btn-sm"
+                                title="Eliminar respaldo"
+                              >
+                                <i className="bi bi-trash"></i>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -400,6 +410,56 @@ export const ConfiguracionView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* MODAL PERSONALIZADO DE CONFIRMACIÓN DE RESTAURACIÓN */}
+      {mostrarModalConfirmacion && (
+        <div 
+          className="modal d-block" 
+          style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}
+        >
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>
+            <div 
+              className="modal-content text-center p-4 shadow-lg" 
+              style={{ 
+                backgroundColor: '#18181b', 
+                border: '1px solid #a855f7', 
+                borderRadius: '16px' 
+              }}
+            >
+              <div className="mb-3 text-warning">
+                <i className="bi bi-exclamation-triangle fs-1" style={{ color: '#facc15' }}></i>
+              </div>
+              
+              <h5 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem' }}>
+                ¿Actualizar/Restaurar Datos?
+              </h5>
+              
+              <p className="text-white-50 small mb-4 px-2">
+                ¡ATENCIÓN! La restauración sobrescribirá/borrará los datos existentes por la copia cargada. Uselo con Precaución ¿Deseas continuar?
+              </p>
+              
+              <div className="d-flex justify-content-center gap-3">
+                <button 
+                  type="button" 
+                  className="btn px-4 fw-semibold text-white" 
+                  style={{ backgroundColor: '#168616', borderRadius: '8px' }}
+                  onClick={() => setMostrarModalConfirmacion(false)}
+                >
+                  Volver
+                </button>
+                <button 
+                  type="button" 
+                  className="btn px-4 fw-semibold text-white" 
+                  style={{ backgroundColor: '#e61111', borderRadius: '8px' }}
+                  onClick={ejecutarRestauracion}
+                >
+                  Sí, Actualizar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

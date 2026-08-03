@@ -284,7 +284,6 @@ export const ClienteView = () => {
           onCerrar={() => setClienteCuentaCorriente(null)} 
           onActualizar={() => {
             cargar();
-            setClienteCuentaCorriente(null);
           }} 
         />
       )}

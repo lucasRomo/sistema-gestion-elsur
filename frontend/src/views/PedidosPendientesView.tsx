@@ -14,6 +14,7 @@ import { FilaPedido } from '../features/pedidos/components/FilaPedido';
 import { ModalCambioEstado } from '../features/pedidos/ModalCambioEstado';
 import { ModalRegistrarPago } from '../features/pedidos/ModalRegistrarPago';
 import { VistaTicketModal } from '../features/pedidos/VistaTicketModal';
+import { CuentaCorrienteModal } from '../features/Clientes/CuentaCorrienteModal';
 
 export const PedidosPendientesPage: React.FC = () => {
   const { pedidos, cargando, actualizarEstado, registrarPago } = usePedidosPendientes();
@@ -31,9 +32,14 @@ export const PedidosPendientesPage: React.FC = () => {
   const [sucesoError, setSucesoError] = useState<{ show: boolean; mensaje: string }>({ show: false, mensaje: '' });
   const [empleados, setEmpleados] = useState<any[]>([]);
   const [modalNotif, setModalNotif] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
+  const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<any>(null);
   const [confirmarDesvincular, setConfirmarDesvincular] = useState<{ show: boolean; idComprobante: number | null }>({
     show: false,
     idComprobante: null
+  });
+  const [modalAvisoCuentaCorriente, setModalAvisoCuentaCorriente] = useState<{ show: boolean; pedido: any | null }>({
+  show: false,
+  pedido: null,
   });
 
   // Modal de Advertencia por Deuda / Saldo Pendiente al Entregar o Finalizar
@@ -423,6 +429,15 @@ export const PedidosPendientesPage: React.FC = () => {
     }
   };
 
+  const handleAbrirPago = (pedido: any) => {
+  // Evaluamos la propiedad que ya viene en tu response
+  if (pedido.es_cuenta_corriente) {
+    setModalAvisoCuentaCorriente({ show: true, pedido: pedido });
+  } else {
+    setPedidoPagoSel(pedido);
+  }
+  };
+
   const pedidosFiltrados = pedidos.filter(p => {
     const esVentaRapida = 
       p.observaciones?.toLowerCase().includes('venta rápida') || 
@@ -533,7 +548,7 @@ export const PedidosPendientesPage: React.FC = () => {
                       pedido={pedido}
                       onCambioEstado={handleCambioEstadoCombo}
                       onCambioUbicacion={handleCambioUbicacion}
-                      onSelectPago={setPedidoPagoSel}
+                      onSelectPago={handleAbrirPago}
                       onSelectTicket={setVerTicketPedido}
                       onSubirArchivo={handleSubirArchivoFisico}
                       onEliminarComprobante={handleEliminarComprobanteFisico}
@@ -844,6 +859,86 @@ export const PedidosPendientesPage: React.FC = () => {
         </div>
       )}
 
+{modalAvisoCuentaCorriente.show && (
+  <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
+    <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>
+      <div 
+        className="modal-content text-white text-center p-4" 
+        style={{ 
+          backgroundColor: '#1a1a1c', 
+          border: '2px solid #8e45e0', 
+          borderRadius: '12px' 
+        }}
+      >
+        <div className="d-flex justify-content-center mb-3">
+          <div 
+            className="d-flex align-items-center justify-content-center"
+            style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: 'rgba(142, 69, 224, 0.15)', border: '2px solid #8e45e0' }}
+          >
+            <i className="bi bi-info-circle-fill fs-3" style={{ color: '#8e45e0' }}></i>
+          </div>
+        </div>
+
+        <h5 className="fw-bold mb-3" style={{ color: '#ffffff' }}>
+          Aviso de Cuenta Corriente
+        </h5>
+
+        <p className="mb-4" style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: '1.4' }}>
+          El pago de este pedido está Vinculado a la cuenta corriente del cliente.
+        </p>
+
+        <div className="d-flex flex-column gap-2">
+          {/* Botón 1: Revisar Cuenta Corriente */}
+          <button 
+           type="button" 
+           className="btn py-2 text-white fw-bold"
+           style={{ backgroundColor: '#2563eb', border: 'none', borderRadius: '6px' }}
+           onClick={() => {
+           const clienteAsociado = modalAvisoCuentaCorriente.pedido?.cliente;
+           setModalAvisoCuentaCorriente({ show: false, pedido: null });
+           setClienteCuentaCorriente(clienteAsociado); 
+           }}>
+           <i className="bi bi-wallet2 me-2"></i> Revisar Cuenta Corriente
+          </button>
+
+          {/* Botón 2: Abonar Pedido */}
+          <button 
+            type="button" 
+            className="btn py-2 text-white fw-bold"
+            style={{ backgroundColor: '#15803d', border: 'none', borderRadius: '6px' }}
+            onClick={() => {
+              const pedidoAbonar = modalAvisoCuentaCorriente.pedido;
+              setModalAvisoCuentaCorriente({ show: false, pedido: null });
+              setPedidoPagoSel(pedidoAbonar); // Abre el modal normal de pago si desean abonarlo por afuera
+            }}
+          >
+            <i className="bi bi-cash-coin me-2"></i> Abonar Pedido
+          </button>
+
+          {/* Botón 3: Cerrar ventana */}
+          <button 
+            type="button" 
+            className="btn py-2 text-white fw-bold"
+            style={{ backgroundColor: '#a33c2f', border: 'none', borderRadius: '6px' }}
+            onClick={() => setModalAvisoCuentaCorriente({ show: false, pedido: null })}
+          >
+            Cerrar ventana
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+{clienteCuentaCorriente && (
+  <CuentaCorrienteModal 
+    cliente={clienteCuentaCorriente}
+    onCerrar={() => setClienteCuentaCorriente(null)}
+    onActualizar={() => {
+      // Opcional: recargar la lista de pedidos o datos si se modificó algo en la cuenta corriente
+    }}
+  />
+)}
       {/* SUCCESS MODAL DE ASIGNACION */}
       {modalNotif.show && (
         <SuccesModal 

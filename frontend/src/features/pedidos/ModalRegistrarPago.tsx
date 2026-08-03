@@ -128,9 +128,6 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                   <option value="EFECTIVO">EFECTIVO</option>
                   <option value="TRANSFERENCIA">TRANSFERENCIA</option>
                   <option value="DEBITO">DÉBITO</option>
-                  <option value="CUENTA_CORRIENTE" disabled={esConsumidorFinal}>
-                    CUENTA CORRIENTE {esConsumidorFinal ? '(Deshabilitado - Consumidor Final)' : ''}
-                  </option>
                 </select>
               </div>
 

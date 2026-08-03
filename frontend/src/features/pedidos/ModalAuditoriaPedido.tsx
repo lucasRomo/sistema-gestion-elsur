@@ -3,9 +3,10 @@ import React from 'react';
 interface ModalAuditoriaPedidoProps {
   pedido: any;
   onClose: () => void;
+  onAbrirCuentaCorriente?: (cliente: any) => void; // <--- 1. Agregamos esta prop opcional
 }
 
-export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedido, onClose }) => {
+export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedido, onClose, onAbrirCuentaCorriente }) => {
   if (!pedido) return null;
 
   return (
@@ -25,9 +26,35 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedi
               
               {/* HISTORIAL DE COBROS */}
               <div className="col-md-5">
-                <h6 className="text-uppercase small mb-3 fw-semibold" style={{ color: '#22c55e', letterSpacing: '1px' }}>
+                <h6 className="text-uppercase small mb-2 fw-semibold" style={{ color: '#25d164', letterSpacing: '1px' }}>
                   <i className="bi bi-cash-stack me-2"></i>Historial de Cobros
                 </h6>
+
+                {/* LEYENDA Y BOTÓN DE CUENTA CORRIENTE */}
+                {pedido.es_cuenta_corriente && (
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <div 
+                      className="font-monospace fw-bold" 
+                      style={{ color: '#25d164', fontSize: '0.8rem' }}
+                    >
+                      Pago Vinculada a Cuenta Corriente
+                    </div>
+                    <button 
+                      type="button" 
+                      className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1"
+                      style={{ backgroundColor: '#198d43', border: 'none', borderRadius: '6px', fontSize: '0.75rem', padding: '4px 10px' }}
+                      onClick={() => {
+                        if (onAbrirCuentaCorriente) {
+                          onAbrirCuentaCorriente(pedido.cliente);
+                        }
+                      }}
+                      title="Ver detalle de Cuenta Corriente del Cliente"
+                    >
+                      <i className="bi bi-wallet2"></i> Ver Cuenta Corriente
+                    </button>
+                  </div>
+                )}
+
                 <div style={{ maxHeight: '800px', overflowY: 'auto' }}>
                   {pedido.comprobantes && pedido.comprobantes.length > 0 ? (
                     <table className="table-sm align-middle small text-white" style={{ backgroundColor: '#1a1a1c', borderCollapse: 'collapse', width: '100%' }}>
@@ -42,37 +69,77 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedi
                       <tbody>
                         {[...pedido.comprobantes]
                           .sort((a, b) => new Date(a.fechaCarga).getTime() - new Date(b.fechaCarga).getTime())
-                          .map((pago: any, idx: number) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid #27272a' }}>
-                              <td className="px-3 py-3 font-monospace">#{pago.id_comprobante || idx + 1}</td>
-                              <td className="py-3">
-                                <span className="badge" style={{ backgroundColor: '#27272a', color: '#a1a1aa' }}>{pago.tipoPago || 'EFECTIVO'}</span>
-                              </td>
-                              <td className="text-center py-3">
-                                {pago.urlArchivoComprobante && (
-                                  <a 
-                                    href={`http://localhost:8080${pago.urlArchivoComprobante}`} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
-                                    className="btn btn-sm" 
-                                    title="Ver comprobante" 
-                                    style={{ 
-                                      backgroundColor: 'transparent', 
-                                      border: '1px solid #0dcaf0', 
-                                      color: '#0dcaf0', 
-                                      padding: '2px 8px', 
-                                      borderRadius: '4px', 
-                                      fontSize: '0.9rem', 
-                                      textDecoration: 'none' 
-                                    }}
-                                  >
-                                    <i className="bi bi-eye-fill"></i>
-                                  </a>
-                                )}
-                              </td>
-                              <td className="text-end px-3 py-3 fw-bold text-success font-monospace">+${Number(pago.montoPago || 0).toFixed(2)}</td>
-                            </tr>
-                          ))}
+                          .map((pago: any, idx: number, arrayOriginal: any[]) => {
+                            const esUnico = arrayOriginal.length === 1;
+                            const esPrimero = idx === 0;
+
+                            return (
+                              <tr key={idx} style={{ borderBottom: '1px solid #27272a' }}>
+                                <td className="px-3 py-3 font-monospace">#{pago.id_comprobante || idx + 1}</td>
+                                <td className="py-3">
+                                  <div className="d-flex align-items-center gap-1">
+                                    <span className="badge" style={{ backgroundColor: '#27272a', color: '#a1a1aa' }}>{pago.tipoPago || 'EFECTIVO'}</span>
+                                    
+                                    {esUnico ? (
+                                      <span className="badge" style={{ backgroundColor: 'rgba(13, 202, 240, 0.2)', color: '#0dcaf0', border: '1px solid #0dcaf0' }}>Total</span>
+                                    ) : esPrimero ? (
+                                      <span className="badge" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#22c55e', border: '1px solid #22c55e' }}>Seña Inicial</span>
+                                    ) : (
+                                      <span className="badge" style={{ backgroundColor: 'rgba(255, 193, 7, 0.2)', color: '#ffc107', border: '1px solid #ffc107' }}>Pago Parcial</span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="text-center py-3">
+                                  <div className="d-flex justify-content-center align-items-center gap-1">
+                                    {pago.urlArchivoComprobante && (
+                                      <a 
+                                        href={`http://localhost:8080${pago.urlArchivoComprobante}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="btn btn-sm" 
+                                        title="Ver comprobante" 
+                                        style={{ 
+                                          backgroundColor: 'transparent', 
+                                          border: '1px solid #0dcaf0', 
+                                          color: '#0dcaf0', 
+                                          padding: '2px 8px', 
+                                          borderRadius: '4px', 
+                                          fontSize: '0.9rem', 
+                                          textDecoration: 'none' 
+                                        }}
+                                      >
+                                        <i className="bi bi-eye-fill"></i>
+                                      </a>
+                                    )}
+
+                                    {pago.tipoPago === 'CUENTA_CORRIENTE' && (
+                                      <button 
+                                        onClick={() => {
+                                          // 2. Invocamos la función pasando el objeto cliente asociado al pedido
+                                          if (onAbrirCuentaCorriente) {
+                                            onAbrirCuentaCorriente(pedido.cliente);
+                                          }
+                                        }}
+                                        className="btn btn-sm" 
+                                        title="Ver detalle de Cuenta Corriente" 
+                                        style={{ 
+                                          backgroundColor: 'transparent', 
+                                          border: '1px solid #ffc107', 
+                                          color: '#ffc107', 
+                                          padding: '2px 8px', 
+                                          borderRadius: '4px', 
+                                          fontSize: '0.9rem' 
+                                        }}
+                                      >
+                                        <i className="bi bi-file-earmark-text-fill"></i>
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="text-end px-3 py-3 fw-bold text-success font-monospace">+${Number(pago.montoPago || 0).toFixed(2)}</td>
+                              </tr>
+                            );
+                          })}
                       </tbody>
                     </table>
                   ) : (

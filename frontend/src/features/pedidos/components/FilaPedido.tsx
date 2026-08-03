@@ -230,10 +230,13 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
                 cursor: 'pointer', 
                 backgroundColor: 'transparent', 
                 transition: 'all 0.2s ease',
-                border: `0.8px solid ${p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? '#22c55e' : '#a72828'}`, 
-                opacity: p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? 0.5 : 1
+                border: `0.8px solid ${p.es_cuenta_corriente ? '#6b7280' : (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? '#22c55e' : '#a72828')}`
               }}
               onMouseEnter={(e) => { 
+                if (p.es_cuenta_corriente) {
+                  e.currentTarget.style.backgroundColor = '#374151'; // Un gris sutil al pasar el mouse
+                  return;
+                }
                 const isLocked = (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO'); 
                 e.currentTarget.style.backgroundColor = isLocked ? '#22c55e' : '#a72828';
                 const icon = e.currentTarget.querySelector('i') as HTMLElement;
@@ -241,15 +244,15 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
               }}
               onMouseLeave={(e) => { 
                 e.currentTarget.style.backgroundColor = 'transparent';
+                if (p.es_cuenta_corriente) return;
                 const isLocked = (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO');
                 const icon = e.currentTarget.querySelector('i') as HTMLElement;
                 if (icon) icon.style.color = isLocked ? '#22c55e' : '#a72828'; 
               }}
               onClick={() => onSelectPago(p)}
-              title={p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? "Ya no quedaron mas Señas/Montos por Asignar" : "Registrar Nuevo Monto/Seña"}
-              disabled={p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO'}
+              title={p.es_cuenta_corriente ? "Pago vinculado a Cuenta Corriente" : (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? "Ya no quedaron mas Señas/Montos por Asignar" : "Registrar Nuevo Monto/Seña")}
             >
-              <i className="bi bi-currency-dollar" style={{ fontSize: '16px', color: (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO') ? '#22c55e' : '#a72828', transition: '0.2s' }}></i>
+              <i className="bi bi-currency-dollar" style={{ fontSize: '16px', color: p.es_cuenta_corriente ? '#6b7280' : ((p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO') ? '#22c55e' : '#a72828'), transition: '0.2s' }}></i>
             </button>
 
             {/* Botón Impresión Ticket */}

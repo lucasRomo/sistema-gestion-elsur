@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts';
 import { pedidoService } from '../../services/pedidoService';
 import { cajaService, type MovimientoCaja } from '../../services/cajaService';
 import type { Pedido } from '../../types/Pedido';
@@ -21,6 +21,33 @@ const AVERIAS_MOCK = [
 ];
 
 const COLORES_TORTA = ['#8e45e0', '#20c997', '#e22e2e', '#0dcaf0', '#ffc107'];
+
+// Genera un sparkline "tipo bolsa": muchos puntos con variaciones chicas y acotadas
+// (nada de picos triangulares exagerados), determinístico según una semilla.
+function generarPuntosSparkline(
+  semilla: number,
+  cantidadPuntos: number = 36,
+  amplitud: number = 6,
+  base: number = 25
+): string {
+  let s = semilla;
+  const random = () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+
+  let y = base;
+  const puntos: string[] = [];
+  const paso = 200 / (cantidadPuntos - 1);
+
+  for (let i = 0; i < cantidadPuntos; i++) {
+    const delta = (random() - 0.5) * amplitud;
+    y = Math.max(8, Math.min(42, y + delta));
+    puntos.push(`${(i * paso).toFixed(1)},${y.toFixed(1)}`);
+  }
+
+  return puntos.join(' ');
+}
 
 // Tooltip para Evolución de Caja
 const CustomAreaTooltip = ({ active, payload, label, esMismoDia }: any) => {
@@ -252,7 +279,142 @@ function agruparPorPeriodo<T>(
   }));
 }
 
+// Dado un rango [fDesde, fHasta] devuelve el rango "anterior" equivalente:
+// - Si es un solo día  -> el día anterior
+// - Si el rango es ~1 mes  -> el mes calendario anterior
+// - Si el rango es ~1 año  -> el año calendario anterior
+// - Cualquier otro rango (ej. una semana) -> el mismo largo de días, corrido hacia atrás
+function calcularPeriodoAnterior(fDesde: string, fHasta: string): { desde: string; hasta: string } {
+  const parseFechaLocal = (fechaStr: string) => {
+    const [y, m, d] = fechaStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  };
+  const formatFecha = (f: Date) => {
+    const y = f.getFullYear();
+    const m = String(f.getMonth() + 1).padStart(2, '0');
+    const d = String(f.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  const desde = parseFechaLocal(fDesde);
+  const hasta = parseFechaLocal(fHasta);
+
+  const esUnSoloDia = fDesde === fHasta;
+  const diffDias = Math.round((hasta.getTime() - desde.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  const diffMeses = (hasta.getFullYear() - desde.getFullYear()) * 12 + (hasta.getMonth() - desde.getMonth());
+  const diffAnios = hasta.getFullYear() - desde.getFullYear();
+
+  let nuevoDesde: Date;
+  let nuevoHasta: Date;
+
+  if (esUnSoloDia) {
+    nuevoDesde = new Date(desde);
+    nuevoDesde.setDate(nuevoDesde.getDate() - 1);
+    nuevoHasta = new Date(nuevoDesde);
+  } else if (diffAnios >= 1 && diffDias > 365) {
+    nuevoDesde = new Date(desde.getFullYear() - 1, desde.getMonth(), desde.getDate());
+    nuevoHasta = new Date(hasta.getFullYear() - 1, hasta.getMonth(), hasta.getDate());
+  } else if (diffMeses >= 1 && diffDias > 25) {
+    nuevoDesde = new Date(desde.getFullYear(), desde.getMonth() - 1, desde.getDate());
+    nuevoHasta = new Date(hasta.getFullYear(), hasta.getMonth() - 1, hasta.getDate());
+  } else {
+    nuevoHasta = new Date(desde);
+    nuevoHasta.setDate(nuevoHasta.getDate() - 1);
+    nuevoDesde = new Date(nuevoHasta);
+    nuevoDesde.setDate(nuevoDesde.getDate() - (diffDias - 1));
+  }
+
+  return { desde: formatFecha(nuevoDesde), hasta: formatFecha(nuevoHasta) };
+}
+
+// Genera la serie "Período actual" vs "Período anterior" para un set de eventos con fecha,
+// alineados por hora (si el rango es un solo día) o por día (para cualquier otro rango).
+function generarSerieComparacion(
+  itemsMock: { fecha: string; cantidad: number }[],
+  fDesdeActual: string,
+  fHastaActual: string
+): { label: string; actual: number; anterior: number }[] {
+  const parseFechaLocal = (fechaStr: string) => {
+    const [y, m, d] = fechaStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  };
+
+  const { desde: fDesdeAnterior } = calcularPeriodoAnterior(fDesdeActual, fHastaActual);
+
+  const desdeActual = parseFechaLocal(fDesdeActual);
+  const desdeAnterior = parseFechaLocal(fDesdeAnterior);
+  const esUnSoloDia = fDesdeActual === fHastaActual;
+
+  const mismoDiaQue = (fechaItem: Date, base: Date) =>
+    fechaItem.getFullYear() === base.getFullYear() &&
+    fechaItem.getMonth() === base.getMonth() &&
+    fechaItem.getDate() === base.getDate();
+
+  if (esUnSoloDia) {
+    const sumarPorHora = (base: Date) => {
+      const mapaHoras: { [hora: string]: number } = {};
+      itemsMock.forEach((item) => {
+        const f = new Date(item.fecha);
+        if (mismoDiaQue(f, base)) {
+          const horaStr = f.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+          mapaHoras[horaStr] = (mapaHoras[horaStr] || 0) + item.cantidad;
+        }
+      });
+      return mapaHoras;
+    };
+
+    const horasActual = sumarPorHora(desdeActual);
+    const horasAnterior = sumarPorHora(desdeAnterior);
+    const todasLasHoras = Array.from(new Set([...Object.keys(horasActual), ...Object.keys(horasAnterior)])).sort();
+
+    if (todasLasHoras.length === 0) {
+      return [{ label: '00:00', actual: 0, anterior: 0 }];
+    }
+
+    return todasLasHoras.map((hora) => ({
+      label: hora,
+      actual: horasActual[hora] || 0,
+      anterior: horasAnterior[hora] || 0
+    }));
+  }
+
+  const hastaActual = parseFechaLocal(fHastaActual);
+  const cantidadDias = Math.round((hastaActual.getTime() - desdeActual.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+  const sumarPorDia = (base: Date) =>
+    itemsMock
+      .filter((item) => mismoDiaQue(new Date(item.fecha), base))
+      .reduce((acc, item) => acc + item.cantidad, 0);
+
+  const resultado: { label: string; actual: number; anterior: number }[] = [];
+  for (let i = 0; i < cantidadDias; i++) {
+    const diaActual = new Date(desdeActual);
+    diaActual.setDate(diaActual.getDate() + i);
+
+    const diaAnterior = new Date(desdeAnterior);
+    diaAnterior.setDate(diaAnterior.getDate() + i);
+
+    resultado.push({
+      label: diaActual.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }),
+      actual: sumarPorDia(diaActual),
+      anterior: sumarPorDia(diaAnterior)
+    });
+  }
+
+  return resultado;
+}
+
 type SeccionInforme = 'MENU' | 'finanzas' | 'ventas' | 'operaciones' | 'clientes' | 'control';
+
+interface KpiCard {
+  label: string;
+  sub: string;
+  val: string | number;
+  color: string;
+  icon: string;
+  points: string;
+  changePercent?: number;
+}
 
 export const InformesView: React.FC = () => {
   const hoy = new Date().toLocaleDateString('sv-SE');
@@ -272,6 +434,17 @@ export const InformesView: React.FC = () => {
   const [topClientes, setTopClientes] = useState<any[]>([]);
   const [incongruenciasArqueo, setIncongruenciasArqueo] = useState<any[]>([]);
 
+  // Controla si se muestra el gráfico de comparación (período actual vs anterior) en cada tarjeta
+  const [comparacionActiva, setComparacionActiva] = useState<{ arqueos: boolean; mermas: boolean; averias: boolean }>({
+    arqueos: false,
+    mermas: false,
+    averias: false
+  });
+
+  const toggleComparacion = (clave: 'arqueos' | 'mermas' | 'averias') => {
+    setComparacionActiva((prev) => ({ ...prev, [clave]: !prev[clave] }));
+  };
+
   const [metricas, setMetricas] = useState<any>({
     ventasTotales: 0,
     ticketsGenerados: 0,
@@ -284,6 +457,9 @@ export const InformesView: React.FC = () => {
     detalleEgresos: [],
     mermasPorPeriodo: [],
     averiasPorPeriodo: [],
+    mermasComparacion: [],
+    averiasComparacion: [],
+    arqueosComparacion: [],
     productosMasVendidos: [],
     categoriasMasVendidas: [],
     ventasPorCategoriaCliente: []
@@ -640,6 +816,9 @@ export const InformesView: React.FC = () => {
       }));
     }
 
+    // --- COMPARACIÓN MERMAS: período actual vs período anterior equivalente ---
+    const mermasComparacion = generarSerieComparacion(MERMAS_MOCK, fDesde, fHasta);
+
     // --- LOS CLIENTES CON MÁS INGRESOS ---
     const mapaClientes: { [key: string]: { nombre: string; totalGastado: number; cantidadPedidos: number } } = {};
 
@@ -773,6 +952,20 @@ export const InformesView: React.FC = () => {
 
     setIncongruenciasArqueo(mockIncongruenciasArqueo);
 
+    // --- COMPARACIÓN ARQUEOS: como no hay fecha por registro (es mock fijo por empleado),
+    // se genera un valor "anterior" determinístico a partir del nombre, solo a fines visuales ---
+    const factorDeterministico = (texto: string) => {
+      let suma = 0;
+      for (let i = 0; i < texto.length; i++) suma += texto.charCodeAt(i);
+      return 0.6 + (suma % 50) / 100; // factor entre 0.6 y 1.09
+    };
+
+    const arqueosComparacion = mockIncongruenciasArqueo.map((item) => ({
+      label: item.empleado,
+      actual: item.montoDiferencia,
+      anterior: Math.round(item.montoDiferencia * factorDeterministico(item.empleado))
+    }));
+
     // --- MÁQUINAS AVERIADAS ---
     const averiasEnRango = AVERIAS_MOCK.filter((item) => {
       const f = new Date(item.fecha);
@@ -805,6 +998,9 @@ export const InformesView: React.FC = () => {
         cantidad: item.valor
       }));
     }
+
+    // --- COMPARACIÓN AVERÍAS: período actual vs período anterior equivalente ---
+    const averiasComparacion = generarSerieComparacion(AVERIAS_MOCK, fDesde, fHasta);
 
     // --- TIPOS / MEDIOS DE PAGO ---
     const mapaPagos: { [key: string]: number } = {};
@@ -858,6 +1054,9 @@ export const InformesView: React.FC = () => {
       detalleEgresos,
       mermasPorPeriodo,
       averiasPorPeriodo,
+      mermasComparacion,
+      averiasComparacion,
+      arqueosComparacion,
       productosMasVendidos: productosMasVendidos.length > 0 ? productosMasVendidos : [{ name: 'Sin datos', value: 1 }],
       categoriasMasVendidas: categoriasMasVendidas.length > 0 ? categoriasMasVendidas : [{ name: 'Sin datos', ventas: 0 }],
       ventasPorCategoriaCliente: ventasPorCategoriaCliente.length > 0 ? ventasPorCategoriaCliente : [{ name: 'Sin datos', ventas: 0, montoTotal: 0 }]
@@ -937,6 +1136,46 @@ export const InformesView: React.FC = () => {
     { id: 'control', label: 'CONTROL INTERNO', desc: 'Reportes de mermas, diferencias de arqueo y fallas de máquinas', icon: 'bi-shield-check', color: '#f43f5e' }
   ];
 
+  // Tarjetas de KPIs globales (estilo "trading card")
+  const kpiCards: KpiCard[] = [
+    { 
+      label: 'INGRESOS TOTALES', 
+      sub: 'YMSUR / Total', 
+      val: `$${metricas.ventasTotales.toLocaleString('es-AR')}`, 
+      color: '#8e45e0', 
+      icon: 'bi-currency-dollar', 
+      changePercent: 2.16,
+      points: generarPuntosSparkline(11, 360, 6, 26)
+    },
+    { 
+      label: 'TICKETS GENERADOS', 
+      sub: 'Operaciones', 
+      val: metricas.ticketsGenerados, 
+      color: '#20c997', 
+      icon: 'bi-receipt', 
+      changePercent: 1.8,
+      points: generarPuntosSparkline(22, 360, 6, 24)
+    },
+    { 
+      label: 'TICKET PROMEDIO', 
+      sub: 'Valor Medio', 
+      val: `$${metricas.ticketPromedio}`, 
+      color: '#0dcaf0', 
+      icon: 'bi-graph-up-arrow', 
+      changePercent: -0.9,
+      points: generarPuntosSparkline(33, 360, 6, 27)
+    },
+    { 
+      label: 'MOVIMIENTOS DE CAJA', 
+      sub: 'Registros', 
+      val: `${metricas.cantidadMovimientos} reg`, 
+      color: '#ffc107', 
+      icon: 'bi-wallet2', 
+      changePercent: 3.4,
+      points: generarPuntosSparkline(31, 360, 6, 25)
+    }
+  ];
+
   return (
     <div className="container-fluid text-white font-monospace pb-5">
       <style>{`
@@ -970,11 +1209,8 @@ export const InformesView: React.FC = () => {
 
       {/* HEADER CONTROLES DE FECHA (SIEMPRE VISIBLE) */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom border-secondary gap-3" style={{ borderColor: '#2d2d30 !important' }}>
-        <div>
-          <div className="d-flex align-items-center gap-2">
-            <h2 className="fw-bold mb-0" style={{ color: '#ffffff' }}>Métricas e Informes</h2>
-          </div>
-          <p className="text-white-50 mb-0 small mt-1">Análisis consolidado de caja, producción y recursos</p>
+        <div style={{ marginLeft: '637px' }}>
+          <h2 className="fw-bold mb-0" style={{ color: '#ffffff' }}>Métricas e Informes</h2>
         </div>
 
         {/* SELECTOR DE FECHAS */}
@@ -1025,19 +1261,79 @@ export const InformesView: React.FC = () => {
       {/* ========================================================= */}
       {seccionActiva === 'MENU' && (
         <div>
-          {/* KPI CARDS GLOBALES */}
+          {/* KPI CARDS GLOBALES (estilo trading card) */}
           <div className="row g-3 mb-4">
-            {[
-              { label: 'INGRESOS TOTALES', val: `$${metricas.ventasTotales.toLocaleString('es-AR')}`, color: '#8e45e0', icon: 'bi-currency-dollar' },
-              { label: 'TICKETS GENERADOS', val: metricas.ticketsGenerados, color: '#20c997', icon: 'bi-receipt' },
-              { label: 'TICKET PROMEDIO', val: `$${metricas.ticketPromedio}`, color: '#0dcaf0', icon: 'bi-graph-up-arrow' },
-              { label: 'MOVIMIENTOS DE CAJA', val: `${metricas.cantidadMovimientos} reg`, color: '#ffc107', icon: 'bi-wallet2' }
-            ].map((card, idx) => (
+            {kpiCards.map((card, idx) => (
               <div className="col-12 col-sm-6 col-xl-3" key={idx}>
-                <div className="p-3 rounded-4 position-relative overflow-hidden h-100 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderTop: `4px solid ${card.color}` }}>
-                  <div className="text-white-50 small mb-1 fw-semibold">{card.label}</div>
-                  <h2 className="fw-bold mb-0 text-white" style={{ fontSize: '1.8rem' }}>{card.val}</h2>
-                  <i className={`bi ${card.icon} position-absolute end-0 bottom-0 mb-1 me-3`} style={{ fontSize: '3.5rem', color: card.color, opacity: 0.15 }}></i>
+                <div 
+                  className="p-3 rounded-4 h-100 shadow-sm d-flex flex-column position-relative overflow-hidden" 
+                  style={{ 
+                    backgroundColor: '#18181b', 
+                    border: '1px solid #3f3f46',
+                    minHeight: '160px'
+                  }}
+                >
+                  {/* Cabecera: ícono + ticker + título */}
+                  <div className="d-flex align-items-center gap-2 mb-2 position-relative z-1">
+                    <div 
+                      className="d-flex align-items-center justify-content-center rounded-2" 
+                      style={{ 
+                        backgroundColor: `${card.color}20`, 
+                        color: card.color,
+                        width: '30px',
+                        height: '30px',
+                        fontSize: '0.85rem',
+                        flexShrink: 0
+                      }}
+                    >
+                      <i className={`bi ${card.icon}`}></i>
+                    </div>
+                    <div>
+                      <div className="text-white-50 font-monospace" style={{ fontSize: '0.65rem', letterSpacing: '0.5px' }}>
+                        {card.sub}
+                      </div>
+                      <div className="fw-bold text-white" style={{ fontSize: '0.8rem' }}>
+                        {card.label}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Gráfico de fondo: ocupa la mitad inferior de la tarjeta y se desvanece hacia el medio */}
+                  <div className="position-absolute start-0 end-0 bottom-0 w-100" style={{ height: '58%' }}>
+                    <svg viewBox="0 0 200 50" preserveAspectRatio="none" className="w-100 h-100">
+                      <defs>
+                        <linearGradient id={`grad-dark-${idx}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor={card.color} stopOpacity="0" />
+                          <stop offset="50%" stopColor={card.color} stopOpacity="0" />
+                          <stop offset="100%" stopColor={card.color} stopOpacity="0.22" />
+                        </linearGradient>
+                        <linearGradient id={`line-fade-${idx}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor={card.color} stopOpacity="0" />
+                          <stop offset="50%" stopColor={card.color} stopOpacity="0" />
+                          <stop offset="100%" stopColor={card.color} stopOpacity="1" />
+                        </linearGradient>
+                      </defs>
+                      <polygon
+                        fill={`url(#grad-dark-${idx})`}
+                        points={`0,50 ${card.points} 200,50`}
+                      />
+                      <polyline
+                        fill="none"
+                        stroke={`url(#line-fade-${idx})`}
+                        strokeWidth="0.9"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        points={card.points}
+                      />
+                    </svg>
+                  </div>
+
+                  {/* Valor grande, apoyado abajo de la tarjeta sobre el gráfico */}
+                  <div className="mt-auto position-relative z-1">
+                    <h3 className="fw-bold mb-0 text-white" style={{ fontSize: '1.6rem', letterSpacing: '-0.5px' }}>
+                      {card.val}
+                    </h3>
+                  </div>
                 </div>
               </div>
             ))}
@@ -1484,10 +1780,49 @@ export const InformesView: React.FC = () => {
                   <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
                     <i className="bi bi-exclamation-triangle-fill me-2" style={{ color: '#f43f5e' }}></i>Arqueos por Empleado
                   </h5>
-                  <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
+                  <div className="d-flex align-items-center gap-2">
+                    <button
+                      onClick={() => toggleComparacion('arqueos')}
+                      className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+                      style={{
+                        fontSize: '0.7rem',
+                        backgroundColor: comparacionActiva.arqueos ? '#f43f5e' : 'transparent',
+                        border: '1px solid #f43f5e',
+                        color: comparacionActiva.arqueos ? '#fff' : '#f43f5e'
+                      }}
+                    >
+                      <i className="bi bi-arrow-left-right"></i> Comparar
+                    </button>
+                    <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
+                  </div>
                 </div>
 
-                {incongruenciasArqueo && incongruenciasArqueo.length > 0 ? (
+                {comparacionActiva.arqueos ? (
+                  metricas.arqueosComparacion && metricas.arqueosComparacion.length > 0 ? (
+                    <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+                      <div className="d-flex align-items-center justify-content-end gap-3 mb-2" style={{ fontSize: '0.7rem' }}>
+                        <span className="d-flex align-items-center gap-1 text-white-50"><i className="bi bi-circle-fill" style={{ fontSize: '0.5rem', color: '#a1a1aa' }}></i>Período anterior</span>
+                        <span className="d-flex align-items-center gap-1 text-white-50"><i className="bi bi-circle-fill" style={{ fontSize: '0.5rem', color: '#f43f5e' }}></i>Período actual</span>
+                      </div>
+                      <ResponsiveContainer width="100%" height="90%">
+                        <LineChart data={metricas.arqueosComparacion} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                          <XAxis dataKey="label" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                          <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val}`} />
+                          <RechartsTooltip
+                            cursor={{ stroke: '#3f3f46' }}
+                            contentStyle={{ backgroundColor: '#222122', border: '1px solid #f43f5e', borderRadius: '8px', fontSize: '0.8rem' }}
+                            labelStyle={{ color: '#fff' }}
+                          />
+                          <Line type="monotone" dataKey="anterior" name="Período anterior" stroke="#a1a1aa" strokeWidth={2} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="actual" name="Período actual" stroke="#f43f5e" strokeWidth={2.5} dot={{ r: 3 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="text-white-50 text-center py-4 my-auto">Sin datos suficientes para comparar.</div>
+                  )
+                ) : incongruenciasArqueo && incongruenciasArqueo.length > 0 ? (
                   <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={incongruenciasArqueo} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
@@ -1511,9 +1846,49 @@ export const InformesView: React.FC = () => {
                   <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
                     <i className="bi bi-trash3-fill me-2" style={{ color: '#ffc107' }}></i>Mermas Generadas
                   </h5>
-                  <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
+                  <div className="d-flex align-items-center gap-2">
+                    <button
+                      onClick={() => toggleComparacion('mermas')}
+                      className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+                      style={{
+                        fontSize: '0.7rem',
+                        backgroundColor: comparacionActiva.mermas ? '#ffc107' : 'transparent',
+                        border: '1px solid #ffc107',
+                        color: comparacionActiva.mermas ? '#18181b' : '#ffc107'
+                      }}
+                    >
+                      <i className="bi bi-arrow-left-right"></i> Comparar
+                    </button>
+                    <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
+                  </div>
                 </div>
-                {metricas.mermasPorPeriodo && metricas.mermasPorPeriodo.length > 0 ? (
+
+                {comparacionActiva.mermas ? (
+                  metricas.mermasComparacion && metricas.mermasComparacion.length > 0 ? (
+                    <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+                      <div className="d-flex align-items-center justify-content-end gap-3 mb-2" style={{ fontSize: '0.7rem' }}>
+                        <span className="d-flex align-items-center gap-1 text-white-50"><i className="bi bi-circle-fill" style={{ fontSize: '0.5rem', color: '#a1a1aa' }}></i>Período anterior</span>
+                        <span className="d-flex align-items-center gap-1 text-white-50"><i className="bi bi-circle-fill" style={{ fontSize: '0.5rem', color: '#ffc107' }}></i>Período actual</span>
+                      </div>
+                      <ResponsiveContainer width="100%" height="90%">
+                        <LineChart data={metricas.mermasComparacion} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                          <XAxis dataKey="label" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                          <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                          <RechartsTooltip
+                            cursor={{ stroke: '#3f3f46' }}
+                            contentStyle={{ backgroundColor: '#222122', border: '1px solid #ffc107', borderRadius: '8px', fontSize: '0.8rem' }}
+                            labelStyle={{ color: '#fff' }}
+                          />
+                          <Line type="monotone" dataKey="anterior" name="Período anterior" stroke="#a1a1aa" strokeWidth={2} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="actual" name="Período actual" stroke="#ffc107" strokeWidth={2.5} dot={{ r: 3 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="text-white-50 text-center py-4 my-auto">Sin datos suficientes para comparar.</div>
+                  )
+                ) : metricas.mermasPorPeriodo && metricas.mermasPorPeriodo.length > 0 ? (
                   <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={metricas.mermasPorPeriodo} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barSize={35}>
@@ -1537,9 +1912,49 @@ export const InformesView: React.FC = () => {
                   <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
                     <i className="bi bi-tools me-2" style={{ color: '#fd7e14' }}></i>Máquinas Averiadas
                   </h5>
-                  <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
+                  <div className="d-flex align-items-center gap-2">
+                    <button
+                      onClick={() => toggleComparacion('averias')}
+                      className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+                      style={{
+                        fontSize: '0.7rem',
+                        backgroundColor: comparacionActiva.averias ? '#fd7e14' : 'transparent',
+                        border: '1px solid #fd7e14',
+                        color: comparacionActiva.averias ? '#18181b' : '#fd7e14'
+                      }}
+                    >
+                      <i className="bi bi-arrow-left-right"></i> Comparar
+                    </button>
+                    <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
+                  </div>
                 </div>
-                {metricas.averiasPorPeriodo && metricas.averiasPorPeriodo.length > 0 ? (
+
+                {comparacionActiva.averias ? (
+                  metricas.averiasComparacion && metricas.averiasComparacion.length > 0 ? (
+                    <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+                      <div className="d-flex align-items-center justify-content-end gap-3 mb-2" style={{ fontSize: '0.7rem' }}>
+                        <span className="d-flex align-items-center gap-1 text-white-50"><i className="bi bi-circle-fill" style={{ fontSize: '0.5rem', color: '#a1a1aa' }}></i>Período anterior</span>
+                        <span className="d-flex align-items-center gap-1 text-white-50"><i className="bi bi-circle-fill" style={{ fontSize: '0.5rem', color: '#fd7e14' }}></i>Período actual</span>
+                      </div>
+                      <ResponsiveContainer width="100%" height="90%">
+                        <LineChart data={metricas.averiasComparacion} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+                          <XAxis dataKey="label" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                          <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                          <RechartsTooltip
+                            cursor={{ stroke: '#3f3f46' }}
+                            contentStyle={{ backgroundColor: '#222122', border: '1px solid #fd7e14', borderRadius: '8px', fontSize: '0.8rem' }}
+                            labelStyle={{ color: '#fff' }}
+                          />
+                          <Line type="monotone" dataKey="anterior" name="Período anterior" stroke="#a1a1aa" strokeWidth={2} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="actual" name="Período actual" stroke="#fd7e14" strokeWidth={2.5} dot={{ r: 3 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="text-white-50 text-center py-4 my-auto">Sin datos suficientes para comparar.</div>
+                  )
+                ) : metricas.averiasPorPeriodo && metricas.averiasPorPeriodo.length > 0 ? (
                   <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={metricas.averiasPorPeriodo} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barSize={35}>

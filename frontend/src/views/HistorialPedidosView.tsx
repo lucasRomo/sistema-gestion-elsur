@@ -9,13 +9,15 @@ import { FiltrosHistorial } from '../features/historial/components/FiltrosHistor
 import { FilaHistorial } from '../features/historial/components/FilaHistorial';
 import { ModalAuditoriaPedido } from '../features/pedidos/ModalAuditoriaPedido';
 import { VistaTicketModal } from '../features/pedidos/VistaTicketModal';
+import { CuentaCorrienteModal } from '../features/Clientes/CuentaCorrienteModal';
 
 export const HistorialPedidosPage: React.FC = () => {
   const { pedidos, cargando, recargarHistorial } = useHistorialPedidos();
   const navigate = useNavigate();
   
-  // Estados para control de modales
-  const [pedidoAuditoriaSel, setPedidoAuditoriaSel] = useState<any>(null);
+  // Estados unificados para control de modales
+  const [pedidoAuditoria, setPedidoAuditoria] = useState<any>(null);
+  const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<any>(null);
   const [verTicketPedido, setVerTicketPedido] = useState<any>(null);
 
   // Filtro unificado de búsqueda general y estado histórico
@@ -27,7 +29,7 @@ export const HistorialPedidosPage: React.FC = () => {
     try {
       const pedidoCompleto = await pedidoService.obtenerPorId(idPedido);
       if (pedidoCompleto) {
-        setPedidoAuditoriaSel(pedidoCompleto);
+        setPedidoAuditoria(pedidoCompleto); // <--- Corregido para usar el estado correcto
       } else {
         alert('No se pudo obtener el historial detallado de este pedido.');
       }
@@ -205,10 +207,21 @@ export const HistorialPedidosPage: React.FC = () => {
       </div>
 
       {/* RENDERIZADO DE MODALES DE AUDITORÍA Y TICKET */}
-      {pedidoAuditoriaSel && (
+      {pedidoAuditoria && (
         <ModalAuditoriaPedido 
-          pedido={pedidoAuditoriaSel}
-          onClose={() => setPedidoAuditoriaSel(null)}
+          pedido={pedidoAuditoria} 
+          onClose={() => setPedidoAuditoria(null)}
+          onAbrirCuentaCorriente={(cliente) => {
+            setClienteCuentaCorriente(cliente); 
+          }}
+        />
+      )}
+
+      {clienteCuentaCorriente && (
+        <CuentaCorrienteModal 
+          cliente={clienteCuentaCorriente}
+          onCerrar={() => setClienteCuentaCorriente(null)}
+          onActualizar={() => {}}
         />
       )}
 
