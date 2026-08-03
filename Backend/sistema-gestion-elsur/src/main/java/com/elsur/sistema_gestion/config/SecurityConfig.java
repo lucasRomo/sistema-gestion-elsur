@@ -19,26 +19,28 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http
-        .csrf(csrf -> csrf.disable())
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        
-        .httpBasic(basic -> basic.disable())
-        .formLogin(form -> form.disable())
-        .logout(logout -> logout.disable())
-        
-        .authorizeHttpRequests(auth -> auth
-            // ➔ 1. Permitimos de forma explícita el acceso a la carpeta de uploads/imágenes
-            .requestMatchers("/uploads/**", "/images/**", "/static/**").permitAll()
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
-            // ➔ 2. Tus endpoints de la API
-            .requestMatchers("/api/usuarios/**", "/api/empleados/**", "/api/pedidos/**", "/api/turnos/**").permitAll()
-            .anyRequest().permitAll() 
-        )
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            // SOLUCIÓN: Deshabilitar frameOptions para permitir iframe entre puertos distintos (5173 -> 8080)
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.disable())
+            )
+            
+            .httpBasic(basic -> basic.disable())
+            .formLogin(form -> form.disable())
+            .logout(logout -> logout.disable())
+            
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/uploads/**", "/images/**", "/static/**", "/api/documentos-digital/archivo/**").permitAll()
+                .requestMatchers("/api/usuarios/**", "/api/empleados/**", "/api/pedidos/**", "/api/turnos/**").permitAll()
+                .anyRequest().permitAll() 
+            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-    return http.build();
-}
+        return http.build();
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -48,12 +50,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Permitimos los orígenes
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
-        
-        // SOLUCIÓN: Agregamos "PATCH" a la lista de métodos permitidos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         

@@ -12,6 +12,7 @@ import { PedidosPendientesPage } from '../PedidosPendientesView';
 import { HistorialPedidosPage } from '../HistorialPedidosView'; 
 import { GestionUsuariosView } from '../GestionUsuariosView'; 
 import { CajaView } from '../CajaView';
+import { RepositorioDigitalView } from '../RepositorioDigitalView';
 import { SidebarLayout } from '../../components/layouts/SidebarLayout';
 import { ProtectedRoute } from '../../components/common/ProtectedRoute';
 import { MatrizPermisosView } from '../admin/MatrizPermisosView';
@@ -94,6 +95,14 @@ function App() {
            <ProtectedRoute permisoRequerido="Caja">
             <CajaView />
            </ProtectedRoute>
+          } />
+
+          <Route path="/repositorio" element={
+            <ProtectedRoute permisoRequerido="Repositorio Digital">
+              <SidebarLayout activeItem="Repositorio Digital">
+                <RepositorioDigitalView />
+              </SidebarLayout>
+            </ProtectedRoute>
           } />
 
           <Route path="/configuracion" element={

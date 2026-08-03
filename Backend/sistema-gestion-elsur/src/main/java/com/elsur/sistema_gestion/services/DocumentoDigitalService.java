@@ -1,24 +1,24 @@
 package com.elsur.sistema_gestion.services;
 
 import com.elsur.sistema_gestion.models.DocumentoDigital;
-import com.elsur.sistema_gestion.repositories.DocumentoDigitalRepository;
+import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import java.math.BigDecimal;
 import java.util.List;
 
-@Service
-public class DocumentoDigitalService {
-
-    @Autowired
-    private DocumentoDigitalRepository documentoDigitalRepository;
-
-    public List<DocumentoDigital> findAll() {
-        return documentoDigitalRepository.findAll();
-    }
-
-    public DocumentoDigital save(DocumentoDigital documentoDigital) {
-        return documentoDigitalRepository.save(documentoDigital);
-    }
+public interface DocumentoDigitalService {
+    List<DocumentoDigital> findAllActivos();
+    DocumentoDigital findById(Long id);
+    DocumentoDigital guardarDocumento(
+            String titulo,
+            String autor,
+            String descripcion,
+            Long idArea,
+            BigDecimal precioBase,
+            Integer cantidadPaginas,
+            MultipartFile archivo
+    ) throws Exception;
+    void eliminarLogico(Long id);
+    Resource cargarArchivoComoRecurso(String nombreArchivo) throws Exception;
 }
