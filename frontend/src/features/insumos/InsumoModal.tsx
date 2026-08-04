@@ -1,3 +1,4 @@
+// src/features/insumos/InsumoModal.tsx
 import React, { useState, useEffect } from 'react';
 import type { Insumo } from '../../types/Insumo';
 import type { Proveedor } from '../../types/Proveedor';
@@ -16,6 +17,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   const [formData, setFormData] = useState({
     idInsumo: '',
     nombreInsumo: '',
+    precio: 0,
     stockActual: 0,
     stockMinimo: 0,
     estado: 'Activo',
@@ -38,6 +40,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
       setFormData({
         idInsumo: insumoEditando.idInsumo?.toString() || '',
         nombreInsumo: insumoEditando.nombreInsumo || '',
+        precio: insumoEditando.precio || 0,
         stockActual: insumoEditando.stockActual || 0,
         stockMinimo: insumoEditando.stockMinimo || 0,
         estado: insumoEditando.estado || 'Activo',
@@ -48,6 +51,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
       setFormData({
         idInsumo: '',
         nombreInsumo: '',
+        precio: 0,
         stockActual: 0,
         stockMinimo: 0,
         estado: 'Activo',
@@ -63,14 +67,13 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Armamos el objeto tal cual lo espera Spring Boot
     const insumoAGuardar = {
       ...(formData.idInsumo && { idInsumo: parseInt(formData.idInsumo) }),
       nombreInsumo: formData.nombreInsumo,
+      precio: parseFloat(formData.precio.toString()),
       stockActual: parseFloat(formData.stockActual.toString()),
       stockMinimo: parseFloat(formData.stockMinimo.toString()),
       estado: formData.estado,
-      // Relación con el proveedor (mandamos el objeto con el ID)
       ...(formData.idProveedor && { proveedor: { idProveedor: parseInt(formData.idProveedor) } })
     };
 
@@ -92,7 +95,6 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
             <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
           </div>
 
-
           <form onSubmit={handleSubmit}>
             <div className="modal-body p-4">
               <div className="mb-3">
@@ -103,13 +105,26 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   name="nombreInsumo" 
                   value={formData.nombreInsumo} 
                   onChange={handleChange} 
-                  required onInvalid={(e: any) => {
-                  if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre de Insumo No puede Estar Vacío");
-                  else if (e.target.validity.patternMismatch) e.target.setCustomValidity("El Campo de Nombre de Insumo solo debe contener Letras");
+                  required 
+                  onInvalid={(e: any) => {
+                    if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre de Insumo No puede Estar Vacío");
                   }}
-                  onInput={(e: any) => e.target.setCustomValidity("")}/>
+                  onInput={(e: any) => e.target.setCustomValidity("")}
+                />
               </div>
-              
+
+              <div className="mb-3">
+                <label className="form-label text-white-50 small">Precio ($)</label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  className="form-control bg-dark border-secondary text-white" 
+                  name="precio" 
+                  value={formData.precio} 
+                  onChange={handleChange} 
+                  required 
+                />
+              </div>
 
               <div className="row">
                 <div className="col-md-6 mb-3">

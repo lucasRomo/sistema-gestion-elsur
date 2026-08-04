@@ -1,7 +1,6 @@
 package com.elsur.sistema_gestion.models;
 
 import java.math.BigDecimal;
-
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -19,10 +18,13 @@ public class Insumo {
     private String nombreInsumo;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal stockActual = BigDecimal.ZERO;;
+    private BigDecimal precio = BigDecimal.ZERO;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal stockMinimo = BigDecimal.ZERO;;
+    private BigDecimal stockActual = BigDecimal.ZERO;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal stockMinimo = BigDecimal.ZERO;
 
     @ManyToOne
     @JoinColumn(name = "id_unidad")
@@ -34,8 +36,4 @@ public class Insumo {
 
     @Column(length = 20)
     private String estado;
-
-    // ... otros campos y relaciones ...
 }
-
-

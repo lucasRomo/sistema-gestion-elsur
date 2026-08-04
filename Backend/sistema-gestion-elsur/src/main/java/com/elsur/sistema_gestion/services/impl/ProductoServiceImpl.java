@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductoServiceImpl implements ProductoService {
@@ -46,15 +47,12 @@ public class ProductoServiceImpl implements ProductoService {
             producto.setEstado("Activo");
         }
 
-        // --- LÓGICA DE AUDITORÍA EN EDICIÓN ---
         if (producto.getIdProducto() != null && productoRepository.existsById(producto.getIdProducto())) {
-            
             Producto productoViejo = productoRepository.findById(producto.getIdProducto()).orElse(null);
 
             if (productoViejo != null) {
                 Usuario usuarioActual = obtenerUsuarioOperador(idUsuario);
 
-                // 1. Campos directos
                 compararYRegistrar(usuarioActual, "Producto", "nombreProducto", producto.getIdProducto(),
                         productoViejo.getNombreProducto(), producto.getNombreProducto());
 
@@ -67,7 +65,6 @@ public class ProductoServiceImpl implements ProductoService {
                 compararYRegistrar(usuarioActual, "Producto", "estado", producto.getIdProducto(),
                         productoViejo.getEstado(), producto.getEstado());
 
-                // 2. Relaciones (Categoría y Máquina) con rehidratación de ID/Nombre
                 String catVieja = (productoViejo.getCategoria() != null && productoViejo.getCategoria().getNombre() != null) 
                         ? productoViejo.getCategoria().getNombre() : "";
 
@@ -78,7 +75,7 @@ public class ProductoServiceImpl implements ProductoService {
                     } else if (producto.getCategoria().getIdCategoria() != null) {
                         if (productoViejo.getCategoria() != null && 
                             productoViejo.getCategoria().getIdCategoria().equals(producto.getCategoria().getIdCategoria())) {
-                            catNueva = catVieja; // Mantiene la misma categoría si solo vino el idCategoria desde React
+                            catNueva = catVieja;
                         }
                     }
                 }
@@ -94,7 +91,7 @@ public class ProductoServiceImpl implements ProductoService {
                     } else if (producto.getMaquinaNecesaria().getIdMaquina() != null) {
                         if (productoViejo.getMaquinaNecesaria() != null && 
                             productoViejo.getMaquinaNecesaria().getIdMaquina().equals(producto.getMaquinaNecesaria().getIdMaquina())) {
-                            maqNueva = maqVieja; // Mantiene la misma máquina si solo vino el idMaquina desde React
+                            maqNueva = maqVieja;
                         }
                     }
                 }
@@ -113,36 +110,52 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    public void actualizarPreciosMasivo(double porcentaje) {
-        List<Producto> productos = productoRepository.findAll();
-        aplicarAumento(productos, porcentaje);
-    }
+    public void actualizarPreciosMasivo(double porcentaje, Integer idCategoria, Integer idProveedor, List<Integer> idsProductos, String criterio, Integer idUsuario) {
+        List<Producto> todos = productoRepository.findAll();
+        List<Producto> aModificar;
 
-    @Override
-    @Transactional
-    public void actualizarPreciosPorCategoria(Integer idCategoria, double porcentaje) {
-        // Suponiendo que agregaste este método al ProductoRepository
-        // List<Producto> productos = productoRepository.findByCategoriaIdCategoria(idCategoria);
-        // Si no querés tocar el repo todavía, podés filtrar con stream:
-        List<Producto> productos = productoRepository.findAll().stream()
-                .filter(p -> p.getCategoria() != null && p.getCategoria().getIdCategoria().equals(idCategoria))
-                .toList();
-        
-        aplicarAumento(productos, porcentaje);
-    }
+        if ("SELECCION".equalsIgnoreCase(criterio)) {
+            if (idsProductos == null || idsProductos.isEmpty()) {
+                return; // Si no hay IDs seleccionados, no se modifica nada
+            }
+            List<Integer> ids = idsProductos.stream()
+                    .map(num -> Integer.parseInt(num.toString()))
+                    .collect(Collectors.toList());
 
-    // Método privado para reutilizar la lógica de aumento y redondeo
-    private void aplicarAumento(List<Producto> productos, double porcentaje) {
-        BigDecimal factor = new BigDecimal(porcentaje / 100).add(BigDecimal.ONE);
-        
-        for (Producto p : productos) {
+            aModificar = todos.stream()
+                    .filter(p -> ids.contains(p.getIdProducto()))
+                    .collect(Collectors.toList());
+
+        } else if ("CATEGORIA".equalsIgnoreCase(criterio)) {
+            if (idCategoria == null || idCategoria <= 0) {
+                return; // Si no hay categoría elegida, no se modifica nada
+            }
+            aModificar = todos.stream()
+                    .filter(p -> p.getCategoria() != null && idCategoria.equals(p.getCategoria().getIdCategoria()))
+                    .collect(Collectors.toList());
+
+        } else {
+            // Solo ingresa a TODOS si fue seleccionado explícitamente
+            aModificar = todos;
+        }
+
+        if (aModificar.isEmpty()) return;
+
+        Usuario usuarioActual = obtenerUsuarioOperador(idUsuario);
+        BigDecimal factor = new BigDecimal(porcentaje / 100.0).add(BigDecimal.ONE);
+
+        for (Producto p : aModificar) {
             if (p.getPrecioBase() != null) {
-                BigDecimal nuevoPrecio = p.getPrecioBase().multiply(factor);
-                // Redondeamos a 2 decimales para que no tire error la base de datos
-                p.setPrecioBase(nuevoPrecio.setScale(2, RoundingMode.HALF_UP));
+                BigDecimal precioAnterior = p.getPrecioBase();
+                BigDecimal nuevoPrecio = precioAnterior.multiply(factor).setScale(2, RoundingMode.HALF_UP);
+                
+                p.setPrecioBase(nuevoPrecio);
+                
+                compararYRegistrar(usuarioActual, "Producto", "precioBase (Aumento Masivo)", p.getIdProducto(), precioAnterior, nuevoPrecio);
             }
         }
-        productoRepository.saveAll(productos);
+
+        productoRepository.saveAll(aModificar);
     }
 
     private Usuario obtenerUsuarioOperador(Integer idUsuario) {

@@ -6,12 +6,15 @@ import { ProductoRegistroModal } from '../features/productos/ProductoRegistroMod
 import { useProductos } from '../hooks/useProductos'; // Tu hook
 import { SuccesModal } from '../components/layouts/SuccesModal';
 import { ProductosFiltros } from '../features/productos/ProductosFiltros';
+import { AumentoMasivoModal } from '../features/productos/AumentoMasivoModal';
+import { actualizarPreciosMasivo } from '../services/productoService';
 
 export const Productos: React.FC = () => {
   // Obtenemos todo lo que necesitamos del hook
   const { productos, guardar, cargar } = useProductos();
   
   const [showModal, setShowModal] = useState(false);
+  const [showAumentoModal, setShowAumentoModal] = useState(false);
   const [productoEditando, setProductoEditando] = useState<any | null>(null);
   const navigate = useNavigate();
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -21,10 +24,21 @@ export const Productos: React.FC = () => {
   const [filtroEstado, setFiltroEstado] = useState('Sin Filtro');
 
   const productosFiltrados = productos.filter((p: any) => {
-  const cumpleNombre = p.nombreProducto?.toLowerCase().includes(filtroNombre.toLowerCase());
-  const cumpleEstado = filtroEstado === 'Sin Filtro' || p.estado === filtroEstado;
-  return cumpleNombre && cumpleEstado;
-});
+    const cumpleNombre = p.nombreProducto?.toLowerCase().includes(filtroNombre.toLowerCase());
+    const cumpleEstado = filtroEstado === 'Sin Filtro' || p.estado === filtroEstado;
+    return cumpleNombre && cumpleEstado;
+  });
+
+  const handleAplicarAumentoMasivo = async (data: {
+    porcentaje: number;
+    idCategoria?: number | null;
+    idsProductos?: number[];
+  }) => {
+    await actualizarPreciosMasivo(data);
+    await cargar(); // Recargar la lista de productos
+    setMensajeExito(`Precios aumentados exitosamente un ${data.porcentaje}%`);
+    setMostrarExito(true);
+  };
 
   return (
     <>
@@ -57,7 +71,13 @@ export const Productos: React.FC = () => {
     <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary font-monospace">
       <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-5 py-2">Volver</button>
      <div className="d-flex gap-3">
-     <button className="btn px-4 py-2 text-white fw-normal" style={{ backgroundColor: '#17a2b8', borderColor: '#0e5a66' }}>Modificar Varios Precios</button>
+     <button 
+      className="btn px-4 py-2 text-white fw-normal" 
+      style={{ backgroundColor: '#17a2b8', borderColor: '#0e5a66' }}
+      onClick={() => setShowAumentoModal(true)}
+     >
+      Modificar Varios Precios
+     </button>
      <button className="btn px-4 py-2 text-white fw-normal" style={{ backgroundColor: '#ca9e1b', borderColor: '#94720c' }}>Calculo de Gastos</button>
      <button className="btn px-4 py-2 text-white fw-normal" style={{ backgroundColor: '#156e45', borderColor: '#0b3320' }} 
       onClick={() => {
@@ -83,6 +103,13 @@ export const Productos: React.FC = () => {
         }
       }}/>
 
+      <AumentoMasivoModal
+        show={showAumentoModal}
+        productos={productos}
+        onClose={() => setShowAumentoModal(false)}
+        onConfirmar={handleAplicarAumentoMasivo}
+      />
+
       
         {mostrarConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
@@ -96,7 +123,6 @@ export const Productos: React.FC = () => {
           <button className="btn btn-outline-light btn-sm px-3" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} onClick={() => setMostrarConfirmacion(false)}>
             volver
           </button>
-          {/* Cambiamos el color del botón a violeta */}
           <button 
             className="btn btn-sm px-3 fw-bold text-white" 
             style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} 
@@ -115,7 +141,6 @@ export const Productos: React.FC = () => {
         </div>
         </div>
         )}
-
 
 {mostrarExito && (
   <SuccesModal 

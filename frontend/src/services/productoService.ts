@@ -4,8 +4,12 @@ const API_URL = 'http://localhost:8080/api/productos';
 const obtenerIdUsuarioLogueado = (): number | null => {
   const usuarioGuardado = localStorage.getItem('usuario_logueado');
   if (!usuarioGuardado) return null;
-  const usuarioObj = JSON.parse(usuarioGuardado);
-  return usuarioObj?.idUsuario || usuarioObj?.id_usuario || null;
+  try {
+    const usuarioObj = JSON.parse(usuarioGuardado);
+    return usuarioObj?.idUsuario || usuarioObj?.id_usuario || null;
+  } catch {
+    return null;
+  }
 };
 
 export const getProductos = async () => {
@@ -38,16 +42,32 @@ export const guardarProducto = async (producto: any) => {
   return res.json();
 };
 
-export const actualizarPreciosMasivo = async (porcentaje: number) => {
+export interface ActualizarPreciosPayload {
+  porcentaje: number;
+  idCategoria?: number | null;
+  idProveedor?: number | null;
+  idsProductos?: number[];
+}
+
+export const actualizarPreciosMasivo = async (
+  payload: number | ActualizarPreciosPayload
+) => {
   const idUsuarioActual = obtenerIdUsuarioLogueado();
-  let url = `${API_URL}/actualizar-precios?porcentaje=${porcentaje}`;
+  let url = `${API_URL}/actualizar-precios`;
   
   if (idUsuarioActual) {
-    url += `&idUsuario=${idUsuarioActual}`;
+    url += `?idUsuario=${idUsuarioActual}`;
   }
 
+  // Si se pasa solo un número, se transforma al objeto esperado por la API
+  const bodyData = typeof payload === 'number' 
+    ? { porcentaje: payload } 
+    : payload;
+
   const res = await fetch(url, {
-    method: 'PATCH'
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(bodyData)
   });
 
   if (!res.ok) {

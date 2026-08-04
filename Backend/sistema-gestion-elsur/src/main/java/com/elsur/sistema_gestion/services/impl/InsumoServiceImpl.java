@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -42,7 +43,10 @@ public class InsumoServiceImpl implements InsumoService {
     @Override
     @Transactional
     public Insumo guardar(Insumo insumo, Integer idUsuario) {
-        // Validación básica: no permitir stock negativo
+        if (insumo.getPrecio() != null && insumo.getPrecio().compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("El precio no puede ser negativo");
+        }
+
         if (insumo.getStockActual() != null && insumo.getStockActual().compareTo(BigDecimal.ZERO) < 0) {
             throw new RuntimeException("El stock actual no puede ser negativo");
         }
@@ -51,17 +55,17 @@ public class InsumoServiceImpl implements InsumoService {
             insumo.setEstado("Activo");
         }
 
-        // --- LÓGICA DE AUDITORÍA EN EDICIÓN ---
         if (insumo.getIdInsumo() != null && insumoRepository.existsById(insumo.getIdInsumo())) {
-            
             Insumo insumoViejo = insumoRepository.findById(insumo.getIdInsumo()).orElse(null);
 
             if (insumoViejo != null) {
                 Usuario usuarioActual = obtenerUsuarioOperador(idUsuario);
 
-                // 1. Campos directos
                 compararYRegistrar(usuarioActual, "Insumo", "nombreInsumo", insumo.getIdInsumo(),
                         insumoViejo.getNombreInsumo(), insumo.getNombreInsumo());
+
+                compararYRegistrar(usuarioActual, "Insumo", "precio", insumo.getIdInsumo(),
+                        insumoViejo.getPrecio(), insumo.getPrecio());
 
                 compararYRegistrar(usuarioActual, "Insumo", "stockActual", insumo.getIdInsumo(),
                         insumoViejo.getStockActual(), insumo.getStockActual());
@@ -72,7 +76,6 @@ public class InsumoServiceImpl implements InsumoService {
                 compararYRegistrar(usuarioActual, "Insumo", "estado", insumo.getIdInsumo(),
                         insumoViejo.getEstado(), insumo.getEstado());
 
-                // 2. Relación Proveedor (rehidratada por ID/Nombre)
                 String provViejo = (insumoViejo.getProveedor() != null && insumoViejo.getProveedor().getNombreComercial() != null) 
                         ? insumoViejo.getProveedor().getNombreComercial() : "";
 
@@ -83,13 +86,12 @@ public class InsumoServiceImpl implements InsumoService {
                     } else if (insumo.getProveedor().getIdProveedor() != null) {
                         if (insumoViejo.getProveedor() != null && 
                             insumoViejo.getProveedor().getIdProveedor().equals(insumo.getProveedor().getIdProveedor())) {
-                            provNuevo = provViejo; // Mantiene el proveedor si solo vino el ID desde React
+                            provNuevo = provViejo;
                         }
                     }
                 }
                 compararYRegistrar(usuarioActual, "Insumo", "proveedor", insumo.getIdInsumo(), provViejo, provNuevo);
 
-                // 3. Relación UnidadMedida
                 String uniVieja = (insumoViejo.getUnidadMedida() != null) 
                         ? String.valueOf(insumoViejo.getUnidadMedida().getNombre()) : "";
 
@@ -119,6 +121,55 @@ public class InsumoServiceImpl implements InsumoService {
                 .filter(i -> i.getStockActual().compareTo(i.getStockMinimo()) <= 0)
                 .collect(Collectors.toList());
     }
+
+    @Override
+@Transactional
+public void actualizarMasivo(double porcentaje, Integer idProveedor, List<Integer> idsInsumos, String criterio, Integer idUsuario) {
+    List<Insumo> todos = insumoRepository.findAll();
+    List<Insumo> aModificar;
+
+    if ("SELECCION".equalsIgnoreCase(criterio)) {
+        if (idsInsumos == null || idsInsumos.isEmpty()) {
+            return; // Si no hay IDs seleccionados, no se modifica nada
+        }
+        // Aseguramos conversión limpia de tipos de datos de Integer
+        List<Integer> ids = idsInsumos.stream()
+                .map(num -> Integer.parseInt(num.toString()))
+                .collect(Collectors.toList());
+
+        aModificar = todos.stream()
+                .filter(i -> ids.contains(i.getIdInsumo()))
+                .collect(Collectors.toList());
+
+    } else if ("PROVEEDOR".equalsIgnoreCase(criterio) || "CATEGORIA".equalsIgnoreCase(criterio)) {
+        if (idProveedor == null || idProveedor <= 0) {
+            return; // Si no se especificó un proveedor/categoría válido, no se modifica nada
+        }
+        aModificar = todos.stream()
+                .filter(i -> i.getProveedor() != null && idProveedor.equals(i.getProveedor().getIdProveedor()))
+                .collect(Collectors.toList());
+
+    } else { 
+        // Solo ingresa a TODOS si fue seleccionado explícitamente
+        aModificar = todos;
+    }
+
+    if (aModificar.isEmpty()) return;
+
+    Usuario usuarioActual = obtenerUsuarioOperador(idUsuario);
+
+    for (Insumo ins : aModificar) {
+        BigDecimal precioViejo = ins.getPrecio() != null ? ins.getPrecio() : BigDecimal.ZERO;
+        BigDecimal factor = BigDecimal.valueOf(1.0 + (porcentaje / 100.0));
+        BigDecimal nuevoPrecio = precioViejo.multiply(factor).setScale(2, RoundingMode.HALF_UP);
+
+        ins.setPrecio(nuevoPrecio);
+
+        compararYRegistrar(usuarioActual, "Insumo", "precio", ins.getIdInsumo(), precioViejo, nuevoPrecio);
+    }
+
+    insumoRepository.saveAll(aModificar);
+}
 
     private Usuario obtenerUsuarioOperador(Integer idUsuario) {
         if (idUsuario != null) {

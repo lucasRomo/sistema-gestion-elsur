@@ -5,9 +5,9 @@ import java.util.List;
 
 public interface ProductoService {
     List<Producto> listarTodos();
+    Producto buscarPorId(Integer id);
     Producto guardar(Producto producto, Integer idUsuario);
-    Producto buscarPorId(Integer id); // Agregado
-    void eliminar(Integer id); // Agregado
-    void actualizarPreciosMasivo(double porcentaje);
-    void actualizarPreciosPorCategoria(Integer idCategoria, double porcentaje); // Nuevo: Muy útil
+    void eliminar(Integer id);
+    
+    void actualizarPreciosMasivo(double porcentaje, Integer idCategoria, Integer idProveedor, List<Integer> idsProductos, String criterio, Integer idUsuario);
 }

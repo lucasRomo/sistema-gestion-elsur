@@ -22,7 +22,6 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
 
   const [mostrarModalEmpleado, setMostrarModalEmpleado] = useState(false);
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
-  // Nuevo estado para el mensaje dinámico
   const [mensajeExito, setMensajeExito] = useState('');
 
   const handleSiguiente = (e: React.FormEvent) => {
@@ -68,15 +67,19 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
       if (responseUsuario.ok) {
         const usuarioGuardado: Usuario = await responseUsuario.json();
 
+        // 1. Verificamos si fue registrado como el primer Admin (idRol === 1)
+        const esPrimerAdmin = usuarioGuardado.rol?.idRol === 1 || usuarioGuardado.rol?.nombreRol === 'ADMIN';
+
         const fechaISO = empleadoData.fechaContratacion 
           ? empleadoData.fechaContratacion 
           : new Date().toISOString().split('T')[0];
 
+        // 2. Si es el primer Admin, el estado pasa a 'Activo' y asignamos cargo 'ADMINISTRADOR'
         const nuevoEmpleado = {
           fechaContratacion: fechaISO,
-          cargo: empleadoData.cargo || 'OPERARIO',
+          cargo: esPrimerAdmin ? 'ADMINISTRADOR' : (empleadoData.cargo || 'OPERARIO'),
           salario: parseFloat(empleadoData.salario) || 0.0,
-          estado: 'Pendiente',
+          estado: esPrimerAdmin ? 'Activo' : 'Pendiente', // <--- AQUÍ ESTABA EL CAMBIO CLAVE
           persona: { idPersona: usuarioGuardado.persona?.idPersona }
         };
 
@@ -87,9 +90,6 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
         });
 
         if (responseEmpleado.ok) {
-          // CORRECCIÓN 5: Detectamos si es Admin y cambiamos el mensaje.
-          const esPrimerAdmin = usuarioGuardado.rol?.nombreRol === 'ADMIN' || usuarioGuardado.rol?.idRol === 1;
-          
           if (esPrimerAdmin) {
             setMensajeExito("¡Felicidades! Al ser el primer registro del sistema, fuiste configurado como ADMINISTRADOR (Dueño). Ya puedes iniciar sesión.");
           } else {
@@ -102,26 +102,24 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
           alert('Usuario creado, pero falló el alta del legajo de empleado.');
         }
       } else {
-    // 🛑 AQUÍ LEEMOS EL MENSAJE QUE MANDA SPRING BOOT CON EL CÓDIGO 409
-    const mensajeError = await responseUsuario.text();
+        const mensajeError = await responseUsuario.text();
 
-    if (responseUsuario.status === 409) {
-      // Si querés que salga con el cartel exacto que pediste:
-      alert(mensajeError); // Mostrará: "Usuario ya Registrado, Intente con uno Nuevo"
-    } else {
-      alert('Error al registrar el usuario en el backend.');
+        if (responseUsuario.status === 409) {
+          alert(mensajeError);
+        } else {
+          alert('Error al registrar el usuario en el backend.');
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error de red con el puerto 8080.');
     }
-  }
-} catch (error) {
-  console.error(error);
-  alert('Error de red con el puerto 8080.');
-}
   };
 
   return (
     <div 
-  className="container-fluid min-vh-100 d-flex justify-content-center align-items-center" 
-  style={{ background: 'linear-gradient(145deg, #240f47 20%, #0c0c0e 80%)', minHeight: '100vh' }}>
+      className="container-fluid min-vh-100 d-flex justify-content-center align-items-center" 
+      style={{ background: 'linear-gradient(145deg, #240f47 20%, #0c0c0e 80%)', minHeight: '100vh' }}>
       
       <div className="w-100 p-4 rounded-3 position-relative" 
            style={{ maxWidth: '750px', backgroundColor: '#1a1a1c', border: '1px solid #3f3f46' }}>
