@@ -64,6 +64,40 @@ public class UsuarioController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/{id}/username")
+    public ResponseEntity<?> cambiarNombreUsuario(
+            @PathVariable Integer id, 
+            @RequestBody com.elsur.sistema_gestion.dto.CambioUsuarioDTO dto) {
+        
+        if (dto.getUsuarioNuevo() == null || dto.getUsuarioNuevo().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("El nuevo nombre de usuario no puede estar vacío.");
+        }
+
+        try {
+            usuarioService.cambiarNombreUsuario(id, dto.getUsuarioActual(), dto.getUsuarioNuevo());
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}/email")
+    public ResponseEntity<?> cambiarEmail(
+            @PathVariable Integer id, 
+            @RequestBody com.elsur.sistema_gestion.dto.CambioEmailDTO dto) {
+        
+        if (dto.getEmailNuevo() == null || dto.getEmailNuevo().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("El nuevo correo electrónico no puede estar vacío.");
+        }
+
+        try {
+            usuarioService.cambiarEmail(id, dto.getEmailActual(), dto.getEmailNuevo());
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/prueba-limpia")
     public ResponseEntity<String> pruebaLlimpia(@RequestBody String texto) {
         return ResponseEntity.ok("El POST funciona perfecto: " + texto);

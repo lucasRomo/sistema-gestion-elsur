@@ -62,6 +62,13 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
   const fechaCreacionFormateada = formatearFechaString(fechaCreacionRaw, true);
   const fechaEntregaFormateada = formatearFechaString(p.fecha_entrega_estimada, true);
 
+  const esDevolucionReabierta = 
+  p.estado === 'DEVUELTO' ||
+  p.observaciones?.toLowerCase().includes('volver a hacer') || 
+  p.observacion?.toLowerCase().includes('volver a hacer') ||
+  p.observaciones?.toLowerCase().includes('devolución') ||
+  p.observacion?.toLowerCase().includes('devolución');
+
   return (
     <>
       <tr style={{ borderBottom: '1px solid #1d1d1d', backgroundColor: '#1d1d1d', transition: 'background-color 0.2s'}}
@@ -222,39 +229,53 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
             </button>
 
             {/* Botón de Pagos */}
-            <button 
-              className="rounded d-flex align-items-center justify-content-center" 
-              style={{ 
-                width: '32px', 
-                height: '32px', 
-                cursor: 'pointer', 
-                backgroundColor: 'transparent', 
-                transition: 'all 0.2s ease',
-                border: `0.8px solid ${p.es_cuenta_corriente ? '#6b7280' : (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? '#22c55e' : '#a72828')}`
-              }}
-              onMouseEnter={(e) => { 
-                if (p.es_cuenta_corriente) {
-                  e.currentTarget.style.backgroundColor = '#374151'; // Un gris sutil al pasar el mouse
-                  return;
-                }
-                const isLocked = (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO'); 
-                e.currentTarget.style.backgroundColor = isLocked ? '#22c55e' : '#a72828';
-                const icon = e.currentTarget.querySelector('i') as HTMLElement;
-                if (icon) icon.style.color = '#000000';
-              }}
-              onMouseLeave={(e) => { 
-                e.currentTarget.style.backgroundColor = 'transparent';
-                if (p.es_cuenta_corriente) return;
-                const isLocked = (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO');
-                const icon = e.currentTarget.querySelector('i') as HTMLElement;
-                if (icon) icon.style.color = isLocked ? '#22c55e' : '#a72828'; 
-              }}
-              onClick={() => onSelectPago(p)}
-              title={p.es_cuenta_corriente ? "Pago vinculado a Cuenta Corriente" : (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? "Ya no quedaron mas Señas/Montos por Asignar" : "Registrar Nuevo Monto/Seña")}
-            >
-              <i className="bi bi-currency-dollar" style={{ fontSize: '16px', color: p.es_cuenta_corriente ? '#6b7280' : ((p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO') ? '#22c55e' : '#a72828'), transition: '0.2s' }}></i>
-            </button>
-
+<button 
+  className="rounded d-flex align-items-center justify-content-center" 
+  style={{ 
+    width: '32px', 
+    height: '32px', 
+    cursor: esDevolucionReabierta ? 'not-allowed' : 'pointer', 
+    backgroundColor: 'transparent', 
+    transition: 'all 0.2s ease',
+    opacity: esDevolucionReabierta ? 0.4 : 1,
+    border: `0.8px solid ${esDevolucionReabierta ? '#6b7280' : (p.es_cuenta_corriente ? '#6b7280' : (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? '#a72828' : '#22c55e'))}` 
+  }}
+  disabled={esDevolucionReabierta}
+  onMouseEnter={(e) => { 
+    if (esDevolucionReabierta) return;
+    if (p.es_cuenta_corriente) {
+      e.currentTarget.style.backgroundColor = '#374151';
+      return;
+    }
+    const isLocked = (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO');
+    e.currentTarget.style.backgroundColor = isLocked ? '#a72828' : '#22c55e';
+    const icon = e.currentTarget.querySelector('i') as HTMLElement;
+    if (icon) icon.style.color = '#000000';
+  }}
+  onMouseLeave={(e) => { 
+    if (esDevolucionReabierta) return;
+    e.currentTarget.style.backgroundColor = 'transparent';
+    if (p.es_cuenta_corriente) return;
+    const isLocked = (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO'); 
+    const icon = e.currentTarget.querySelector('i') as HTMLElement;
+    if (icon) icon.style.color = isLocked ? '#a72828' : '#22c55e'; 
+  }}
+  onClick={() => !esDevolucionReabierta && onSelectPago(p)}
+  title={
+    esDevolucionReabierta 
+      ? "Cobro bloqueado por Devolución en proceso" 
+      : (p.es_cuenta_corriente ? "Pago vinculado a Cuenta Corriente" : (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? "Ya no quedaron mas Señas/Montos por Asignar" : "Registrar Nuevo Monto/Seña"))
+  }
+>
+  <i 
+    className="bi bi-currency-dollar" 
+    style={{ 
+      fontSize: '16px', 
+      color: esDevolucionReabierta ? '#6b7280' : (p.es_cuenta_corriente ? '#6b7280' : ((p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO') ? '#a72828' : '#22c55e')), 
+      transition: '0.2s' 
+    }}
+  ></i>
+</button>
             {/* Botón Impresión Ticket */}
             <button 
               className="rounded d-flex align-items-center justify-content-center" 

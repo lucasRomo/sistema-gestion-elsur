@@ -10,26 +10,34 @@ interface RespaldoLog {
 }
 
 export const ConfiguracionView: React.FC = () => {
-  // Estado para Cambio de Contraseña
-  const [passwords, setPasswords] = useState({ actual: '', nueva: '', confirmar: '' });
-  const [mensajePass, setMensajePass] = useState<{ texto: string; tipo: 'error' | 'exito' } | null>(null);
-  const [cargandoPass, setCargandoPass] = useState(false);
-
-  // Estado para Respaldo Local Contingente
-  const [historialRespaldos, setHistorialRespaldos] = useState<RespaldoLog[]>([]);
-  const [cargandoRespaldo, setCargandoRespaldo] = useState(false);
-  const [mensajeRespaldo, setMensajeRespaldo] = useState<{ texto: string; tipo: 'error' | 'exito' } | null>(null);
-
-  // Estado para Cargar / Restaurar Respaldo
-  const [archivoSeleccionado, setArchivoSeleccionado] = useState<File | null>(null);
-  const [cargandoRestaurar, setCargandoRestaurar] = useState(false);
-
-  // ESTADO PARA EL MODAL PERSONALIZADO DE RESTAURACIÓN
-  const [mostrarModalConfirmacion, setMostrarModalConfirmacion] = useState(false);
+  const [opcionPerfil, setOpcionPerfil] = useState<'usuario' | 'password' | 'email'>('password');
 
   const usuarioGuardado = localStorage.getItem('usuario_logueado');
   const usuario = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
   const token = localStorage.getItem('token');
+
+  // Estados para Cambio de Contraseña
+  const [passwords, setPasswords] = useState({ actual: '', nueva: '', confirmar: '' });
+  const [mensajePass, setMensajePass] = useState<{ texto: string; tipo: 'error' | 'exito' } | null>(null);
+  const [cargandoPass, setCargandoPass] = useState(false);
+
+  // Estados para Cambio de Usuario
+  const [datosUsuario, setDatosUsuario] = useState({ actual: usuario?.nombreUsuario || '', nuevo: '' });
+  const [mensajeUsuario, setMensajeUsuario] = useState<{ texto: string; tipo: 'error' | 'exito' } | null>(null);
+  const [cargandoUsuario, setCargandoUsuario] = useState(false);
+
+  // Estados para Cambio de Email
+  const [datosEmail, setDatosEmail] = useState({ actual: usuario?.persona?.email || '', nuevo: '' });
+  const [mensajeEmail, setMensajeEmail] = useState<{ texto: string; tipo: 'error' | 'exito' } | null>(null);
+  const [cargandoEmail, setCargandoEmail] = useState(false);
+
+  // Estados para Respaldos
+  const [historialRespaldos, setHistorialRespaldos] = useState<RespaldoLog[]>([]);
+  const [cargandoRespaldo, setCargandoRespaldo] = useState(false);
+  const [mensajeRespaldo, setMensajeRespaldo] = useState<{ texto: string; tipo: 'error' | 'exito' } | null>(null);
+  const [archivoSeleccionado, setArchivoSeleccionado] = useState<File | null>(null);
+  const [cargandoRestaurar, setCargandoRestaurar] = useState(false);
+  const [mostrarModalConfirmacion, setMostrarModalConfirmacion] = useState(false);
 
   useEffect(() => {
     cargarHistorialRespaldos();
@@ -38,9 +46,7 @@ export const ConfiguracionView: React.FC = () => {
   const cargarHistorialRespaldos = async () => {
     try {
       const response = await fetch('http://localhost:8080/api/respaldos/historial', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
@@ -51,20 +57,17 @@ export const ConfiguracionView: React.FC = () => {
     }
   };
 
+  // HANDLER: CAMBIAR CONTRASEÑA
   const handleCambiarPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setMensajePass(null);
 
-    if (!passwords.nueva || !passwords.confirmar) {
-      setMensajePass({ texto: 'Por favor completa todos los campos requeridos.', tipo: 'error' });
+    if (!passwords.actual || !passwords.nueva || !passwords.confirmar) {
+      setMensajePass({ texto: 'Por favor completa todos los campos.', tipo: 'error' });
       return;
     }
     if (passwords.nueva !== passwords.confirmar) {
       setMensajePass({ texto: 'Las nuevas contraseñas no coinciden.', tipo: 'error' });
-      return;
-    }
-    if (passwords.nueva.length < 4) {
-      setMensajePass({ texto: 'La contraseña debe tener al menos 4 caracteres.', tipo: 'error' });
       return;
     }
 
@@ -87,45 +90,121 @@ export const ConfiguracionView: React.FC = () => {
         setMensajePass({ texto: '¡Contraseña actualizada con éxito!', tipo: 'exito' });
         setPasswords({ actual: '', nueva: '', confirmar: '' });
       } else {
-        setMensajePass({ texto: 'Error al cambiar la contraseña en el servidor.', tipo: 'error' });
+        const err = await response.text();
+        setMensajePass({ texto: err || 'Error al cambiar la contraseña.', tipo: 'error' });
       }
     } catch (error) {
-      console.error(error);
-      setMensajePass({ texto: 'Error de conexión con el backend (Puerto 8080).', tipo: 'error' });
+      setMensajePass({ texto: 'Error de conexión con el backend.', tipo: 'error' });
     } finally {
       setCargandoPass(false);
     }
   };
 
+  // HANDLER: CAMBIAR USUARIO
+  const handleCambiarUsuario = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMensajeUsuario(null);
+
+    if (!datosUsuario.actual.trim() || !datosUsuario.nuevo.trim()) {
+      setMensajeUsuario({ texto: 'Completa ambos campos de usuario.', tipo: 'error' });
+      return;
+    }
+
+    setCargandoUsuario(true);
+    try {
+      const idUsuario = usuario?.idUsuario || 1;
+      const response = await fetch(`http://localhost:8080/api/usuarios/${idUsuario}/username`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          usuarioActual: datosUsuario.actual, 
+          usuarioNuevo: datosUsuario.nuevo 
+        })
+      });
+
+      if (response.ok) {
+        setMensajeUsuario({ texto: '¡Nombre de usuario actualizado!', tipo: 'exito' });
+        if (usuario) {
+          usuario.nombreUsuario = datosUsuario.nuevo;
+          localStorage.setItem('usuario_logueado', JSON.stringify(usuario));
+        }
+        setDatosUsuario({ actual: datosUsuario.nuevo, nuevo: '' });
+      } else {
+        const errText = await response.text();
+        setMensajeUsuario({ texto: errText || 'El usuario actual no coincide o no se pudo actualizar.', tipo: 'error' });
+      }
+    } catch (error) {
+      setMensajeUsuario({ texto: 'Error de conexión con el servidor.', tipo: 'error' });
+    } finally {
+      setCargandoUsuario(false);
+    }
+  };
+
+  // HANDLER: CAMBIAR EMAIL
+  const handleCambiarEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMensajeEmail(null);
+
+    if (!datosEmail.actual.trim() || !datosEmail.nuevo.trim()) {
+      setMensajeEmail({ texto: 'Completa ambos campos de correo.', tipo: 'error' });
+      return;
+    }
+    if (!datosEmail.nuevo.includes('@')) {
+      setMensajeEmail({ texto: 'Ingresa un correo electrónico válido.', tipo: 'error' });
+      return;
+    }
+
+    setCargandoEmail(true);
+    try {
+      const idUsuario = usuario?.idUsuario || 1;
+      const response = await fetch(`http://localhost:8080/api/usuarios/${idUsuario}/email`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          emailActual: datosEmail.actual, 
+          emailNuevo: datosEmail.nuevo 
+        })
+      });
+
+      if (response.ok) {
+        setMensajeEmail({ texto: '¡Email actualizado con éxito!', tipo: 'exito' });
+        if (usuario && usuario.persona) {
+          usuario.persona.email = datosEmail.nuevo;
+          localStorage.setItem('usuario_logueado', JSON.stringify(usuario));
+        }
+        setDatosEmail({ actual: datosEmail.nuevo, nuevo: '' });
+      } else {
+        const errText = await response.text();
+        setMensajeEmail({ texto: errText || 'El email actual no coincide o no se pudo actualizar.', tipo: 'error' });
+      }
+    } catch (error) {
+      setMensajeEmail({ texto: 'Error de conexión con el servidor.', tipo: 'error' });
+    } finally {
+      setCargandoEmail(false);
+    }
+  };
+
+  // HANDLERS DE RESPALDO
   const handleGenerarRespaldo = async () => {
     setCargandoRespaldo(true);
     setMensajeRespaldo(null);
-
     try {
       const usuarioNombre = usuario?.nombreUsuario || 'Operario';
       const response = await fetch(`http://localhost:8080/api/respaldos/generar?usuario=${encodeURIComponent(usuarioNombre)}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      if (!response.ok) throw new Error("Error al descargar respaldo");
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `backup_elsur_contingencia_${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-
-      setMensajeRespaldo({ texto: 'Respaldo local descargado correctamente.', tipo: 'exito' });
+      if (!response.ok) throw new Error("Error al generar el respaldo");
+      setMensajeRespaldo({ texto: 'Respaldo generado y guardado correctamente.', tipo: 'exito' });
       cargarHistorialRespaldos();
     } catch (error) {
-      console.error(error);
-      setMensajeRespaldo({ texto: 'No se pudo generar el respaldo contingente.', tipo: 'error' });
+      setMensajeRespaldo({ texto: 'No se pudo generar el respaldo.', tipo: 'error' });
     } finally {
       setCargandoRespaldo(false);
     }
@@ -134,12 +213,9 @@ export const ConfiguracionView: React.FC = () => {
   const handleDescargarRespaldoHistorial = async (idRespaldo: number, nombreArchivo: string) => {
     try {
       const response = await fetch(`http://localhost:8080/api/respaldos/descargar/${idRespaldo}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error("Error al descargar el archivo");
-
+      if (!response.ok) throw new Error("Error al descargar");
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -150,75 +226,53 @@ export const ConfiguracionView: React.FC = () => {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error(error);
-      alert("No se pudo descargar el archivo de respaldo seleccionado.");
+      alert("No se pudo descargar el archivo seleccionado.");
     }
   };
 
   const handleEliminarRespaldo = async (idRespaldo: number) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar este respaldo del historial y del servidor?")) {
-      return;
-    }
-
+    if (!window.confirm("¿Deseas eliminar este respaldo?")) return;
     try {
       const response = await fetch(`http://localhost:8080/api/respaldos/${idRespaldo}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
       if (response.ok) {
-        setMensajeRespaldo({ texto: 'Respaldo eliminado del historial con éxito.', tipo: 'exito' });
+        setMensajeRespaldo({ texto: 'Respaldo eliminado con éxito.', tipo: 'exito' });
         cargarHistorialRespaldos();
-      } else {
-        setMensajeRespaldo({ texto: 'No se pudo eliminar el respaldo del servidor.', tipo: 'error' });
       }
     } catch (error) {
-      console.error(error);
-      setMensajeRespaldo({ texto: 'Error al intentar eliminar el respaldo.', tipo: 'error' });
+      setMensajeRespaldo({ texto: 'Error al eliminar el respaldo.', tipo: 'error' });
     }
   };
 
-  // Intercepta el submit para mostrar el modal en lugar del window.confirm
   const handleRestaurarRespaldoClick = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!archivoSeleccionado) {
-      setMensajeRespaldo({ texto: 'Por favor selecciona un archivo JSON de respaldo.', tipo: 'error' });
-      return;
-    }
+    if (!archivoSeleccionado) return;
     setMostrarModalConfirmacion(true);
   };
 
-  // Ejecuta la restauración real al confirmar en el modal
   const ejecutarRestauracion = async () => {
     setMostrarModalConfirmacion(false);
     setCargandoRestaurar(true);
     setMensajeRespaldo(null);
-
     const formData = new FormData();
-    if (archivoSeleccionado) {
-      formData.append('archivo', archivoSeleccionado);
-    }
+    if (archivoSeleccionado) formData.append('archivo', archivoSeleccionado);
 
     try {
       const response = await fetch('http://localhost:8080/api/respaldos/restaurar', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       });
-
       if (response.ok) {
-        setMensajeRespaldo({ texto: '¡Base de datos restaurada con éxito desde el archivo seleccionado!', tipo: 'exito' });
+        setMensajeRespaldo({ texto: '¡Base de datos restaurada con éxito!', tipo: 'exito' });
         setArchivoSeleccionado(null);
       } else {
         const errorText = await response.text();
         setMensajeRespaldo({ texto: `Error al restaurar: ${errorText}`, tipo: 'error' });
       }
     } catch (error) {
-      console.error(error);
       setMensajeRespaldo({ texto: 'Error de conexión al restaurar el respaldo.', tipo: 'error' });
     } finally {
       setCargandoRestaurar(false);
@@ -234,9 +288,9 @@ export const ConfiguracionView: React.FC = () => {
       </div>
 
       <div className="row g-4 mt-2">
-        {/* COLUMNA 1: Cambiar Contraseña */}
+        {/* COLUMNA 1: Ajustes del Perfil */}
         <div className="col-12 col-lg-5">
-          <div className="p-4 rounded-4 shadow h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+          <div className="p-4 rounded-4 shadow h-100 d-flex flex-column" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
             <div className="d-flex align-items-center gap-3 mb-4 p-3 rounded" style={{ backgroundColor: '#222122', borderLeft: '4px solid #8e45e0' }}>
               <i className="bi bi-person-bounding-box fs-3" style={{ color: '#8e45e0' }}></i>
               <div>
@@ -245,60 +299,189 @@ export const ConfiguracionView: React.FC = () => {
               </div>
             </div>
 
-            <h5 className="fw-bold mb-3" style={{ color: '#8e45e0' }}>
-              <i className="bi bi-shield-lock me-2"></i>Cambiar Contraseña Propia
-            </h5>
+            {/* Menú Tabs */}
+            <div className="btn-group w-100 mb-4 p-1 rounded" style={{ backgroundColor: '#222122', border: '1px solid #3f3f46' }}>
+              <button
+                type="button"
+                className={`btn btn-sm fw-bold ${opcionPerfil === 'usuario' ? 'btn-primary' : 'text-white-50'}`}
+                style={opcionPerfil === 'usuario' ? { backgroundColor: '#8e45e0', borderColor: '#8e45e0' } : {}}
+                onClick={() => setOpcionPerfil('usuario')}
+              >
+                <i className="bi bi-person me-1"></i> Usuario
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm fw-bold ${opcionPerfil === 'password' ? 'btn-primary' : 'text-white-50'}`}
+                style={opcionPerfil === 'password' ? { backgroundColor: '#8e45e0', borderColor: '#8e45e0' } : {}}
+                onClick={() => setOpcionPerfil('password')}
+              >
+                <i className="bi bi-key me-1"></i> Contraseña
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm fw-bold ${opcionPerfil === 'email' ? 'btn-primary' : 'text-white-50'}`}
+                style={opcionPerfil === 'email' ? { backgroundColor: '#8e45e0', borderColor: '#8e45e0' } : {}}
+                onClick={() => setOpcionPerfil('email')}
+              >
+                <i className="bi bi-envelope me-1"></i> Email
+              </button>
+            </div>
 
-            {mensajePass && (
-              <div className={`alert ${mensajePass.tipo === 'error' ? 'alert-danger bg-danger text-white' : 'alert-success bg-success text-white'} border-0 py-2 small fw-bold mb-3`}>
-                <i className={`bi ${mensajePass.tipo === 'error' ? 'bi-exclamation-circle' : 'bi-check-circle'} me-2`}></i>
-                {mensajePass.texto}
+            {/* FORMULARIO 1: CAMBIAR USUARIO */}
+            {opcionPerfil === 'usuario' && (
+              <div>
+                <h5 className="fw-bold mb-3" style={{ color: '#8e45e0' }}>
+                  <i className="bi bi-person-gear me-2"></i>Modificar Nombre de Usuario
+                </h5>
+
+                {mensajeUsuario && (
+                  <div className={`alert ${mensajeUsuario.tipo === 'error' ? 'alert-danger bg-danger text-white' : 'alert-success bg-success text-white'} border-0 py-2 small fw-bold mb-3`}>
+                    <i className={`bi ${mensajeUsuario.tipo === 'error' ? 'bi-exclamation-circle' : 'bi-check-circle'} me-2`}></i>
+                    {mensajeUsuario.texto}
+                  </div>
+                )}
+
+                <form onSubmit={handleCambiarUsuario}>
+                  <div className="mb-3">
+                    <label className="form-label text-white-50 small">Usuario Actual</label>
+                    <input 
+                      type="text" 
+                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      value={datosUsuario.actual}
+                      onChange={(e) => setDatosUsuario({ ...datosUsuario, actual: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="form-label text-white-50 small">Nuevo Usuario</label>
+                    <input 
+                      type="text" 
+                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      placeholder="Ingrese nuevo nombre de usuario"
+                      value={datosUsuario.nuevo}
+                      onChange={(e) => setDatosUsuario({ ...datosUsuario, nuevo: e.target.value })}
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={cargandoUsuario}
+                    className="btn w-100 py-2 fw-bold text-white shadow" 
+                    style={{ backgroundColor: '#8e45e0', borderRadius: '8px' }}
+                  >
+                    {cargandoUsuario ? 'Actualizando...' : 'Guardar Nuevo Usuario'}
+                  </button>
+                </form>
               </div>
             )}
 
-            <form onSubmit={handleCambiarPassword}>
-              <div className="mb-3">
-                <label className="form-label text-white-50 small">Contraseña Actual</label>
-                <input 
-                  type="password" 
-                  className="form-control bg-dark text-white border-secondary font-monospace"
-                  placeholder="••••••••"
-                  value={passwords.actual}
-                  onChange={(e) => setPasswords({ ...passwords, actual: e.target.value })}
-                />
-              </div>
+            {/* FORMULARIO 2: CAMBIAR CONTRASEÑA */}
+            {opcionPerfil === 'password' && (
+              <div>
+                <h5 className="fw-bold mb-3" style={{ color: '#8e45e0' }}>
+                  <i className="bi bi-shield-lock me-2"></i>Cambiar Contraseña Propia
+                </h5>
 
-              <div className="mb-3">
-                <label className="form-label text-white-50 small">Nueva Contraseña</label>
-                <input 
-                  type="password" 
-                  className="form-control bg-dark text-white border-secondary font-monospace"
-                  placeholder="Mínimo 4 caracteres"
-                  value={passwords.nueva}
-                  onChange={(e) => setPasswords({ ...passwords, nueva: e.target.value })}
-                />
-              </div>
+                {mensajePass && (
+                  <div className={`alert ${mensajePass.tipo === 'error' ? 'alert-danger bg-danger text-white' : 'alert-success bg-success text-white'} border-0 py-2 small fw-bold mb-3`}>
+                    <i className={`bi ${mensajePass.tipo === 'error' ? 'bi-exclamation-circle' : 'bi-check-circle'} me-2`}></i>
+                    {mensajePass.texto}
+                  </div>
+                )}
 
-              <div className="mb-4">
-                <label className="form-label text-white-50 small">Confirmar Nueva Contraseña</label>
-                <input 
-                  type="password" 
-                  className="form-control bg-dark text-white border-secondary font-monospace"
-                  placeholder="Repite la nueva contraseña"
-                  value={passwords.confirmar}
-                  onChange={(e) => setPasswords({ ...passwords, confirmar: e.target.value })}
-                />
-              </div>
+                <form onSubmit={handleCambiarPassword}>
+                  <div className="mb-3">
+                    <label className="form-label text-white-50 small">Contraseña Actual</label>
+                    <input 
+                      type="password" 
+                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      placeholder="••••••••"
+                      value={passwords.actual}
+                      onChange={(e) => setPasswords({ ...passwords, actual: e.target.value })}
+                    />
+                  </div>
 
-              <button 
-                type="submit" 
-                disabled={cargandoPass}
-                className="btn w-100 py-2 fw-bold text-white shadow" 
-                style={{ backgroundColor: '#8e45e0', borderRadius: '8px' }}
-              >
-                {cargandoPass ? 'Actualizando...' : 'Actualizar Contraseña'}
-              </button>
-            </form>
+                  <div className="mb-3">
+                    <label className="form-label text-white-50 small">Nueva Contraseña</label>
+                    <input 
+                      type="password" 
+                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      placeholder="Mínimo 4 caracteres"
+                      value={passwords.nueva}
+                      onChange={(e) => setPasswords({ ...passwords, nueva: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="form-label text-white-50 small">Confirmar Nueva Contraseña</label>
+                    <input 
+                      type="password" 
+                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      placeholder="Repite la nueva contraseña"
+                      value={passwords.confirmar}
+                      onChange={(e) => setPasswords({ ...passwords, confirmar: e.target.value })}
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={cargandoPass}
+                    className="btn w-100 py-2 fw-bold text-white shadow" 
+                    style={{ backgroundColor: '#8e45e0', borderRadius: '8px' }}
+                  >
+                    {cargandoPass ? 'Actualizando...' : 'Actualizar Contraseña'}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* FORMULARIO 3: CAMBIAR EMAIL */}
+            {opcionPerfil === 'email' && (
+              <div>
+                <h5 className="fw-bold mb-3" style={{ color: '#8e45e0' }}>
+                  <i className="bi bi-envelope-at me-2"></i>Modificar Correo Electrónico
+                </h5>
+
+                {mensajeEmail && (
+                  <div className={`alert ${mensajeEmail.tipo === 'error' ? 'alert-danger bg-danger text-white' : 'alert-success bg-success text-white'} border-0 py-2 small fw-bold mb-3`}>
+                    <i className={`bi ${mensajeEmail.tipo === 'error' ? 'bi-exclamation-circle' : 'bi-check-circle'} me-2`}></i>
+                    {mensajeEmail.texto}
+                  </div>
+                )}
+
+                <form onSubmit={handleCambiarEmail}>
+                  <div className="mb-3">
+                    <label className="form-label text-white-50 small">Email Actual</label>
+                    <input 
+                      type="email" 
+                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      value={datosEmail.actual}
+                      onChange={(e) => setDatosEmail({ ...datosEmail, actual: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="form-label text-white-50 small">Nuevo Email</label>
+                    <input 
+                      type="email" 
+                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      placeholder="ejemplo@correo.com"
+                      value={datosEmail.nuevo}
+                      onChange={(e) => setDatosEmail({ ...datosEmail, nuevo: e.target.value })}
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={cargandoEmail}
+                    className="btn w-100 py-2 fw-bold text-white shadow" 
+                    style={{ backgroundColor: '#8e45e0', borderRadius: '8px' }}
+                  >
+                    {cargandoEmail ? 'Actualizando...' : 'Guardar Nuevo Email'}
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
 
@@ -330,7 +513,6 @@ export const ConfiguracionView: React.FC = () => {
               </div>
             )}
 
-            {/* SECCIÓN CARGAR / RESTAURAR RESPALDO */}
             <div className="p-3 mb-4 rounded border border-secondary" style={{ backgroundColor: '#222122' }}>
               <h6 className="fw-bold text-warning mb-2 small">
                 <i className="bi bi-upload me-2"></i>Cargar / Restaurar Copia de Seguridad JSON
@@ -353,7 +535,6 @@ export const ConfiguracionView: React.FC = () => {
               </form>
             </div>
 
-            {/* HISTORIAL DE RESPALDOS */}
             <div className="mt-3">
               <h6 className="fw-bold text-white-50 mb-3 small">Historial de Respaldos Generados</h6>
               
@@ -387,14 +568,14 @@ export const ConfiguracionView: React.FC = () => {
                               <button 
                                 onClick={() => handleDescargarRespaldoHistorial(resp.idRespaldo, resp.nombreArchivo)}
                                 className="btn btn-outline-info btn-sm"
-                                title="Descargar este respaldo"
+                                title="Descargar"
                               >
                                 <i className="bi bi-download"></i>
                               </button>
                               <button 
                                 onClick={() => handleEliminarRespaldo(resp.idRespaldo)}
                                 className="btn btn-outline-danger btn-sm"
-                                title="Eliminar respaldo"
+                                title="Eliminar"
                               >
                                 <i className="bi bi-trash"></i>
                               </button>
@@ -411,50 +592,21 @@ export const ConfiguracionView: React.FC = () => {
         </div>
       </div>
 
-      {/* MODAL PERSONALIZADO DE CONFIRMACIÓN DE RESTAURACIÓN */}
+      {/* MODAL RESTAURAR */}
       {mostrarModalConfirmacion && (
-        <div 
-          className="modal d-block" 
-          style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}
-        >
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>
-            <div 
-              className="modal-content text-center p-4 shadow-lg" 
-              style={{ 
-                backgroundColor: '#18181b', 
-                border: '1px solid #a855f7', 
-                borderRadius: '16px' 
-              }}
-            >
+            <div className="modal-content text-center p-4 shadow-lg" style={{ backgroundColor: '#18181b', border: '1px solid #a855f7', borderRadius: '16px' }}>
               <div className="mb-3 text-warning">
                 <i className="bi bi-exclamation-triangle fs-1" style={{ color: '#facc15' }}></i>
               </div>
-              
-              <h5 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem' }}>
-                ¿Actualizar/Restaurar Datos?
-              </h5>
-              
+              <h5 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem' }}>¿Actualizar/Restaurar Datos?</h5>
               <p className="text-white-50 small mb-4 px-2">
-                ¡ATENCIÓN! La restauración sobrescribirá/borrará los datos existentes por la copia cargada. Uselo con Precaución ¿Deseas continuar?
+                ¡ATENCIÓN! La restauración sobrescribirá los datos existentes. ¿Deseas continuar?
               </p>
-              
               <div className="d-flex justify-content-center gap-3">
-                <button 
-                  type="button" 
-                  className="btn px-4 fw-semibold text-white" 
-                  style={{ backgroundColor: '#168616', borderRadius: '8px' }}
-                  onClick={() => setMostrarModalConfirmacion(false)}
-                >
-                  Volver
-                </button>
-                <button 
-                  type="button" 
-                  className="btn px-4 fw-semibold text-white" 
-                  style={{ backgroundColor: '#e61111', borderRadius: '8px' }}
-                  onClick={ejecutarRestauracion}
-                >
-                  Sí, Actualizar
-                </button>
+                <button type="button" className="btn px-4 fw-semibold text-white" style={{ backgroundColor: '#168616', borderRadius: '8px' }} onClick={() => setMostrarModalConfirmacion(false)}>Volver</button>
+                <button type="button" className="btn px-4 fw-semibold text-white" style={{ backgroundColor: '#e61111', borderRadius: '8px' }} onClick={ejecutarRestauracion}>Sí, Actualizar</button>
               </div>
             </div>
           </div>

@@ -10,6 +10,7 @@ import { FilaHistorial } from '../features/historial/components/FilaHistorial';
 import { ModalAuditoriaPedido } from '../features/pedidos/ModalAuditoriaPedido';
 import { VistaTicketModal } from '../features/pedidos/VistaTicketModal';
 import { CuentaCorrienteModal } from '../features/Clientes/CuentaCorrienteModal';
+import { SuccesModal } from '../components/layouts/SuccesModal';
 
 export const HistorialPedidosPage: React.FC = () => {
   const { pedidos, cargando, recargarHistorial } = useHistorialPedidos();
@@ -20,6 +21,11 @@ export const HistorialPedidosPage: React.FC = () => {
   const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<any>(null);
   const [verTicketPedido, setVerTicketPedido] = useState<any>(null);
 
+  // Estado para el modal de devolución
+  const [pedidoDevolucion, setPedidoDevolucion] = useState<any>(null);
+  const [descripcionDevolucion, setDescripcionDevolucion] = useState('');
+  const [cargandoDevolucion, setCargandoDevolucion] = useState(false);
+
   // Filtro unificado de búsqueda general y estado histórico
   const [filtroTexto, setFiltroTexto] = useState('');
   const [filtroEstadoHistorial, setFiltroEstadoHistorial] = useState('TODOS');
@@ -29,7 +35,7 @@ export const HistorialPedidosPage: React.FC = () => {
     try {
       const pedidoCompleto = await pedidoService.obtenerPorId(idPedido);
       if (pedidoCompleto) {
-        setPedidoAuditoria(pedidoCompleto); // <--- Corregido para usar el estado correcto
+        setPedidoAuditoria(pedidoCompleto);
       } else {
         alert('No se pudo obtener el historial detallado de este pedido.');
       }
@@ -64,6 +70,75 @@ export const HistorialPedidosPage: React.FC = () => {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const [suceso, setSuceso] = useState<{ show: boolean; titulo: string; mensaje: string; tipo: string }>({ 
+  show: false, 
+  titulo: '', 
+  mensaje: '', 
+  tipo: 'exito' 
+  });
+
+  // Handler para procesar las acciones de Devolución
+  const handleProcesarDevolucion = async (accion: 'REINICIAR' | 'DEVUELTO') => {
+  if (!descripcionDevolucion.trim()) {
+    setSuceso({
+      show: true,
+      titulo: 'Atención',
+      mensaje: 'Por favor, ingresa una descripción para la devolución.',
+      tipo: 'error'
+    });
+    return;
+  }
+
+  setCargandoDevolucion(true);
+  try {
+    const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
+    const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
+
+    if (accion === 'REINICIAR') {
+      await pedidoService.cambiarEstado(
+        pedidoDevolucion.id_pedido, 
+        'PENDIENTE', 
+        `Devolución (Volver a Hacer): ${descripcionDevolucion}`, 
+        idUsuarioActivo
+      );
+      
+      setSuceso({
+        show: true,
+        titulo: 'Éxito',
+        mensaje: 'El pedido ha vuelto a ingresar a la cola de pedidos pendientes.',
+        tipo: 'exito'
+      });
+    } else {
+      await pedidoService.cambiarEstado(
+        pedidoDevolucion.id_pedido, 
+        'DEVUELTO', 
+        `Devolución Final: ${descripcionDevolucion}`, 
+        idUsuarioActivo
+      );
+      
+      setSuceso({
+        show: true,
+        titulo: 'Éxito',
+        mensaje: 'Pedido marcado como Devuelto correctamente.',
+        tipo: 'exito'
+      });
+    }
+
+    setPedidoDevolucion(null);
+    setDescripcionDevolucion('');
+  } catch (error: any) {
+    console.error('Error al procesar la devolución:', error);
+    setSuceso({
+      show: true,
+      titulo: 'Error',
+      mensaje: error.message || 'Error al procesar la devolución.',
+      tipo: 'error'
+    });
+  } finally {
+    setCargandoDevolucion(false);
+  }
   };
 
   // Filtrado de registros en memoria
@@ -111,7 +186,7 @@ export const HistorialPedidosPage: React.FC = () => {
     } else if (filtroEstadoHistorial === 'CANCELADO') {
       cumpleEstado = p.estado === 'CANCELADO';
     } else {
-      cumpleEstado = ['ENTREGADO', 'CANCELADO', 'FINALIZADO'].includes(p.estado);
+      cumpleEstado = ['ENTREGADO', 'CANCELADO', 'FINALIZADO', 'DEVUELTO'].includes(p.estado);
     }
 
     return cumpleBusquedaGeneral && cumpleEstado;
@@ -192,6 +267,7 @@ export const HistorialPedidosPage: React.FC = () => {
                       onSelectTicket={setVerTicketPedido}
                       onSubirArchivo={handleSubirArchivoFisico}
                       onEliminarComprobante={handleEliminarComprobanteFisico}
+                      onAbrirDevolucion={(p) => setPedidoDevolucion(p)}
                     />
                   ))
                 )}
@@ -230,6 +306,94 @@ export const HistorialPedidosPage: React.FC = () => {
           pedido={verTicketPedido}
           onClose={() => setVerTicketPedido(null)}
         />
+      )}
+
+    {/* MODAL NOTIFICACIÓN GENÉRICA / SUCESO */}
+    {suceso.show && (
+    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+    <div className="modal-dialog modal-sm modal-dialog-centered">
+      <div 
+        className="modal-content p-4 text-white text-center" 
+        style={{ 
+          border: '2px solid #8e45e0', 
+          backgroundColor: '#1a1a1c', 
+          borderRadius: '12px',
+          fontFamily: 'monospace'
+        }}>
+        <i 
+          className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-exclamation-circle'} fs-1 mb-2`} 
+          style={{ color: '#8e45e0' }}
+        ></i>
+        <h5 className="fw-bold">{suceso.titulo}</h5>
+        <p className="small" style={{ color: '#a1a1aa' }}>{suceso.mensaje}</p>
+        <button 
+          className={`btn ${suceso.tipo === 'exito' ? 'btn-success' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold`}
+          style={{ borderRadius: '6px' }}
+          onClick={() => {
+            setSuceso({ ...suceso, show: false });
+            if (suceso.tipo === 'exito') {
+              recargarHistorial();
+            }
+          }}
+        >
+          Aceptar
+        </button>
+      </div>
+      </div>
+      </div>
+    )}
+    
+      {/* MODAL DE DEVOLUCIÓN */}
+      {pedidoDevolucion && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '500px' }}>
+            <div className="modal-content text-white font-monospace p-4 shadow-lg" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '16px' }}>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="fw-bold mb-0 text-warning">
+                  <i className="bi bi-arrow-return-left me-2"></i>Devolución de Pedido #{pedidoDevolucion.id_pedido}
+                </h5>
+                <button 
+                  type="button" 
+                  className="btn-close btn-close-white" 
+                  onClick={() => {
+                    setPedidoDevolucion(null);
+                    setDescripcionDevolucion('');
+                  }}
+                ></button>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label text-white-50 small">Motivo / Descripción de la devolución</label>
+                <textarea 
+                  className="form-control bg-dark text-white border-secondary font-monospace"
+                  rows={3}
+                  placeholder="Ingrese los detalles o la razón del reclamo/devolución..."
+                  value={descripcionDevolucion}
+                  onChange={(e) => setDescripcionDevolucion(e.target.value)}
+                />
+              </div>
+
+              <div className="d-flex flex-column gap-2 mt-4">
+                <button 
+                  type="button" 
+                  disabled={cargandoDevolucion}
+                  className="btn btn-warning fw-bold py-2 shadow"
+                  onClick={() => handleProcesarDevolucion('REINICIAR')}
+                >
+                  <i className="bi bi-arrow-clockwise me-2"></i>Volver a Hacer
+                </button>
+                <button 
+                  type="button" 
+                  disabled={cargandoDevolucion}
+                  className="btn btn-danger fw-bold py-2 shadow"
+                  onClick={() => handleProcesarDevolucion('DEVUELTO')}
+                >
+                  <i className="bi bi-x-circle me-2"></i>Marcar como Devuelto
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </SidebarLayout>
   );

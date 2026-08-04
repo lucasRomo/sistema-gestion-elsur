@@ -6,12 +6,14 @@ interface FilaHistorialProps {
   onSelectTicket: (pedido: any) => void;
   onSubirArchivo: (idPedido: number, file: File) => void;
   onEliminarComprobante: (idPedido: number) => void;
+  onAbrirDevolucion: (pedido: any) => void; // <--- Nueva prop
 }
 
 export const FilaHistorial: React.FC<FilaHistorialProps> = ({
   pedido: p,
   onAbrirAuditoria,
   onSelectTicket,
+  onAbrirDevolucion, // <--- Recibimos el handler
 }) => {
   // Lógica del nombre del cliente
   const nombreCliente = p.cliente?.persona 
@@ -98,7 +100,7 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
       </td>
 
       <td className="text-center" style={{ padding: '12px 12px' }}>
-        <span className={`badge font-monospace ${p.text_color} ${p.estado === 'CANCELADO' ? 'bg-danger text-white' : p.estado === 'ENTREGADO' ? 'bg-success text-white' : 'bg-secondary text-white'}`}>
+        <span className={`badge font-monospace ${p.text_color} ${p.estado === 'CANCELADO' ? 'bg-danger text-white' : p.estado === 'DEVUELTO' ? 'bg-warning text-dark' : p.estado === 'ENTREGADO' ? 'bg-success text-white' : 'bg-secondary text-white'}`}>
           {p.estado}
         </span>
       </td>
@@ -112,6 +114,7 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
       <td className="text-success fw-bold" style={{ padding: '12px 12px' }}>
         ${Number(p.monto_pago_adelantado).toFixed(2)}
       </td>
+      
       {/* ACCIONES */}
       <td style={{ padding: '12px 8px' }}>
         <div className="d-flex justify-content-center gap-2 align-items-center">
@@ -135,6 +138,18 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
             title="Imprimir Ticket"
           >
             <i className="bi bi-printer" style={{ color: '#ffc107' }}></i>
+          </button>
+
+          {/* NUEVO BOTÓN DEVOLUCIÓN */}
+          <button 
+            className="rounded d-flex align-items-center justify-content-center" 
+            style={{ width: '32px', height: '32px', border: '0.8px solid #fd7e14', backgroundColor: 'transparent', transition: '0.2s' }}
+            onClick={() => onAbrirDevolucion(p)}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fd7e14'; e.currentTarget.querySelector('i')!.style.color = '#000'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.querySelector('i')!.style.color = '#fd7e14'; }}
+            title="Devolución de Pedido"
+          >
+            <i className="bi bi-arrow-return-left" style={{ color: '#fd7e14' }}></i>
           </button>
         </div>
       </td>

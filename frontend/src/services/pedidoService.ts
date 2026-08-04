@@ -72,6 +72,34 @@ export const pedidoService = {
 
   const text = await response.text();
   return text ? JSON.parse(text) : null;
+  },
+
+  cambiarEstado: async (idPedido: number, nuevoEstado: string, observaciones: string = '', idUsuario: number = 1) => {
+  try {
+    const response = await fetch(`${BASE_URL}/${idPedido}/cambiar-estado`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        nuevoEstado,
+        observaciones,
+        idUsuario
+      }),
+    });
+
+    if (!response.ok) {
+      const errorMsg = await response.text();
+      throw new Error(errorMsg || 'Error al cambiar el estado del pedido');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error en cambiarEstado:', error);
+    throw error;
   }
+}
+
+
 
 };

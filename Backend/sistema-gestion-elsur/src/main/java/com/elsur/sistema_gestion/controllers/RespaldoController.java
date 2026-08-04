@@ -26,18 +26,14 @@ public class RespaldoController {
         return ResponseEntity.ok(respaldoService.obtenerHistorial());
     }
 
-    @GetMapping("/generar")
-    public ResponseEntity<byte[]> descargarRespaldoContingente(
-            @RequestParam(value = "usuario", required = false, defaultValue = "Operario") String usuario) {
-        
-        byte[] bytes = respaldoService.generarRespaldoContingente(usuario);
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        String fileName = "backup_elsur_contingencia_" + timestamp + ".json";
+    @PostMapping("/generar") // O @GetMapping según cómo lo mantengas
+    public ResponseEntity<String> generarRespaldo(
+        @RequestParam(value = "usuario", required = false, defaultValue = "Operario") String usuario) {
+    
+    // El servicio guarda el archivo físicamente en la carpeta 'backup' del servidor
+    respaldoService.generarRespaldoContingente(usuario);
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(bytes);
+    return ResponseEntity.ok("Respaldo creado con éxito en el servidor.");
     }
 
     @GetMapping("/descargar/{id}")

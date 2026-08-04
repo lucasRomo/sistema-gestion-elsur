@@ -149,87 +149,90 @@ export const PedidosPendientesPage: React.FC = () => {
 
   // Confirmación desde ModalCambioEstado con chequeo exacto contra Cliente.java
   const confirmarCambioEstado = async (observaciones: string) => {
-    if (!pedidoEstadoSel) return;
+  if (!pedidoEstadoSel) return;
 
-    const cliente = pedidoEstadoSel.cliente || {};
+  const cliente = pedidoEstadoSel.cliente || {};
 
-    // 1. Monto total del pedido
-    const totalPedido = Number(
-      pedidoEstadoSel.monto_total ?? 
-      pedidoEstadoSel.montoTotal ?? 
-      pedidoEstadoSel.total ?? 
-      0
-    );
+  // 1. Monto total del pedido
+  const totalPedido = Number(
+    pedidoEstadoSel.monto_total ?? 
+    pedidoEstadoSel.montoTotal ?? 
+    pedidoEstadoSel.total ?? 
+    0
+  );
 
-    // 2. Monto abonado/seña del pedido
-    const pagadoPedido = Number(
-      pedidoEstadoSel.monto_pago_adelantado ?? 
-      pedidoEstadoSel.montoPagoAdelantado ?? 
-      pedidoEstadoSel.monto_abonado ?? 
-      pedidoEstadoSel.montoAbonado ?? 
-      pedidoEstadoSel.pagoAdelantado ?? 
-      0
-    );
+  // 2. Monto abonado / seña del pedido
+  const pagadoPedido = Number(
+    pedidoEstadoSel.monto_pago_adelantado ?? 
+    pedidoEstadoSel.montoPagoAdelantado ?? 
+    pedidoEstadoSel.monto_abonado ?? 
+    pedidoEstadoSel.montoAbonado ?? 
+    pedidoEstadoSel.pagoAdelantado ?? 
+    0
+  );
 
-    // Saldo pendiente de este pedido
-    const saldoPendientePedido = Math.max(0, totalPedido - pagadoPedido);
+  // Saldo pendiente de este pedido
+  const saldoPendientePedido = Math.max(0, totalPedido - pagadoPedido);
 
-    // 3. Deuda previa del cliente (mapeado directo de Cliente.java: saldoDeudor)
-    const deudaPreviaCliente = Number(
-      cliente.saldoDeudor ?? 
-      cliente.saldo_deudor ?? 
-      0
-    );
+  // 3. Deuda previa del cliente
+  const deudaPreviaCliente = Number(
+    cliente.saldoDeudor ?? 
+    cliente.saldo_deudor ?? 
+    0
+  );
 
-    // 4. Límite de crédito del cliente (mapeado directo de Cliente.java: limiteCredito)
-    const limiteCredito = Number(
-      cliente.limiteCredito ?? 
-      cliente.limite_credito ?? 
-      0
-    );
+  // 4. Límite de crédito asignado al cliente
+  const limiteCredito = Number(
+    cliente.limiteCredito ?? 
+    cliente.limite_credito ?? 
+    0
+  );
 
-    // Deuda total proyectada
-    const deudaTotalProyectada = deudaPreviaCliente + saldoPendientePedido;
+  // Deuda total proyectada
+  const deudaTotalProyectada = deudaPreviaCliente + saldoPendientePedido;
 
-    const estadoNormalizado = (nuevoEstadoPendiente || '').toUpperCase().trim();
-    const esEntregaOFinalizacion = [
-      'ENTREGADO', 
-      'FINALIZADO', 
-      'COMPLETADO', 
-      'TERMINADO', 
-      'LISTO PARA ENTREGAR'
-    ].includes(estadoNormalizado);
+  const estadoNormalizado = (nuevoEstadoPendiente || '').toUpperCase().trim();
+  const esEntregaOFinalizacion = [
+    'ENTREGADO', 
+    'FINALIZADO', 
+    'COMPLETADO', 
+    'TERMINADO', 
+    'LISTO PARA ENTREGAR'
+  ].includes(estadoNormalizado);
 
-    // Se activa si hay saldo pendiente y (no tiene límite o la deuda supera el límite actual)
-    const superaLimite = limiteCredito > 0 
-      ? deudaTotalProyectada > limiteCredito 
-      : saldoPendientePedido > 0;
+  // EVALUACIÓN DE BLOQUEO POR LÍMITE:
+  // Se activa si hay saldo pendiente y (no tiene límite configurado o la deuda proyectada supera el límite)
+  const superaLimite = limiteCredito > 0 
+    ? deudaTotalProyectada > limiteCredito 
+    : saldoPendientePedido > 0;
 
-    if (esEntregaOFinalizacion && superaLimite) {
-      // Sugerimos como nuevo límite por defecto la deuda proyectada para facilitar la carga rápida
-      setNuevoLimiteInput(deudaTotalProyectada.toString());
+  if (esEntregaOFinalizacion && superaLimite) {
+    // Sugerimos como nuevo límite por defecto la deuda proyectada
+    setNuevoLimiteInput(deudaTotalProyectada.toString());
 
-      setModalAdvertenciaDeuda({
-        show: true,
-        pedido: pedidoEstadoSel,
-        nuevoEstado: nuevoEstadoPendiente,
-        observaciones: observaciones,
-        saldoPendiente: saldoPendientePedido,
-        deudaPrevia: deudaPreviaCliente,
-        deudaTotal: deudaTotalProyectada,
-        limiteCredito: limiteCredito
-      });
-      setPedidoEstadoSel(null);
-      return;
-    }
+    // Abre el modal de advertencia/bloqueo y frena la ejecución aquí
+    setModalAdvertenciaDeuda({
+      show: true,
+      pedido: pedidoEstadoSel,
+      nuevoEstado: nuevoEstadoPendiente,
+      observaciones: observaciones,
+      saldoPendiente: saldoPendientePedido,
+      deudaPrevia: deudaPreviaCliente,
+      deudaTotal: deudaTotalProyectada,
+      limiteCredito: limiteCredito
+    });
+    
+    setPedidoEstadoSel(null);
+    return; // <-- Bloquea la continuación automática del cambio de estado
+  }
 
-    // Procesar cambio si no supera los límites
-    await ejecutarCambioEstado(
-      pedidoEstadoSel.id_pedido,
-      nuevoEstadoPendiente,
-      pedidoEstadoSel.estado,
-      observaciones
-    );
+  // Si no supera el límite de crédito o no requiere validación, procede normalmente
+  await ejecutarCambioEstado(
+    pedidoEstadoSel.id_pedido,
+    nuevoEstadoPendiente,
+    pedidoEstadoSel.estado,
+    observaciones
+  );
   };
 
   // Función para actualizar límite de crédito en la BD y entregar inmediatamente
