@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Insumo } from '../../types/Insumo';
 import type { Proveedor } from '../../types/Proveedor';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface InsumoModalProps {
   show: boolean;
@@ -10,6 +11,9 @@ interface InsumoModalProps {
 }
 
 export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, onClose, onGuardar }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   
   // Estado del formulario
@@ -89,14 +93,14 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
               <i className="bi bi-box-seam me-2"></i> 
               {insumoEditando ? 'Editar Insumo' : 'Registrar Nuevo Insumo'}
             </h5>
-            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
+            <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose}></button>
           </div>
 
 
           <form onSubmit={handleSubmit}>
             <div className="modal-body p-4">
               <div className="mb-3">
-                <label className="form-label text-white-50 small">Nombre del Insumo</label>
+                <label className="form-label small" style={{ color: mutedText }}>Nombre del Insumo</label>
                 <input 
                   type="text" 
                   className="form-control bg-dark border-secondary text-white" 
@@ -113,7 +117,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
               <div className="row">
                 <div className="col-md-6 mb-3">
-                  <label className="form-label text-white-50 small">Stock Actual</label>
+                  <label className="form-label small" style={{ color: mutedText }}>Stock Actual</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -125,7 +129,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   />
                 </div>
                 <div className="col-md-6 mb-3">
-                  <label className="form-label text-white-50 small">Stock Mínimo</label>
+                  <label className="form-label small" style={{ color: mutedText }}>Stock Mínimo</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -139,7 +143,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
               </div>
 
               <div className="mb-3">
-                <label className="form-label text-white-50 small">Proveedor Principal</label>
+                <label className="form-label small" style={{ color: mutedText }}>Proveedor Principal</label>
                 <select 
                   className="form-select bg-dark border-secondary text-white" 
                   name="idProveedor" 
@@ -154,7 +158,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
               </div>
 
               <div className="mb-3">
-                <label className="form-label text-white-50 small">Estado</label>
+                <label className="form-label small" style={{ color: mutedText }}>Estado</label>
                 <select 
                   className="form-select bg-dark border-secondary text-white" 
                   name="estado" 

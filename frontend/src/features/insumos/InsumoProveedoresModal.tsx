@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Insumo } from '../../types/Insumo';
 import type { Proveedor } from '../../types/Proveedor';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface InsumoProveedoresModalProps {
   show: boolean;
@@ -12,6 +13,9 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [filtroEstado, setFiltroEstado] = useState('Todos'); // ◄ NUEVO: Estado del filtro
   const [cargando, setCargando] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
 
   useEffect(() => {
     if (show && insumo?.proveedor?.tipoProveedor) {
@@ -49,19 +53,19 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
             <h5 className="modal-title fw-bold" style={{ color: '#a855f7' }}>
               <i className="bi bi-truck me-2"></i> Proveedores de "{insumo.nombreInsumo}"
             </h5>
-            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
+            <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose}></button>
           </div>
 
           <div className="modal-body p-4">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
-                <span className="text-white-50 small d-block">Categoría:</span>
+                <span className="small d-block" style={{ color: mutedText }}>Categoría:</span>
                 <span className="badge bg-dark border border-secondary text-info">{insumo.proveedor?.tipoProveedor?.descripcion || 'Sin categoría'}</span>
               </div>
               
               {/* ◄ NUEVO: Selector de filtro */}
               <div className="d-flex align-items-center gap-2">
-                <span className="small text-white-50">Filtrar Estado:</span>
+                <span className="small" style={{ color: mutedText }}>Filtrar Estado:</span>
                 <select 
                   className="form-select form-select-sm bg-dark border-secondary text-white"
                   style={{ width: '130px' }}
@@ -76,7 +80,7 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
             </div>
 
             <div className="table-responsive rounded border border-secondary" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-              <table className="table table-dark table-hover m-0 align-middle text-center" style={{ fontSize: '0.85rem' }}>
+              <table className={`table table-hover m-0 align-middle text-center ${isDark ? 'table-dark' : ''}`} style={{ fontSize: '0.85rem' }}>
                 <thead className="table-active sticky-top bg-dark text-secondary" style={{ zIndex: 1 }}>
                   <tr>
                     <th>ID</th>
@@ -88,7 +92,7 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
                 </thead>
                 <tbody>
                   {cargando ? (
-                    <tr><td colSpan={5} className="text-center py-3 text-white-50">Buscando...</td></tr>
+                    <tr><td colSpan={5} className="text-center py-3" style={{ color: mutedText }}>Buscando...</td></tr>
                   ) : proveedoresFiltrados.length > 0 ? (
                     proveedoresFiltrados.map(p => (
                       <tr key={p.idProveedor}>

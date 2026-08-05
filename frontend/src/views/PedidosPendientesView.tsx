@@ -15,6 +15,7 @@ import { ModalCambioEstado } from '../features/pedidos/ModalCambioEstado';
 import { ModalRegistrarPago } from '../features/pedidos/ModalRegistrarPago';
 import { VistaTicketModal } from '../features/pedidos/VistaTicketModal';
 import { CuentaCorrienteModal } from '../features/Clientes/CuentaCorrienteModal';
+import { useTheme } from '../Context/ThemeContext';
 
 export const PedidosPendientesPage: React.FC = () => {
   const { pedidos, cargando, actualizarEstado, registrarPago } = usePedidosPendientes();
@@ -480,6 +481,9 @@ export const PedidosPendientesPage: React.FC = () => {
     return true;
   });
 
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+
   return (
     <SidebarLayout activeItem="Pedidos Pendientes">
       <div 
@@ -501,6 +505,7 @@ export const PedidosPendientesPage: React.FC = () => {
             filtroEmpleado={filtroEmpleado}
             setFiltroEmpleado={setFiltroEmpleado}
             empleados={empleados}
+            isDarkMode={isDarkMode}
           />
         </div>
 
@@ -516,8 +521,8 @@ export const PedidosPendientesPage: React.FC = () => {
               className="table-dark table-hover m-0 align-middle"
               style={{ width: '100%', borderCollapse: 'collapse', color: '#e4e4e7', backgroundColor: '#121214' }}
             >
-              <thead style={{ position: 'sticky', top: 0, backgroundColor: '#1d1d1d', zIndex: 1 }}>
-                <tr style={{ backgroundColor: '#1d1d1d', borderBottom: '2px solid #27272a', color: '#a1a1aa', fontFamily: 'monospace', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+              <thead style={{ position: 'sticky', top: 0, zIndex: 1, backgroundColor: isDarkMode ? '#000000' : '#f6f9fc' }}>
+                <tr className="border-bottom border-secondary-subtle"style={{ fontFamily: 'monospace', fontSize: '0.85rem', textTransform: 'uppercase',color: isDarkMode ? '#e4e4e7' : '#334155' }}>
                   <th style={{ padding: '12px 12px 12px 24px' }}>ID</th>
                   <th>Cliente</th>
                   <th style={{ padding: '3px' }}>Estante</th>
@@ -869,21 +874,21 @@ export const PedidosPendientesPage: React.FC = () => {
         className="modal-content text-white text-center p-4" 
         style={{ 
           backgroundColor: '#1a1a1c', 
-          border: '2px solid #8e45e0', 
+          border: '2px solid #7c2ae8', 
           borderRadius: '12px' 
         }}
       >
         <div className="d-flex justify-content-center mb-3">
           <div 
             className="d-flex align-items-center justify-content-center"
-            style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: 'rgba(142, 69, 224, 0.15)', border: '2px solid #8e45e0' }}
+            style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: 'rgba(124, 42, 232, 0.15)', border: '2px solid #7c2ae8' }}
           >
-            <i className="bi bi-info-circle-fill fs-3" style={{ color: '#8e45e0' }}></i>
+            <i className="bi bi-info-circle-fill fs-3" style={{ color: '#7c2ae8' }}></i>
           </div>
         </div>
 
-        <h5 className="fw-bold mb-3" style={{ color: '#ffffff' }}>
-          Aviso de Cuenta Corriente
+        <h5 className="fw-bold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#0f172a' }}>
+         Aviso de Cuenta Corriente
         </h5>
 
         <p className="mb-4" style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: '1.4' }}>
@@ -893,15 +898,16 @@ export const PedidosPendientesPage: React.FC = () => {
         <div className="d-flex flex-column gap-2">
           {/* Botón 1: Revisar Cuenta Corriente */}
           <button 
-           type="button" 
-           className="btn py-2 text-white fw-bold"
-           style={{ backgroundColor: '#2563eb', border: 'none', borderRadius: '6px' }}
-           onClick={() => {
-           const clienteAsociado = modalAvisoCuentaCorriente.pedido?.cliente;
-           setModalAvisoCuentaCorriente({ show: false, pedido: null });
-           setClienteCuentaCorriente(clienteAsociado); 
-           }}>
-           <i className="bi bi-wallet2 me-2"></i> Revisar Cuenta Corriente
+            type="button" 
+            className="btn py-2 text-white fw-bold"
+            style={{ backgroundColor: '#2563eb', border: 'none', borderRadius: '6px' }}
+            onClick={() => {
+              const clienteAsociado = modalAvisoCuentaCorriente.pedido?.cliente;
+              setModalAvisoCuentaCorriente({ show: false, pedido: null });
+              setClienteCuentaCorriente(clienteAsociado); 
+            }}
+          >
+            <i className="bi bi-wallet2 me-2"></i> Revisar Cuenta Corriente
           </button>
 
           {/* Botón 2: Abonar Pedido */}
@@ -912,7 +918,7 @@ export const PedidosPendientesPage: React.FC = () => {
             onClick={() => {
               const pedidoAbonar = modalAvisoCuentaCorriente.pedido;
               setModalAvisoCuentaCorriente({ show: false, pedido: null });
-              setPedidoPagoSel(pedidoAbonar); // Abre el modal normal de pago si desean abonarlo por afuera
+              setPedidoPagoSel(pedidoAbonar);
             }}
           >
             <i className="bi bi-cash-coin me-2"></i> Abonar Pedido
@@ -922,7 +928,7 @@ export const PedidosPendientesPage: React.FC = () => {
           <button 
             type="button" 
             className="btn py-2 text-white fw-bold"
-            style={{ backgroundColor: '#a33c2f', border: 'none', borderRadius: '6px' }}
+            style={{ backgroundColor: '#dc2626', border: 'none', borderRadius: '6px' }}
             onClick={() => setModalAvisoCuentaCorriente({ show: false, pedido: null })}
           >
             Cerrar ventana
@@ -938,7 +944,6 @@ export const PedidosPendientesPage: React.FC = () => {
     cliente={clienteCuentaCorriente}
     onCerrar={() => setClienteCuentaCorriente(null)}
     onActualizar={() => {
-      // Opcional: recargar la lista de pedidos o datos si se modificó algo en la cuenta corriente
     }}
   />
 )}

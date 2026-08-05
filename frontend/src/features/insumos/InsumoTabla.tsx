@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Insumo } from '../../types/Insumo';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface InsumoTablaProps {
   insumos: Insumo[];
@@ -8,11 +9,18 @@ interface InsumoTablaProps {
 }
 
 export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onVerProveedores }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const tableText = isDark ? 'white' : '#18181b';
+  const theadBorder = isDark ? '#3f3f46' : '#e2e8f0';
+  const rowBorder = isDark ? '#2d2d30' : '#e2e8f0';
+  const rowHoverBg = isDark ? '#27272a' : '#f1f5f9';
   return (
     <div className="table-responsive" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', color: tableText }}>
         <thead>
-          <tr style={{ borderBottom: '2px solid #3f3f46', textAlign: 'left' }}>
+          <tr style={{ borderBottom: `2px solid ${theadBorder}`, textAlign: 'left' }}>
             <th style={{ padding: '12px' }}>ID</th>
             <th style={{ padding: '12px' }}>Nombre Insumo</th>
             <th style={{ padding: '12px' }}>Stock Mínimo</th>
@@ -30,11 +38,11 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
           ) : (
             insumos.map((i) => (
               <tr 
-                key={i.idInsumo}
-                style={{ borderBottom: '1px solid #2d2d30' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#27272a'} 
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
+  key={i.idInsumo}
+  style={{ borderBottom: `1px solid ${rowBorder}` }}
+  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
+  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+>
                 <td style={{ padding: '12px' }}>{i.idInsumo}</td>
                 <td style={{ padding: '12px' }} className="fw-bold">{i.nombreInsumo}</td>
                 <td style={{ padding: '12px' }} className="text-warning">{i.stockMinimo}</td>

@@ -9,8 +9,11 @@ import type { CategoriaCliente } from '../types/CategoriaCliente';
 import { PedidosPendientesCard } from '../features/VentaRapida/PedidosPendientesCard';
 import { VistaTicketModal } from '../features/pedidos/VistaTicketModal';
 import { NotificacionesCard } from '../features/VentaRapida/NotificacionesCard';
+import { useTheme } from '../Context/ThemeContext'; 
 
 export const VentaRapida: React.FC = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<CategoriaCliente[]>([]);
   const [categoriaSeleccionadaId, setCategoriaSeleccionadaId] = useState<string>('');
@@ -211,33 +214,69 @@ export const VentaRapida: React.FC = () => {
 
   return (
     <div 
-      className="container-fluid font-monospace text-white d-flex flex-column justify-content-between"
+      className={`container-fluid font-monospace d-flex flex-column justify-content-between ${isDark ? 'text-white' : 'text-dark'}`}
       style={{ minHeight: 'calc(100vh - 40px)', paddingBottom: '10px' }}
     >
+      {/* Estilos dinámicos para forzar fondos blancos en selects y options cuando no esté en modo oscuro */}
+      <style>{`
+        ${!isDark ? `
+          select.form-select, 
+          input.form-control {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+          }
+
+          /* Sobrescribir estados de foco/click para que no cambien de color */
+          select.form-select:focus,
+          select.form-select:focus-visible,
+          select.form-select:active,
+          input.form-control:focus,
+          input.form-control:focus-visible,
+          input.form-control:active {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #8e45e0 !important;
+            box-shadow: 0 0 0 0.25rem rgba(142, 69, 224, 0.2) !important;
+            outline: none !important;
+          }
+
+          select.form-select option {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+          }
+        ` : ''}
+      `}</style>
+
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div className="w-100 text-center position-relative">
-          <h1 className="fw-bold tracking-wider font-monospace m-0" style={{ fontSize: '2.3rem', color: '#ffffff' }}>
-            Panel principal
+          <h1 className="fw-bold tracking-wider font-monospace m-0" style={{ fontSize: '2.3rem', color: isDark ? '#ffffff' : '#ac76d8' }}>
+           Panel principal
           </h1>
         </div>
       </div>
 
-    <div className="row mb-3 g-3 flex-grow-0" style={{ minHeight: '220px' }}>
-      <div className="col-12 col-md-4">
-      <PedidosPendientesCard />
+      <div className="row mb-3 g-3 flex-grow-0" style={{ minHeight: '220px' }}>
+        <div className="col-12 col-md-4">
+          <PedidosPendientesCard />
+        </div>
+        <div className="col-12 col-md-4">
+          <NotificacionesCard />
+        </div>
+        <div className="col-12 col-md-4">
+          <FaltaStockCard />
+        </div>
       </div>
-      <div className="col-12 col-md-4">
-      <NotificacionesCard />
-      </div>
-      <div className="col-12 col-md-4">
-      <FaltaStockCard />
-      </div>
-    </div>
 
       {/* --- PANEL INFERIOR --- */}
       <div 
-        className="card p-4 shadow flex-grow-1 d-flex flex-column justify-content-between" 
-        style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46', borderRadius: '12px' }}
+        className="card p-4 flex-grow-1 d-flex flex-column justify-content-between" 
+        style={{ 
+          backgroundColor: isDark ? '#1E1E1F' : '#ffffff', 
+          border: isDark ? '1px solid #3f3f46' : '1px solid #cbd5e1', 
+          borderRadius: '14px',
+          boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05)'
+        }}
       >
         <div>
           <SelectorProducto 
@@ -276,7 +315,7 @@ export const VentaRapida: React.FC = () => {
 
       {/* Modales Suceso & Confirmación */}
       {suceso.show && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
             <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
               <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-x-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
@@ -306,7 +345,7 @@ export const VentaRapida: React.FC = () => {
       )}
 
       {confirmarCancelacion && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
             <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
               <i className="bi bi-exclamation-triangle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>

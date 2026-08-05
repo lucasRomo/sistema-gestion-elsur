@@ -4,9 +4,26 @@ import { ModalNuevoIngreso } from '../features/caja/ModalNuevoIngreso';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTurno } from '../Context/TurnoContext';
+import { useTheme } from '../Context/ThemeContext';
 
 export const CajaView: React.FC = () => {
-  // --- LÓGICA DE ESTADOS PARA EL FLUJO DE CAJA ---
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const pageBg = isDark ? '#1b1b1b' : '#f8fafc';
+  const cardBg = isDark ? '#1e1e1f' : '#ffffff';
+  const cardBorder = isDark ? '#242427' : '#e2e8f0';
+  const graphInnerBg = isDark ? '#222122' : '#f1f5f9';
+  const tableWrapBg = isDark ? '#1d1d1d' : '#f8fafc';
+  const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
+
+  // Colores para el gráfico de Recharts (no son CSS, van por props)
+  const chartGrid = isDark ? '#2d2d30' : '#e2e8f0';
+  const chartTick = isDark ? '#aaa' : '#64748b';
+  const tooltipBg = isDark ? '#1e1e1f' : '#ffffff';
+  const tooltipBorder = isDark ? '#2d2d30' : '#e2e8f0';
+  const tooltipText = isDark ? '#fff' : '#18181b';
+  const dotColor = isDark ? '#ffffff' : '#1e1e1f';
   const { cajaAbierta, setCajaAbierta } = useTurno();
   const [saldoCaja, setSaldoCaja] = useState<number>(0);
   const [ingresosTurno, setIngresosTurno] = useState<number>(0);
@@ -227,7 +244,7 @@ export const CajaView: React.FC = () => {
 
   return (
     <SidebarLayout activeItem="Caja">
-      <div className="container-fluid text-white p-2 pt-5 mt-2" style={{ backgroundColor: '#1b1b1b' }}>
+      <div className="container-fluid text-white p-2 pt-5 mt-2" style={{ backgroundColor: pageBg }}>
         
         {/* Título Principal */}
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -239,7 +256,7 @@ export const CajaView: React.FC = () => {
         <div className="row g-4 mb-4">
           {/* Tarjeta Izquierda: Saldo y Totales */}
           <div className="col-md-6">
-            <div className="p-4 rounded-3 h-100" style={{ backgroundColor: '#1e1e1f', border: '1px solid #242427' }}>
+            <div className="p-4 rounded-3 h-100" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span className="text-light opacity-75 fw-medium">
                   Flujo de Caja Actual: {' '}
@@ -274,8 +291,8 @@ export const CajaView: React.FC = () => {
 
           {/* Tarjeta Derecha: Gráfico */}
           <div className="col-md-6">
-            <div className="p-4 rounded-3 h-100" style={{ backgroundColor: '#1e1e1f', border: '1px solid #242427' }}>
-              <div className="p-3 rounded" style={{ backgroundColor: '#222122', borderColor: '#2d2d30', minHeight: '180px', overflowX: 'auto' }}>
+            <div className="p-4 rounded-3 h-100" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+  <div className="p-3 rounded" style={{ backgroundColor: graphInnerBg, borderColor: chartGrid, minHeight: '180px', overflowX: 'auto' }}>
                 <div className="text-center small opacity-20 mb-2 font-monospace" >
                   {new Date().toLocaleDateString('es-AR')}
                 </div>
@@ -290,31 +307,31 @@ export const CajaView: React.FC = () => {
                         monto: m.tipoMovimiento === 'EGRESO' ? -Math.abs(m.monto) : m.monto}))}
                         margin={{ top: 10, right: 15, left: -15, bottom: 5 }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                        <XAxis 
-                          dataKey="hora" 
-                          tick={{ fill: '#aaa', fontSize: 11 }} 
-                          axisLine={{ stroke: '#2d2d30' }}
-                          tickLine={false}
-                        />
-                        <YAxis 
-                          domain={['auto', 'auto']} 
-                          tick={{ fill: '#aaa', fontSize: 11 }} 
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#1e1e1f', borderColor: '#2d2d30', color: '#fff', fontSize: '12px' }}
-                          labelStyle={{ color: '#aaa' }}
-                        />
-                        <Line 
-                          type="linear" 
-                          dataKey="monto" 
-                          stroke="#6c0beb" 
-                          strokeWidth={4} 
-                          dot={{ fill: '#ffffff', stroke: '#ffffff', strokeWidth: 2, r: 4 }}
-                          activeDot={{ r: 6 }}
-                        />
+                        <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
+<XAxis 
+  dataKey="hora" 
+  tick={{ fill: chartTick, fontSize: 11 }} 
+  axisLine={{ stroke: chartGrid }}
+  tickLine={false}
+/>
+<YAxis 
+  domain={['auto', 'auto']} 
+  tick={{ fill: chartTick, fontSize: 11 }} 
+  axisLine={false}
+  tickLine={false}
+/>
+<Tooltip 
+  contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, color: tooltipText, fontSize: '12px' }}
+  labelStyle={{ color: chartTick }}
+/>
+<Line 
+  type="linear" 
+  dataKey="monto" 
+  stroke="#6c0beb" 
+  strokeWidth={4} 
+  dot={{ fill: dotColor, stroke: dotColor, strokeWidth: 2, r: 4 }}
+  activeDot={{ r: 6 }}
+/>
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
@@ -334,10 +351,10 @@ export const CajaView: React.FC = () => {
           <div className="col-lg-8 d-flex flex-column">
             <h5 className="mb-3 fw-semibold text-light">Registro de Movimientos Manuales</h5>
             
-           <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: '#1d1d1d', border: '1px solid #2d2d30', height: '315px' }}>
-              <div className="table-responsive flex-grow-1" style={{ backgroundColor: '#1d1d1d', height: '100%', overflowY: 'auto' }}>
-                <table className="table table-dark table-hover m-0 align-middle text-center" style={{ backgroundColor: '#1d1d1d' }}>
-                  <thead style={{ position: 'sticky', top: 0, backgroundColor: '#1d1d1d', zIndex: 1 }}>
+           <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: tableWrapBg, border: `1px solid ${chartGrid}`, height: '315px' }}>
+  <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapBg, height: '100%', overflowY: 'auto' }}>
+    <table className={`table table-hover m-0 align-middle text-center ${isDark ? 'table-dark' : ''}`} style={{ backgroundColor: tableWrapBg }}>
+      <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
                     <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
                       <th style={{ width: '160px' }}>Fecha/Hora</th>
                       <th style={{ width: '110px' }}>Monto</th>
@@ -467,7 +484,7 @@ export const CajaView: React.FC = () => {
             <div className="modal-content text-white" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px' }}>
               <div className="modal-header border-bottom border-secondary">
                 <h5 className="modal-title fw-bold">Apertura de Caja</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setShowModalApertura(false)}></button>
+                <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setShowModalApertura(false)}></button>
               </div>
               <form onSubmit={confirmarAperturaCaja}>
                 <div className="modal-body py-4">
@@ -513,7 +530,7 @@ export const CajaView: React.FC = () => {
             <div className="modal-content text-white" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px' }}>
               <div className="modal-header border-bottom border-secondary">
                 <h5 className="modal-title fw-bold">Cerrar Turno y Arqueo</h5>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setShowModalCierre(false)}></button>
+                <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setShowModalCierre(false)}></button>
               </div>
               <form onSubmit={confirmarCierreCaja}>
                 <div className="modal-body py-4">

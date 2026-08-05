@@ -31,6 +31,12 @@ export const DetallesPedidoForm: React.FC<Props> = ({
   const [comprobanteFile, setComprobanteFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const inputStyle = {
+    backgroundColor: '#2b2b2c',
+    color: '#ffffff',
+    borderColor: '#3f3f46'
+  };
+
   useEffect(() => {
     if (clientes && clientes.length > 0) {
       const primerCliente = clientes[0];
@@ -104,7 +110,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
     if (fechaEntrega) {
       fechaFinalEntrega = fechaEntrega.length === 16 ? `${fechaEntrega}:00` : fechaEntrega;
     } else {
-      // Si no seleccionó fecha, se toma la fecha/hora actual en formato ISO
       const ahorita = new Date();
       const anio = ahorita.getFullYear();
       const mes = String(ahorita.getMonth() + 1).padStart(2, '0');
@@ -139,7 +144,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
   };
 
   return (
-    <div className="card text-white p-4 w-100 rounded" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46', maxWidth: '1570px' }}>
+    <div className="card text-white p-4 w-100 rounded" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46', maxWidth: '1570px' }} data-bs-theme="dark">
       <h2 className="text-center mb-4 fw-bold">Configurar Parámetros del Comprobante</h2>
       
       <form onSubmit={handleSubmit} className="row g-3">
@@ -147,12 +152,13 @@ export const DetallesPedidoForm: React.FC<Props> = ({
         <div className="col-12">
           <label className="form-label small text-secondary fw-bold">Cliente:</label>
           <select 
-            className="form-select bg-dark text-white border-secondary" 
+            className="form-select" 
+            style={inputStyle}
             value={clienteId} 
             onChange={(e) => setClienteId(e.target.value)}
             required
           >
-            <option value="" disabled>-- Seleccione un Cliente --</option>
+            <option value="" disabled style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>-- Seleccione un Cliente --</option>
             {clientes.map((c, index) => {
               const id = c.id_cliente ?? c.idCliente ?? c.id;
               const nombreCliente = c.persona 
@@ -160,7 +166,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
                 : (c.razon_social || `Cliente #${id || index}`);
 
               return (
-                <option key={`cliente-opt-${id ?? index}`} value={id}>
+                <option key={`cliente-opt-${id ?? index}`} value={id} style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>
                   {nombreCliente}
                 </option>
               );
@@ -172,12 +178,13 @@ export const DetallesPedidoForm: React.FC<Props> = ({
         <div className="col-12">
           <label className="form-label small text-secondary fw-bold">Empleado que Confecciona:</label>
           <select 
-            className="form-select bg-dark text-white border-secondary" 
+            className="form-select" 
+            style={inputStyle}
             value={empleadoId} 
             onChange={(e) => setEmpleadoId(e.target.value)}
             required
           >
-            <option value="" disabled>-- Seleccione un Empleado --</option>
+            <option value="" disabled style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>-- Seleccione un Empleado --</option>
             {empleados.map((emp, index) => {
               const id = emp.id_empleado ?? emp.idEmpleado ?? emp.id;
               const nombreCompleto = emp.persona 
@@ -185,7 +192,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
                 : `${emp.nombre || 'Empleado'} ${emp.apellido || id || index}`;
                 
               return (
-                <option key={`empleado-opt-${id ?? index}`} value={id}>
+                <option key={`empleado-opt-${id ?? index}`} value={id} style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>
                   {nombreCompleto} {emp.cargo ? `(${emp.cargo})` : ''}
                 </option>
               );
@@ -193,47 +200,46 @@ export const DetallesPedidoForm: React.FC<Props> = ({
           </select>
         </div>
 
-        {/* Combobox de Estado */}
+        {/* Estado y Método Comercial */}
         <div className="col-md-6">
           <label className="form-label small text-secondary fw-bold">Tipo / Estado de Registro:</label>
-          <select className="form-select bg-dark text-white border-secondary" value={estado} onChange={(e) => setEstado(e.target.value)}>
-            <option value="PENDIENTE">PENDIENTE (A Producción)</option>
-            <option value="EN PROCESO">EN PROCESO (Taller)</option>
-            <option value="PRESUPUESTO">PRESUPUESTO (Solo Guardar)</option>
+          <select className="form-select" style={inputStyle} value={estado} onChange={(e) => setEstado(e.target.value)}>
+            <option value="PENDIENTE" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>PENDIENTE (A Producción)</option>
+            <option value="EN PROCESO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>EN PROCESO (Taller)</option>
+            <option value="PRESUPUESTO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>PRESUPUESTO (Solo Guardar)</option>
           </select>
         </div>
 
-        {/* Método Comercial */}
         <div className="col-md-6">
           <label className="form-label small text-secondary fw-bold">Método Comercial:</label>
           <select 
-            className="form-select bg-dark text-white border-secondary" 
+            className="form-select" 
+            style={inputStyle}
             value={tipoPago} 
             onChange={(e) => setTipoPago(e.target.value)}
             disabled={estado === 'PRESUPUESTO'}
           >
-            <option value="Efectivo">Efectivo</option>
-            <option value="Tarjeta / Transferencia">Tarjeta / Transferencia</option>
-            <option value="Cuenta Corriente">Cuenta Corriente</option>
+            <option value="Efectivo" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>Efectivo</option>
+            <option value="Tarjeta / Transferencia" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>Tarjeta / Transferencia</option>
+            <option value="Cuenta Corriente" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>Cuenta Corriente</option>
           </select>
         </div>
 
-       {/* Fecha y Hora de Entrega Estimada */}
+        {/* Fecha y Hora de Entrega Estimada */}
         <div className="col-12">
-          <label className="form-label small text-secondary fw-bold">
-            Fecha y Hora de Entrega Estimada: {estado === 'PRESUPUESTO' && <span className="text-muted">(Opcional para presupuestos)</span>}
-          </label>
-          <input 
-            type="datetime-local" 
-            className="form-control bg-dark text-white border-secondary" 
-            required={estado !== 'PRESUPUESTO'} 
-            value={fechaEntrega} 
-            onChange={(e) => setFechaEntrega(e.target.value)} 
-            style={{ colorScheme: 'dark' }}
-          />
-        </div>
+  <label className="form-label small fw-bold">
+    Fecha y Hora de Entrega Estimada: {estado === 'PRESUPUESTO' && <span className="text-muted fw-normal">(Opcional para presupuestos)</span>}
+  </label>
+  <input 
+    type="datetime-local" 
+    className="form-control" 
+    required={estado !== 'PRESUPUESTO'} 
+    value={fechaEntrega} 
+    onChange={(e) => setFechaEntrega(e.target.value)} 
+  />
+</div>
 
-        {/* Monto Total Cotizado */}
+        {/* Montos */}
         <div className="col-md-6">
           <label className="form-label small text-secondary fw-bold d-flex justify-content-between">
             <span>Monto Total Cotizado:</span>
@@ -243,31 +249,33 @@ export const DetallesPedidoForm: React.FC<Props> = ({
           </label>
           <input 
             type="text" 
-            className="form-control bg-dark text-info fw-bold font-monospace fs-5 border-secondary" 
+            className="form-control text-info fw-bold font-monospace fs-5" 
+            style={inputStyle}
             readOnly 
             value={`$${total.toFixed(2)}`} 
           />
         </div>
 
-        {/* Seña / Adelanto Recibido */}
         <div className="col-md-6">
           <label className="form-label small text-secondary fw-bold">
             Seña / Adelanto Recibido: {tipoPago === 'Cuenta Corriente' && <span className="text-info">(Opcional para Cuenta Corriente)</span>}
           </label>
           <input 
             type="number" 
-            className="form-control bg-dark text-white border-secondary" 
+            className="form-control font-monospace" 
+            style={inputStyle}
             value={montoEntregado} 
             onChange={(e) => setMontoEntregado(e.target.value)} 
             disabled={estado === 'PRESUPUESTO'}
           />
         </div>
 
-        {/* Instrucciones / Notas Internas */}
+        {/* Notas Internas */}
         <div className="col-12">
           <label className="form-label small text-secondary fw-bold">Instrucciones / Notas Internas:</label>
           <textarea 
-            className="form-control bg-dark text-white border-secondary" 
+            className="form-control" 
+            style={inputStyle}
             rows={3} 
             placeholder="Detalles sobre materiales, medidas o aclaración de validez del presupuesto..." 
             value={observaciones} 
@@ -275,15 +283,14 @@ export const DetallesPedidoForm: React.FC<Props> = ({
           />
         </div>
 
-        {/* Fila de Botones Inferior */}
-        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 w-100">
+        {/* Botones Inferiores */}
+        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 w-100 pt-3 border-top border-secondary">
           <button 
             type="button" 
-            className="btn btn-danger px-4" 
-            style={{ backgroundColor: '#a63333', border: 'none' }} 
+            className="btn btn-danger px-4 fw-medium text-white"
             onClick={onVolver}
           >
-            Volver al Carrito
+            <i className="bi bi-arrow-left me-1"></i> Volver al Carrito
           </button>
 
           <div className="d-flex align-items-center gap-2">
@@ -301,24 +308,22 @@ export const DetallesPedidoForm: React.FC<Props> = ({
                   <button
                     type="button"
                     className="btn btn-outline-info font-monospace d-flex align-items-center gap-2 px-3"
-                    style={{ borderWidth: '1px' }}
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <i className="bi bi-cloud-upload"></i> Vincular Comprobante (Opcional)
+                    <i className="bi bi-paperclip"></i> Adjuntar Comprobante
                   </button>
                 ) : (
                   <div className="d-flex align-items-center bg-dark border border-success rounded px-3 py-1 gap-2">
-                    <span className="text-success small font-monospace text-truncate" style={{ maxWidth: '200px' }} title={comprobanteFile.name}>
-                      <i className="bi bi-check2-circle me-1"></i> {comprobanteFile.name}
+                    <span className="text-success small font-monospace text-truncate" style={{ maxWidth: '180px' }} title={comprobanteFile.name}>
+                      <i className="bi bi-file-earmark-check me-1"></i> {comprobanteFile.name}
                     </span>
                     <button
                       type="button"
-                      className="btn btn-sm btn-link text-danger p-0 m-0 border-0 d-flex align-items-center"
+                      className="btn btn-sm btn-link text-danger p-0 m-0 border-0"
                       onClick={handleRemoveFile}
-                      style={{ textDecoration: 'none' }}
                       title="Quitar comprobante"
                     >
-                      <i className="bi bi-x-circle fs-6"></i>
+                      <i className="bi bi-x-lg"></i>
                     </button>
                   </div>
                 )}
@@ -328,13 +333,13 @@ export const DetallesPedidoForm: React.FC<Props> = ({
 
           <button 
             type="submit" 
-            className="btn btn-success px-4" 
-            style={{ backgroundColor: '#3d824b', border: 'none' }}
+            className="btn btn-success px-4 fw-bold" 
+            style={{ backgroundColor: '#288f47', border: 'none' }}
           >
-            {estado === 'PRESUPUESTO' ? 'Guardar Presupuesto' : 'Confirmar Pedido'}
+            {estado === 'PRESUPUESTO' ? 'Guardar Presupuesto' : 'Confirmar Pedido'} <i className="bi bi-check-lg ms-1"></i>
           </button>
         </div>
       </form>
     </div>
   );
-};
+};  

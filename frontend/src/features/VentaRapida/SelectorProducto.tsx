@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Producto } from '../../types/Producto';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface Props {
   productos: Producto[];
@@ -13,12 +14,17 @@ interface Props {
 export const SelectorProducto: React.FC<Props> = ({ 
   productos, productoId, setProductoId, cantidad, setCantidad, onAgregar 
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
     <div className="row g-3 mb-4 align-items-end">
       <div className="col-md-7">
-        <label className="form-label small text-light">Producto:</label> {/* Añadido text-light */}
+        <label className={`form-label small ${isDark ? 'text-light' : 'text-dark'}`}>
+          Producto:
+        </label>
         <select 
-          className="form-select bg-dark text-white border-secondary"
+          className={`form-select ${isDark ? 'bg-dark text-white border-secondary' : 'bg-white text-dark border-secondary-subtle'}`}
           value={productoId}
           onChange={(e) => setProductoId(e.target.value)}
         >
@@ -32,10 +38,12 @@ export const SelectorProducto: React.FC<Props> = ({
       </div>
       
       <div className="col-md-2">
-        <label className="form-label small text-light">Cantidad:</label> {/* Añadido text-light */}
+        <label className={`form-label small ${isDark ? 'text-light' : 'text-dark'}`}>
+          Cantidad:
+        </label>
         <input 
           type="number" 
-          className="form-control bg-dark text-white border-secondary"
+          className={`form-control ${isDark ? 'bg-dark text-white border-secondary' : 'bg-white text-dark border-secondary-subtle'}`}
           min="1"
           value={cantidad}
           onChange={(e) => setCantidad(e.target.value)}

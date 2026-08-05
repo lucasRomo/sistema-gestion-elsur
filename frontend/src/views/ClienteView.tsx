@@ -10,8 +10,19 @@ import { CuentasCorrientesResumenModal } from '../features/Clientes/CuentasCorri
 import { useClientes } from '../hooks/useClientes';
 import { SuccesModal } from '../components/layouts/SuccesModal';
 import { ClienteFiltros } from '../features/Clientes/ClientesFiltros';
+import { useTheme } from '../Context/ThemeContext';
 
 export const ClienteView = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // Estilos adaptativos
+  const textColor = isDark ? 'text-white' : 'text-dark';
+  const tableHeaderBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const tableRowBorder = isDark ? '#2d2d30' : '#e2e8f0';
+  const hoverRowBg = isDark ? '#27272a' : '#f1f5f9';
+  const modalStepBg = isDark ? '#1e1e24' : '#ffffff';
+
   const { clientes, registrar, cargar } = useClientes();
   const [paso, setPaso] = useState(0); 
   const [clienteConUbicacionSeleccionada, setClienteConUbicacionSeleccionada] = useState<any | null>(null);
@@ -91,29 +102,29 @@ export const ClienteView = () => {
   });
 
   const obtenerColorSaldo = (saldoDeudor: number, limiteCredito: number) => {
-  const saldo = Math.abs(Number(saldoDeudor || 0));
-  const limite = Number(limiteCredito || 0);
-  if (saldo === 0) return 'text-success';
-  if (limite <= 0) return 'text-danger';
+    const saldo = Math.abs(Number(saldoDeudor || 0));
+    const limite = Number(limiteCredito || 0);
+    if (saldo === 0) return 'text-success';
+    if (limite <= 0) return 'text-danger';
 
-  const porcentaje = (saldo / limite) * 100;
+    const porcentaje = (saldo / limite) * 100;
 
-  if (porcentaje >= 100) {
-    return 'text-danger'; 
-  } else if (porcentaje >= 75) { 
-    return 'text-warning'; 
-  } else {
-    return 'text-success'; 
-  }
+    if (porcentaje >= 100) {
+      return 'text-danger'; 
+    } else if (porcentaje >= 75) { 
+      return 'text-warning'; 
+    } else {
+      return 'text-success'; 
+    }
   };
 
   return (
     <>
       <div className="d-flex justify-content-center align-items-center mb-4 position-relative">
-      <h1 className="fw-bold text-white mb-0 text-center" style={{ fontSize: '1.85rem' }}>Clientes</h1>
-      <button type="button" className="btn btn-outline-info font-monospace position-absolute end-0" onClick={() => setVerCategoriasModal(true)}>
-      <i className="bi bi-tag me-2"></i>Categorías de Clientes
-      </button>
+        <h1 className={`fw-bold ${textColor} mb-0 text-center`} style={{ fontSize: '1.85rem' }}>Clientes</h1>
+        <button type="button" className="btn btn-outline-info font-monospace position-absolute end-0" onClick={() => setVerCategoriasModal(true)}>
+          <i className="bi bi-tag me-2"></i>Categorías de Clientes
+        </button>
       </div>
 
       <SuccesModal 
@@ -130,9 +141,9 @@ export const ClienteView = () => {
       />
 
       <div className="table-responsive" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }} className={textColor}>
           <thead>
-            <tr style={{ borderBottom: '2px solid #3f3f46', textAlign: 'left' }}>
+            <tr style={{ borderBottom: `2px solid ${tableHeaderBorder}`, textAlign: 'left' }}>
               <th style={{ padding: '12px' }}>ID</th>
               <th style={{ padding: '12px' }}>Nombre</th>
               <th style={{ padding: '12px' }}>Apellido</th>
@@ -152,8 +163,8 @@ export const ClienteView = () => {
                 return (
                   <tr 
                     key={c.id_cliente} 
-                    style={{ borderBottom: '1px solid #2d2d30' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#27272a'} 
+                    style={{ borderBottom: `1px solid ${tableRowBorder}`, transition: 'background-color 0.15s ease' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverRowBg} 
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
                     <td style={{ padding: '12px' }}>{c.id_cliente}</td>
@@ -162,7 +173,6 @@ export const ClienteView = () => {
                     <td style={{ padding: '12px' }}>{c.persona?.numeroDocumento}</td>
                     <td style={{ padding: '12px' }}>{c.razonSocial}</td>
                     
-                    {/* Badge indicativo del estado de Cta Cte */}
                     <td style={{ padding: '12px' }}>
                       {tieneCtaCte ? (
                         <span className="badge bg-success font-monospace">Habilitada (${Number(c.limiteCredito).toFixed(0)})</span>
@@ -172,9 +182,9 @@ export const ClienteView = () => {
                     </td>
 
                     <td style={{ padding: '12px' }}>
-                    <span className={`fw-bold ${obtenerColorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
-                    ${Number(c.saldoDeudor || 0).toFixed(2)}
-                    </span>
+                      <span className={`fw-bold ${obtenerColorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
+                        ${Number(c.saldoDeudor || 0).toFixed(2)}
+                      </span>
                     </td>
                     <td style={{ padding: '12px' }}>
                       <span className={`badge ${c.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>
@@ -183,7 +193,6 @@ export const ClienteView = () => {
                     </td>
                     <td style={{ padding: '12px' }}>
                       <div className="d-flex justify-content-center gap-2">
-                        {/* Botón de Cuenta Corriente */}
                         <button 
                           className={`btn btn-sm d-flex align-items-center justify-content-center ${
                             tieneCtaCte ? 'btn-outline-success' : 'btn-outline-secondary opacity-50'
@@ -205,14 +214,13 @@ export const ClienteView = () => {
                         </button>
                         
                         <button 
-                         className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
-                         style={{ width: '32px', height: '32px' }} 
-                         title="Ver Ubicación" 
-                         onClick={() => setClienteConUbicacionSeleccionada(c)}
+                          className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
+                          style={{ width: '32px', height: '32px' }} 
+                          title="Ver Ubicación" 
+                          onClick={() => setClienteConUbicacionSeleccionada(c)}
                         >
-                        <i className="bi bi-house-door"></i>
+                          <i className="bi bi-house-door"></i>
                         </button>
-                        
                       </div>
                     </td>
                   </tr>
@@ -220,9 +228,9 @@ export const ClienteView = () => {
               })
             ) : (
               <tr>
-                <td colSpan={9} className="text-center text-white py-5">
-                  <i className="bi display-6 d-block mb-2 text-secondary"></i>
-                  No se han Registrado o Encontrado Clientes en el sistema
+                <td colSpan={9} className={`text-center ${textColor} py-5`}>
+                  <i className="bi bi-search display-6 d-block mb-2 text-secondary"></i>
+                  No se han registrado o encontrado clientes en el sistema.
                 </td>
               </tr>
             )}
@@ -230,14 +238,12 @@ export const ClienteView = () => {
         </table>
       </div>
 
-      {/* Barra Inferior de Acciones */}
       <div className="d-flex justify-content-between align-items-center w-100 mt-4">
         <button onClick={() => navigate('/dashboard')} className="btn btn-danger" style={{ borderRadius: '6px' }}>
           Volver
         </button>
 
         <div className="d-flex gap-2">
-          {/* Botón para ver el Resumen de todas las Cuentas Corrientes Activas */}
           <button 
             className="btn btn-outline-warning font-monospace fw-bold d-flex align-items-center gap-2"
             onClick={() => setVerResumenCuentasModal(true)}
@@ -253,9 +259,9 @@ export const ClienteView = () => {
 
       {/* Modales de Flujo de Registro y Edición */}
       {paso === 1 && (
-        <div className="modal d-block" style={{background:'rgba(0,0,0,0.8)'}}>
-          <div className="modal-dialog">
-            <div className="modal-content bg-dark text-white p-4">
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className={`modal-content ${textColor} p-4 shadow-lg`} style={{ backgroundColor: modalStepBg }}>
               <PersonaForm formData={formData} setFormData={setFormData} onSiguiente={() => setPaso(2)} onVolver={() => setPaso(0)} />
             </div>
           </div>
@@ -265,10 +271,8 @@ export const ClienteView = () => {
       {clienteAEditar && <ClienteEditModal cliente={clienteAEditar} onCerrar={() => setClienteAEditar(null)} onConfirmar={handleConfirmarEdicion} />}
       {clienteConUbicacionSeleccionada && <UbicacionViewModal cliente={clienteConUbicacionSeleccionada} onCerrar={() => setClienteConUbicacionSeleccionada(null)} onConfirmar={handleConfirmarEdicion} />}
       
-      {/* Modal de Configurar Categorías */}
       {verCategoriasModal && <CategoriaClienteModal onCerrar={() => setVerCategoriasModal(false)} />}
       
-      {/* Modal Resumen de Cuentas Corrientes Activas */}
       {verResumenCuentasModal && (
         <CuentasCorrientesResumenModal 
           clientes={clientes} 
@@ -277,7 +281,6 @@ export const ClienteView = () => {
         />
       )}
 
-      {/* Modal Individual de Cuenta Corriente */}
       {clienteCuentaCorriente && (
         <CuentaCorrienteModal 
           cliente={clienteCuentaCorriente} 

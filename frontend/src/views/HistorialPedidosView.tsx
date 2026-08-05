@@ -11,8 +11,20 @@ import { ModalAuditoriaPedido } from '../features/pedidos/ModalAuditoriaPedido';
 import { VistaTicketModal } from '../features/pedidos/VistaTicketModal';
 import { CuentaCorrienteModal } from '../features/Clientes/CuentaCorrienteModal';
 import { SuccesModal } from '../components/layouts/SuccesModal';
+import { useTheme } from '../Context/ThemeContext';
 
 export const HistorialPedidosPage: React.FC = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const tableWrapperBg = isDark ? '#1d1d1d' : '#f8fafc';
+  const tableBg = isDark ? '#121214' : '#ffffff';
+  const tableText = isDark ? '#e4e4e7' : '#18181b';
+  const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
+  const theadBorder = isDark ? '#27272a' : '#e2e8f0';
+  const theadText = isDark ? '#a1a1aa' : '#334155';
+  const grayText = isDark ? '#a1a1aa' : '#64748b';
+  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
   const { pedidos, cargando, recargarHistorial } = useHistorialPedidos();
   const navigate = useNavigate();
   
@@ -217,21 +229,21 @@ export const HistorialPedidosPage: React.FC = () => {
 
         {/* Tabla del Historial */}
         <div 
-          className="d-flex flex-column flex-grow-1 overflow-hidden mb-2" 
-          style={{ backgroundColor: '#1d1d1d', height: 'calc(100vh - 210px)' }}
-        >
-          <div 
-            className="table-responsive flex-grow-1" 
-            style={{ backgroundColor: '#1d1d1d', height: '100%', overflowY: 'auto' }}
-          >
-            <table 
-              className="table-dark table-hover m-0 align-middle" 
-              style={{ width: '100%', borderCollapse: 'collapse', color: '#e4e4e7', backgroundColor: '#121214' }}
-            >
+  className="d-flex flex-column flex-grow-1 overflow-hidden mb-2" 
+  style={{ backgroundColor: tableWrapperBg, height: 'calc(100vh - 210px)' }}
+>
+  <div 
+    className="table-responsive flex-grow-1" 
+    style={{ backgroundColor: tableWrapperBg, height: '100%', overflowY: 'auto' }}
+  >
+    <table 
+      className={`table-hover m-0 align-middle ${isDark ? 'table-dark' : ''}`}
+      style={{ width: '100%', borderCollapse: 'collapse', color: tableText, backgroundColor: tableBg }}
+    >
               <thead 
-                style={{ position: 'sticky', top: 0, backgroundColor: '#1d1d1d', zIndex: 1 }}
-              >
-                <tr style={{ backgroundColor: '#1d1d1d', borderBottom: '2px solid #27272a', color: '#a1a1aa', fontFamily: 'monospace', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+  style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}
+>
+  <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontFamily: 'monospace', fontSize: '0.85rem', textTransform: 'uppercase' }}>
                  <th style={{ padding: '12px 12px 12px 24px' }}>ID</th>
                  <th style={{ padding: '12px 12px 12px 19px' }}>Cliente</th>
                  <th style={{ padding: '12px 12px' }}>Contacto</th>
@@ -325,7 +337,7 @@ export const HistorialPedidosPage: React.FC = () => {
           style={{ color: '#8e45e0' }}
         ></i>
         <h5 className="fw-bold">{suceso.titulo}</h5>
-        <p className="small" style={{ color: '#a1a1aa' }}>{suceso.mensaje}</p>
+        <p className="small" style={{ color: grayText }}>{suceso.mensaje}</p>
         <button 
           className={`btn ${suceso.tipo === 'exito' ? 'btn-success' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold`}
           style={{ borderRadius: '6px' }}
@@ -353,17 +365,17 @@ export const HistorialPedidosPage: React.FC = () => {
                   <i className="bi bi-arrow-return-left me-2"></i>Devolución de Pedido #{pedidoDevolucion.id_pedido}
                 </h5>
                 <button 
-                  type="button" 
-                  className="btn-close btn-close-white" 
-                  onClick={() => {
-                    setPedidoDevolucion(null);
-                    setDescripcionDevolucion('');
-                  }}
-                ></button>
+  type="button" 
+  className={`btn-close ${isDark ? 'btn-close-white' : ''}`}
+  onClick={() => {
+    setPedidoDevolucion(null);
+    setDescripcionDevolucion('');
+  }}
+></button>
               </div>
 
               <div className="mb-3">
-                <label className="form-label text-white-50 small">Motivo / Descripción de la devolución</label>
+                <label className="form-label small" style={{ color: mutedText }}>Motivo / Descripción de la devolución</label>
                 <textarea 
                   className="form-control bg-dark text-white border-secondary font-monospace"
                   rows={3}
@@ -390,6 +402,18 @@ export const HistorialPedidosPage: React.FC = () => {
                 >
                   <i className="bi bi-x-circle me-2"></i>Marcar como Devuelto
                 </button>
+
+                <button 
+    type="button" 
+    disabled={cargandoDevolucion}
+    className="btn btn-outline-secondary fw-bold py-2"
+    onClick={() => {
+      setPedidoDevolucion(null);
+      setDescripcionDevolucion('');
+    }}
+  >
+    Cancelar
+  </button>
               </div>
             </div>
           </div>

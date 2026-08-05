@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoSur from '../../assets/logo-elsur.png';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface SidebarLayoutProps {
   activeItem: string;
@@ -9,10 +10,21 @@ interface SidebarLayoutProps {
 
 export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, children }) => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const esOscuro = theme === 'dark';
+
   const [usuario, setUsuario] = useState<any>(null);
   const [fechaActual, setFechaActual] = useState<string>('');
   const [colapsado, setColapsado] = useState<boolean>(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Fondo del Dashboard más oscuro para resaltar las tarjetas blancas en modo claro
+  const mainBg = esOscuro ? '#1b1b1b' : '#e5e7eb'; 
+  const sidebarBg = esOscuro ? '#222122' : '#ffffff';
+  const sidebarBorder = esOscuro ? '#2d2d30' : '#cbd5e1';
+  const userInfoBg = esOscuro ? '#292829' : '#f1f5f9';
+  const textColor = esOscuro ? '#ffffff' : '#0f172a';
+  const mutedText = esOscuro ? '#a1a1aa' : '#64748b';
 
   useEffect(() => {
     const usuarioGuardado = localStorage.getItem('usuario_logueado');
@@ -41,7 +53,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   const nombrePersona = usuario?.persona?.nombre || usuario?.nombreUsuario || 'Usuario';
   const rolUsuario = usuario?.rol?.nombreRol || usuario?.rol?.nombre || 'Empleado';
 
-  // Verificamos si es administrador explícito
   const esAdmin = rolUsuario.toUpperCase().includes('ADMIN') || rolUsuario.toUpperCase().includes('GERENTE');
 
   const tienePermiso = (nombreModulo: string) => {
@@ -114,14 +125,17 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
   const renderizarBotonMenu = (item: { name: string; icon: string; path: string }) => {
     const isActive = activeItem === item.name;
+    const activeBg = esOscuro ? '#2d2d30' : '#f1f5f9';
+    const inactiveTextColor = esOscuro ? '#d4d4d8' : '#334155';
+
     return (
       <button
         key={item.name}
         onClick={() => handleNavegacion(item.path)}
         className="btn d-flex align-items-center w-100 transition-all"
         style={{
-          backgroundColor: isActive ? '#2d2d30' : 'transparent', 
-          color: isActive ? '#8e45e0' : '#d4d4d8', 
+          backgroundColor: isActive ? activeBg : 'transparent', 
+          color: isActive ? '#8e45e0' : inactiveTextColor, 
           borderRadius: '6px',
           border: isActive ? '1px solid #8e45e0' : '1px solid transparent',
           textAlign: 'left',
@@ -133,14 +147,14 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         }}
         onMouseEnter={(e) => {
           if (!isActive) {
-            e.currentTarget.style.backgroundColor = '#3b1d61';
-            e.currentTarget.style.color = '#e9d5ff';
+            e.currentTarget.style.backgroundColor = esOscuro ? '#3b1d61' : '#f3e8ff';
+            e.currentTarget.style.color = esOscuro ? '#e9d5ff' : '#6b21a8';
           }
         }}
         onMouseLeave={(e) => {
           if (!isActive) {
             e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = '#d4d4d8';
+            e.currentTarget.style.color = inactiveTextColor;
           }
         }}
       >
@@ -148,7 +162,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           className={`bi ${item.icon}`} 
           style={{ 
             fontSize: '0.9rem',
-            color: isActive ? '#8e45e0' : 'gray',
+            color: isActive ? '#8e45e0' : (esOscuro ? 'gray' : '#64748b'),
             marginRight: colapsado ? '0px' : '0.55rem',
             transition: 'margin 0.2s'
           }}
@@ -164,8 +178,8 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   };
 
   return (
-    <div className="d-flex vh-100" style={{ backgroundColor: '#1b1b1b', color: 'white', overflow: 'hidden' }}>
-      
+    <div className="d-flex vh-100" style={{ backgroundColor: mainBg, color: textColor, overflow: 'hidden' }}>
+      {/* Estilos para forzar selectores e inputs limpios en modo claro */}
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -174,6 +188,20 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
+
+        ${!esOscuro ? `
+          select.form-select, 
+          input.form-control {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+          }
+          
+          select.form-select option {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+          }
+        ` : ''}
       `}</style>
 
       {/* Sidebar */}
@@ -183,18 +211,17 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           width: colapsado ? '60px' : '240px',
           minWidth: colapsado ? '60px' : '240px',
           maxWidth: colapsado ? '60px' : '240px',
-          borderRight: '1px solid #2d2d30', 
-          backgroundColor: '#222122', 
+          borderRight: `1px solid ${sidebarBorder}`, 
+          backgroundColor: sidebarBg, 
           padding: colapsado ? '0.75rem 0.25rem' : '0.75rem 0.55rem', 
           transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
           overflow: 'hidden',
-          height: '100vh'
+          height: '100vh',
+          boxShadow: esOscuro ? 'none' : '2px 0 10px rgba(0,0,0,0.03)'
         }}
       >
-        
         {/* BLOQUE SUPERIOR */}
         <div>
-          {/* Cabecera Logo */}
           <div className="d-flex align-items-center mb-2 ps-1" style={{ minHeight: '34px' }}>
             <div 
               className="d-flex align-items-center gap-2" 
@@ -211,16 +238,15 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
                 }} 
               />
               {!colapsado && (
-                <span className="fw-bold font-monospace text-white" style={{ fontSize: '1rem', letterSpacing: '1px' }}>
+                <span className="fw-bold font-monospace" style={{ fontSize: '1rem', letterSpacing: '1px', color: textColor }}>
                   el SUR
                 </span>
               )}
             </div>
 
-            {/* Botón de colapsar (solo visible cuando está expandido) */}
             {!colapsado && (
               <button 
-                className="btn text-white p-1 border-0 ms-auto d-flex align-items-center justify-content-center" 
+                className="btn p-1 border-0 ms-auto d-flex align-items-center justify-content-center" 
                 onClick={() => setColapsado(true)}
                 style={{ backgroundColor: 'transparent' }}
                 title="Colapsar menú"
@@ -230,41 +256,39 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
             )}
           </div>
 
-          {/* Área de Info de Usuario / Botón Desplegar al estar colapsado */}
           {!colapsado ? (
             <div 
               className="mb-2 py-2 rounded" 
               style={{ 
-                backgroundColor: '#292829', 
+                backgroundColor: userInfoBg, 
                 borderLeft: '3px solid #8e45e0',
                 paddingLeft: '0.95rem',
                 paddingRight: '0.5rem',
                 minHeight: '82px'
               }}
             >
-              <div className="text-light small font-monospace" style={{ fontSize: '0.8rem' }}>
+              <div className="small font-monospace" style={{ fontSize: '0.8rem', color: textColor }}>
                 Buenos Días: <span style={{ color: '#8e45e0' }} className="fw-bold">{nombrePersona.toUpperCase()}</span>
               </div>
-              <div className="text-light small font-monospace mt-1" style={{ fontSize: '0.8rem' }}>
-                Fecha: <span className="text-white-50">{fechaActual}</span>
+              <div className="small font-monospace mt-1" style={{ fontSize: '0.8rem', color: textColor }}>
+                Fecha: <span style={{ color: mutedText }}>{fechaActual}</span>
               </div>
-              <div className="text-light small font-monospace mt-1" style={{ fontSize: '0.8rem' }}>
-                Rol: <span className="badge bg-dark ms-2" style={{ color: '#8e45e0', border: '1px solid #8e45e0', fontSize: '0.68rem' }}>{rolUsuario}</span>
+              <div className="small font-monospace mt-1" style={{ fontSize: '0.8rem', color: textColor }}>
+                Rol: <span className="badge ms-2" style={{ backgroundColor: esOscuro ? '#000000' : '#e2e8f0', color: '#8e45e0', border: '1px solid #8e45e0', fontSize: '0.68rem' }}>{rolUsuario}</span>
               </div>
             </div>
           ) : (
-            /* Botón para desplegar */
             <div 
               className="mb-2 rounded d-flex align-items-center justify-content-center" 
               style={{ 
-                backgroundColor: '#292829', 
+                backgroundColor: userInfoBg, 
                 minHeight: '40px',
                 height: '40px',
                 borderLeft: '3px solid #8e45e0'
               }}
             >
               <button 
-                className="btn text-white p-1 border-0 w-100 h-100 d-flex align-items-center justify-content-center" 
+                className="btn p-1 border-0 w-100 h-100 d-flex align-items-center justify-content-center" 
                 onClick={() => setColapsado(false)}
                 style={{ backgroundColor: 'transparent' }}
                 title="Desplegar menú"
@@ -274,7 +298,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
             </div>
           )}
 
-          <hr className="border-secondary mb-2 mt-2" style={{ opacity: 0.3 }} />
+          <hr className="mb-2 mt-2" style={{ borderColor: sidebarBorder, opacity: 0.5 }} />
         </div>
 
         {/* LISTA NAVEGACIÓN */}
@@ -296,10 +320,10 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
           {menuProduccion.length > 0 && (
             <>
-              {colapsado && <hr className="border-secondary w-100 my-0" style={{ opacity: 0.2 }} />}
+              {colapsado && <hr className="w-100 my-0" style={{ borderColor: sidebarBorder, opacity: 0.3 }} />}
               <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
                 {!colapsado && (
-                  <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
+                  <div className="small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: mutedText }}>
                     — PRODUCCIÓN
                   </div>
                 )}
@@ -310,10 +334,10 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
           {menuStock.length > 0 && (
             <>
-              {colapsado && <hr className="border-secondary w-100 my-0" style={{ opacity: 0.2 }} />}
+              {colapsado && <hr className="w-100 my-0" style={{ borderColor: sidebarBorder, opacity: 0.3 }} />}
               <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
                 {!colapsado && (
-                  <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
+                  <div className="small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: mutedText }}>
                     — STOCK
                   </div>
                 )}
@@ -324,10 +348,10 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
           {menuEntidades.length > 0 && (
             <>
-              {colapsado && <hr className="border-secondary w-100 my-0" style={{ opacity: 0.2 }} />}
+              {colapsado && <hr className="w-100 my-0" style={{ borderColor: sidebarBorder, opacity: 0.3 }} />}
               <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
                 {!colapsado && (
-                  <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
+                  <div className="small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: mutedText }}>
                     — ADMINISTRACIÓN / ENTIDADES
                   </div>
                 )}
@@ -338,10 +362,10 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
           {menuGerente.length > 0 && (
             <>
-              {colapsado && <hr className="border-secondary w-100 my-0" style={{ opacity: 0.2 }} />}
+              {colapsado && <hr className="w-100 my-0" style={{ borderColor: sidebarBorder, opacity: 0.3 }} />}
               <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
                 {!colapsado && (
-                  <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
+                  <div className="small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: mutedText }}>
                     — OPCIONES DE GERENTE
                   </div>
                 )}
@@ -352,10 +376,10 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
           {menuConfiguracion.length > 0 && (
             <>
-              {colapsado && <hr className="border-secondary w-100 my-0" style={{ opacity: 0.2 }} />}
+              {colapsado && <hr className="w-100 my-0" style={{ borderColor: sidebarBorder, opacity: 0.3 }} />}
               <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
                 {!colapsado && (
-                  <div className="text-light-50 small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: '#a1a1aa' }}>
+                  <div className="small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: mutedText }}>
                     — MI CUENTA
                   </div>
                 )}
@@ -366,7 +390,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         </div>
 
         {/* CERRAR SESIÓN */}
-        <div className="pt-2 border-top border-secondary mt-1" style={{ borderColor: '#2d2d30 !important' }}>
+        <div className="pt-2 mt-1" style={{ borderTop: `1px solid ${sidebarBorder}` }}>
           <button 
             onClick={handleCerrarSesion}
             className="btn d-flex align-items-center w-100 px-2 py-1.5 fw-semibold transition-all"
@@ -412,7 +436,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           {children}
         </div>
       </div>
-    
     </div>
   );
 };

@@ -1,0 +1,93 @@
+/* ==========================================
+   1. COLORES Y TEXTOS EN MODO CLARO (LIGHT)
+   ========================================== */
+html[data-bs-theme="light"] body,
+body.light-mode {
+  background-color: #f4f5f7 !important;
+  color: #18181b !important;
+}
+
+/* Títulos principales e h1/h2/h3 que se ven blancos en modo claro */
+html[data-bs-theme="light"] h1,
+html[data-bs-theme="light"] h2,
+html[data-bs-theme="light"] h3,
+html[data-bs-theme="light"] h4,
+html[data-bs-theme="light"] .text-white,
+html[data-bs-theme="light"] .text-light {
+  color: #18181b !important;
+}
+
+/* Excepción: Mantener blanco el texto en botones primarios/oscuros */
+html[data-bs-theme="light"] .btn-primary,
+html[data-bs-theme="light"] .btn-danger,
+html[data-bs-theme="light"] .btn-success,
+html[data-bs-theme="light"] .btn-purple,
+html[data-bs-theme="light"] .badge {
+  color: #ffffff !important;
+}
+
+/* ==========================================
+   2. REGLAS PARA TABLAS Y CONTENEDORES
+   ========================================== */
+html[data-bs-theme="light"] .table {
+  color: #18181b !important;
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+}
+
+html[data-bs-theme="light"] .table th,
+html[data-bs-theme="light"] .table td {
+  background-color: transparent !important;
+  color: #18181b !important;
+}
+
+html[data-bs-theme="light"] .table-hover tbody tr:hover {
+  background-color: #f1f5f9 !important;
+  color: #000000 !important;
+}
+
+/* Contenedores y Cards generales */
+html[data-bs-theme="light"] .card,
+html[data-bs-theme="light"] .bg-dark,
+html[data-bs-theme="light"] [style*="background-color: #222"],
+html[data-bs-theme="light"] [style*="background-color: #18181b"] {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+  border-color: #e4e4e7 !important;
+}
+
+/* ==========================================
+   3. INPUTS, SELECTS Y BUSCADORES
+   ========================================== */
+html[data-bs-theme="light"] .form-control,
+html[data-bs-theme="light"] .form-select {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+  border-color: #d4d4d8 !important;
+}
+
+html[data-bs-theme="light"] .form-control::placeholder {
+  color: #a1a1aa !important;
+}
+
+html[data-bs-theme="light"] .form-control:focus, 
+html[data-bs-theme="light"] .form-select:focus {
+  border-color: #8e45e0 !important;
+  box-shadow: 0 0 0 0.25rem rgba(142, 69, 224, 0.2) !important;
+  background-color: #ffffff !important;
+  color: #18181b !important;
+}
+
+/* Correctivo para reglas de focus en CSS previo */
+html[data-bs-theme="dark"] .form-control:focus, 
+html[data-bs-theme="dark"] .form-select:focus {
+  border-color: #0d6efd !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+  background-color: #222226 !important;
+  color: #ffffff !important;
+}
+
+/* Transición suave global */
+*, ::after, ::before {
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}

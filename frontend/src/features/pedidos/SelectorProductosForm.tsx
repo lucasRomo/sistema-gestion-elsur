@@ -48,7 +48,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
     setCarrito(carrito.filter((_, i) => i !== index));
   };
 
-  // CÁLCULOS DE DESCUENTO
   const subtotal = carrito.reduce((sum, item) => sum + item.subtotal, 0);
 
   const catActual = categorias.find(c => {
@@ -65,16 +64,15 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
   return (
     <div className="w-100">
-      {/* TARJETA PRINCIPAL */}
-      <div className="card text-white p-4 w-100 rounded mb-4" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46' }}>
+      <div className="card text-white p-4 w-100 rounded" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46', maxWidth: '1570px' }} data-bs-theme="dark">
         <h2 className="text-center mb-4 fw-bold">Tabla para Calcular y Elegir Productos</h2>
         
-        {/* SELECTOR DE PRODUCTOS */}
+        {/* Selector de Producto y Cantidad */}
         <div className="row g-3 mb-4 align-items-end">
           <div className="col-md-7">
-            <label className="form-label small text-secondary fw-bold">Producto:</label>
+            <label className="form-label small fw-bold">Producto:</label>
             <select 
-              className="form-select bg-dark text-white border-secondary"
+              className="form-select"
               value={productoId}
               onChange={(e) => setProductoId(e.target.value)}
             >
@@ -88,10 +86,10 @@ export const SelectorProductosForm: React.FC<Props> = ({
           </div>
           
           <div className="col-md-2">
-            <label className="form-label small text-secondary fw-bold">Cantidad:</label>
+            <label className="form-label small fw-bold">Cantidad:</label>
             <input 
               type="number" 
-              className="form-control bg-dark text-white border-secondary"
+              className="form-control"
               min="1"
               value={cantidad}
               onChange={(e) => setCantidad(e.target.value)}
@@ -99,46 +97,51 @@ export const SelectorProductosForm: React.FC<Props> = ({
           </div>
 
           <div className="col-md-3">
-            <button className="btn w-100 fw-bold text-white" style={{ backgroundColor: '#5a8ab8' }} onClick={handleAgregar}>
+            <button className="btn btn-primary w-100 fw-bold" onClick={handleAgregar}>
               Agregar
             </button>
           </div>
         </div>
 
-        {/* TABLA DE PRODUCTOS EN CARRITO (Scroll vertical a partir de 3 productos) */}
+        {/* Lista de Productos Agregados */}
         <div className="mb-4">
-          <div className="d-flex text-secondary border-bottom border-secondary pb-2 mb-2 small fw-bold">
+          <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted">
             <div style={{ width: '40%' }}>Lista de Productos:</div>
             <div style={{ width: '20%' }}>Cantidad:</div>
             <div style={{ width: '20%' }}>Precio Unitario:</div>
             <div style={{ width: '20%' }}>SubTotal:</div>
           </div>
           
-          <div style={{ maxHeight: '120px', overflowY: 'auto' }}>
+          <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
             {carrito.length === 0 ? (
-              <div className="text-center text-light mt-4">No hay productos en la lista.</div>
+              <div className="text-center text-muted my-4 py-2">No hay productos en la lista.</div>
             ) : (
               carrito.map((item, index) => (
-                <div key={index} className="d-flex align-items-center mb-2 text-white border-bottom border-dark pb-1">
-                  <div style={{ width: '40%' }} className="d-flex align-items-center">
-                    <button className="btn btn-sm text-danger p-0 me-2" onClick={() => handleEliminar(index)}>
-                      <i className="bi bi-x-circle-fill"></i>
+                <div key={index} className="d-flex align-items-center mb-2 border-bottom pb-2">
+                  <div style={{ width: '40%' }} className="d-flex align-items-center gap-2">
+                    <button 
+                      type="button" 
+                      className="btn btn-sm text-danger p-0 border-0 bg-transparent" 
+                      onClick={() => handleEliminar(index)}
+                      title="Quitar de la lista"
+                    >
+                      <i className="bi bi-x-circle-fill fs-6"></i>
                     </button>
                     <span>{item.producto.nombreProducto}</span>
                   </div>
-                  <div style={{ width: '20%' }}>{item.cantidad}</div>
-                  <div style={{ width: '20%' }}>${item.producto.precioBase}</div>
-                  <div style={{ width: '20%' }} className="fw-bold text-info">${item.subtotal.toFixed(2)}</div>
+                  <div style={{ width: '20%' }} className="font-monospace">{item.cantidad}</div>
+                  <div style={{ width: '20%' }} className="font-monospace">${item.producto.precioBase}</div>
+                  <div style={{ width: '20%' }} className="fw-bold font-monospace">${item.subtotal.toFixed(2)}</div>
                 </div>
               ))
             )}
           </div>
         </div>
 
-        {/* SELECTOR DE CATEGORÍA DE CLIENTE / DESCUENTO */}
+        {/* Categoría de Cliente */}
         <div className="mb-4">
-          <label className="form-label small text-light fw-bold d-flex align-items-center justify-content-between">
-            <span><i className="bi bi-tags-fill text-info me-1"></i> Categoría de Cliente / Descuento:</span>
+          <label className="form-label small fw-bold d-flex align-items-center justify-content-between">
+            <span><i className="bi bi-tags-fill me-1"></i> Categoría de Cliente / Descuento:</span>
             {porcentajeDescuento > 0 && (
               <span className="badge bg-success font-monospace fs-6">
                 ¡{porcentajeDescuento}% OFF APLICADO!
@@ -146,7 +149,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
             )}
           </label>
           <select 
-            className="form-select bg-dark text-white border-info font-monospace"
+            className="form-select font-monospace"
             value={categoriaSeleccionadaId}
             onChange={(e) => setCategoriaSeleccionadaId(e.target.value)}
           >
@@ -165,73 +168,65 @@ export const SelectorProductosForm: React.FC<Props> = ({
           </select>
         </div>
 
-        {/* DESGLOSE VISUAL Y TOTAL FINAL */}
-        <div className="p-3 rounded mb-4" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-          <div className="d-flex justify-content-between text-light mb-1 small">
+        {/* Resumen Total Estilo Dashboard */}
+        <div className="summary-card-custom p-3 rounded mb-4">
+          <div className="d-flex justify-content-between mb-1 small">
             <span>Subtotal Productos:</span>
-            <span className="fw-bold">${subtotal.toFixed(2)}</span>
+            <span className="fw-bold font-monospace">${subtotal.toFixed(2)}</span>
           </div>
 
           {porcentajeDescuento > 0 && (
             <div className="d-flex justify-content-between text-success mb-1 small">
               <span>Descuento Aplicado ({porcentajeDescuento}%):</span>
-              <span className="fw-bold">-${montoDescuento.toFixed(2)}</span>
+              <span className="fw-bold font-monospace">-${montoDescuento.toFixed(2)}</span>
             </div>
           )}
 
-          <hr className="my-2 border-secondary" />
+          <hr className="my-2" />
 
-          <div className="d-flex justify-content-between align-items-center text-white">
-            <span className="fw-bold fs-5">Precio Total Final:</span>
-            <span className="fw-bold fs-3 text-info font-monospace">${totalFinal.toFixed(2)}</span>
+          <div className="d-flex justify-content-between align-items-center">
+            <span className="fw-bold fs-5">Total a Cobrar:</span>
+            <span className="fw-bold fs-3 text-primary font-monospace">${totalFinal.toFixed(2)}</span>
           </div>
         </div>
 
-        {/* BOTONES DE ACCIÓN */}
+        {/* Botones de Navegación */}
         <div className="d-flex justify-content-between mt-3">
-          <button className="btn btn-danger px-4" style={{ backgroundColor: '#a63333', border: 'none' }} onClick={onCancelar}>
+          <button className="btn btn-danger px-4" onClick={onCancelar}>
             Volver
           </button>
-          <div>
-            <button className="btn btn-success px-5" style={{ backgroundColor: '#3d824b', border: 'none' }} onClick={onSiguiente} disabled={carrito.length === 0}>
-              Siguiente
-            </button>
-          </div>
+          <button className="btn btn-success px-5 fw-bold" onClick={onSiguiente} disabled={carrito.length === 0}>
+            Siguiente
+          </button>
         </div>
       </div>
 
-      {/* SECCIÓN INFERIOR: FUERA DE LA TARJETA PRINCIPAL */}
-      <div className="p-3 rounded mb-4 text-white" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46' }}>
+      {/* Impacto Estimado en Stock */}
+      <div className="card text-white p-4 w-100 rounded" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46', maxWidth: '1570px' }} data-bs-theme="dark">
         <div className="d-flex align-items-center gap-2 mb-3">
-          <i className="bi bi-boxes text-info"></i>
-          <span className="small text-secondary fw-bold">Impacto Estimado en el Stock de Insumos:</span>
+          <i className="bi bi-boxes"></i>
+          <span className="small fw-bold">Impacto Estimado en el Stock de Insumos:</span>
         </div>
 
-        <div className="d-flex text-secondary border-bottom border-secondary pb-2 mb-2 small fw-bold">
+        <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted">
           <div style={{ width: '40%' }}>Insumo Afectado:</div>
           <div style={{ width: '20%' }}>Cantidad Requerida:</div>
           <div style={{ width: '20%' }}>Stock Actual:</div>
           <div style={{ width: '20%' }}>Stock Resultante:</div>
         </div>
 
-        <div style={{ minHeight: '80px', maxHeight: '160px', overflowY: 'auto' }}>
+        <div style={{ minHeight: '60px', maxHeight: '160px', overflowY: 'auto' }}>
           {carrito.length === 0 ? (
-            <div className="text-center text-light mt-3 small">Agregue productos arriba para ver el impacto en el stock de insumos.</div>
+            <div className="text-center text-muted mt-3 small">Agregue productos arriba para ver el impacto en el stock de insumos.</div>
           ) : (
-            <>
-              <div className="d-flex align-items-center mb-2 text-white border-bottom border-dark pb-1 small">
-                <div style={{ width: '40%' }}>Hojas A4 (Resma)</div>
-                <div style={{ width: '20%' }} className="text-warning">2 unidades</div>
-                <div style={{ width: '20%' }} className="text-light">45 unidades</div>
-                <div style={{ width: '20%' }} className="fw-bold text-success">43 unidades</div>
+            carrito.map((item, index) => (
+              <div key={index} className="d-flex align-items-center mb-2 border-bottom pb-1 small">
+                <div style={{ width: '40%' }}>{item.producto.nombreProducto}</div>
+                <div style={{ width: '20%' }} className="font-monospace">{item.cantidad} unidad(es)</div>
+                <div style={{ width: '20%' }} className="font-monospace">${item.producto.precioBase.toFixed(2)}</div>
+                <div style={{ width: '20%' }} className="fw-bold font-monospace">${item.subtotal.toFixed(2)}</div>
               </div>
-              <div className="d-flex align-items-center mb-2 text-white border-bottom border-dark pb-1 small">
-                <div style={{ width: '40%' }}>Anillos metálicos 12mm</div>
-                <div style={{ width: '20%' }} className="text-warning">1 unidad</div>
-                <div style={{ width: '20%' }} className="text-light">120 unidades</div>
-                <div style={{ width: '20%' }} className="fw-bold text-success">119 unidades</div>
-              </div>
-            </>
+            ))
           )}
         </div>
       </div>

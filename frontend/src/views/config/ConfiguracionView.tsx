@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface RespaldoLog {
   idRespaldo: number;
@@ -10,6 +11,9 @@ interface RespaldoLog {
 }
 
 export const ConfiguracionView: React.FC = () => {
+  const { theme, toggleTheme } = useTheme(); 
+  const esOscuro = theme === 'dark';
+
   const [opcionPerfil, setOpcionPerfil] = useState<'usuario' | 'password' | 'email'>('password');
 
   const usuarioGuardado = localStorage.getItem('usuario_logueado');
@@ -57,7 +61,6 @@ export const ConfiguracionView: React.FC = () => {
     }
   };
 
-  // HANDLER: CAMBIAR CONTRASEÑA
   const handleCambiarPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setMensajePass(null);
@@ -100,7 +103,6 @@ export const ConfiguracionView: React.FC = () => {
     }
   };
 
-  // HANDLER: CAMBIAR USUARIO
   const handleCambiarUsuario = async (e: React.FormEvent) => {
     e.preventDefault();
     setMensajeUsuario(null);
@@ -143,7 +145,6 @@ export const ConfiguracionView: React.FC = () => {
     }
   };
 
-  // HANDLER: CAMBIAR EMAIL
   const handleCambiarEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     setMensajeEmail(null);
@@ -190,7 +191,6 @@ export const ConfiguracionView: React.FC = () => {
     }
   };
 
-  // HANDLERS DE RESPALDO
   const handleGenerarRespaldo = async () => {
     setCargandoRespaldo(true);
     setMensajeRespaldo(null);
@@ -279,31 +279,71 @@ export const ConfiguracionView: React.FC = () => {
     }
   };
 
+  // Clases dinámicas según el tema
+  const cardBg = esOscuro ? '#18181b' : '#ffffff';
+  const cardBorder = esOscuro ? '#3f3f46' : '#e4e4e7';
+  const subBg = esOscuro ? '#222122' : '#f4f4f5';
+  const textColor = esOscuro ? '#ffffff' : '#18181b';
+  const mutedTextColor = esOscuro ? 'text-white-50' : 'text-muted';
+  const inputBgClass = esOscuro ? 'bg-dark text-white border-secondary' : 'bg-light text-dark border-secondary';
+
   return (
-    <div className="container-fluid text-white font-monospace pb-5">
-      <div className="mb-4 pb-3 border-bottom border-secondary" style={{ borderColor: '#2d2d30 !important' }}>
+    <div className={`container-fluid font-monospace pb-5 ${esOscuro ? 'text-white' : 'text-dark'}`}>
+      <div className="mb-4 pb-3 border-bottom border-secondary" style={{ borderColor: esOscuro ? '#2d2d30' : '#dee2e6' }}>
         <div className="text-center">
-          <h3 className="fw-bold mb-0" style={{ color: '#ffffff', fontSize: '1.8rem' }}>Configuración y Respaldo</h3>
+          <h3 className="fw-bold mb-0" style={{ color: textColor, fontSize: '1.8rem' }}>Configuración y Respaldo</h3>
         </div>
       </div>
 
-      <div className="row g-4 mt-2">
+      {/* SECCIÓN NUEVA: APARIENCIA DEL SISTEMA (MODO CLARO / OSCURO) */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="p-3 rounded-4 shadow d-flex justify-content-between align-items-center" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+            <div className="d-flex align-items-center gap-3">
+              <i className={`bi ${esOscuro ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-primary'} fs-3`}></i>
+              <div>
+                <h6 className="fw-bold mb-0" style={{ color: textColor }}>Apariencia del Sistema</h6>
+                <span className={`${mutedTextColor} small`}>
+                  Modo actual: <b>{esOscuro ? 'Oscuro (Dark Mode)' : 'Claro (Light Mode)'}</b>
+                </span>
+              </div>
+            </div>
+
+            <div className="form-check form-switch fs-4 mb-0">
+              <input 
+                className="form-check-input style-switch" 
+                type="checkbox" 
+                role="switch"
+                id="flexSwitchCheckDefault"
+                checked={!esOscuro}
+                onChange={toggleTheme}
+                style={{ cursor: 'pointer' }}
+              />
+              <label className="form-check-label fs-6 align-middle ms-2" htmlFor="flexSwitchCheckDefault" style={{ color: textColor, cursor: 'pointer' }}>
+                {esOscuro ? 'Cambiar a Claro' : 'Cambiar a Oscuro'}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="row g-4">
         {/* COLUMNA 1: Ajustes del Perfil */}
         <div className="col-12 col-lg-5">
-          <div className="p-4 rounded-4 shadow h-100 d-flex flex-column" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            <div className="d-flex align-items-center gap-3 mb-4 p-3 rounded" style={{ backgroundColor: '#222122', borderLeft: '4px solid #8e45e0' }}>
+          <div className="p-4 rounded-4 shadow h-100 d-flex flex-column" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+            <div className="d-flex align-items-center gap-3 mb-4 p-3 rounded" style={{ backgroundColor: subBg, borderLeft: '4px solid #8e45e0' }}>
               <i className="bi bi-person-bounding-box fs-3" style={{ color: '#8e45e0' }}></i>
               <div>
-                <h6 className="mb-0 fw-bold">{usuario?.persona?.nombre} {usuario?.persona?.apellido}</h6>
-                <span className="text-white-50 small">Usuario: <b>@{usuario?.nombreUsuario}</b></span>
+                <h6 className="mb-0 fw-bold" style={{ color: textColor }}>{usuario?.persona?.nombre} {usuario?.persona?.apellido}</h6>
+                <span className={`${mutedTextColor} small`}>Usuario: <b>@{usuario?.nombreUsuario}</b></span>
               </div>
             </div>
 
             {/* Menú Tabs */}
-            <div className="btn-group w-100 mb-4 p-1 rounded" style={{ backgroundColor: '#222122', border: '1px solid #3f3f46' }}>
+            <div className="btn-group w-100 mb-4 p-1 rounded" style={{ backgroundColor: subBg, border: `1px solid ${cardBorder}` }}>
               <button
                 type="button"
-                className={`btn btn-sm fw-bold ${opcionPerfil === 'usuario' ? 'btn-primary' : 'text-white-50'}`}
+                className={`btn btn-sm fw-bold ${opcionPerfil === 'usuario' ? 'btn-primary' : mutedTextColor}`}
                 style={opcionPerfil === 'usuario' ? { backgroundColor: '#8e45e0', borderColor: '#8e45e0' } : {}}
                 onClick={() => setOpcionPerfil('usuario')}
               >
@@ -311,7 +351,7 @@ export const ConfiguracionView: React.FC = () => {
               </button>
               <button
                 type="button"
-                className={`btn btn-sm fw-bold ${opcionPerfil === 'password' ? 'btn-primary' : 'text-white-50'}`}
+                className={`btn btn-sm fw-bold ${opcionPerfil === 'password' ? 'btn-primary' : mutedTextColor}`}
                 style={opcionPerfil === 'password' ? { backgroundColor: '#8e45e0', borderColor: '#8e45e0' } : {}}
                 onClick={() => setOpcionPerfil('password')}
               >
@@ -319,7 +359,7 @@ export const ConfiguracionView: React.FC = () => {
               </button>
               <button
                 type="button"
-                className={`btn btn-sm fw-bold ${opcionPerfil === 'email' ? 'btn-primary' : 'text-white-50'}`}
+                className={`btn btn-sm fw-bold ${opcionPerfil === 'email' ? 'btn-primary' : mutedTextColor}`}
                 style={opcionPerfil === 'email' ? { backgroundColor: '#8e45e0', borderColor: '#8e45e0' } : {}}
                 onClick={() => setOpcionPerfil('email')}
               >
@@ -343,20 +383,20 @@ export const ConfiguracionView: React.FC = () => {
 
                 <form onSubmit={handleCambiarUsuario}>
                   <div className="mb-3">
-                    <label className="form-label text-white-50 small">Usuario Actual</label>
+                    <label className={`form-label ${mutedTextColor} small`}>Usuario Actual</label>
                     <input 
                       type="text" 
-                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      className={`form-control ${inputBgClass} font-monospace`}
                       value={datosUsuario.actual}
                       onChange={(e) => setDatosUsuario({ ...datosUsuario, actual: e.target.value })}
                     />
                   </div>
 
                   <div className="mb-4">
-                    <label className="form-label text-white-50 small">Nuevo Usuario</label>
+                    <label className={`form-label ${mutedTextColor} small`}>Nuevo Usuario</label>
                     <input 
                       type="text" 
-                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      className= {`form-control ${inputBgClass} font-monospace text-muted`}
                       placeholder="Ingrese nuevo nombre de usuario"
                       value={datosUsuario.nuevo}
                       onChange={(e) => setDatosUsuario({ ...datosUsuario, nuevo: e.target.value })}
@@ -391,10 +431,10 @@ export const ConfiguracionView: React.FC = () => {
 
                 <form onSubmit={handleCambiarPassword}>
                   <div className="mb-3">
-                    <label className="form-label text-white-50 small">Contraseña Actual</label>
+                    <label className={`form-label ${mutedTextColor} small`}>Contraseña Actual</label>
                     <input 
                       type="password" 
-                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      className={`form-control ${inputBgClass} font-monospace`}
                       placeholder="••••••••"
                       value={passwords.actual}
                       onChange={(e) => setPasswords({ ...passwords, actual: e.target.value })}
@@ -402,10 +442,10 @@ export const ConfiguracionView: React.FC = () => {
                   </div>
 
                   <div className="mb-3">
-                    <label className="form-label text-white-50 small">Nueva Contraseña</label>
+                    <label className={`form-label ${mutedTextColor} small`}>Nueva Contraseña</label>
                     <input 
                       type="password" 
-                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      className={`form-control ${inputBgClass} font-monospace`}
                       placeholder="Mínimo 4 caracteres"
                       value={passwords.nueva}
                       onChange={(e) => setPasswords({ ...passwords, nueva: e.target.value })}
@@ -413,10 +453,10 @@ export const ConfiguracionView: React.FC = () => {
                   </div>
 
                   <div className="mb-4">
-                    <label className="form-label text-white-50 small">Confirmar Nueva Contraseña</label>
+                    <label className={`form-label ${mutedTextColor} small`}>Confirmar Nueva Contraseña</label>
                     <input 
                       type="password" 
-                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      className={`form-control ${inputBgClass} font-monospace`}
                       placeholder="Repite la nueva contraseña"
                       value={passwords.confirmar}
                       onChange={(e) => setPasswords({ ...passwords, confirmar: e.target.value })}
@@ -451,20 +491,20 @@ export const ConfiguracionView: React.FC = () => {
 
                 <form onSubmit={handleCambiarEmail}>
                   <div className="mb-3">
-                    <label className="form-label text-white-50 small">Email Actual</label>
+                    <label className={`form-label ${mutedTextColor} small`}>Email Actual</label>
                     <input 
                       type="email" 
-                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      className={`form-control ${inputBgClass} font-monospace`}
                       value={datosEmail.actual}
                       onChange={(e) => setDatosEmail({ ...datosEmail, actual: e.target.value })}
                     />
                   </div>
 
                   <div className="mb-4">
-                    <label className="form-label text-white-50 small">Nuevo Email</label>
+                    <label className={`form-label ${mutedTextColor} small`}>Nuevo Email</label>
                     <input 
                       type="email" 
-                      className="form-control bg-dark text-white border-secondary font-monospace"
+                      className={`form-control ${inputBgClass} font-monospace`}
                       placeholder="ejemplo@correo.com"
                       value={datosEmail.nuevo}
                       onChange={(e) => setDatosEmail({ ...datosEmail, nuevo: e.target.value })}
@@ -487,13 +527,13 @@ export const ConfiguracionView: React.FC = () => {
 
         {/* COLUMNA 2: Respaldo y Restauración Contingente */}
         <div className="col-12 col-lg-7">
-          <div className="p-4 rounded-4 shadow h-100" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+          <div className="p-4 rounded-4 shadow h-100" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
             <div className="d-flex justify-content-between align-items-center mb-3">
               <div>
                 <h5 className="fw-bold mb-1 text-info">
                   <i className="bi bi-hdd-network me-2"></i>Respaldo Local Contingente
                 </h5>
-                <p className="text-white-50 small mb-0">Generación y carga de datos para contingencias operativas</p>
+                <p className={`${mutedTextColor} small mb-0`}>Generación y carga de datos para contingencias operativas</p>
               </div>
               <button 
                 onClick={handleGenerarRespaldo}
@@ -513,7 +553,7 @@ export const ConfiguracionView: React.FC = () => {
               </div>
             )}
 
-            <div className="p-3 mb-4 rounded border border-secondary" style={{ backgroundColor: '#222122' }}>
+            <div className="p-3 mb-4 rounded border border-secondary" style={{ backgroundColor: subBg }}>
               <h6 className="fw-bold text-warning mb-2 small">
                 <i className="bi bi-upload me-2"></i>Cargar / Restaurar Copia de Seguridad JSON
               </h6>
@@ -521,7 +561,7 @@ export const ConfiguracionView: React.FC = () => {
                 <input 
                   type="file" 
                   accept=".json"
-                  className="form-control form-control-sm bg-dark text-white border-secondary font-monospace"
+                  className={`form-control form-control-sm ${inputBgClass} font-monospace`}
                   onChange={(e) => setArchivoSeleccionado(e.target.files ? e.target.files[0] : null)}
                 />
                 <button 
@@ -536,11 +576,11 @@ export const ConfiguracionView: React.FC = () => {
             </div>
 
             <div className="mt-3">
-              <h6 className="fw-bold text-white-50 mb-3 small">Historial de Respaldos Generados</h6>
+              <h6 className={`fw-bold ${mutedTextColor} mb-3 small`}>Historial de Respaldos Generados</h6>
               
               <div className="table-responsive rounded border border-secondary" style={{ maxHeight: '280px' }}>
-                <table className="table table-dark table-hover mb-0 align-middle small">
-                  <thead style={{ backgroundColor: '#27272a' }}>
+                <table className={`table ${esOscuro ? 'table-dark' : 'table-light'} table-hover mb-0 align-middle small`}>
+                  <thead style={{ backgroundColor: esOscuro ? '#27272a' : '#e4e4e7' }}>
                     <tr>
                       <th>Fecha / Hora</th>
                       <th>Archivo</th>
@@ -552,7 +592,7 @@ export const ConfiguracionView: React.FC = () => {
                   <tbody>
                     {historialRespaldos.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="text-center py-4 text-white-50">
+                        <td colSpan={5} className={`text-center py-4 ${mutedTextColor}`}>
                           No hay respaldos registrados en el sistema.
                         </td>
                       </tr>
@@ -596,12 +636,12 @@ export const ConfiguracionView: React.FC = () => {
       {mostrarModalConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>
-            <div className="modal-content text-center p-4 shadow-lg" style={{ backgroundColor: '#18181b', border: '1px solid #a855f7', borderRadius: '16px' }}>
+            <div className="modal-content text-center p-4 shadow-lg" style={{ backgroundColor: cardBg, border: '1px solid #a855f7', borderRadius: '16px' }}>
               <div className="mb-3 text-warning">
                 <i className="bi bi-exclamation-triangle fs-1" style={{ color: '#facc15' }}></i>
               </div>
-              <h5 className="fw-bold text-white mb-2" style={{ fontSize: '1.25rem' }}>¿Actualizar/Restaurar Datos?</h5>
-              <p className="text-white-50 small mb-4 px-2">
+              <h5 className="fw-bold mb-2" style={{ color: textColor, fontSize: '1.25rem' }}>¿Actualizar/Restaurar Datos?</h5>
+              <p className={`${mutedTextColor} small mb-4 px-2`}>
                 ¡ATENCIÓN! La restauración sobrescribirá los datos existentes. ¿Deseas continuar?
               </p>
               <div className="d-flex justify-content-center gap-3">

@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import type { Pedido } from '../../types/Pedido';
 import { pedidoService } from '../../services/pedidoService';
+import { useTheme } from '../../Context/ThemeContext';
 
 export const PedidosPendientesCard: React.FC = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [cargando, setCargando] = useState<boolean>(true);
 
@@ -62,7 +66,7 @@ export const PedidosPendientesCard: React.FC = () => {
               ? `${personaEmp.nombre} ${personaEmp.apellido}`.toLowerCase()
               : (empleado.nombre || '').toLowerCase();
 
-            // Match por ID de Usuario o por Coincidencia de Nombre ("Pepe")
+            // Match por ID de Usuario o por Coincidencia de Nombre
             const coincideId = idUsuarioLogueado && Number(idEmp) === Number(idUsuarioLogueado);
             const coincideNombre = nombreUsuarioLogueado && nombreCompletoEmp.includes(nombreUsuarioLogueado);
 
@@ -85,18 +89,19 @@ export const PedidosPendientesCard: React.FC = () => {
     <div 
       className="card p-3 shadow-sm h-100 d-flex flex-column" 
       style={{ 
-        backgroundColor: '#1E1E1F', 
-        border: '1px solid #3f3f46', 
-        borderRadius: '12px'
-      }}
+  backgroundColor: isDark ? '#1E1E1F' : '#ffffff', 
+  border: isDark ? '1px solid #3f3f46' : '1px solid #e2e8f0', 
+  borderRadius: '12px',
+  boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.05)'
+}}
     >
-      <h6 className="fw-bold mb-3 font-monospace text-light d-flex align-items-center gap-2">
-        <i className="bi bi-clock-history text-info"></i>
+      <h6 className={`fw-bold mb-3 font-monospace d-flex align-items-center gap-2 ${isDark ? 'text-light' : 'text-dark'}`}>
+        <i className={`bi bi-clock-history ${isDark ? 'text-info' : 'text-primary'}`}></i>
         Pedidos Pendientes:
       </h6>
 
       {cargando ? (
-        <div className="text-center py-3 text-secondary small font-monospace my-auto">
+        <div className={`text-center py-3 small font-monospace my-auto ${isDark ? 'text-secondary' : 'text-muted'}`}>
           Cargando pedidos...
         </div>
       ) : pedidos.length === 0 ? (
@@ -105,13 +110,13 @@ export const PedidosPendientesCard: React.FC = () => {
         </div>
       ) : (
         <div 
-  className="d-flex flex-column gap-2 pe-1" 
-  style={{ 
-    maxHeight: '140px', 
-    overflowY: 'auto',
-    overflowX: 'hidden'
-  }}
->
+          className="d-flex flex-column gap-2 pe-1" 
+          style={{ 
+            maxHeight: '140px', 
+            overflowY: 'auto',
+            overflowX: 'hidden'
+          }}
+        >
           {pedidos.map((pedido: any) => {
             const id = pedido.id_pedido || pedido.idPedido;
             const clienteNombre = pedido.cliente?.persona 
@@ -122,13 +127,17 @@ export const PedidosPendientesCard: React.FC = () => {
               <div 
                 key={id} 
                 className="d-flex justify-content-between align-items-center px-3 py-2 rounded flex-shrink-0"
-                style={{ backgroundColor: '#27272a', fontSize: '0.85rem' }}
+                style={{ 
+  backgroundColor: isDark ? '#27272a' : '#f8fafc', 
+  border: isDark ? 'none' : '1px solid #f1f5f9',
+  fontSize: '0.85rem' 
+}}
               >
                 <div className="d-flex flex-column">
-                  <span className="text-white font-monospace fw-semibold">
+                  <span className={`font-monospace fw-semibold ${isDark ? 'text-white' : 'text-dark'}`}>
                     #{id} - {clienteNombre}
                   </span>
-                  <span className="text-secondary small font-monospace">
+                  <span className={`small font-monospace ${isDark ? 'text-secondary' : 'text-muted'}`}>
                     Entrega: {pedido.fecha_entrega_estimada ? new Date(pedido.fecha_entrega_estimada).toLocaleDateString() : 'Sin fecha'}
                   </span>
                 </div>
@@ -136,7 +145,7 @@ export const PedidosPendientesCard: React.FC = () => {
                   <span className="badge bg-warning text-dark font-monospace">
                     {pedido.estado || 'PENDIENTE'}
                   </span>
-                  <span className="font-monospace fw-bold text-info">
+                  <span className={`font-monospace fw-bold ${isDark ? 'text-info' : 'text-primary'}`}>
                     ${pedido.monto_total || pedido.montoTotal || 0}
                   </span>
                 </div>

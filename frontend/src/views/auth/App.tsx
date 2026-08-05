@@ -19,9 +19,11 @@ import { ConfiguracionView } from '../config/ConfiguracionView';
 import { InformesView } from '../informes/InformesView';
 import { TurnoProvider } from '../../Context/TurnoContext';
 import { HistorialActividadView } from '../HistorialActividadView';
+import { ThemeProvider } from '../../Context/ThemeContext';
 
 function App() {
   return (
+  <ThemeProvider>
     <TurnoProvider>
       <BrowserRouter>
         <Routes>
@@ -138,6 +140,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </TurnoProvider>
+  </ThemeProvider>
   );
 }
 

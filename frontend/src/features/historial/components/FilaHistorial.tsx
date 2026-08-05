@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../../../Context/ThemeContext';
 
 interface FilaHistorialProps {
   pedido: any;
@@ -15,6 +16,15 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
   onSelectTicket,
   onAbrirDevolucion, // <--- Recibimos el handler
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const filaBg = isDark ? '#1d1d1d' : '#ffffff';
+  const filaBgHover = isDark ? '#18181b' : '#f1f5f9';
+  const filaBorder = isDark ? '#27272a' : '#e2e8f0';
+  const fechaColor = isDark ? '#a9a9aa' : '#64748b';
+  const empleadoColor = isDark ? '#d4d4d8' : '#334155';
+
   // Lógica del nombre del cliente
   const nombreCliente = p.cliente?.persona 
     ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
@@ -56,9 +66,9 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
   const fechaEntregaFinalFormateada = formatearFechaString(fechaEntregaFinalRaw);
 
   return (
-    <tr style={{ borderBottom: '1px solid #27272a', backgroundColor: '#1d1d1d', transition: 'background 0.2s' }} 
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#18181b'}
-        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1d1d1d'}>
+    <tr style={{ borderBottom: `1px solid ${filaBorder}`, backgroundColor: filaBg, transition: 'background 0.2s' }} 
+    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = filaBgHover}
+    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = filaBg}>
       <td className="fw-bold" style={{ color:'#0fdae9', padding: '12px 12px 12px 12px' }}>#{p.id_pedido}</td>
       <td style={{ padding: '15px 20px' }}>
         <span className="fw-semibold text-white">{nombreCliente}</span>
@@ -77,15 +87,13 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
           )}
         </div>
       </td>
-      <td style={{ padding: '12px 16px' }}>
-        <span className="text-light-50">
-          <i className="bi bi-person-check text-secondary me-1"></i>
-          {nombreEmpleado}
-        </span>
-      </td>
+      <span style={{ color: empleadoColor }}>
+      <i className="bi bi-person-check text-secondary me-1"></i>
+        {nombreEmpleado}
+      </span>
 
       {/* FECHA ASIGNACIÓN */}
-      <td className="font-monospace" style={{ color:'#a9a9aa', fontSize: '0.82rem', padding: '12px 24px 12px 12px' }}>
+      <td className="font-monospace" style={{ color: fechaColor, fontSize: '0.82rem', padding: '12px 24px 12px 12px' }}>
         {fechaAsignacionFormateada}
       </td>
 

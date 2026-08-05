@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SuccesModal } from '../../components/layouts/SuccesModal';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface ModalRegistrarPagoProps {
   pedido: any;
@@ -9,6 +10,8 @@ interface ModalRegistrarPagoProps {
 }
 
 export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, onClose, onConfirm }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [tipoPago, setTipoPago] = useState('EFECTIVO');
   const [monto, setMonto] = useState('');
   const [archivo, setArchivo] = useState<File | null>(null);
@@ -18,6 +21,15 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const saldoPendiente = pedido.monto_total - pedido.monto_pago_adelantado;
   const [showConfirm, setShowConfirm] = useState(false);
+  const modalBg = isDark ? '#1a1a1c' : '#ffffff';
+  const modalBorder = isDark ? '#334155' : '#cbd5e1';
+  const resumenBg = isDark ? '#121214' : '#f1f5f9';
+  const resumenText = isDark ? '#a1a1aa' : '#334155';
+  const totalText = isDark ? '#ffffff' : '#0f172a';
+  const labelClass = isDark ? 'text-light' : 'text-dark';
+  const inputBg = isDark ? 'bg-dark' : 'bg-white';
+  const inputText = isDark ? 'text-white' : 'text-dark';
+  const archivoBg = isDark ? '#121214' : '#f1f5f9';
 
   // Verificación de Consumidor Final
   const esConsumidorFinal = 
@@ -93,30 +105,40 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   };
 
   return (
-    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
+    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
       <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content" style={{ backgroundColor: '#1a1a1c', border: '1px solid #4d099b', borderRadius: '12px', padding: '10px' }}>
+        <div className="modal-content shadow-lg" style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}`, borderRadius: '12px', padding: '10px' }}>
           
           <div className="modal-header border-0 pb-0">
             <h5 className="modal-title" style={{ color: '#8e45e0', fontWeight: 'bold' }}>
               <i className="bi bi-currency-dollar me-2"></i>Registrar Pago - Pedido #{pedido.id_pedido}
             </h5>
-            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
+            <button type="button" className="btn-close" onClick={onClose}></button>
           </div>
 
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
-              <div className="d-flex justify-content-between mb-4 px-2 py-2 rounded" style={{ backgroundColor: '#121214', fontSize: '0.9rem' }}>
-                <div className="text-white">Total : <span className="text-white">${Number(pedido.monto_total).toFixed(2)}</span></div>
-                <div className="text-white">Abonado : <span className="text-success">${Number(pedido.monto_pago_adelantado).toFixed(2)}</span></div>
-                <div className="text-white">Saldo : <span className="text-danger">${Number(saldoPendiente).toFixed(2)}</span></div>
-              </div>
+              {/* Tarjeta de Resumen en Tono Claro */}
+              <div 
+  className="d-flex justify-content-between mb-4 px-3 py-2 rounded align-items-center shadow-sm font-monospace" 
+  style={{ backgroundColor: resumenBg, border: `1px solid ${modalBorder}`, fontSize: '0.9rem' }}
+>
+  <div style={{ color: resumenText, fontWeight: '600' }}>
+    Total : <span className="fw-bold" style={{ color: totalText }}>${Number(pedido.monto_total).toFixed(2)}</span>
+  </div>
+  <div style={{ color: resumenText, fontWeight: '600' }}>
+    Abonado : <span className="fw-bold" style={{ color: '#16a34a' }}>${Number(pedido.monto_pago_adelantado).toFixed(2)}</span>
+  </div>
+  <div style={{ color: resumenText, fontWeight: '600' }}>
+    Saldo : <span className="fw-bold" style={{ color: '#dc2626' }}>${Number(saldoPendiente).toFixed(2)}</span>
+  </div>
+</div>
 
+              {/* Selector Tipo de Pago */}
               <div className="mb-3">
-                <label className="form-label small text-white">Tipo de Pago:</label>
+                <label className={`form-label small ${labelClass} fw-bold mb-1`}>Tipo de Pago:</label>
                 <select 
-                  className="form-control" 
-                  style={{ backgroundColor: '#121214', color: '#fff', border: '1px solid #3f3f46' }}
+                  className={`form-select ${inputBg} ${inputText} border-secondary font-monospace`}
                   value={tipoPago}
                   onChange={(e) => {
                     setTipoPago(e.target.value);
@@ -131,13 +153,13 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                 </select>
               </div>
 
+              {/* Input Monto */}
               <div className="mb-3">
-                <label className="form-label small text-white">Monto a Ingresar ($):</label>
+                <label className={`form-label small ${labelClass} fw-bold mb-1`}>Monto a Ingresar ($):</label>
                 <input 
                   type="number" 
                   step="0.01"
-                  className="form-control"
-                  style={{ backgroundColor: '#121214', color: '#fff', border: '1px solid #3f3f46' }}
+                  className={`form-control ${inputBg} ${inputText} border-secondary font-monospace`}
                   placeholder="0.00"
                   required
                   value={monto}
@@ -145,9 +167,10 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                 />
               </div>
 
+              {/* Adjuntar Comprobante */}
               {tipoPago !== 'EFECTIVO' && tipoPago !== 'CUENTA_CORRIENTE' && (
                 <div className="mb-4">
-                  <label className="form-label small text-white mb-2 d-block">Comprobante de Respaldo:</label>
+                  <label className="form-label small text-dark fw-bold mb-2 d-block">Comprobante de Respaldo:</label>
                   
                   <input 
                     type="file" 
@@ -163,11 +186,12 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                       onClick={() => fileInputRef.current?.click()}
                       className="btn w-100 d-flex align-items-center justify-content-center gap-2 py-2"
                       style={{
-                        backgroundColor: 'transparent',
-                        border: '1px solid #00b4d8',
-                        color: '#00b4d8',
+                        backgroundColor: '#f8fafc',
+                        border: '1px solid #0284c7',
+                        color: '#0284c7',
                         borderRadius: '8px',
                         fontSize: '0.95rem',
+                        fontWeight: '600',
                         transition: 'all 0.2s ease'
                       }}
                     >
@@ -176,15 +200,15 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                     </button>
                   ) : (
                     <div 
-                      className="d-flex align-items-center justify-content-between p-2 rounded" 
-                      style={{ backgroundColor: '#121214', border: '1px solid #3f3f46' }}
-                    >
-                      <div className="d-flex align-items-center gap-2 overflow-hidden">
-                        <i className="bi bi-file-earmark-image text-info fs-5"></i>
-                        <span className="text-white small text-truncate" style={{ maxWidth: '280px' }}>
-                          {archivo.name}
-                        </span>
-                      </div>
+  className="d-flex align-items-center justify-content-between p-2 rounded" 
+  style={{ backgroundColor: archivoBg, border: `1px solid ${modalBorder}` }}
+>
+  <div className="d-flex align-items-center gap-2 overflow-hidden">
+    <i className="bi bi-file-earmark-image text-primary fs-5"></i>
+    <span className={`${labelClass} small text-truncate`} style={{ maxWidth: '280px' }}>
+      {archivo.name}
+    </span>
+  </div>
                       <button 
                         type="button" 
                         className="btn btn-sm btn-outline-danger border-0" 
@@ -203,7 +227,7 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
               <button 
                 type="button" 
                 className="btn btn-success px-4" 
-                style={{ backgroundColor: '#15803d', border: 'none' }}
+                style={{ backgroundColor: '#16a34a', border: 'none' }}
                 onClick={() => setShowConfirm(true)}
               >
                 Procesar Cobro
@@ -230,18 +254,17 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
       />
 
       {showConfirm && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 10000 }}>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 10000 }}>
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '340px' }}>
             <div 
-              className="modal-content text-white text-center" 
-              style={{ 
-                backgroundColor: '#161517', 
-                border: '2px solid #7c2ae8', 
-                borderRadius: '10px', 
-                padding: '30px 22px',
-                boxShadow: '0 0 20px rgba(0,0,0,0.5)'
-              }}
-            >
+  className={`modal-content ${isDark ? 'text-white' : 'text-dark'} text-center shadow-lg`} 
+  style={{ 
+    backgroundColor: modalBg, 
+    border: '2px solid #7c2ae8', 
+    borderRadius: '10px', 
+    padding: '30px 22px'
+  }}
+>
               <div className="d-flex justify-content-center mb-4">
                 <div 
                   className="d-flex align-items-center justify-content-center"
@@ -259,19 +282,19 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                 </div>
               </div>
 
-              <h4 className="fw-bold mb-3" style={{ fontSize: '1.3rem', color: '#ffffff' }}>
-                ¿Estás seguro?
-              </h4>
-              
-              <p className="px-1 mb-4" style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.4' }}>
-                Se registrará el ingreso del cobro para este pedido.
-              </p>
+              <h4 className="fw-bold mb-3" style={{ fontSize: '1.3rem', color: totalText }}>
+  ¿Estás seguro?
+</h4>
+
+<p className="px-1 mb-4" style={{ color: resumenText, fontSize: '0.9rem', lineHeight: '1.4' }}>
+  Se registrará el ingreso del cobro para este pedido.
+</p>
 
               <div className="d-flex gap-2">
                 <button 
                   type="button"
                   className="btn w-50 py-2 text-white fw-bold" 
-                  style={{ backgroundColor: '#a81805', border: 'none', borderRadius: '6px', fontSize: '0.95rem' }}
+                  style={{ backgroundColor: '#dc2626', border: 'none', borderRadius: '6px', fontSize: '0.95rem' }}
                   onClick={() => setShowConfirm(false)}
                 >
                   No, volver
@@ -279,7 +302,7 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                 <button 
                   type="button"
                   className="btn w-50 py-2 text-white fw-bold" 
-                  style={{ backgroundColor: '#15803d', border: 'none', borderRadius: '6px', fontSize: '0.95rem' }}
+                  style={{ backgroundColor: '#16a34a', border: 'none', borderRadius: '6px', fontSize: '0.95rem' }}
                   onClick={(e) => {
                     setShowConfirm(false);
                     handleSubmit(e);

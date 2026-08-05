@@ -8,6 +8,7 @@ interface FiltrosPedidosProps {
   filtroEmpleado: string;
   setFiltroEmpleado: (value: string) => void;
   empleados: any[];
+  isDarkMode?: boolean;
 }
 
 export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
@@ -17,30 +18,52 @@ export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
   setFiltroEstado,
   filtroEmpleado,
   setFiltroEmpleado,
-  empleados
+  empleados,
+  isDarkMode = true 
 }) => {
+  // Estilos dinámicos según el modo
+  const containerBg = isDarkMode ? '#1f1f23' : '#f1f5f9';
+  const containerBorder = isDarkMode ? '#334155' : '#cbd5e1';
+  const labelColorClass = isDarkMode ? 'text-light' : 'text-dark';
+  const inputBg = isDarkMode ? '#121214' : '#ffffff';
+  const inputTextColor = isDarkMode ? 'text-white' : 'text-dark';
+  const inputBorder = isDarkMode ? 'border-secondary' : 'border-secondary';
+
   return (
-    <div className="row g-3 p-3 rounded d-print-none align-items-end" style={{ backgroundColor: '#1d1d1d', border: '1px solid #2d2d30' }}>
+    <div 
+      className="row g-3 p-3 rounded d-print-none align-items-end shadow" 
+      style={{ 
+        backgroundColor: containerBg, 
+        border: `1px solid ${containerBorder}`,
+        transition: 'all 0.2s ease-in-out'
+      }}
+    >
       
       {/* 1. Buscar por Cliente */}
       <div className="col-md-4">
-        <label className="form-label small text-secondary fw-bold mb-1">Buscar por Cliente:</label>
+        <label className={`form-label small fw-semibold mb-1 ${labelColorClass}`}>
+          Buscar por Cliente:
+        </label>
         <input 
           type="text" 
-          className="form-control bg-dark text-white border-secondary" 
+          className={`form-control ${inputTextColor} ${inputBorder} font-monospace`} 
           placeholder="Escribí el nombre..." 
           value={filtroCliente}
           onChange={(e) => setFiltroCliente(e.target.value)}
+          style={{ backgroundColor: inputBg }}
         />
       </div>
 
       {/* 2. Filtrar por Estado Operativo */}
       <div className="col-md-4">
-        <label className="form-label small text-secondary fw-bold mb-1">Filtrar por Estado Operativo:</label>
+        <label className={`form-label small fw-semibold mb-1 ${labelColorClass}`}>
+          Filtrar por Estado Operativo:
+        </label>
         <select 
-          className="form-select bg-dark text-white border-secondary"
+          className={`form-select ${inputTextColor} ${inputBorder} font-monospace`}
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value)}
+          style={{ backgroundColor: inputBg }}
         >
           <option value="">Todos los activos (Taller)</option>
           <option value="PRESUPUESTO">PRESUPUESTOS</option>
@@ -54,11 +77,14 @@ export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
 
       {/* 3. Filtrar por Empleado Asignado */}
       <div className="col-md-4">
-        <label className="form-label small text-secondary fw-bold mb-1">Filtrar por Empleado Asignado:</label>
+        <label className={`form-label small fw-semibold mb-1 ${labelColorClass}`}>
+          Filtrar por Empleado Asignado:
+        </label>
         <select 
-          className="form-select bg-dark text-white border-secondary font-monospace"
+          className={`form-select ${inputTextColor} ${inputBorder} font-monospace`}
           value={filtroEmpleado}
           onChange={(e) => setFiltroEmpleado(e.target.value)}
+          style={{ backgroundColor: inputBg }}
         >
           <option value="">Todos los Empleados</option>
           <option value="SIN_ASIGNAR">Sin Asignar</option>

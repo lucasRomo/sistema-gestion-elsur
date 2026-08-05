@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface PedidoBackend {
   id_pedido: number;
@@ -13,15 +14,16 @@ interface PedidoBackend {
   };
   fecha_entrega_estimada: string;
   estado: string;
-  observaciones?: string;
+  observaciones?: string; 
   observacion?: string;
   estante?: string;
 }
 
 export const NotificacionesCard: React.FC = () => {
-  // Pestaña activa: 0 = Caja, 1 = Pedidos Demorados
-  const [vistaActual, setVistaActual] = useState<number>(0);
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
+  const [vistaActual, setVistaActual] = useState<number>(0);
   const [cajaAbierta, setCajaAbierta] = useState<boolean | null>(null);
   const [datosTurno, setDatosTurno] = useState<any>(null);
   const [ingresosTurno, setIngresosTurno] = useState<number>(0);
@@ -34,7 +36,6 @@ export const NotificacionesCard: React.FC = () => {
 
   const fetchNotificaciones = async () => {
     try {
-      // 1. Obtener estado de Caja
       const resCaja = await fetch('http://localhost:8080/api/turnos/estado-caja');
       if (resCaja.ok) {
         const textRes = await resCaja.text();
@@ -43,7 +44,6 @@ export const NotificacionesCard: React.FC = () => {
           setCajaAbierta(true);
           setDatosTurno(dataCaja);
 
-          // 1.1 Obtener Totales de Caja (Ingresos y Egresos)
           const resTotales = await fetch('http://localhost:8080/api/movimientos-caja/totales');
           if (resTotales.ok) {
             const dataTotales = await resTotales.json();
@@ -58,7 +58,6 @@ export const NotificacionesCard: React.FC = () => {
         }
       }
 
-      // 2. Obtener Pedidos (con la lógica exacta de filtrado)
       const resPedidos = await fetch('http://localhost:8080/api/pedidos');
       if (resPedidos.ok) {
         const dataPedidos: PedidoBackend[] = await resPedidos.json();
@@ -72,12 +71,10 @@ export const NotificacionesCard: React.FC = () => {
         }[] = [];
 
         dataPedidos.forEach((p) => {
-          // Excluir Ventas Rápidas
           const obs = (p.observaciones || p.observacion || '').toLowerCase();
           const esVentaRapida = obs.includes('venta rápida') || p.estante === 'Venta Rápida';
           if (esVentaRapida) return;
 
-          // Excluir Presupuestos y estados no activos
           const estadoUpper = (p.estado || '').toUpperCase().trim();
           if (
             !estadoUpper ||
@@ -146,24 +143,24 @@ export const NotificacionesCard: React.FC = () => {
     }
   };
 
-  // Color dinámico para el título de la tarjeta de Caja y su circulito indicador
-  const colorCaja = cajaAbierta ? '#22c55e' : '#ef4444';
+  const colorCaja = cajaAbierta ? (isDark ? '#22c55e' : '#16a34a') : '#ef4444';
 
   return (
     <div
-      className="card h-100 p-3 shadow-sm font-monospace text-white d-flex flex-column justify-content-between position-relative"
+      className={`card h-100 p-3 font-monospace d-flex flex-column justify-content-between position-relative ${isDark ? 'text-white' : 'text-dark'}`}
       style={{
-        backgroundColor: '#1E1E1F',
-        border: '1px solid #3f3f46',
+        backgroundColor: isDark ? '#1E1E1F' : '#ffffff',
+        border: isDark ? '1px solid #3f3f46' : '1px solid #e2e8f0',
         borderRadius: '12px',
         maxHeight: '220px',
         overflow: 'hidden',
+        boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.05)'
       }}
     >
       {/* BOTONES LATERALES */}
       <button
         onClick={() => cambiarVista('prev')}
-        className="btn p-0 border-0 text-white position-absolute opacity-75 opacity-100-hover"
+        className={`btn p-0 border-0 position-absolute opacity-75 opacity-100-hover ${isDark ? 'text-white' : 'text-secondary'}`}
         style={{
           left: '8px',
           top: '50%',
@@ -178,7 +175,7 @@ export const NotificacionesCard: React.FC = () => {
 
       <button
         onClick={() => cambiarVista('next')}
-        className="btn p-0 border-0 text-white position-absolute opacity-75 opacity-100-hover"
+        className={`btn p-0 border-0 position-absolute opacity-75 opacity-100-hover ${isDark ? 'text-white' : 'text-secondary'}`}
         style={{
           right: '8px',
           top: '50%',
@@ -199,7 +196,7 @@ export const NotificacionesCard: React.FC = () => {
             className="fw-bold m-0 d-flex align-items-center gap-2"
             style={{
               fontSize: '0.88rem',
-              color: vistaActual === 0 ? colorCaja : '#f59e0b',
+              color: vistaActual === 0 ? colorCaja : (isDark ? '#f59e0b' : '#d97706'),
             }}
           >
             <i className="bi bi-bell-fill"></i>
@@ -222,8 +219,12 @@ export const NotificacionesCard: React.FC = () => {
               <div
                 className="p-2 rounded d-flex align-items-center justify-content-between"
                 style={{
-                  backgroundColor: cajaAbierta ? '#14532d33' : '#7f1d1d33',
-                  border: cajaAbierta ? '1px solid #22c55e' : '1px solid #ef4444',
+                  backgroundColor: cajaAbierta 
+                    ? (isDark ? '#14532d33' : '#dcfce7') 
+                    : (isDark ? '#7f1d1d33' : '#fee2e2'),
+                  border: cajaAbierta 
+                    ? (isDark ? '1px solid #22c55e' : '1px solid #86efac') 
+                    : (isDark ? '1px solid #ef4444' : '1px solid #fca5a5'),
                 }}
               >
                 <div className="d-flex align-items-center gap-2">
@@ -231,10 +232,10 @@ export const NotificacionesCard: React.FC = () => {
                     className={`bi ${cajaAbierta ? 'bi-door-open-fill text-success' : 'bi-door-closed-fill text-danger'} fs-5`}
                   ></i>
                   <div className="d-flex flex-column">
-                    <span className="fw-bold" style={{ fontSize: '0.82rem' }}>
+                    <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`} style={{ fontSize: '0.82rem' }}>
                       Caja Registradora
                     </span>
-                    <span className="small text-white-50" style={{ fontSize: '0.68rem' }}>
+                    <span className={`small ${isDark ? 'text-white-50' : 'text-muted'}`} style={{ fontSize: '0.68rem' }}>
                       {cajaAbierta ? 'Turno en curso' : 'Sin turno activo'}
                     </span>
                   </div>
@@ -247,14 +248,17 @@ export const NotificacionesCard: React.FC = () => {
                 </span>
               </div>
 
-              {/* BLOQUE INTERMEDIO: INGRESOS Y EGRESOS DEL TURNO (Solo si está abierta) */}
+              {/* BLOQUE INTERMEDIO: INGRESOS Y EGRESOS DEL TURNO */}
               {cajaAbierta && (
                 <div className="d-flex gap-2">
                   <div
                     className="flex-fill p-1 px-2 rounded d-flex align-items-center justify-content-between"
-                    style={{ backgroundColor: '#182e21', border: '1px solid #22c55e44' }}
+                    style={{ 
+                      backgroundColor: isDark ? '#182e21' : '#f0fdf4', 
+                      border: isDark ? '1px solid #22c55e44' : '1px solid #bbf7d0' 
+                    }}
                   >
-                    <span className="text-white-50" style={{ fontSize: '0.68rem' }}>
+                    <span className={isDark ? 'text-white-50' : 'text-muted'} style={{ fontSize: '0.68rem' }}>
                       <i className="bi bi-arrow-down-left-circle-fill text-success me-1"></i>
                       Ingresos:
                     </span>
@@ -265,9 +269,12 @@ export const NotificacionesCard: React.FC = () => {
 
                   <div
                     className="flex-fill p-1 px-2 rounded d-flex align-items-center justify-content-between"
-                    style={{ backgroundColor: '#331919', border: '1px solid #ef444444' }}
+                    style={{ 
+                      backgroundColor: isDark ? '#331919' : '#fef2f2', 
+                      border: isDark ? '1px solid #ef444444' : '1px solid #fecaca' 
+                    }}
                   >
-                    <span className="text-white-50" style={{ fontSize: '0.68rem' }}>
+                    <span className={isDark ? 'text-white-50' : 'text-muted'} style={{ fontSize: '0.68rem' }}>
                       <i className="bi bi-arrow-up-right-circle-fill text-danger me-1"></i>
                       Egresos:
                     </span>
@@ -278,21 +285,21 @@ export const NotificacionesCard: React.FC = () => {
                 </div>
               )}
 
-              {/* BLOQUE INFERIOR: CONDICIONAL (DATOS DEL TURNO O MENSAJE DE CAJA CERRADA) */}
+              {/* BLOQUE INFERIOR */}
               {cajaAbierta ? (
                 <div
-                  className="p-1 px-2 rounded d-flex justify-content-between text-white-50 small align-items-center"
-                  style={{ backgroundColor: '#27272a', fontSize: '0.72rem' }}
+                  className={`p-1 px-2 rounded d-flex justify-content-between small align-items-center ${isDark ? 'text-white-50' : 'text-muted'}`}
+                  style={{ backgroundColor: isDark ? '#27272a' : '#f1f5f9', fontSize: '0.72rem' }}
                 >
                   <div>
                     Monto Inicial:{' '}
-                    <span className="text-white fw-bold">
+                    <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>
                       ${datosTurno?.montoInicial?.toFixed(2) || '0.00'}
                     </span>
                   </div>
                   <div>
                     Turno N°:{' '}
-                    <span className="text-white fw-bold">
+                    <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>
                       #{datosTurno?.idTurno ?? datosTurno?.id_turno ?? '-'}
                     </span>
                   </div>
@@ -300,7 +307,11 @@ export const NotificacionesCard: React.FC = () => {
               ) : (
                 <div
                   className="p-1 px-2 rounded text-center text-danger fw-semibold"
-                  style={{ backgroundColor: '#27272a', fontSize: '0.70rem', border: '1px dashed #ef444455' }}
+                  style={{ 
+                    backgroundColor: isDark ? '#27272a' : '#fef2f2', 
+                    fontSize: '0.70rem', 
+                    border: isDark ? '1px dashed #ef444455' : '1px dashed #fca5a5' 
+                  }}
                 >
                   Abra la caja del dia o Espere a mañana para continuar
                 </div>
@@ -320,21 +331,19 @@ export const NotificacionesCard: React.FC = () => {
                     key={ped.id}
                     className="p-2 rounded d-flex align-items-center justify-content-between"
                     style={{
-                      backgroundColor: '#27272a',
-                      borderLeft:
-                        ped.estadoTiempo === 'vencido'
-                          ? '3px solid #ef4444'
-                          : '3px solid #f59e0b',
+                      backgroundColor: isDark ? '#27272a' : '#f8fafc',
+                      border: isDark ? 'none' : '1px solid #e2e8f0',
+                      borderLeft: ped.estadoTiempo === 'vencido' ? '3px solid #ef4444' : '3px solid #f59e0b',
                     }}
                   >
                     <div style={{ maxWidth: '65%' }}>
                       <div
-                        className="fw-bold text-truncate"
-                        style={{ fontSize: '0.75rem', color: '#f4f4f5' }}
+                        className={`fw-bold text-truncate ${isDark ? 'text-white' : 'text-dark'}`}
+                        style={{ fontSize: '0.75rem' }}
                       >
                         #{ped.id} - {ped.cliente}
                       </div>
-                      <div className="small text-white-50" style={{ fontSize: '0.65rem' }}>
+                      <div className={`small ${isDark ? 'text-white-50' : 'text-muted'}`} style={{ fontSize: '0.65rem' }}>
                         {ped.estadoTiempo === 'vencido'
                           ? `Demorado por ${ped.minDiferencia} min`
                           : `Vence en ${ped.minDiferencia} min`}
@@ -350,7 +359,7 @@ export const NotificacionesCard: React.FC = () => {
                   </div>
                 ))
               ) : (
-                <div className="d-flex flex-column align-items-center justify-content-center h-100 text-white-50 small">
+                <div className={`d-flex flex-column align-items-center justify-content-center h-100 small ${isDark ? 'text-white-50' : 'text-muted'}`}>
                   <i className="bi bi-check2-circle text-success fs-4 mb-1"></i>
                   <span style={{ fontSize: '0.75rem' }}>No hay entregas demoradas</span>
                 </div>
@@ -366,7 +375,7 @@ export const NotificacionesCard: React.FC = () => {
               width: '6px',
               height: '6px',
               borderRadius: '50%',
-              backgroundColor: vistaActual === 0 ? colorCaja : '#52525b',
+              backgroundColor: vistaActual === 0 ? colorCaja : (isDark ? '#52525b' : '#cbd5e1'),
               transition: 'all 0.2s',
             }}
           ></span>
@@ -375,7 +384,7 @@ export const NotificacionesCard: React.FC = () => {
               width: '6px',
               height: '6px',
               borderRadius: '50%',
-              backgroundColor: vistaActual === 1 ? '#f59e0b' : '#52525b',
+              backgroundColor: vistaActual === 1 ? (isDark ? '#f59e0b' : '#d97706') : (isDark ? '#52525b' : '#cbd5e1'),
               transition: 'all 0.2s',
             }}
           ></span>

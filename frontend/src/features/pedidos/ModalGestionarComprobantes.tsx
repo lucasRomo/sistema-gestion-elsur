@@ -1,13 +1,5 @@
 import React, { useRef, useState } from 'react';
 
-interface Pago {
-  id_comprobante: number;
-  montoPago: number;
-  tipoPago: string;
-  fechaCarga: string;
-  urlArchivoComprobante: string | null;
-}
-
 interface ModalGestionarComprobantesProps {
   pedido: any;
   onClose: () => void;
@@ -56,27 +48,23 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-lg modal-dialog-centered">
-        
-        {/* ➔ CAMBIADO: Fondo negro puro (#0b0b0c) y borde verde esmeralda brillante (#22c55e) de 2px */}
         <div 
-          className="modal-content text-white" 
+          className="modal-content custom-card" 
           style={{ 
-            backgroundColor: '#0b0b0c', 
-            border: '2px solid #500b91', 
+            backgroundColor: 'var(--bs-body-bg, #1a1a1c)', 
+            border: '2px solid #8e45e0', 
             borderRadius: '12px' 
           }}
         >
-          
           <div className="modal-header border-0 pb-0">
-            {/* ➔ CAMBIADO: Título en color verde esmeralda brillante */}
-            <h5 className="modal-title fw-bold" style={{ color: '#500b91', fontFamily: 'monospace' }}>
+            <h5 className="modal-title fw-bold" style={{ color: '#a855f7', fontFamily: 'monospace' }}>
               Gestionar Comprobantes - Pedido #{pedido.id_pedido}
             </h5>
             <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
           </div>
 
           <div className="modal-body">
-            <p className="small mb-4" style={{ fontFamily: 'monospace' }}>
+            <p className="small mb-4 text-body-secondary" style={{ fontFamily: 'monospace' }}>
               A continuación se listan los cobros realizados para este pedido. Podés vincular comprobantes físicos a cobros de tipo transferencia o eliminar comprobantes existentes.
             </p>
 
@@ -89,10 +77,9 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
             />
 
             <div className="table-responsive">
-              {/* ➔ CAMBIADO: Tabla con bordes finos oscuros */}
-              <table className="table table-dark table-hover align-middle mb-0" style={{ borderColor: '#1e1e24' }}>
+              <table className="table table-hover align-middle mb-0">
                 <thead>
-                  <tr style={{ color: '#a1a1aa', fontFamily: 'monospace' }}>
+                  <tr style={{ fontFamily: 'monospace' }}>
                     <th>Monto Cobrado</th>
                     <th>Fecha y Hora</th>
                     <th>Método de Pago</th>
@@ -108,37 +95,34 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
                       const esDigital = cobro.tipoPago === 'TRANSFERENCIA';
 
                       return (
-                        <tr key={cobro.id_comprobante} style={{ borderBottom: '1px solid #1e1e24' }}>
-                          
-                          {/* ➔ CAMBIADO: Monto en color verde esmeralda brillante */}
-                          <td className="fw-bold" style={{ color: '#22c55e' }}>
+                        <tr key={cobro.id_comprobante}>
+                          <td className="fw-bold text-success">
                             ${cobro.montoPago.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                           </td>
-                          
-                          <td style={{ color: '#e4e4e7' }}>{formatearFechaYHora(cobro.fechaCarga)}</td>
-                          
+                          <td>{formatearFechaYHora(cobro.fechaCarga)}</td>
                           <td>
-                            {/* ➔ CAMBIADO: Badge de transferencia usa el color verde de fondo con bordes limpios */}
                             <span 
-                              className="badge" 
-                              style={{ 
-                                backgroundColor: esDigital ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255, 255, 255, 0.08)',
-                                color: esDigital ? '#22c55e' : '#a1a1aa',
-                                border: esDigital ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(255, 255, 255, 0.15)'
-                              }}
-                            >
-                              {cobro.tipoPago}
-                            </span>
+  className="d-inline-block px-2 py-1 rounded font-monospace" 
+  style={{ 
+    backgroundColor: esDigital ? '#dcfce7' : '#e2e8f0', 
+    color: esDigital ? '#15803d' : '#1e293b', 
+    border: esDigital ? '1px solid #86efac' : '1px solid #cbd5e1',
+    fontWeight: '700',
+    fontSize: '0.75rem',
+    lineHeight: '1.2',
+    letterSpacing: '0.025em'
+  }}
+>
+  {cobro.tipoPago}
+</span>
                           </td>
-                          
                           <td>
                             <div className="d-flex justify-content-center gap-2">
-                              
                               {esDigital && !tieneArchivo && (
                                 <button
                                   type="button"
-                                  className="btn btn-sm d-flex align-items-center gap-1 text-white"
-                                  style={{ backgroundColor: 'transparent', border: '1px solid #500b91', borderRadius: '6px' }}
+                                  className="btn btn-sm d-flex align-items-center gap-1 btn-outline-purple"
+                                  style={{ border: '1px solid #8e45e0', color: '#a855f7' }}
                                   onClick={() => abrirSelectorArchivo(cobro.id_comprobante)}
                                 >
                                   <i className="bi bi-file-earmark-arrow-up"></i> Vincular
@@ -170,7 +154,6 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
                               {!esDigital && !tieneArchivo && (
                                 <span className="text-muted small">-</span>
                               )}
-
                             </div>
                           </td>
                         </tr>
@@ -187,17 +170,14 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
           </div>
 
           <div className="modal-footer border-0">
-            {/* ➔ CAMBIADO: Botón cerrar usando un estilo gris oscuro discreto con bordes curvos */}
             <button 
               type="button" 
-              className="btn text-white px-4" 
-              style={{ backgroundColor: '#27272a', border: '1px solid #3f3f46', borderRadius: '6px', fontFamily: 'monospace' }}
+              className="btn btn-secondary px-4" 
               onClick={onClose}
             >
               Cerrar
             </button>
           </div>
-
         </div>
       </div>
     </div>

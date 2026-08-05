@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ContadorTiempo } from './ContadorTiempo';
+import { useTheme } from '../../../Context/ThemeContext';
 
 interface FilaPedidoProps {
   pedido: any;
@@ -24,6 +25,17 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
   onSelectTicket,
   onSelectComprobantes
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const filaBg = isDark ? '#1d1d1d' : '#ffffff';
+  const filaBgHover = isDark ? '#18181b' : '#f1f5f9';
+  const filaBorder = isDark ? '#1d1d1d' : '#e2e8f0';
+  const textoCliente = isDark ? 'text-white' : 'text-dark';
+  const selectBg = isDark ? 'bg-black' : 'bg-white';
+  const selectTextClaro = isDark ? 'text-light' : 'text-dark';
+  const selectTextFuerte = isDark ? 'text-white' : 'text-dark';
+  const fechaColor = isDark ? '#a9a9aa' : '#64748b';
+  const modalBg = isDark ? 'bg-dark text-white' : 'bg-white text-dark';
   const [mostrarObsModal, setMostrarObsModal] = useState(false);
 
   // Cálculo de Nombre del Cliente
@@ -67,13 +79,24 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
   p.observaciones?.toLowerCase().includes('volver a hacer') || 
   p.observacion?.toLowerCase().includes('volver a hacer') ||
   p.observaciones?.toLowerCase().includes('devolución') ||
-  p.observacion?.toLowerCase().includes('devolución');
+  p.observacion?.toLowerCase().includes('devolución') ||
+  Boolean(p.observacion_devolucion || p.motivo_devolucion);
+
+  const tieneObservaciones = Boolean(
+    (p.observaciones && p.observaciones.trim() !== '') ||
+    (p.observacion && p.observacion.trim() !== '') ||
+    p.observacion_devolucion ||
+    p.motivo_devolucion ||
+    esDevolucionReabierta
+  );
+
+  const textoDevolucion = p.observacion_devolucion || p.motivo_devolucion || null;
 
   return (
     <>
-      <tr style={{ borderBottom: '1px solid #1d1d1d', backgroundColor: '#1d1d1d', transition: 'background-color 0.2s'}}
-       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#18181b'}
-       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1d1d1d'}>
+      <tr style={{ borderBottom: `1px solid ${filaBorder}`, backgroundColor: filaBg, transition: 'background-color 0.2s'}}
+ onMouseEnter={(e) => e.currentTarget.style.backgroundColor = filaBgHover}
+ onMouseLeave={(e) => e.currentTarget.style.backgroundColor = filaBg}>
         <td style={{ padding: '10px 2px 12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#00d2ff', fontFamily: 'monospace', fontWeight: 'bold', height: '100%'}} className="fw-bold text-info">
           #{p.id_pedido}
         </td>
@@ -81,15 +104,18 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
         {/* CLIENTE */}
         <td>
           <div className="d-flex align-items-center gap-2">
-            <span className="fw-semibold text-white">{nombreCliente}</span>
-            {p.observaciones && p.observaciones.trim() !== '' && (
+            <span className={`fw-semibold ${textoCliente}`}>{nombreCliente}</span>
+            {tieneObservaciones && (
               <button 
-                className="btn btn-link p-0 text-warning border-0 d-flex align-items-center"
+                className="btn btn-link p-0 text-warning border-0 d-flex align-items-center gap-1"
                 style={{ textDecoration: 'none', cursor: 'pointer' }}
                 onClick={() => setMostrarObsModal(true)}
-                title="Ver observaciones del pedido"
+                title="Ver observaciones y detalle de devolución"
               >
                 <i className="bi bi-chat-left-text-fill fs-6"></i>
+                {esDevolucionReabierta && (
+                  <i className="bi bi-arrow-return-left text-danger fs-6" title="Pedido devuelto"></i>
+                )}
               </button>
             )}
           </div>
@@ -103,7 +129,7 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
             </span>
           ) : (
             <select
-              className="form-select form-select-sm bg-black text-warning border-warning-subtle font-monospace"
+              className={`form-select form-select-sm ${selectBg} text-warning border-warning-subtle font-monospace`}
               style={{ width: '115px', fontSize: '0.80rem', cursor: 'pointer' }}
               value={p.ubicacion_estante || 'Taller'}
               onChange={(e) => onCambioUbicacion && onCambioUbicacion(p.id_pedido, e.target.value)}
@@ -133,7 +159,7 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
         {/* EMPLEADO ASIGNADO */}
         <td>
           <select 
-            className="form-select form-select-sm bg-black text-light border-secondary font-monospace"
+            className={`form-select form-select-sm ${selectBg} ${selectTextClaro} border-secondary font-monospace`}
             style={{ width: '160px', fontSize: '0.85rem', cursor: 'pointer' }}
             value={
               ultimaAsignacion?.empleado?.idEmpleado || 
@@ -161,11 +187,11 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
         </td>
 
         {/* FECHA ASIGNACIÓN */}
-        <td className="font-monospace" style={{ color: '#a9a9aa', fontSize: '0.82rem' }}>
+        <td className="font-monospace" style={{ color: fechaColor, fontSize: '0.82rem' }}>
           {fechaCreacionFormateada}
         </td>
 
-        {/* ENTREGA ESTIMADA + CONTADOR (Unificados en la misma celda) */}
+        {/* ENTREGA ESTIMADA + CONTADOR */}
         <td className="font-monospace" style={{ fontSize: '0.82rem' }}>
           <div className="d-flex flex-column align-items-start gap-1">
             <span className="text-warning fw-semibold">
@@ -178,7 +204,7 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
         {/* ESTADO */}
         <td>
           <select 
-            className="form-select form-select-sm bg-black text-white border-secondary font-monospace"
+            className={`form-select form-select-sm ${selectBg} ${selectTextFuerte} border-secondary font-monospace`}
             style={{ width: '145px', border: p.estado === 'PRESUPUESTO' ? '1px solid #ffc107' : '' }}
             value={p.estado}
             onChange={(e) => onCambioEstado(p, e.target.value)}
@@ -193,8 +219,7 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
         </td>
 
         {/* MONTO TOTAL */}
-        <td className="fw-bold">${Number(p.monto_total).toFixed(2)}</td>
-
+        <td className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>${Number(p.monto_total).toFixed(2)}</td>
         {/* MONTO ABONADO */}
         <td className="text-info">${Number(p.monto_pago_adelantado).toFixed(2)}</td>
 
@@ -229,53 +254,54 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
             </button>
 
             {/* Botón de Pagos */}
-<button 
-  className="rounded d-flex align-items-center justify-content-center" 
-  style={{ 
-    width: '32px', 
-    height: '32px', 
-    cursor: esDevolucionReabierta ? 'not-allowed' : 'pointer', 
-    backgroundColor: 'transparent', 
-    transition: 'all 0.2s ease',
-    opacity: esDevolucionReabierta ? 0.4 : 1,
-    border: `0.8px solid ${esDevolucionReabierta ? '#6b7280' : (p.es_cuenta_corriente ? '#6b7280' : (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? '#a72828' : '#22c55e'))}` 
-  }}
-  disabled={esDevolucionReabierta}
-  onMouseEnter={(e) => { 
-    if (esDevolucionReabierta) return;
-    if (p.es_cuenta_corriente) {
-      e.currentTarget.style.backgroundColor = '#374151';
-      return;
-    }
-    const isLocked = (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO');
-    e.currentTarget.style.backgroundColor = isLocked ? '#a72828' : '#22c55e';
-    const icon = e.currentTarget.querySelector('i') as HTMLElement;
-    if (icon) icon.style.color = '#000000';
-  }}
-  onMouseLeave={(e) => { 
-    if (esDevolucionReabierta) return;
-    e.currentTarget.style.backgroundColor = 'transparent';
-    if (p.es_cuenta_corriente) return;
-    const isLocked = (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO'); 
-    const icon = e.currentTarget.querySelector('i') as HTMLElement;
-    if (icon) icon.style.color = isLocked ? '#a72828' : '#22c55e'; 
-  }}
-  onClick={() => !esDevolucionReabierta && onSelectPago(p)}
-  title={
-    esDevolucionReabierta 
-      ? "Cobro bloqueado por Devolución en proceso" 
-      : (p.es_cuenta_corriente ? "Pago vinculado a Cuenta Corriente" : (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? "Ya no quedaron mas Señas/Montos por Asignar" : "Registrar Nuevo Monto/Seña"))
-  }
->
-  <i 
-    className="bi bi-currency-dollar" 
-    style={{ 
-      fontSize: '16px', 
-      color: esDevolucionReabierta ? '#6b7280' : (p.es_cuenta_corriente ? '#6b7280' : ((p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO') ? '#a72828' : '#22c55e')), 
-      transition: '0.2s' 
-    }}
-  ></i>
-</button>
+            <button 
+              className="rounded d-flex align-items-center justify-content-center" 
+              style={{ 
+                width: '32px', 
+                height: '32px', 
+                cursor: esDevolucionReabierta ? 'not-allowed' : 'pointer', 
+                backgroundColor: 'transparent', 
+                transition: 'all 0.2s ease',
+                opacity: esDevolucionReabierta ? 0.4 : 1,
+                border: `0.8px solid ${esDevolucionReabierta ? '#6b7280' : (p.es_cuenta_corriente ? '#6b7280' : (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? '#a72828' : '#22c55e'))}` 
+              }}
+              disabled={esDevolucionReabierta}
+              onMouseEnter={(e) => { 
+                if (esDevolucionReabierta) return;
+                if (p.es_cuenta_corriente) {
+                  e.currentTarget.style.backgroundColor = '#374151';
+                  return;
+                }
+                const isLocked = (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO');
+                e.currentTarget.style.backgroundColor = isLocked ? '#a72828' : '#22c55e';
+                const icon = e.currentTarget.querySelector('i') as HTMLElement;
+                if (icon) icon.style.color = '#000000';
+              }}
+              onMouseLeave={(e) => { 
+                if (esDevolucionReabierta) return;
+                e.currentTarget.style.backgroundColor = 'transparent';
+                if (p.es_cuenta_corriente) return;
+                const isLocked = (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO'); 
+                const icon = e.currentTarget.querySelector('i') as HTMLElement;
+                if (icon) icon.style.color = isLocked ? '#a72828' : '#22c55e'; 
+              }}
+              onClick={() => !esDevolucionReabierta && onSelectPago(p)}
+              title={
+                esDevolucionReabierta 
+                  ? "Cobro bloqueado por Devolución en proceso" 
+                  : (p.es_cuenta_corriente ? "Pago vinculado a Cuenta Corriente" : (p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO' ? "Ya no quedaron mas Señas/Montos por Asignar" : "Registrar Nuevo Monto/Seña"))
+              }
+            >
+              <i 
+                className="bi bi-currency-dollar" 
+                style={{ 
+                  fontSize: '16px', 
+                  color: esDevolucionReabierta ? '#6b7280' : (p.es_cuenta_corriente ? '#6b7280' : ((p.monto_pago_adelantado >= p.monto_total || p.estado === 'PRESUPUESTO') ? '#a72828' : '#22c55e')), 
+                  transition: '0.2s' 
+                }}
+              ></i>
+            </button>
+
             {/* Botón Impresión Ticket */}
             <button 
               className="rounded d-flex align-items-center justify-content-center" 
@@ -311,7 +337,7 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
             className="modal-dialog modal-dialog-centered" 
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-content bg-dark text-white border border-warning shadow-lg">
+            <div className={`modal-content ${modalBg} border border-warning shadow-lg`}>
               <div className="modal-header border-bottom border-secondary">
                 <h5 className="modal-title font-monospace text-warning d-flex align-items-center gap-2">
                   <i className="bi bi-chat-left-text-fill"></i> Observaciones - Pedido #{p.id_pedido}
@@ -322,8 +348,26 @@ export const FilaPedido: React.FC<FilaPedidoProps> = ({
                   onClick={() => setMostrarObsModal(false)}
                 ></button>
               </div>
-              <div className="modal-body font-monospace" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#e4e4e7' }}>
-                {p.observaciones}
+              <div className="modal-body font-monospace d-flex flex-column gap-3" style={{ color: isDark ? '#e4e4e7' : '#334155' }}>
+                {/* Observación general del pedido */}
+                <div>
+                  <span className="fw-bold text-warning d-block mb-1">Descripción:</span>
+                  <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    {p.observaciones || p.observacion || 'Sin observaciones registradas.'}
+                  </div>
+                </div>
+
+                {/* Observación / Motivo de devolución (si aplica) */}
+                {(textoDevolucion || esDevolucionReabierta) && (
+                  <div className="p-2 rounded border border-danger-subtle bg-danger bg-opacity-10">
+                    <span className="fw-bold text-danger d-flex align-items-center gap-1 mb-1">
+                      <i className="bi bi-arrow-return-left"></i> Observación por Devolución:
+                    </span>
+                    <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                      {textoDevolucion || 'Pedido reabierto por devolución.'}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="modal-footer border-top border-secondary">
                 <button 

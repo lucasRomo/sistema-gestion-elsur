@@ -1,14 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import type { Producto, Categoria } from '../../types/Producto';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface Props {
   show: boolean;
   producto: Producto | null;
   onClose: () => void;
-  onGuardar: (data: any) => void; // Ya no es opcional, es obligatorio recibir el data
+  onGuardar: (data: any) => void;
 }
 
 export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose, onGuardar }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // Estilos adaptativos según el tema activo
+  const modalBg = isDark ? '#1e1e24' : '#ffffff';
+  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const subModalBg = isDark ? '#18181b' : '#ffffff';
+  const subModalBorder = isDark ? '#ffc107' : '#f59e0b';
+  const textColor = isDark ? 'text-white' : 'text-dark';
+  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
+  const inputBg = isDark ? '#121214' : '#ffffff';
+  const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const borderDivider = isDark ? 'border-secondary' : 'border-light-subtle';
+  const itemCategoryBg = isDark ? '#121214' : '#f8fafc';
+
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [showCategorias, setShowCategorias] = useState<boolean>(false);
   const [nuevaCategoria, setNuevaCategoria] = useState<string>('');
@@ -16,7 +32,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const [formData, setFormData] = useState({
     nombreProducto: '',
     precioBase: '',
-    stock: '0', // NUEVO ESTADO INICIAL
+    stock: '0',
     idCategoria: '',
     estado: 'Activo'
   });
@@ -38,12 +54,11 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
         setFormData({
           nombreProducto: producto.nombreProducto,
           precioBase: producto.precioBase.toString(),
-          stock: producto.stock?.toString() || '0', // CARGAMOS EL STOCK AL EDITAR
+          stock: producto.stock?.toString() || '0',
           idCategoria: producto.categoria?.idCategoria?.toString() || '',
           estado: producto.estado
         });
       } else {
-        // Limpiamos el formulario si es un producto nuevo
         setFormData({
           nombreProducto: '',
           precioBase: '',
@@ -89,80 +104,103 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     }
   };
 
-  // Dentro de ProductoRegistroModal.tsx -> handleSubmit
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  const payload = {
-    ...producto,
-    nombreProducto: formData.nombreProducto,
-    precioBase: parseFloat(formData.precioBase),
-    stock: parseInt(formData.stock) || 0,
-    categoria: { idCategoria: parseInt(formData.idCategoria) },
-    estado: formData.estado
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const payload = {
+      ...producto,
+      nombreProducto: formData.nombreProducto,
+      precioBase: parseFloat(formData.precioBase),
+      stock: parseInt(formData.stock) || 0,
+      categoria: { idCategoria: parseInt(formData.idCategoria) },
+      estado: formData.estado
+    };
 
-  // YA NO HAGAS FETCH AQUÍ. Solo llama a la función que viene de afuera:
-  await onGuardar(payload);
-};
+    await onGuardar(payload);
+  };
 
   if (!show) return null;
 
   return (
     <>
-      <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1050 }}>
+      <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content text-white font-monospace" style={{ backgroundColor: '#1e1e24', border: '1px solid #3f3f46' }}>
-            <div className="modal-header border-bottom border-secondary">
-              <h5 className="modal-title text-info fw-bold">
+          <div className={`modal-content ${textColor} font-monospace shadow-lg`} style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}` }}>
+            <div className={`modal-header border-bottom ${borderDivider}`}>
+              <h5 className="modal-title fw-bold" style={{ color: isDark ? '#0bc9f8' : '#0284c7' }}>
                 <i className="bi bi-box-seam me-2"></i> {producto ? 'Modificar Producto' : 'Registrar Producto'}
               </h5>
-              <button className="btn-close btn-close-white" onClick={onClose}></button>
+              <button className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose}></button>
             </div>
             
-
             <form onSubmit={handleSubmit}>
-              <div className="modal-body">
+              <div className="modal-body p-4">
                 <div className="mb-3">
-                  <label className="form-label small">Nombre del Producto</label>
-                  <input className="form-control bg-dark text-white border-secondary" 
-                   value={formData.nombreProducto} 
-                   onChange={e => setFormData({...formData, nombreProducto: e.target.value})} 
-                   required pattern="[A-Za-z0-9Á-Úá-ú\s]+"
-                   onInvalid={(e: any) => {
-                   if (e.target.validity.valueMissing) e.target.setCustomValidity("El nombre del producto es obligatorio");
-                   else if (e.target.validity.patternMismatch) e.target.setCustomValidity("Nombre inválido");
-                   }}
-                   onInput={(e: any) => e.target.setCustomValidity("")}/>
+                  <label className="form-label small fw-semibold" style={{ color: mutedText }}>Nombre del Producto</label>
+                  <input 
+                    className={`form-control ${textColor}`} 
+                    style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+                    value={formData.nombreProducto} 
+                    onChange={e => setFormData({...formData, nombreProducto: e.target.value})} 
+                    required pattern="[A-Za-z0-9Á-Úá-ú\s]+"
+                    onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El nombre del producto es obligatorio");
+                      else if (e.target.validity.patternMismatch) e.target.setCustomValidity("Nombre inválido");
+                    }}
+                    onInput={(e: any) => e.target.setCustomValidity("")}
+                  />
                 </div>
                 
-
-                {/* Agrupamos Precio y Stock en la misma fila para que no quede tan largo el modal */}
                 <div className="row mb-3">
                   <div className="col-6">
-                    <label className="form-label small">Precio Base</label>
-                    <input className="form-control bg-dark text-white border-secondary" type="number" step="0.01" value={formData.precioBase} onChange={e => setFormData({...formData, precioBase: e.target.value})} required />
+                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Precio Base</label>
+                    <input 
+                      className={`form-control ${textColor}`} 
+                      style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+                      type="number" 
+                      step="0.01" 
+                      value={formData.precioBase} 
+                      onChange={e => setFormData({...formData, precioBase: e.target.value})} 
+                      required 
+                    />
                   </div>
                   <div className="col-6">
-                    <label className="form-label small">Stock Inicial</label>
-                    <input className="form-control bg-dark text-white border-secondary" type="number" min="0" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} required />
+                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Stock Inicial</label>
+                    <input 
+                      className={`form-control ${textColor}`} 
+                      style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+                      type="number" 
+                      min="0" 
+                      value={formData.stock} 
+                      onChange={e => setFormData({...formData, stock: e.target.value})} 
+                      required 
+                    />
                   </div>
                 </div>
+
                 <div className="mb-3">
-                <label className="form-label small">Estado del Producto</label>
-                <select 
-                className="form-select bg-dark text-white border-secondary"
-                value={formData.estado} 
-                onChange={e => setFormData({...formData, estado: e.target.value})}
-                >
-                <option value="Activo">Activo</option>
-                <option value="Desactivado">Desactivado</option>
-                </select>
+                  <label className="form-label small fw-semibold" style={{ color: mutedText }}>Estado del Producto</label>
+                  <select 
+                    className={`form-select ${textColor}`}
+                    style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+                    value={formData.estado} 
+                    onChange={e => setFormData({...formData, estado: e.target.value})}
+                  >
+                    <option value="Activo">Activo</option>
+                    <option value="Desactivado">Desactivado</option>
+                  </select>
                 </div>
+
                 <div className="mb-3">
-                  <label className="form-label small">Categoría</label>
+                  <label className="form-label small fw-semibold" style={{ color: mutedText }}>Categoría</label>
                   <div className="input-group">
-                    <select className="form-select bg-dark text-white border-secondary" value={formData.idCategoria} onChange={e => setFormData({...formData, idCategoria: e.target.value})} required>
+                    <select 
+                      className={`form-select ${textColor}`} 
+                      style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+                      value={formData.idCategoria} 
+                      onChange={e => setFormData({...formData, idCategoria: e.target.value})} 
+                      required
+                    >
                       <option value="">Seleccionar Categoría</option>
                       {categorias.map(c => <option key={c.idCategoria} value={c.idCategoria}>{c.nombre}</option>)}
                     </select>
@@ -173,9 +211,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </div>
               </div>
               
-              <div className="modal-footer border-top border-secondary">
-                <button type="button" className="btn btn-secondary px-4" onClick={onClose}>Cancelar</button>
-                <button type="submit" className="btn btn-info text-dark fw-bold px-4">Guardar</button>
+              <div className={`modal-footer border-top ${borderDivider} py-2`}>
+                <button type="button" className="btn btn-sm btn-secondary px-4" onClick={onClose}>Cancelar</button>
+                <button type="submit" className="btn btn-sm btn-info text-dark fw-bold px-4">Guardar</button>
               </div>
             </form>
           </div>
@@ -183,21 +221,31 @@ const handleSubmit = async (e: React.FormEvent) => {
       </div>
 
       {showCategorias && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1060 }}>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1060 }}>
           <div className="modal-dialog modal-md modal-dialog-centered">
-            <div className="modal-content text-white font-monospace" style={{ backgroundColor: '#18181b', border: '1px solid #ffc107' }}>
-              <div className="modal-header border-bottom border-secondary">
+            <div className={`modal-content ${textColor} font-monospace shadow-lg`} style={{ backgroundColor: subModalBg, border: `1px solid ${subModalBorder}` }}>
+              <div className={`modal-header border-bottom ${borderDivider}`}>
                 <h6 className="modal-title text-warning fw-bold"><i className="bi bi-gear-fill me-2"></i>Administrar Categorías</h6>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setShowCategorias(false)}></button>
+                <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setShowCategorias(false)}></button>
               </div>
-              <div className="modal-body">
+              <div className="modal-body p-3">
                 <div className="input-group mb-3">
-                  <input className="form-control bg-dark text-white border-secondary" placeholder="Nueva categoría..." value={nuevaCategoria} onChange={e => setNuevaCategoria(e.target.value)} />
+                  <input 
+                    className={`form-control ${textColor}`} 
+                    style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+                    placeholder="Nueva categoría..." 
+                    value={nuevaCategoria} 
+                    onChange={e => setNuevaCategoria(e.target.value)} 
+                  />
                   <button className="btn btn-success" onClick={handleCrearCategoria}>Agregar</button>
                 </div>
                 <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                   {categorias.map(c => (
-                    <div key={c.idCategoria} className="bg-dark p-2 rounded mb-1 border border-secondary d-flex justify-content-between align-items-center">
+                    <div 
+                      key={c.idCategoria} 
+                      className={`p-2 rounded mb-1 border ${borderDivider} d-flex justify-content-between align-items-center`}
+                      style={{ backgroundColor: itemCategoryBg }}
+                    >
                       <span className="small">{c.nombre}</span>
                       <button 
                         type="button"

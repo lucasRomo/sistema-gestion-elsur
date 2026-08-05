@@ -7,8 +7,12 @@ import { InsumoModal } from '../features/insumos/InsumoModal';
 import { useInsumos } from '../hooks/useInsumos'; // Hook modularizado
 import { SuccesModal } from '../components/layouts/SuccesModal';
 import { InsumosFiltros } from '../features/insumos/InsumosFiltros';
+import { useTheme } from '../Context/ThemeContext';
 
 export const Insumos: React.FC = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
   const navigate = useNavigate();
   const { insumos, guardar, cargar } = useInsumos(); // Lógica aquí
   
@@ -20,6 +24,7 @@ export const Insumos: React.FC = () => {
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
+  
 
   const insumosFiltrados = insumos.filter((i) => {
     const cumpleNombre = i.nombreInsumo.toLowerCase().includes(filtroNombre.toLowerCase());
@@ -90,7 +95,7 @@ export const Insumos: React.FC = () => {
         <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
         <i className="bi bi-shield-lock-fill fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
         <h5 className="fw-bold">¿Confirmar Modificaciones?</h5>
-        <p className="small text-white-50">Se sobreescribirán los datos del insumo.</p>
+        <p className="small" style={{ color: mutedText }}>Se sobreescribirán los datos del insumo.</p>
         
         <div className="d-flex justify-content-center gap-2 mt-3">
           <button className="btn btn-outline-light btn-sm px-3" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}}  onClick={() => setMostrarConfirmacion(false)}>

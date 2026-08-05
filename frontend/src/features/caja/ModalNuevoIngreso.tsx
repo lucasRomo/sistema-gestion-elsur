@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface ModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
   const [idPedido, setIdPedido] = useState<string | null>(null);
   const [pedidosPendientes, setPedidosPendientes] = useState<any[]>([]);
   const [fechaPlaceholder, setFechaPlaceholder] = useState('');
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   // Seteamos un formato de fecha dinámico para simular el comportamiento automático en el placeholder
   useEffect(() => {
@@ -96,11 +99,11 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
               <div className="mb-3">
                 <label className="form-label text-light opacity-75 small fw-medium mb-2">Seleccione el Tipo de Movimiento</label>
                 <select 
-                  className="form-select border-0 py-2 px-3 text-dark fw-normal" 
-                  style={{ borderRadius: '8px', cursor: 'pointer' }}
-                  value={tipoMovimiento}
-                  onChange={(e) => setTipoMovimiento(e.target.value)}
-                >
+  className="form-select border-0 py-2 px-3 text-dark fw-normal" 
+  style={{ borderRadius: '8px', cursor: 'pointer', backgroundColor: '#ffffff' }}
+  value={tipoMovimiento}
+  onChange={(e) => setTipoMovimiento(e.target.value)}
+>
                   <option value="INGRESO">Ingreso</option>
                   <option value="EGRESO">Egreso</option>
                 </select>

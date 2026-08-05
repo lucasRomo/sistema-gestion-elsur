@@ -1,5 +1,6 @@
 import React from 'react';
 import type { CategoriaCliente } from '../../types/CategoriaCliente';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface Props {
   subtotal: number;
@@ -26,6 +27,9 @@ export const ResumenVenta: React.FC<Props> = ({
   ultimoPedido,
   onImprimirTicket
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const catActual = categorias.find(c => {
     const id = c.idCategoriaCliente ?? (c as any).idCategoria ?? (c as any).id_categoria ?? (c as any).id;
     return id?.toString() === categoriaSeleccionadaId;
@@ -39,7 +43,7 @@ export const ResumenVenta: React.FC<Props> = ({
     <div className="mt-3">
       {/* --- SELECTOR DE CATEGORÍA DE CLIENTE --- */}
       <div className="mb-3">
-        <label className="form-label small text-light fw-bold d-flex align-items-center justify-content-between">
+        <label className={`form-label small fw-bold d-flex align-items-center justify-content-between ${isDark ? 'text-light' : 'text-dark'}`}>
           <span><i className="bi bi-tags-fill text-info me-1"></i> Categoría de Cliente / Descuento:</span>
           {porcentaje > 0 && (
             <span className="badge bg-success font-monospace fs-6">
@@ -48,7 +52,7 @@ export const ResumenVenta: React.FC<Props> = ({
           )}
         </label>
         <select 
-          className="form-select bg-dark text-white border-info font-monospace"
+          className={`form-select font-monospace ${isDark ? 'bg-dark text-white border-info' : 'bg-white text-dark border-info-subtle'}`}
           value={categoriaSeleccionadaId}
           onChange={(e) => onSeleccionarCategoria(e.target.value)}
         >
@@ -68,11 +72,17 @@ export const ResumenVenta: React.FC<Props> = ({
       </div>
 
       {/* --- DESGLOSE VISUAL DE PRECIOS --- */}
-      <div className="p-3 rounded mb-3" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-        <div className="d-flex justify-content-between text-light mb-1 small">
-          <span>Subtotal Productos:</span>
-          <span className="fw-bold">${subtotal.toFixed(2)}</span>
-        </div>
+      <div 
+  className="p-3 rounded mb-3" 
+  style={{ 
+    backgroundColor: isDark ? '#18181b' : '#f1f5f9', 
+    border: isDark ? '1px solid #3f3f46' : '1px solid #e2e8f0' 
+  }}
+>
+        <div className={`d-flex justify-content-between mb-1 small ${isDark ? 'text-light' : 'text-secondary'}`}>
+    <span>Subtotal Productos:</span>
+    <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>${subtotal.toFixed(2)}</span>
+  </div>
         
         {porcentaje > 0 && (
           <div className="d-flex justify-content-between text-success mb-1 small">
@@ -81,15 +91,17 @@ export const ResumenVenta: React.FC<Props> = ({
           </div>
         )}
 
-        <hr className="my-2 border-secondary" />
+        <hr className={`my-2 ${isDark ? 'border-secondary' : 'border-secondary-subtle'}`} />
 
-        <div className="d-flex justify-content-between align-items-center text-white">
-          <span className="fw-bold fs-5">Total a Cobrar:</span>
-          <span className="fw-bold fs-3 text-info font-monospace">${total.toFixed(2)}</span>
-        </div>
-      </div>
+        <div className="d-flex justify-content-between align-items-center">
+    <span className={`fw-bold fs-5 ${isDark ? 'text-white' : 'text-dark'}`}>Total a Cobrar:</span>
+    <span className={`fw-bold fs-3 font-monospace ${isDark ? 'text-info' : 'text-primary'}`}>
+      ${total.toFixed(2)}
+    </span>
+  </div>
+</div>
 
-      {/* --- BOTONES DE ACCIÓN (IGUALES EN TAMAÑO Y PERFECTAMENTE ALINEADOS) --- */}
+      {/* --- BOTONES DE ACCIÓN --- */}
       <div className="d-flex justify-content-between align-items-center gap-3 w-100">
         <button 
           type="button"

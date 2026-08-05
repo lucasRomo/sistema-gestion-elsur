@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface InsumosFiltrosProps {
   filtroNombre: string;
@@ -13,10 +14,13 @@ export const InsumosFiltros: React.FC<InsumosFiltrosProps> = ({
   filtroEstado,
   setFiltroEstado,
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
   return (
-    <div className="row g-3 align-items-center mb-4 p-3 rounded" style={{ backgroundColor: '#1d1d1d', border: '1px solid #2d2d30' }}>
+    <div className="row g-3 align-items-center mb-4 p-3 rounded" style={{ backgroundColor: isDark ? '#1d1d1d' : '#f1f5f9', border: `1px solid ${isDark ? '#2d2d30' : '#cbd5e1'}` }}>
       <div className="col-md-6">
-        <label className="form-label text-white-50 small font-monospace">Filtrar por Nombre:</label>
+        <label className="form-label small font-monospace" style={{ color: mutedText }}>Filtrar por Nombre:</label>
         <input 
           type="text" 
           className="form-control bg-dark text-white border-secondary py-2"
@@ -28,7 +32,7 @@ export const InsumosFiltros: React.FC<InsumosFiltrosProps> = ({
       </div>
       
       <div className="col-md-6">
-        <label className="form-label text-white-50 small font-monospace">Filtrar por Estado:</label>
+        <label className="form-label small font-monospace" style={{ color: mutedText }}>Filtrar por Estado:</label>
         <select 
           className="form-select bg-dark text-white border-secondary py-2"
           style={{ borderColor: '#3f3f46' }}

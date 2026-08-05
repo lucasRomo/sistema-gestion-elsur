@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../Context/ThemeContext';
 
 interface RegistroActividad {
   idRegAct: number;
@@ -21,6 +22,9 @@ interface RegistroActividad {
 }
 
 export const HistorialActividadView: React.FC = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
   const navigate = useNavigate();
   const [actividades, setActividades] = useState<RegistroActividad[]>([]);
   const [filtroEmpleado, setFiltroEmpleado] = useState<string>('Sin Filtro');
@@ -131,7 +135,7 @@ export const HistorialActividadView: React.FC = () => {
           style={{ maxHeight: '60vh', overflowY: 'auto' }}
         >
           <table className="table table-borderless text-white align-middle mb-0" style={{ '--bs-table-bg': '#1d1d1d', '--bs-table-color': '#ffffff' } as React.CSSProperties}>
-            <thead className="sticky-top" style={{ backgroundColor: '#1d1d1d', zIndex: 1 }}>
+            <thead className="sticky-top" style={{ backgroundColor: isDark ? '#1d1d1d' : '#f6f9fc', zIndex: 1 }}>
               <tr className="border-bottom border-secondary text-secondary" style={{ fontSize: '0.8rem', letterSpacing: '0.3px' }}>
                 <th className="py-3 fw-bold" style={{ width: '18%', backgroundColor: '#1d1d1d' }}>FECHA Y HORA</th>
                 <th className="py-3 fw-bold" style={{ width: '18%', backgroundColor: '#1d1d1d' }}>USUARIO RESPONSIBLE</th>
@@ -163,8 +167,8 @@ export const HistorialActividadView: React.FC = () => {
                       <i className="bi bi-person me-2 text-secondary"></i>
                       {obtenerNombreUsuario(act)}
                     </td>
-                    <td className="text-white-50">{act.tablaAfectada}</td>
-                    <td className="text-white-50">{act.columnaAfectada || '-'}</td>
+                    <td style={{ color: mutedText }}>{act.tablaAfectada}</td>
+                    <td style={{ color: mutedText }}>{act.columnaAfectada || '-'}</td>
                     <td className="text-center font-monospace text-warning">
                       #{act.idRegistroMod || '-'}
                     </td>

@@ -1,11 +1,115 @@
-.form-control:focus, 
-.form-select:focus {
+/* ==========================================
+   1. REGISTRO MODO OSCURO (DARK MODE - BASE)
+   ========================================== */
+html[data-bs-theme="dark"] body,
+body {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+html[data-bs-theme="dark"] .form-control,
+html[data-bs-theme="dark"] .form-select {
+  background-color: #2b2b2c;
+  color: #ffffff;
+  border-color: #3f3f46;
+}
+
+html[data-bs-theme="dark"] .form-control:focus, 
+html[data-bs-theme="dark"] .form-select:focus {
   border-color: #0d6efd !important; /* Azul */
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
   background-color: #222226 !important; /* Color oscuro base */
   color: #ffffff !important;
 }
 
+html[data-bs-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* ==========================================
+   2. REGISTRO MODO CLARO (LIGHT MODE)
+   ========================================== */
+html[data-bs-theme="light"] body,
+body.light-mode {
+  background-color: #f4f5f7 !important;
+  color: #18181b !important;
+}
+
+/* Títulos principales e h1/h2/h3 que se ven blancos en modo claro */
+html[data-bs-theme="light"] h1,
+html[data-bs-theme="light"] h2,
+html[data-bs-theme="light"] h3,
+html[data-bs-theme="light"] h4,
+html[data-bs-theme="light"] .text-white,
+html[data-bs-theme="light"] .text-light {
+  color: #18181b !important;
+}
+
+/* Excepción: Mantener blanco el texto en botones primarios y badges */
+html[data-bs-theme="light"] .btn-primary,
+html[data-bs-theme="light"] .btn-danger,
+html[data-bs-theme="light"] .btn-success,
+html[data-bs-theme="light"] .btn-purple,
+html[data-bs-theme="light"] .badge {
+  color: #ffffff !important;
+}
+
+/* Tablas en modo claro */
+html[data-bs-theme="light"] .table {
+  color: #18181b !important;
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+}
+
+html[data-bs-theme="light"] .table th,
+html[data-bs-theme="light"] .table td {
+  background-color: transparent !important;
+  color: #18181b !important;
+}
+
+html[data-bs-theme="light"] .table-hover tbody tr:hover {
+  background-color: #f1f5f9 !important;
+  color: #000000 !important;
+}
+
+/* Contenedores y Cards en modo claro */
+html[data-bs-theme="light"] .card,
+html[data-bs-theme="light"] .custom-card,
+html[data-bs-theme="light"] .bg-dark,
+html[data-bs-theme="light"] [style*="background-color: #222"],
+html[data-bs-theme="light"] [style*="background-color: #18181b"] {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+  border-color: #e4e4e7 !important;
+}
+
+/* Inputs y Selects en modo claro */
+html[data-bs-theme="light"] .form-control,
+html[data-bs-theme="light"] .form-select {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+  border-color: #d4d4d8 !important;
+}
+
+html[data-bs-theme="light"] .form-control::placeholder {
+  color: #a1a1aa !important;
+}
+
+html[data-bs-theme="light"] .form-control:focus, 
+html[data-bs-theme="light"] .form-select:focus {
+  border-color: #8e45e0 !important;
+  box-shadow: 0 0 0 0.25rem rgba(142, 69, 224, 0.2) !important;
+  background-color: #ffffff !important;
+  color: #18181b !important;
+}
+
+html[data-bs-theme="light"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: none;
+}
+
+/* ==========================================
+   3. CLASES UTILITARIAS Y COMPONENTES
+   ========================================== */
 .btn-truck-custom {
   background-color: transparent !important;
   border: 1px solid #a855f7 !important;
@@ -21,3 +125,97 @@
 .transparente-registro > div {
   background: transparent !important;
 }
+
+/* Transición suave global */
+*, ::after, ::before {
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+/* ==========================================
+   4. CORRECCIÓN DE CALENDARIO NATIVO (COLOR SCHEME)
+   ========================================== */
+html[data-bs-theme="light"] input[type="datetime-local"],
+html[data-bs-theme="light"] input[type="date"],
+html[data-bs-theme="light"] input[type="time"] {
+  color-scheme: light !important;
+}
+
+html[data-bs-theme="dark"] input[type="datetime-local"],
+html[data-bs-theme="dark"] input[type="date"],
+html[data-bs-theme="dark"] input[type="time"] {
+  color-scheme: dark !important;
+}
+
+/* Estilo unificado para tarjetas de resumen e impacto */
+.summary-card-custom {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #0f172a;
+}
+
+html[data-bs-theme="dark"] .summary-card-custom {
+  background-color: #1e1e1f;
+  border: 1px solid #3f3f46;
+  color: #ffffff;
+}
+
+/* Estilo para contenedor de impacto de stock */
+.stock-impact-card {
+  background-color: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+}
+
+html[data-bs-theme="dark"] .stock-impact-card {
+  background-color: #18181b;
+  border: 1px solid #27272a;
+}
+
+html[data-bs-theme="light"] input[type="number"]::-webkit-inner-spin-button,
+html[data-bs-theme="light"] input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: inner-spin-button !important;
+  background: transparent !important;
+  filter: none !important;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+/* Opción visual: que resalten al pasar el mouse */
+html[data-bs-theme="light"] input[type="number"]::-webkit-inner-spin-button:hover {
+  opacity: 1;
+}
+
+/* ==========================================
+   5. MODALES Y SOBREESCRITURAS DE COMPONENTES
+   ========================================== */
+
+/* Reglas de Modales para Bootstrap */
+html[data-bs-theme="light"] .modal-content {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+}
+
+html[data-bs-theme="dark"] .modal-content {
+  background-color: #18181b !important;
+  color: #ffffff !important;
+}
+
+html[data-bs-theme="dark"] .modal-content .text-body-secondary {
+  color: #a1a1aa !important;
+}
+
+html[data-bs-theme="light"] .modal-content .text-body-secondary {
+  color: #64748b !important;
+}
+
+/* Scrollbar oculto para el Sidebar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
