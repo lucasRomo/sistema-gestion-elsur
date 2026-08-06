@@ -1,7 +1,9 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.models.Empleado;
 import com.elsur.sistema_gestion.models.Incidencia;
 import com.elsur.sistema_gestion.models.Maquina;
+import com.elsur.sistema_gestion.repositories.EmpleadoRepository;
 import com.elsur.sistema_gestion.repositories.IncidenciaRepository;
 import com.elsur.sistema_gestion.repositories.MaquinaRepository;
 import com.elsur.sistema_gestion.services.IncidenciaService;
@@ -21,48 +23,70 @@ public class IncidenciaServiceImpl implements IncidenciaService {
     @Autowired
     private MaquinaRepository maquinaRepository;
 
-    @Override
-    public List<Incidencia> listarTodas() {
-        return incidenciaRepository.findAll();
-    }
-
-    @Override
-    public List<Incidencia> listarPorMaquina(Integer idMaquina) {
-        return incidenciaRepository.findByMaquinaIdMaquinaOrderByFechaReporteDesc(idMaquina);
-    }
+    @Autowired
+    private EmpleadoRepository empleadoRepository;
 
     @Override
     @Transactional
-    public Incidencia registrar(Incidencia incidencia) {
-        // Seteamos la fecha actual al reporte
+    public Incidencia registrarFalla(Integer idMaquina, String descripcion, String prioridad, Integer idEmpleadoReporta) {
+        Maquina maquina = maquinaRepository.findById(idMaquina)
+                .orElseThrow(() -> new RuntimeException("Máquina no encontrada"));
+
+        // 1. Cambiar estado de la máquina a FUERA DE SERVICIO
+        maquina.setEstado("FUERA DE SERVICIO");
+        maquinaRepository.save(maquina);
+
+        // 2. Crear y guardar el registro de la incidencia
+        Incidencia incidencia = new Incidencia();
+        incidencia.setMaquina(maquina);
+        incidencia.setDescripcion(descripcion);
+        incidencia.setPrioridad(prioridad != null ? prioridad : "MEDIA");
+        incidencia.setEstadoIncidencia("PENDIENTE");
         incidencia.setFechaReporte(LocalDateTime.now());
-        
-        // Al reportar una falla, actualizamos el estado de la máquina automáticamente
-        if (incidencia.getMaquina() != null) {
-            Maquina m = incidencia.getMaquina();
-            m.setEstado("FUERA_DE_SERVICIO");
-            maquinaRepository.save(m);
+
+        if (idEmpleadoReporta != null) {
+            Empleado emp = empleadoRepository.findById(idEmpleadoReporta).orElse(null);
+            incidencia.setEmpleadoReporta(emp);
         }
-        
+
         return incidenciaRepository.save(incidencia);
     }
 
     @Override
     @Transactional
-    public void resolverIncidencia(Integer idIncidencia, String resolucion) {
-        Incidencia inc = incidenciaRepository.findById(idIncidencia)
+    public Incidencia resolverIncidencia(Integer idIncidencia, String resolucion, Integer idEmpleadoResuelve) {
+        Incidencia incidencia = incidenciaRepository.findById(idIncidencia)
                 .orElseThrow(() -> new RuntimeException("Incidencia no encontrada"));
-        
-        inc.setResolucion(resolucion);
-        inc.setFechaResolucion(LocalDateTime.now());
-        
-        // Si ya se arregló, volvemos la máquina a operativa
-        if (inc.getMaquina() != null) {
-            Maquina m = inc.getMaquina();
-            m.setEstado("OPERATIVA");
-            maquinaRepository.save(m);
+
+        incidencia.setResolucion(resolucion);
+        incidencia.setFechaResolucion(LocalDateTime.now());
+        incidencia.setEstadoIncidencia("RESUELTA");
+
+        if (idEmpleadoResuelve != null) {
+            Empleado emp = empleadoRepository.findById(idEmpleadoResuelve).orElse(null);
+            incidencia.setEmpleadoResuelve(emp);
         }
+
+        // Si ya no quedan incidencias pendientes para la máquina, restablecer a OPERATIVA
+        Maquina maquina = incidencia.getMaquina();
+        List<Incidencia> pendientes = incidenciaRepository
+                .findByMaquinaIdMaquinaAndEstadoIncidencia(maquina.getIdMaquina(), "PENDIENTE");
         
-        incidenciaRepository.save(inc);
+        if (pendientes.size() <= 1) { // La actual ya se resolvió
+            maquina.setEstado("OPERATIVA");
+            maquinaRepository.save(maquina);
+        }
+
+        return incidenciaRepository.save(incidencia);
+    }
+
+    @Override
+    public List<Incidencia> obtenerPorMaquina(Integer idMaquina) {
+        return incidenciaRepository.findByMaquinaIdMaquinaOrderByFechaReporteDesc(idMaquina);
+    }
+
+    @Override
+    public List<Incidencia> listarTodas() {
+        return incidenciaRepository.findAll();
     }
 }

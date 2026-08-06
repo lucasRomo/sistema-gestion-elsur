@@ -14,11 +14,17 @@ public class Incidencia {
     private Integer idIncidencia;
 
     @ManyToOne
-    @JoinColumn(name = "id_maquina")
+    @JoinColumn(name = "id_maquina", nullable = false)
     private Maquina maquina;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String descripcion;
+
+    @Column(name = "prioridad", length = 20)
+    private String prioridad = "MEDIA"; // 'BAJA', 'MEDIA', 'ALTA', 'CRITICA'
+
+    @Column(name = "estado_incidencia", length = 20)
+    private String estadoIncidencia = "PENDIENTE"; // 'PENDIENTE', 'RESUELTA'
 
     @Column(name = "fecha_reporte")
     private LocalDateTime fechaReporte = LocalDateTime.now();
@@ -27,9 +33,13 @@ public class Incidencia {
     @JoinColumn(name = "id_empleado_reporta")
     private Empleado empleadoReporta;
 
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String resolucion;
 
-    @Column
+    @Column(name = "fecha_resolucion")
     private LocalDateTime fechaResolucion;
+
+    @ManyToOne
+    @JoinColumn(name = "id_empleado_resuelve")
+    private Empleado empleadoResuelve;
 }

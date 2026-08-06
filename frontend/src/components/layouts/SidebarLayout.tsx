@@ -79,7 +79,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   ].filter(item => tienePermiso(item.name));
 
   const menuStock = [
-    { name: 'Inventario', icon: 'bi-box-seam', path: '/inventario' },
     { name: 'Insumos', icon: 'bi-boxes', path: '/insumos' },
     { name: 'Productos', icon: 'bi-archive', path: '/productos' },
   ].filter(item => tienePermiso(item.name));
@@ -87,6 +86,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   const menuEntidades = [
     { name: 'Clientes', icon: 'bi-person-fill', path: '/clientes' },
     { name: 'Proveedores', icon: 'bi-truck', path: '/proveedores' },
+    { name: 'Equipos / Máquinas', icon: 'bi-cpu', path: '/maquinas' },
   ].filter(item => tienePermiso(item.name));
 
   // CORREGIDO: Ahora las opciones del gerente pasan por tienePermiso

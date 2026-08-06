@@ -20,6 +20,7 @@ import { ConfiguracionView } from '../config/ConfiguracionView';
 import { InformesView } from '../informes/InformesView';
 import { TurnoProvider } from '../../Context/TurnoContext';
 import { HistorialActividadView } from '../HistorialActividadView';
+import { MaquinasView } from '../MaquinasView';
 
 function App() {
   return (
@@ -141,6 +142,14 @@ function App() {
           <Route path="/gestion-usuarios" element={
            <ProtectedRoute permisoRequerido="Gestión de Usuarios">
              <GestionUsuariosView />
+          </ProtectedRoute>
+          } />
+
+          <Route path="/maquinas" element={
+            <ProtectedRoute permisoRequerido="Equipos / Máquinas">
+            <SidebarLayout activeItem="Equipos / Máquinas">
+            <MaquinasView />
+          </SidebarLayout>
           </ProtectedRoute>
           } />
 

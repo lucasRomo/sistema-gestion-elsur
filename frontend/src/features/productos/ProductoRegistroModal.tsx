@@ -5,19 +5,21 @@ interface Props {
   show: boolean;
   producto: Producto | null;
   onClose: () => void;
-  onGuardar: (data: any) => void; // Ya no es opcional, es obligatorio recibir el data
+  onGuardar: (data: any) => void;
 }
 
 export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose, onGuardar }) => {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [maquinas, setMaquinas] = useState<any[]>([]); // Estado para cargar las máquinas de la BD
   const [showCategorias, setShowCategorias] = useState<boolean>(false);
   const [nuevaCategoria, setNuevaCategoria] = useState<string>('');
   
   const [formData, setFormData] = useState({
     nombreProducto: '',
     precioBase: '',
-    stock: '0', // NUEVO ESTADO INICIAL
+    stock: '0',
     idCategoria: '',
+    idMaquinaNecesaria: '', // opcional (si está vacío equivale a "No aplica")
     estado: 'Activo'
   });
 
@@ -31,24 +33,37 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     } catch (err) { console.error("Error cargando categorías:", err); }
   };
 
+  const cargarMaquinas = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/api/maquinas');
+      if (res.ok) {
+        const data = await res.json();
+        setMaquinas(data);
+      }
+    } catch (err) { console.error("Error cargando máquinas:", err); }
+  };
+
   useEffect(() => {
     if (show) {
       cargarCategorias();
+      cargarMaquinas();
+
       if (producto) {
         setFormData({
           nombreProducto: producto.nombreProducto,
           precioBase: producto.precioBase.toString(),
-          stock: producto.stock?.toString() || '0', // CARGAMOS EL STOCK AL EDITAR
+          stock: producto.stock?.toString() || '0',
           idCategoria: producto.categoria?.idCategoria?.toString() || '',
+          idMaquinaNecesaria: producto.maquinaNecesaria?.idMaquina?.toString() || '',
           estado: producto.estado
         });
       } else {
-        // Limpiamos el formulario si es un producto nuevo
         setFormData({
           nombreProducto: '',
           precioBase: '',
           stock: '0',
           idCategoria: '',
+          idMaquinaNecesaria: '',
           estado: 'Activo'
         });
       }
@@ -89,22 +104,21 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     }
   };
 
-  // Dentro de ProductoRegistroModal.tsx -> handleSubmit
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  const payload = {
-    ...producto,
-    nombreProducto: formData.nombreProducto,
-    precioBase: parseFloat(formData.precioBase),
-    stock: parseInt(formData.stock) || 0,
-    categoria: { idCategoria: parseInt(formData.idCategoria) },
-    estado: formData.estado
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const payload = {
+      ...producto,
+      nombreProducto: formData.nombreProducto,
+      precioBase: parseFloat(formData.precioBase),
+      stock: parseInt(formData.stock) || 0,
+      categoria: formData.idCategoria ? { idCategoria: parseInt(formData.idCategoria) } : null,
+      maquinaNecesaria: formData.idMaquinaNecesaria ? { idMaquina: parseInt(formData.idMaquinaNecesaria) } : null,
+      estado: formData.estado
+    };
 
-  // YA NO HAGAS FETCH AQUÍ. Solo llama a la función que viene de afuera:
-  await onGuardar(payload);
-};
+    await onGuardar(payload);
+  };
 
   if (!show) return null;
 
@@ -120,7 +134,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               <button className="btn-close btn-close-white" onClick={onClose}></button>
             </div>
             
-
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="mb-3">
@@ -130,14 +143,12 @@ const handleSubmit = async (e: React.FormEvent) => {
                    onChange={e => setFormData({...formData, nombreProducto: e.target.value})} 
                    required pattern="[A-Za-z0-9Á-Úá-ú\s]+"
                    onInvalid={(e: any) => {
-                   if (e.target.validity.valueMissing) e.target.setCustomValidity("El nombre del producto es obligatorio");
-                   else if (e.target.validity.patternMismatch) e.target.setCustomValidity("Nombre inválido");
+                     if (e.target.validity.valueMissing) e.target.setCustomValidity("El nombre del producto es obligatorio");
+                     else if (e.target.validity.patternMismatch) e.target.setCustomValidity("Nombre inválido");
                    }}
                    onInput={(e: any) => e.target.setCustomValidity("")}/>
                 </div>
-                
 
-                {/* Agrupamos Precio y Stock en la misma fila para que no quede tan largo el modal */}
                 <div className="row mb-3">
                   <div className="col-6">
                     <label className="form-label small">Precio Base</label>
@@ -148,17 +159,38 @@ const handleSubmit = async (e: React.FormEvent) => {
                     <input className="form-control bg-dark text-white border-secondary" type="number" min="0" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} required />
                   </div>
                 </div>
-                <div className="mb-3">
-                <label className="form-label small">Estado del Producto</label>
-                <select 
-                className="form-select bg-dark text-white border-secondary"
-                value={formData.estado} 
-                onChange={e => setFormData({...formData, estado: e.target.value})}
-                >
-                <option value="Activo">Activo</option>
-                <option value="Desactivado">Desactivado</option>
-                </select>
+
+                <div className="row mb-3">
+                  <div className="col-6">
+                    <label className="form-label small">Estado del Producto</label>
+                    <select 
+                      className="form-select bg-dark text-white border-secondary"
+                      value={formData.estado} 
+                      onChange={e => setFormData({...formData, estado: e.target.value})}
+                    >
+                      <option value="Activo">Activo</option>
+                      <option value="Desactivado">Desactivado</option>
+                    </select>
+                  </div>
+
+                  {/* SELECT DE MÁQUINA (Opcional / No aplica) */}
+                  <div className="col-6">
+                    <label className="form-label small">Máquina Necesaria</label>
+                    <select 
+                      className="form-select bg-dark text-white border-secondary"
+                      value={formData.idMaquinaNecesaria} 
+                      onChange={e => setFormData({...formData, idMaquinaNecesaria: e.target.value})}
+                    >
+                      <option value="">No aplica</option>
+                      {maquinas.map((m: any) => (
+                        <option key={m.idMaquina} value={m.idMaquina}>
+                          {m.nombre} ({m.estado})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+
                 <div className="mb-3">
                   <label className="form-label small">Categoría</label>
                   <div className="input-group">

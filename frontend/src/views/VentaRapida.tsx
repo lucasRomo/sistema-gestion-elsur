@@ -6,18 +6,28 @@ import { ResumenVenta } from '../features/VentaRapida/ResumenVenta';
 import type { Producto } from '../types/Producto';
 import type { CartItem } from '../types/Pedido';
 import type { CategoriaCliente } from '../types/CategoriaCliente';
+import type { Maquina } from '../types/Maquina';
 import { PedidosPendientesCard } from '../features/VentaRapida/PedidosPendientesCard';
 
 export const VentaRapida: React.FC = () => {
   const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<CategoriaCliente[]>([]);
   const [categoriaSeleccionadaId, setCategoriaSeleccionadaId] = useState<string>('');
+  const [maquinas, setMaquinas] = useState<Maquina[]>([]);
   
   const [productoSeleccionado, setProductoSeleccionado] = useState<string>('');
   const [cantidad, setCantidad] = useState<string>('1');
   const [carrito, setCarrito] = useState<CartItem[]>([]);
   const [confirmarCancelacion, setConfirmarCancelacion] = useState(false);
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
+
+  // Estado para el modal de advertencia de máquinas fuera de servicio
+  const [showModalMaquinas, setShowModalMaquinas] = useState(false);
+  const [conflictosMaquinas, setConflictosMaquinas] = useState<{
+    productoNombre: string;
+    maquinaNombre: string;
+    estado: string;
+  }[]>([]);
 
   useEffect(() => {
     const fetchProductos = async () => {
@@ -37,7 +47,6 @@ export const VentaRapida: React.FC = () => {
         const response = await fetch('http://localhost:8080/api/categorias-cliente');
         if (response.ok) {
           const data = await response.json();
-          // Mapeo reconociendo las propiedades del Backend: idCategoria, nombre, descuentoAutomatico
           const categoriasNormalizadas = data.map((cat: any) => ({
             idCategoriaCliente: cat.idCategoria ?? cat.id_categoria ?? cat.idCategoriaCliente ?? cat.id,
             nombreCategoria: cat.nombre ?? cat.nombreCategoria ?? cat.nombre_categoria ?? 'Sin nombre',
@@ -50,8 +59,21 @@ export const VentaRapida: React.FC = () => {
       }
     };
 
+    const fetchMaquinas = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/maquinas');
+        if (response.ok) {
+          const data = await response.json();
+          setMaquinas(data);
+        }
+      } catch (error) {
+        console.error("Error al obtener máquinas:", error);
+      }
+    };
+
     fetchProductos();
     fetchCategorias();
+    fetchMaquinas();
   }, []);
 
   const handleAgregar = () => {
@@ -86,7 +108,8 @@ export const VentaRapida: React.FC = () => {
   const montoDescuento = (subtotalVenta * porcentajeDescuento) / 100;
   const totalFinal = subtotalVenta - montoDescuento;
 
-  const handleCompletarVenta = async () => {
+  // VALIDACIÓN DE MAQUINARIA FUERA DE SERVICIO / FALLA / MANTENIMIENTO
+  const handleValidarYCompletarVenta = () => {
     if (carrito.length === 0) {
       setSuceso({
         show: true,
@@ -97,6 +120,51 @@ export const VentaRapida: React.FC = () => {
       return;
     }
 
+    const conflictos: { productoNombre: string; maquinaNombre: string; estado: string }[] = [];
+
+    carrito.forEach(item => {
+      const prod = item.producto as any;
+      if (!prod) return;
+
+      const maquinaAsociada = prod.maquinaNecesaria || prod.maquina || prod.maquinaAsociada;
+      const maquinaId = maquinaAsociada?.idMaquina ?? maquinaAsociada?.id ?? prod.idMaquina;
+
+      let maquinaObj: any = undefined;
+      if (maquinaId !== undefined && maquinaId !== null && maquinas.length > 0) {
+        maquinaObj = maquinas.find(m => String(m.idMaquina) === String(maquinaId));
+      }
+
+      if (!maquinaObj) maquinaObj = maquinaAsociada;
+      if (!maquinaObj) return;
+
+      const nombreMaquina = (maquinaObj.nombre || maquinaObj.nombreMaquina || '').trim();
+      const estadoRaw = (maquinaObj.estado || '').trim().toUpperCase();
+      const estadoNormalizado = estadoRaw.replace(/_/g, ' ');
+
+      if (!nombreMaquina || nombreMaquina.toLowerCase().includes('no aplica')) return;
+
+      if (
+        estadoNormalizado.includes('FUERA DE SERVICIO') || 
+        estadoNormalizado.includes('FALLA') || 
+        estadoNormalizado.includes('MANTENIMIENTO')
+      ) {
+        conflictos.push({
+          productoNombre: prod.nombreProducto || prod.nombre || 'Producto sin nombre',
+          maquinaNombre: nombreMaquina,
+          estado: estadoRaw
+        });
+      }
+    });
+
+    if (conflictos.length > 0) {
+      setConflictosMaquinas(conflictos);
+      setShowModalMaquinas(true);
+    } else {
+      ejecutarCompletarVenta();
+    }
+  };
+
+  const ejecutarCompletarVenta = async () => {
     const idUsuarioLogueado = (() => {
       const usuarioJson = localStorage.getItem('usuario_logueado');
       if (usuarioJson) {
@@ -245,9 +313,66 @@ export const VentaRapida: React.FC = () => {
           categoriaSeleccionadaId={categoriaSeleccionadaId}
           onSeleccionarCategoria={setCategoriaSeleccionadaId}
           onCancelar={handleCancelar} 
-          onCompletar={handleCompletarVenta} 
+          onCompletar={handleValidarYCompletarVenta} 
         />
       </div>
+
+      {/* MODAL MÁQUINAS FUERA DE SERVICIO */}
+      {showModalMaquinas && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div 
+              className="modal-content p-4 text-white" 
+              style={{ border: '2px solid #ffc107', backgroundColor: '#1a1a1c', borderRadius: '12px', fontFamily: 'monospace' }}
+            >
+              <div className="text-center mb-3">
+                <i className="bi bi-exclamation-triangle-fill fs-1 text-warning"></i>
+                <h5 className="fw-bold mt-2 text-warning">¡Atención! Maquinaria Fuera de Servicio</h5>
+              </div>
+              
+              <p className="small text-light">
+                Los siguientes productos seleccionados requieren maquinaria que actualmente no está operativa:
+              </p>
+
+              <div className="list-group mb-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                {conflictosMaquinas.map((conf, idx) => (
+                  <div key={idx} className="list-group-item bg-dark text-white border-secondary d-flex justify-content-between align-items-center">
+                    <div>
+                      <div className="fw-bold">{conf.productoNombre}</div>
+                      <small className="text-secondary">Equipo: {conf.maquinaNombre}</small>
+                    </div>
+                    <span className="badge bg-danger">{conf.estado}</span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="small text-secondary mb-4 text-center">
+                ¿Desea continuar con la venta rápida de todos modos o cancelar para modificar el carrito?
+              </p>
+
+              <div className="d-flex gap-2 justify-content-center">
+                <button 
+                  className="btn btn-sm px-3 text-white" 
+                  style={{ backgroundColor: '#e22e2e', border: '1px solid #e22e2e', borderRadius: '6px' }}
+                  onClick={() => setShowModalMaquinas(false)}
+                >
+                  Cancelar / Volver
+                </button>
+                <button 
+                  className="btn btn-sm px-3 text-dark font-weight-bold" 
+                  style={{ backgroundColor: '#ffc107', border: '1px solid #ffc107', borderRadius: '6px', fontWeight: 'bold' }}
+                  onClick={() => {
+                    setShowModalMaquinas(false);
+                    ejecutarCompletarVenta();
+                  }}
+                >
+                  Continuar de todos modos
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modales Suceso & Confirmación */}
       {suceso.show && (

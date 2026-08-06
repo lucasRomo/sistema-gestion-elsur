@@ -5,8 +5,8 @@ import java.util.List;
 
 public interface MaquinaService {
     List<Maquina> listarTodas();
-    List<Maquina> listarOperativas();
-    Maquina guardar(Maquina maquina);
     Maquina buscarPorId(Integer id);
-    void cambiarEstado(Integer id, String nuevoEstado);
+    Maquina guardar(Maquina maquina, Integer idUsuarioOperador);
+    Maquina cambiarEstado(Integer id, String nuevoEstado, Integer idUsuarioOperador);
+    void eliminar(Integer id);
 }

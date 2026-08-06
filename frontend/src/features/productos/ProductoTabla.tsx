@@ -36,10 +36,13 @@ export const ProductoTabla: React.FC<Props> = ({ productos, onEditar }) => (
             <td style={{ padding: '12px' }} className={p.stock > 0 ? "text-success fw-bold" : "text-danger fw-bold"}>
               {p.stock}
             </td>
-            <td style={{ padding: '12px' }} className="text-warning">No disponible</td>
+            {/* Columna Máquina Dinámica */}
+            <td style={{ padding: '12px' }} className={p.maquinaNecesaria ? "text-warning fw-semibold" : "text-white-50"}>
+              {p.maquinaNecesaria?.nombre || 'No aplica'}
+            </td>
             <td style={{ padding: '12px' }}>
               <span className={`badge ${p.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>
-              {p.estado}
+                {p.estado}
               </span>
             </td>
             <td style={{ padding: '12px' }}>

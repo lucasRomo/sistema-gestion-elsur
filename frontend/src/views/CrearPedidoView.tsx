@@ -9,7 +9,7 @@ import type { CategoriaCliente } from '../types/CategoriaCliente';
 export const CrearPedidoView: React.FC = () => {
   const navigate = useNavigate();
   
-  const { productos, clientes, empleados, enviarPedido } = useRegistrarPedido();
+  const { productos, clientes, empleados, maquinas, enviarPedido } = useRegistrarPedido();
   
   const [paso, setPaso] = useState<number>(1);
   const [carrito, setCarrito] = useState<CartItem[]>([]);
@@ -22,7 +22,6 @@ export const CrearPedidoView: React.FC = () => {
   const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string } | null>(null);
   const [fileTemporal, setFileTemporal] = useState<File | null>(null);
 
-  // Cargar categorías en el nivel superior para compartirlas entre los pasos
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
@@ -44,7 +43,6 @@ export const CrearPedidoView: React.FC = () => {
     fetchCategorias();
   }, []);
 
-  // CÁLCULO DEL TOTAL CON DESCUENTO REAL
   const subtotalCarrito = carrito.reduce((sum, item) => sum + item.subtotal, 0);
 
   const catActual = categorias.find(c => {
@@ -133,6 +131,7 @@ export const CrearPedidoView: React.FC = () => {
             categorias={categorias}
             categoriaSeleccionadaId={categoriaSeleccionadaId}
             setCategoriaSeleccionadaId={setCategoriaSeleccionadaId}
+            maquinas={maquinas}
             onSiguiente={() => setPaso(2)}
             onCancelar={() => navigate('/dashboard')}
           />
