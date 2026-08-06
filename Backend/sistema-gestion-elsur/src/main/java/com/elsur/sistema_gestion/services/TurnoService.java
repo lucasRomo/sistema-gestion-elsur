@@ -4,13 +4,17 @@ import com.elsur.sistema_gestion.models.Turno;
 
 import java.util.Optional;
 
+import java.util.List;
+
 public interface TurnoService {
-    
+
     Turno abrirTurno(Turno turno);
+
+    Turno cerrarTurno(Integer idTurno, Double montoReal, String observaciones);
+
+    Optional<Turno> obtenerTurnoAbiertoHoy();
 
     boolean existeTurnoAbiertoHoy();
 
-    Turno cerrarTurno(Integer idTurno, Double montoReal);
-
-    Optional<Turno> obtenerTurnoAbiertoHoy();
+    List<Turno> obtenerTodos();
 }

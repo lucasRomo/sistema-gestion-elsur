@@ -22,7 +22,7 @@ export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
   isDarkMode = true 
 }) => {
   // Estilos dinámicos según el modo
-  const containerBg = isDarkMode ? '#1f1f23' : '#f1f5f9';
+  const containerBg = isDarkMode ? '#1d1d1d' : '#f1f5f9';
   const containerBorder = isDarkMode ? '#334155' : '#cbd5e1';
   const labelColorClass = isDarkMode ? 'text-light' : 'text-dark';
   const inputBg = isDarkMode ? '#121214' : '#ffffff';
@@ -72,6 +72,7 @@ export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
           <option value="PAUSADO">PAUSADO</option>
           <option value="CANCELADO">CANCELADO</option>
           <option value="FINALIZADO">FINALIZADO</option>
+          <option value="DEVUELTO">DEVUELTOS ↩</option>
         </select>
       </div>
 

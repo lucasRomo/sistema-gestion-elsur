@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/turnos")
@@ -36,13 +37,16 @@ public class TurnoController {
      * Cierra el turno especificado realizando el arqueo.
      */
     @PostMapping("/{id}/cerrar")
-    public ResponseEntity<?> cerrarCaja(@PathVariable Integer id, @RequestParam Double montoReal) {
-        try {
-            Turno turnoCerrado = turnoService.cerrarTurno(id, montoReal);
-            return ResponseEntity.ok(turnoCerrado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public ResponseEntity<?> cerrarCaja( 
+        @PathVariable Integer id, 
+        @RequestParam Double montoReal,
+        @RequestParam(required = false) String observaciones) {
+    try {
+        Turno turnoCerrado = turnoService.cerrarTurno(id, montoReal, observaciones);
+        return ResponseEntity.ok(turnoCerrado);
+    } catch (RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
     }
 
     @GetMapping("/estado-caja")
@@ -54,6 +58,11 @@ public class TurnoController {
         return ResponseEntity.ok(turnoActivo.get()); // Retorna el objeto Turno (con su idTurno)
     }
     return ResponseEntity.ok(null); // Retorna null si la caja está cerrada
-}
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Turno>> obtenerTodos() {
+    return ResponseEntity.ok(turnoService.obtenerTodos());
+    }
     
 }

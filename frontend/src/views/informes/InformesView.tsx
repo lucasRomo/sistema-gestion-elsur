@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts';
 import { pedidoService } from '../../services/pedidoService';
-import { cajaService, type MovimientoCaja } from '../../services/cajaService';
+import { cajaService, type MovimientoCaja, type Turno } from '../../services/cajaService';
 import type { Pedido } from '../../types/Pedido';
 import { getProductos } from '../../services/productoService';
+import { ModalRegistrosArqueo } from './ModalRegistrosArqueos';
 
 // --- MOCK DATA TEMPORAL DE MERMAS Y AVERÍAS ---
 const MERMAS_MOCK = [
@@ -322,11 +323,21 @@ export const InformesView: React.FC = () => {
   const [topClientes, setTopClientes] = useState<any[]>([]);
   const [incongruenciasArqueo, setIncongruenciasArqueo] = useState<any[]>([]);
 
+  const usuarioLogueado = React.useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('usuario_logueado') || 'null');
+    } catch {
+      return null;
+    }
+  }, []);
+  const esAdmin = usuarioLogueado?.rol?.nombreRol?.toUpperCase() === 'ADMIN';
+  const [showModalRegistrosArqueo, setShowModalRegistrosArqueo] = useState(false);
+
   const [modalComparacionAbierto, setModalComparacionAbierto] = useState(false);
   const [informeComparacion, setInformeComparacion] = useState<InformeComparacion | null>(null);
   const [tipoComparacion, setTipoComparacion] = useState<TipoComparacion | null>(null);
   const [datosComparacion, setDatosComparacion] = useState<any[]>([]);
-
+  
 
   interface PeriodoRango {
   desde: string;
@@ -1765,6 +1776,39 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
                 </button>
               </div>
             </div>
+
+            {/* ========================================== */}
+            {/* Boton Registros de Arqueos                 */}
+            {/* ========================================== */}
+             {esAdmin && (
+               <div className="col-12 d-flex">
+                <div
+                  onClick={() => setShowModalRegistrosArqueo(true)}
+                  className="card-menu-item p-4 w-100 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3"
+                  style={{ borderLeft: '5px solid #daa32d' }}
+                >
+                  <div className="d-flex align-items-center gap-3">
+                    <i className="bi bi-journal-check" style={{ fontSize: '2.2rem', color: '#daa32d' }}></i>
+                    <div>
+                      <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
+                        <h4 className="fw-bold text-white mb-0">REGISTROS DE ARQUEO</h4>
+                        <span className="badge bg-dark text-white-50 border border-secondary px-2 py-1">Solo Admin</span>
+                      </div>
+                      <p className="text-white-50 small mb-0">
+                        Revisá todos los cierres de caja registrados por turno, sus movimientos y diferencias de arqueo
+                      </p>
+                    </div>
+                  </div>
+
+                  <span
+                    className="badge bg-dark text-white-50 border border-secondary px-3 py-2 flex-shrink-0"
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    Ver Registros →
+                  </span>
+                </div>
+              </div>
+             )}
           </div>
         </div>
       )}
@@ -2479,6 +2523,8 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
                     </div>
                   </div>
                 )}
+
+                
               </div>
 
               <div className="modal-footer border-secondary">
@@ -2490,6 +2536,11 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
           </div>
         </div>
       )}
+
+      <ModalRegistrosArqueo
+        isOpen={showModalRegistrosArqueo}
+        onClose={() => setShowModalRegistrosArqueo(false)}
+      />
     </div>
   );
 };

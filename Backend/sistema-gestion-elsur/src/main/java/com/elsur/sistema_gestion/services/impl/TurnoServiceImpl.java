@@ -6,10 +6,10 @@ import com.elsur.sistema_gestion.repositories.TurnoRepository;
 import com.elsur.sistema_gestion.services.TurnoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.List;
 
 @Service
 public class TurnoServiceImpl implements TurnoService {
@@ -33,7 +33,7 @@ public class TurnoServiceImpl implements TurnoService {
     }
 
     @Override
-    public Turno cerrarTurno(Integer idTurno, Double montoReal) {
+    public Turno cerrarTurno(Integer idTurno, Double montoReal, String observaciones) {
         Turno turno = turnoRepository.findById(idTurno)
                 .orElseThrow(() -> new RuntimeException("No se encontró el turno con ID: " + idTurno));
 
@@ -51,6 +51,9 @@ public class TurnoServiceImpl implements TurnoService {
 
         // Calculamos la diferencia del arqueo (Real ingresado - Esperado por sistema)
         turno.setDiferenciaArqueo(montoReal - esperado);
+        
+        // Asignamos la justificación/observación ingresada en el frontend
+        turno.setObservaciones(observaciones);
 
         return turnoRepository.save(turno);
     }
@@ -65,5 +68,9 @@ public class TurnoServiceImpl implements TurnoService {
     public boolean existeTurnoAbiertoHoy() {
         return obtenerTurnoAbiertoHoy().isPresent();
     }
-    
+
+    @Override
+    public List<Turno> obtenerTodos() {
+    return turnoRepository.findAllByOrderByFechaAperturaDesc();
+    }
 }
