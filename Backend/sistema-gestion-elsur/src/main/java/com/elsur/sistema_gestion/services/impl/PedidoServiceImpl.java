@@ -66,14 +66,12 @@ public class PedidoServiceImpl implements PedidoService {
             throw new RuntimeException("La Caja No está Abierta. Por favor, inicie turno antes de continuar.");
         }
 
-        // 1. Validar Cliente
         Integer idCliente = (pedido.getCliente() != null && pedido.getCliente().getIdCliente() != null)  
                             ? pedido.getCliente().getIdCliente() : 1; 
         Cliente clienteActual = clienteRepository.findById(idCliente) 
             .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
         pedido.setCliente(clienteActual);
 
-        // 2. Vincular detalles del carrito de productos
         if (pedido.getDetalles() != null) { 
             for (DetallePedido detalle : pedido.getDetalles()) { 
                 detalle.setPedido(pedido);
@@ -85,7 +83,6 @@ public class PedidoServiceImpl implements PedidoService {
             }
         }
 
-        // 3. Forzar flags de estado y Cuenta Corriente
         if ("PRESUPUESTO".equalsIgnoreCase(pedido.getEstado())) { 
             pedido.setEs_presupuesto(true);
         }
@@ -93,7 +90,6 @@ public class PedidoServiceImpl implements PedidoService {
         boolean esCuentaCorriente = (tipoPago != null && (tipoPago.equalsIgnoreCase("Cuenta Corriente") || tipoPago.equalsIgnoreCase("CUENTA_CORRIENTE"))) 
                                     || (pedido.isEs_cuenta_corriente());
 
-        // Consumidor Final (id 1) no puede operar con Cuenta Corriente
         if (idCliente == 1 && esCuentaCorriente) {
             throw new RuntimeException("El Consumidor Final no puede realizar compras a Cuenta Corriente.");
         }
@@ -102,11 +98,9 @@ public class PedidoServiceImpl implements PedidoService {
             pedido.setEs_cuenta_corriente(true);
         }
 
-        // 4. Guardar Pedido en base de datos
         Pedido p = pedidoRepository.save(pedido);
         pedidoRepository.flush(); 
 
-        // 5. Vincular empleado asignado si existe
         if (idEmpleado != null) { 
             Empleado emp = empleadoRepository.findById(idEmpleado) 
                 .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
@@ -117,7 +111,6 @@ public class PedidoServiceImpl implements PedidoService {
             asignacionRepository.save(asignacion); 
         }
 
-        // 6. Procesar Seña / Adelanto inicial
         BigDecimal seña = p.getMonto_pago_adelantado();
         if (seña != null && seña.compareTo(BigDecimal.ZERO) > 0) {
             
@@ -151,7 +144,6 @@ public class PedidoServiceImpl implements PedidoService {
             
             p.getComprobantes().add(nuevoCobro);
 
-            // Registrar ingreso en Caja
             try {
                 MovimientoCaja movimiento = new MovimientoCaja();
                 movimiento.setTipoMovimiento("INGRESO"); 
@@ -185,7 +177,6 @@ public class PedidoServiceImpl implements PedidoService {
             }
         }
 
-        // 7. Impactar Saldo Deudor e Historial de Cuenta Corriente si corresponde
         if (p.isEs_cuenta_corriente() && idCliente != 1) {
             BigDecimal total = p.getMonto_total() != null ? p.getMonto_total() : BigDecimal.ZERO;
             BigDecimal adelanto = seña != null ? seña : BigDecimal.ZERO;
@@ -210,6 +201,16 @@ public class PedidoServiceImpl implements PedidoService {
             }
         }
         
+        // Descuento automático de stock si se trata de Venta Rápida
+        if (p.getObservaciones() != null && p.getObservaciones().contains("Venta Rápida")) {
+            try {
+                this.procesarDescuentoStock(p.getId_pedido());
+                p = pedidoRepository.findById(p.getId_pedido()).orElse(p);
+            } catch (Exception e) {
+                System.err.println("Aviso: El descuento de stock de Venta Rápida se procesará en la actualización de estado: " + e.getMessage());
+            }
+        }
+
         return pedidoRepository.save(p);
     }
 
@@ -302,14 +303,35 @@ public class PedidoServiceImpl implements PedidoService {
 
         for (DetallePedido detalle : pedido.getDetalles()) {
             Producto producto = detalle.getProducto();
-            int nuevoStock = producto.getStock() - detalle.getCantidad();
-            if (nuevoStock < 0) throw new RuntimeException("Stock insuficiente para " + producto.getNombreProducto());
             
-            producto.setStock(nuevoStock);
-            productoRepository.save(producto);
+            // 1. Descuento del stock directo del producto final (si aplica)
+            if (producto.getStock() != null) {
+                int nuevoStock = producto.getStock() - detalle.getCantidad();
+                if (nuevoStock < 0) {
+                    throw new RuntimeException("Stock insuficiente para el producto: " + producto.getNombreProducto());
+                }
+                producto.setStock(nuevoStock);
+                productoRepository.save(producto);
+            }
+
+            // 2. Descuento del stock de insumos según la Receta (US GP.34)
+            List<ProductoInsumo> receta = productoInsumoRepository.findByIdIdProducto(producto.getIdProducto());
+            for (ProductoInsumo pi : receta) {
+                Insumo insumo = pi.getInsumo();
+                BigDecimal consumoTotal = pi.getCantidadConsumo()
+                        .multiply(BigDecimal.valueOf(detalle.getCantidad()));
+
+                if (insumo.getStockActual().compareTo(consumoTotal) < 0) {
+                    throw new RuntimeException("Stock insuficiente del insumo '" + insumo.getNombreInsumo() + 
+                            "' para producir el producto " + producto.getNombreProducto());
+                }
+
+                insumo.setStockActual(insumo.getStockActual().subtract(consumoTotal));
+                insumoRepository.save(insumo);
+            }
         }
         
-        if ("Venta Rápida".equals(pedido.getObservaciones())) {
+        if (pedido.getObservaciones() != null && pedido.getObservaciones().contains("Venta Rápida")) {
             pedido.setEstado("VENTA_RAPIDA");
         } else {
             pedido.setEstado("ENTREGADO");
@@ -414,7 +436,6 @@ public class PedidoServiceImpl implements PedidoService {
         BigDecimal montoBD = BigDecimal.valueOf(monto);
         pedido.setMonto_pago_adelantado(pedido.getMonto_pago_adelantado().add(montoBD));
 
-        // Reducir Saldo Deudor si el pedido es Cuenta Corriente
         if (pedido.isEs_cuenta_corriente() && pedido.getCliente() != null && pedido.getCliente().getIdCliente() != 1) {
             Cliente c = pedido.getCliente();
             BigDecimal saldoActual = c.getSaldoDeudor() != null ? c.getSaldoDeudor() : BigDecimal.ZERO;
@@ -527,7 +548,6 @@ public class PedidoServiceImpl implements PedidoService {
         BigDecimal montoBD = BigDecimal.valueOf(monto);
         pedido.setMonto_pago_adelantado(pedido.getMonto_pago_adelantado().add(montoBD));
 
-        // Reducir Saldo Deudor si el pedido es Cuenta Corriente
         if (pedido.isEs_cuenta_corriente() && pedido.getCliente() != null && pedido.getCliente().getIdCliente() != 1) {
             Cliente c = pedido.getCliente();
             BigDecimal saldoActual = c.getSaldoDeudor() != null ? c.getSaldoDeudor() : BigDecimal.ZERO;

@@ -4,9 +4,10 @@ import type { Producto } from '../../types/Producto';
 interface Props {
   productos: Producto[];
   onEditar: (p: Producto) => void;
+  onConfigurarReceta?: (p: Producto) => void;
 }
 
-export const ProductoTabla: React.FC<Props> = ({ productos, onEditar }) => (
+export const ProductoTabla: React.FC<Props> = ({ productos, onEditar, onConfigurarReceta }) => (
   <div className="table-responsive" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
     <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
       <thead>
@@ -36,7 +37,6 @@ export const ProductoTabla: React.FC<Props> = ({ productos, onEditar }) => (
             <td style={{ padding: '12px' }} className={p.stock > 0 ? "text-success fw-bold" : "text-danger fw-bold"}>
               {p.stock}
             </td>
-            {/* Columna Máquina Dinámica */}
             <td style={{ padding: '12px' }} className={p.maquinaNecesaria ? "text-warning fw-semibold" : "text-white-50"}>
               {p.maquinaNecesaria?.nombre || 'No aplica'}
             </td>
@@ -46,7 +46,7 @@ export const ProductoTabla: React.FC<Props> = ({ productos, onEditar }) => (
               </span>
             </td>
             <td style={{ padding: '12px' }}>
-              <div className="d-flex justify-content-center">
+              <div className="d-flex justify-content-center gap-2">
                 <button 
                   className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
                   style={{ width: '32px', height: '32px' }}
@@ -55,6 +55,16 @@ export const ProductoTabla: React.FC<Props> = ({ productos, onEditar }) => (
                 >
                   <i className="bi bi-pencil-square"></i>
                 </button>
+                {onConfigurarReceta && (
+                  <button 
+                    className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
+                    style={{ width: '32px', height: '32px' }}
+                    onClick={() => onConfigurarReceta(p)}
+                    title="Configurar Receta / Insumos"
+                  >
+                    <i className="bi bi-box-seam"></i>
+                  </button>
+                )}
               </div>
             </td>
           </tr>

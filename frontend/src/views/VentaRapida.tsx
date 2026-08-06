@@ -29,19 +29,19 @@ export const VentaRapida: React.FC = () => {
     estado: string;
   }[]>([]);
 
-  useEffect(() => {
-    const fetchProductos = async () => {
-      try {
-        const response = await fetch('http://localhost:8080/api/productos');
-        if (response.ok) {
-          const data = await response.json();
-          setProductosDisponibles(data.filter((p: Producto) => p.estado === 'Activo'));
-        }
-      } catch (error) {
-        console.error("Error al obtener productos:", error);
+  const fetchProductos = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/productos');
+      if (response.ok) {
+        const data = await response.json();
+        setProductosDisponibles(data.filter((p: Producto) => p.estado === 'Activo'));
       }
-    };
+    } catch (error) {
+      console.error("Error al obtener productos:", error);
+    }
+  };
 
+  useEffect(() => {
     const fetchCategorias = async () => {
       try {
         const response = await fetch('http://localhost:8080/api/categorias-cliente');
@@ -178,6 +178,8 @@ export const VentaRapida: React.FC = () => {
       return null;
     })();
 
+    const idUsuario = idUsuarioLogueado || 1;
+
     const payloadParaBackend = {
       pedido: {
         cliente: { id_cliente: 1 }, 
@@ -194,10 +196,13 @@ export const VentaRapida: React.FC = () => {
           subtotal: item.subtotal
         }))
       },
-      idEmpleado: idUsuarioLogueado
+      idEmpleado: idUsuario,
+      idUsuario: idUsuario,
+      tipoPago: 'EFECTIVO'
     };
 
     try {
+      // 1. Crear el Pedido
       const resCrear = await fetch('http://localhost:8080/api/pedidos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -207,18 +212,21 @@ export const VentaRapida: React.FC = () => {
       if (!resCrear.ok) throw new Error(await resCrear.text());
       
       const pedidoGuardado = await resCrear.json();
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const idPedido = pedidoGuardado.id_pedido || pedidoGuardado.idPedido;
+
+      await new Promise(resolve => setTimeout(resolve, 300));
       
+      // 2. Registrar el Pago en Caja
       const formDataPago = new FormData();
       const payloadPago = {
         monto: totalFinal,
         tipoPago: 'EFECTIVO',
-        idUsuario: idUsuarioLogueado
+        idUsuario: idUsuario
       };
 
       formDataPago.append("payload", JSON.stringify(payloadPago));
 
-      const resPago = await fetch(`http://localhost:8080/api/pedidos/${pedidoGuardado.id_pedido}/pagos`, {
+      const resPago = await fetch(`http://localhost:8080/api/pedidos/${idPedido}/pagos`, {
         method: 'POST',
         body: formDataPago
       });
@@ -228,12 +236,31 @@ export const VentaRapida: React.FC = () => {
         throw new Error(errorText || "Error al registrar el cobro en el sistema de caja.");
       }
 
+      // 3. Cambiar el estado a FINALIZADO
+      const resEstado = await fetch(`http://localhost:8080/api/pedidos/${idPedido}/cambiar-estado`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nuevoEstado: 'FINALIZADO',
+          observaciones: `Venta Rápida ${porcentajeDescuento > 0 ? `(Categoría: ${categoriaActual?.nombreCategoria} - ${porcentajeDescuento}% Desc.)` : ''}`,
+          idUsuario: idUsuario
+        })
+      });
+
+      if (!resEstado.ok) {
+        const errorText = await resEstado.text();
+        throw new Error(errorText || "Error al actualizar estado del pedido.");
+      }
+
+      // 4. Refrescar catálogo para impactar stock descontado en la interfaz
+      await fetchProductos();
+
       setCarrito([]);
       setCategoriaSeleccionadaId('');
       setSuceso({
         show: true,
         titulo: "¡Éxito!",
-        mensaje: `Venta realizada con éxito ($${totalFinal.toFixed(2)}) y registrada en Caja.`,
+        mensaje: `Venta realizada con éxito ($${totalFinal.toFixed(2)}), registrada en Caja y stock descontado.`,
         tipo: "exito"
       });
     } catch (error: any) {
@@ -287,7 +314,6 @@ export const VentaRapida: React.FC = () => {
         </div>
       </div>
 
-      {/* --- PANEL INFERIOR --- */}
       <div 
         className="card p-4 shadow flex-grow-1 d-flex flex-column justify-content-between" 
         style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46', borderRadius: '12px' }}
@@ -304,7 +330,6 @@ export const VentaRapida: React.FC = () => {
           <CarritoLista carrito={carrito} onEliminar={handleEliminarItem} />
         </div>
         
-        {/* COMPONENTE RESUMEN DE VENTA */}
         <ResumenVenta 
           subtotal={subtotalVenta}
           montoDescuento={montoDescuento}
@@ -317,7 +342,6 @@ export const VentaRapida: React.FC = () => {
         />
       </div>
 
-      {/* MODAL MÁQUINAS FUERA DE SERVICIO */}
       {showModalMaquinas && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered">
@@ -374,7 +398,6 @@ export const VentaRapida: React.FC = () => {
         </div>
       )}
 
-      {/* Modales Suceso & Confirmación */}
       {suceso.show && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">

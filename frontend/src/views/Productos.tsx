@@ -1,21 +1,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SidebarLayout } from '../components/layouts/SidebarLayout';
 import { ProductoTabla } from '../features/productos/ProductoTabla';
 import { ProductoRegistroModal } from '../features/productos/ProductoRegistroModal';
-import { useProductos } from '../hooks/useProductos'; // Tu hook
+import { useProductos } from '../hooks/useProductos';
 import { SuccesModal } from '../components/layouts/SuccesModal';
 import { ProductosFiltros } from '../features/productos/ProductosFiltros';
 import { AumentoMasivoModal } from '../features/productos/AumentoMasivoModal';
+import { RecetaModal } from '../features/productos/RecetaModal'; 
+import { RecetasGlobalModal } from '../features/productos/RecetasGlobalModal'; 
 import { actualizarPreciosMasivo } from '../services/productoService';
 
 export const Productos: React.FC = () => {
-  // Obtenemos todo lo que necesitamos del hook
   const { productos, guardar, cargar } = useProductos();
   
   const [showModal, setShowModal] = useState(false);
   const [showAumentoModal, setShowAumentoModal] = useState(false);
+  const [showRecetaModal, setShowRecetaModal] = useState(false);
+  const [showRecetasGlobalModal, setShowRecetasGlobalModal] = useState(false);
   const [productoEditando, setProductoEditando] = useState<any | null>(null);
+  const [productoSeleccionadoReceta, setProductoSeleccionadoReceta] = useState<any | null>(null);
   const navigate = useNavigate();
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
@@ -35,7 +38,7 @@ export const Productos: React.FC = () => {
     idsProductos?: number[];
   }) => {
     await actualizarPreciosMasivo(data);
-    await cargar(); // Recargar la lista de productos
+    await cargar();
     setMensajeExito(`Precios aumentados exitosamente un ${data.porcentaje}%`);
     setMostrarExito(true);
   };
@@ -66,6 +69,10 @@ export const Productos: React.FC = () => {
               setProductoEditando(p);
               setShowModal(true);
             }} 
+            onConfigurarReceta={(p) => {
+              setProductoSeleccionadoReceta(p);
+              setShowRecetaModal(true);
+            }}
         />
 
     <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary font-monospace">
@@ -77,6 +84,13 @@ export const Productos: React.FC = () => {
       onClick={() => setShowAumentoModal(true)}
      >
       Modificar Varios Precios
+     </button>
+     <button 
+      className="btn px-4 py-2 text-white fw-normal" 
+      style={{ backgroundColor: '#6f42c1', borderColor: '#59339d' }}
+      onClick={() => setShowRecetasGlobalModal(true)}
+     >
+      Ver Productos con Receta
      </button>
      <button className="btn px-4 py-2 text-white fw-normal" style={{ backgroundColor: '#ca9e1b', borderColor: '#94720c' }}>Calculo de Gastos</button>
      <button className="btn px-4 py-2 text-white fw-normal" style={{ backgroundColor: '#156e45', borderColor: '#0b3320' }} 
@@ -110,7 +124,31 @@ export const Productos: React.FC = () => {
         onConfirmar={handleAplicarAumentoMasivo}
       />
 
-      
+      {showRecetaModal && productoSeleccionadoReceta && (
+        <RecetaModal
+          show={showRecetaModal}
+          producto={productoSeleccionadoReceta}
+          onClose={() => {
+            setShowRecetaModal(false);
+            setProductoSeleccionadoReceta(null);
+            cargar();
+          }}
+        />
+      )}
+
+      {showRecetasGlobalModal && (
+        <RecetasGlobalModal
+          show={showRecetasGlobalModal}
+          productos={productos}
+          onClose={() => setShowRecetasGlobalModal(false)}
+          onEditarReceta={(p) => {
+            setShowRecetasGlobalModal(false);
+            setProductoSeleccionadoReceta(p);
+            setShowRecetaModal(true);
+          }}
+        />
+      )}
+
         {mostrarConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
         <div className="modal-dialog modal-sm modal-dialog-centered">
