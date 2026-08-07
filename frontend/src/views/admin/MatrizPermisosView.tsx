@@ -22,8 +22,6 @@ interface Usuario {
   tienePermisosPersonalizados?: boolean;
 }
 
-// Estructura para agrupar las ventanas igual que en el Sidebar
-// Estructura para agrupar las ventanas igual que en el Sidebar
 const CATEGORIAS_SIDEBAR: { [categoria: string]: string[] } = {
   'GENERAL': ['Panel Principal'],
   'PRODUCCIÓN': ['Crear Pedido', 'Pedidos Pendientes', 'Historial de Pedidos', 'Caja', 'Repositorio Digital'],
@@ -36,7 +34,7 @@ const CATEGORIAS_SIDEBAR: { [categoria: string]: string[] } = {
 export const MatrizPermisosView: React.FC = () => {
   const navigate = useNavigate();
   const [roles, setRoles] = useState<any[]>([]);
-  const [rolSeleccionado, setRolSeleccionado] = useState<number>(2); 
+  const [rolSeleccionado, setRolSeleccionado] = useState<number>(1); 
   const [modulos, setModulos] = useState<ModuloPermiso[]>([]);
   
   const [rolSeleccionadoEnUsuario, setRolSeleccionadoEnUsuario] = useState<number | null>(null);
@@ -110,9 +108,10 @@ export const MatrizPermisosView: React.FC = () => {
         const res = await fetch(`http://localhost:8080/api/permisos/rol/${idRolAConsultar}`);
         if (res.ok) {
           const idsActivos: number[] = await res.json(); 
-          
+          const esRolAdminActivo = idRolAConsultar === 1;
+
           setModulos(prev => prev.map(mod => {
-            const esProtegido = usuarioEditar?.idUsuario === 1 && 
+            const esProtegido = (esRolAdminActivo || usuarioEditar?.idUsuario === 1) && 
               ['Matriz de Permisos', 'Configuración', 'Gestión de Usuarios'].includes(mod.nombrePermiso);
 
             return {
@@ -134,28 +133,27 @@ export const MatrizPermisosView: React.FC = () => {
   const handleCambioPerfilSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const nuevoRolId = Number(e.target.value);
 
-    if (usuarioEditar?.idUsuario === 1) {
-      setMensajeBloqueoTexto("El Administrador Principal no puede cambiar su perfil global para evitar bloqueos del sistema.");
-      setMostrarModalBloqueo(true);
-      return;
-    }
-
-    setRolSeleccionado(nuevoRolId);
-
     if (usuarioEditar) {
       setRolSeleccionadoEnUsuario(nuevoRolId);
+    } else {
+      setRolSeleccionado(nuevoRolId);
     }
   };
 
   const esPermisoProtegido = (nombrePermiso: string) => {
-    if (usuarioEditar?.idUsuario !== 1) return false;
     const permisosProtegidos = ['Matriz de Permisos', 'Configuración', 'Gestión de Usuarios'];
-    return permisosProtegidos.includes(nombrePermiso);
+    if (!permisosProtegidos.includes(nombrePermiso)) return false;
+
+    if (usuarioEditar) {
+      return usuarioEditar.idUsuario === 1 || usuarioEditar.rol?.idRol === 1 || rolSeleccionadoEnUsuario === 1;
+    }
+
+    return rolSeleccionado === 1;
   };
 
   const togglePermiso = (id: number, nombrePermiso: string) => {
     if (esPermisoProtegido(nombrePermiso)) {
-      setMensajeBloqueoTexto("Este permiso está protegido para el Administrador Principal y no se puede desactivar.");
+      setMensajeBloqueoTexto("Este permiso está protegido para el Perfil Administrador y no se puede desactivar.");
       setMostrarModalBloqueo(true);
       return;
     }
@@ -178,19 +176,30 @@ export const MatrizPermisosView: React.FC = () => {
   const confirmarGuardado = async () => {
     setMostrarModalConfirmacion(false);
 
+    // Módulos finales asegurando los permisos protegidos de Admin
     const modulosAsegurados = modulos.map(mod => {
-      if (usuarioEditar?.idUsuario === 1 && esPermisoProtegido(mod.nombrePermiso)) {
+      if (esPermisoProtegido(mod.nombrePermiso)) {
         return { ...mod, activo: true };
       }
       return mod;
     });
 
+    const permisosActivos = modulosAsegurados.filter(m => m.activo).map(m => ({
+      idPermiso: m.idPermiso,
+      nombrePermiso: m.nombrePermiso
+    }));
+
     const permisosActivosIds = modulosAsegurados.filter(m => m.activo).map(m => m.idPermiso);
 
     try {
+      let idRolFinalAsignado: number | undefined;
+
       if (usuarioEditar) {
-        if (rolSeleccionadoEnUsuario !== null && usuarioEditar.idUsuario !== 1) {
-          await fetch(`http://localhost:8080/api/usuarios/${usuarioEditar.idUsuario}`, {
+        // CASO 1: Reasignación de Rol Global al Usuario (Ej: reasignar ADMIN al admin)
+        if (rolSeleccionadoEnUsuario !== null) {
+          const rolObjeto = roles.find(r => r.idRol === rolSeleccionadoEnUsuario);
+
+          const resUsuario = await fetch(`http://localhost:8080/api/usuarios/${usuarioEditar.idUsuario}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -199,8 +208,19 @@ export const MatrizPermisosView: React.FC = () => {
             })
           });
 
-          setMensajeExitoTexto(`¡Se asignó el perfil global a ${usuarioEditar.nombreUsuario}!`);
+          if (resUsuario.ok) {
+            idRolFinalAsignado = rolSeleccionadoEnUsuario;
+            
+            const usuarioActualizado = {
+              ...usuarioEditar,
+              rol: rolObjeto || { idRol: rolSeleccionadoEnUsuario, nombreRol: 'ADMIN' },
+              tienePermisosPersonalizados: false
+            };
+            setUsuarioEditar(usuarioActualizado);
+            setMensajeExitoTexto(`¡Se asignó el perfil "${rolObjeto?.nombreRol || 'ADMIN'}" a ${usuarioEditar.nombreUsuario}!`);
+          }
         } 
+        // CASO 2: Edición de permisos personalizados del usuario (Checkboxes)
         else {
           let idRolDestino = usuarioEditar.rol?.idRol;
 
@@ -222,9 +242,11 @@ export const MatrizPermisosView: React.FC = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   ...usuarioEditar,
-                  rol: { idRol: idRolDestino }
+                  rol: { idRol: idRolDestino, nombreRol: nombreNuevoPerfil }
                 })
               });
+
+              setUsuarioEditar(prev => prev ? { ...prev, rol: { idRol: idRolDestino!, nombreRol: nombreNuevoPerfil }, tienePermisosPersonalizados: true } : null);
             }
           }
 
@@ -234,18 +256,52 @@ export const MatrizPermisosView: React.FC = () => {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(permisosActivosIds)
             });
+            idRolFinalAsignado = idRolDestino;
           }
 
-          setMensajeExitoTexto(`¡Permisos personalizados de ${usuarioEditar.nombreUsuario} actualizados!`);
+          setMensajeExitoTexto(`¡Permisos de ${usuarioEditar.nombreUsuario} actualizados!`);
         }
       } else {
+        // CASO 3: Edición de la plantilla de Perfil Global
         await fetch(`http://localhost:8080/api/permisos/rol/${rolSeleccionado}/actualizar`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(permisosActivosIds)
         });
+        idRolFinalAsignado = rolSeleccionado;
 
         setMensajeExitoTexto('¡Permisos de perfil global actualizados!');
+      }
+
+      // ==========================================================
+      // ACTUALIZACIÓN EN VIVO DE LA SESIÓN ACTIVA (LOCALSTORAGE & EVENTOS)
+      // ==========================================================
+      const usuarioSesionString = localStorage.getItem('usuario_logueado') || localStorage.getItem('usuario');
+      if (usuarioSesionString) {
+        const usuarioSesion = JSON.parse(usuarioSesionString);
+        
+        const esMismoUsuario = usuarioEditar 
+          ? (usuarioEditar.idUsuario === usuarioSesion.idUsuario)
+          : (usuarioSesion.rol?.idRol === rolSeleccionado);
+
+        if (esMismoUsuario) {
+          usuarioSesion.permisos = permisosActivos;
+          
+          if (idRolFinalAsignado) {
+            const rolInfo = roles.find(r => r.idRol === idRolFinalAsignado);
+            usuarioSesion.rol = {
+              idRol: idRolFinalAsignado,
+              nombreRol: rolInfo ? rolInfo.nombreRol : (usuarioEditar?.rol?.nombreRol || usuarioSesion.rol?.nombreRol)
+            };
+          }
+
+          localStorage.setItem('usuario_logueado', JSON.stringify(usuarioSesion));
+          localStorage.setItem('usuario', JSON.stringify(usuarioSesion));
+
+          window.dispatchEvent(new CustomEvent('permisos-actualizados', { detail: permisosActivos }));
+          window.dispatchEvent(new Event('permisos-actualizados'));
+          window.dispatchEvent(new Event('storage'));
+        }
       }
 
       setRolSeleccionadoEnUsuario(null);
@@ -260,7 +316,7 @@ export const MatrizPermisosView: React.FC = () => {
 
   const handleCrearRol = async () => {
     if (!nuevoRolNombre.trim()) {
-      setMensajeBloqueoTexto("El nombre no puede estar vacío");
+      setMensajeBloqueoTexto("El nombre del perfil no puede estar vacío");
       setMostrarModalBloqueo(true);
       return;
     }
@@ -318,9 +374,15 @@ export const MatrizPermisosView: React.FC = () => {
     return completo.includes(busquedaUsuario.toLowerCase());
   });
 
+  const rolUsuarioEsPersonalizado = usuarioEditar?.rol?.nombreRol.startsWith('PERFIL_') || usuarioEditar?.tienePermisosPersonalizados;
+
+  const valorSelectRol = usuarioEditar 
+    ? (rolSeleccionadoEnUsuario !== null ? rolSeleccionadoEnUsuario : (usuarioEditar.rol?.idRol || ''))
+    : rolSeleccionado;
+
   return (
     <div className="container-fluid text-white font-monospace py-2 px-3">
-      {/* HEADER COMPACTO */}
+      {/* HEADER Y SECTOR "ASIGNAR PERFIL A USUARIO" DESTACADO */}
       <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
         <div>
           <h3 className="fw-bold mb-0" style={{ color: '#ffffff', fontSize: '1.4rem' }}>Matriz de Permisos por Perfil</h3>
@@ -347,24 +409,52 @@ export const MatrizPermisosView: React.FC = () => {
             </button>
           )}
 
-          <select 
-            className="form-select form-select-sm bg-dark text-white fw-bold px-2 py-1" 
+          {/* PANEL RESALTADO DE SELECCIÓN/ASIGNACIÓN DE PERFIL */}
+          <div 
+            className="d-flex align-items-center gap-2 px-3 py-1 rounded-3 shadow-lg" 
             style={{ 
-              border: '1px solid #8e45e0', 
-              borderRadius: '6px', 
-              width: '200px', 
-              fontSize: '0.8rem',
-              cursor: usuarioEditar?.idUsuario === 1 ? 'not-allowed' : 'pointer',
-              opacity: usuarioEditar?.idUsuario === 1 ? 0.6 : 1 
+              backgroundColor: usuarioEditar ? '#1c102b' : '#18181b', 
+              border: usuarioEditar ? '2px solid #20c997' : '2px solid #8e45e0',
+              boxShadow: usuarioEditar ? '0 0 14px rgba(32, 201, 151, 0.5)' : '0 0 10px rgba(142, 69, 224, 0.3)'
             }}
-            value={rolSeleccionado}
-            onChange={handleCambioPerfilSelect}
-            disabled={usuarioEditar?.idUsuario === 1}
           >
-            {roles.map(rol => (
-              <option key={rol.idRol} value={rol.idRol}>PERFIL: {rol.nombreRol}</option>
-            ))}
-          </select>
+            <div className="d-flex flex-column align-items-start">
+              <span className="fw-bold" style={{ fontSize: '0.7rem', color: usuarioEditar ? '#20c997' : '#c084fc', letterSpacing: '0.5px' }}>
+                <i className={`bi ${usuarioEditar ? 'bi-person-badge-fill text-success' : 'bi-shield-lock-fill text-warning'} me-1`}></i>
+                {usuarioEditar ? 'ASIGNAR PERFIL A USUARIO:' : 'VER PLANTILLA DE PERFIL:'}
+              </span>
+              <span className="text-white-50" style={{ fontSize: '0.62rem' }}>
+                {usuarioEditar ? 'Aplica la plantilla del rol seleccionado' : 'Edita permisos base del grupo'}
+              </span>
+            </div>
+
+            <select 
+              className="form-select form-select-sm bg-dark text-white fw-bold shadow-sm py-1 px-2 ms-1" 
+              style={{ 
+                width: '210px', 
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                border: usuarioEditar ? '1px solid #20c997' : '1px solid #8e45e0'
+              }}
+              value={valorSelectRol}
+              onChange={handleCambioPerfilSelect}
+            >
+              {usuarioEditar && rolUsuarioEsPersonalizado && rolSeleccionadoEnUsuario === null && (
+                <option value={usuarioEditar.rol?.idRol} disabled style={{ backgroundColor: '#2d2d30', color: '#ffc107' }}>
+                  ★ PERFIL PERSONALIZADO
+                </option>
+              )}
+              {roles.map(rol => (
+                <option 
+                  key={rol.idRol} 
+                  value={rol.idRol}
+                  style={{ backgroundColor: '#18181b', color: '#ffffff' }}
+                >
+                  {rol.nombreRol}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -384,7 +474,7 @@ export const MatrizPermisosView: React.FC = () => {
                 type="text" 
                 className="form-control form-control-sm bg-dark text-white border-secondary"
                 style={{ fontSize: '0.75rem' }}
-                placeholder="Buscar..."
+                placeholder="Buscar usuario..."
                 value={busquedaUsuario}
                 onChange={(e) => setBusquedaUsuario(e.target.value)}
               />
@@ -447,14 +537,14 @@ export const MatrizPermisosView: React.FC = () => {
           </div>
         </div>
 
-        {/* PANEL DERECHO: MATRIZ CON ESPACIEDO OPTIMIZADO */}
+        {/* PANEL DERECHO: MATRIZ DE PERMISOS */}
         <div className="col-md-9">
           <div className="p-3 rounded-4" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
             
             {usuarioEditar ? (
               <div className="p-2 px-3 mb-3 rounded d-flex justify-content-between align-items-center" style={{ backgroundColor: '#132e27', border: '1px solid #20c997' }}>
                 <div>
-                  <span className="badge bg-success mb-0 me-2" style={{ fontSize: '0.7rem' }}>EMPLEADO</span>
+                  <span className="badge bg-success mb-0 me-2" style={{ fontSize: '0.7rem' }}>EMPLEADO SELECCIONADO</span>
                   <span className="fw-bold text-white">
                     Permisos de: <span style={{ color: '#20c997' }}>"{usuarioEditar.persona ? `${usuarioEditar.persona.nombre} ${usuarioEditar.persona.apellido}` : usuarioEditar.nombreUsuario}"</span>
                   </span>
@@ -473,7 +563,7 @@ export const MatrizPermisosView: React.FC = () => {
               </div>
             )}
 
-            {/* CONTENEDOR MULTI-COLUMNA AMPLIA */}
+            {/* CONTENEDOR MULTI-COLUMNA */}
             <div style={{ columnCount: 2, columnGap: '0.75rem' }}>
               {Object.entries(CATEGORIAS_SIDEBAR).map(([catNombre, ventanasList]) => {
                 const modulosDeCategoria = modulos.filter(m => ventanasList.includes(m.nombrePermiso));
@@ -511,7 +601,7 @@ export const MatrizPermisosView: React.FC = () => {
                             <div className="d-flex align-items-center gap-1">
                               <span className="fw-semibold text-white" style={{ fontSize: '0.85rem' }}>{mod.nombrePermiso}</span>
                               {bloqueado && (
-                                <i className="bi bi-lock-fill text-warning ms-1" style={{ fontSize: '0.8rem' }} title="Protegido para Administrador Principal"></i>
+                                <i className="bi bi-lock-fill text-warning ms-1" style={{ fontSize: '0.8rem' }} title="Protegido para Perfil Administrador"></i>
                               )}
                             </div>
                             <span 

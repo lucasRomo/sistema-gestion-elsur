@@ -2,6 +2,7 @@ package com.elsur.sistema_gestion.models;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -55,4 +56,11 @@ public class Incidencia {
     @ManyToOne
     @JoinColumn(name = "id_empleado_resuelve")
     private Empleado empleadoResuelve;
+
+    // Control de Pago de Mantenimiento
+    @Column(name = "pagado")
+    private Boolean pagado = false;
+
+    @Column(name = "monto_pagado")
+    private BigDecimal montoPagado;
 }

@@ -3,7 +3,7 @@ package com.elsur.sistema_gestion.controllers;
 import com.elsur.sistema_gestion.models.Permiso;
 import com.elsur.sistema_gestion.models.Rol;
 import com.elsur.sistema_gestion.services.PermisoService;
-import com.elsur.sistema_gestion.services.RolService; // ¡NUEVO IMPORT!
+import com.elsur.sistema_gestion.services.RolService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +20,7 @@ public class PermisoController {
     private PermisoService permisoService;
 
     @Autowired
-    private RolService rolService; // ¡AGREGAR ESTO!
+    private RolService rolService;
 
     @GetMapping
     public List<Permiso> listarTodos() {
@@ -32,14 +32,11 @@ public class PermisoController {
         return permisoService.listarRoles();
     }
 
-    // --- ¡NUEVO ENDPOINT PARA CREAR ROLES! ---
     @PostMapping("/roles")
     public ResponseEntity<Rol> crearRol(@RequestBody Rol nuevoRol) {
-        // Guardamos el nuevo rol en la base de datos
         Rol rolGuardado = rolService.guardar(nuevoRol);
         return ResponseEntity.ok(rolGuardado);
     }
-    // ------------------------------------------
 
     @GetMapping("/rol/{idRol}")
     public ResponseEntity<List<Integer>> obtenerPermisosPorRol(@PathVariable Integer idRol) {
@@ -57,11 +54,9 @@ public class PermisoController {
         }
     }
 
-    // --- NUEVO ENDPOINT PARA ELIMINAR ROLES ---
     @DeleteMapping("/roles/{idRol}")
     public ResponseEntity<?> eliminarRol(@PathVariable Integer idRol) {
         try {
-            // Protección opcional: No permitir borrar los roles base del sistema (ADMIN y OPERARIO)
             if (idRol == 1 || idRol == 2) {
                 return ResponseEntity.status(400).body(Map.of("error", "No se pueden eliminar los roles del sistema por defecto."));
             }

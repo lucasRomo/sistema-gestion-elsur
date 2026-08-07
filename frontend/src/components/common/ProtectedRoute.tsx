@@ -4,7 +4,7 @@ import { Navigate } from 'react-router-dom';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   soloAdmin?: boolean;
-  permisoRequerido?: string; // Nombre exacto del permiso (ej: 'Clientes', 'Insumos')
+  permisoRequerido?: string;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
@@ -12,7 +12,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   soloAdmin = false, 
   permisoRequerido 
 }) => {
-  const usuarioGuardado = localStorage.getItem('usuario_logueado');
+  const usuarioGuardado = localStorage.getItem('usuario_logueado') || localStorage.getItem('usuario');
 
   if (!usuarioGuardado) {
     return <Navigate to="/login" replace />;
@@ -29,22 +29,23 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const rol = usuario?.rol?.nombreRol?.toUpperCase() || '';
   const esAdmin = rol.includes('ADMIN') || rol.includes('GERENTE');
 
-  // Si requiere ser Admin y no lo es
   if (soloAdmin && !esAdmin) {
     return <AccesoRestringidoUI />;
   }
 
-  // Si requiere un permiso específico de módulo
-  if (permisoRequerido && !esAdmin) {
-    // Extraer lista de permisos del usuario (pueden venir en usuario.permisos o usuario.rol.permisos)
+  if (permisoRequerido) {
     const listaPermisos: any[] = usuario?.permisos || usuario?.rol?.permisos || [];
     
-    const tienePermiso = listaPermisos.some((p: any) => 
-      (typeof p === 'string' && p.toLowerCase() === permisoRequerido.toLowerCase()) ||
-      (p.nombrePermiso && p.nombrePermiso.toLowerCase() === permisoRequerido.toLowerCase())
-    );
+    if (Array.isArray(listaPermisos) && listaPermisos.length > 0) {
+      const tienePermiso = listaPermisos.some((p: any) => 
+        (typeof p === 'string' && p.toLowerCase() === permisoRequerido.toLowerCase()) ||
+        (p && typeof p === 'object' && p.nombrePermiso && p.nombrePermiso.toLowerCase() === permisoRequerido.toLowerCase())
+      );
 
-    if (!tienePermiso) {
+      if (!tienePermiso) {
+        return <AccesoRestringidoUI />;
+      }
+    } else if (!esAdmin) {
       return <AccesoRestringidoUI />;
     }
   }

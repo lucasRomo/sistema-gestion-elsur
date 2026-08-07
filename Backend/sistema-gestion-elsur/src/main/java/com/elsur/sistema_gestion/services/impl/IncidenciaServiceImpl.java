@@ -133,6 +133,11 @@ public class IncidenciaServiceImpl implements IncidenciaService {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
+        // Actualizar marca de pago en la incidencia
+        incidencia.setPagado(true);
+        incidencia.setMontoPagado(monto);
+        incidenciaRepository.save(incidencia);
+
         MovimientoCaja movimiento = new MovimientoCaja();
         movimiento.setMonto(monto);
         movimiento.setTipoMovimiento("EGRESO");

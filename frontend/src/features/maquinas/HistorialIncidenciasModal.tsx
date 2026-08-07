@@ -14,9 +14,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
   const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
   const [cargando, setCargando] = useState(false);
 
-  // Estado local para los IDs de incidencias cuyos pagos se realizaron en la sesión actual
-  const [incidenciasPagadas, setIncidenciasPagadas] = useState<number[]>([]);
-
   // Formularios en línea para cambios de estado
   const [idAccionActiva, setIdAccionActiva] = useState<number | null>(null);
   const [tipoAccion, setTipoAccion] = useState<'MANTENIMIENTO' | 'RESOLVER' | null>(null);
@@ -76,7 +73,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
     return 1;
   };
 
-  // Formateador helper para empleados
   const formatEmpleado = (empleado?: Empleado, defaultTexto: string = 'Sin asignar') => {
     if (!empleado) return defaultTexto;
     if (empleado.persona && (empleado.persona.nombre || empleado.persona.apellido)) {
@@ -88,7 +84,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
     return defaultTexto;
   };
 
-  // Pasar a Etapa 2: Mantenimiento
   const handlePonerEnMantenimiento = async (idIncidencia: number) => {
     if (!textoNota.trim()) {
       setErrorValidacion('Ingrese la nota de mantenimiento.');
@@ -116,7 +111,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
     }
   };
 
-  // Pasar a Etapa 3: Alta Operativa
   const handleResolver = async (idIncidencia: number) => {
     if (!textoNota.trim()) {
       setErrorValidacion('Ingrese el detalle de la solución.');
@@ -144,7 +138,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
     }
   };
 
-  // Confirmar Egreso de Dinero
   const ejecutarPagoMantenimiento = async (forzar: boolean = false) => {
     if (!incidenciaAPagar?.idIncidencia) return;
     if (!montoPago || Number(montoPago) <= 0) {
@@ -170,12 +163,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
 
       if (res.ok) {
         alert("¡Egreso registrado correctamente en caja como Pago de Mantenimiento!");
-        
-        // Marcamos la incidencia como pagada en el estado local
-        if (incidenciaAPagar.idIncidencia) {
-          setIncidenciasPagadas(prev => [...prev, incidenciaAPagar.idIncidencia!]);
-        }
-
         setIncidenciaAPagar(null);
         setShowModalSaldoInsuficiente(false);
         setMontoPago('');
@@ -255,8 +242,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                   const tieneMantenimiento = Boolean(inc.notaMantenimiento);
                   const esMantenimientoActivo = !esResuelta && (maquina.estado === 'MANTENIMIENTO' || tieneMantenimiento);
                   
-                  // Verifica si está pagado desde backend o desde la sesión actual
-                  const esPagado = Boolean(inc.pagado) || (inc.idIncidencia ? incidenciasPagadas.includes(inc.idIncidencia) : false);
+                  // Se lee directamente la bandera persistida en la BD
+                  const esPagado = Boolean(inc.pagado);
 
                   return (
                     <div 
@@ -277,7 +264,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                         </div>
                         <div className="d-flex align-items-center gap-2">
                           
-                          {/* BOTÓN CON ESTADO DINÁMICO DE PAGO */}
+                          {/* BOTÓN BASADO EN LA BD */}
                           {esPagado ? (
                             <span 
                               className="bg-success text-white font-semibold px-2 py-1 rounded flex items-center gap-1 fw-bold"
@@ -374,6 +361,13 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                                 <p className="mb-2 text-warning fw-medium" style={{ fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>
                                   {inc.notaMantenimiento}
                                 </p>
+                              ) : maquina.estado === 'OPERATIVA' ? (
+                                /* VALIDACIÓN: SI ESTÁ EN OPERATIVA NO SE PUEDE PONER EN MANTENIMIENTO */
+                                <div className="text-center py-2">
+                                  <span className="badge bg-secondary text-white-50 p-2 d-block">
+                                    <i className="bi bi-info-circle me-1"></i> Se pasó a operativo. No requiere mantenimiento.
+                                  </span>
+                                </div>
                               ) : (
                                 <div className="text-center py-2">
                                   <button

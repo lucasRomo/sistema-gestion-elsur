@@ -14,8 +14,8 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   const [colapsado, setColapsado] = useState<boolean>(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const usuarioGuardado = localStorage.getItem('usuario_logueado');
+  const cargarUsuarioDeSesion = () => {
+    const usuarioGuardado = localStorage.getItem('usuario_logueado') || localStorage.getItem('usuario');
     if (usuarioGuardado) {
       try {
         setUsuario(JSON.parse(usuarioGuardado));
@@ -23,12 +23,29 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         console.error("Error al parsear el usuario del localStorage", error);
       }
     }
+  };
+
+  useEffect(() => {
+    cargarUsuarioDeSesion();
 
     const hoy = new Date();
     const dia = String(hoy.getDate()).padStart(2, '0');
     const mes = String(hoy.getMonth() + 1).padStart(2, '0');
     const anio = hoy.getFullYear();
     setFechaActual(`${dia}/${mes}/${anio}`);
+
+    // LISTENERS EN VIVO DE CAMBIOS DE PERMISOS / SESIÓN
+    const handleActualizacion = () => {
+      cargarUsuarioDeSesion();
+    };
+
+    window.addEventListener('permisos-actualizados', handleActualizacion);
+    window.addEventListener('storage', handleActualizacion);
+
+    return () => {
+      window.removeEventListener('permisos-actualizados', handleActualizacion);
+      window.removeEventListener('storage', handleActualizacion);
+    };
   }, []);
 
   useLayoutEffect(() => {
@@ -40,25 +57,29 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
   const nombrePersona = usuario?.persona?.nombre || usuario?.nombreUsuario || 'Usuario';
   const rolUsuario = usuario?.rol?.nombreRol || usuario?.rol?.nombre || 'Empleado';
-
   const esAdmin = rolUsuario.toUpperCase().includes('ADMIN') || rolUsuario.toUpperCase().includes('GERENTE');
 
   const tienePermiso = (nombreModulo: string) => {
     if (nombreModulo.toLowerCase() === 'panel principal') return true;
-    if (esAdmin) return true;
 
     const permisos: any[] = usuario?.permisos || usuario?.rol?.permisos || [];
 
-    return permisos.some((p: any) => {
-      if (typeof p === 'string') {
-        return p.toLowerCase() === nombreModulo.toLowerCase();
-      }
-      if (p && typeof p === 'object') {
-        const nombre = p.nombrePermiso || p.nombre || p.nombreModulo;
-        return nombre && nombre.toLowerCase() === nombreModulo.toLowerCase();
-      }
-      return false;
-    });
+    // Evaluación estricta cuando existen permisos cargados en la sesión
+    if (Array.isArray(permisos) && permisos.length > 0) {
+      return permisos.some((p: any) => {
+        if (typeof p === 'string') {
+          return p.toLowerCase() === nombreModulo.toLowerCase();
+        }
+        if (p && typeof p === 'object') {
+          const nombre = p.nombrePermiso || p.nombre || p.nombreModulo;
+          return nombre && nombre.toLowerCase() === nombreModulo.toLowerCase();
+        }
+        return false;
+      });
+    }
+
+    // Si no hay lista explícita aún en sesión, el admin ve todo por defecto
+    return esAdmin;
   };
 
   const menuPrincipales = [
@@ -97,6 +118,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
   const handleCerrarSesion = () => {
     localStorage.removeItem('usuario_logueado');
+    localStorage.removeItem('usuario');
     localStorage.removeItem('token_sesion');
     navigate('/login');
   };

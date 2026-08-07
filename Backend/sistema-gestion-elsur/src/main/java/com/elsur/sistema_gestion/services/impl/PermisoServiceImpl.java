@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,6 +22,13 @@ public class PermisoServiceImpl implements PermisoService {
 
     @Autowired
     private RolRepository rolRepository;
+
+    // Nombres de los permisos vitales protegidos para el perfil ADMIN
+    private static final List<String> PERMISOS_PROTEGIDOS_ADMIN = Arrays.asList(
+            "Matriz de Permisos",
+            "Gestión de Usuarios",
+            "Configuración"
+    );
 
     @Override
     public List<Permiso> listarTodos() {
@@ -36,9 +45,8 @@ public class PermisoServiceImpl implements PermisoService {
         Rol rol = rolRepository.findById(idRol)
                 .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
         
-        // Mapeamos los permisos del rol a una lista de IDs numéricos para el Frontend
         return rol.getPermisos().stream()
-                .map(Permiso::getIdPermiso) // Cambia 'getIdPermiso' por como se llame el ID en tu modelo Permiso
+                .map(Permiso::getIdPermiso)
                 .collect(Collectors.toList());
     }
 
@@ -47,11 +55,25 @@ public class PermisoServiceImpl implements PermisoService {
     public void actualizarPermisosRol(Integer idRol, List<Integer> permisosIds) {
         Rol rol = rolRepository.findById(idRol)
                 .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+
+        List<Integer> idsFinales = new ArrayList<>(permisosIds);
+
+        // PROTECCIÓN EN BACKEND: Si es el rol ADMIN (idRol = 1), asegurar que no pierda módulos críticos
+        if (idRol == 1) {
+            List<Permiso> todosLosPermisos = permisoRepository.findAll();
+            List<Integer> idsProtegidos = todosLosPermisos.stream()
+                    .filter(p -> PERMISOS_PROTEGIDOS_ADMIN.contains(p.getNombrePermiso()))
+                    .map(Permiso::getIdPermiso)
+                    .collect(Collectors.toList());
+
+            for (Integer idProtegido : idsProtegidos) {
+                if (!idsFinales.contains(idProtegido)) {
+                    idsFinales.add(idProtegido);
+                }
+            }
+        }
         
-        // Buscamos todos los objetos Permiso correspondientes a los IDs que mandó React
-        List<Permiso> nuevosPermisos = permisoRepository.findAllById(permisosIds);
-        
-        // Reemplazamos la lista anterior por la nueva y guardamos
+        List<Permiso> nuevosPermisos = permisoRepository.findAllById(idsFinales);
         rol.setPermisos(nuevosPermisos);
         rolRepository.save(rol);
     }
