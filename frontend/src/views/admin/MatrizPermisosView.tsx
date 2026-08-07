@@ -23,11 +23,12 @@ interface Usuario {
 }
 
 // Estructura para agrupar las ventanas igual que en el Sidebar
+// Estructura para agrupar las ventanas igual que en el Sidebar
 const CATEGORIAS_SIDEBAR: { [categoria: string]: string[] } = {
   'GENERAL': ['Panel Principal'],
   'PRODUCCIÓN': ['Crear Pedido', 'Pedidos Pendientes', 'Historial de Pedidos', 'Caja', 'Repositorio Digital'],
-  'STOCK': ['Inventario', 'Insumos', 'Productos'],
-  'ADMINISTRACIÓN / ENTIDADES': ['Clientes', 'Proveedores'],
+  'STOCK': ['Insumos', 'Productos'],
+  'ADMINISTRACIÓN / ENTIDADES': ['Clientes', 'Proveedores', 'Equipos / Máquinas'],
   'OPCIONES DE GERENTE': ['Informes', 'Matriz de Permisos', 'Gestión de Usuarios', 'Historial de Actividad'],
   'MI CUENTA': ['Configuración']
 };

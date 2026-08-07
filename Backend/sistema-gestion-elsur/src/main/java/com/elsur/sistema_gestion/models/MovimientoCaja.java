@@ -23,6 +23,9 @@ public class MovimientoCaja {
     @Column(length = 20, nullable = false)
     private String tipoMovimiento; // 'INGRESO', 'EGRESO'
 
+    @Column(length = 50)
+    private String categoria; // 'EGRESO_MANTENIMIENTO', 'INSUMOS', 'VENTA', 'VARIOS'
+
     @Column(columnDefinition = "TEXT")
     private String descripcion;
 
@@ -35,9 +38,13 @@ public class MovimientoCaja {
     private Pedido pedido;
 
     @ManyToOne
+    @JoinColumn(name = "id_incidencia", nullable = true)
+    private Incidencia incidencia;
+
+    @ManyToOne
     @JoinColumn(name = "id_turno", nullable = true)
     private Turno turno;
 
     @Column(length = 20, nullable = true) 
-    private String metodoPago;
+    private String metodoPago; // 'EFECTIVO', 'TRANSFERENCIA', 'DEBITO', 'CREDITO'
 }

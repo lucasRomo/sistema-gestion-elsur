@@ -17,14 +17,9 @@ public class Incidencia {
     @JoinColumn(name = "id_maquina", nullable = false)
     private Maquina maquina;
 
+    // Etapa 1: Falla reportada
     @Column(columnDefinition = "TEXT", nullable = false)
     private String descripcion;
-
-    @Column(name = "prioridad", length = 20)
-    private String prioridad = "MEDIA"; // 'BAJA', 'MEDIA', 'ALTA', 'CRITICA'
-
-    @Column(name = "estado_incidencia", length = 20)
-    private String estadoIncidencia = "PENDIENTE"; // 'PENDIENTE', 'RESUELTA'
 
     @Column(name = "fecha_reporte")
     private LocalDateTime fechaReporte = LocalDateTime.now();
@@ -33,6 +28,24 @@ public class Incidencia {
     @JoinColumn(name = "id_empleado_reporta")
     private Empleado empleadoReporta;
 
+    @Column(name = "prioridad", length = 20)
+    private String prioridad = "MEDIA"; // 'BAJA', 'MEDIA', 'ALTA', 'CRITICA'
+
+    @Column(name = "estado_incidencia", length = 20)
+    private String estadoIncidencia = "PENDIENTE"; // 'PENDIENTE', 'MANTENIMIENTO', 'RESUELTA'
+
+    // Etapa 2: Revisión en taller / Mantenimiento
+    @Column(name = "nota_mantenimiento", columnDefinition = "TEXT")
+    private String notaMantenimiento;
+
+    @Column(name = "fecha_mantenimiento")
+    private LocalDateTime fechaMantenimiento;
+
+    @ManyToOne
+    @JoinColumn(name = "id_empleado_mantenimiento")
+    private Empleado empleadoMantenimiento;
+
+    // Etapa 3: Alta operativa y Solución
     @Column(columnDefinition = "TEXT")
     private String resolucion;
 

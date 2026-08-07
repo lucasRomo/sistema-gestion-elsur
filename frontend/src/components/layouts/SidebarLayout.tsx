@@ -41,17 +41,12 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   const nombrePersona = usuario?.persona?.nombre || usuario?.nombreUsuario || 'Usuario';
   const rolUsuario = usuario?.rol?.nombreRol || usuario?.rol?.nombre || 'Empleado';
 
-  // Verificamos si es administrador explícito
   const esAdmin = rolUsuario.toUpperCase().includes('ADMIN') || rolUsuario.toUpperCase().includes('GERENTE');
 
   const tienePermiso = (nombreModulo: string) => {
-    // El Panel Principal/Dashboard debe estar accesible para cualquier usuario autenticado
     if (nombreModulo.toLowerCase() === 'panel principal') return true;
-    
-    // Si es admin o gerente, tiene acceso a todo de fábrica
     if (esAdmin) return true;
 
-    // Extraer array de permisos del objeto usuario (soporta varios formatos de DTO)
     const permisos: any[] = usuario?.permisos || usuario?.rol?.permisos || [];
 
     return permisos.some((p: any) => {
@@ -89,7 +84,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
     { name: 'Equipos / Máquinas', icon: 'bi-cpu', path: '/maquinas' },
   ].filter(item => tienePermiso(item.name));
 
-  // CORREGIDO: Ahora las opciones del gerente pasan por tienePermiso
   const menuGerente = [
     { name: 'Informes', icon: 'bi-file-earmark-bar-graph-fill', path: '/informes' },
     { name: 'Matriz de Permisos', icon: 'bi-shield-lock-fill', path: '/matriz-permisos' },
@@ -182,7 +176,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         }
       `}</style>
 
-      {/* Sidebar */}
       <div 
         className="d-flex flex-column flex-shrink-0 justify-content-between d-print-none"
         style={{ 
@@ -197,8 +190,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           height: '100vh'
         }}
       >
-        
-        {/* BLOQUE SUPERIOR */}
         <div>
           <div className="d-flex justify-content-between align-items-center mb-2 ps-1" style={{ minHeight: '34px' }}>
             {!colapsado ? (
@@ -210,11 +201,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
                 <img 
                   src={logoSur} 
                   alt="El SUR" 
-                  style={{ 
-                    width: '32px',    
-                    height: 'auto',    
-                    objectFit: 'contain' 
-                  }} 
+                  style={{ width: '32px', height: 'auto', objectFit: 'contain' }} 
                 />
                 <span className="fw-bold font-monospace text-white" style={{ fontSize: '1rem', letterSpacing: '1px' }}>
                   el SUR
@@ -234,7 +221,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
             </button>
           </div>
 
-          {/* Info Usuario */}
           <div 
             className="mb-2 py-2 rounded" 
             style={{ 
@@ -277,14 +263,10 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           <hr className="border-secondary mb-2 mt-2" style={{ opacity: 0.3 }} />
         </div>
 
-        {/* LISTA NAVEGACIÓN */}
         <div 
           ref={scrollContainerRef} 
           className="flex-grow-1 d-flex flex-column justify-content-start gap-2 py-1 no-scrollbar" 
-          style={{ 
-            overflowY: 'auto', 
-            overflowX: 'hidden' 
-          }}
+          style={{ overflowY: 'auto', overflowX: 'hidden' }}
         >
           {menuPrincipales.length > 0 && (
             <div>
@@ -325,7 +307,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
             </div>
           )}
 
-          {/* CORREGIDO: Evaluamos menuGerente.length > 0 en lugar de esAdmin */}
           {menuGerente.length > 0 && (
             <div>
               {colapsado ? <hr className="border-secondary my-1" style={{ opacity: 0.2 }} /> : (
@@ -349,7 +330,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           )}
         </div>
 
-        {/* CERRAR SESIÓN */}
         <div className="pt-2 border-top border-secondary mt-1" style={{ borderColor: '#2d2d30 !important' }}>
           <button 
             onClick={handleCerrarSesion}
@@ -381,15 +361,9 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         </div> 
       </div>
       
-      {/* Contenido Principal */}
       <div 
         className="flex-grow-1" 
-        style={{ 
-          minWidth: 0,
-          width: '100%',
-          overflowX: 'hidden',
-          overflowY: 'auto'
-        }}
+        style={{ minWidth: 0, width: '100%', overflowX: 'hidden', overflowY: 'auto' }}
       >
         <div className="p-4" style={{ width: '100%', maxWidth: '100%' }}>
           {children}

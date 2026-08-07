@@ -1,12 +1,28 @@
+export interface Persona {
+  idPersona?: number;
+  nombre: string;
+  apellido: string;
+}
+
+export interface Empleado {
+  idEmpleado: number;
+  persona?: Persona;
+  cargo?: string;
+}
+
 export interface Incidencia {
   idIncidencia?: number;
-  maquina?: { idMaquina: number; nombre: string };
   descripcion: string;
-  prioridad?: string;
-  estadoIncidencia?: 'PENDIENTE' | 'RESUELTA';
-  fechaReporte?: string;
+  notaMantenimiento?: string;
+  fechaMantenimiento?: string;
+  empleadoMantenimiento?: Empleado;
   resolucion?: string;
+  estadoIncidencia?: string;
+  prioridad?: string;
+  fechaReporte?: string;
   fechaResolucion?: string;
-  empleadoReporta?: { idEmpleado: number; persona?: { nombre: string; apellido: string } };
-  empleadoResuelve?: { idEmpleado: number; persona?: { nombre: string; apellido: string } };
+  empleadoReporta?: Empleado;
+  empleadoResuelve?: Empleado;
+  pagado?: boolean;
+  montoPagado?: number;
 }

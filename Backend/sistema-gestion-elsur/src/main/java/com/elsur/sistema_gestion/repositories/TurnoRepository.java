@@ -2,7 +2,6 @@ package com.elsur.sistema_gestion.repositories;
 
 import com.elsur.sistema_gestion.models.EstadoTurno;
 import com.elsur.sistema_gestion.models.Turno;
-import com.elsur.sistema_gestion.models.EstadoTurno;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,4 +26,7 @@ public interface TurnoRepository extends JpaRepository<Turno, Integer> {
     Optional<Turno> findFirstByFechaCierreIsNull();
 
     Optional<Turno> findFirstByEstado(EstadoTurno estado);
+
+    // Método agregado para buscar el último turno por EstadoTurno
+    Optional<Turno> findTopByEstadoOrderByFechaAperturaDesc(EstadoTurno estado);
 }

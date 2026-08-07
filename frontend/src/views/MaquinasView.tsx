@@ -19,6 +19,19 @@ export const MaquinasView: React.FC = () => {
   const [showModalHistorial, setShowModalHistorial] = useState(false);
   const [maquinaHistorial, setMaquinaHistorial] = useState<Maquina | null>(null);
 
+  const getUsuarioActualId = () => {
+    const usrStr = localStorage.getItem('usuario_logueado');
+    if (usrStr) {
+      try {
+        const obj = JSON.parse(usrStr);
+        return obj.idEmpleado || obj.idUsuario || obj.id_usuario || 1;
+      } catch (e) {
+        return 1;
+      }
+    }
+    return 1;
+  };
+
   const cargarMaquinas = async () => {
     setCargando(true);
     try {
@@ -45,13 +58,67 @@ export const MaquinasView: React.FC = () => {
 
     const method = maquina.idMaquina ? 'PUT' : 'POST';
 
+    // 1. Guardar cambios básicos de la máquina
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(maquina)
+      body: JSON.stringify({
+        idMaquina: maquina.idMaquina,
+        nombre: maquina.nombre,
+        estado: maquina.estado
+      })
     });
 
     if (res.ok) {
+      // 2. Sincronización automática con el historial según el estado seleccionado
+      if (maquina.idMaquina && maquina.observacion) {
+        try {
+          const incRes = await fetch(`http://localhost:8080/api/incidencias/maquina/${maquina.idMaquina}`);
+          if (incRes.ok) {
+            const incidencias: any[] = await incRes.json();
+            const pendiente = incidencias.find((i: any) => i.estadoIncidencia === 'PENDIENTE');
+
+            if (maquina.estado === 'OPERATIVA' && pendiente) {
+              // Si pasa a OPERATIVA, resuelve la incidencia pendiente
+              await fetch(`http://localhost:8080/api/incidencias/${pendiente.idIncidencia}/resolver`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  resolucion: maquina.observacion,
+                  idEmpleadoResuelve: getUsuarioActualId()
+                })
+              });
+            } else if (maquina.estado === 'MANTENIMIENTO' && !pendiente) {
+              // Si pasa a MANTENIMIENTO y no había ticket abierto
+              await fetch('http://localhost:8080/api/incidencias/reportar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  idMaquina: maquina.idMaquina,
+                  descripcion: `[MANTENIMIENTO PROGRAMADO] ${maquina.observacion}`,
+                  prioridad: 'MEDIA',
+                  idEmpleadoReporta: getUsuarioActualId()
+                })
+              });
+            } else if (['FUERA DE SERVICIO', 'FALLA'].includes(maquina.estado) && !pendiente) {
+              // Si pasa a FUERA DE SERVICIO o FALLA
+              await fetch('http://localhost:8080/api/incidencias/reportar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  idMaquina: maquina.idMaquina,
+                  descripcion: `[${maquina.estado}] ${maquina.observacion}`,
+                  prioridad: 'ALTA',
+                  idEmpleadoReporta: getUsuarioActualId()
+                })
+              });
+            }
+          }
+        } catch (err) {
+          console.error("Error al sincronizar historial:", err);
+        }
+      }
+
       cargarMaquinas();
     } else {
       throw new Error("No se pudo procesar la solicitud.");
@@ -62,7 +129,12 @@ export const MaquinasView: React.FC = () => {
     const res = await fetch('http://localhost:8080/api/incidencias/reportar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idMaquina, descripcion, prioridad })
+      body: JSON.stringify({ 
+        idMaquina, 
+        descripcion, 
+        prioridad,
+        idEmpleadoReporta: getUsuarioActualId()
+      })
     });
 
     if (res.ok) {
@@ -143,7 +215,7 @@ export const MaquinasView: React.FC = () => {
         </div>
       </div>
 
-      {/* BOTONES ABAJO A LA DERECHA */}
+      {/* Botones inferiores */}
       <div className="d-flex justify-content-end gap-2 mt-3 mb-4">
         <button
           className="btn btn-danger fw-bold px-3 shadow"

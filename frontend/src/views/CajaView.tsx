@@ -6,7 +6,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useTurno } from '../Context/TurnoContext';
 
 export const CajaView: React.FC = () => {
-  // --- LÓGICA DE ESTADOS PARA EL FLUJO DE CAJA ---
   const { cajaAbierta, setCajaAbierta } = useTurno();
   const [saldoCaja, setSaldoCaja] = useState<number>(0);
   const [ingresosTurno, setIngresosTurno] = useState<number>(0);
@@ -17,7 +16,6 @@ export const CajaView: React.FC = () => {
   const [movimientos, setMovimientos] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  // --- ESTADOS PARA LOS NUEVOS MODALES ---
   const [showModalApertura, setShowModalApertura] = useState<boolean>(false);
   const [montoInicialInput, setMontoInicialInput] = useState<string>('0');
   const [guardandoApertura, setGuardandoApertura] = useState<boolean>(false);
@@ -53,35 +51,31 @@ export const CajaView: React.FC = () => {
   };
 
   useEffect(() => {
-  const inicializarCaja = async () => {
-    try {
-      const res = await fetch('http://localhost:8080/api/turnos/estado-caja');
-      
-      if (res.ok) {
-        // 1. Leemos la respuesta como texto primero para evitar el choque de JSON vacío
-        const text = await res.text();
-        const data = text ? JSON.parse(text) : null;
+    const inicializarCaja = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/turnos/estado-caja');
+        if (res.ok) {
+          const text = await res.text();
+          const data = text ? JSON.parse(text) : null;
 
-        // 2. Evaluamos los datos
-        if (data && data.estado === "ABIERTO") {
-          setCajaAbierta(true);
-          setTurnoActual(data);
-          fetchMovimientosHoy();
-          fetchTotalesCaja();
-        } else {
-          setCajaAbierta(false);
-          setTurnoActual(null);
+          if (data && data.estado === "ABIERTO") {
+            setCajaAbierta(true);
+            setTurnoActual(data);
+            fetchMovimientosHoy();
+            fetchTotalesCaja();
+          } else {
+            setCajaAbierta(false);
+            setTurnoActual(null);
+          }
         }
+      } catch (error) {
+        console.error("Error al inicializar la caja:", error);
       }
-    } catch (error) {
-      console.error("Error al inicializar la caja:", error);
-    }
-  };
+    };
 
-  inicializarCaja();
-}, [setCajaAbierta]);
+    inicializarCaja();
+  }, [setCajaAbierta]);
 
-  // --- CONTROLADORES DE APERTURA ---
   const handleAbrirAperturaModal = () => {
     setMontoInicialInput('0');
     setShowModalApertura(true);
@@ -129,7 +123,6 @@ export const CajaView: React.FC = () => {
     }
   };
 
-  // --- CONTROLADORES DE CIERRE ---
   const handleAbrirCierreModal = () => {
     if (!turnoActual) {
       alert("No hay un turno activo para cerrar.");
@@ -168,7 +161,7 @@ export const CajaView: React.FC = () => {
         alert("Error al cerrar caja: " + errorText);
       }
     } catch (error) {
-      console.error("Error al conectar con el servidor para cerrar caja:", error);
+      console.error("Error al cerrar caja:", error);
     } finally {
       setGuardandoCierre(false);
     }
@@ -190,6 +183,7 @@ export const CajaView: React.FC = () => {
       const nuevoMovimiento = {
         monto: Number(data.monto),
         tipoMovimiento: data.tipoMovimiento, 
+        categoria: data.tipoMovimiento === 'EGRESO' ? 'VARIOS' : 'VENTA',
         descripcion: data.concepto,
         usuario: { 
           idUsuario: usuarioObj.idUsuario || usuarioObj.id_usuario 
@@ -206,18 +200,10 @@ export const CajaView: React.FC = () => {
 
       if (res.ok) {
         setIsModalOpen(false);
-        const montoNum = Number(data.monto);
-        if (data.tipoMovimiento === 'INGRESO') {
-          setSaldoCaja((prev) => prev + montoNum);
-          setIngresosTurno((prev) => prev + montoNum);
-        } else {
-          setSaldoCaja((prev) => prev - montoNum);
-          setEgresosTurno((prev) => prev + montoNum);
-        }
+        fetchTotalesCaja();
         fetchMovimientosHoy();
       } else {
         const errorText = await res.text();
-        console.error("Error del servidor al guardar movimiento:", errorText);
         alert("No se pudo guardar el movimiento. Error: " + errorText);
       }
     } catch (error) {
@@ -225,9 +211,23 @@ export const CajaView: React.FC = () => {
     }
   };
 
+  const renderBadgeCategoria = (m: any) => {
+    if (m.categoria === 'EGRESO_MANTENIMIENTO') {
+      return <span className="badge bg-warning text-dark fw-bold"><i className="bi bi-tools me-1"></i>MANTENIMIENTO</span>;
+    }
+    if (m.categoria === 'INSUMOS') {
+      return <span className="badge bg-info text-dark fw-bold"><i className="bi bi-truck me-1"></i>INSUMOS</span>;
+    }
+    return (
+      <span className={`badge ${m.tipoMovimiento === 'INGRESO' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
+        {m.tipoMovimiento === 'INGRESO' ? 'Ganancia' : 'Egreso'}
+      </span>
+    );
+  };
+
   return (
     <SidebarLayout activeItem="Caja">
-      <div className="container-fluid text-white p-2 pt-5 mt-2" style={{ backgroundColor: '#1b1b1b' }}>
+      <div className="container-fluid text-white p-2 pt-5 mt-2 font-monospace" style={{ backgroundColor: '#1b1b1b' }}>
         
         {/* Título Principal */}
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -235,9 +235,8 @@ export const CajaView: React.FC = () => {
           <i className="bi bi-question-circle text-info fs-3" style={{ cursor: 'pointer' }}></i>
         </div>
 
-        {/* --- SECCIÓN SUPERIOR: PANELES DE FLUJO --- */}
+        {/* PANELES DE FLUJO */}
         <div className="row g-4 mb-4">
-          {/* Tarjeta Izquierda: Saldo y Totales */}
           <div className="col-md-6">
             <div className="p-4 rounded-3 h-100" style={{ backgroundColor: '#1e1e1f', border: '1px solid #242427' }}>
               <div className="d-flex justify-content-between align-items-center mb-2">
@@ -272,11 +271,10 @@ export const CajaView: React.FC = () => {
             </div>
           </div>
 
-          {/* Tarjeta Derecha: Gráfico */}
           <div className="col-md-6">
             <div className="p-4 rounded-3 h-100" style={{ backgroundColor: '#1e1e1f', border: '1px solid #242427' }}>
               <div className="p-3 rounded" style={{ backgroundColor: '#222122', borderColor: '#2d2d30', minHeight: '180px', overflowX: 'auto' }}>
-                <div className="text-center small opacity-20 mb-2 font-monospace" >
+                <div className="text-center small opacity-20 mb-2 font-monospace">
                   {new Date().toLocaleDateString('es-AR')}
                 </div>
                 
@@ -284,37 +282,18 @@ export const CajaView: React.FC = () => {
                   {cajaAbierta && movimientos.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart
-                        data={[...movimientos] .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+                        data={[...movimientos].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
                         .map(m => ({
-                        hora: new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }),
-                        monto: m.tipoMovimiento === 'EGRESO' ? -Math.abs(m.monto) : m.monto}))}
+                          hora: new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                          monto: m.tipoMovimiento === 'EGRESO' ? -Math.abs(m.monto) : m.monto
+                        }))}
                         margin={{ top: 10, right: 15, left: -15, bottom: 5 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                        <XAxis 
-                          dataKey="hora" 
-                          tick={{ fill: '#aaa', fontSize: 11 }} 
-                          axisLine={{ stroke: '#2d2d30' }}
-                          tickLine={false}
-                        />
-                        <YAxis 
-                          domain={['auto', 'auto']} 
-                          tick={{ fill: '#aaa', fontSize: 11 }} 
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#1e1e1f', borderColor: '#2d2d30', color: '#fff', fontSize: '12px' }}
-                          labelStyle={{ color: '#aaa' }}
-                        />
-                        <Line 
-                          type="linear" 
-                          dataKey="monto" 
-                          stroke="#6c0beb" 
-                          strokeWidth={4} 
-                          dot={{ fill: '#ffffff', stroke: '#ffffff', strokeWidth: 2, r: 4 }}
-                          activeDot={{ r: 6 }}
-                        />
+                        <XAxis dataKey="hora" tick={{ fill: '#aaa', fontSize: 11 }} axisLine={{ stroke: '#2d2d30' }} tickLine={false} />
+                        <YAxis domain={['auto', 'auto']} tick={{ fill: '#aaa', fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <Tooltip contentStyle={{ backgroundColor: '#1e1e1f', borderColor: '#2d2d30', color: '#fff', fontSize: '12px' }} labelStyle={{ color: '#aaa' }} />
+                        <Line type="linear" dataKey="monto" stroke="#6c0beb" strokeWidth={4} dot={{ fill: '#ffffff', stroke: '#ffffff', strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} />
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
@@ -328,38 +307,34 @@ export const CajaView: React.FC = () => {
           </div>
         </div>
 
-        {/* --- SECCIÓN INTERMEDIA: TABLA Y ACCIONES LATERALES --- */}
+        {/* TABLA DE MOVIMIENTOS Y ACCIONES */}
         <div className="row g-4 align-items-stretch mb-4">
-          {/* Listado de movimientos */}
           <div className="col-lg-8 d-flex flex-column">
-            <h5 className="mb-3 fw-semibold text-light">Registro de Movimientos Manuales</h5>
+            <h5 className="mb-3 fw-semibold text-light">Registro de Movimientos</h5>
             
-           <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: '#1d1d1d', border: '1px solid #2d2d30', height: '315px' }}>
+            <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: '#1d1d1d', border: '1px solid #2d2d30', height: '315px' }}>
               <div className="table-responsive flex-grow-1" style={{ backgroundColor: '#1d1d1d', height: '100%', overflowY: 'auto' }}>
                 <table className="table table-dark table-hover m-0 align-middle text-center" style={{ backgroundColor: '#1d1d1d' }}>
                   <thead style={{ position: 'sticky', top: 0, backgroundColor: '#1d1d1d', zIndex: 1 }}>
                     <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
                       <th style={{ width: '160px' }}>Fecha/Hora</th>
                       <th style={{ width: '110px' }}>Monto</th>
-                      <th style={{ width: '120px' }}>Tipo</th>
+                      <th style={{ width: '140px' }}>Categoría</th>
                       <th className="text-start">Descripción</th>
                       <th style={{ width: '80px' }}>Usuario</th>
-                      <th style={{ width: '80px' }}>IdPedido</th>
                     </tr>
                   </thead>
                   <tbody>
                     {movimientos.length === 0 ? (
-                      <tr><td colSpan={6} className="py-5">No hay movimientos registrados hoy</td></tr>
+                      <tr><td colSpan={5} className="py-5">No hay movimientos registrados hoy</td></tr>
                     ) : (
                       movimientos.map((m) => (
                         <tr key={m.id_movimiento} className="border-secondary" style={{ fontSize: '0.95rem' }}>
                           <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
-                          <td className="fw-bold text-white">${Number(m.monto).toFixed(2)}</td>
-                          <td>
-                            <span className={`badge ${m.tipoMovimiento === 'INGRESO' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
-                              {m.tipoMovimiento === 'INGRESO' ? 'Ganancia' : 'Egreso'}
-                            </span>
-                          </td> 
+                          <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
+                            {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
+                          </td>
+                          <td>{renderBadgeCategoria(m)}</td> 
                           <td>
                             <div 
                               className="text-start text-light" 
@@ -368,7 +343,7 @@ export const CajaView: React.FC = () => {
                                 overflow: 'hidden',        
                                 textOverflow: 'ellipsis',  
                                 display: 'block',
-                                maxWidth: '350px' 
+                                maxWidth: '300px' 
                               }}
                               title={m.descripcion || 'Sin descripción'}
                             >
@@ -376,7 +351,6 @@ export const CajaView: React.FC = () => {
                             </div>
                           </td>
                           <td>{m.usuario?.idUsuario || m.usuario?.id_usuario || '1'}</td>
-                          <td>{m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1] : '-'}</td>
                         </tr>
                       ))
                     )}
@@ -386,7 +360,6 @@ export const CajaView: React.FC = () => {
             </div>
           </div>
 
-          {/* Botonera de la Derecha */}
           <div className="col-lg-4 d-flex flex-column justify-content-start align-items-center gap-3 pt-0">
             <h5 className="mb-3 fw-semibold text-light align-self-start" style={{ visibility: 'hidden' }}>Acciones</h5>
             
@@ -420,13 +393,13 @@ export const CajaView: React.FC = () => {
           </div>
         </div>
 
-        {/* --- SECCIÓN INFERIOR: BOTONES ACCIONES DE ARQUEO --- */}
+        {/* BOTONERA DE ARQUEO Y APERTURA */}
         <div className="d-flex flex-wrap gap-3 justify-content-center w-100 mt-4 px-2 m-0 pb-3">
-          <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2" style={{ backgroundColor: '#ce1515', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }}>Volver</button>
+          <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2" style={{ backgroundColor: '#ce1515', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', border: 'none' }}>Volver</button>
 
           <button 
             className="btn btn-success d-flex align-items-center justify-content-center fw-semibold text-center text-white" 
-            style={{ height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }}
+            style={{ height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', border: 'none' }}
             disabled={cajaAbierta}
             onClick={handleAbrirAperturaModal}
           >
@@ -435,7 +408,7 @@ export const CajaView: React.FC = () => {
           
           <button 
             className="btn d-flex align-items-center justify-content-center fw-semibold text-center" 
-            style={{ backgroundColor: '#10cbd8', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }}
+            style={{ backgroundColor: '#10cbd8', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', border: 'none' }}
             disabled={!cajaAbierta}
           >
             <span>Iniciar Arqueo Automático</span>
@@ -443,7 +416,7 @@ export const CajaView: React.FC = () => {
           
           <button 
             className="btn btn-primary d-flex align-items-center justify-content-center fw-semibold text-center text-white" 
-            style={{ backgroundColor: '#5c85d6', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }}
+            style={{ backgroundColor: '#5c85d6', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', border: 'none' }}
             disabled={!cajaAbierta}
           >
             <span>Consultar Arqueo Anterior</span>
@@ -451,7 +424,7 @@ export const CajaView: React.FC = () => {
           
           <button 
             className="btn btn-danger d-flex align-items-center justify-content-center fw-semibold text-center text-white" 
-            style={{ backgroundColor: '#daa32d', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }}
+            style={{ backgroundColor: '#daa32d', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', border: 'none' }}
             disabled={!cajaAbierta}
             onClick={handleAbrirCierreModal}
           >
@@ -460,11 +433,11 @@ export const CajaView: React.FC = () => {
         </div>
       </div>
 
-      {/* --- MODAL DE APERTURA DE CAJA --- */}
+      {/* MODAL APERTURA DE CAJA */}
       {showModalApertura && (
-        <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }} role="dialog">
+        <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content text-white" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px' }}>
+            <div className="modal-content text-white font-monospace" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px' }}>
               <div className="modal-header border-bottom border-secondary">
                 <h5 className="modal-title fw-bold">Apertura de Caja</h5>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setShowModalApertura(false)}></button>
@@ -488,9 +461,6 @@ export const CajaView: React.FC = () => {
                       autoFocus
                     />
                   </div>
-                  <p className="small text-center m-0">
-                    Este monto se guardará como saldo inicial en la base de datos PostgreSQL.
-                  </p>
                 </div>
                 <div className="modal-footer border-top border-secondary">
                   <button type="button" className="btn btn-secondary px-4" onClick={() => setShowModalApertura(false)} disabled={guardandoApertura}>
@@ -506,11 +476,11 @@ export const CajaView: React.FC = () => {
         </div>
       )}
 
-      {/* --- MODAL DE CIERRE DE CAJA --- */}
+      {/* MODAL CIERRE DE CAJA */}
       {showModalCierre && (
-        <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }} role="dialog">
+        <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content text-white" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px' }}>
+            <div className="modal-content text-white font-monospace" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px' }}>
               <div className="modal-header border-bottom border-secondary">
                 <h5 className="modal-title fw-bold">Cerrar Turno y Arqueo</h5>
                 <button type="button" className="btn-close btn-close-white" onClick={() => setShowModalCierre(false)}></button>
@@ -534,9 +504,6 @@ export const CajaView: React.FC = () => {
                       autoFocus
                     />
                   </div>
-                  <p className="small text-center m-0">
-                    El sistema calculará automáticamente la diferencia con el saldo esperado para obtener un arqueo Final.
-                  </p>
                 </div>
                 <div className="modal-footer border-top border-secondary">
                   <button type="button" className="btn btn-secondary px-4" onClick={() => setShowModalCierre(false)} disabled={guardandoCierre}>
@@ -552,7 +519,6 @@ export const CajaView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal nuevo ingreso vinculado */}
       <ModalNuevoIngreso 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

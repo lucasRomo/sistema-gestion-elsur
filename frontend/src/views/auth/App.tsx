@@ -31,7 +31,7 @@ function App() {
           <Route path="/registro" element={<RegisterView onVolver={() => window.location.href='/'} />} />
           <Route path="/login" element={<LoginView onLoginExitoso={() => window.location.href='/dashboard'} onVolver={() => window.location.href='/'} />} />
 
-          {/* RUTAS OPERATIVAS CON SIDEBAR Y PROTECCIÓN DE PERMISOS */}
+          {/* RUTAS OPERATIVAS */}
           <Route path="/dashboard" element={
             <ProtectedRoute permisoRequerido="Panel Principal">
               <SidebarLayout activeItem="Panel Principal">
@@ -114,7 +114,7 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* RUTAS EXCLUSIVAS DE GERENTE / ADMIN */}
+          {/* RUTAS EXCLUSIVAS Y GERENCIA */}
           <Route path="/matriz-permisos" element={
            <ProtectedRoute permisoRequerido="Matriz de Permisos">
             <SidebarLayout activeItem="Matriz de Permisos">

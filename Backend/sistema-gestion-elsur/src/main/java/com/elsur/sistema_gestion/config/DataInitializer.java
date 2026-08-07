@@ -58,19 +58,15 @@ public class DataInitializer implements CommandLineRunner {
             jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('rol', 'id_rol'), 2)");
             System.out.println("[DataInitializer] -> Roles insertados.");
         } else {
-            // Asegurar que el rol 2 se llame OPERARIO si ya existía como EMPLEADO
             jdbcTemplate.execute("UPDATE rol SET nombre_rol = 'OPERARIO' WHERE id_rol = 2 AND nombre_rol = 'EMPLEADO'");
         }
 
-        // 4. CLIENTE CONSUMIDOR FINAL (Carga por SQL Nativo para evitar fallos de ID)
+        // 4. CLIENTE CONSUMIDOR FINAL
         if (clienteRepository.count() == 0) {
-            // Primero insertamos la Persona asociada (ID: 1)
             jdbcTemplate.execute("INSERT INTO persona (id_persona, nombre, apellido, numero_documento, id_tipo_documento, id_tipo_persona) " +
                     "VALUES (1, 'Consumidor', 'Final', '99999999', 1, 1)");
             jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('persona', 'id_persona'), 1)");
-            System.out.println("[DataInitializer] -> Persona 'Consumidor Final' insertada.");
 
-            // Ahora insertamos el Cliente (ID: 1) apuntando a esa Persona
             jdbcTemplate.execute("INSERT INTO cliente (id_cliente, razon_social, saldo_deudor, limite_credito, estado, condicion_de_pago, persona_de_contacto, id_persona) " +
                     "VALUES (1, 'Consumidor Final', 0.00, 0.00, 'Activo', 'Contado', 'N/A', 1)");
             jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('cliente', 'id_cliente'), 1)");
@@ -78,6 +74,9 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         // 5. PERMISOS Y MÓDULOS DEL SISTEMA
+        // Actualiza registros existentes de "Inventario" a "Equipos / Máquinas"
+        jdbcTemplate.execute("UPDATE permiso SET nombre_permiso = 'Equipos / Máquinas' WHERE nombre_permiso = 'Inventario'");
+
         Long totalPermisos = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM permiso", Long.class);
         if (totalPermisos == null || totalPermisos == 0) {
             jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (1, 'Panel Principal')");
@@ -86,7 +85,7 @@ public class DataInitializer implements CommandLineRunner {
             jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (4, 'Historial de Pedidos')");
             jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (5, 'Caja')");
             jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (6, 'Repositorio Digital')");
-            jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (7, 'Inventario')");
+            jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (7, 'Equipos / Máquinas')");
             jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (8, 'Insumos')");
             jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (9, 'Productos')");
             jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (10, 'Clientes')");
@@ -103,10 +102,8 @@ public class DataInitializer implements CommandLineRunner {
         // 6. ASIGNACIÓN INICIAL DE PERMISOS A ROLES (ROL_PERMISO)
         Long totalRolPermiso = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM rol_permiso", Long.class);
         if (totalRolPermiso == null || totalRolPermiso == 0) {
-            // Asignar TODOS los permisos al ADMIN (id_rol = 1)
             jdbcTemplate.execute("INSERT INTO rol_permiso (id_rol, id_permiso) SELECT 1, id_permiso FROM permiso ON CONFLICT DO NOTHING");
 
-            // Asignar permisos operativos estándar al OPERARIO (id_rol = 2)
             int[] permisosOperario = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16};
             for (int idPermiso : permisosOperario) {
                 jdbcTemplate.execute("INSERT INTO rol_permiso (id_rol, id_permiso) VALUES (2, " + idPermiso + ") ON CONFLICT DO NOTHING");
@@ -114,6 +111,6 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("[DataInitializer] -> Relaciones Rol-Permiso inicializadas.");
         }
 
-        System.out.println("[DataInitializer] ¡Sincronización terminada con éxito sin bloqueos de Hibernate!");
+        System.out.println("[DataInitializer] Sincronización completada con éxito.");
     }
 }
