@@ -18,8 +18,8 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedi
   const rowBorder = isDark ? '#27272a' : '#e2e8f0';
   const theadBorder = isDark ? '#3f3f46' : '#e2e8f0';
   const grayText = isDark ? '#a1a1aa' : '#64748b';
-  const badgeBg = isDark ? '#27272a' : '#e2e8f0';
-  const badgeText = isDark ? '#a1a1aa' : '#475569';
+  const badgeBg = isDark ? '#27272a' : '#525252';
+  const badgeText = isDark ? '#a1a1aa' : '#1e293b';
   const mutedBoxText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
 
   return (

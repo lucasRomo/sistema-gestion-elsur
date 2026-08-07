@@ -31,12 +31,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
   const [comprobanteFile, setComprobanteFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const inputStyle = {
-    backgroundColor: '#2b2b2c',
-    color: '#ffffff',
-    borderColor: '#3f3f46'
-  };
-
   useEffect(() => {
     if (clientes && clientes.length > 0) {
       const primerCliente = clientes[0];
@@ -144,7 +138,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
   };
 
   return (
-    <div className="card text-white p-4 w-100 rounded" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46', maxWidth: '1570px' }} data-bs-theme="dark">
+    <div className="card im-surface p-4 w-100 rounded" style={{ maxWidth: '1570px' }}>
       <h2 className="text-center mb-4 fw-bold">Configurar Parámetros del Comprobante</h2>
       
       <form onSubmit={handleSubmit} className="row g-3">
@@ -153,12 +147,11 @@ export const DetallesPedidoForm: React.FC<Props> = ({
           <label className="form-label small text-secondary fw-bold">Cliente:</label>
           <select 
             className="form-select" 
-            style={inputStyle}
             value={clienteId} 
             onChange={(e) => setClienteId(e.target.value)}
             required
           >
-            <option value="" disabled style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>-- Seleccione un Cliente --</option>
+            <option value="" disabled>-- Seleccione un Cliente --</option>  
             {clientes.map((c, index) => {
               const id = c.id_cliente ?? c.idCliente ?? c.id;
               const nombreCliente = c.persona 
@@ -179,7 +172,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
           <label className="form-label small text-secondary fw-bold">Empleado que Confecciona:</label>
           <select 
             className="form-select" 
-            style={inputStyle}
             value={empleadoId} 
             onChange={(e) => setEmpleadoId(e.target.value)}
             required
@@ -196,14 +188,14 @@ export const DetallesPedidoForm: React.FC<Props> = ({
                   {nombreCompleto} {emp.cargo ? `(${emp.cargo})` : ''}
                 </option>
               );
-            })}
+            })} 
           </select>
         </div>
 
         {/* Estado y Método Comercial */}
         <div className="col-md-6">
           <label className="form-label small text-secondary fw-bold">Tipo / Estado de Registro:</label>
-          <select className="form-select" style={inputStyle} value={estado} onChange={(e) => setEstado(e.target.value)}>
+          <select className="form-select" value={estado} onChange={(e) => setEstado(e.target.value)}>
             <option value="PENDIENTE" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>PENDIENTE (A Producción)</option>
             <option value="EN PROCESO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>EN PROCESO (Taller)</option>
             <option value="PRESUPUESTO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>PRESUPUESTO (Solo Guardar)</option>
@@ -214,7 +206,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
           <label className="form-label small text-secondary fw-bold">Método Comercial:</label>
           <select 
             className="form-select" 
-            style={inputStyle}
             value={tipoPago} 
             onChange={(e) => setTipoPago(e.target.value)}
             disabled={estado === 'PRESUPUESTO'}
@@ -241,7 +232,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
 
         {/* Montos */}
         <div className="col-md-6">
-          <label className="form-label small text-secondary fw-bold d-flex justify-content-between">
+          <label className="form-label small text-body-secondary fw-bold d-flex justify-content-between">
             <span>Monto Total Cotizado:</span>
             {porcentajeDescuento > 0 && (
               <span className="text-success font-monospace">({porcentajeDescuento}% OFF aplicado)</span>
@@ -250,7 +241,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
           <input 
             type="text" 
             className="form-control text-info fw-bold font-monospace fs-5" 
-            style={inputStyle}
             readOnly 
             value={`$${total.toFixed(2)}`} 
           />
@@ -263,7 +253,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
           <input 
             type="number" 
             className="form-control font-monospace" 
-            style={inputStyle}
             value={montoEntregado} 
             onChange={(e) => setMontoEntregado(e.target.value)} 
             disabled={estado === 'PRESUPUESTO'}
@@ -275,7 +264,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
           <label className="form-label small text-secondary fw-bold">Instrucciones / Notas Internas:</label>
           <textarea 
             className="form-control" 
-            style={inputStyle}
             rows={3} 
             placeholder="Detalles sobre materiales, medidas o aclaración de validez del presupuesto..." 
             value={observaciones} 

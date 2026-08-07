@@ -5,6 +5,7 @@ import { cajaService, type MovimientoCaja, type Turno } from '../../services/caj
 import type { Pedido } from '../../types/Pedido';
 import { getProductos } from '../../services/productoService';
 import { ModalRegistrosArqueo } from './ModalRegistrosArqueos';
+import { useTheme } from '../../Context/ThemeContext';
 
 // --- MOCK DATA TEMPORAL DE MERMAS Y AVERÍAS ---
 const MERMAS_MOCK = [
@@ -51,6 +52,7 @@ function generarPuntosSparkline(
 }
 
 // Tooltip para Evolución de Caja
+// Tooltip para Área / Caja
 const CustomAreaTooltip = ({ active, payload, label, esMismoDia }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
@@ -59,9 +61,12 @@ const CustomAreaTooltip = ({ active, payload, label, esMismoDia }: any) => {
     const montoMovimiento = data.montoMovimiento || 0;
 
     return (
-      <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${esEgreso ? '#e22e2e' : '#8e45e0'}`, color: '#fff', fontSize: '0.85rem' }}>
-        <div className="d-flex align-items-center justify-content-between gap-3 mb-2 pb-1 border-bottom border-secondary" style={{ borderColor: '#3f3f46 !important' }}>
-          <span className="fw-bold text-white-50">{label}</span>
+      <div 
+        className="p-2 rounded-3 shadow-lg im-surface" 
+        style={{ border: `1px solid ${esEgreso ? '#e22e2e' : '#8e45e0'}`, fontSize: '0.85rem' }}
+      >
+        <div className="d-flex align-items-center justify-content-between gap-3 mb-2 pb-1 border-bottom border-secondary border-opacity-25">
+          <span className="fw-bold text-body-secondary">{label}</span>
           {esMismoDia && (
             <span className={`fw-bold badge ${esEgreso ? 'bg-danger' : 'bg-success'}`}>
               {esEgreso ? `- $${Math.abs(montoMovimiento).toLocaleString('es-AR')}` : `+ $${Math.abs(montoMovimiento).toLocaleString('es-AR')}`}
@@ -69,7 +74,7 @@ const CustomAreaTooltip = ({ active, payload, label, esMismoDia }: any) => {
           )}
         </div>
         <div className="d-flex align-items-center justify-content-between gap-2">
-          <span className="text-white-50">Estado Caja:</span>
+          <span className="text-body-secondary">Estado Caja:</span>
           <span className="fw-bold" style={{ color: '#20c997' }}>
             ${saldoAcumulado.toLocaleString('es-AR')}
           </span>
@@ -85,16 +90,16 @@ const CustomEgresoTooltip = ({ active, payload, esMismoDia }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #e22e2e', color: '#fff', fontSize: '0.85rem' }}>
-        <div className="fw-bold text-white-50 mb-1 border-bottom border-secondary pb-1">
+      <div className="p-2 rounded-3 shadow-lg im-surface" style={{ border: '1px solid #e22e2e', fontSize: '0.85rem' }}>
+        <div className="fw-bold text-body-secondary mb-1 border-bottom border-secondary border-opacity-25 pb-1">
           {data.ejeX}
         </div>
         <div className="fw-bold text-danger mb-1">
           Total Egreso: - ${Math.abs(data.monto).toLocaleString('es-AR')}
         </div>
         {esMismoDia && (
-          <div className="small text-white-50">
-            <strong>Razón / Desc:</strong> {data.descripcion || 'Sin descripción'}
+          <div className="small text-body-secondary">
+            <strong className="text-body">Razón / Desc:</strong> {data.descripcion || 'Sin descripción'}
           </div>
         )}
       </div>
@@ -108,28 +113,20 @@ const CustomMermaTooltip = ({ active, payload, esMismoDia }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div 
-        className="p-2 rounded-3 shadow-lg" 
-        style={{ 
-          backgroundColor: '#222122', 
-          border: '1px solid #ffc107', 
-          color: '#fff', 
-          fontSize: '0.85rem' 
-        }}
-      >
-        <div className="fw-bold text-warning mb-1 border-bottom border-secondary pb-1">
+      <div className="p-2 rounded-3 shadow-lg im-surface" style={{ border: '1px solid #ffc107', fontSize: '0.85rem' }}>
+        <div className="fw-bold text-warning mb-1 border-bottom border-secondary border-opacity-25 pb-1">
           {data.ejeX} - {data.cantidad} un. desperdiciadas
         </div>
 
         {esMismoDia && (
           <div className="mt-2">
             {data.insumo && (
-              <div className="small text-white mb-1">
+              <div className="small text-body mb-1">
                 <strong className="text-warning">Insumo:</strong> {data.insumo}
               </div>
             )}
             {data.motivo && (
-              <div className="small text-white-50">
+              <div className="small text-body-secondary">
                 <strong className="text-warning">Motivo:</strong> {data.motivo}
               </div>
             )}
@@ -146,14 +143,14 @@ const CustomAveriaTooltip = ({ active, payload, esMismoDia }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #fd7e14', color: '#fff', fontSize: '0.85rem' }}>
-        <div className="fw-bold text-white mb-1 border-bottom border-secondary pb-1" style={{ color: '#fd7e14' }}>
+      <div className="p-2 rounded-3 shadow-lg im-surface" style={{ border: '1px solid #fd7e14', fontSize: '0.85rem' }}>
+        <div className="fw-bold mb-1 border-bottom border-secondary border-opacity-25 pb-1" style={{ color: '#fd7e14' }}>
           {data.ejeX} - {data.cantidad} avería(s)
         </div>
         {esMismoDia && (
           <>
-            <div className="small text-white-50"><strong>Equipo:</strong> {data.maquina || 'No especificado'}</div>
-            <div className="small text-white-50"><strong>Falla:</strong> {data.detalle || 'Sin detalle'}</div>
+            <div className="small text-body-secondary"><strong className="text-body">Equipo:</strong> {data.maquina || 'No especificado'}</div>
+            <div className="small text-body-secondary"><strong className="text-body">Falla:</strong> {data.detalle || 'Sin detalle'}</div>
           </>
         )}
       </div>
@@ -167,15 +164,15 @@ const CustomEmpleadoTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #0dcaf0', color: '#fff', fontSize: '0.85rem' }}>
-        <div className="fw-bold text-info mb-1 border-bottom border-secondary pb-1">
+      <div className="p-2 rounded-3 shadow-lg im-surface" style={{ border: '1px solid #0dcaf0', fontSize: '0.85rem' }}>
+        <div className="fw-bold text-info mb-1 border-bottom border-secondary border-opacity-25 pb-1">
           {data.name}
         </div>
-        <div className="text-white-50">
-          <strong className="text-white">Ventas / Recaudación:</strong> ${Number(data.ventas || 0).toLocaleString('es-AR')}
+        <div className="text-body-secondary">
+          <strong className="text-body">Ventas / Recaudación:</strong> ${Number(data.ventas || 0).toLocaleString('es-AR')}
         </div>
-        <div className="text-white-50">
-          <strong className="text-white">Pedidos completados:</strong> {data.pedidosCompletados || 0}
+        <div className="text-body-secondary">
+          <strong className="text-body">Pedidos completados:</strong> {data.pedidosCompletados || 0}
         </div>
       </div>
     );
@@ -183,18 +180,19 @@ const CustomEmpleadoTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+// Tooltip para Arqueos
 const CustomArqueoTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #f43f5e', color: '#fff', fontSize: '0.85rem' }}>
-        <div className="fw-bold text-white mb-1 border-bottom border-secondary pb-1">
+      <div className="p-2 rounded-3 shadow-lg im-surface" style={{ border: '1px solid #f43f5e', fontSize: '0.85rem' }}>
+        <div className="fw-bold text-body mb-1 border-bottom border-secondary border-opacity-25 pb-1">
           {data.empleado}
         </div>
         <div className="text-danger fw-bold mb-1">
           Total Faltante / Ajuste: ${Number(data.montoDiferencia || 0).toLocaleString('es-AR')}
         </div>
-        <div className="small text-white-50">
+        <div className="small text-body-secondary">
           Incongruencias detectadas: {data.cantidadIncongruencias}
         </div>
       </div>
@@ -1192,7 +1190,7 @@ export const InformesView: React.FC = () => {
 
   const handleSeleccionarEsteMes = () => {
   const hoy = new Date();
-  const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1); // Desde el 1 del mes actual hasta hoy
+  const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
 
   const desdeStr = formatDateForInput(primerDiaMes);
   const hastaStr = formatDateForInput(hoy);
@@ -1456,7 +1454,7 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
     { 
       label: 'INGRESOS TOTALES', 
       sub: 'YMSUR / Total', 
-      val: `$${metricas.ventasTotales.toLocaleString('es-AR')}`, 
+      val: `$${metricas.ventasTotales.toLocaleString('es-AR')}`,  
       color: '#8e45e0', 
       icon: 'bi-currency-dollar', 
       changePercent: 2.16,
@@ -1523,37 +1521,30 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
       `}</style>
 
       {/* HEADER PRINCIPAL */}
-<div 
-  className="d-flex flex-column flex-lg-row align-items-center justify-content-between gap-3 p-3 mb-4 rounded-3"
-  style={{
-    backgroundColor: '#18191c',
-    border: '1px solid #2d2f34'
-  }}
->
+     <div 
+       className="d-flex flex-column flex-lg-row align-items-center justify-content-between gap-3 p-3 mb-4 rounded-3 im-surface-head"
+      >
   
   {/* 1. IZQUIERDA: Botones de Período (Día, Semana, Mes) */}
   <div className="btn-group btn-group-sm" role="group" aria-label="Selección rápida de período">
     <button 
       type="button" 
-      className="btn btn-outline-secondary border-secondary text-light fw-medium px-3"
+      className="btn btn-outline-secondary border-secondary text-light fw-medium px-3 im-btn-period"
       onClick={handleSeleccionarHoy}
-      style={{ backgroundColor: '#212529' }}
     >
-      Día
+      Ayer
     </button>
     <button 
       type="button" 
-      className="btn btn-outline-secondary border-secondary text-light fw-medium px-3"
+      className="btn btn-outline-secondary border-secondary text-light fw-medium px-3 im-btn-period"
       onClick={handleSeleccionarEstaSemana}
-      style={{ backgroundColor: '#212529' }}
     >
       Semana
     </button>
     <button 
       type="button" 
-      className="btn btn-outline-secondary border-secondary text-light fw-medium px-3"
+      className="btn btn-outline-secondary border-secondary text-light fw-medium px-3 im-btn-period"
       onClick={handleSeleccionarEsteMes}
-      style={{ backgroundColor: '#212529' }}
     >
       Mes
     </button>
@@ -1568,63 +1559,49 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
 </h2>
 
   {/* 3. DERECHA: Fechas independientes + Botón separado */}
-  <div className="d-flex align-items-center gap-2">
-    
-    {/* Campo Input Fecha DESDE (Caja individual) */}
-    <div 
-      className="d-flex align-items-center px-2 py-1 rounded-2"
-      style={{
-        backgroundColor: '#212428',
-        border: '1px solid #2d3036'
-      }}
-    >
-      <i className="bi bi-calendar3 text-secondary me-2 small"></i>
-      <input
-        type="date"
-        className="form-control form-control-sm bg-transparent text-white border-0 shadow-none p-0"
-        value={fechaDesdeInput}
-        onChange={(e) => setFechaDesdeInput(e.target.value)}
-        style={{ colorScheme: 'dark', width: '125px', fontSize: '0.85rem' }}
-      />
-    </div>
-
-    <span className="text-secondary fw-bold px-1">-</span>
-
-    {/* Campo Input Fecha HASTA (Caja individual) */}
-    <div 
-      className="d-flex align-items-center px-2 py-1 rounded-2"
-      style={{
-        backgroundColor: '#212428',
-        border: '1px solid #2d3036'
-      }}
-    >
-      <i className="bi bi-calendar3 text-secondary me-2 small"></i>
-      <input
-        type="date"
-        className="form-control form-control-sm bg-transparent text-white border-0 shadow-none p-0"
-        value={fechaHastaInput}
-        onChange={(e) => setFechaHastaInput(e.target.value)}
-        style={{ colorScheme: 'dark', width: '125px', fontSize: '0.85rem' }}
-      />
-    </div>
-
-    {/* Botón Analizar Independiente */}
-    <button
-      type="button"
-      className="btn btn-sm text-white fw-semibold px-3 rounded-2 ms-1"
-      onClick={handleAnalizar}
-      style={{
-        backgroundColor: '#6f42c1',
-        borderColor: '#6f42c1',
-        fontSize: '0.85rem',
-        paddingTop: '0.35rem',
-        paddingBottom: '0.35rem'
-      }}
-    >
-      Analizar
-    </button>
+<div className="d-flex align-items-center gap-2">
+  
+  {/* Campo Input Fecha DESDE */}
+  <div className="d-flex align-items-center px-3 py-2 rounded-3 im-surface">
+    <input
+      type="date"
+      className="form-control form-control-sm bg-transparent border-0 shadow-none p-0"
+      value={fechaDesdeInput}
+      onChange={(e) => setFechaDesdeInput(e.target.value)}
+      style={{ width: '125px', fontSize: '0.85rem' }}
+    />
   </div>
 
+  <span className="text-secondary fw-bold px-1">-</span>
+
+  {/* Campo Input Fecha HASTA */}
+  <div className="d-flex align-items-center px-3 py-2 rounded-3 im-surface">
+    <input
+      type="date"
+      className="form-control form-control-sm bg-transparent border-0 shadow-none p-0"
+      value={fechaHastaInput}
+      onChange={(e) => setFechaHastaInput(e.target.value)}
+      style={{ width: '125px', fontSize: '0.85rem' }}
+    />
+  </div>
+
+  {/* Botón Analizar */}
+  <button
+    type="button"
+    className="btn btn-sm fw-semibold px-3 rounded-2 ms-1"
+    onClick={handleAnalizar}
+    style={{
+      backgroundColor: '#6f42c1',
+      borderColor: '#6f42c1',
+      color: '#ffffff',
+      fontSize: '0.85rem',
+      paddingTop: '0.35rem',
+      paddingBottom: '0.35rem'
+    }}
+  >
+    Analizar
+  </button>
+</div>
 </div>
 
       {/* BOTÓN VOLVER (SI ESTAMOS EN UNA SECCIÓN) */}
@@ -1636,8 +1613,8 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
           >
             <i className="bi bi-arrow-left"></i> Volver al Menú Principal
           </button>
-          <span className="text-white-50 small">
-            Período: <strong>{fechaDesde}</strong> al <strong>{fechaHasta}</strong>
+          <span className="text-body-secondary small">
+           Período: <strong>{fechaDesde}</strong> al <strong>{fechaHasta}</strong>
           </span>
         </div>
       )}
@@ -1652,12 +1629,8 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
             {kpiCards.map((card, idx) => (
               <div className="col-12 col-sm-6 col-xl-3" key={idx}>
                 <div 
-                  className="p-3 rounded-4 h-100 shadow-sm d-flex flex-column position-relative overflow-hidden" 
-                  style={{ 
-                    backgroundColor: '#18181b', 
-                    border: '1px solid #3f3f46',
-                    minHeight: '160px'
-                  }}
+                 className="p-3 rounded-4 h-100 shadow-sm d-flex flex-column position-relative overflow-hidden im-surface" 
+                 style={{ minHeight: '160px' }}
                 >
                   {/* Cabecera: ícono + ticker + título */}
                   <div className="d-flex align-items-center gap-2 mb-2 position-relative z-1">
@@ -1675,13 +1648,15 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
                       <i className={`bi ${card.icon}`}></i>
                     </div>
                     <div>
-                      <div className="text-white-50 font-monospace" style={{ fontSize: '0.65rem', letterSpacing: '0.5px' }}>
-                        {card.sub}
-                      </div>
-                      <div className="fw-bold text-white" style={{ fontSize: '0.8rem' }}>
-                        {card.label}
-                      </div>
-                    </div>
+  {/* text-body-secondary ajusta el subtítulo automáticamente (gris oscuro/negro en claro, gris claro en oscuro) */}
+  <div className="text-body-secondary font-monospace fw-semibold" style={{ fontSize: '0.65rem', letterSpacing: '0.5px' }}>
+    {card.sub}
+  </div>
+  {/* text-body asegura el color de texto principal del tema activo */}
+  <div className="fw-bold text-body" style={{ fontSize: '0.8rem' }}>
+    {card.label}
+  </div>
+</div>
                   </div>
 
                   {/* Gráfico de fondo: ocupa la mitad inferior de la tarjeta y se desvanece hacia el medio */}
@@ -1725,8 +1700,8 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
             ))}
           </div>
 
-          <h5 className="fw-bold mb-3 text-white-50 font-monospace" style={{ fontSize: '0.9rem', letterSpacing: '1px' }}>
-            SELECCIONÁ UN MÓDULO PARA VER SUS INFORMES DETALLADOS:
+          <h5 className="fw-bold mb-3 text-body-secondary font-monospace" style={{ fontSize: '0.9rem', letterSpacing: '1px' }}>
+           SELECCIONÁ UN MÓDULO PARA VER SUS INFORMES DETALLADOS:
           </h5>
 
           {/* TARJETAS DE SECCIÓN Y DESCARGA DE PDF (FILAS IGUALADAS CON ALIGN-ITEMS-STRETCH) */}
@@ -1744,7 +1719,7 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
                       <span className="badge bg-dark text-white-50 border border-secondary px-2 py-1">Ver Reportes →</span>
                     </div>
                     <h4 className="fw-bold text-white mb-2">{sec.label}</h4>
-                    <p className="text-white-50 small mb-0">{sec.desc}</p>
+                    <p className="text-body-secondary small mb-0">{sec.desc}</p>
                   </div>
                 </div>
               </div>
@@ -1763,7 +1738,7 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
                     <span className="badge bg-danger text-white px-2 py-1">Próximamente</span>
                   </div>
                   <h4 className="fw-bold text-white mb-2">EXPORTAR INFORMES</h4>
-                  <p className="text-white-50 small mb-0">Generar y descargar un documento consolidado con las métricas del período</p>
+                  <p className="text-body-secondary small mb-0">Generar y descargar un documento consolidado con las métricas del período</p>
                 </div>
 
                 <button 
@@ -1826,7 +1801,7 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
 
           <div className="row g-4 mb-4 align-items-stretch">
             <div className="col-12 col-xl-8">
-              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between im-surface">
                 <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
                   <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
                   <i className="bi bi-activity me-2" style={{ color: '#8e45e0' }}></i>Evolución de Ingresos a Caja
@@ -1861,7 +1836,7 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
             </div>
 
             <div className="col-12 col-xl-4">
-              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+             <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between im-surface">
                 <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
                   <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
                   <i className="bi bi-pie-chart-fill me-2" style={{ color: '#20c997' }}></i>Tipos / Medios de Pago
@@ -1892,7 +1867,7 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
             </div>
 
             <div className="col-12">
-              <div className="p-4 rounded-4 shadow-sm" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+              <div className="p-4 rounded-4 shadow-sm im-surface">
                 <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
                   <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
                   <i className="bi bi-arrow-down-right-circle-fill me-2" style={{ color: '#e22e2e' }}></i>Egresos y Salidas de Caja Detallados
@@ -1913,7 +1888,7 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
                         <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
                         <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />
                         <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
-                        <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEgresoTooltip esMismoDia={esMismoDia} />} />
+                        <RechartsTooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} content={<CustomEgresoTooltip esMismoDia={esMismoDia} />} />
                         <Bar dataKey="monto" fill="#e22e2e" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
@@ -1931,454 +1906,464 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
       {/* 2. SECCIÓN: VENTAS Y PRODUCTOS             */}
       {/* ========================================== */}
       {seccionActiva === 'ventas' && (
-        <>
-          <div className="d-flex align-items-center gap-2 mb-4">
-            <h3 className="fw-bold mb-0" style={{ color: '#20c997' }}>
-              <i className="bi bi-bag-check-fill me-2"></i>Ventas y Productos
-            </h3>
+  <>
+    <div className="d-flex align-items-center gap-2 mb-4">
+      <h3 className="fw-bold mb-0" style={{ color: '#20c997' }}>
+        <i className="bi bi-bag-check-fill me-2"></i>Ventas y Productos
+      </h3>
+    </div>
+
+    <div className="row g-4 mb-4 align-items-stretch">
+      {/* 1. Distribución por Estados */}
+      <div className="col-12 col-xl-4">
+        <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between im-surface">
+          <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
+            <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-diagram-3-fill me-2" style={{ color: '#ffc107' }}></i>Distribución por Estados
+            </h5>
+            <button
+              type="button"
+              onClick={() => abrirModalComparacion('estados')}
+              className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+              style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #ffc107', color: '#ffc107' }}
+            >
+              <i className="bi bi-arrow-left-right"></i> Comparar
+            </button>
           </div>
-
-          <div className="row g-4 mb-4 align-items-stretch">
-            <div className="col-12 col-xl-4">
-              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-                <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
-                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                  <i className="bi bi-diagram-3-fill me-2" style={{ color: '#ffc107' }}></i>Distribución por Estados
-                  </h5>
-                  <button
-                    type="button"
-                    onClick={() => abrirModalComparacion('estados')}
-                    className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
-                    style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #ffc107', color: '#ffc107' }}
-                  >
-                    <i className="bi bi-arrow-left-right"></i> Comparar
-                  </button>
-                </div>
-                <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={metricas.distribucionEstados} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none">
-                        {metricas.distribucionEstados.map((_: any, index: number) => (
-                          <Cell key={`cell-estado-${index}`} fill={COLORES_TORTA[(index + 2) % COLORES_TORTA.length]} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip contentStyle={{ backgroundColor: '#222122', borderColor: '#3f3f46', borderRadius: '8px' }} />
-                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-12 col-xl-4">
-              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-                <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
-                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                  <i className="bi bi-box-seam-fill me-2" style={{ color: '#20c997' }}></i>Productos Más Vendidos
-                  </h5>
-                  <button
-                    type="button"
-                    onClick={() => abrirModalComparacion('productos')}
-                    className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
-                    style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #20c997', color: '#20c997' }}
-                  >
-                    <i className="bi bi-arrow-left-right"></i> Comparar
-                  </button>
-                </div>
-                <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie 
-                        data={metricas?.productosMasVendidos || []} 
-                        cx="50%" 
-                        cy="45%" 
-                        innerRadius={60} 
-                        outerRadius={95} 
-                        paddingAngle={5} 
-                        dataKey="value" 
-                        stroke="none"
-                      >
-                        {(metricas?.productosMasVendidos || []).map((_: any, index: number) => (
-                          <Cell key={`cell-prod-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip 
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            const data = payload[0].payload;
-                            const colorSlice = data.color || '#20c997';
-
-                            return (
-                              <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
-                                <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.nombreReal || data.name}</p>
-                                <p className="small mb-0">{data.name} — Unidades vendidas: <span className="text-white fw-bold">{data.value}</span></p>
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-12 col-xl-4">
-              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-                <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
-                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                  <i className="bi bi-tags-fill me-2" style={{ color: '#8e45e0' }}></i>Categorías Más Vendidas
-                  </h5>
-                  <button
-                    type="button"
-                    onClick={() => abrirModalComparacion('categorias')}
-                    className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
-                    style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #8e45e0', color: '#8e45e0' }}
-                  >
-                    <i className="bi bi-arrow-left-right"></i> Comparar
-                  </button>
-                </div>
-                <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={metricas?.categoriasMasVendidas || []} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                      <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
-                      <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                      <RechartsTooltip cursor={{ fill: '#222122' }} contentStyle={{ backgroundColor: '#18181b', borderColor: '#8e45e0', borderRadius: '8px', color: '#fff' }} />
-                      <Bar dataKey="ventas" fill="#8e45e0" radius={[6, 6, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
+          <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={metricas.distribucionEstados} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none">
+                  {metricas.distribucionEstados.map((_: any, index: number) => (
+                    <Cell key={`cell-estado-${index}`} fill={COLORES_TORTA[(index + 2) % COLORES_TORTA.length]} />
+                  ))}
+                </Pie>
+                <RechartsTooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#e2e8f0', borderRadius: '8px', color: '#000' }} />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem' }} />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-        </>
-      )}
+        </div>
+      </div>
+
+      {/* 2. Productos Más Vendidos */}
+      <div className="col-12 col-xl-4">
+        <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between im-surface">
+          <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
+            <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-box-seam-fill me-2" style={{ color: '#20c997' }}></i>Productos Más Vendidos
+            </h5>
+            <button
+              type="button"
+              onClick={() => abrirModalComparacion('productos')}
+              className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+              style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #20c997', color: '#20c997' }}
+            >
+              <i className="bi bi-arrow-left-right"></i> Comparar
+            </button>
+          </div>
+          <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie 
+                  data={metricas?.productosMasVendidos || []} 
+                  cx="50%" 
+                  cy="45%" 
+                  innerRadius={60} 
+                  outerRadius={95} 
+                  paddingAngle={5} 
+                  dataKey="value" 
+                  stroke="none"
+                >
+                  {(metricas?.productosMasVendidos || []).map((_: any, index: number) => (
+                    <Cell key={`cell-prod-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
+                  ))}
+                </Pie>
+                <RechartsTooltip 
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      const colorSlice = data.color || '#20c997';
+
+                      return (
+                        <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#fff', border: `1px solid ${colorSlice}`, color: '#000' }}>
+                          <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.nombreReal || data.name}</p>
+                          <p className="small mb-0">{data.name} — Unidades vendidas: <span className="fw-bold">{data.value}</span></p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Categorías Más Vendidas */}
+      <div className="col-12 col-xl-4">
+        <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between im-surface">
+          <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
+            <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-tags-fill me-2" style={{ color: '#8e45e0' }}></i>Categorías Más Vendidas
+            </h5>
+            <button
+              type="button"
+              onClick={() => abrirModalComparacion('categorias')}
+              className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+              style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #8e45e0', color: '#8e45e0' }}
+            >
+              <i className="bi bi-arrow-left-right"></i> Comparar
+            </button>
+          </div>
+          <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={metricas?.categoriasMasVendidas || []} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
+                <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <RechartsTooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} contentStyle={{ backgroundColor: '#fff', borderColor: '#8e45e0', borderRadius: '8px', color: '#000' }} />
+                <Bar dataKey="ventas" fill="#8e45e0" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+    </div>
+  </>
+)}
 
       {/* ========================================== */}
       {/* 3. SECCIÓN: OPERACIONES Y RECURSOS HUMANOS */}
       {/* ========================================== */}
       {seccionActiva === 'operaciones' && (
-        <>
-          <div className="d-flex align-items-center gap-2 mb-4">
-            <h3 className="fw-bold mb-0" style={{ color: '#0dcaf0' }}>
-              <i className="bi bi-people-fill me-2"></i>Operaciones y Recursos Humanos
-            </h3>
+  <>
+    <div className="d-flex align-items-center gap-2 mb-4">
+      <h3 className="fw-bold mb-0" style={{ color: '#0dcaf0' }}>
+        <i className="bi bi-people-fill me-2"></i>Operaciones y Recursos Humanos
+      </h3>
+    </div>
+
+    <div className="row g-4 mb-4 align-items-stretch">
+      {/* 1. Recaudación de Empleado por Pago Completado */}
+      <div className="col-12 col-xl-8">
+        <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between im-surface">
+          <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
+            <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-person-badge-fill me-2" style={{ color: '#0dcaf0' }}></i>Recaudación de Empleado por Pago Completado
+            </h5>
+            <button
+              type="button"
+              onClick={() => abrirModalComparacion('recaudacionEmpleados')}
+              className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+              style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #0dcaf0', color: '#0dcaf0' }}
+            >
+              <i className="bi bi-arrow-left-right"></i> Comparar
+            </button>
           </div>
-
-          <div className="row g-4 mb-4 align-items-stretch">
-            <div className="col-12 col-xl-8">
-              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-                <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
-                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                  <i className="bi bi-person-badge-fill me-2" style={{ color: '#0dcaf0' }}></i>Recaudación de Empleado por Pago Completado
-                  </h5>
-                  <button
-                    type="button"
-                    onClick={() => abrirModalComparacion('recaudacionEmpleados')}
-                    className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
-                    style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #0dcaf0', color: '#0dcaf0' }}
-                  >
-                    <i className="bi bi-arrow-left-right"></i> Comparar
-                  </button>
-                </div>
-                <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={metricas.rendimientoEmpleados} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                      <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
-                      <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
-                      <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEmpleadoTooltip />} />
-                      <Bar dataKey="ventas" fill="#0dcaf0" radius={[6, 6, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-12 col-xl-4">
-              <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-                <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
-                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                  <i className="bi bi-check2-square me-2" style={{ color: '#0dcaf0' }}></i>Pedidos Completados por Empleado
-                  </h5>
-                  <button
-                    type="button"
-                    onClick={() => abrirModalComparacion('pedidosEmpleados')}
-                    className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
-                    style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #0dcaf0', color: '#0dcaf0' }}
-                  >
-                    <i className="bi bi-arrow-left-right"></i> Comparar
-                  </button>
-                </div>
-                <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={metricas.pedidosCompletadosPorEmpleado}
-                        cx="50%"
-                        cy="45%"
-                        innerRadius={60}
-                        outerRadius={95}
-                        paddingAngle={5}
-                        dataKey="value"
-                        stroke="none"
-                      >
-                        {(metricas.pedidosCompletadosPorEmpleado || []).map((_: any, index: number) => (
-                          <Cell key={`cell-emp-completado-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            const data = payload[0].payload;
-                            const colorSlice = data.color || '#0dcaf0';
-
-                            return (
-                              <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff', fontSize: '0.85rem' }}>
-                                <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.name}</p>
-                                <p className="small mb-0 text-white">Pedidos finalizados: <span className="fw-bold">{data.value}</span></p>
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                      <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
+          <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={metricas.rendimientoEmpleados} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
+                <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val/1000 + 'k' : val}`} />
+                <RechartsTooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} content={<CustomEmpleadoTooltip />} />
+                <Bar dataKey="ventas" fill="#0dcaf0" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-        </>
-      )}
+        </div>
+      </div>
+
+      {/* 2. Pedidos Completados por Empleado */}
+      <div className="col-12 col-xl-4">
+        <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between im-surface">
+          <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
+            <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-check2-square me-2" style={{ color: '#0dcaf0' }}></i>Pedidos Completados por Empleado
+            </h5>
+            <button
+              type="button"
+              onClick={() => abrirModalComparacion('pedidosEmpleados')}
+              className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+              style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #0dcaf0', color: '#0dcaf0' }}
+            >
+              <i className="bi bi-arrow-left-right"></i> Comparar
+            </button>
+          </div>
+          <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={metricas.pedidosCompletadosPorEmpleado}
+                  cx="50%"
+                  cy="45%"
+                  innerRadius={60}
+                  outerRadius={95}
+                  paddingAngle={5}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {(metricas.pedidosCompletadosPorEmpleado || []).map((_: any, index: number) => (
+                    <Cell key={`cell-emp-completado-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
+                  ))}
+                </Pie>
+                <RechartsTooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      const colorSlice = data.color || '#0dcaf0';
+
+                      return (
+                        <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#fff', border: `1px solid ${colorSlice}`, color: '#000', fontSize: '0.85rem' }}>
+                          <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.name}</p>
+                          <p className="small mb-0">Pedidos finalizados: <span className="fw-bold">{data.value}</span></p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+    </div>
+  </>
+)}
 
       {/* ========================================== */}
       {/* 4. SECCIÓN: CLIENTES                       */}
       {/* ========================================== */}
-      {seccionActiva === 'clientes' && (
-        <>
-          <div className="d-flex align-items-center gap-2 mb-4">
-            <h3 className="fw-bold mb-0" style={{ color: '#ffc107' }}>
-              <i className="bi bi-trophy-fill me-2"></i>Clientes
-            </h3>
+     {seccionActiva === 'clientes' && (
+  <>
+    <div className="d-flex align-items-center gap-2 mb-4">
+      <h3 className="fw-bold mb-0" style={{ color: '#ffc107' }}>
+        <i className="bi bi-trophy-fill me-2"></i>Clientes
+      </h3>
+    </div>
+
+    <div className="row g-4 mb-4 align-items-stretch">
+      {/* 1. Clientes Más Activos */}
+      <div className="col-12 col-xl-6">
+        <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between im-surface">
+          <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
+            <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-trophy-fill me-2" style={{ color: '#ffc107' }}></i>Clientes Más Activos
+            </h5>
+            <button
+              type="button"
+              onClick={() => abrirModalComparacion('clientes')}
+              className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+              style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #ffc107', color: '#ffc107' }}
+            >
+              <i className="bi bi-arrow-left-right"></i> Comparar
+            </button>
           </div>
-
-          <div className="row g-4 mb-4 align-items-stretch">
-            <div className="col-12 col-xl-6">
-              <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-                <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
-                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                  <i className="bi bi-trophy-fill me-2" style={{ color: '#ffc107' }}></i>Clientes Más Activos
-                  </h5>
-                  <button
-                    type="button"
-                    onClick={() => abrirModalComparacion('clientes')}
-                    className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
-                    style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #ffc107', color: '#ffc107' }}
+          
+          {topClientes && topClientes.length > 0 ? (
+            <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={topClientes}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={60}
+                    outerRadius={95}
+                    paddingAngle={5}
+                    dataKey="totalGastado"
+                    stroke="none"
                   >
-                    <i className="bi bi-arrow-left-right"></i> Comparar
-                  </button>
-                </div>
-                
-                {topClientes && topClientes.length > 0 ? (
-                  <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={topClientes}
-                          cx="50%"
-                          cy="45%"
-                          innerRadius={60}
-                          outerRadius={95}
-                          paddingAngle={5}
-                          dataKey="totalGastado"
-                          stroke="none"
-                        >
-                          {topClientes.map((_: any, index: number) => (
-                            <Cell key={`cell-cliente-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
-                          ))}
-                        </Pie>
-                        <RechartsTooltip
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              const data = payload[0].payload;
-                              const colorSlice = data.color || '#ffc107';
+                    {topClientes.map((_: any, index: number) => (
+                      <Cell key={`cell-cliente-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        const colorSlice = data.color || '#ffc107';
 
-                              return (
-                                <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
-                                  <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.nombreReal || data.name}</p>
-                                  <p className="small mb-1 text-white">Total Pagado: <span className="fw-bold">${Number(data.totalGastado).toLocaleString('es-AR')}</span></p>
-                                  <p className="small mb-0 text-white-50">Pedidos creados: {data.cantidadPedidos}</p>
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="text-white-50 text-center py-4 my-auto">Sin datos de clientes en este período.</div>
-                )}
-              </div>
+                        return (
+                          <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#fff', border: `1px solid ${colorSlice}`, color: '#000' }}>
+                            <p className="fw-bold mb-1" style={{ color: colorSlice }}>{data.nombreReal || data.name}</p>
+                            <p className="small mb-1">Total Pagado: <span className="fw-bold">${Number(data.totalGastado).toLocaleString('es-AR')}</span></p>
+                            <p className="small mb-0 text-body-secondary">Pedidos creados: {data.cantidadPedidos}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem' }} />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
+          ) : (
+            <div className="text-body-secondary text-center py-4 my-auto">Sin datos de clientes en este período.</div>
+          )}
+        </div>
+      </div>
 
-            <div className="col-12 col-xl-6">
-              <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-                <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
-                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                  <i className="bi bi-person-vcard-fill me-2" style={{ color: '#20c997' }}></i>Ventas por Categoría de Cliente
-                  </h5>
-                  <button
-                    type="button"
-                    onClick={() => abrirModalComparacion('categoriasCliente')}
-                    className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
-                    style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #20c997', color: '#20c997' }}
-                  >
-                    <i className="bi bi-arrow-left-right"></i> Comparar
-                  </button>
-                </div>
-                
-                {metricas.ventasPorCategoriaCliente && metricas.ventasPorCategoriaCliente.length > 0 ? (
-                  <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={metricas.ventasPorCategoriaCliente} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                        <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
-                        <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                        <RechartsTooltip 
-                          cursor={{ fill: '#222122' }} 
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              const data = payload[0].payload;
-                              return (
-                                <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #20c997', color: '#fff' }}>
-                                  <p className="fw-bold mb-1 text-success">{data.name}</p>
-                                  <p className="small mb-1 text-white">Pedidos solicitados: <span className="fw-bold">{data.ventas}</span></p>
-                                  <p className="small mb-0 text-white-50">Monto total: <span className="fw-bold text-white">${Number(data.montoTotal || 0).toLocaleString('es-AR')}</span></p>
-                                  <p className="small mb-0 text-success">Total Ahorrado: <span className="fw-bold">${Number(data.montoAhorrado || 0).toLocaleString('es-AR')}</span></p>
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <Bar dataKey="ventas" fill="#20c997" radius={[6, 6, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="text-white-50 text-center py-4 my-auto">Sin registros de categorías de clientes.</div>
-                )}
-              </div>
-            </div>
+      {/* 2. Ventas por Categoría de Cliente */}
+      <div className="col-12 col-xl-6">
+        <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between im-surface">
+          <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
+            <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-person-vcard-fill me-2" style={{ color: '#20c997' }}></i>Ventas por Categoría de Cliente
+            </h5>
+            <button
+              type="button"
+              onClick={() => abrirModalComparacion('categoriasCliente')}
+              className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+              style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #20c997', color: '#20c997' }}
+            >
+              <i className="bi bi-arrow-left-right"></i> Comparar
+            </button>
           </div>
-        </>
-      )}
+          
+          {metricas.ventasPorCategoriaCliente && metricas.ventasPorCategoriaCliente.length > 0 ? (
+            <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={metricas.ventasPorCategoriaCliente} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <RechartsTooltip 
+                    cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#fff', border: '1px solid #20c997', color: '#000' }}>
+                            <p className="fw-bold mb-1 text-success">{data.name}</p>
+                            <p className="small mb-1">Pedidos solicitados: <span className="fw-bold">{data.ventas}</span></p>
+                            <p className="small mb-0 text-body-secondary">Monto total: <span className="fw-bold text-body">${Number(data.montoTotal || 0).toLocaleString('es-AR')}</span></p>
+                            <p className="small mb-0 text-success">Total Ahorrado: <span className="fw-bold">${Number(data.montoAhorrado || 0).toLocaleString('es-AR')}</span></p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar dataKey="ventas" fill="#20c997" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="text-body-secondary text-center py-4 my-auto">Sin registros de categorías de clientes.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  </>
+)}
 
       {/* ========================================== */}
       {/* 5. SECCIÓN: CONTROL INTERNO Y TALLER       */}
       {/* ========================================== */}
       {seccionActiva === 'control' && (
-        <>
-          <div className="d-flex align-items-center gap-2 mb-4">
-            <h3 className="fw-bold mb-0" style={{ color: '#f43f5e' }}>
-              <i className="bi bi-shield-check me-2"></i>Control Interno y Taller
-            </h3>
-          </div>
+  <>
+    <div className="d-flex align-items-center gap-2 mb-4">
+      <h3 className="fw-bold mb-0" style={{ color: '#f43f5e' }}>
+        <i className="bi bi-shield-check me-2"></i>Control Interno y Taller
+      </h3>
+    </div>
 
-          <div className="row g-4 align-items-stretch">
-            <div className="col-12 col-xl-4">
-              <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                    <i className="bi bi-exclamation-triangle-fill me-2" style={{ color: '#f43f5e' }}></i>Arqueos por Empleado
-                  </h5>
-                  <div className="d-flex align-items-center gap-2">
-                    <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
-                  </div>
-                </div>
-
-                {incongruenciasArqueo && incongruenciasArqueo.length > 0 ? (
-                  <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={incongruenciasArqueo} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                        <XAxis dataKey="empleado" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
-                        <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val / 1000 + 'k' : val}`} />
-                        <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomArqueoTooltip />} />
-                        <Bar dataKey="montoDiferencia" fill="#f43f5e" radius={[6, 6, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="text-white-50 text-center py-4 my-auto">No se registraron diferencias de arqueo en este período.</div>
-                )}
-              </div>
-            </div>
-
-            <div className="col-12 col-xl-4">
-              <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                    <i className="bi bi-trash-fill me-2" style={{ color: '#ffc107' }}></i>Mermas y Desperdicios
-                  </h5>
-                  <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
-                </div>
-
-                {metricas.mermasPorPeriodo && metricas.mermasPorPeriodo.length > 0 ? (
-                  <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={metricas.mermasPorPeriodo} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                        <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
-                        <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                        <RechartsTooltip cursor={{ stroke: '#ffc107' }} content={<CustomMermaTooltip esMismoDia={esMismoDia} />} />
-                        <Line type="monotone" dataKey="cantidad" stroke="#ffc107" strokeWidth={3} dot={{ fill: '#ffc107', r: 5 }} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="text-white-50 text-center py-4 my-auto">Sin mermas registradas en el período.</div>
-                )}
-              </div>
-            </div>
-
-            <div className="col-12 col-xl-4">
-              <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                  <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
-                    <i className="bi bi-tools me-2" style={{ color: '#fd7e14' }}></i>Máquinas y Averías
-                  </h5>
-                  <span className="badge bg-dark border border-warning text-warning px-2 py-1">MOCK</span>
-                </div>
-
-                {metricas.averiasPorPeriodo && metricas.averiasPorPeriodo.length > 0 ? (
-                  <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={metricas.averiasPorPeriodo} margin={{ top: 20, right: 30, left: 10, bottom: 10 }} barSize={35}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-                        <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
-                        <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                        <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomAveriaTooltip esMismoDia={esMismoDia} />} />
-                        <Bar dataKey="cantidad" fill="#fd7e14" radius={[6, 6, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <div className="text-white-50 text-center py-4 my-auto">No hay registro de averías técnicas en el rango.</div>
-                )}
-              </div>
+    <div className="row g-4 align-items-stretch">
+      {/* 1. Arqueos por Empleado */}
+      <div className="col-12 col-xl-4">
+        <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between im-surface">
+          <div className="d-flex align-items-center justify-content-between mb-3">
+            <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-exclamation-triangle-fill me-2" style={{ color: '#f43f5e' }}></i>Arqueos por Empleado
+            </h5>
+            <div className="d-flex align-items-center gap-2">
+              <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">MOCK</span>
             </div>
           </div>
-        </>
-      )}
+
+          {incongruenciasArqueo && incongruenciasArqueo.length > 0 ? (
+            <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={incongruenciasArqueo} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="empleado" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val / 1000 + 'k' : val}`} />
+                  <RechartsTooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} content={<CustomArqueoTooltip />} />
+                  <Bar dataKey="montoDiferencia" fill="#f43f5e" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="text-body-secondary text-center py-4 my-auto">No se registraron diferencias de arqueo en este período.</div>
+          )}
+        </div>
+      </div>
+
+      {/* 2. Mermas y Desperdicios */}
+      <div className="col-12 col-xl-4">
+        <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between im-surface">
+          <div className="d-flex align-items-center justify-content-between mb-3">
+            <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-trash-fill me-2" style={{ color: '#ffc107' }}></i>Mermas y Desperdicios
+            </h5>
+            <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">MOCK</span>
+          </div>
+
+          {metricas.mermasPorPeriodo && metricas.mermasPorPeriodo.length > 0 ? (
+            <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={metricas.mermasPorPeriodo} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <RechartsTooltip cursor={{ stroke: '#ffc107' }} content={<CustomMermaTooltip esMismoDia={esMismoDia} />} />
+                  <Line type="monotone" dataKey="cantidad" stroke="#ffc107" strokeWidth={3} dot={{ fill: '#ffc107', r: 5 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="text-body-secondary text-center py-4 my-auto">Sin mermas registradas en el período.</div>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Máquinas y Averías */}
+      <div className="col-12 col-xl-4">
+        <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between im-surface">
+          <div className="d-flex align-items-center justify-content-between mb-3">
+            <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+              <i className="bi bi-tools me-2" style={{ color: '#fd7e14' }}></i>Máquinas y Averías
+            </h5>
+            <span className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">MOCK</span>
+          </div>
+
+          {metricas.averiasPorPeriodo && metricas.averiasPorPeriodo.length > 0 ? (
+            <div className="my-auto d-flex align-items-center justify-content-center" style={{ height: '340px', width: '100%' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={metricas.averiasPorPeriodo} margin={{ top: 20, right: 30, left: 10, bottom: 10 }} barSize={35}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <RechartsTooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} content={<CustomAveriaTooltip esMismoDia={esMismoDia} />} />
+                  <Bar dataKey="cantidad" fill="#fd7e14" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="text-body-secondary text-center py-4 my-auto">No hay registro de averías técnicas en el rango.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  </>
+)}
 
       {/* ========================================== */}
       {/* MODAL DE COMPARACIÓN ENTRE PERÍODOS        */}

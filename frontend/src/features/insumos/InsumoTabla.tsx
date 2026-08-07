@@ -12,71 +12,119 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const tableText = isDark ? 'white' : '#18181b';
-  const theadBorder = isDark ? '#3f3f46' : '#e2e8f0';
-  const rowBorder = isDark ? '#2d2d30' : '#e2e8f0';
-  const rowHoverBg = isDark ? '#27272a' : '#f1f5f9';
+  const containerBg = isDark ? 'transparent' : '#ffffff';
+  const tableText = isDark ? '#ffffff' : '#0f172a';
+  const headerBg = isDark ? 'transparent' : '#f8fafc';
+  const theadBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const rowBorder = isDark ? '#2d2d30' : '#f1f5f9';
+  const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
+  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
+
   return (
-    <div className="table-responsive" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', color: tableText }}>
+    <div 
+      className="table-responsive rounded-3 shadow-sm mb-4 font-monospace" 
+      style={{ 
+        backgroundColor: containerBg,
+        border: `1px solid ${theadBorder}`,
+        maxHeight: '65vh', 
+        overflowY: 'auto' 
+      }}
+    >
+      <table className="table table-borderless align-middle m-0" style={{ color: tableText }}>
         <thead>
-          <tr style={{ borderBottom: `2px solid ${theadBorder}`, textAlign: 'left' }}>
-            <th style={{ padding: '12px' }}>ID</th>
-            <th style={{ padding: '12px' }}>Nombre Insumo</th>
-            <th style={{ padding: '12px' }}>Stock Mínimo</th>
-            <th style={{ padding: '12px' }}>Stock Actual</th>
-            <th style={{ padding: '12px' }}>Tipo de Proveedor</th>
-            <th style={{ padding: '12px' }}>Estado</th>
-            <th style={{ padding: '12px', textAlign: 'center' }}>Opciones</th>
+          <tr 
+            style={{ 
+              borderBottom: `2px solid ${theadBorder}`, 
+              backgroundColor: isDark ? '#1f1f23' : '#f8fafc',
+              fontSize: '0.85rem'
+            }}
+            className="text-uppercase fw-bold text-muted"
+          >
+            <th className="py-3 px-3 text-center">ID</th>
+            <th className="py-3 px-3">Nombre Insumo</th>
+            <th className="py-3 px-3 text-center">Stock Mínimo</th>
+            <th className="py-3 px-3 text-center">Stock Actual</th>
+            <th className="py-3 px-3">Tipo de Proveedor</th>
+            <th className="py-3 px-3 text-center">Estado</th>
+            <th className="py-3 px-3 text-center">Opciones</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody style={{ fontSize: '0.9rem' }}>
           {insumos.length === 0 ? (
             <tr>
-              <td colSpan={7} className="text-center py-4">No se han registrado o encontrado insumos en el sistema.</td>
+              <td colSpan={7} className="text-center py-5" style={{ color: mutedText }}>
+                No se han registrado o encontrado insumos en el sistema.
+              </td>
             </tr>
           ) : (
-            insumos.map((i) => (
-              <tr 
-  key={i.idInsumo}
-  style={{ borderBottom: `1px solid ${rowBorder}` }}
-  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
-  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
->
-                <td style={{ padding: '12px' }}>{i.idInsumo}</td>
-                <td style={{ padding: '12px' }} className="fw-bold">{i.nombreInsumo}</td>
-                <td style={{ padding: '12px' }} className="text-warning">{i.stockMinimo}</td>
-                <td style={{ padding: '12px' }} className={`fw-bold ${i.stockActual <= i.stockMinimo ? 'text-danger' : 'text-success'}`}>
-                  {i.stockActual} {i.stockActual <= i.stockMinimo && <i className="bi bi-exclamation-circle-fill ms-1"></i>}
-                </td>
-                <td style={{ padding: '12px' }}>{i.proveedor?.tipoProveedor?.descripcion || '-'}</td>
-                <td style={{ padding: '12px' }}>
-                  <span className={`badge ${i.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>
-              {i.estado}
-                  </span>
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <div className="d-flex justify-content-center gap-2">
-                    {/* Botones con el estilo que ya definimos globalmente */}
-                    <button 
-                      className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
-                      style={{ width: '32px', height: '32px' }}
-                      onClick={() => onEditar(i)} 
-                      title="Editar Insumo"
+            insumos.map((i) => {
+              const tieneBajoStock = i.stockActual <= i.stockMinimo;
+              
+              return (
+                <tr 
+                  key={i.idInsumo}
+                  style={{ borderBottom: `1px solid ${rowBorder}` }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  {/* ID con estilo cian (#) similar a Historial de Pedidos */}
+                  <td className="py-3 px-3 fw-bold text-center text-info-custom">
+                    #{i.idInsumo}
+                  </td>
+                  
+                  <td className="py-3 px-3 fw-bold">
+                    {i.nombreInsumo}
+                  </td>
+                  
+                  <td className="py-3 px-3 text-center text-warning fw-bold">
+                    {i.stockMinimo}
+                  </td>
+                  
+                  <td className={`py-3 px-3 text-center fw-bold ${tieneBajoStock ? 'text-danger' : 'text-success'}`}>
+  {i.stockActual} {tieneBajoStock && <i className="bi bi-exclamation-circle-fill text-danger ms-1" title="Stock por debajo del mínimo"></i>}
+</td>
+                  
+                  <td className="py-3 px-3" style={{ color: isDark ? '#e4e4e7' : '#334155' }}>
+                    {i.proveedor?.tipoProveedor?.descripcion || '-'}
+                  </td>
+                  
+                  {/* Badges de estado con estilos redondeados */}
+                  <td className="py-3 px-3 text-center">
+                    <span 
+                      className={`badge px-3 py-2 text-uppercase fw-bold rounded-pill ${
+                        i.estado === 'Activo' ? 'bg-success' : 'bg-danger'
+                      }`}
+                      style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}
                     >
-                      <i className="bi bi-pencil-square"></i>
-                    </button>
-                    <button 
-                     className="btn btn-sm d-flex align-items-center justify-content-center btn-truck-custom" 
-                     style={{ width: '32px', height: '32px' }} 
-                     onClick={() => onVerProveedores(i)} 
-                     title="Ver Proveedores del rubro">
-                     <i className="bi bi-truck"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))
+                      {i.estado}
+                    </span>
+                  </td>
+                  
+                  {/* Acciones */}
+                  <td className="py-3 px-3 text-center">
+                    <div className="d-flex justify-content-center gap-2">
+                      <button 
+                        className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                        style={{ width: '32px', height: '32px' }}
+                        onClick={() => onEditar(i)} 
+                        title="Editar Insumo"
+                      >
+                        <i className="bi bi-pencil-square"></i>
+                      </button>
+                      
+                      <button 
+                        className="btn btn-sm d-flex align-items-center justify-content-center btn-truck-custom rounded-2" 
+                        style={{ width: '32px', height: '32px' }} 
+                        onClick={() => onVerProveedores(i)} 
+                        title="Ver Proveedores del rubro"
+                      >
+                        <i className="bi bi-truck"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

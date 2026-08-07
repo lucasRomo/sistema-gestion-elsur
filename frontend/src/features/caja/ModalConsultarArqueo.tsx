@@ -34,6 +34,9 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const cardBg = isDark ? '#27272a' : '#f8fafc';
   const cardBorder = isDark ? '#3f3f46' : '#e2e8f0';
+  const textMuted = isDark ? '#a1a1aa' : '#475569';
+  const consolidatedBg = isDark ? '#1e293b' : '#f1f5f9';
+  const consolidatedText = isDark ? '#38bdf8' : '#0284c7';
 
   // El saldo total en físico incluye el monto inicial sumado al flujo neto de efectivo
   const totalEsperadoFisico = montoInicial + (datosArqueo?.totalEfectivo || 0);
@@ -64,18 +67,18 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
                   </div>
                   <hr className="my-2" style={{ color: cardBorder }} />
                   
-                  <div className="d-flex justify-content-between small text-muted mb-1">
-                    <span>Inicio de Caja:</span>
-                    <span className="text-info fw-semibold">${montoInicial.toLocaleString('es-AR')}</span>
-                  </div>
-                  <div className="d-flex justify-content-between small text-muted mb-1">
-                    <span>Ingresos Efectivo:</span>
-                    <span className="text-success fw-medium">${datosArqueo?.efectivoIngresos?.toLocaleString('es-AR') || 0}</span>
-                  </div>
-                  <div className="d-flex justify-content-between small text-muted mb-2">
-                    <span>Egresos Efectivo:</span>
-                    <span className="text-danger fw-medium">${datosArqueo?.efectivoEgresos?.toLocaleString('es-AR') || 0}</span>
-                  </div>
+                  <div className="d-flex justify-content-between small mb-1" style={{ color: textMuted }}>
+  <span>Inicio de Caja:</span>
+  <span className="fw-bold text-info-custom fs-6">${montoInicial.toLocaleString('es-AR')}</span>
+</div>
+<div className="d-flex justify-content-between small mb-1" style={{ color: textMuted }}>
+  <span>Ingresos Efectivo:</span>
+  <span className="text-success fw-medium">${datosArqueo?.efectivoIngresos?.toLocaleString('es-AR') || 0}</span>
+</div>
+<div className="d-flex justify-content-between small mb-2" style={{ color: textMuted }}>
+  <span>Egresos Efectivo:</span>
+  <span className="text-danger fw-medium">${datosArqueo?.efectivoEgresos?.toLocaleString('es-AR') || 0}</span>
+</div>
                   
                   <div className="d-flex justify-content-between align-items-center pt-2 border-top">
                     <span className="fw-bold" style={{ color: textColor }}>Total Esperado Físico:</span>
@@ -88,8 +91,7 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
               <div className="col-md-6">
                 <div className="p-3 rounded-3" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
                   <div className="d-flex align-items-center justify-content-between mb-2">
-                    <span className="fw-bold text-info fs-5">💳 Transferencias</span>
-                    <i className="bi bi-credit-card-2-front fs-4 text-info"></i>
+                    <span className="fw-bold text-info-custom fs-5">💳 Transferencias</span>
                   </div>
                   <hr className="my-2" style={{ color: cardBorder }} />
                   
@@ -104,7 +106,7 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
                   
                   <div className="d-flex justify-content-between align-items-center pt-2 border-top">
                     <span className="fw-bold" style={{ color: textColor }}>Total Digital:</span>
-                    <span className="fw-bold text-info fs-4">${datosArqueo?.totalTransferencias?.toLocaleString('es-AR') || 0}</span>
+                    <span className="fw-bold text-info-custom fs-6">${datosArqueo?.totalTransferencias?.toLocaleString('es-AR') || 0}</span>
                   </div>
                 </div>
               </div>
@@ -154,10 +156,14 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
             </div>
 
             {/* Total Consolidado */}
-            <div className="p-3 rounded-3 text-center" style={{ backgroundColor: isDark ? '#1e293b' : '#e2e8f0' }}>
-              <span className="text-uppercase small fw-bold text-muted d-block mb-1">Saldo Total Estimado Hoy</span>
-              <h2 className="fw-bold text-primary m-0">${saldoTotalConsolidado.toLocaleString('es-AR')}</h2>
-            </div>
+            <div className="p-3 rounded-3 text-center" style={{ backgroundColor: consolidatedBg, border: `1px solid ${cardBorder}` }}>
+  <span className="text-uppercase small fw-bold d-block mb-1" style={{ color: textMuted }}>
+    Saldo Total Estimado Hoy
+  </span>
+  <h2 className="fw-bold m-0" style={{ color: consolidatedText }}>
+    ${saldoTotalConsolidado.toLocaleString('es-AR')}
+  </h2>
+</div>
           </div>
 
           <div className="modal-footer border-0 justify-content-end pt-2">

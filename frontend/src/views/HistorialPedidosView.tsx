@@ -91,7 +91,6 @@ export const HistorialPedidosPage: React.FC = () => {
   tipo: 'exito' 
   });
 
-  // Handler para procesar las acciones de Devolución
   const handleProcesarDevolucion = async (accion: 'REINICIAR' | 'DEVUELTO') => {
   if (!descripcionDevolucion.trim()) {
     setSuceso({
@@ -109,6 +108,7 @@ export const HistorialPedidosPage: React.FC = () => {
     const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
 
     if (accion === 'REINICIAR') {
+      // Reabre el pedido cambiándolo explícitamente a PENDIENTE
       await pedidoService.cambiarEstado(
         pedidoDevolucion.id_pedido, 
         'PENDIENTE', 
@@ -123,6 +123,7 @@ export const HistorialPedidosPage: React.FC = () => {
         tipo: 'exito'
       });
     } else {
+      // Guarda el pedido con estado DEVUELTO (Permanecerá únicamente en Historial)
       await pedidoService.cambiarEstado(
         pedidoDevolucion.id_pedido, 
         'DEVUELTO', 
@@ -133,13 +134,14 @@ export const HistorialPedidosPage: React.FC = () => {
       setSuceso({
         show: true,
         titulo: 'Éxito',
-        mensaje: 'Pedido marcado como Devuelto correctamente.',
+        mensaje: 'Pedido finalizado y marcado como Devuelto correctamente.',
         tipo: 'exito'
       });
     }
 
     setPedidoDevolucion(null);
     setDescripcionDevolucion('');
+    recargarHistorial(); // Refrescar lista del historial inmediatamente
   } catch (error: any) {
     console.error('Error al procesar la devolución:', error);
     setSuceso({
@@ -229,9 +231,13 @@ export const HistorialPedidosPage: React.FC = () => {
 
         {/* Tabla del Historial */}
         <div 
-  className="d-flex flex-column flex-grow-1 overflow-hidden mb-2" 
-  style={{ backgroundColor: tableWrapperBg, height: 'calc(100vh - 210px)' }}
->
+          className="d-flex flex-column flex-grow-1 overflow-hidden mb-2 shadow-sm rounded-3 border" 
+          style={{ 
+            backgroundColor: tableWrapperBg, 
+            borderColor: isDark ? '#27272a' : '#e2e8f0',
+            height: 'calc(100vh - 165px)' 
+          }}
+        >
   <div 
     className="table-responsive flex-grow-1" 
     style={{ backgroundColor: tableWrapperBg, height: '100%', overflowY: 'auto' }}
@@ -289,7 +295,7 @@ export const HistorialPedidosPage: React.FC = () => {
         </div>
 
         {/* Botón Volver */}
-        <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-2 border-top border-secondary pb-1 mt-auto">
+        <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-1 pb-1 mt-auto">
           <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2">Volver</button>
         </div>
       </div>

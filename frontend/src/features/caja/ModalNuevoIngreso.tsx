@@ -215,22 +215,22 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
           </div>
 
           {/* Footer - Botones */}
-          <div className="modal-footer border-0 d-flex justify-content-between pt-3 px-0">
-            <button 
-              className="btn px-4 py-2 text-white fw-bold border-0 shadow-sm" 
-              style={{ backgroundColor: '#a52a2a', borderRadius: '8px', width: '35%' }}
-              onClick={onClose}
-            >
-              Cancelar
-            </button>
-            <button 
-              className="btn px-4 py-2 text-white fw-bold border-0 shadow-sm" 
-              style={{ backgroundColor: '#2b7a3e', borderRadius: '8px', width: '45%' }}
-              onClick={handleSubmit}
-            >
-              Guardar Movimiento
-            </button>
-          </div>
+<div className="modal-footer border-0 d-flex justify-content-between pt-3 px-0">
+  <button 
+    className="btn px-4 py-2 fw-bold border-0 shadow-sm" 
+    style={{ backgroundColor: '#a52a2a', color: '#ffffff', borderRadius: '8px', width: '35%' }}
+    onClick={onClose}
+  >
+    Cancelar
+  </button>
+  <button 
+    className="btn px-4 py-2 fw-bold border-0 shadow-sm" 
+    style={{ backgroundColor: '#2b7a3e', color: '#ffffff', borderRadius: '8px', width: '45%' }}
+    onClick={handleSubmit}
+  >
+    Guardar Movimiento
+  </button>
+</div>
 
         </div>
       </div>

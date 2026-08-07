@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; 
 
 interface ModuloPermiso {
   idPermiso: number;
@@ -22,7 +22,6 @@ interface Usuario {
   tienePermisosPersonalizados?: boolean;
 }
 
-// Estructura para agrupar las ventanas igual que en el Sidebar
 const CATEGORIAS_SIDEBAR: { [categoria: string]: string[] } = {
   'GENERAL': ['Panel Principal'],
   'PRODUCCIÓN': ['Crear Pedido', 'Pedidos Pendientes', 'Historial de Pedidos', 'Caja', 'Repositorio Digital'],
@@ -318,19 +317,19 @@ export const MatrizPermisosView: React.FC = () => {
   });
 
   return (
-    <div className="container-fluid text-white font-monospace py-2 px-3">
+    <div className="container-fluid py-2 px-3 matriz-container">
       {/* HEADER COMPACTO */}
-      <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+      <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
         <div style={{ width: '335px' }}></div>
         <div className="text-center">
-          <h3 className="fw-bold mb-0" style={{ color: '#ffffff', fontSize: '1.8rem' }}>Matriz de Permisos por Perfil</h3>
+          <h3 className="fw-bold mb-0 text-body" style={{ fontSize: '1.8rem' }}>Matriz de Permisos por Perfil</h3>
         </div>
         
         <div className="d-flex align-items-center gap-2">
           <button 
             onClick={() => setMostrarModalNuevoRol(true)}
-            className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1"
-            style={{ backgroundColor: '#2b7a3e', border: '1px solid #20c997', fontSize: '0.8rem' }}
+            className="btn btn-sm btn-success fw-bold d-flex align-items-center gap-1 matriz-btn-nuevo"
+            style={{ fontSize: '0.8rem' }}
           >
             <i className="bi bi-plus-lg"></i> Nuevo Perfil
           </button>
@@ -338,8 +337,8 @@ export const MatrizPermisosView: React.FC = () => {
           {!usuarioEditar && rolSeleccionado > 2 && (
             <button 
               onClick={handleEliminarRol}
-              className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1"
-              style={{ backgroundColor: '#a52a2a', border: '1px solid #dc3545', fontSize: '0.8rem' }}
+              className="btn btn-sm btn-danger fw-bold d-flex align-items-center gap-1"
+              style={{ fontSize: '0.8rem' }}
               title="Eliminar perfil seleccionado"
             >
               <i className="bi bi-trash"></i>
@@ -347,10 +346,8 @@ export const MatrizPermisosView: React.FC = () => {
           )}
 
           <select 
-            className="form-select form-select-sm bg-dark text-white fw-bold px-2 py-1" 
+            className="form-select form-select-sm fw-bold px-2 py-1 im-surface border-info text-body matriz-select-perfil" 
             style={{ 
-              border: '1px solid #8e45e0', 
-              borderRadius: '6px', 
               width: '200px', 
               fontSize: '0.8rem',
               cursor: usuarioEditar?.idUsuario === 1 ? 'not-allowed' : 'pointer',
@@ -370,9 +367,9 @@ export const MatrizPermisosView: React.FC = () => {
       <div className="row g-3">
         {/* PANEL IZQUIERDO: LISTA DE USUARIOS */}
         <div className="col-md-3">
-          <div className="p-3 rounded-4" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+          <div className="p-3 rounded-4 im-surface border border-secondary border-opacity-25 matriz-card-bg">
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <h6 className="fw-bold mb-0 text-white small">
+              <h6 className="fw-bold mb-0 text-body small">
                 <i className="bi bi-people-fill text-warning me-2"></i>Usuarios
               </h6>
               <span className="badge bg-secondary" style={{ fontSize: '0.7rem' }}>{usuarios.length}</span>
@@ -381,7 +378,7 @@ export const MatrizPermisosView: React.FC = () => {
             <div className="mb-2">
               <input 
                 type="text" 
-                className="form-control form-control-sm bg-dark text-white border-secondary"
+                className="form-control form-control-sm im-surface text-body border-secondary border-opacity-25"
                 style={{ fontSize: '0.75rem' }}
                 placeholder="Buscar..."
                 value={busquedaUsuario}
@@ -403,37 +400,37 @@ export const MatrizPermisosView: React.FC = () => {
                 return (
                   <div 
                     key={u.idUsuario}
-                    className="p-2 rounded d-flex justify-content-between align-items-center"
-                    style={{ 
-                      backgroundColor: esSeleccionado ? '#2b213a' : '#222122',
-                      border: esSeleccionado ? '1px solid #8e45e0' : '1px solid #2d2d30'
-                    }}
+                    className={`p-2 rounded d-flex justify-content-between align-items-center matriz-user-item ${esSeleccionado ? 'selected border-info bg-info bg-opacity-10' : 'im-surface border-secondary border-opacity-25'}`}
+                    style={{ border: '1px solid' }}
                   >
                     <div className="d-flex align-items-center gap-2">
                       <div 
-                        className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
-                        style={{ width: '28px', height: '28px', backgroundColor: '#8e45e0', fontSize: '0.7rem' }}
+                        className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white bg-info matriz-avatar"
+                        style={{ width: '28px', height: '28px', fontSize: '0.7rem' }}
                       >
                         {iniciales}
                       </div>
                       <div style={{ lineHeight: '1.1' }}>
-                        <p className="mb-0 fw-bold text-white" style={{ fontSize: '0.75rem' }}>
+                        <p className="mb-0 fw-bold text-body" style={{ fontSize: '0.75rem' }}>
                           {u.persona ? `${u.persona.nombre} ${u.persona.apellido}` : u.nombreUsuario}
                         </p>
-                        <span className="text-white-50" style={{ fontSize: '0.65rem' }}>
+                        <span className="text-body-secondary" style={{ fontSize: '0.65rem' }}>
                           @{u.nombreUsuario}
                         </span>
                       </div>
                     </div>
 
                     <div className="d-flex align-items-center gap-1">
-                      <span className="badge bg-dark border border-secondary text-info" style={{ fontSize: '0.6rem', padding: '3px 5px' }}>
-                        {nombreRolMostrar}
-                      </span>
+                      <span 
+  className="badge bg-body-tertiary border border-secondary border-opacity-25 matriz-user-badge"
+  style={{ fontSize: '0.6rem', padding: '3px 5px' }}
+>
+  {nombreRolMostrar}
+</span>
                       <button 
                         onClick={() => seleccionarUsuarioParaPermisos(u)}
-                        className="btn btn-sm text-white p-0 px-1"
-                        style={{ backgroundColor: esSeleccionado ? '#8e45e0' : 'transparent', border: '1px solid #8e45e0', fontSize: '0.7rem' }}
+                        className={`btn btn-sm p-0 px-1 ${esSeleccionado ? 'btn-info text-white' : 'btn-outline-info'}`}
+                        style={{ fontSize: '0.7rem' }}
                         title="Configurar permisos"
                       >
                         <i className="bi bi-sliders"></i>
@@ -448,26 +445,26 @@ export const MatrizPermisosView: React.FC = () => {
 
         {/* PANEL DERECHO: MATRIZ CON ESPACIEDO OPTIMIZADO */}
         <div className="col-md-9">
-          <div className="p-3 rounded-4" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+          <div className="p-3 rounded-4 im-surface border border-secondary border-opacity-25 matriz-card-bg">
             
             {usuarioEditar ? (
-              <div className="p-2 px-3 mb-3 rounded d-flex justify-content-between align-items-center" style={{ backgroundColor: '#132e27', border: '1px solid #20c997' }}>
+              <div className="p-2 px-3 mb-3 rounded d-flex justify-content-between align-items-center bg-success bg-opacity-10 border border-success border-opacity-25">
                 <div>
                   <span className="badge bg-success mb-0 me-2" style={{ fontSize: '0.7rem' }}>EMPLEADO</span>
-                  <span className="fw-bold text-white">
-                    Permisos de: <span style={{ color: '#20c997' }}>"{usuarioEditar.persona ? `${usuarioEditar.persona.nombre} ${usuarioEditar.persona.apellido}` : usuarioEditar.nombreUsuario}"</span>
+                  <span className="fw-bold text-body">
+                    Permisos de: <span className="text-success">"{usuarioEditar.persona ? `${usuarioEditar.persona.nombre} ${usuarioEditar.persona.apellido}` : usuarioEditar.nombreUsuario}"</span>
                   </span>
                   {usuarioEditar.idUsuario === 1 && <span className="badge bg-warning text-dark ms-2" style={{ fontSize: '0.7rem' }}>ADMIN PRINCIPAL</span>}
                 </div>
-                <button onClick={volverAModoGlobal} className="btn btn-sm btn-outline-light py-1 px-2" style={{ fontSize: '0.75rem' }}>
+                <button onClick={volverAModoGlobal} className="btn btn-sm btn-outline-secondary py-1 px-2" style={{ fontSize: '0.75rem' }}>
                   <i className="bi bi-x-circle me-1"></i> Volver a Perfiles Globales
                 </button>
               </div>
             ) : (
-              <div className="p-2 px-3 mb-3 rounded" style={{ backgroundColor: '#222122', border: '1px solid #8e45e0' }}>
-                <span className="badge me-2" style={{ backgroundColor: '#8e45e0', fontSize: '0.7rem' }}>PERFIL GLOBAL</span>
-                <span className="fw-bold text-white">
-                  Permisos del perfil: <span style={{ color: '#8e45e0' }}>{roles.find(r => r.idRol === rolSeleccionado)?.nombreRol}</span>
+              <div className="p-2 px-3 mb-3 rounded im-surface border border-info border-opacity-50 matriz-banner-global">
+                <span className="badge bg-info text-dark me-2 matriz-badge-perfil-global" style={{ fontSize: '0.7rem' }}>PERFIL GLOBAL</span>
+                <span className="fw-bold text-body">
+                  Permisos del perfil: <span className="text-info matriz-text-accent">{roles.find(r => r.idRol === rolSeleccionado)?.nombreRol}</span>
                 </span>
               </div>
             )}
@@ -481,14 +478,10 @@ export const MatrizPermisosView: React.FC = () => {
                 return (
                   <div 
                     key={catNombre} 
-                    className="p-2 px-3 rounded mb-3" 
-                    style={{ 
-                      backgroundColor: '#141416', 
-                      border: '1px solid #2d2d30',
-                      breakInside: 'avoid'
-                    }}
+                    className="p-2 px-3 rounded mb-3 im-surface border border-secondary border-opacity-25 matriz-cat-card" 
+                    style={{ breakInside: 'avoid' }}
                   >
-                    <h6 className="fw-bold text-white-50 mb-2 border-bottom border-secondary pb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>
+                    <h6 className="fw-bold text-body-secondary mb-2 border-bottom border-secondary border-opacity-25 pb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>
                       — {catNombre}
                     </h6>
                     <div className="d-flex flex-column gap-2">
@@ -499,29 +492,21 @@ export const MatrizPermisosView: React.FC = () => {
                           <div 
                             key={mod.idPermiso}
                             onClick={() => togglePermiso(mod.idPermiso, mod.nombrePermiso)}
-                            className="d-flex justify-content-between align-items-center px-3 py-2 rounded transition-all"
+                            className={`d-flex justify-content-between align-items-center px-3 py-2 rounded transition-all matriz-permiso-item ${mod.activo ? 'activo bg-info bg-opacity-10 border border-info border-opacity-25' : 'im-surface border border-secondary border-opacity-25'}`}
                             style={{ 
-                              backgroundColor: mod.activo ? 'rgba(142, 69, 224, 0.12)' : '#222122', 
-                              border: mod.activo ? '1px solid #8e45e0' : '1px solid #2d2d30',
                               cursor: bloqueado ? 'not-allowed' : 'pointer',
                               opacity: bloqueado ? 0.75 : 1
                             }}
                           >
                             <div className="d-flex align-items-center gap-1">
-                              <span className="fw-semibold text-white" style={{ fontSize: '0.85rem' }}>{mod.nombrePermiso}</span>
+                              <span className="fw-semibold text-body" style={{ fontSize: '0.85rem' }}>{mod.nombrePermiso}</span>
                               {bloqueado && (
                                 <i className="bi bi-lock-fill text-warning ms-1" style={{ fontSize: '0.8rem' }} title="Protegido para Administrador Principal"></i>
                               )}
                             </div>
                             <span 
-                              className="badge px-2 py-1 fw-bold" 
-                              style={{ 
-                                backgroundColor: mod.activo ? 'rgba(25, 135, 84, 0.2)' : 'rgba(220, 53, 69, 0.2)',
-                                color: mod.activo ? '#20c997' : '#ff6b6b',
-                                border: mod.activo ? '1px solid #198754' : '1px solid #dc3545',
-                                fontSize: '0.7rem',
-                                letterSpacing: '0.5px'
-                              }}
+                              className={`badge px-2 py-1 fw-bold ${mod.activo ? 'bg-success text-dark' : 'bg-danger text-white'}`} 
+                              style={{ fontSize: '0.7rem', letterSpacing: '0.5px' }}
                             >
                               {mod.activo ? 'ACTIVO' : 'DESACTIVADO'}
                             </span>
@@ -535,11 +520,15 @@ export const MatrizPermisosView: React.FC = () => {
             </div>
 
             {/* BOTONES DE ACCIÓN */}
-            <div className="d-flex justify-content-between mt-3 pt-2 border-top border-secondary">
-              <button onClick={() => navigate('/dashboard')} className="btn btn-sm px-3 py-1 fw-bold text-white" style={{ backgroundColor: '#a52a2a', borderRadius: '6px', fontSize: '0.85rem' }}>
-                Volver
-              </button>
-              <button onClick={handleGuardar} className="btn btn-sm px-4 py-1 fw-bold text-white shadow" style={{ backgroundColor: '#2b7a3e', borderRadius: '6px', fontSize: '0.85rem' }}>
+            <div className="d-flex justify-content-between mt-3 pt-2 border-top border-secondary border-opacity-25">
+              <button 
+  onClick={() => navigate('/dashboard')} 
+  className="btn btn-sm btn-danger px-3 py-1 fw-bold matriz-btn-volver" 
+  style={{ borderRadius: '6px', fontSize: '0.85rem' }}
+>
+  Volver
+</button>
+              <button onClick={handleGuardar} className="btn btn-sm btn-success px-4 py-1 fw-bold text-white shadow matriz-btn-guardar" style={{ borderRadius: '6px', fontSize: '0.85rem' }}>
                 Guardar Cambios
               </button>
             </div>
@@ -550,24 +539,23 @@ export const MatrizPermisosView: React.FC = () => {
 
       {/* MODALES */}
       {mostrarModalNuevoRol && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #8e45e0', borderRadius: '12px' }}>
-              <h5 className="fw-bold mb-3 text-center" style={{ color: '#8e45e0', fontSize: '1rem' }}>Crear Nuevo Perfil Global</h5>
+            <div className="modal-content im-surface text-body p-3 border border-info rounded-3 matriz-card-bg">
+              <h5 className="fw-bold mb-3 text-center text-info matriz-text-accent" style={{ fontSize: '1rem' }}>Crear Nuevo Perfil Global</h5>
               <div className="mb-3">
-                <label className="text-white-50 mb-1 small" style={{ fontSize: '0.75rem' }}>Nombre del Perfil (Ej: CAJERO)</label>
+                <label className="text-body-secondary mb-1 small" style={{ fontSize: '0.75rem' }}>Nombre del Perfil (Ej: CAJERO)</label>
                 <input 
                   type="text" 
-                  className="form-control form-control-sm bg-dark text-white" 
-                  style={{ border: '1px solid #3f3f46' }}
+                  className="form-control form-control-sm im-surface text-body border-secondary border-opacity-25" 
                   value={nuevoRolNombre}
                   onChange={(e) => setNuevoRolNombre(e.target.value)}
                   placeholder="Escriba aquí..."
                 />
               </div>
               <div className="d-flex justify-content-between gap-2">
-                <button className="btn btn-sm w-50 fw-bold text-white" style={{ backgroundColor: '#a52a2a' }} onClick={() => setMostrarModalNuevoRol(false)}>Cancelar</button>
-                <button className="btn btn-sm w-50 fw-bold text-white" style={{ backgroundColor: '#2b7a3e' }} onClick={handleCrearRol}>Crear</button>
+                <button className="btn btn-sm btn-secondary w-50 fw-bold text-white matriz-btn-volver" onClick={() => setMostrarModalNuevoRol(false)}>Cancelar</button>
+                <button className="btn btn-sm btn-success w-50 fw-bold text-white matriz-btn-guardar" onClick={handleCrearRol}>Crear</button>
               </div>
             </div>
           </div>
@@ -575,20 +563,20 @@ export const MatrizPermisosView: React.FC = () => {
       )}
 
       {mostrarModalConfirmacion && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #8e45e0', borderRadius: '12px' }}>
+            <div className="modal-content im-surface text-body p-3 border border-warning rounded-3 matriz-card-bg">
               <div className="modal-body text-center py-2">
                 <i className="bi bi-exclamation-triangle-fill text-warning" style={{ fontSize: '2.5rem' }}></i>
                 <h5 className="mt-2 fw-bold">¡Atención!</h5>
-                <p className="text-white-50 mt-1 small" style={{ fontSize: '0.75rem' }}>
+                <p className="text-body-secondary mt-1 small" style={{ fontSize: '0.75rem' }}>
                   {usuarioEditar 
                     ? `Estás modificando la configuración de permisos para ${usuarioEditar.nombreUsuario}.`
                     : `Estás modificando la plantilla del Perfil Global.`}
                 </p>
                 <div className="d-flex justify-content-center gap-2 mt-3">
-                  <button className="btn btn-sm px-3 fw-bold text-white w-50" style={{ backgroundColor: '#a52a2a' }} onClick={() => setMostrarModalConfirmacion(false)}>Cancelar</button>
-                  <button className="btn btn-sm px-3 fw-bold text-white w-50" style={{ backgroundColor: '#2b7a3e' }} onClick={confirmarGuardado}>Confirmar</button>
+                  <button className="btn btn-sm btn-secondary px-3 fw-bold text-white w-50 matriz-btn-volver" onClick={() => setMostrarModalConfirmacion(false)}>Cancelar</button>
+                  <button className="btn btn-sm btn-success px-3 fw-bold text-white w-50 matriz-btn-guardar" onClick={confirmarGuardado}>Confirmar</button>
                 </div>
               </div>
             </div>
@@ -597,17 +585,17 @@ export const MatrizPermisosView: React.FC = () => {
       )}
 
       {mostrarModalExito && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #20c997', borderRadius: '12px' }}>
+            <div className="modal-content im-surface text-body p-3 border border-success rounded-3 matriz-card-bg">
               <div className="modal-body text-center py-3">
                 <div className="d-flex justify-content-center mb-2">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', backgroundColor: '#132e27', border: '2px solid #20c997' }}>
+                  <div className="rounded-circle d-flex align-items-center justify-content-center bg-success bg-opacity-10 border border-success" style={{ width: '60px', height: '60px' }}>
                     <i className="bi bi-check-lg text-success" style={{ fontSize: '2rem' }}></i>
                   </div>
                 </div>
-                <h6 className="fw-bold my-2 text-white">{mensajeExitoTexto}</h6>
-                <button className="btn btn-sm px-4 fw-bold text-white mt-2" style={{ backgroundColor: '#a52a2a', borderRadius: '6px' }} onClick={() => setMostrarModalExito(false)}>Cerrar</button>
+                <h6 className="fw-bold my-2 text-body">{mensajeExitoTexto}</h6>
+                <button className="btn btn-sm btn-secondary px-4 fw-bold text-white mt-2 matriz-btn-volver" style={{ borderRadius: '6px' }} onClick={() => setMostrarModalExito(false)}>Cerrar</button>
               </div>
             </div>
           </div>
@@ -615,17 +603,17 @@ export const MatrizPermisosView: React.FC = () => {
       )}
 
       {mostrarModalBloqueo && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #ffc107', borderRadius: '12px' }}>
+            <div className="modal-content im-surface text-body p-3 border border-warning rounded-3 matriz-card-bg">
               <div className="modal-body text-center py-2">
                 <div className="d-flex justify-content-center mb-2">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', backgroundColor: 'rgba(255, 193, 7, 0.1)', border: '2px solid #ffc107' }}>
+                  <div className="rounded-circle d-flex align-items-center justify-content-center bg-warning bg-opacity-10 border border-warning" style={{ width: '60px', height: '60px' }}>
                     <i className="bi bi-lock-fill text-warning" style={{ fontSize: '1.8rem' }}></i>
                   </div>
                 </div>
-                <p className="fw-bold mb-2 text-white px-1 small" style={{ fontSize: '0.8rem' }}>{mensajeBloqueoTexto}</p>
-                <button className="btn btn-sm px-4 fw-bold text-white mt-1" style={{ backgroundColor: '#a52a2a', borderRadius: '6px' }} onClick={() => setMostrarModalBloqueo(false)}>Cerrar</button>
+                <p className="fw-bold mb-2 text-body px-1 small" style={{ fontSize: '0.8rem' }}>{mensajeBloqueoTexto}</p>
+                <button className="btn btn-sm btn-secondary px-4 fw-bold text-white mt-1 matriz-btn-volver" style={{ borderRadius: '6px' }} onClick={() => setMostrarModalBloqueo(false)}>Cerrar</button>
               </div>
             </div>
           </div>

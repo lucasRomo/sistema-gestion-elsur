@@ -219,3 +219,257 @@ html[data-bs-theme="light"] .modal-content .text-body-secondary {
   scrollbar-width: none;
 }
 
+/* ==========================================
+   6. EXTENSIÓN: InformesView + ModalRegistrosArqueo (modo claro)
+   Estos componentes usan tonos de fondo/borde/texto que no estaban
+   contemplados en el bloque 2, así que se agregan acá los que faltaban.
+   ========================================== */
+
+/* Fondos de tarjetas / tooltips / contenedores oscuros que faltaban cazar */
+html[data-bs-theme="light"] [style*="background-color: #222122"],
+html[data-bs-theme="light"] [style*="background-color: #121214"],
+html[data-bs-theme="light"] [style*="background-color: #1c1c1f"],
+html[data-bs-theme="light"] [style*="background-color: #212529"],
+html[data-bs-theme="light"] [style*="background-color: #212428"],
+html[data-bs-theme="light"] [style*="background-color: #18191c"] {
+  background-color: #ffffff !important;
+  color: #18181b !important;
+  border-color: #e4e4e7 !important;
+}
+
+/* Caja de "Observación del cierre" (fondo ámbar oscuro) */
+html[data-bs-theme="light"] [style*="background-color: #2a1f0d"] {
+  background-color: #fef3c7 !important;
+  color: #78350f !important;
+}
+
+/* Bordes neutros grises oscuros (grid de gráficos, separadores) */
+html[data-bs-theme="light"] [style*="border: 1px solid #3f3f46"],
+html[data-bs-theme="light"] [style*="border: 1px solid #2d3036"],
+html[data-bs-theme="light"] [style*="border: 1px solid #2d2f34"],
+html[data-bs-theme="light"] [style*="border: 1px solid #2d2d30"],
+html[data-bs-theme="light"] [style*="borderColor: #3f3f46"] {
+  border-color: #e4e4e7 !important;
+}
+
+/* Texto gris apagado (labels, subtítulos) */
+html[data-bs-theme="light"] [style*="color: #a1a1aa"] {
+  color: #64748b !important;
+}
+
+/* Texto blanco puro, SOLO cuando va pegado a los fondos oscuros de arriba
+   (así no pisa texto blanco que va sobre botones/badges de color, que debe seguir blanco) */
+html[data-bs-theme="light"] [style*="background-color: #222122"][style*="color: #fff"],
+html[data-bs-theme="light"] [style*="background-color: #121214"][style*="color: #fff"] {
+  color: #18181b !important;
+}
+
+/* Ejes y grillas de los gráficos Recharts (atributos SVG, no "style") */
+html[data-bs-theme="light"] svg [stroke="#a1a1aa"] {
+  stroke: #94a3b8 !important;
+}
+html[data-bs-theme="light"] svg [stroke="#2d2d30"] {
+  stroke: #e2e8f0 !important;
+}
+
+html[data-bs-theme="light"] .card-menu-item {
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+}
+html[data-bs-theme="light"] .card-menu-item:hover {
+  background-color: #f8f9fa !important;
+  border-color: #d4d4d8 !important;
+}
+html[data-bs-theme="light"] .btn-volver {
+  background-color: #f1f5f9 !important;
+  border-color: #d4d4d8 !important;
+  color: #18181b !important;
+}
+html[data-bs-theme="light"] .btn-volver:hover {
+  background-color: #e4e4e7 !important;
+  color: #18181b !important;
+}
+
+/* ==========================================
+   7. CLASES DE SUPERFICIE REUSABLES (reemplazan el truco de [style*=#hex])
+   ========================================== */
+.im-surface       { background-color: #18181b; border: 1px solid #3f3f46; }
+.im-surface-alt   { background-color: #222122; border: 1px solid #3f3f46; }
+.im-surface-deep  { background-color: #121214; border: 1px solid #3f3f46; }
+.im-surface-head  { background-color: #18191c; border: 1px solid #2d2f34; }
+.im-surface-amber { background-color: #2a1f0d; border: 1px solid #daa32d; }
+
+html[data-bs-theme="light"] .im-surface,
+html[data-bs-theme="light"] .im-surface-alt,
+html[data-bs-theme="light"] .im-surface-deep,
+html[data-bs-theme="light"] .im-surface-head {
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+  color: #18181b !important;
+}
+
+html[data-bs-theme="light"] .im-surface-amber {
+  background-color: #fef3c7 !important;
+  border-color: #fcd34d !important;
+  color: #78350f !important;
+}
+
+.im-btn-period { background-color: #212529; }
+html[data-bs-theme="light"] .im-btn-period {
+  background-color: #f1f5f9 !important;
+  border-color: #d4d4d8 !important;
+  color: #18181b !important;
+}
+html[data-bs-theme="light"] .im-btn-period:hover {
+  background-color: #e4e4e7 !important;
+}
+
+/* ==========================================
+   8. TOOLTIPS DE RECHARTS (MODO CLARO / MODO OSCURO)
+   ========================================== */
+
+/* Configuración base (Modo Oscuro por defecto) */
+.recharts-default-tooltip,
+.recharts-tooltip-wrapper > div {
+  background-color: #18181b !important;
+  border: 1px solid #3f3f46 !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.recharts-tooltip-label,
+.recharts-tooltip-item {
+  color: #ffffff !important;
+}
+
+/* Adaptación para Modo Claro */
+html[data-bs-theme="light"] .recharts-default-tooltip,
+html[data-bs-theme="light"] .recharts-tooltip-wrapper > div {
+  background-color: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  color: #18181b !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-bs-theme="light"] .recharts-tooltip-label,
+html[data-bs-theme="light"] .recharts-tooltip-item {
+  color: #18181b !important;
+}
+
+
+/* matriz-permisos-dark.css */
+
+/* Estilos específicos para el modo oscuro basados en la foto 1 */
+[data-bs-theme="dark"] .matriz-container {
+  font-family: var(--bs-font-monospace, monospace) !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .matriz-card-bg {
+  background-color: #18181b !important;
+  border: 1px solid #3f3f46 !important;
+}
+
+[data-bs-theme="dark"] .matriz-user-item {
+  background-color: #222122 !important;
+  border: 1px solid #2d2d30 !important;
+}
+
+[data-bs-theme="dark"] .matriz-user-item.selected {
+  background-color: #2b213a !important;
+  border: 1px solid #8e45e0 !important;
+}
+
+[data-bs-theme="dark"] .matriz-avatar {
+  background-color: #8e45e0 !important;
+}
+
+[data-bs-theme="dark"] .matriz-badge-perfil-global {
+  background-color: #8e45e0 !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .matriz-banner-global {
+  background-color: #222122 !important;
+  border: 1px solid #8e45e0 !important;
+}
+
+[data-bs-theme="dark"] .matriz-text-accent {
+  color: #8e45e0 !important;
+}
+
+[data-bs-theme="dark"] .matriz-cat-card {
+  background-color: #141416 !important;
+  border: 1px solid #2d2d30 !important;
+}
+
+[data-bs-theme="dark"] .matriz-permiso-item {
+  background-color: #222122 !important;
+  border: 1px solid #2d2d30 !important;
+}
+
+[data-bs-theme="dark"] .matriz-permiso-item.activo {
+  background-color: rgba(142, 69, 224, 0.12) !important;
+  border: 1px solid #8e45e0 !important;
+}
+
+[data-bs-theme="dark"] .matriz-btn-guardar {
+  background-color: #2b7a3e !important;
+  border-color: #20c997 !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .matriz-btn-volver {
+  background-color: #a52a2a !important;
+  border-color: #dc3545 !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .matriz-select-perfil {
+  background-color: #212529 !important;
+  color: #ffffff !important;
+  border: 1px solid #8e45e0 !important;
+}
+
+/* Badge del usuario en Modo Claro */
+html[data-bs-theme="light"] .matriz-user-badge {
+  color: #212529 !important; /* Texto negro / oscuro */
+}
+
+/* Botón Volver Rojo en Modo Claro */
+html[data-bs-theme="light"] .matriz-btn-volver {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  color: #ffffff !important;
+}
+
+html[data-bs-theme="light"] .im-surface,
+html[data-bs-theme="light"] .card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+:root, [data-bs-theme="light"] {
+  --bg-subtle-card: #e2e8f0;      /* Fondo de los cuadros (más oscuro que antes) */
+  --border-subtle-card: #cbd5e1;  /* Borde definido para tarjetas */
+  --text-primary-card: #0f172a;    /* Texto principal legible */
+}
+
+/* Modo Oscuro */
+[data-bs-theme="dark"] {
+  --bg-subtle-card: #27272a;      /* Fondo oscuro para las tarjetas */
+  --border-subtle-card: #3f3f46;  /* Borde oscuro */
+  --text-primary-card: #ffffff;
+}
+
+.text-info-custom {
+  color: #0284c7 !important; /* Azul/Celeste oscuro con alto contraste para modo claro */
+  transition: color 0.2s ease;
+}
+
+/* Cuando la app tiene el tema oscuro activo en el body/html */
+[data-theme='dark'] .text-info-custom,
+.dark .text-info-custom {
+  color: #38bdf8 !important; /* Celeste Neón claro brillante para modo oscuro */
+}

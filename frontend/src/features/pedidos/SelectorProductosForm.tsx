@@ -64,7 +64,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
   return (
     <div className="w-100">
-      <div className="card text-white p-4 w-100 rounded" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46', maxWidth: '1570px' }} data-bs-theme="dark">
+      <div className="card im-surface p-4 w-100 rounded shadow-sm" style={{ maxWidth: '1570px' }}>
         <h2 className="text-center mb-4 fw-bold">Tabla para Calcular y Elegir Productos</h2>
         
         {/* Selector de Producto y Cantidad */}
@@ -202,34 +202,39 @@ export const SelectorProductosForm: React.FC<Props> = ({
       </div>
 
       {/* Impacto Estimado en Stock */}
-      <div className="card text-white p-4 w-100 rounded" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46', maxWidth: '1570px' }} data-bs-theme="dark">
-        <div className="d-flex align-items-center gap-2 mb-3">
-          <i className="bi bi-boxes"></i>
-          <span className="small fw-bold">Impacto Estimado en el Stock de Insumos:</span>
-        </div>
+<div 
+  className="card im-surface p-4 w-100 rounded mt-4" 
+  style={{ maxWidth: '1570px' }}
+>
+  <div className="d-flex align-items-center gap-2 mb-3">
+    <i className="bi bi-boxes"></i>
+    <span className="small fw-bold">Impacto Estimado en el Stock de Insumos:</span>
+  </div>
 
-        <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted">
-          <div style={{ width: '40%' }}>Insumo Afectado:</div>
-          <div style={{ width: '20%' }}>Cantidad Requerida:</div>
-          <div style={{ width: '20%' }}>Stock Actual:</div>
-          <div style={{ width: '20%' }}>Stock Resultante:</div>
-        </div>
+  <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted">
+    <div style={{ width: '40%' }}>Insumo Afectado:</div>
+    <div style={{ width: '20%' }}>Cantidad Requerida:</div>
+    <div style={{ width: '20%' }}>Stock Actual:</div>
+    <div style={{ width: '20%' }}>Stock Resultante:</div>
+  </div>
 
-        <div style={{ minHeight: '60px', maxHeight: '160px', overflowY: 'auto' }}>
-          {carrito.length === 0 ? (
-            <div className="text-center text-muted mt-3 small">Agregue productos arriba para ver el impacto en el stock de insumos.</div>
-          ) : (
-            carrito.map((item, index) => (
-              <div key={index} className="d-flex align-items-center mb-2 border-bottom pb-1 small">
-                <div style={{ width: '40%' }}>{item.producto.nombreProducto}</div>
-                <div style={{ width: '20%' }} className="font-monospace">{item.cantidad} unidad(es)</div>
-                <div style={{ width: '20%' }} className="font-monospace">${item.producto.precioBase.toFixed(2)}</div>
-                <div style={{ width: '20%' }} className="fw-bold font-monospace">${item.subtotal.toFixed(2)}</div>
-              </div>
-            ))
-          )}
-        </div>
+  <div style={{ minHeight: '60px', maxHeight: '160px', overflowY: 'auto' }}>
+    {carrito.length === 0 ? (
+      <div className="text-center text-muted mt-3 small">
+        Agregue productos arriba para ver el impacto en el stock de insumos.
       </div>
+    ) : (
+      carrito.map((item, index) => (
+        <div key={index} className="d-flex align-items-center mb-2 border-bottom pb-1 small">
+          <div style={{ width: '40%' }}>{item.producto.nombreProducto}</div>
+          <div style={{ width: '20%' }} className="font-monospace">{item.cantidad} unidad(es)</div>
+          <div style={{ width: '20%' }} className="font-monospace">${item.producto.precioBase.toFixed(2)}</div>
+          <div style={{ width: '20%' }} className="fw-bold font-monospace">${item.subtotal.toFixed(2)}</div>
+        </div>
+      ))
+    )}
+  </div>
+</div>
     </div>
   );
 };

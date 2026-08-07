@@ -49,6 +49,12 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
   const selectTextClaro = isDark ? 'text-light' : 'text-dark';
   const selectTextFuerte = isDark ? 'text-white' : 'text-dark';
   const modalBg = isDark ? 'bg-dark text-white' : 'bg-white text-dark';
+  const timelineContainerBg = isDark ? '#09090b' : '#e4e4e4';
+  const timelineContainerBorder = isDark ? '#27272a' : '#e2e8f0';
+  const timelineBadgeBg = isDark ? '#18181b' : '#ffffff';
+  const timelineCardBg = isDark ? '#18181b' : '#ffffff';
+  const timelineCardBorder = isDark ? '#27272a' : '#cbd5e1';
+  const timelineTitleText = isDark ? 'text-white' : 'text-dark';
 
   const nombreCliente = p.cliente?.persona 
     ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
@@ -303,100 +309,96 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
           <div className="p-4 d-flex flex-column gap-4">
             
             {/* LÍNEA DE TIEMPO / TIPO MÉTRICA FINANCIAL */}
+<div 
+  className="p-4 rounded-3 border" 
+  style={{ 
+    backgroundColor: timelineContainerBg, 
+    borderColor: timelineContainerBorder,
+    boxShadow: isDark ? 'inset 0 0 20px rgba(0,0,0,0.5)' : 'none'
+  }}
+>
+  <div className="d-flex align-items-center justify-content-between mb-4">
+    <span className="text-muted small font-monospace text-uppercase tracking-wider">
+      <i className="bi bi-activity text-purple me-2" style={{ color: '#a855f7' }}></i>
+      Historial Traza del Pedido
+    </span>
+  </div>
+
+  {/* CONTENEDOR DE LA LÍNEA Y NODOS */}
+  <div className="position-relative overflow-x-auto py-3">
+    {/* Línea horizontal que conecta solo entre el primer y el último punto */}
+    {timelineEvents.length > 1 && (
+      <div 
+        className="position-absolute" 
+        style={{ 
+          height: '2px', 
+          top: '49px', 
+          left: '80px', 
+          right: '80px', 
+          backgroundColor: '#8b5cf6',
+          boxShadow: '0 0 8px #8b5cf6',
+          zIndex: 0 
+        }} 
+      />
+    )}
+
+    <div className="d-flex justify-content-between align-items-start position-relative" style={{ minWidth: `${Math.max(650, timelineEvents.length * 150)}px` }}>
+      {timelineEvents.map((item) => (
+        <div key={item.id} className="d-flex flex-column align-items-center text-center px-2" style={{ width: '160px', zIndex: 1 }}>
+          
+          {/* Fecha arriba */}
+          <span className="text-muted font-monospace mb-2" style={{ fontSize: '0.70rem', lineHeight: '14px' }}>
+            {item.fechaFormateada}
+          </span>
+
+          {/* Punto Neón con fondo de la tarjeta detrás para tapar la línea interna */}
+          <div className="p-1 rounded-circle" style={{ backgroundColor: timelineContainerBg }}>
             <div 
-              className="p-4 rounded-3 border" 
+              className="rounded-circle"
               style={{ 
-                backgroundColor: '#09090b', 
-                borderColor: '#27272a',
-                boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5)'
-              }}
-            >
-              <div className="d-flex align-items-center justify-content-between mb-4">
-                <span className="text-muted small font-monospace text-uppercase tracking-wider">
-                  <i className="bi bi-activity text-purple me-2" style={{ color: '#a855f7' }}></i>
-                  Historial Traza del Pedido
-                </span>
-                <span className="badge font-monospace" style={{ backgroundColor: '#18181b', color: '#a855f7', border: '1px solid #27272a' }}>
-                  {timelineEvents.length} Interacciones
-                </span>
+                width: '14px', 
+                height: '14px', 
+                backgroundColor: isDark ? '#ffffff' : '#8b5cf6',
+                border: '3px solid #8b5cf6',
+                boxShadow: '0 0 10px #a855f7',
+                flexShrink: 0 
+              }} 
+            />
+          </div>
+
+          {/* Card / Detalle */}
+          <div 
+            className="mt-3 p-2 rounded-2 w-100 border text-start transition-all shadow-sm"
+            style={{ 
+              backgroundColor: timelineCardBg, 
+              borderColor: item.tipo === 'PAGO' ? '#10b981' : timelineCardBorder
+            }}
+          >
+            <div className={`fw-bold font-monospace ${timelineTitleText}`} style={{ fontSize: '0.78rem' }}>
+              {item.titulo}
+            </div>
+
+            {item.subtitulo && (
+              <div className="text-muted font-monospace" style={{ fontSize: '0.72rem' }}>
+                {item.subtitulo}
               </div>
+            )}
 
-              {/* CONTENEDOR DE LA LÍNEA Y NODOS */}
-              <div className="position-relative overflow-x-auto py-3">
-                {/* Línea horizontal que conecta solo entre el primer y el último punto */}
-                {timelineEvents.length > 1 && (
-                  <div 
-                    className="position-absolute" 
-                    style={{ 
-                      height: '2px', 
-                      top: '49px', 
-                      left: '80px', 
-                      right: '80px', 
-                      backgroundColor: '#8b5cf6',
-                      boxShadow: '0 0 8px #8b5cf6',
-                      zIndex: 0 
-                    }} 
-                  />
-                )}
+            {item.monto && (
+              <div className="badge font-monospace mt-1" style={{
+               fontSize: '0.75rem',
+               backgroundColor: '#059669',
+               color: '#ffffff',
+               border: '1px solid #10b981',
+               whiteSpace: 'nowrap'
+              }}>
+                {item.monto}
+              </div>
+            )}
+          </div>
 
-                <div className="d-flex justify-content-between align-items-start position-relative" style={{ minWidth: `${Math.max(650, timelineEvents.length * 150)}px` }}>
-                  {timelineEvents.map((item) => (
-                    <div key={item.id} className="d-flex flex-column align-items-center text-center px-2" style={{ width: '160px', zIndex: 1 }}>
-                      
-                      {/* Fecha arriba */}
-                      <span className="text-muted font-monospace mb-2" style={{ fontSize: '0.70rem', lineHeight: '14px' }}>
-                        {item.fechaFormateada}
-                      </span>
-
-                      {/* Punto Neón con fondo oscuro detrás para tapar la línea interna */}
-                      <div className="p-1 rounded-circle" style={{ backgroundColor: '#09090b' }}>
-                        <div 
-                          className="rounded-circle"
-                          style={{ 
-                            width: '14px', 
-                            height: '14px', 
-                            backgroundColor: '#ffffff',
-                            border: '3px solid #8b5cf6',
-                            boxShadow: '0 0 10px #a855f7',
-                            flexShrink: 0 
-                          }} 
-                        />
-                      </div>
-
-                      {/* Card / Detalle */}
-                      <div 
-                        className="mt-3 p-2 rounded-2 w-100 border text-start transition-all"
-                        style={{ 
-                          backgroundColor: '#18181b', 
-                          borderColor: item.tipo === 'PAGO' ? '#10b981' : '#27272a',
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                        }}
-                      >
-                        <div className="fw-bold font-monospace text-white" style={{ fontSize: '0.78rem' }}>
-                          {item.titulo}
-                        </div>
-
-                        {item.subtitulo && (
-                          <div className="text-muted font-monospace" style={{ fontSize: '0.72rem' }}>
-                            {item.subtitulo}
-                          </div>
-                        )}
-
-                        {item.monto && (
-                          <div className="badge bg-success bg-opacity-20 border border-success border-opacity-25 font-monospace mt-1" style={{
-                           fontSize: '0.75rem',
-                           backgroundColor: '#059669',
-                           color: '#ffffff',
-                           border: '1px solid #10b981',
-                           whiteSpace: 'nowrap'
-                          }}>
-                            {item.monto}
-                          </div>
-                        )}
-                      </div>
-
-                    </div>
-                  ))}
+        </div>
+      ))}
                 </div>
               </div>
             </div>

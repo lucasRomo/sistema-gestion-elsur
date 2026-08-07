@@ -15,8 +15,9 @@ export const CajaView: React.FC = () => {
   const pageBg = isDark ? '#1b1b1b' : '#f8fafc';
   const cardBg = isDark ? '#1e1e1f' : '#ffffff';
   const cardBorder = isDark ? '#242427' : '#e2e8f0';
+  const shadowStyle = isDark ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
   const graphInnerBg = isDark ? '#222122' : '#f1f5f9';
-  const tableWrapBg = isDark ? '#1d1d1d' : '#f8fafc';
+  const tableWrapBg = isDark ? '#1d1d1d' : '#ffffff';
   const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
 
   const chartGrid = isDark ? '#2d2d30' : '#e2e8f0';
@@ -262,7 +263,7 @@ export const CajaView: React.FC = () => {
 
   return (
     <SidebarLayout activeItem="Caja">
-      <div className="container-fluid text-white p-2 pt-5 mt-2" style={{ backgroundColor: pageBg }}>
+      <div className="container-fluid p-2 pt-5 mt-2" style={{ backgroundColor: 'transparent' }}>
         
         {/* Título Principal */}
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -290,7 +291,7 @@ export const CajaView: React.FC = () => {
               </h1>
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span>Inicio de Caja:</span>
-                <span className="text-info fw-semibold font-monospace">
+                <span className="fw-bold text-info-custom fs-6">
                   ${cajaAbierta ? (turnoActual?.montoInicial || 0).toLocaleString('es-AR') : '0'}
                 </span>
               </div>
@@ -312,8 +313,8 @@ export const CajaView: React.FC = () => {
           </div>
 
           <div className="col-md-6">
-            <div className="p-4 rounded-3 h-100" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-              <div className="p-3 rounded" style={{ backgroundColor: graphInnerBg, borderColor: chartGrid, minHeight: '180px', overflowX: 'auto' }}>
+            <div className="p-4 rounded-3 h-100" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle }}>
+              <div className="p-3 rounded" style={{ backgroundColor: graphInnerBg, border: `1px solid ${cardBorder}`, minHeight: '180px', overflowX: 'auto' }}>
                 <div className="text-center small opacity-20 mb-2 font-monospace" >
                   {new Date().toLocaleDateString('es-AR')}
                 </div>
@@ -352,7 +353,7 @@ export const CajaView: React.FC = () => {
           <div className="col-lg-8 d-flex flex-column">
             <h5 className="mb-3 fw-semibold text-light">Registro de Movimientos Manuales</h5>
             
-            <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: tableWrapBg, border: `1px solid ${chartGrid}`, height: '315px' }}>
+            <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle, height: '315px' }}>
               <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapBg, height: '100%', overflowY: 'auto' }}>
                 <table className={`table table-hover m-0 align-middle text-center ${isDark ? 'table-dark' : ''}`} style={{ backgroundColor: tableWrapBg }}>
                   <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
