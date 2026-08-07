@@ -51,6 +51,14 @@ public class InsumoServiceImpl implements InsumoService {
             throw new RuntimeException("El stock actual no puede ser negativo");
         }
 
+        if (insumo.getStockEmpaquetado() != null && insumo.getStockEmpaquetado().compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("El stock empaquetado no puede ser negativo");
+        }
+
+        if (insumo.getFactorConversion() != null && insumo.getFactorConversion().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("El factor de conversión debe ser mayor a cero");
+        }
+
         if (insumo.getEstado() == null || insumo.getEstado().trim().isEmpty()) {
             insumo.setEstado("Activo");
         }
@@ -69,6 +77,12 @@ public class InsumoServiceImpl implements InsumoService {
 
                 compararYRegistrar(usuarioActual, "Insumo", "stockActual", insumo.getIdInsumo(),
                         insumoViejo.getStockActual(), insumo.getStockActual());
+
+                compararYRegistrar(usuarioActual, "Insumo", "stockEmpaquetado", insumo.getIdInsumo(),
+                        insumoViejo.getStockEmpaquetado(), insumo.getStockEmpaquetado());
+
+                compararYRegistrar(usuarioActual, "Insumo", "factorConversion", insumo.getIdInsumo(),
+                        insumoViejo.getFactorConversion(), insumo.getFactorConversion());
 
                 compararYRegistrar(usuarioActual, "Insumo", "stockMinimo", insumo.getIdInsumo(),
                         insumoViejo.getStockMinimo(), insumo.getStockMinimo());
@@ -96,12 +110,19 @@ public class InsumoServiceImpl implements InsumoService {
                         ? String.valueOf(insumoViejo.getUnidadMedida().getNombre()) : "";
 
                 String uniNueva = "";
-                if (insumo.getUnidadMedida() != null) {
-                    if (insumo.getUnidadMedida().getNombre() != null) {
-                        uniNueva = String.valueOf(insumo.getUnidadMedida().getNombre());
-                    }
+                if (insumo.getUnidadMedida() != null && insumo.getUnidadMedida().getNombre() != null) {
+                    uniNueva = String.valueOf(insumo.getUnidadMedida().getNombre());
                 }
                 compararYRegistrar(usuarioActual, "Insumo", "unidadMedida", insumo.getIdInsumo(), uniVieja, uniNueva);
+
+                String uniCompraVieja = (insumoViejo.getUnidadCompra() != null) 
+                        ? String.valueOf(insumoViejo.getUnidadCompra().getNombre()) : "";
+
+                String uniCompraNueva = "";
+                if (insumo.getUnidadCompra() != null && insumo.getUnidadCompra().getNombre() != null) {
+                    uniCompraNueva = String.valueOf(insumo.getUnidadCompra().getNombre());
+                }
+                compararYRegistrar(usuarioActual, "Insumo", "unidadCompra", insumo.getIdInsumo(), uniCompraVieja, uniCompraNueva);
             }
         }
 
@@ -123,53 +144,89 @@ public class InsumoServiceImpl implements InsumoService {
     }
 
     @Override
-@Transactional
-public void actualizarMasivo(double porcentaje, Integer idProveedor, List<Integer> idsInsumos, String criterio, Integer idUsuario) {
-    List<Insumo> todos = insumoRepository.findAll();
-    List<Insumo> aModificar;
+    @Transactional
+    public void actualizarMasivo(double porcentaje, Integer idProveedor, List<Integer> idsInsumos, String criterio, Integer idUsuario) {
+        List<Insumo> todos = insumoRepository.findAll();
+        List<Insumo> aModificar;
 
-    if ("SELECCION".equalsIgnoreCase(criterio)) {
-        if (idsInsumos == null || idsInsumos.isEmpty()) {
-            return; // Si no hay IDs seleccionados, no se modifica nada
+        if ("SELECCION".equalsIgnoreCase(criterio)) {
+            if (idsInsumos == null || idsInsumos.isEmpty()) {
+                return;
+            }
+            List<Integer> ids = idsInsumos.stream()
+                    .map(num -> Integer.parseInt(num.toString()))
+                    .collect(Collectors.toList());
+
+            aModificar = todos.stream()
+                    .filter(i -> ids.contains(i.getIdInsumo()))
+                    .collect(Collectors.toList());
+
+        } else if ("PROVEEDOR".equalsIgnoreCase(criterio) || "CATEGORIA".equalsIgnoreCase(criterio)) {
+            if (idProveedor == null || idProveedor <= 0) {
+                return;
+            }
+            aModificar = todos.stream()
+                    .filter(i -> i.getProveedor() != null && idProveedor.equals(i.getProveedor().getIdProveedor()))
+                    .collect(Collectors.toList());
+
+        } else { 
+            aModificar = todos;
         }
-        // Aseguramos conversión limpia de tipos de datos de Integer
-        List<Integer> ids = idsInsumos.stream()
-                .map(num -> Integer.parseInt(num.toString()))
-                .collect(Collectors.toList());
 
-        aModificar = todos.stream()
-                .filter(i -> ids.contains(i.getIdInsumo()))
-                .collect(Collectors.toList());
+        if (aModificar.isEmpty()) return;
 
-    } else if ("PROVEEDOR".equalsIgnoreCase(criterio) || "CATEGORIA".equalsIgnoreCase(criterio)) {
-        if (idProveedor == null || idProveedor <= 0) {
-            return; // Si no se especificó un proveedor/categoría válido, no se modifica nada
+        Usuario usuarioActual = obtenerUsuarioOperador(idUsuario);
+
+        for (Insumo ins : aModificar) {
+            BigDecimal precioViejo = ins.getPrecio() != null ? ins.getPrecio() : BigDecimal.ZERO;
+            BigDecimal factor = BigDecimal.valueOf(1.0 + (porcentaje / 100.0));
+            BigDecimal nuevoPrecio = precioViejo.multiply(factor).setScale(2, RoundingMode.HALF_UP);
+
+            ins.setPrecio(nuevoPrecio);
+
+            compararYRegistrar(usuarioActual, "Insumo", "precio", ins.getIdInsumo(), precioViejo, nuevoPrecio);
         }
-        aModificar = todos.stream()
-                .filter(i -> i.getProveedor() != null && idProveedor.equals(i.getProveedor().getIdProveedor()))
-                .collect(Collectors.toList());
 
-    } else { 
-        // Solo ingresa a TODOS si fue seleccionado explícitamente
-        aModificar = todos;
+        insumoRepository.saveAll(aModificar);
     }
 
-    if (aModificar.isEmpty()) return;
+    // GP.33: Registrar Conversión de Insumos (Atómica)
+    @Override
+    @Transactional
+    public Insumo convertirStock(Integer idInsumo, BigDecimal cantidadBultos, Integer idUsuario) {
+        if (cantidadBultos == null || cantidadBultos.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("La cantidad de bultos a abrir debe ser mayor a cero");
+        }
 
-    Usuario usuarioActual = obtenerUsuarioOperador(idUsuario);
+        Insumo insumo = buscarPorId(idInsumo);
 
-    for (Insumo ins : aModificar) {
-        BigDecimal precioViejo = ins.getPrecio() != null ? ins.getPrecio() : BigDecimal.ZERO;
-        BigDecimal factor = BigDecimal.valueOf(1.0 + (porcentaje / 100.0));
-        BigDecimal nuevoPrecio = precioViejo.multiply(factor).setScale(2, RoundingMode.HALF_UP);
+        if (insumo.getFactorConversion() == null || insumo.getFactorConversion().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new RuntimeException("El insumo no tiene un factor de conversión configurado");
+        }
 
-        ins.setPrecio(nuevoPrecio);
+        BigDecimal stockEmp = insumo.getStockEmpaquetado() != null ? insumo.getStockEmpaquetado() : BigDecimal.ZERO;
+        if (stockEmp.compareTo(cantidadBultos) < 0) {
+            throw new RuntimeException("Stock insuficiente de empaques/bultos cerrados. Disponible: " + stockEmp);
+        }
 
-        compararYRegistrar(usuarioActual, "Insumo", "precio", ins.getIdInsumo(), precioViejo, nuevoPrecio);
+        BigDecimal stockEmpaquetadoAnterior = stockEmp;
+        BigDecimal stockActualAnterior = insumo.getStockActual() != null ? insumo.getStockActual() : BigDecimal.ZERO;
+
+        // Operación atómica: restar de empaques y sumar a consumo suelto
+        BigDecimal nuevoStockEmpaquetado = stockEmp.subtract(cantidadBultos);
+        BigDecimal incrementoUnidadesSueltas = cantidadBultos.multiply(insumo.getFactorConversion());
+        BigDecimal nuevoStockActual = stockActualAnterior.add(incrementoUnidadesSueltas);
+
+        insumo.setStockEmpaquetado(nuevoStockEmpaquetado);
+        insumo.setStockActual(nuevoStockActual);
+
+        Usuario usuarioActual = obtenerUsuarioOperador(idUsuario);
+
+        compararYRegistrar(usuarioActual, "Insumo", "stockEmpaquetado", insumo.getIdInsumo(), stockEmpaquetadoAnterior, nuevoStockEmpaquetado);
+        compararYRegistrar(usuarioActual, "Insumo", "stockActual", insumo.getIdInsumo(), stockActualAnterior, nuevoStockActual);
+
+        return insumoRepository.save(insumo);
     }
-
-    insumoRepository.saveAll(aModificar);
-}
 
     private Usuario obtenerUsuarioOperador(Integer idUsuario) {
         if (idUsuario != null) {

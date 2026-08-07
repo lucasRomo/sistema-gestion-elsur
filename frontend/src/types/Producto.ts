@@ -13,7 +13,8 @@ export interface Producto {
   idProducto?: number;
   nombreProducto: string;
   precioBase: number;
-  stock: number; // <-- NUEVO CAMPO AGREGADO
+  stock: number;
+  stockVinculado?: boolean;
   categoria: Categoria;
   maquinaNecesaria?: Maquina | null;
   estado: 'Activo' | 'Desactivado';

@@ -28,6 +28,14 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
     }
   }, [show, producto]);
 
+  // Convierte el valor de unidadMedida (ya sea string u objeto) a un string plano legible
+  const obtenerNombreUnidad = (u: any): string => {
+    if (!u) return 'Unidad';
+    if (typeof u === 'object' && u.nombre) return u.nombre;
+    if (typeof u === 'string') return u;
+    return 'Unidad';
+  };
+
   const cargarInsumos = async () => {
     try {
       const res = await fetch('http://localhost:8080/api/insumos');
@@ -48,7 +56,7 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
         const listaMapeada = data.map((pi: any) => ({
           idInsumo: pi.insumo?.idInsumo || pi.id?.idInsumo,
           nombreInsumo: pi.insumo?.nombreInsumo || 'Insumo',
-          unidadMedida: pi.insumo?.unidadMedida || 'Unidad',
+          unidadMedida: obtenerNombreUnidad(pi.insumo?.unidadMedida),
           cantidadConsumo: pi.cantidadConsumo
         }));
         setRecetaActual(listaMapeada);
@@ -78,7 +86,7 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
         {
           idInsumo: insumoObj.idInsumo,
           nombreInsumo: insumoObj.nombreInsumo,
-          unidadMedida: insumoObj.unidadMedida || 'Unidad',
+          unidadMedida: obtenerNombreUnidad(insumoObj.unidadMedida),
           cantidadConsumo: Number(cantidad)
         }
       ]);
@@ -143,11 +151,14 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
                   onChange={(e) => setInsumoSeleccionado(e.target.value)}
                 >
                   <option value="">-- Seleccionar --</option>
-                  {insumosDisponibles.map(i => (
-                    <option key={i.idInsumo} value={i.idInsumo}>
-                      {i.nombreInsumo}{i.unidadMedida ? ` (${i.unidadMedida})` : ''} - Stock: {i.stockActual}
-                    </option>
-                  ))}
+                  {insumosDisponibles.map(i => {
+                    const nombreUnidad = obtenerNombreUnidad(i.unidadMedida);
+                    return (
+                      <option key={i.idInsumo} value={i.idInsumo}>
+                        {i.nombreInsumo} ({nombreUnidad}) - Stock: {i.stockActual}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
               <div className="col-md-4">

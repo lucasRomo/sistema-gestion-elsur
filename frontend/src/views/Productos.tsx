@@ -8,7 +8,8 @@ import { ProductosFiltros } from '../features/productos/ProductosFiltros';
 import { AumentoMasivoModal } from '../features/productos/AumentoMasivoModal';
 import { RecetaModal } from '../features/productos/RecetaModal'; 
 import { RecetasGlobalModal } from '../features/productos/RecetasGlobalModal'; 
-import { actualizarPreciosMasivo } from '../services/productoService';
+import { actualizarPreciosMasivo, toggleStockVinculado } from '../services/productoService';
+import type { Producto } from '../types/Producto';
 
 export const Productos: React.FC = () => {
   const { productos, guardar, cargar } = useProductos();
@@ -17,8 +18,8 @@ export const Productos: React.FC = () => {
   const [showAumentoModal, setShowAumentoModal] = useState(false);
   const [showRecetaModal, setShowRecetaModal] = useState(false);
   const [showRecetasGlobalModal, setShowRecetasGlobalModal] = useState(false);
-  const [productoEditando, setProductoEditando] = useState<any | null>(null);
-  const [productoSeleccionadoReceta, setProductoSeleccionadoReceta] = useState<any | null>(null);
+  const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
+  const [productoSeleccionadoReceta, setProductoSeleccionadoReceta] = useState<Producto | null>(null);
   const navigate = useNavigate();
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
@@ -26,7 +27,7 @@ export const Productos: React.FC = () => {
   const [filtroNombre, setFiltroNombre] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Sin Filtro');
 
-  const productosFiltrados = productos.filter((p: any) => {
+  const productosFiltrados = productos.filter((p: Producto) => {
     const cumpleNombre = p.nombreProducto?.toLowerCase().includes(filtroNombre.toLowerCase());
     const cumpleEstado = filtroEstado === 'Sin Filtro' || p.estado === filtroEstado;
     return cumpleNombre && cumpleEstado;
@@ -41,6 +42,16 @@ export const Productos: React.FC = () => {
     await cargar();
     setMensajeExito(`Precios aumentados exitosamente un ${data.porcentaje}%`);
     setMostrarExito(true);
+  };
+
+  const handleToggleVinculo = async (producto: Producto) => {
+    if (!producto.idProducto) return;
+    try {
+      await toggleStockVinculado(producto.idProducto);
+      await cargar();
+    } catch (err) {
+      console.error("Error al cambiar estado de vínculo de stock:", err);
+    }
   };
 
   return (
@@ -59,134 +70,156 @@ export const Productos: React.FC = () => {
         </div>
         
         <ProductosFiltros 
-         filtroNombre={filtroNombre} setFiltroNombre={setFiltroNombre}
-         filtroEstado={filtroEstado} setFiltroEstado={setFiltroEstado}
-         />
+          filtroNombre={filtroNombre} 
+          setFiltroNombre={setFiltroNombre}
+          filtroEstado={filtroEstado} 
+          setFiltroEstado={setFiltroEstado}
+        />
 
         <ProductoTabla 
-            productos={productosFiltrados} 
-            onEditar={(p) => {
-              setProductoEditando(p);
-              setShowModal(true);
-            }} 
-            onConfigurarReceta={(p) => {
-              setProductoSeleccionadoReceta(p);
-              setShowRecetaModal(true);
-            }}
-        />
-
-    <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary font-monospace">
-      <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-5 py-2">Volver</button>
-     <div className="d-flex gap-3">
-     <button 
-      className="btn px-4 py-2 text-white fw-normal" 
-      style={{ backgroundColor: '#17a2b8', borderColor: '#0e5a66' }}
-      onClick={() => setShowAumentoModal(true)}
-     >
-      Modificar Varios Precios
-     </button>
-     <button 
-      className="btn px-4 py-2 text-white fw-normal" 
-      style={{ backgroundColor: '#6f42c1', borderColor: '#59339d' }}
-      onClick={() => setShowRecetasGlobalModal(true)}
-     >
-      Ver Productos con Receta
-     </button>
-     <button className="btn px-4 py-2 text-white fw-normal" style={{ backgroundColor: '#ca9e1b', borderColor: '#94720c' }}>Calculo de Gastos</button>
-     <button className="btn px-4 py-2 text-white fw-normal" style={{ backgroundColor: '#156e45', borderColor: '#0b3320' }} 
-      onClick={() => {
-        setProductoEditando(null);
-        setShowModal(true);
-      }}>Registrar Nuevo Producto</button>
-     </div>
-    </div>
-
-        <ProductoRegistroModal 
-        show={showModal}
-        producto={productoEditando}
-        onClose={() => setShowModal(false)}
-        onGuardar={async (data) => {
-        if (productoEditando) {
-        setProductoEditando(data); 
-        setMostrarConfirmacion(true);
-        } else {
-        await guardar(data);
-        setShowModal(false);
-        setMensajeExito('Producto Guardado Exitosamente');
-        setMostrarExito(true);
-        }
-      }}/>
-
-      <AumentoMasivoModal
-        show={showAumentoModal}
-        productos={productos}
-        onClose={() => setShowAumentoModal(false)}
-        onConfirmar={handleAplicarAumentoMasivo}
-      />
-
-      {showRecetaModal && productoSeleccionadoReceta && (
-        <RecetaModal
-          show={showRecetaModal}
-          producto={productoSeleccionadoReceta}
-          onClose={() => {
-            setShowRecetaModal(false);
-            setProductoSeleccionadoReceta(null);
-            cargar();
-          }}
-        />
-      )}
-
-      {showRecetasGlobalModal && (
-        <RecetasGlobalModal
-          show={showRecetasGlobalModal}
-          productos={productos}
-          onClose={() => setShowRecetasGlobalModal(false)}
-          onEditarReceta={(p) => {
-            setShowRecetasGlobalModal(false);
+          productos={productosFiltrados} 
+          onEditar={(p) => {
+            setProductoEditando(p);
+            setShowModal(true);
+          }} 
+          onConfigurarReceta={(p) => {
             setProductoSeleccionadoReceta(p);
             setShowRecetaModal(true);
           }}
+          onToggleStockVinculado={handleToggleVinculo}
         />
-      )}
 
-        {mostrarConfirmacion && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
-        <div className="modal-dialog modal-sm modal-dialog-centered">
-        <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
-        <i className="bi bi-shield-lock-fill fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
-        <h5 className="fw-bold">¿Confirmar Modificaciones?</h5>
-        <p className="small text-white-50">Se sobreescribirán los datos del producto.</p>
-        
-        <div className="d-flex justify-content-center gap-2 mt-3">
-          <button className="btn btn-outline-light btn-sm px-3" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} onClick={() => setMostrarConfirmacion(false)}>
-            volver
+        <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary font-monospace">
+          <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-5 py-2">
+            Volver
           </button>
-          <button 
-            className="btn btn-sm px-3 fw-bold text-white" 
-            style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} 
-            onClick={async () => {
-              await guardar(productoEditando);
-              setMostrarConfirmacion(false);
+          <div className="d-flex gap-3">
+            <button 
+              className="btn px-4 py-2 text-white fw-normal" 
+              style={{ backgroundColor: '#17a2b8', borderColor: '#0e5a66' }}
+              onClick={() => setShowAumentoModal(true)}
+            >
+              Modificar Varios Precios
+            </button>
+            <button 
+              className="btn px-4 py-2 text-white fw-normal" 
+              style={{ backgroundColor: '#6f42c1', borderColor: '#59339d' }}
+              onClick={() => setShowRecetasGlobalModal(true)}
+            >
+              Ver Productos con Receta
+            </button>
+            <button 
+              className="btn px-4 py-2 text-white fw-normal" 
+              style={{ backgroundColor: '#ca9e1b', borderColor: '#94720c' }}
+            >
+              Cálculo de Gastos
+            </button>
+            <button 
+              className="btn px-4 py-2 text-white fw-normal" 
+              style={{ backgroundColor: '#156e45', borderColor: '#0b3320' }} 
+              onClick={() => {
+                setProductoEditando(null);
+                setShowModal(true);
+              }}
+            >
+              Registrar Nuevo Producto
+            </button>
+          </div>
+        </div>
+
+        <ProductoRegistroModal 
+          show={showModal}
+          producto={productoEditando}
+          onClose={() => setShowModal(false)}
+          onGuardar={async (data) => {
+            if (productoEditando) {
+              setProductoEditando(data); 
+              setMostrarConfirmacion(true);
+            } else {
+              await guardar(data);
               setShowModal(false);
-              setMensajeExito('Modificación hecha exitosamente');
+              setMensajeExito('Producto Guardado Exitosamente');
               setMostrarExito(true);
+            }
+          }}
+        />
+
+        <AumentoMasivoModal
+          show={showAumentoModal}
+          productos={productos}
+          onClose={() => setShowAumentoModal(false)}
+          onConfirmar={handleAplicarAumentoMasivo}
+        />
+
+        {showRecetaModal && productoSeleccionadoReceta && (
+          <RecetaModal
+            show={showRecetaModal}
+            producto={productoSeleccionadoReceta}
+            onClose={() => {
+              setShowRecetaModal(false);
+              setProductoSeleccionadoReceta(null);
+              cargar();
             }}
-          >
-            Confirmar
-          </button>
-        </div>
-        </div>
-        </div>
-        </div>
+          />
         )}
 
-{mostrarExito && (
-  <SuccesModal 
-    show={mostrarExito} 
-    onClose={() => setMostrarExito(false)} 
-    message={mensajeExito} 
-  />
-)}
+        {showRecetasGlobalModal && (
+          <RecetasGlobalModal
+            show={showRecetasGlobalModal}
+            productos={productos}
+            onClose={() => setShowRecetasGlobalModal(false)}
+            onEditarReceta={(p) => {
+              setShowRecetasGlobalModal(false);
+              setProductoSeleccionadoReceta(p);
+              setShowRecetaModal(true);
+            }}
+          />
+        )}
+
+        {mostrarConfirmacion && (
+          <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+            <div className="modal-dialog modal-sm modal-dialog-centered">
+              <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
+                <i className="bi bi-shield-lock-fill fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
+                <h5 className="fw-bold">¿Confirmar Modificaciones?</h5>
+                <p className="small text-white-50">Se sobreescribirán los datos del producto.</p>
+                
+                <div className="d-flex justify-content-center gap-2 mt-3">
+                  <button 
+                    className="btn btn-outline-light btn-sm px-3" 
+                    style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} 
+                    onClick={() => setMostrarConfirmacion(false)}
+                  >
+                    Volver
+                  </button>
+                  <button 
+                    className="btn btn-sm px-3 fw-bold text-white" 
+                    style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} 
+                    onClick={async () => {
+                      if (productoEditando) {
+                        await guardar(productoEditando);
+                        setMostrarConfirmacion(false);
+                        setShowModal(false);
+                        setMensajeExito('Modificación hecha exitosamente');
+                        setMostrarExito(true);
+                      }
+                    }}
+                  >
+                    Confirmar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {mostrarExito && (
+          <SuccesModal 
+            show={mostrarExito} 
+            onClose={() => setMostrarExito(false)} 
+            message={mensajeExito} 
+          />
+        )}
       </div>
     </>
   );

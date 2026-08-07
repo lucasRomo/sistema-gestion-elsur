@@ -1,7 +1,9 @@
 package com.elsur.sistema_gestion.services.impl;
 
 import com.elsur.sistema_gestion.models.Producto;
+import com.elsur.sistema_gestion.models.ProductoInsumo;
 import com.elsur.sistema_gestion.models.Usuario;
+import com.elsur.sistema_gestion.repositories.ProductoInsumoRepository;
 import com.elsur.sistema_gestion.repositories.ProductoRepository;
 import com.elsur.sistema_gestion.repositories.UsuarioRepository;
 import com.elsur.sistema_gestion.services.ProductoService;
@@ -24,6 +26,9 @@ public class ProductoServiceImpl implements ProductoService {
     private ProductoRepository productoRepository;
 
     @Autowired
+    private ProductoInsumoRepository productoInsumoRepository;
+
+    @Autowired
     private RegistroActividadService registroActividadService;
 
     @Autowired
@@ -31,13 +36,49 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     public List<Producto> listarTodos() {
-        return productoRepository.findAll();
+        List<Producto> productos = productoRepository.findAll();
+        for (Producto p : productos) {
+            if (Boolean.TRUE.equals(p.getStockVinculado())) {
+                p.setStock(calcularStockDesdeInsumos(p.getIdProducto()));
+            }
+        }
+        return productos;
+    }
+
+    private Integer calcularStockDesdeInsumos(Integer idProducto) {
+        List<ProductoInsumo> receta = productoInsumoRepository.findByIdIdProducto(idProducto);
+        if (receta.isEmpty()) return 0;
+
+        int minStockCalculado = Integer.MAX_VALUE;
+
+        for (ProductoInsumo pi : receta) {
+            if (pi.getInsumo() == null || pi.getCantidadConsumo() == null || pi.getCantidadConsumo().compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+
+            BigDecimal stockInsumo = pi.getInsumo().getStockActual() != null 
+                    ? pi.getInsumo().getStockActual() 
+                    : BigDecimal.ZERO;
+
+            BigDecimal consumo = pi.getCantidadConsumo();
+
+            int posiblesUnidades = stockInsumo.divide(consumo, 0, RoundingMode.FLOOR).intValue();
+            if (posiblesUnidades < minStockCalculado) {
+                minStockCalculado = posiblesUnidades;
+            }
+        }
+
+        return minStockCalculado == Integer.MAX_VALUE ? 0 : Math.max(0, minStockCalculado);
     }
 
     @Override
     public Producto buscarPorId(Integer id) {
-        return productoRepository.findById(id)
+        Producto p = productoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado con id: " + id));
+        if (Boolean.TRUE.equals(p.getStockVinculado())) {
+            p.setStock(calcularStockDesdeInsumos(p.getIdProducto()));
+        }
+        return p;
     }
 
     @Override
@@ -45,6 +86,9 @@ public class ProductoServiceImpl implements ProductoService {
     public Producto guardar(Producto producto, Integer idUsuario) {
         if (producto.getEstado() == null || producto.getEstado().trim().isEmpty()) {
             producto.setEstado("Activo");
+        }
+        if (Boolean.TRUE.equals(producto.getStockVinculado())) {
+            producto.setStock(calcularStockDesdeInsumos(producto.getIdProducto()));
         }
 
         if (producto.getIdProducto() != null && productoRepository.existsById(producto.getIdProducto())) {
@@ -64,38 +108,6 @@ public class ProductoServiceImpl implements ProductoService {
 
                 compararYRegistrar(usuarioActual, "Producto", "estado", producto.getIdProducto(),
                         productoViejo.getEstado(), producto.getEstado());
-
-                String catVieja = (productoViejo.getCategoria() != null && productoViejo.getCategoria().getNombre() != null) 
-                        ? productoViejo.getCategoria().getNombre() : "";
-
-                String catNueva = "";
-                if (producto.getCategoria() != null) {
-                    if (producto.getCategoria().getNombre() != null && !producto.getCategoria().getNombre().trim().isEmpty()) {
-                        catNueva = producto.getCategoria().getNombre();
-                    } else if (producto.getCategoria().getIdCategoria() != null) {
-                        if (productoViejo.getCategoria() != null && 
-                            productoViejo.getCategoria().getIdCategoria().equals(producto.getCategoria().getIdCategoria())) {
-                            catNueva = catVieja;
-                        }
-                    }
-                }
-                compararYRegistrar(usuarioActual, "Producto", "categoria", producto.getIdProducto(), catVieja, catNueva);
-
-                String maqVieja = (productoViejo.getMaquinaNecesaria() != null && productoViejo.getMaquinaNecesaria().getNombre() != null) 
-                        ? productoViejo.getMaquinaNecesaria().getNombre() : "";
-
-                String maqNueva = "";
-                if (producto.getMaquinaNecesaria() != null) {
-                    if (producto.getMaquinaNecesaria().getNombre() != null && !producto.getMaquinaNecesaria().getNombre().trim().isEmpty()) {
-                        maqNueva = producto.getMaquinaNecesaria().getNombre();
-                    } else if (producto.getMaquinaNecesaria().getIdMaquina() != null) {
-                        if (productoViejo.getMaquinaNecesaria() != null && 
-                            productoViejo.getMaquinaNecesaria().getIdMaquina().equals(producto.getMaquinaNecesaria().getIdMaquina())) {
-                            maqNueva = maqVieja;
-                        }
-                    }
-                }
-                compararYRegistrar(usuarioActual, "Producto", "maquinaNecesaria", producto.getIdProducto(), maqVieja, maqNueva);
             }
         }
 
@@ -115,27 +127,16 @@ public class ProductoServiceImpl implements ProductoService {
         List<Producto> aModificar;
 
         if ("SELECCION".equalsIgnoreCase(criterio)) {
-            if (idsProductos == null || idsProductos.isEmpty()) {
-                return; // Si no hay IDs seleccionados, no se modifica nada
-            }
-            List<Integer> ids = idsProductos.stream()
-                    .map(num -> Integer.parseInt(num.toString()))
-                    .collect(Collectors.toList());
-
+            if (idsProductos == null || idsProductos.isEmpty()) return;
             aModificar = todos.stream()
-                    .filter(p -> ids.contains(p.getIdProducto()))
+                    .filter(p -> idsProductos.contains(p.getIdProducto()))
                     .collect(Collectors.toList());
-
         } else if ("CATEGORIA".equalsIgnoreCase(criterio)) {
-            if (idCategoria == null || idCategoria <= 0) {
-                return; // Si no hay categoría elegida, no se modifica nada
-            }
+            if (idCategoria == null || idCategoria <= 0) return;
             aModificar = todos.stream()
                     .filter(p -> p.getCategoria() != null && idCategoria.equals(p.getCategoria().getIdCategoria()))
                     .collect(Collectors.toList());
-
         } else {
-            // Solo ingresa a TODOS si fue seleccionado explícitamente
             aModificar = todos;
         }
 
@@ -148,9 +149,7 @@ public class ProductoServiceImpl implements ProductoService {
             if (p.getPrecioBase() != null) {
                 BigDecimal precioAnterior = p.getPrecioBase();
                 BigDecimal nuevoPrecio = precioAnterior.multiply(factor).setScale(2, RoundingMode.HALF_UP);
-                
                 p.setPrecioBase(nuevoPrecio);
-                
                 compararYRegistrar(usuarioActual, "Producto", "precioBase (Aumento Masivo)", p.getIdProducto(), precioAnterior, nuevoPrecio);
             }
         }
@@ -170,7 +169,6 @@ public class ProductoServiceImpl implements ProductoService {
         if (viejoVal == null && nuevoVal == null) return;
 
         boolean sonIguales = false;
-
         if (viejoVal instanceof Number || nuevoVal instanceof Number) {
             try {
                 BigDecimal bdViejo = viejoVal != null ? new BigDecimal(viejoVal.toString()) : BigDecimal.ZERO;
@@ -187,11 +185,7 @@ public class ProductoServiceImpl implements ProductoService {
 
         if (!sonIguales) {
             registroActividadService.registrarCambio(
-                usuario,
-                "UPDATE",
-                tabla,
-                columna,
-                idReg,
+                usuario, "UPDATE", tabla, columna, idReg,
                 viejoVal != null ? viejoVal.toString() : "",
                 nuevoVal != null ? nuevoVal.toString() : ""
             );

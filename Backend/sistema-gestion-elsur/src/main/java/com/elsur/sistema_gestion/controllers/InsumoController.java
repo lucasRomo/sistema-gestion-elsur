@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -43,8 +44,25 @@ public class InsumoController {
         return ResponseEntity.ok(insumoService.guardar(insumo, idUsuario));
     }
 
+    @PostMapping("/{id}/convertir")
+    public ResponseEntity<?> convertirStock(
+            @PathVariable Integer id,
+            @RequestBody Map<String, Object> payload,
+            @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
+        if (payload.get("cantidadBultos") == null) {
+            return ResponseEntity.badRequest().body("Debe especificar la cantidad de bultos a abrir.");
+        }
+        try {
+            BigDecimal cantidadBultos = new BigDecimal(payload.get("cantidadBultos").toString());
+            Insumo insumoConvertido = insumoService.convertirStock(id, cantidadBultos, idUsuario);
+            return ResponseEntity.ok(insumoConvertido);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PatchMapping("/actualizar-masivo")
-        public ResponseEntity<String> actualizarMasivo(
+    public ResponseEntity<String> actualizarMasivo(
             @RequestBody Map<String, Object> payload,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
         

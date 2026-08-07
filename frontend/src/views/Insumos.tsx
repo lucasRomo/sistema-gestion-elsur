@@ -1,14 +1,15 @@
-// src/pages/Insumos.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { InsumoTabla } from '../features/insumos/InsumoTabla';
 import { InsumoProveedoresModal } from '../features/insumos/InsumoProveedoresModal';
 import { InsumoModal } from '../features/insumos/InsumoModal';
+import { ConvertirInsumoModal } from '../features/insumos/ConvertirInsumoModal';
 import { useInsumos } from '../hooks/useInsumos';
 import { SuccesModal } from '../components/layouts/SuccesModal';
 import { InsumosFiltros } from '../features/insumos/InsumosFiltros';
 import { AumentoMasivoInsumosModal } from '../features/insumos/AumentoMasivoInsumosModal';
 import { actualizarInsumosMasivo } from '../services/insumoService';
+import type { Insumo } from '../types/Insumo';
 
 export const Insumos: React.FC = () => {
   const navigate = useNavigate();
@@ -16,10 +17,14 @@ export const Insumos: React.FC = () => {
   
   const [filtroNombre, setFiltroNombre] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Sin Filtro');
-  const [insumoProveedoresSeleccionado, setInsumoProveedoresSeleccionado] = useState<any | null>(null);
+  const [insumoProveedoresSeleccionado, setInsumoProveedoresSeleccionado] = useState<Insumo | null>(null);
+  const [insumoConvertirSeleccionado, setInsumoConvertirSeleccionado] = useState<Insumo | null>(null);
+  
   const [showModalForm, setShowModalForm] = useState(false);
   const [showAumentoModal, setShowAumentoModal] = useState(false);
-  const [insumoEditando, setInsumoEditando] = useState<any | null>(null);
+  const [showConvertirModal, setShowConvertirModal] = useState(false);
+  
+  const [insumoEditando, setInsumoEditando] = useState<Insumo | null>(null);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
@@ -65,6 +70,10 @@ export const Insumos: React.FC = () => {
           insumos={insumosFiltrados}
           onEditar={(insumo) => { setInsumoEditando(insumo); setShowModalForm(true); }}
           onVerProveedores={(insumo) => setInsumoProveedoresSeleccionado(insumo)}
+          onConvertir={(insumo) => {
+            setInsumoConvertirSeleccionado(insumo);
+            setShowConvertirModal(true);
+          }}
         />
 
         {/* Botonera */}
@@ -111,6 +120,20 @@ export const Insumos: React.FC = () => {
               setMensajeExito('Insumo Creado Correctamente');
               setMostrarExito(true);
             }
+          }}
+        />
+
+        <ConvertirInsumoModal
+          show={showConvertirModal}
+          insumo={insumoConvertirSeleccionado}
+          onClose={() => {
+            setShowConvertirModal(false);
+            setInsumoConvertirSeleccionado(null);
+          }}
+          onExito={async (msg) => {
+            await cargar();
+            setMensajeExito(msg);
+            setMostrarExito(true);
           }}
         />
 

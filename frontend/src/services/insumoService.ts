@@ -1,4 +1,3 @@
-// src/services/insumoService.ts
 import type { Insumo } from '../types/Insumo';
 
 const API_URL = 'http://localhost:8080/api/insumos';
@@ -14,13 +13,13 @@ const obtenerIdUsuarioLogueado = (): number | null => {
   }
 };
 
-export const getInsumos = async () => {
+export const getInsumos = async (): Promise<Insumo[]> => {
   const res = await fetch(API_URL);
   if (!res.ok) throw new Error("Error al obtener insumos");
   return res.json();
 };
 
-export const guardarInsumo = async (insumo: any) => {
+export const guardarInsumo = async (insumo: any): Promise<Insumo> => {
   const idUsuarioActual = obtenerIdUsuarioLogueado();
   const isEditing = Boolean(insumo.idInsumo);
   
@@ -35,6 +34,26 @@ export const guardarInsumo = async (insumo: any) => {
     method: method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(insumo)
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  return res.json();
+};
+
+export const convertirInsumo = async (idInsumo: number, cantidadBultos: number): Promise<Insumo> => {
+  const idUsuarioActual = obtenerIdUsuarioLogueado();
+  let url = `${API_URL}/${idInsumo}/convertir`;
+  if (idUsuarioActual) {
+    url += `?idUsuario=${idUsuarioActual}`;
+  }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cantidadBultos })
   });
 
   if (!res.ok) {

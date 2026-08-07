@@ -29,8 +29,13 @@ public class Producto {
     private Maquina maquinaNecesaria;
 
     // ... dentro de la clase Producto
-@Column(nullable = false)
-private Integer stock = 0; // Valor por defecto
+    @Column(nullable = false)
+    private Integer stock = 0; // Valor por defecto
+
+    // ... dentro de com.elsur.sistema_gestion.models.Producto.java
+
+    @Column(name = "stock_vinculado")
+    private Boolean stockVinculado = false;
     
     @Column(length = 20)
     private String estado;

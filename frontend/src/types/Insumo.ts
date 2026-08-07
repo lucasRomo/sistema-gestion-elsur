@@ -1,9 +1,9 @@
-// src/types/Insumo.ts
 import type { Proveedor } from './Proveedor';
 
 export interface UnidadMedida {
   idUnidad?: number;
-  descripcion: string;
+  nombre?: string;
+  abreviatura?: string;
 }
 
 export interface Insumo {
@@ -13,6 +13,9 @@ export interface Insumo {
   stockActual: number;
   stockMinimo: number;
   unidadMedida?: UnidadMedida;
+  unidadCompra?: UnidadMedida;
+  factorConversion?: number;
+  stockEmpaquetado?: number;
   proveedor?: Proveedor;
   estado: string;
 }

@@ -60,4 +60,13 @@ public class ProductoController {
         productoService.eliminar(id);
         return ResponseEntity.ok().build();
     }
+
+    // Agrega este endpoint en ProductoController.java
+
+    @PatchMapping("/{id}/toggle-stock-vinculado")
+    public ResponseEntity<Producto> toggleStockVinculado(@PathVariable Integer id) {
+        Producto p = productoService.buscarPorId(id);
+        p.setStockVinculado(!Boolean.TRUE.equals(p.getStockVinculado()));
+        return ResponseEntity.ok(productoService.guardar(p, null));
+    }
 }

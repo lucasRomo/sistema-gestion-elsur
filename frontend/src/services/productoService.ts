@@ -76,3 +76,11 @@ export const actualizarPreciosMasivo = async (
   }
   return res.text();
 };
+
+export const toggleStockVinculado = async (idProducto: number) => {
+  const res = await fetch(`http://localhost:8080/api/productos/${idProducto}/toggle-stock-vinculado`, {
+    method: 'PATCH'
+  });
+  if (!res.ok) throw new Error("Error al cambiar vinculación de stock");
+  return res.json();
+};
