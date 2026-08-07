@@ -12,16 +12,21 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   const isDark = theme === 'dark';
 
   // Variables adaptativas según el tema
-  const modalBg = isDark ? '#1e1e24' : '#ffffff';
+  const modalBg = isDark ? '#1b1b1b' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const textColor = isDark ? 'text-white' : 'text-dark';
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
   const borderDivider = isDark ? 'border-secondary' : 'border-light-subtle';
-  const cardBg = isDark ? '#121214' : '#f8fafc';
-  const inputBg = isDark ? '#121214' : '#ffffff';
+  const cardBg = isDark ? '#1b1b1b' : '#f8fafc';
+  const inputBg = isDark ? '#1b1b1b' : '#ffffff';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const tableContainerBg = isDark ? '#1a1a1c' : '#ffffff';
+  const tableText = isDark ? '#ffffff' : '#0f172a';
+  const tableContainerBorder = isDark ? '#2d2d30' : '#e2e8f0';
   const tableHeaderBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const tableRowBorder = isDark ? '#2d2d30' : '#e2e8f0';
+
+  
 
   const [limite, setLimite] = useState<number>(cliente.limiteCredito || 0);
   const [movimientos, setMovimientos] = useState<any[]>([]);
@@ -174,7 +179,9 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                         onChange={e => setLimite(Number(e.target.value))} 
                       />
                     </div>
-                    <button type="submit" className="btn btn-warning fw-bold">Actualizar Límite</button>
+                    <button type="submit" className="btn fw-bold" style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}>
+  Actualizar Límite
+</button>
                   </form>
                 </div>
               </div>
@@ -213,8 +220,25 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
 
               {/* Tabla de Histórico de Movimientos */}
               <h6 className="font-monospace mb-2 fw-bold">Histórico de Compras y Pagos</h6>
-              <div className="table-responsive" style={{ maxHeight: '30vh', overflowY: 'auto' }}>
-                <table className={`table ${textColor}`} style={{ borderCollapse: 'collapse', width: '100%' }}>
+              <div 
+              className="table-responsive rounded shadow-sm" 
+              style={{ 
+                maxHeight: '45vh', 
+                overflowY: 'auto',
+                backgroundColor: tableContainerBg,
+                border: `1px solid ${tableContainerBorder}`,
+                transition: 'all 0.2s ease-in-out'
+              }}
+            >
+              <table 
+                className="align-middle m-0" 
+                style={{ 
+                  width: '100%',
+                  borderCollapse: 'separate', 
+                  borderSpacing: 0,
+                  color: tableText 
+                }}
+              >
                   <thead>
                     <tr style={{ borderBottom: `2px solid ${tableHeaderBorder}` }}>
                       <th style={{ padding: '10px' }}>Fecha</th>
@@ -249,7 +273,9 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
 
             </div>
             <div className={`modal-footer border-top ${borderDivider}`}>
-              <button className="btn btn-secondary px-4" onClick={onCerrar}>Volver</button>
+              <button className="btn btn-danger px-4 fw-semibold" style={{ color: '#ffffff' }} onClick={onCerrar}>
+  Volver
+</button>
             </div>
           </div>
         </div>

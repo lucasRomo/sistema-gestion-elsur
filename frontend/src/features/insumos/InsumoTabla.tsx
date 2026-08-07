@@ -12,9 +12,8 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const containerBg = isDark ? 'transparent' : '#ffffff';
+  const containerBg = isDark ? '#1b1b1b' : '#ffffff';
   const tableText = isDark ? '#ffffff' : '#0f172a';
-  const headerBg = isDark ? 'transparent' : '#f8fafc';
   const theadBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const rowBorder = isDark ? '#2d2d30' : '#f1f5f9';
   const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
@@ -30,12 +29,20 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
         overflowY: 'auto' 
       }}
     >
-      <table className="table table-borderless align-middle m-0" style={{ color: tableText }}>
+      <table 
+      className="table table-borderless align-middle m-0" 
+      style={{ 
+        color: tableText,
+        backgroundColor: 'transparent',
+        '--bs-table-bg': 'transparent',
+        '--bs-table-color': tableText
+      } as React.CSSProperties}
+    >
         <thead>
           <tr 
             style={{ 
               borderBottom: `2px solid ${theadBorder}`, 
-              backgroundColor: isDark ? '#1f1f23' : '#f8fafc',
+              backgroundColor:'containerBg',
               fontSize: '0.85rem'
             }}
             className="text-uppercase fw-bold text-muted"

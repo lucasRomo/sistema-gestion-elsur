@@ -15,18 +15,25 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables adaptativas según el tema
-  const modalBg = isDark ? '#1e1e24' : '#ffffff';
+  // Variables adaptativas del tema
+  const modalBg = isDark ? '#1b1b1b' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const textColor = isDark ? 'text-white' : 'text-dark';
-  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
+  const titleColor = isDark ? '#ffffff' : '#0f172a';
+  const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
   const borderDivider = isDark ? 'border-secondary' : 'border-light-subtle';
-  const cardBg = isDark ? '#121214' : '#f8fafc';
-  const inputBg = isDark ? '#121214' : '#ffffff';
+  const cardBg = isDark ? '#1b1b1b' : '#f8fafc';
+  const inputBg = isDark ? '#1b1b1b' : '#ffffff';
+  const inputTextColor = isDark ? 'text-white' : 'text-dark';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
+
+  // Estilos específicos de la tabla adaptativa
+  const tableContainerBg = isDark ? '#1a1a1c' : '#ffffff';
+  const tableText = isDark ? '#ffffff' : '#0f172a';
+  const tableContainerBorder = isDark ? '#2d2d30' : '#e2e8f0';
   const tableHeaderBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const tableRowBorder = isDark ? '#2d2d30' : '#e2e8f0';
-  const hoverRowBg = isDark ? '#27272a' : '#f1f5f9';
+  const hoverRowBg = isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc';
+  const emptyTextColor = isDark ? 'text-white-50' : 'text-muted';
 
   const [busqueda, setBusqueda] = useState('');
   const [soloConDeuda, setSoloConDeuda] = useState(false);
@@ -55,9 +62,9 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
       <div className="modal-dialog modal-xl modal-dialog-centered">
-        <div className={`modal-content ${textColor} shadow-lg font-monospace`} style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}` }}>
+        <div className="modal-content shadow-lg font-monospace" style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}`, color: titleColor }}>
           <div className={`modal-header border-bottom ${borderDivider}`}>
-            <h5 className="modal-title font-monospace fw-bold">
+            <h5 className="modal-title font-monospace fw-bold" style={{ color: titleColor }}>
               <i className="bi bi-wallet2 text-success me-2"></i>
               Resumen General de Cuentas Corrientes Activas
             </h5>
@@ -92,14 +99,19 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
             {/* Controles de Búsqueda y Filtros */}
             <div className="row g-3 mb-3 align-items-center">
               <div className="col-md-7">
-                <input
-                  type="text"
-                  className={`form-control ${textColor}`}
-                  style={{ backgroundColor: inputBg, borderColor: inputBorder }}
-                  placeholder="Buscar por Nombre, DNI / Documento o Razón Social..."
-                  value={busqueda}
-                  onChange={(e) => setBusqueda(e.target.value)}
-                />
+                <div className="input-group">
+                  <span className="input-group-text border-end-0" style={{ backgroundColor: inputBg, borderColor: inputBorder, color: mutedText }}>
+                    <i className="bi bi-search"></i>
+                  </span>
+                  <input
+                    type="text"
+                    className={`form-control border-start-0 ${inputTextColor}`}
+                    style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+                    placeholder="Buscar por Nombre, DNI / Documento o Razón Social..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                  />
+                </div>
               </div>
               <div className="col-md-5 d-flex align-items-center justify-content-end">
                 <div className="form-check form-switch">
@@ -117,18 +129,35 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
               </div>
             </div>
 
-            {/* Tabla de Cuentas Corrientes */}
-            <div className="table-responsive" style={{ maxHeight: '45vh', overflowY: 'auto' }}>
-              <table className={`table ${textColor}`} style={{ borderCollapse: 'collapse', width: '100%' }}>
+            {/* Tabla de Cuentas Corrientes Adaptativa (sin la clase .table) */}
+            <div 
+              className="table-responsive rounded shadow-sm" 
+              style={{ 
+                maxHeight: '45vh', 
+                overflowY: 'auto',
+                backgroundColor: tableContainerBg,
+                border: `1px solid ${tableContainerBorder}`,
+                transition: 'all 0.2s ease-in-out'
+              }}
+            >
+              <table 
+                className="align-middle m-0" 
+                style={{ 
+                  width: '100%',
+                  borderCollapse: 'separate', 
+                  borderSpacing: 0,
+                  color: tableText 
+                }}
+              >
                 <thead>
-                  <tr style={{ borderBottom: `2px solid ${tableHeaderBorder}` }}>
-                    <th style={{ padding: '10px' }}>ID</th>
-                    <th style={{ padding: '10px' }}>Cliente</th>
-                    <th style={{ padding: '10px' }}>DNI / Documento</th>
-                    <th style={{ padding: '10px' }}>Razón Social</th>
-                    <th style={{ padding: '10px' }} className="text-end">Límite Crédito</th>
-                    <th style={{ padding: '10px' }} className="text-end">Saldo Deudor</th>
-                    <th style={{ padding: '10px' }} className="text-center">Acción</th>
+                  <tr style={{ borderBottom: `2px solid ${tableHeaderBorder}`, backgroundColor: tableContainerBg }}>
+                    <th className="py-3 px-3 font-monospace small" style={{ color: tableText, width: '60px', whiteSpace: 'nowrap' }}>ID</th>
+                    <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Cliente</th>
+                    <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>DNI / Documento</th>
+                    <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Razón Social</th>
+                    <th className="py-3 px-3 font-monospace small text-end" style={{ color: tableText }}>Límite Crédito</th>
+                    <th className="py-3 px-3 font-monospace small text-end" style={{ color: tableText }}>Saldo Deudor</th>
+                    <th className="py-3 px-3 font-monospace small text-center" style={{ color: tableText }}>Acción</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -139,19 +168,19 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverRowBg}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      <td style={{ padding: '10px' }}>{c.id_cliente}</td>
-                      <td style={{ padding: '10px' }}>{c.persona?.nombre} {c.persona?.apellido}</td>
-                      <td style={{ padding: '10px' }}>{c.persona?.numeroDocumento || '-'}</td>
-                      <td style={{ padding: '10px' }}>{c.razonSocial || '-'}</td>
-                      <td style={{ padding: '10px' }} className="text-end font-monospace text-warning">
+                      <td className="px-3 py-3 font-monospace small" style={{ color: tableText, whiteSpace: 'nowrap' }}>{c.id_cliente}</td>
+                      <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.persona?.nombre} {c.persona?.apellido}</td>
+                      <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.numeroDocumento || '-'}</td>
+                      <td className="px-3 py-3" style={{ color: tableText }}>{c.razonSocial || '-'}</td>
+                      <td className="px-3 py-3 text-end font-monospace text-warning fw-semibold">
                         ${Number(c.limiteCredito || 0).toFixed(2)}
                       </td>
-                      <td style={{ padding: '10px' }} className={`text-end font-monospace fw-bold ${Number(c.saldoDeudor || 0) > 0 ? 'text-danger' : 'text-success'}`}>
+                      <td className={`px-3 py-3 text-end font-monospace fw-bold ${Number(c.saldoDeudor || 0) > 0 ? 'text-danger' : 'text-success'}`}>
                         ${Number(c.saldoDeudor || 0).toFixed(2)}
                       </td>
-                      <td style={{ padding: '10px' }} className="text-center">
+                      <td className="px-3 py-3 text-center">
                         <button
-                          className="btn btn-outline-success btn-sm font-monospace"
+                          className="btn btn-outline-success btn-sm font-monospace rounded-2 px-3 py-1"
                           onClick={() => {
                             onCerrar();
                             onSeleccionarCliente(c);
@@ -164,8 +193,9 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
                   ))}
                   {cuentasActivas.length === 0 && (
                     <tr>
-                      <td colSpan={7} className={`text-center py-4 ${textColor}`}>
-                        No se encontraron cuentas corrientes activas con los filtros especificados.
+                      <td colSpan={7} className={`text-center py-5 ${emptyTextColor}`}>
+                        <i className="bi bi-search display-5 d-block mb-2 opacity-50"></i>
+                        <span className="font-monospace">No se encontraron cuentas corrientes activas con los filtros especificados.</span>
                       </td>
                     </tr>
                   )}
@@ -175,7 +205,9 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
           </div>
 
           <div className={`modal-footer border-top ${borderDivider}`}>
-            <button className="btn btn-secondary px-4" onClick={onCerrar}>Cerrar</button>
+            <button className="btn btn-danger px-4 fw-semibold" style={{ color: '#ffffff' }} onClick={onCerrar}>
+              Volver
+            </button>
           </div>
         </div>
       </div>

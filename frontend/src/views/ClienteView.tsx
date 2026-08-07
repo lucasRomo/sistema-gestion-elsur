@@ -16,11 +16,15 @@ export const ClienteView = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Estilos adaptativos
-  const textColor = isDark ? 'text-white' : 'text-dark';
+  // Estilos adaptativos de paleta
+  const titleColor = isDark ? '#ffffff' : '#0f172a';
+  const tableContainerBg = isDark ? '#1d1d1d' : '#ffffff';
+  const tableText = isDark ? '#ffffff' : '#0f172a';
+  const tableContainerBorder = isDark ? '#2d2d30' : '#e2e8f0';
   const tableHeaderBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const tableRowBorder = isDark ? '#2d2d30' : '#e2e8f0';
-  const hoverRowBg = isDark ? '#27272a' : '#f1f5f9';
+  const hoverRowBg = isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc';
+  const emptyTextColor = isDark ? 'text-white-50' : 'text-muted';
   const modalStepBg = isDark ? '#1e1e24' : '#ffffff';
 
   const { clientes, registrar, cargar } = useClientes();
@@ -119,12 +123,20 @@ export const ClienteView = () => {
   };
 
   return (
-    <>
+    <div className="container-fluid px-0">
+      {/* Título de la Sección */}
       <div className="d-flex justify-content-center align-items-center mb-4 position-relative">
-        <h1 className={`fw-bold ${textColor} mb-0 text-center`} style={{ fontSize: '1.85rem' }}>Clientes</h1>
-        <button type="button" className="btn btn-outline-info font-monospace position-absolute end-0" onClick={() => setVerCategoriasModal(true)}>
-          <i className="bi bi-tag me-2"></i>Categorías de Clientes
-        </button>
+        <h1 className="fw-bold m-0 text-center font-monospace" style={{ fontSize: '2.25rem', color: titleColor }}>
+          Clientes
+        </h1>
+        <button 
+  type="button" 
+  className="btn btn-info  fw-semibold font-monospace position-absolute end-0 shadow-sm" 
+  style={{ color: '#ffffff' }}
+  onClick={() => setVerCategoriasModal(true)}
+>
+  <i className="bi bi-tag me-2"></i>Categorías de Clientes
+</button>
       </div>
 
       <SuccesModal 
@@ -140,19 +152,37 @@ export const ClienteView = () => {
         setFiltroEstado={setFiltroEstado}
       />
 
-      <div className="table-responsive" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }} className={textColor}>
+      {/* Tabla Adaptativa sin la clase .table de Bootstrap */}
+      <div 
+        className="table-responsive rounded shadow-sm" 
+        style={{ 
+          maxHeight: '60vh', 
+          overflowY: 'auto',
+          backgroundColor: tableContainerBg,
+          border: `1px solid ${tableContainerBorder}`,
+          transition: 'all 0.2s ease-in-out'
+        }}
+      >
+        <table 
+          className="align-middle m-0" 
+          style={{ 
+            width: '100%',
+            borderCollapse: 'separate', 
+            borderSpacing: 0,
+            color: tableText 
+          }}
+        >
           <thead>
-            <tr style={{ borderBottom: `2px solid ${tableHeaderBorder}`, textAlign: 'left' }}>
-              <th style={{ padding: '12px' }}>ID</th>
-              <th style={{ padding: '12px' }}>Nombre</th>
-              <th style={{ padding: '12px' }}>Apellido</th>
-              <th style={{ padding: '12px' }}>Documento</th>
-              <th style={{ padding: '12px' }}>Razón Social</th>
-              <th style={{ padding: '12px' }}>Cta. Cte.</th>
-              <th style={{ padding: '12px' }}>Saldo Deudor</th>
-              <th style={{ padding: '12px' }}>Estado</th>
-              <th style={{ padding: '12px', textAlign: 'center' }}>Opciones</th>
+            <tr style={{ borderBottom: `2px solid ${tableHeaderBorder}`, backgroundColor: tableContainerBg }}>
+              <th className="py-3 px-3 font-monospace small" style={{ color: tableText, width: '60px', whiteSpace: 'nowrap' }}>ID</th>
+              <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Nombre</th>
+              <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Apellido</th>
+              <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Documento</th>
+              <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Razón Social</th>
+              <th className="py-3 px-5 font-monospace small" style={{ color: tableText }}>Cta. Cte.</th>
+              <th className="py-3 px-0 font-monospace small" style={{ color: tableText }}>Saldo Deudor</th>
+              <th className="py-3 px-4 font-monospace small" style={{ color: tableText }}>Estado</th>
+              <th className="py-3 px-3 font-monospace small text-center" style={{ color: tableText }}>Opciones</th>
             </tr>
           </thead>
           <tbody>
@@ -167,59 +197,63 @@ export const ClienteView = () => {
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverRowBg} 
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    <td style={{ padding: '12px' }}>{c.id_cliente}</td>
-                    <td style={{ padding: '12px' }}>{c.persona?.nombre}</td>
-                    <td style={{ padding: '12px' }}>{c.persona?.apellido}</td>
-                    <td style={{ padding: '12px' }}>{c.persona?.numeroDocumento}</td>
-                    <td style={{ padding: '12px' }}>{c.razonSocial}</td>
+                    <td className="px-3 py-3 font-monospace small" style={{ color: tableText, whiteSpace: 'nowrap' }}>{c.id_cliente}</td>
+                    <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.persona?.nombre}</td>
+                    <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.apellido}</td>
+                    <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.numeroDocumento}</td>
+                    <td className="px-3 py-3" style={{ color: tableText }}>{c.razonSocial}</td>
                     
-                    <td style={{ padding: '12px' }}>
+                    <td className="px-3 py-3">
                       {tieneCtaCte ? (
-                        <span className="badge bg-success font-monospace">Habilitada (${Number(c.limiteCredito).toFixed(0)})</span>
+                        <span className="badge rounded-pill bg-success bg-opacity-75 font-monospace px-3 py-2" style={{ color: '#ffffff' }}>
+                          Habilitada (${Number(c.limiteCredito).toFixed(0)})
+                        </span>
                       ) : (
-                        <span className="badge bg-secondary font-monospace opacity-75">Sin Cta Cte</span>
+                        <span className="badge rounded-pill bg-secondary font-monospace opacity-75 px-3 py-2" style={{ color: '#ffffff' }}>
+                          Sin Cta Cte
+                        </span>
                       )}
                     </td>
 
-                    <td style={{ padding: '12px' }}>
+                    <td className="px-3 py-3">
                       <span className={`fw-bold ${obtenerColorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
                         ${Number(c.saldoDeudor || 0).toFixed(2)}
                       </span>
                     </td>
-                    <td style={{ padding: '12px' }}>
-                      <span className={`badge ${c.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>
+                    <td className="px-3 py-3">
+                      <span className={`badge rounded-pill px-3 py-2 ${c.estado === 'Activo' ? 'bg-success bg-opacity-75' : 'bg-danger bg-opacity-75'}`} style={{ color: '#ffffff' }}>
                         {c.estado}
                       </span>
                     </td>
-                    <td style={{ padding: '12px' }}>
+                    <td className="px-3 py-3">
                       <div className="d-flex justify-content-center gap-2">
                         <button 
-                          className={`btn btn-sm d-flex align-items-center justify-content-center ${
+                          className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
                             tieneCtaCte ? 'btn-outline-success' : 'btn-outline-secondary opacity-50'
                           }`} 
-                          style={{ width: '32px', height: '32px' }} 
+                          style={{ width: '34px', height: '34px' }} 
                           title={tieneCtaCte ? "Gestionar Cuenta Corriente" : "Sin Cta. Cte. (Haz clic para asignar límite)"} 
                           onClick={() => setClienteCuentaCorriente(c)}
                         >
-                          <i className="bi bi-wallet2"></i>
+                          <i className="bi bi-wallet2 fs-6"></i>
                         </button>
 
                         <button 
-                          className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
-                          style={{ width: '32px', height: '32px' }} 
+                          className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                          style={{ width: '34px', height: '34px' }} 
                           title="Modificar Cliente" 
                           onClick={() => setClienteAEditar(c)}
                         >
-                          <i className="bi bi-pencil-square"></i>
+                          <i className="bi bi-pencil-square fs-6"></i>
                         </button>
                         
                         <button 
-                          className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
-                          style={{ width: '32px', height: '32px' }} 
+                          className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                          style={{ width: '34px', height: '34px' }} 
                           title="Ver Ubicación" 
                           onClick={() => setClienteConUbicacionSeleccionada(c)}
                         >
-                          <i className="bi bi-house-door"></i>
+                          <i className="bi bi-house-door fs-6"></i>
                         </button>
                       </div>
                     </td>
@@ -228,9 +262,9 @@ export const ClienteView = () => {
               })
             ) : (
               <tr>
-                <td colSpan={9} className={`text-center ${textColor} py-5`}>
-                  <i className="bi bi-search display-6 d-block mb-2 text-secondary"></i>
-                  No se han registrado o encontrado clientes en el sistema.
+                <td colSpan={9} className={`text-center py-5 ${emptyTextColor}`}>
+                  <i className="bi bi-search display-5 d-block mb-2 opacity-50"></i>
+                  <span className="font-monospace">No se han registrado o encontrado clientes en el sistema.</span>
                 </td>
               </tr>
             )}
@@ -238,21 +272,31 @@ export const ClienteView = () => {
         </table>
       </div>
 
-      <div className="d-flex justify-content-between align-items-center w-100 mt-4">
-        <button onClick={() => navigate('/dashboard')} className="btn btn-danger" style={{ borderRadius: '6px' }}>
-          Volver
+      {/* Botonera Inferior con texto blanco estático */}
+      <div className={`d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 border-top ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
+        <button 
+          onClick={() => navigate('/dashboard')} 
+          className="btn btn-danger px-4 py-2 fw-semibold" 
+          style={{ color: '#ffffff' }}
+        >
+          <i className="bi bi-arrow-left me-2"></i>Volver
         </button>
 
-        <div className="d-flex gap-2">
+        <div className="d-flex flex-wrap gap-2">
           <button 
-            className="btn btn-outline-warning font-monospace fw-bold d-flex align-items-center gap-2"
-            onClick={() => setVerResumenCuentasModal(true)}
-          >
-            <i className="bi bi-wallet2"></i> Ver Cuentas Corrientes Activas
-          </button>
+  className="btn px-4 py-2 fw-semibold shadow-sm font-monospace d-flex align-items-center gap-2" 
+  style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}
+  onClick={() => setVerResumenCuentasModal(true)}
+>
+  <i className="bi bi-wallet2"></i> Ver Cuentas Corrientes Activas
+</button>
 
-          <button className="btn btn-success" onClick={() => setPaso(1)}>
-            Registrar Nuevo Cliente
+          <button 
+            className="btn btn-success px-4 py-2 fw-semibold shadow-sm" 
+            style={{ color: '#ffffff' }}
+            onClick={() => setPaso(1)}
+          >
+            <i className="bi bi-plus-circle me-2"></i>Registrar Nuevo Cliente
           </button>
         </div>
       </div>
@@ -261,7 +305,7 @@ export const ClienteView = () => {
       {paso === 1 && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className={`modal-content ${textColor} p-4 shadow-lg`} style={{ backgroundColor: modalStepBg }}>
+            <div className="modal-content p-4 shadow-lg" style={{ backgroundColor: modalStepBg, color: tableText }}>
               <PersonaForm formData={formData} setFormData={setFormData} onSiguiente={() => setPaso(2)} onVolver={() => setPaso(0)} />
             </div>
           </div>
@@ -290,6 +334,6 @@ export const ClienteView = () => {
           }} 
         />
       )}
-    </>
+    </div>
   );
 };

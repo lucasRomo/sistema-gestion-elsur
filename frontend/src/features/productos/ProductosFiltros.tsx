@@ -16,10 +16,10 @@ export const ProductosFiltros: React.FC<ProductosFiltrosProps> = ({
   const isDark = theme === 'dark';
 
   // Variables adaptativas para tema Claro/Oscuro
-  const containerBg = isDark ? '#1d1d1d' : '#f1f5f9';
-  const containerBorder = isDark ? '#2d2d30' : '#cbd5e1';
-  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
-  const inputBg = isDark ? '#121214' : '#ffffff';
+  const containerBg = isDark ? '#1d1d1d' : '#f8fafc';
+  const containerBorder = isDark ? '#2d2d30' : '#e2e8f0';
+  const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
+  const inputBg = isDark ? '#1b1b1b' : '#ffffff';
   const inputTextColor = isDark ? 'text-white' : 'text-dark';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
 
@@ -36,14 +36,19 @@ export const ProductosFiltros: React.FC<ProductosFiltrosProps> = ({
         <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
           Filtrar por Nombre:
         </label>
-        <input 
-          type="text" 
-          className={`form-control ${inputTextColor} py-2`}
-          style={{ backgroundColor: inputBg, borderColor: inputBorder }}
-          placeholder="Buscar producto..." 
-          value={filtroNombre}
-          onChange={(e) => setFiltroNombre(e.target.value)}
-        />
+        <div className="input-group">
+          <span className="input-group-text border-end-0" style={{ backgroundColor: inputBg, borderColor: inputBorder, color: mutedText }}>
+            <i className="bi bi-search"></i>
+          </span>
+          <input 
+            type="text" 
+            className={`form-control border-start-0 ${inputTextColor} py-2`}
+            style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+            placeholder="Buscar producto..." 
+            value={filtroNombre}
+            onChange={(e) => setFiltroNombre(e.target.value)}
+          />
+        </div>
       </div>
       <div className="col-md-6">
         <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>

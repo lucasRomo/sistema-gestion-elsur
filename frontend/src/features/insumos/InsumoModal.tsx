@@ -172,11 +172,21 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
             </div>
 
             <div className="modal-footer border-top border-secondary py-2">
-              <button type="button" className="btn btn-sm btn-secondary px-4" onClick={onClose}>Cancelar</button>
-              <button type="submit" className="btn btn-sm px-4 fw-bold text-white" style={{ backgroundColor: '#16a34a' }}>
-                {insumoEditando ? 'Actualizar' : 'Guardar'}
-              </button>
-            </div>
+  <button 
+    type="button" 
+    className="btn btn-sm btn-secondary px-4" 
+    onClick={onClose}
+  >
+    Cancelar
+  </button>
+  <button 
+    type="submit" 
+    className="btn btn-sm px-4 fw-bold" 
+    style={{ backgroundColor: '#16a34a', color: '#ffffff' }}
+  >
+    {insumoEditando ? 'Actualizar' : 'Guardar'}
+  </button>
+</div>
           </form>
 
         </div>
