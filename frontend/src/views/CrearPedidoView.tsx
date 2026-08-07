@@ -70,7 +70,7 @@ export const CrearPedidoView: React.FC = () => {
           const usuarioObj = JSON.parse(usuarioJson);
           return usuarioObj.idUsuario ? parseInt(usuarioObj.idUsuario) : null;
         } catch (e) {
-          console.error("Error al parsear el usuario_logueado desde localStorage:", e);
+          console.error("Error al parsear usuario_logueado:", e);
         }
       }
       return null;
@@ -148,16 +148,17 @@ export const CrearPedidoView: React.FC = () => {
         )}
       </div>
 
+      {/* Modal de Confirmación */}
       {confirmarGuardado && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
             <div 
-              className="modal-content p-4 text-white text-center" 
-              style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px', fontFamily: 'monospace' }}
+              className="modal-content p-4 text-white text-center custom-modal-card" 
+              style={{ border: '2px solid #8e45e0', borderRadius: '12px', fontFamily: 'monospace' }}
             >
               <i className="bi bi-question-circle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">¿Confirmar registro?</h5>
-              <p className="small" style={{ color: '#a1a1aa' }}>
+              <p className="small text-muted">
                 {fileTemporal 
                   ? `¿Está listo para finalizar el Pedido con el comprobante "${fileTemporal.name}" adjunto?` 
                   : '¿Está listo para finalizar el Pedido?'}
@@ -183,16 +184,17 @@ export const CrearPedidoView: React.FC = () => {
         </div>
       )}
 
+      {/* Modal de Resultado */}
       {suceso.show && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
             <div 
-              className="modal-content p-4 text-white text-center" 
-              style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px', fontFamily: 'monospace' }}
+              className="modal-content p-4 text-white text-center custom-modal-card" 
+              style={{ border: '2px solid #8e45e0', borderRadius: '12px', fontFamily: 'monospace' }}
             >
               <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-x-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">{suceso.titulo}</h5>
-              <p className="small" style={{ color: '#a1a1aa' }}>{suceso.mensaje}</p>
+              <p className="small text-muted">{suceso.mensaje}</p>
               <button 
                 className={`btn ${suceso.tipo === 'exito' ? 'btn-success' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold`}
                 style={{ borderRadius: '6px' }}

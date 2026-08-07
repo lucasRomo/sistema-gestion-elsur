@@ -16,7 +16,31 @@ export interface TotalesCaja {
   saldoActual: number;
 }
 
-const API_BASE_URL = 'http://localhost:8080/api';
+export interface ArqueoCaja {
+  id: number;
+  fechaCierre: string;
+  usuarioCierre: string;
+  montoEsperado: number;
+  montoReal: number;
+  diferencia: number;   
+  estado: 'APROBADO' | 'PENDIENTE' | 'OBSERVADO';
+  observacion?: string;
+}
+
+export interface Turno {
+  idTurno: number;
+  usuario?: any;
+  fechaApertura: string;
+  fechaCierre?: string | null;
+  montoInicial: number;
+  montoEsperadoSistema?: number;
+  montoRealContado?: number;
+  diferenciaArqueo?: number;
+  observaciones?: string;
+  estado: 'ABIERTO' | 'CERRADO';
+}
+
+const API_BASE_URL = 'http://localhost:8080/api'; 
 
 export const cajaService = {
   // NUEVO: Obtiene TODOS los movimientos para poder filtrar cualquier rango de fechas en Informes
@@ -59,7 +83,33 @@ export const cajaService = {
       console.error('Error en cajaService.obtenerTotales:', error);
       return null;
     }
+  },
+
+  obtenerTodosLosTurnos: async (): Promise<Turno[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/turnos`);
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error en cajaService.obtenerTodosLosTurnos:', error);
+      return [];
+    }
+  },
+
+  // NUEVO: Movimientos de un turno específico (para el detalle del arqueo)
+  obtenerMovimientosPorTurno: async (idTurno: number): Promise<MovimientoCaja[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/movimientos-caja/turno/${idTurno}`);
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error en cajaService.obtenerMovimientosPorTurno:', error);
+      return [];
+    }
   }
 
-  
 };

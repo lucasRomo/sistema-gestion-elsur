@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface TurnoRepository extends JpaRepository<Turno, Integer> {
@@ -27,6 +28,8 @@ public interface TurnoRepository extends JpaRepository<Turno, Integer> {
 
     Optional<Turno> findFirstByEstado(EstadoTurno estado);
 
-    // Método agregado para buscar el último turno por EstadoTurno
+      List<Turno> findAllByOrderByFechaAperturaDesc();
+
+      // Método agregado para buscar el último turno por EstadoTurno
     Optional<Turno> findTopByEstadoOrderByFechaAperturaDesc(EstadoTurno estado);
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../../../Context/ThemeContext';
 
 interface FiltrosHistorialProps {
   filtroTexto: string;
@@ -13,8 +14,10 @@ export const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
   filtroEstadoHistorial,
   setFiltroEstadoHistorial,
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   return (
-    <div className="row g-3 mb-4 p-3 rounded d-print-none" style={{ backgroundColor: '#1d1d1d', border: '1px solid #2d2d30' }}>
+    <div className="row g-3 mb-4 p-3 rounded d-print-none" style={{ backgroundColor: isDark ? '#1d1d1d' : '#f1f5f9', border: `1px solid ${isDark ? '#2d2d30' : '#cbd5e1'}` }}>
       <div className="col-md-7">
         <label className="form-label small text-secondary fw-bold">Filtro por Cliente, Empleado o Fecha:</label>
         <input 

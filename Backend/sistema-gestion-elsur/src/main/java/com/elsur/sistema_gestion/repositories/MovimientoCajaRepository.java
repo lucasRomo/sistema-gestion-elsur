@@ -18,4 +18,5 @@ public interface MovimientoCajaRepository extends JpaRepository<MovimientoCaja, 
     @Query("SELECT m FROM MovimientoCaja m WHERE m.pedido.id_pedido = :idPedido")
     List<MovimientoCaja> buscarPorPedido(@Param("idPedido") Integer idPedido);
     List<MovimientoCaja> findByFechaBetween(LocalDateTime inicio, LocalDateTime fin);
+    List<MovimientoCaja> findByTurno_IdTurno(Integer idTurno);
 }

@@ -8,8 +8,14 @@ import type { CartItem } from '../types/Pedido';
 import type { CategoriaCliente } from '../types/CategoriaCliente';
 import type { Maquina } from '../types/Maquina';
 import { PedidosPendientesCard } from '../features/VentaRapida/PedidosPendientesCard';
+import { VistaTicketModal } from '../features/pedidos/VistaTicketModal';
+import { NotificacionesCard } from '../features/VentaRapida/NotificacionesCard';
+import { useTheme } from '../Context/ThemeContext'; 
 
 export const VentaRapida: React.FC = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<CategoriaCliente[]>([]);
   const [categoriaSeleccionadaId, setCategoriaSeleccionadaId] = useState<string>('');
@@ -21,7 +27,15 @@ export const VentaRapida: React.FC = () => {
   const [confirmarCancelacion, setConfirmarCancelacion] = useState(false);
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
 
-  // Estado para el modal de advertencia de máquinas fuera de servicio
+  // RECUPERAR ÚLTIMO PEDIDO DE LOCALSTORAGE AL INICIALIZAR EL ESTADO
+  const [ultimoPedidoRealizado, setUltimoPedidoRealizado] = useState<any | null>(() => {
+    const guardado = localStorage.getItem('ultimo_pedido_venta_rapida');
+    return guardado ? JSON.parse(guardado) : null;
+  });
+
+  const [verTicketPedido, setVerTicketPedido] = useState<any | null>(null);
+
+  // Modal de advertencia de máquinas fuera de servicio
   const [showModalMaquinas, setShowModalMaquinas] = useState(false);
   const [conflictosMaquinas, setConflictosMaquinas] = useState<{
     productoNombre: string;
@@ -252,8 +266,12 @@ export const VentaRapida: React.FC = () => {
         throw new Error(errorText || "Error al actualizar estado del pedido.");
       }
 
-      // 4. Refrescar catálogo para impactar stock descontado en la interfaz
+      // 4. Refrescar catálogo para impactar stock descontado
       await fetchProductos();
+
+      // PERSISTIR EL ÚLTIMO PEDIDO PARA TICKET
+      setUltimoPedidoRealizado(pedidoGuardado);
+      localStorage.setItem('ultimo_pedido_venta_rapida', JSON.stringify(pedidoGuardado));
 
       setCarrito([]);
       setCategoriaSeleccionadaId('');
@@ -294,29 +312,67 @@ export const VentaRapida: React.FC = () => {
 
   return (
     <div 
-      className="container-fluid font-monospace text-white d-flex flex-column justify-content-between"
+      className={`container-fluid font-monospace d-flex flex-column justify-content-between ${isDark ? 'text-white' : 'text-dark'}`}
       style={{ minHeight: 'calc(100vh - 40px)', paddingBottom: '10px' }}
     >
+      {!isDark && (
+        <style>{`
+          select.form-select, 
+          input.form-control {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+          }
+
+          select.form-select:focus,
+          select.form-select:focus-visible,
+          select.form-select:active,
+          input.form-control:focus,
+          input.form-control:focus-visible,
+          input.form-control:active {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #8e45e0 !important;
+            box-shadow: 0 0 0 0.25rem rgba(142, 69, 224, 0.2) !important;
+            outline: none !important;
+          }
+
+          select.form-select option {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+          }
+        `}</style>
+      )}
+
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div className="w-100 text-center position-relative">
-          <h1 className="fw-bold tracking-wider font-monospace m-0" style={{ fontSize: '2.3rem', color: '#ffffff' }}>
+          <h1 className="fw-bold tracking-wider font-monospace m-0" style={{ fontSize: '2.3rem', color: isDark ? '#ffffff' : '#ac76d8' }}>
             Panel principal
           </h1>
         </div>
       </div>
 
       <div className="row mb-3 g-3 flex-grow-0" style={{ minHeight: '220px' }}>
-        <div className="col-12 col-md-6">
+        <div className="col-12 col-md-4">
           <PedidosPendientesCard />
         </div>
-        <div className="col-12 col-md-6">
+        <div className="col-12 col-md-4">
+          <NotificacionesCard />
+        </div>
+        <div className="col-12 col-md-4">
           <FaltaStockCard />
         </div>
       </div>
 
+      {/* --- PANEL INFERIOR --- */}
       <div 
-        className="card p-4 shadow flex-grow-1 d-flex flex-column justify-content-between" 
-        style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46', borderRadius: '12px' }}
+        className="card p-4 flex-grow-1 d-flex flex-column justify-content-between" 
+        style={{ 
+          backgroundColor: isDark ? '#1E1E1F' : '#ffffff', 
+          border: isDark ? '1px solid #3f3f46' : '1px solid #cbd5e1', 
+          borderRadius: '14px',
+          boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05)'
+        }}
       >
         <div>
           <SelectorProducto 
@@ -339,9 +395,20 @@ export const VentaRapida: React.FC = () => {
           onSeleccionarCategoria={setCategoriaSeleccionadaId}
           onCancelar={handleCancelar} 
           onCompletar={handleValidarYCompletarVenta} 
+          ultimoPedido={ultimoPedidoRealizado}
+          onImprimirTicket={() => setVerTicketPedido(ultimoPedidoRealizado)}
         />
       </div>
 
+      {/* MODAL DE VISTA PREVIA DEL TICKET */}
+      {verTicketPedido && (
+        <VistaTicketModal 
+          pedido={verTicketPedido}
+          onClose={() => setVerTicketPedido(null)}
+        />
+      )}
+
+      {/* MODAL DE ADVERTENCIA DE MAQUINARIA */}
       {showModalMaquinas && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered">
@@ -398,23 +465,40 @@ export const VentaRapida: React.FC = () => {
         </div>
       )}
 
+      {/* MODAL SUCESO */}
       {suceso.show && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
             <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
               <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-x-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">{suceso.titulo}</h5>
               <p className="small" style={{ color: '#a1a1aa' }}>{suceso.mensaje}</p>
-              <button className="btn btn-success btn-sm px-4 mt-3 fw-bold" onClick={() => setSuceso({ ...suceso, show: false })}>
-                Cerrar
-              </button>
+              
+              <div className="d-flex flex-column gap-2 mt-3">
+                {suceso.tipo === 'exito' && suceso.titulo === '¡Éxito!' && ultimoPedidoRealizado && (
+                  <button 
+                    className="btn fw-bold text-dark btn-sm px-3 py-2" 
+                    style={{ backgroundColor: '#eab308' }}
+                    onClick={() => {
+                      setSuceso({ ...suceso, show: false });
+                      setVerTicketPedido(ultimoPedidoRealizado);
+                    }}
+                  >
+                    <i className="bi bi-printer-fill me-1"></i> Imprimir Ticket
+                  </button>
+                )}
+                <button style={{ backgroundColor: 'rgb(175, 58, 50)', border: 'none' }} className="btn btn-secondary btn-sm px-4 fw-bold" onClick={() => setSuceso({ ...suceso, show: false })}>
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* MODAL CONFIRMAR CANCELACIÓN */}
       {confirmarCancelacion && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
             <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
               <i className="bi bi-exclamation-triangle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>

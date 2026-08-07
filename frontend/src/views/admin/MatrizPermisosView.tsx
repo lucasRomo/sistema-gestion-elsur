@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../Context/ThemeContext';
 
 interface ModuloPermiso {
   idPermiso: number;
@@ -22,10 +23,11 @@ interface Usuario {
   tienePermisosPersonalizados?: boolean;
 }
 
+// CATEGORÍAS UNIFICADAS: Incluye 'Inventario' (Lisandro) y 'Equipos / Máquinas' (Lucas)
 const CATEGORIAS_SIDEBAR: { [categoria: string]: string[] } = {
   'GENERAL': ['Panel Principal'],
   'PRODUCCIÓN': ['Crear Pedido', 'Pedidos Pendientes', 'Historial de Pedidos', 'Caja', 'Repositorio Digital'],
-  'STOCK': ['Insumos', 'Productos'],
+  'STOCK': ['Inventario', 'Insumos', 'Productos'],
   'ADMINISTRACIÓN / ENTIDADES': ['Clientes', 'Proveedores', 'Equipos / Máquinas'],
   'OPCIONES DE GERENTE': ['Informes', 'Matriz de Permisos', 'Gestión de Usuarios', 'Historial de Actividad'],
   'MI CUENTA': ['Configuración']
@@ -33,6 +35,9 @@ const CATEGORIAS_SIDEBAR: { [categoria: string]: string[] } = {
 
 export const MatrizPermisosView: React.FC = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [roles, setRoles] = useState<any[]>([]);
   const [rolSeleccionado, setRolSeleccionado] = useState<number>(1); 
   const [modulos, setModulos] = useState<ModuloPermiso[]>([]);
@@ -176,7 +181,7 @@ export const MatrizPermisosView: React.FC = () => {
   const confirmarGuardado = async () => {
     setMostrarModalConfirmacion(false);
 
-    // Módulos finales asegurando los permisos protegidos de Admin
+    // Asegurar los permisos protegidos de Admin
     const modulosAsegurados = modulos.map(mod => {
       if (esPermisoProtegido(mod.nombrePermiso)) {
         return { ...mod, activo: true };
@@ -195,7 +200,7 @@ export const MatrizPermisosView: React.FC = () => {
       let idRolFinalAsignado: number | undefined;
 
       if (usuarioEditar) {
-        // CASO 1: Reasignación de Rol Global al Usuario (Ej: reasignar ADMIN al admin)
+        // CASO 1: Reasignación de Rol Global al Usuario
         if (rolSeleccionadoEnUsuario !== null) {
           const rolObjeto = roles.find(r => r.idRol === rolSeleccionadoEnUsuario);
 
@@ -220,7 +225,7 @@ export const MatrizPermisosView: React.FC = () => {
             setMensajeExitoTexto(`¡Se asignó el perfil "${rolObjeto?.nombreRol || 'ADMIN'}" a ${usuarioEditar.nombreUsuario}!`);
           }
         } 
-        // CASO 2: Edición de permisos personalizados del usuario (Checkboxes)
+        // CASO 2: Edición de permisos personalizados del usuario
         else {
           let idRolDestino = usuarioEditar.rol?.idRol;
 
@@ -273,9 +278,7 @@ export const MatrizPermisosView: React.FC = () => {
         setMensajeExitoTexto('¡Permisos de perfil global actualizados!');
       }
 
-      // ==========================================================
-      // ACTUALIZACIÓN EN VIVO DE LA SESIÓN ACTIVA (LOCALSTORAGE & EVENTOS)
-      // ==========================================================
+      // ACTUALIZACIÓN EN VIVO DE SESIÓN Y EVENTOS LOCALES
       const usuarioSesionString = localStorage.getItem('usuario_logueado') || localStorage.getItem('usuario');
       if (usuarioSesionString) {
         const usuarioSesion = JSON.parse(usuarioSesionString);
@@ -381,12 +384,32 @@ export const MatrizPermisosView: React.FC = () => {
     : rolSeleccionado;
 
   return (
-    <div className="container-fluid text-white font-monospace py-2 px-3">
-      {/* HEADER Y SECTOR "ASIGNAR PERFIL A USUARIO" DESTACADO */}
-      <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+    <div className={`container-fluid font-monospace py-2 px-3 ${isDark ? 'text-white' : 'text-dark'}`}>
+      {!isDark && (
+        <style>{`
+          select.form-select, 
+          input.form-control {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+          }
+          select.form-select:focus,
+          input.form-control:focus {
+            border-color: #8e45e0 !important;
+            box-shadow: 0 0 0 0.25rem rgba(142, 69, 224, 0.2) !important;
+          }
+        `}</style>
+      )}
+
+      {/* HEADER Y SECTOR "ASIGNAR PERFIL A USUARIO" */}
+      <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
         <div>
-          <h3 className="fw-bold mb-0" style={{ color: '#ffffff', fontSize: '1.4rem' }}>Matriz de Permisos por Perfil</h3>
-          <p className="text-white-50 mb-0 small" style={{ fontSize: '0.75rem' }}>Configuración dinámica de acceso a ventanas y asignación de personal</p>
+          <h3 className="fw-bold mb-0" style={{ fontSize: '1.6rem', color: isDark ? '#ffffff' : '#1e293b' }}>
+            Matriz de Permisos por Perfil
+          </h3>
+          <p className="mb-0 small text-secondary" style={{ fontSize: '0.75rem' }}>
+            Configuración dinámica de acceso a ventanas y asignación de personal
+          </p>
         </div>
         
         <div className="d-flex align-items-center gap-2">
@@ -409,27 +432,27 @@ export const MatrizPermisosView: React.FC = () => {
             </button>
           )}
 
-          {/* PANEL RESALTADO DE SELECCIÓN/ASIGNACIÓN DE PERFIL */}
+          {/* PANEL DE SELECCIÓN Y DESTACADO */}
           <div 
-            className="d-flex align-items-center gap-2 px-3 py-1 rounded-3 shadow-lg" 
+            className="d-flex align-items-center gap-2 px-3 py-1 rounded-3 shadow-sm" 
             style={{ 
-              backgroundColor: usuarioEditar ? '#1c102b' : '#18181b', 
+              backgroundColor: isDark ? (usuarioEditar ? '#1c102b' : '#18181b') : (usuarioEditar ? '#f3e8ff' : '#f8fafc'), 
               border: usuarioEditar ? '2px solid #20c997' : '2px solid #8e45e0',
-              boxShadow: usuarioEditar ? '0 0 14px rgba(32, 201, 151, 0.5)' : '0 0 10px rgba(142, 69, 224, 0.3)'
+              boxShadow: usuarioEditar ? '0 0 12px rgba(32, 201, 151, 0.3)' : '0 0 10px rgba(142, 69, 224, 0.2)'
             }}
           >
             <div className="d-flex flex-column align-items-start">
-              <span className="fw-bold" style={{ fontSize: '0.7rem', color: usuarioEditar ? '#20c997' : '#c084fc', letterSpacing: '0.5px' }}>
+              <span className="fw-bold" style={{ fontSize: '0.7rem', color: usuarioEditar ? '#20c997' : '#8e45e0', letterSpacing: '0.5px' }}>
                 <i className={`bi ${usuarioEditar ? 'bi-person-badge-fill text-success' : 'bi-shield-lock-fill text-warning'} me-1`}></i>
                 {usuarioEditar ? 'ASIGNAR PERFIL A USUARIO:' : 'VER PLANTILLA DE PERFIL:'}
               </span>
-              <span className="text-white-50" style={{ fontSize: '0.62rem' }}>
+              <span className="text-secondary" style={{ fontSize: '0.62rem' }}>
                 {usuarioEditar ? 'Aplica la plantilla del rol seleccionado' : 'Edita permisos base del grupo'}
               </span>
             </div>
 
             <select 
-              className="form-select form-select-sm bg-dark text-white fw-bold shadow-sm py-1 px-2 ms-1" 
+              className={`form-select form-select-sm fw-bold shadow-sm py-1 px-2 ms-1 ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
               style={{ 
                 width: '210px', 
                 fontSize: '0.82rem',
@@ -440,7 +463,7 @@ export const MatrizPermisosView: React.FC = () => {
               onChange={handleCambioPerfilSelect}
             >
               {usuarioEditar && rolUsuarioEsPersonalizado && rolSeleccionadoEnUsuario === null && (
-                <option value={usuarioEditar.rol?.idRol} disabled style={{ backgroundColor: '#2d2d30', color: '#ffc107' }}>
+                <option value={usuarioEditar.rol?.idRol} disabled style={{ backgroundColor: isDark ? '#2d2d30' : '#fff3cd', color: '#d97706' }}>
                   ★ PERFIL PERSONALIZADO
                 </option>
               )}
@@ -448,7 +471,7 @@ export const MatrizPermisosView: React.FC = () => {
                 <option 
                   key={rol.idRol} 
                   value={rol.idRol}
-                  style={{ backgroundColor: '#18181b', color: '#ffffff' }}
+                  style={{ backgroundColor: isDark ? '#18181b' : '#ffffff', color: isDark ? '#ffffff' : '#0f172a' }}
                 >
                   {rol.nombreRol}
                 </option>
@@ -461,9 +484,15 @@ export const MatrizPermisosView: React.FC = () => {
       <div className="row g-3">
         {/* PANEL IZQUIERDO: LISTA DE USUARIOS */}
         <div className="col-md-3">
-          <div className="p-3 rounded-4" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
+          <div 
+            className="p-3 rounded-4" 
+            style={{ 
+              backgroundColor: isDark ? '#18181b' : '#ffffff', 
+              border: isDark ? '1px solid #3f3f46' : '1px solid #cbd5e1' 
+            }}
+          >
             <div className="d-flex justify-content-between align-items-center mb-2">
-              <h6 className="fw-bold mb-0 text-white small">
+              <h6 className={`fw-bold mb-0 small ${isDark ? 'text-white' : 'text-dark'}`}>
                 <i className="bi bi-people-fill text-warning me-2"></i>Usuarios
               </h6>
               <span className="badge bg-secondary" style={{ fontSize: '0.7rem' }}>{usuarios.length}</span>
@@ -472,7 +501,7 @@ export const MatrizPermisosView: React.FC = () => {
             <div className="mb-2">
               <input 
                 type="text" 
-                className="form-control form-control-sm bg-dark text-white border-secondary"
+                className={`form-control form-control-sm border-secondary border-opacity-25 ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
                 style={{ fontSize: '0.75rem' }}
                 placeholder="Buscar usuario..."
                 value={busquedaUsuario}
@@ -496,8 +525,10 @@ export const MatrizPermisosView: React.FC = () => {
                     key={u.idUsuario}
                     className="p-2 rounded d-flex justify-content-between align-items-center"
                     style={{ 
-                      backgroundColor: esSeleccionado ? '#2b213a' : '#222122',
-                      border: esSeleccionado ? '1px solid #8e45e0' : '1px solid #2d2d30'
+                      backgroundColor: esSeleccionado 
+                        ? (isDark ? '#2b213a' : '#f3e8ff') 
+                        : (isDark ? '#222122' : '#f8fafc'),
+                      border: esSeleccionado ? '1px solid #8e45e0' : (isDark ? '1px solid #2d2d30' : '1px solid #e2e8f0')
                     }}
                   >
                     <div className="d-flex align-items-center gap-2">
@@ -508,10 +539,10 @@ export const MatrizPermisosView: React.FC = () => {
                         {iniciales}
                       </div>
                       <div style={{ lineHeight: '1.1' }}>
-                        <p className="mb-0 fw-bold text-white" style={{ fontSize: '0.75rem' }}>
+                        <p className={`mb-0 fw-bold ${isDark ? 'text-white' : 'text-dark'}`} style={{ fontSize: '0.75rem' }}>
                           {u.persona ? `${u.persona.nombre} ${u.persona.apellido}` : u.nombreUsuario}
                         </p>
-                        <span className="text-white-50" style={{ fontSize: '0.65rem' }}>
+                        <span className="text-secondary" style={{ fontSize: '0.65rem' }}>
                           @{u.nombreUsuario}
                         </span>
                       </div>
@@ -523,8 +554,13 @@ export const MatrizPermisosView: React.FC = () => {
                       </span>
                       <button 
                         onClick={() => seleccionarUsuarioParaPermisos(u)}
-                        className="btn btn-sm text-white p-0 px-1"
-                        style={{ backgroundColor: esSeleccionado ? '#8e45e0' : 'transparent', border: '1px solid #8e45e0', fontSize: '0.7rem' }}
+                        className="btn btn-sm p-0 px-1"
+                        style={{ 
+                          backgroundColor: esSeleccionado ? '#8e45e0' : 'transparent', 
+                          color: esSeleccionado ? '#ffffff' : '#8e45e0',
+                          border: '1px solid #8e45e0', 
+                          fontSize: '0.7rem' 
+                        }}
                         title="Configurar permisos"
                       >
                         <i className="bi bi-sliders"></i>
@@ -539,25 +575,42 @@ export const MatrizPermisosView: React.FC = () => {
 
         {/* PANEL DERECHO: MATRIZ DE PERMISOS */}
         <div className="col-md-9">
-          <div className="p-3 rounded-4" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-            
+          <div 
+            className="p-3 rounded-4" 
+            style={{ 
+              backgroundColor: isDark ? '#18181b' : '#ffffff', 
+              border: isDark ? '1px solid #3f3f46' : '1px solid #cbd5e1' 
+            }}
+          >
             {usuarioEditar ? (
-              <div className="p-2 px-3 mb-3 rounded d-flex justify-content-between align-items-center" style={{ backgroundColor: '#132e27', border: '1px solid #20c997' }}>
+              <div 
+                className="p-2 px-3 mb-3 rounded d-flex justify-content-between align-items-center" 
+                style={{ 
+                  backgroundColor: isDark ? '#132e27' : '#d1fae5', 
+                  border: '1px solid #20c997' 
+                }}
+              >
                 <div>
                   <span className="badge bg-success mb-0 me-2" style={{ fontSize: '0.7rem' }}>EMPLEADO SELECCIONADO</span>
-                  <span className="fw-bold text-white">
-                    Permisos de: <span style={{ color: '#20c997' }}>"{usuarioEditar.persona ? `${usuarioEditar.persona.nombre} ${usuarioEditar.persona.apellido}` : usuarioEditar.nombreUsuario}"</span>
+                  <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>
+                    Permisos de: <span style={{ color: '#059669' }}>"{usuarioEditar.persona ? `${usuarioEditar.persona.nombre} ${usuarioEditar.persona.apellido}` : usuarioEditar.nombreUsuario}"</span>
                   </span>
                   {usuarioEditar.idUsuario === 1 && <span className="badge bg-warning text-dark ms-2" style={{ fontSize: '0.7rem' }}>ADMIN PRINCIPAL</span>}
                 </div>
-                <button onClick={volverAModoGlobal} className="btn btn-sm btn-outline-light py-1 px-2" style={{ fontSize: '0.75rem' }}>
+                <button onClick={volverAModoGlobal} className="btn btn-sm btn-outline-secondary py-1 px-2" style={{ fontSize: '0.75rem' }}>
                   <i className="bi bi-x-circle me-1"></i> Volver a Perfiles Globales
                 </button>
               </div>
             ) : (
-              <div className="p-2 px-3 mb-3 rounded" style={{ backgroundColor: '#222122', border: '1px solid #8e45e0' }}>
+              <div 
+                className="p-2 px-3 mb-3 rounded d-flex align-items-center" 
+                style={{ 
+                  backgroundColor: isDark ? '#222122' : '#f3e8ff', 
+                  border: '1px solid #8e45e0' 
+                }}
+              >
                 <span className="badge me-2" style={{ backgroundColor: '#8e45e0', fontSize: '0.7rem' }}>PERFIL GLOBAL</span>
-                <span className="fw-bold text-white">
+                <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>
                   Permisos del perfil: <span style={{ color: '#8e45e0' }}>{roles.find(r => r.idRol === rolSeleccionado)?.nombreRol}</span>
                 </span>
               </div>
@@ -574,12 +627,12 @@ export const MatrizPermisosView: React.FC = () => {
                     key={catNombre} 
                     className="p-2 px-3 rounded mb-3" 
                     style={{ 
-                      backgroundColor: '#141416', 
-                      border: '1px solid #2d2d30',
+                      backgroundColor: isDark ? '#141416' : '#f8fafc', 
+                      border: isDark ? '1px solid #2d2d30' : '1px solid #e2e8f0',
                       breakInside: 'avoid'
                     }}
                   >
-                    <h6 className="fw-bold text-white-50 mb-2 border-bottom border-secondary pb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>
+                    <h6 className="fw-bold text-secondary mb-2 border-bottom border-secondary border-opacity-25 pb-1" style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}>
                       — {catNombre}
                     </h6>
                     <div className="d-flex flex-column gap-2">
@@ -592,14 +645,18 @@ export const MatrizPermisosView: React.FC = () => {
                             onClick={() => togglePermiso(mod.idPermiso, mod.nombrePermiso)}
                             className="d-flex justify-content-between align-items-center px-3 py-2 rounded transition-all"
                             style={{ 
-                              backgroundColor: mod.activo ? 'rgba(142, 69, 224, 0.12)' : '#222122', 
-                              border: mod.activo ? '1px solid #8e45e0' : '1px solid #2d2d30',
+                              backgroundColor: mod.activo 
+                                ? (isDark ? 'rgba(142, 69, 224, 0.15)' : '#f3e8ff') 
+                                : (isDark ? '#222122' : '#ffffff'), 
+                              border: mod.activo ? '1px solid #8e45e0' : (isDark ? '1px solid #2d2d30' : '1px solid #cbd5e1'),
                               cursor: bloqueado ? 'not-allowed' : 'pointer',
                               opacity: bloqueado ? 0.75 : 1
                             }}
                           >
                             <div className="d-flex align-items-center gap-1">
-                              <span className="fw-semibold text-white" style={{ fontSize: '0.85rem' }}>{mod.nombrePermiso}</span>
+                              <span className={`fw-semibold ${isDark ? 'text-white' : 'text-dark'}`} style={{ fontSize: '0.85rem' }}>
+                                {mod.nombrePermiso}
+                              </span>
                               {bloqueado && (
                                 <i className="bi bi-lock-fill text-warning ms-1" style={{ fontSize: '0.8rem' }} title="Protegido para Perfil Administrador"></i>
                               )}
@@ -626,7 +683,7 @@ export const MatrizPermisosView: React.FC = () => {
             </div>
 
             {/* BOTONES DE ACCIÓN */}
-            <div className="d-flex justify-content-between mt-3 pt-2 border-top border-secondary">
+            <div className="d-flex justify-content-between mt-3 pt-2 border-top border-secondary border-opacity-25">
               <button onClick={() => navigate('/dashboard')} className="btn btn-sm px-3 py-1 fw-bold text-white" style={{ backgroundColor: '#a52a2a', borderRadius: '6px', fontSize: '0.85rem' }}>
                 Volver
               </button>
@@ -646,11 +703,10 @@ export const MatrizPermisosView: React.FC = () => {
             <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #8e45e0', borderRadius: '12px' }}>
               <h5 className="fw-bold mb-3 text-center" style={{ color: '#8e45e0', fontSize: '1rem' }}>Crear Nuevo Perfil Global</h5>
               <div className="mb-3">
-                <label className="text-white-50 mb-1 small" style={{ fontSize: '0.75rem' }}>Nombre del Perfil (Ej: CAJERO)</label>
+                <label className="text-secondary mb-1 small" style={{ fontSize: '0.75rem' }}>Nombre del Perfil (Ej: CAJERO)</label>
                 <input 
                   type="text" 
-                  className="form-control form-control-sm bg-dark text-white" 
-                  style={{ border: '1px solid #3f3f46' }}
+                  className="form-control form-control-sm bg-dark text-white border-secondary" 
                   value={nuevoRolNombre}
                   onChange={(e) => setNuevoRolNombre(e.target.value)}
                   placeholder="Escriba aquí..."
@@ -672,7 +728,7 @@ export const MatrizPermisosView: React.FC = () => {
               <div className="modal-body text-center py-2">
                 <i className="bi bi-exclamation-triangle-fill text-warning" style={{ fontSize: '2.5rem' }}></i>
                 <h5 className="mt-2 fw-bold">¡Atención!</h5>
-                <p className="text-white-50 mt-1 small" style={{ fontSize: '0.75rem' }}>
+                <p className="text-secondary mt-1 small" style={{ fontSize: '0.75rem' }}>
                   {usuarioEditar 
                     ? `Estás modificando la configuración de permisos para ${usuarioEditar.nombreUsuario}.`
                     : `Estás modificando la plantilla del Perfil Global.`}

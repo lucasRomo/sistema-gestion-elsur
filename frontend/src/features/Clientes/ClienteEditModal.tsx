@@ -104,9 +104,9 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
               <div style={{ maxHeight: '68vh', overflowY: 'auto', overflowX: 'hidden', paddingRight: '8px' }}>
                 
                 {/* SECCIÓN 1: DATOS PERSONALES */}
-                <h5 className="border-bottom pb-2 mb-3 mt-2" style={{ color: '#e4e4e7', borderColor: '#3f3f46 !important', fontSize: '1.05rem', fontWeight: '600' }}>
-                  1. Datos Personales
-                </h5>
+                <h5 className="border-bottom pb-2 mb-3 mt-2 font-monospace fw-bold text-dark-emphasis" style={{ fontSize: '1.05rem' }}>
+  1. Datos Personales
+</h5>
                 
                 <div className="row g-3 mb-4 mx-0">
                   <div className="col-md-4 px-1">
@@ -204,9 +204,9 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                 </div>
 
                 {/* SECCIÓN 2: DATOS COMERCIALES */}
-                <h5 className="border-bottom pb-2 mb-3" style={{ color: '#e4e4e7', borderColor: '#3f3f46 !important', fontSize: '1.05rem', fontWeight: '600' }}>
-                  2. Datos Comerciales
-                </h5>
+                <h5 className="border-bottom pb-2 mb-3 font-monospace fw-bold text-dark-emphasis" style={{ fontSize: '1.05rem' }}>
+  2. Datos Comerciales
+</h5>
                 
                 <div className="row g-3 mb-2 mx-0">
                   <div className="col-md-4 px-1">
@@ -279,8 +279,10 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
 
               {/* Botones de Acción Fijos Inferiores */}
               <div className="d-flex justify-content-end gap-2 mt-3 pt-3 border-top" style={{ borderColor: '#3f3f46 !important' }}>
-                <button type="button" className="btn btn-secondary px-4" style={{ borderRadius: '8px' }} onClick={onCerrar}>Cancelar</button>
-                <button type="submit" className="btn btn-info px-4 fw-semibold text-dark" style={{ borderRadius: '8px' }}>Aceptar</button>
+                <button type="button" className="btn btn-danger px-4 fw-semibold" style={{ borderRadius: '8px', color: '#ffffff' }} onClick={onCerrar}>
+  Cancelar
+</button>
+                <button type="submit" className="btn btn-info px-4 fw-semibold" style={{ borderRadius: '8px', color: '#ffffff' }}>Aceptar</button>
               </div>
             </form>
           </div>

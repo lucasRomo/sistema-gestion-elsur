@@ -3,6 +3,7 @@ import type { Producto } from '../../types/Producto';
 import type { CartItem } from '../../types/Pedido';
 import type { CategoriaCliente } from '../../types/CategoriaCliente';
 import type { Maquina } from '../../types/Maquina';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface Props {
   productos: Producto[];
@@ -27,10 +28,19 @@ export const SelectorProductosForm: React.FC<Props> = ({
   onSiguiente, 
   onCancelar 
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const containerBg = isDark ? '#18181b' : '#ffffff';
+  const textPrimary = isDark ? '#ffffff' : '#0f172a';
+  const borderTheme = isDark ? '#3f3f46' : '#cbd5e1';
+  const cardSectionBg = isDark ? '#27272a' : '#f8fafc';
+  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
+
   const [productoId, setProductoId] = useState('');
   const [cantidad, setCantidad] = useState('1');
 
-  // Estado para el modal de advertencia de máquinas fuera de servicio
+  // Modal para máquinas fuera de servicio
   const [showModalMaquinas, setShowModalMaquinas] = useState(false);
   const [conflictosMaquinas, setConflictosMaquinas] = useState<{
     productoNombre: string;
@@ -59,7 +69,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
     setCarrito(carrito.filter((_, i) => i !== index));
   };
 
-  // VALIDACIÓN DE MÁQUINAS EN ESTADO "FUERA DE SERVICIO" O "FALLA" ADAPTADA AL BACKEND
   const handleContinuarSiguiente = () => {
     const conflictos: { productoNombre: string; maquinaNombre: string; estado: string }[] = [];
 
@@ -67,19 +76,14 @@ export const SelectorProductosForm: React.FC<Props> = ({
       const prod = item.producto as any;
       if (!prod) return;
 
-      // 1. Obtener la máquina asignada desde 'maquinaNecesaria' (Spring Boot) o fallbacks
       const maquinaAsociada = prod.maquinaNecesaria || prod.maquina || prod.maquinaAsociada;
-      
-      // 2. Extraer el ID de la máquina
       const maquinaId = maquinaAsociada?.idMaquina ?? maquinaAsociada?.id ?? prod.idMaquina;
 
-      // 3. Buscar en la lista global 'maquinas' para obtener el estado en tiempo real (conversión String para evitar fallos de tipo)
       let maquinaObj: any = undefined;
       if (maquinaId !== undefined && maquinaId !== null && maquinas.length > 0) {
         maquinaObj = maquinas.find(m => String(m.idMaquina) === String(maquinaId));
       }
 
-      // Fallback al objeto anidado si no está en la lista global
       if (!maquinaObj) {
         maquinaObj = maquinaAsociada;
       }
@@ -87,17 +91,13 @@ export const SelectorProductosForm: React.FC<Props> = ({
       if (!maquinaObj) return;
 
       const nombreMaquina = (maquinaObj.nombre || maquinaObj.nombreMaquina || '').trim();
-      
-      // Normalizar Enum de Java (ej. "FUERA_DE_SERVICIO" a "FUERA DE SERVICIO")
       const estadoRaw = (maquinaObj.estado || '').trim().toUpperCase();
       const estadoNormalizado = estadoRaw.replace(/_/g, ' ');
 
-      // OMITIR SI "NO APLICA" O SI NO TIENE NOMBRE
       if (!nombreMaquina || nombreMaquina.toLowerCase().includes('no aplica')) {
         return;
       }
 
-      // EVALUAR ESTADOS NO OPERATIVOS
       if (
         estadoNormalizado.includes('FUERA DE SERVICIO') || 
         estadoNormalizado.includes('FALLA') || 
@@ -119,7 +119,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
     }
   };
 
-  // CÁLCULOS DE DESCUENTO
   const subtotal = carrito.reduce((sum, item) => sum + item.subtotal, 0);
 
   const catActual = categorias.find(c => {
@@ -135,16 +134,26 @@ export const SelectorProductosForm: React.FC<Props> = ({
   const totalFinal = subtotal - montoDescuento;
 
   return (
-    <>
-      <div className="card text-white p-4 w-100 rounded" style={{ backgroundColor: '#1E1E1F', border: '1px solid #3f3f46' }}>
-        <h3 className="text-center mb-4 fw-normal font-monospace">Tabla para Calcular y Elegir Productos</h3>
+    <div className="w-100 font-monospace">
+      <div 
+        className="card p-4 w-100 rounded shadow-sm" 
+        style={{ 
+          maxWidth: '1570px', 
+          backgroundColor: containerBg, 
+          color: textPrimary, 
+          border: `1px solid ${borderTheme}` 
+        }}
+      >
+        <h2 className="text-center mb-4 fw-bold" style={{ color: isDark ? '#0bc9f8' : 'inherit' }}>
+          Tabla para Calcular y Elegir Productos
+        </h2>
         
-        {/* SELECTOR DE PRODUCTOS */}
+        {/* Selector de Producto y Cantidad */}
         <div className="row g-3 mb-4 align-items-end">
           <div className="col-md-7">
-            <label className="form-label small text-secondary fw-bold">Producto:</label>
+            <label className="form-label small fw-bold" style={{ color: mutedText }}>Producto:</label>
             <select 
-              className="form-select bg-dark text-white border-secondary"
+              className={`form-select ${isDark ? 'bg-dark text-white border-secondary' : ''}`}
               value={productoId}
               onChange={(e) => setProductoId(e.target.value)}
             >
@@ -158,10 +167,10 @@ export const SelectorProductosForm: React.FC<Props> = ({
           </div>
           
           <div className="col-md-2">
-            <label className="form-label small text-secondary fw-bold">Cantidad:</label>
+            <label className="form-label small fw-bold" style={{ color: mutedText }}>Cantidad:</label>
             <input 
               type="number" 
-              className="form-control bg-dark text-white border-secondary"
+              className={`form-control ${isDark ? 'bg-dark text-white border-secondary' : ''}`}
               min="1"
               value={cantidad}
               onChange={(e) => setCantidad(e.target.value)}
@@ -169,15 +178,19 @@ export const SelectorProductosForm: React.FC<Props> = ({
           </div>
 
           <div className="col-md-3">
-            <button className="btn w-100 fw-bold text-white" style={{ backgroundColor: '#5a8ab8' }} onClick={handleAgregar}>
+            <button 
+              className="btn w-100 fw-bold text-white" 
+              style={{ backgroundColor: '#0284c7' }} 
+              onClick={handleAgregar}
+            >
               Agregar
             </button>
           </div>
         </div>
 
-        {/* TABLA DE PRODUCTOS EN CARRITO */}
+        {/* Lista de Productos Agregados */}
         <div className="mb-4">
-          <div className="d-flex text-secondary border-bottom border-secondary pb-2 mb-2 small fw-bold">
+          <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted" style={{ borderColor: borderTheme }}>
             <div style={{ width: '40%' }}>Lista de Productos:</div>
             <div style={{ width: '20%' }}>Cantidad:</div>
             <div style={{ width: '20%' }}>Precio Unitario:</div>
@@ -186,13 +199,22 @@ export const SelectorProductosForm: React.FC<Props> = ({
           
           <div style={{ minHeight: '150px', maxHeight: '250px', overflowY: 'auto' }}>
             {carrito.length === 0 ? (
-              <div className="text-center text-light mt-4">No hay productos en la lista.</div>
+              <div className="text-center my-4 py-2" style={{ color: mutedText }}>No hay productos en la lista.</div>
             ) : (
               carrito.map((item, index) => (
-                <div key={index} className="d-flex align-items-center mb-2 text-white border-bottom border-dark pb-1">
-                  <div style={{ width: '40%' }} className="d-flex align-items-center">
-                    <button className="btn btn-sm text-danger p-0 me-2" onClick={() => handleEliminar(index)}>
-                      <i className="bi bi-x-circle-fill"></i>
+                <div 
+                  key={index} 
+                  className="d-flex align-items-center mb-2 border-bottom pb-2" 
+                  style={{ borderColor: isDark ? '#2d2d30' : '#e2e8f0' }}
+                >
+                  <div style={{ width: '40%' }} className="d-flex align-items-center gap-2">
+                    <button 
+                      type="button" 
+                      className="btn btn-sm text-danger p-0 border-0 bg-transparent" 
+                      onClick={() => handleEliminar(index)}
+                      title="Quitar de la lista"
+                    >
+                      <i className="bi bi-x-circle-fill fs-6"></i>
                     </button>
                     <span>{item.producto.nombreProducto}</span>
                   </div>
@@ -205,10 +227,10 @@ export const SelectorProductosForm: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* SELECTOR DE CATEGORÍA DE CLIENTE / DESCUENTO */}
+        {/* Categoría de Cliente */}
         <div className="mb-4">
-          <label className="form-label small text-light fw-bold d-flex align-items-center justify-content-between">
-            <span><i className="bi bi-tags-fill text-info me-1"></i> Categoría de Cliente / Descuento:</span>
+          <label className="form-label small fw-bold d-flex align-items-center justify-content-between">
+            <span><i className="bi bi-tags-fill me-1 text-info"></i> Categoría de Cliente / Descuento:</span>
             {porcentajeDescuento > 0 && (
               <span className="badge bg-success font-monospace fs-6">
                 ¡{porcentajeDescuento}% OFF APLICADO!
@@ -216,7 +238,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
             )}
           </label>
           <select 
-            className="form-select bg-dark text-white border-info font-monospace"
+            className={`form-select ${isDark ? 'bg-dark text-white border-info' : ''}`}
             value={categoriaSeleccionadaId}
             onChange={(e) => setCategoriaSeleccionadaId(e.target.value)}
           >
@@ -235,9 +257,9 @@ export const SelectorProductosForm: React.FC<Props> = ({
           </select>
         </div>
 
-        {/* DESGLOSE VISUAL Y TOTAL FINAL */}
-        <div className="p-3 rounded mb-4" style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}>
-          <div className="d-flex justify-content-between text-light mb-1 small">
+        {/* Resumen Total */}
+        <div className="p-3 rounded mb-4" style={{ backgroundColor: cardSectionBg, border: `1px solid ${borderTheme}` }}>
+          <div className="d-flex justify-content-between mb-1 small">
             <span>Subtotal Productos:</span>
             <span className="fw-bold">${subtotal.toFixed(2)}</span>
           </div>
@@ -249,29 +271,70 @@ export const SelectorProductosForm: React.FC<Props> = ({
             </div>
           )}
 
-          <hr className="my-2 border-secondary" />
+          <hr className="my-2" style={{ borderColor: borderTheme }} />
 
-          <div className="d-flex justify-content-between align-items-center text-white">
-            <span className="fw-bold fs-5">Precio Total Final:</span>
+          <div className="d-flex justify-content-between align-items-center">
+            <span className="fw-bold fs-5">Total a Cobrar:</span>
             <span className="fw-bold fs-3 text-info font-monospace">${totalFinal.toFixed(2)}</span>
           </div>
         </div>
 
-        {/* BOTONES DE ACCIÓN */}
+        {/* Botones de Navegación */}
         <div className="d-flex justify-content-between mt-3">
-          <button className="btn btn-danger px-4" style={{ backgroundColor: '#a63333', border: 'none' }} onClick={onCancelar}>
+          <button className="btn btn-danger px-4" onClick={onCancelar}>
             Volver
           </button>
-          <div>
-            <button 
-              className="btn btn-success px-5" 
-              style={{ backgroundColor: '#3d824b', border: 'none' }} 
-              onClick={handleContinuarSiguiente} 
-              disabled={carrito.length === 0}
-            >
-              Siguiente
-            </button>
-          </div>
+          <button 
+            className="btn btn-success px-5 fw-bold" 
+            onClick={handleContinuarSiguiente} 
+            disabled={carrito.length === 0}
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
+
+      {/* Impacto Estimado en Stock */}
+      <div 
+        className="card p-4 w-100 rounded mt-4 shadow-sm" 
+        style={{ 
+          maxWidth: '1570px', 
+          backgroundColor: containerBg, 
+          color: textPrimary, 
+          border: `1px solid ${borderTheme}` 
+        }}
+      >
+        <div className="d-flex align-items-center gap-2 mb-3">
+          <i className="bi bi-boxes text-info"></i>
+          <span className="small fw-bold">Impacto Estimado en el Stock de Insumos:</span>
+        </div>
+
+        <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted" style={{ borderColor: borderTheme }}>
+          <div style={{ width: '40%' }}>Insumo Afectado:</div>
+          <div style={{ width: '20%' }}>Cantidad Requerida:</div>
+          <div style={{ width: '20%' }}>Stock Actual:</div>
+          <div style={{ width: '20%' }}>Stock Resultante:</div>
+        </div>
+
+        <div style={{ minHeight: '60px', maxHeight: '160px', overflowY: 'auto' }}>
+          {carrito.length === 0 ? (
+            <div className="text-center mt-3 small" style={{ color: mutedText }}>
+              Agregue productos arriba para ver el impacto en el stock de insumos.
+            </div>
+          ) : (
+            carrito.map((item, index) => (
+              <div 
+                key={index} 
+                className="d-flex align-items-center mb-2 border-bottom pb-1 small" 
+                style={{ borderColor: isDark ? '#2d2d30' : '#e2e8f0' }}
+              >
+                <div style={{ width: '40%' }}>{item.producto.nombreProducto}</div>
+                <div style={{ width: '20%' }}>{item.cantidad} unidad(es)</div>
+                <div style={{ width: '20%' }}>${item.producto.precioBase.toFixed(2)}</div>
+                <div style={{ width: '20%' }} className="fw-bold">${item.subtotal.toFixed(2)}</div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -281,7 +344,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
           <div className="modal-dialog modal-dialog-centered">
             <div 
               className="modal-content p-4 text-white" 
-              style={{ border: '2px solid #ffc107', backgroundColor: '#1a1a1c', borderRadius: '12px', fontFamily: 'monospace' }}
+              style={{ border: '2px solid #ffc107', backgroundColor: '#18181b', borderRadius: '12px' }}
             >
               <div className="text-center mb-3">
                 <i className="bi bi-exclamation-triangle-fill fs-1 text-warning"></i>
@@ -310,15 +373,13 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
               <div className="d-flex gap-2 justify-content-center">
                 <button 
-                  className="btn btn-sm px-3 text-white" 
-                  style={{ backgroundColor: '#e22e2e', border: '1px solid #e22e2e', borderRadius: '6px' }}
+                  className="btn btn-sm btn-danger px-3" 
                   onClick={() => setShowModalMaquinas(false)}
                 >
                   Cancelar / Volver
                 </button>
                 <button 
-                  className="btn btn-sm px-3 text-dark font-weight-bold" 
-                  style={{ backgroundColor: '#ffc107', border: '1px solid #ffc107', borderRadius: '6px', fontWeight: 'bold' }}
+                  className="btn btn-sm btn-warning px-3 fw-bold text-dark" 
                   onClick={() => {
                     setShowModalMaquinas(false);
                     onSiguiente();
@@ -331,6 +392,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };

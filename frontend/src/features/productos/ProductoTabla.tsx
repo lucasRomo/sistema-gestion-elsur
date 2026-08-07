@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Producto } from '../../types/Producto';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface Props {
   productos: Producto[];
@@ -13,97 +14,142 @@ export const ProductoTabla: React.FC<Props> = ({
   onEditar, 
   onConfigurarReceta,
   onToggleStockVinculado 
-}) => (
-  <div className="table-responsive" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-    <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
-      <thead>
-        <tr style={{ borderBottom: '2px solid #3f3f46', textAlign: 'left' }}>
-          <th style={{ padding: '12px' }}>ID</th>
-          <th style={{ padding: '12px' }}>Nombre</th>
-          <th style={{ padding: '12px' }}>Categoría</th>
-          <th style={{ padding: '12px' }}>Precio</th>
-          <th style={{ padding: '12px' }}>Stock</th>
-          <th style={{ padding: '12px' }}>Máquina</th>
-          <th style={{ padding: '12px' }}>Estado</th>
-          <th style={{ padding: '12px', textAlign: 'center' }}>Opciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {productos.map(p => (
-          <tr 
-            key={p.idProducto}
-            style={{ borderBottom: '1px solid #2d2d30' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#27272a'} 
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            <td style={{ padding: '12px' }}>{p.idProducto}</td>
-            <td style={{ padding: '12px' }} className="fw-bold">{p.nombreProducto}</td>
-            <td style={{ padding: '12px' }}>{p.categoria?.nombre || '-'}</td>
-            <td style={{ padding: '12px' }} className="text-info">${Number(p.precioBase).toFixed(2)}</td>
-            <td style={{ padding: '12px' }}>
-              <span className={p.stock > 0 ? "text-success fw-bold me-2" : "text-danger fw-bold me-2"}>
-                {p.stock}
-              </span>
-              {p.stockVinculado && (
-                <span className="badge bg-info text-dark font-monospace" style={{ fontSize: '0.7rem' }}>
-                  Auto
-                </span>
-              )}
-            </td>
-            <td style={{ padding: '12px' }} className={p.maquinaNecesaria ? "text-warning fw-semibold" : "text-white-50"}>
-              {p.maquinaNecesaria?.nombre || 'No aplica'}
-            </td>
-            <td style={{ padding: '12px' }}>
-              <span className={`badge ${p.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>
-                {p.estado}
-              </span>
-            </td>
-            <td style={{ padding: '12px' }}>
-              <div className="d-flex justify-content-center gap-2">
-                {/* Botón Simple Toggle Vinculo Stock */}
-                {onToggleStockVinculado && (
-                  <button 
-                    className={`btn btn-sm d-flex align-items-center justify-content-center ${
-                      p.stockVinculado 
-                        ? 'btn-info text-dark fw-bold' 
-                        : 'btn-outline-secondary text-secondary'
-                    }`} 
-                    style={{ 
-                      width: '32px', 
-                      height: '32px',
-                      borderColor: p.stockVinculado ? '#0dcaf0' : '#495057',
-                      backgroundColor: p.stockVinculado ? '#0dcaf0' : 'transparent'
-                    }}
-                    onClick={() => onToggleStockVinculado(p)}
-                    title={p.stockVinculado ? "Stock vinculado a insumos (Activado)" : "Vincular stock a insumos (Desactivado)"}
-                  >
-                    <i className={`bi ${p.stockVinculado ? 'bi-link-45deg' : 'bi-link-45deg'}`} style={{ fontSize: '1.2rem' }}></i>
-                  </button>
-                )}
+}) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
-                <button 
-                  className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
-                  style={{ width: '32px', height: '32px' }}
-                  onClick={() => onEditar(p)}
-                  title="Editar Producto"
-                >
-                  <i className="bi bi-pencil-square"></i>
-                </button>
-                {onConfigurarReceta && (
-                  <button 
-                    className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
-                    style={{ width: '32px', height: '32px' }}
-                    onClick={() => onConfigurarReceta(p)}
-                    title="Configurar Receta / Insumos"
-                  >
-                    <i className="bi bi-box-seam"></i>
-                  </button>
-                )}
-              </div>
-            </td>
+  // Variables cromáticas adaptativas según tema activo
+  const containerBg = isDark ? '#1d1d1d' : '#ffffff';
+  const tableText = isDark ? '#ffffff' : '#0f172a';
+  const tableBorder = isDark ? '#3f3f46' : '#e2e8f0';
+  const theadBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const rowBorder = isDark ? '#2d2d30' : '#e2e8f0';
+  const rowHoverBg = isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc';
+  const emptyTextColor = isDark ? 'text-white-50' : 'text-muted';
+  const noMachineColor = isDark ? 'rgba(255, 255, 255, 0.5)' : '#64748b';
+
+  return (
+    <div 
+      className="table-responsive rounded shadow-sm" 
+      style={{ 
+        maxHeight: '60vh', 
+        overflowY: 'auto',
+        backgroundColor: containerBg,
+        border: `1px solid ${tableBorder}`,
+        transition: 'all 0.2s ease-in-out'
+      }}
+    >
+      <table 
+        className="align-middle m-0" 
+        style={{ 
+          width: '100%',
+          borderCollapse: 'separate', 
+          borderSpacing: 0,
+          color: tableText 
+        }}
+      >
+        <thead>
+          <tr style={{ borderBottom: `2px solid ${theadBorder}`, backgroundColor: isDark ? '#1d1d1d' : '#f1f5f9' }}>
+            <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>ID</th>
+            <th className="py-3 px-1 font-monospace small" style={{ color: tableText }}>Nombre</th>
+            <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Categoría</th>
+            <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Precio</th>
+            <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Stock</th>
+            <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Máquina</th>
+            <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Estado</th>
+            <th className="py-3 px-3 font-monospace small text-center" style={{ color: tableText }}>Opciones</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
+        </thead>
+        <tbody>
+          {productos && productos.length > 0 ? (
+            productos.map((p) => (
+              <tr 
+                key={p.idProducto}
+                style={{ borderBottom: `1px solid ${rowBorder}`, transition: 'background-color 0.15s ease' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <td className="px-3 py-3 font-monospace small" style={{ color: tableText }}>{p.idProducto}</td>
+                <td className="px-1 py-3 fw-bold" style={{ color: tableText }}>{p.nombreProducto}</td>
+                <td className="px-3 py-3" style={{ color: tableText }}>{p.categoria?.nombre || '-'}</td>
+                <td className="px-3 py-3 fw-semibold text-info">${Number(p.precioBase).toFixed(2)}</td>
+                <td className="px-3 py-3">
+                  <span className={p.stock > 0 ? "text-success fw-bold me-2" : "text-danger fw-bold me-2"}>
+                    {p.stock}
+                  </span>
+                  {(p as any).stockVinculado && (
+                    <span className="badge bg-info text-dark font-monospace" style={{ fontSize: '0.7rem' }}>
+                      Auto
+                    </span>
+                  )}
+                </td>
+                <td 
+                  className="px-3 py-3" 
+                  style={{ color: (p as any).maquinaNecesaria ? (isDark ? '#ffc107' : '#d97706') : noMachineColor }}
+                >
+                  {(p as any).maquinaNecesaria?.nombre || (p as any).maquinaNecesaria?.nombreMaquina || 'No aplica'}
+                </td>
+                <td className="px-3 py-3">
+                  <span className={`badge rounded-pill px-3 py-2 ${p.estado === 'Activo' ? 'bg-success bg-opacity-75' : 'bg-danger bg-opacity-75'}`} style={{ color: '#ffffff' }}>
+                    {p.estado}
+                  </span>
+                </td>
+                <td className="px-3 py-3">
+                  <div className="d-flex justify-content-center gap-2">
+                    {/* Botón Toggle Vínculo de Stock */}
+                    {onToggleStockVinculado && (
+                      <button 
+                        className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
+                          (p as any).stockVinculado 
+                            ? 'btn-info text-dark fw-bold' 
+                            : 'btn-outline-secondary'
+                        }`} 
+                        style={{ 
+                          width: '34px', 
+                          height: '34px'
+                        }}
+                        onClick={() => onToggleStockVinculado(p)}
+                        title={(p as any).stockVinculado ? "Stock vinculado a insumos (Activado)" : "Vincular stock a insumos (Desactivado)"}
+                      >
+                        <i className="bi bi-link-45deg fs-5"></i>
+                      </button>
+                    )}
+
+                    {/* Botón Editar Producto */}
+                    <button 
+                      className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                      style={{ width: '34px', height: '34px' }}
+                      onClick={() => onEditar(p)}
+                      title="Editar Producto"
+                    >
+                      <i className="bi bi-pencil-square fs-6"></i>
+                    </button>
+
+                    {/* Botón Configurar Receta / Insumos */}
+                    {onConfigurarReceta && (
+                      <button 
+                        className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                        style={{ width: '34px', height: '34px' }}
+                        onClick={() => onConfigurarReceta(p)}
+                        title="Configurar Receta / Insumos"
+                      >
+                        <i className="bi bi-box-seam fs-6"></i>
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={8} className={`text-center py-5 ${emptyTextColor}`}>
+                <i className="bi bi-box-seam display-5 d-block mb-2 opacity-50"></i>
+                <span className="font-monospace">No se han registrado o encontrado productos en el sistema</span>
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};

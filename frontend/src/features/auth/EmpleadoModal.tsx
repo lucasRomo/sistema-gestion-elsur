@@ -76,8 +76,8 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
                 </div>
 
                 <div className="col-12">
-                  <label className="form-label text-light small">Fecha de Contratación:</label>
-                  <input type="date" className="form-control bg-dark text-white border-secondary" value={formData.fechaContratacion} onChange={e => handleChange('fechaContratacion', e.target.value)} required />
+                  <label className="form-label text-light small" >Fecha de Contratación:</label>
+                  <input type="date" className="form-control bg-dark text-white border-secondary" style={{ colorScheme: 'dark' }} value={formData.fechaContratacion} onChange={e => handleChange('fechaContratacion', e.target.value)} required />
                 </div>
 
 

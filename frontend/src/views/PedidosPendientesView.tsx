@@ -8,15 +8,17 @@ import { SuccesModal } from '../components/layouts/SuccesModal';
 import { useTurno } from '../Context/TurnoContext';
 import { ModalGestionarComprobantes } from '../features/pedidos/ModalGestionarComprobantes';
 
-// Importación de Componentes Extraídos e Internos
+// Importación de Componentes
 import { FiltrosPedidos } from '../features/pedidos/components/FiltrosPedidos';
-import { FilaPedido } from '../features/pedidos/components/FilaPedido'; 
+import { TarjetaPedido } from '../features/pedidos/components/TarjetaPedido'; 
 import { ModalCambioEstado } from '../features/pedidos/ModalCambioEstado';
 import { ModalRegistrarPago } from '../features/pedidos/ModalRegistrarPago';
 import { VistaTicketModal } from '../features/pedidos/VistaTicketModal';
+import { CuentaCorrienteModal } from '../features/Clientes/CuentaCorrienteModal';
+import { useTheme } from '../Context/ThemeContext';
 
 export const PedidosPendientesPage: React.FC = () => {
-  const { pedidos, cargando, actualizarEstado, registrarPago } = usePedidosPendientes();
+  const { pedidos, cargando, actualizarEstado, registrarPago, refrescar } = usePedidosPendientes();
   const navigate = useNavigate();
   const { cajaAbierta } = useTurno();
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
@@ -31,9 +33,14 @@ export const PedidosPendientesPage: React.FC = () => {
   const [sucesoError, setSucesoError] = useState<{ show: boolean; mensaje: string }>({ show: false, mensaje: '' });
   const [empleados, setEmpleados] = useState<any[]>([]);
   const [modalNotif, setModalNotif] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
+  const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<any>(null);
   const [confirmarDesvincular, setConfirmarDesvincular] = useState<{ show: boolean; idComprobante: number | null }>({
     show: false,
     idComprobante: null
+  });
+  const [modalAvisoCuentaCorriente, setModalAvisoCuentaCorriente] = useState<{ show: boolean; pedido: any | null }>({
+    show: false,
+    pedido: null,
   });
 
   // Modal de Advertencia por Deuda / Saldo Pendiente al Entregar o Finalizar
@@ -85,17 +92,18 @@ export const PedidosPendientesPage: React.FC = () => {
 
   // Handler para asignar empleado
   const handleCambioEmpleado = async (idPedido: number, idEmpleado: string) => {
-    try {
-      const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
-      const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
-      
-      await (pedidoService as any).asignarEmpleado(idPedido, idEmpleado, idUsuarioActivo);
-      
-      setModalNotif({ show: true, msg: "El empleado ha sido asignado correctamente." });
-    } catch (error) {
-      console.error("Error al asignar:", error);
-      alert("Error al asignar el empleado.");
-    }
+  try {
+    const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
+    const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
+    
+    await (pedidoService as any).asignarEmpleado(idPedido, idEmpleado, idUsuarioActivo);
+    await refrescar(); // NUEVO: sin esto, la tarjeta queda con datos viejos hasta el próximo F5
+    
+    setModalNotif({ show: true, msg: "El empleado ha sido asignado correctamente." });
+  } catch (error) {
+    console.error("Error al asignar:", error);
+    alert("Error al asignar el empleado.");
+  }
   };
 
   // Función interna para ejecutar el cambio de estado en el backend
@@ -141,13 +149,12 @@ export const PedidosPendientesPage: React.FC = () => {
     }
   };
 
-  // Confirmación desde ModalCambioEstado con chequeo exacto contra Cliente.java
+  // Confirmación desde ModalCambioEstado
   const confirmarCambioEstado = async (observaciones: string) => {
     if (!pedidoEstadoSel) return;
 
     const cliente = pedidoEstadoSel.cliente || {};
 
-    // 1. Monto total del pedido
     const totalPedido = Number(
       pedidoEstadoSel.monto_total ?? 
       pedidoEstadoSel.montoTotal ?? 
@@ -155,7 +162,6 @@ export const PedidosPendientesPage: React.FC = () => {
       0
     );
 
-    // 2. Monto abonado/seña del pedido
     const pagadoPedido = Number(
       pedidoEstadoSel.monto_pago_adelantado ?? 
       pedidoEstadoSel.montoPagoAdelantado ?? 
@@ -165,24 +171,20 @@ export const PedidosPendientesPage: React.FC = () => {
       0
     );
 
-    // Saldo pendiente de este pedido
     const saldoPendientePedido = Math.max(0, totalPedido - pagadoPedido);
 
-    // 3. Deuda previa del cliente (mapeado directo de Cliente.java: saldoDeudor)
     const deudaPreviaCliente = Number(
       cliente.saldoDeudor ?? 
       cliente.saldo_deudor ?? 
       0
     );
 
-    // 4. Límite de crédito del cliente (mapeado directo de Cliente.java: limiteCredito)
     const limiteCredito = Number(
       cliente.limiteCredito ?? 
       cliente.limite_credito ?? 
       0
     );
 
-    // Deuda total proyectada
     const deudaTotalProyectada = deudaPreviaCliente + saldoPendientePedido;
 
     const estadoNormalizado = (nuevoEstadoPendiente || '').toUpperCase().trim();
@@ -194,13 +196,11 @@ export const PedidosPendientesPage: React.FC = () => {
       'LISTO PARA ENTREGAR'
     ].includes(estadoNormalizado);
 
-    // Se activa si hay saldo pendiente y (no tiene límite o la deuda supera el límite actual)
     const superaLimite = limiteCredito > 0 
       ? deudaTotalProyectada > limiteCredito 
       : saldoPendientePedido > 0;
 
     if (esEntregaOFinalizacion && superaLimite) {
-      // Sugerimos como nuevo límite por defecto la deuda proyectada para facilitar la carga rápida
       setNuevoLimiteInput(deudaTotalProyectada.toString());
 
       setModalAdvertenciaDeuda({
@@ -213,11 +213,11 @@ export const PedidosPendientesPage: React.FC = () => {
         deudaTotal: deudaTotalProyectada,
         limiteCredito: limiteCredito
       });
+      
       setPedidoEstadoSel(null);
       return;
     }
 
-    // Procesar cambio si no supera los límites
     await ejecutarCambioEstado(
       pedidoEstadoSel.id_pedido,
       nuevoEstadoPendiente,
@@ -226,7 +226,6 @@ export const PedidosPendientesPage: React.FC = () => {
     );
   };
 
-  // Función para actualizar límite de crédito en la BD y entregar inmediatamente
   const handleActualizarLimiteYEntregar = async () => {
     const nuevoLimiteNum = Number(nuevoLimiteInput);
     if (isNaN(nuevoLimiteNum) || nuevoLimiteNum < 0) {
@@ -244,7 +243,6 @@ export const PedidosPendientesPage: React.FC = () => {
 
     setGuardandoLimite(true);
     try {
-      // Llamada al endpoint de Spring Boot de CuentaCorrienteController
       const response = await fetch(`http://localhost:8080/api/cuentas-corrientes/cliente/${idCliente}/limite`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -256,7 +254,6 @@ export const PedidosPendientesPage: React.FC = () => {
         throw new Error(errorText || "Error al actualizar el límite de crédito en el servidor.");
       }
 
-      // Límite actualizado en backend con éxito, procedemos a cambiar el estado del pedido
       await ejecutarCambioEstado(
         modalAdvertenciaDeuda.pedido.id_pedido,
         modalAdvertenciaDeuda.nuevoEstado,
@@ -375,6 +372,24 @@ export const PedidosPendientesPage: React.FC = () => {
     }
   };
 
+  const handleCambioUbicacion = async (idPedido: number, nuevaUbicacion: string) => {
+    try {
+      await pedidoService.actualizarUbicacion(idPedido, nuevaUbicacion);
+      setSuceso({ 
+        show: true, 
+        titulo: "Éxito", 
+        mensaje: `Ubicación actualizada a "${nuevaUbicacion}"`, 
+        tipo: "exito" 
+      });
+    } catch (error) {
+      console.error("Error al actualizar la ubicación:", error);
+      setSucesoError({
+        show: true,
+        mensaje: "No se pudo actualizar la ubicación del pedido en el servidor."
+      });
+    }
+  };
+
   const handleSubirArchivoFisico = async (idPedido: number, file: File) => {
     try {
       const ok = await pedidoService.subirComprobanteFisico(idPedido, file);
@@ -406,44 +421,62 @@ export const PedidosPendientesPage: React.FC = () => {
     }
   };
 
+  const handleAbrirPago = (pedido: any) => {
+    if (pedido.es_cuenta_corriente) {
+      setModalAvisoCuentaCorriente({ show: true, pedido: pedido });
+    } else {
+      setPedidoPagoSel(pedido);
+    }
+  };
+
   const pedidosFiltrados = pedidos.filter(p => {
     const esVentaRapida = 
       p.observaciones?.toLowerCase().includes('venta rápida') || 
       p.observacion?.toLowerCase().includes('venta rápida') ||
       p.estante === 'Venta Rápida';
-
     if (esVentaRapida) return false;
-
     const nombreCliente = p.cliente?.persona 
       ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
       : (p.cliente?.razonSocial || p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
     const cumpleCliente = nombreCliente.toLowerCase().includes(filtroCliente.toLowerCase());
     if (!cumpleCliente) return false;
-
-    if (filtroEstado === 'PRESUPUESTO') {
+    if (filtroEstado === 'DEVUELTO') {
+      const listaHistoriales = p.historiales || p.historialEstadoPedidos || [];
+      const esDevolucion = 
+        p.estado === 'DEVUELTO' ||
+        p.observaciones?.toLowerCase().includes('devolución') ||
+        p.observacion?.toLowerCase().includes('devolución') ||
+        Boolean(p.observacion_devolucion || p.motivo_devolucion) ||
+        listaHistoriales.some((h: any) => 
+          (h.observaciones && h.observaciones.toLowerCase().includes('devolución')) ||
+          (h.observacion && h.observacion.toLowerCase().includes('devolución')) ||
+          h.estado_anterior === 'DEVUELTO' || 
+          h.estadoAnterior === 'DEVUELTO'
+        );
+      if (!esDevolucion) return false;
+    } else if (filtroEstado === 'PRESUPUESTO') {
       if (p.estado !== 'PRESUPUESTO') return false;
     } else {
       if (p.estado === 'PRESUPUESTO') return false;
       if (filtroEstado !== '' && p.estado !== filtroEstado) return false;
     }
-
     if (filtroEmpleado !== '') {
       const ultimaAsignacion = p.asignaciones && p.asignaciones.length > 0
         ? p.asignaciones[p.asignaciones.length - 1]
         : null;
-
       const idEmpleadoAsignado = ultimaAsignacion?.empleado?.idEmpleado || 
                                  ultimaAsignacion?.empleado?.id_empleado;
-
       if (filtroEmpleado === 'SIN_ASIGNAR') {
         if (idEmpleadoAsignado) return false;
       } else {
         if (String(idEmpleadoAsignado) !== String(filtroEmpleado)) return false;
       }
     }
-
     return true;
   });
+
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
 
   return (
     <SidebarLayout activeItem="Pedidos Pendientes">
@@ -451,11 +484,11 @@ export const PedidosPendientesPage: React.FC = () => {
         className="container-fluid px-2 d-flex flex-column pt-3" 
         style={{ height: 'calc(100vh - 45px)', overflow: 'hidden' }}
       >
-        <div className="d-flex justify-content-between align-items-center mb-2 d-print-none">
-          <h1 className="fw-bold tracking-tight text-white m-0" style={{ fontSize: '1.85rem' }}>
+        <div className="d-flex justify-content-center align-items-center mb-2 position-relative d-print-none">
+          <h1 className="fw-bold tracking-tight text-white m-0 text-center" style={{ fontSize: '1.85rem' }}>
             {filtroEstado === 'PRESUPUESTO' ? 'Presupuestos / Cotizaciones' : 'Cola de Producción Taller'}
           </h1>
-          <span className="badge bg-dark border border-info text-info font-monospace">Datos en Tiempo Real</span>
+          <span className="badge bg-dark border border-info text-info font-monospace position-absolute end-0">Datos en Tiempo Real</span>
         </div>
 
         <div className="mt-3 mb-3">
@@ -467,67 +500,43 @@ export const PedidosPendientesPage: React.FC = () => {
             filtroEmpleado={filtroEmpleado}
             setFiltroEmpleado={setFiltroEmpleado}
             empleados={empleados}
+            isDarkMode={isDarkMode}
           />
         </div>
 
+        {/* CONTENEDOR GRID RESPONSIVO PARA LAS TARJETAS (CARDS) */}
         <div 
-          className="d-flex flex-column flex-grow-1 overflow-hidden mb-2" 
-          style={{ backgroundColor: '#1d1d1d', height: 'calc(100vh - 210px)' }}
+          className="flex-grow-1 overflow-y-auto mb-2 pe-1" 
+          style={{ height: 'calc(100vh - 210px)' }}
         >
-          <div 
-            className="table-responsive flex-grow-1" 
-            style={{ backgroundColor: '#1d1d1d', height: '100%', overflowY: 'auto' }}
-          >
-            <table 
-              className="table-dark table-hover m-0 align-middle"
-              style={{ width: '100%', borderCollapse: 'collapse', color: '#e4e4e7', backgroundColor: '#121214' }}
-            >
-              <thead style={{ position: 'sticky', top: 0, backgroundColor: '#1d1d1d', zIndex: 1 }}>
-                <tr style={{ backgroundColor: '#1d1d1d', borderBottom: '2px solid #27272a', color: '#a1a1aa', fontFamily: 'monospace', fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                  <th style={{ padding: '12px 12px 12px 24px' }}>ID</th>
-                  <th>Cliente</th>
-                  <th style={{ padding: '3px' }}>Estante</th>
-                  <th style={{ textAlign: 'left' }}>Contacto</th>
-                  <th>Empleado Asignado</th> 
-                  <th>Fecha Asignación</th>  
-                  <th>Estado</th>
-                  <th>Monto Total</th>
-                  <th>Monto Abonado</th>
-                  <th className="text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cargando ? (
-                  <tr>
-                    <td colSpan={10} className="text-center py-5 text-muted font-monospace">
-                      Consultando la base de datos PostgreSQL...
-                    </td>
-                  </tr>
-                ) : pedidosFiltrados.length === 0 ? (
-                  <tr>
-                    <td colSpan={10} className="text-center py-5 text-muted">
-                      No se encontraron registros bajo este filtro.
-                    </td>
-                  </tr>
-                ) : (
-                  pedidosFiltrados.map((pedido) => (
-                    <FilaPedido 
-                      key={`pedido-row-${pedido.id_pedido}`}
-                      pedido={pedido}
-                      onCambioEstado={handleCambioEstadoCombo}
-                      onSelectPago={setPedidoPagoSel}
-                      onSelectTicket={setVerTicketPedido}
-                      onSubirArchivo={handleSubirArchivoFisico}
-                      onEliminarComprobante={handleEliminarComprobanteFisico}
-                      empleados={empleados}
-                      onCambioEmpleado={handleCambioEmpleado}
-                      onSelectComprobantes={(p) => setPedidoGestionComprobanteSel(p)}
-                    />
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          {cargando ? (
+            <div className="text-center py-5 font-monospace text-muted">
+              Cargando Pedidos Pendientes...
+            </div>
+          ) : pedidosFiltrados.length === 0 ? (
+            <div className="text-center py-5 font-monospace text-muted">
+              No se encontraron registros bajo este filtro.
+            </div>
+          ) : (
+            <div className="d-flex flex-column gap-2">
+              {pedidosFiltrados.map((pedido) => (
+                <div key={`pedido-card-${pedido.id_pedido}`} className="w-100">
+                  <TarjetaPedido 
+                    pedido={pedido}
+                    onCambioEstado={handleCambioEstadoCombo}
+                    onCambioUbicacion={handleCambioUbicacion}
+                    onSelectPago={handleAbrirPago}
+                    onSelectTicket={setVerTicketPedido}
+                    onSubirArchivo={handleSubirArchivoFisico}
+                    onEliminarComprobante={handleEliminarComprobanteFisico}
+                    empleados={empleados}
+                    onCambioEmpleado={handleCambioEmpleado}
+                    onSelectComprobantes={(p) => setPedidoGestionComprobanteSel(p)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-2 border-top border-secondary pb-1 mt-auto">
@@ -548,7 +557,7 @@ export const PedidosPendientesPage: React.FC = () => {
         />
       )}
 
-      {/* MODAL ADVERTENCIA DE DEUDA / LÍMITE DE CRÉDITO SUPERADO O INEXISTENTE */}
+      {/* MODAL ADVERTENCIA DE DEUDA / LÍMITE DE CRÉDITO SUPERADO */}
       {modalAdvertenciaDeuda.show && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '480px' }}>
@@ -607,7 +616,6 @@ export const PedidosPendientesPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* OPCIÓN PARA ACTUALIZAR EL LÍMITE DE CRÉDITO DIRECTO */}
               <div className="p-3 mb-3 rounded" style={{ backgroundColor: '#232326', border: '1px solid #3f3f46' }}>
                 <label className="form-label text-warning small fw-bold mb-1">
                   <i className="bi bi-pencil-square me-1"></i>
@@ -627,7 +635,6 @@ export const PedidosPendientesPage: React.FC = () => {
               </div>
 
               <div className="d-flex flex-column gap-2">
-                {/* BOTÓN 1: Actualizar Límite en BD y Entregar */}
                 <button 
                   type="button" 
                   className="btn btn-primary fw-bold py-2"
@@ -638,7 +645,6 @@ export const PedidosPendientesPage: React.FC = () => {
                   {guardandoLimite ? 'Guardando...' : 'Actualizar Límite y Entregar'}
                 </button>
 
-                {/* BOTÓN 2: Autorizar Excepcionalmente por esta vez */}
                 <button 
                   type="button" 
                   className="btn btn-warning fw-bold py-2"
@@ -655,7 +661,6 @@ export const PedidosPendientesPage: React.FC = () => {
                   <i className="bi bi-check-circle me-1"></i> Autorizar Solo Esta Vez
                 </button>
 
-                {/* BOTÓN 3: Ir a Cobrar */}
                 <button 
                   type="button" 
                   className="btn btn-success fw-bold py-2"
@@ -678,7 +683,6 @@ export const PedidosPendientesPage: React.FC = () => {
                   <i className="bi bi-currency-dollar me-1"></i> Registrar Cobro Ahora
                 </button>
 
-                {/* BOTÓN 4: Cancelar */}
                 <button 
                   type="button" 
                   className="btn btn-outline-secondary py-2 mt-1"
@@ -719,7 +723,7 @@ export const PedidosPendientesPage: React.FC = () => {
         />
       )}
 
-      {/* GESTION DE COMPROBANTES */}
+      {/* GESTIÓN DE COMPROBANTES */}
       {pedidoGestionComprobanteSel && (
         <ModalGestionarComprobantes
           pedido={pedidoGestionComprobanteSel}
@@ -795,7 +799,7 @@ export const PedidosPendientesPage: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL NOTIFICACION GENÉRICA */}
+      {/* MODAL NOTIFICACIÓN GENÉRICA */}
       {suceso.show && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
@@ -826,7 +830,85 @@ export const PedidosPendientesPage: React.FC = () => {
         </div>
       )}
 
-      {/* SUCCESS MODAL DE ASIGNACION */}
+      {/* AVISO DE CUENTA CORRIENTE */}
+      {modalAvisoCuentaCorriente.show && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>
+            <div 
+              className="modal-content text-white text-center p-4" 
+              style={{ 
+                backgroundColor: '#1a1a1c', 
+                border: '2px solid #7c2ae8', 
+                borderRadius: '12px' 
+              }}
+            >
+              <div className="d-flex justify-content-center mb-3">
+                <div 
+                  className="d-flex align-items-center justify-content-center"
+                  style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: 'rgba(124, 42, 232, 0.15)', border: '2px solid #7c2ae8' }}
+                >
+                  <i className="bi bi-info-circle-fill fs-3" style={{ color: '#7c2ae8' }}></i>
+                </div>
+              </div>
+
+              <h5 className="fw-bold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#0f172a' }}>
+                Aviso de Cuenta Corriente
+              </h5>
+
+              <p className="mb-4" style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: '1.4' }}>
+                El pago de este pedido está Vinculado a la cuenta corriente del cliente.
+              </p>
+
+              <div className="d-flex flex-column gap-2">
+                <button 
+                  type="button" 
+                  className="btn py-2 text-white fw-bold"
+                  style={{ backgroundColor: '#2563eb', border: 'none', borderRadius: '6px' }}
+                  onClick={() => {
+                    const clienteAsociado = modalAvisoCuentaCorriente.pedido?.cliente;
+                    setModalAvisoCuentaCorriente({ show: false, pedido: null });
+                    setClienteCuentaCorriente(clienteAsociado); 
+                  }}
+                >
+                  <i className="bi bi-wallet2 me-2"></i> Revisar Cuenta Corriente
+                </button>
+
+                <button 
+                  type="button" 
+                  className="btn py-2 text-white fw-bold"
+                  style={{ backgroundColor: '#15803d', border: 'none', borderRadius: '6px' }}
+                  onClick={() => {
+                    const pedidoAbonar = modalAvisoCuentaCorriente.pedido;
+                    setModalAvisoCuentaCorriente({ show: false, pedido: null });
+                    setPedidoPagoSel(pedidoAbonar);
+                  }}
+                >
+                  <i className="bi bi-cash-coin me-2"></i> Abonar Pedido
+                </button>
+
+                <button 
+                  type="button" 
+                  className="btn py-2 text-white fw-bold"
+                  style={{ backgroundColor: '#dc2626', border: 'none', borderRadius: '6px' }}
+                  onClick={() => setModalAvisoCuentaCorriente({ show: false, pedido: null })}
+                >
+                  Cerrar ventana
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {clienteCuentaCorriente && (
+        <CuentaCorrienteModal 
+          cliente={clienteCuentaCorriente}
+          onCerrar={() => setClienteCuentaCorriente(null)}
+          onActualizar={() => {}}
+        />
+      )}
+
+      {/* SUCCESS MODAL DE ASIGNACIÓN */}
       {modalNotif.show && (
         <SuccesModal 
           show={modalNotif.show} 

@@ -57,6 +57,49 @@ export const pedidoService = {
     const response = await fetch(BASE_URL);
     if (!response.ok) throw new Error('Error al obtener la lista de pedidos');
     return await response.json();
+  },
+
+  actualizarUbicacion: async (idPedido: number, nuevaUbicacion: string) => {
+  const response = await fetch(`${BASE_URL}/${idPedido}/ubicacion`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ubicacionEstante: nuevaUbicacion })
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al actualizar la ubicación del pedido');
   }
+
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
+  },
+
+  cambiarEstado: async (idPedido: number, nuevoEstado: string, observaciones: string = '', idUsuario: number = 1) => {
+  try {
+    const response = await fetch(`${BASE_URL}/${idPedido}/cambiar-estado`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        nuevoEstado,
+        observaciones,
+        idUsuario
+      }),
+    });
+
+    if (!response.ok) {
+      const errorMsg = await response.text();
+      throw new Error(errorMsg || 'Error al cambiar el estado del pedido');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error en cambiarEstado:', error);
+    throw error;
+  }
+}
+
+
 
 };

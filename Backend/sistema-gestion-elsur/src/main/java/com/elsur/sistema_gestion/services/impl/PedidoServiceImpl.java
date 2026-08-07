@@ -3,6 +3,9 @@ package com.elsur.sistema_gestion.services.impl;
 import com.elsur.sistema_gestion.models.*;
 import com.elsur.sistema_gestion.repositories.*;
 import com.elsur.sistema_gestion.services.PedidoService;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +59,37 @@ public class PedidoServiceImpl implements PedidoService {
         }
 
         return pedido;
+    }
+
+   @Override
+   @Transactional
+    public void actualizarUbicacion(Integer idPedido, String nuevaUbicacion) {
+    Pedido pedido = pedidoRepository.findById(idPedido)
+            .orElseThrow(() -> new EntityNotFoundException("Pedido no encontrado con ID: " + idPedido));
+
+    String ubicacionAnterior = pedido.getUbicacion_estante() != null ? pedido.getUbicacion_estante() : "Taller";
+
+    if (ubicacionAnterior.equals(nuevaUbicacion)) {
+        return;
+    }
+
+    pedido.setUbicacion_estante(nuevaUbicacion);
+    pedidoRepository.save(pedido);
+
+
+    HistorialEstadoPedido historial = new HistorialEstadoPedido();
+    historial.setPedido(pedido);
+    historial.setFecha_cambio(LocalDateTime.now());
+    historial.setEstado_anterior("UBICACION: " + ubicacionAnterior);
+    historial.setEstado_nuevo("UBICACION: " + nuevaUbicacion);
+    historial.setObservaciones("Cambio de ubicación del pedido en el local");
+
+    Usuario usuario = usuarioRepository.findAll().stream()
+        .findFirst()
+        .orElseThrow(() -> new RuntimeException("Error: No existe ningún usuario para registrar el historial."));
+    historial.setUsuarioResponsable(usuario);
+
+    historialRepository.save(historial);
     }
 
     @Override

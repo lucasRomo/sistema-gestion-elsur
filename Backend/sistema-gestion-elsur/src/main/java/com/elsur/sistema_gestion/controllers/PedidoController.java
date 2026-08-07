@@ -120,6 +120,22 @@ public class PedidoController {
         }
     }
 
+    @PutMapping("/{id}/ubicacion")
+    public ResponseEntity<?> actualizarUbicacion(
+        @PathVariable Integer id, 
+        @RequestBody Map<String, String> payload) {
+    
+    // Captura el valor enviado desde el frontend o el Map
+    String nuevaUbicacion = payload.get("ubicacionEstante");
+    if (nuevaUbicacion == null) {
+        nuevaUbicacion = payload.get("ubicacion_estante"); // Por si viene con guion bajo desde el JSON
+    }
+
+    pedidoService.actualizarUbicacion(id, nuevaUbicacion);
+    
+    return ResponseEntity.ok().build();
+    }
+
     @PostMapping(value = "/{id}/pagos", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> agregarPago(
         @PathVariable Integer id,

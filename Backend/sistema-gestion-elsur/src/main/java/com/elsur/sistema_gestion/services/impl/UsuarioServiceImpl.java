@@ -216,6 +216,51 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional
+    public void cambiarNombreUsuario(Integer idUsuario, String usuarioActual, String usuarioNuevo) {
+        Usuario user = buscarPorId(idUsuario);
+
+        if (usuarioActual == null || !user.getNombreUsuario().equalsIgnoreCase(usuarioActual.trim())) {
+            throw new RuntimeException("El nombre de usuario actual no coincide.");
+        }
+
+        if (usuarioExiste(usuarioNuevo) && !user.getNombreUsuario().equalsIgnoreCase(usuarioNuevo.trim())) {
+            throw new RuntimeException("El nuevo nombre de usuario ya está en uso.");
+        }
+
+        // Registrar cambio en auditoría
+        compararYRegistrar(user, "Usuario", "nombreUsuario", idUsuario, user.getNombreUsuario(), usuarioNuevo);
+
+        user.setNombreUsuario(usuarioNuevo);
+        usuarioRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void cambiarEmail(Integer idUsuario, String emailActual, String emailNuevo) {
+        Usuario user = buscarPorId(idUsuario);
+
+        if (user.getPersona() == null) {
+            throw new RuntimeException("El usuario no tiene una persona asociada.");
+        }
+
+        String actualEnBD = user.getPersona().getEmail();
+        if (actualEnBD == null || !actualEnBD.equalsIgnoreCase(emailActual.trim())) {
+            throw new RuntimeException("El email actual no coincide.");
+        }
+
+        if (emailExiste(emailNuevo) && !actualEnBD.equalsIgnoreCase(emailNuevo.trim())) {
+            throw new RuntimeException("El nuevo email ya está registrado por otro usuario.");
+        }
+
+        // Registrar cambio en auditoría
+        compararYRegistrar(user, "Persona", "email", idUsuario, actualEnBD, emailNuevo);
+
+        user.getPersona().setEmail(emailNuevo);
+        usuarioRepository.save(user);
+    }
+
+    @Override
+    @Transactional
     public void eliminar(Integer id) {
         usuarioRepository.deleteById(id);
     }

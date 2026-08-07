@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Insumo, UnidadMedida } from '../../types/Insumo';
 import type { Proveedor } from '../../types/Proveedor';
+import { useTheme } from '../../Context/ThemeContext';
 import { GestionUnidadesModal } from './GestionUnidadesModal';
 import { RelacionesModal } from './RelacionesModal';
 
@@ -12,14 +13,18 @@ interface InsumoModalProps {
 }
 
 export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, onClose, onGuardar }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
+
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [unidadesMedida, setUnidadesMedida] = useState<UnidadMedida[]>([]);
   
-  // Modales secundarios
+  // Modales secundarios (Funcionalidades de Lucas)
   const [showGestionUnidadesModal, setShowGestionUnidadesModal] = useState(false);
   const [showRelacionesModal, setShowRelacionesModal] = useState(false);
 
-  // Estado del formulario
+  // Estado del formulario (Incluye todos los campos de Lucas)
   const [formData, setFormData] = useState({
     idInsumo: '',
     nombreInsumo: '',
@@ -35,21 +40,21 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   });
 
   const cargarUnidadesMedida = () => {
-  fetch('http://localhost:8080/api/unidades-medida')
-    .then(res => {
-      if (!res.ok) throw new Error('Error al consultar unidades');
-      return res.json();
-    })
-    .then(data => {
-      if (Array.isArray(data)) {
-        setUnidadesMedida(data);
-      }
-    })
-    .catch(err => {
-      console.error("No se pudieron cargar las unidades desde el servidor:", err);
-      setUnidadesMedida([]); // Dejar vacío para forzar al usuario a crearlas desde el modal
-    });
-};
+    fetch('http://localhost:8080/api/unidades-medida')
+      .then(res => {
+        if (!res.ok) throw new Error('Error al consultar unidades');
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setUnidadesMedida(data);
+        }
+      })
+      .catch(err => {
+        console.error("No se pudieron cargar las unidades desde el servidor:", err);
+        setUnidadesMedida([]);
+      });
+  };
 
   useEffect(() => {
     if (show) {
@@ -137,15 +142,20 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                 <i className="bi bi-box-seam me-2"></i> 
                 {insumoEditando ? 'Editar Insumo' : 'Registrar Nuevo Insumo'}
               </h5>
-              <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
+              <button 
+                type="button" 
+                className={`btn-close ${isDark ? 'btn-close-white' : ''}`} 
+                onClick={onClose}
+              ></button>
             </div>
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body p-4">
                 
+                {/* Nombre y Precio */}
                 <div className="row">
                   <div className="col-md-8 mb-3">
-                    <label className="form-label text-white-50 small">Nombre del Insumo</label>
+                    <label className="form-label small" style={{ color: mutedText }}>Nombre del Insumo</label>
                     <input 
                       type="text" 
                       className="form-control bg-dark border-secondary text-white" 
@@ -153,11 +163,16 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                       value={formData.nombreInsumo} 
                       onChange={handleChange} 
                       required 
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre de Insumo No puede Estar Vacío");
+                        else if (e.target.validity.patternMismatch) e.target.setCustomValidity("El Campo de Nombre de Insumo solo debe contener Letras");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
 
                   <div className="col-md-4 mb-3">
-                    <label className="form-label text-white-50 small">Precio ($)</label>
+                    <label className="form-label small" style={{ color: mutedText }}>Precio ($)</label>
                     <input 
                       type="number" 
                       step="0.01" 
@@ -198,7 +213,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
                   <div className="row">
                     <div className="col-md-4 mb-2">
-                      <label className="form-label text-white-50 small">Unidad Suelta (Consumo)</label>
+                      <label className="form-label small" style={{ color: mutedText }}>Unidad Suelta (Consumo)</label>
                       <select 
                         className="form-select bg-dark border-secondary text-white" 
                         name="idUnidad" 
@@ -213,7 +228,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                     </div>
 
                     <div className="col-md-4 mb-2">
-                      <label className="form-label text-white-50 small">Unidad Empaque (Compra)</label>
+                      <label className="form-label small" style={{ color: mutedText }}>Unidad Empaque (Compra)</label>
                       <select 
                         className="form-select bg-dark border-secondary text-white" 
                         name="idUnidadCompra" 
@@ -228,7 +243,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                     </div>
 
                     <div className="col-md-4 mb-2">
-                      <label className="form-label text-white-50 small">Factor Conversión</label>
+                      <label className="form-label small" style={{ color: mutedText }}>Factor Conversión</label>
                       <input 
                         type="number" 
                         step="0.01" 
@@ -238,7 +253,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                         value={formData.factorConversion} 
                         onChange={handleChange} 
                       />
-                      <small className="text-white-50" style={{ fontSize: '0.7rem' }}>Cant. de consumo por empaque</small>
+                      <small style={{ color: mutedText, fontSize: '0.7rem' }}>Cant. de consumo por empaque</small>
                     </div>
                   </div>
                 </div>
@@ -246,7 +261,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                 {/* STOCKS */}
                 <div className="row">
                   <div className="col-md-4 mb-3">
-                    <label className="form-label text-white-50 small">Stock Empaquetado (Bultos)</label>
+                    <label className="form-label small" style={{ color: mutedText }}>Stock Empaquetado (Bultos)</label>
                     <input 
                       type="number" 
                       step="1" 
@@ -258,7 +273,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   </div>
 
                   <div className="col-md-4 mb-3">
-                    <label className="form-label text-white-50 small">Stock Suelto (Actual)</label>
+                    <label className="form-label small" style={{ color: mutedText }}>Stock Suelto (Actual)</label>
                     <input 
                       type="number" 
                       step="0.01" 
@@ -271,7 +286,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   </div>
 
                   <div className="col-md-4 mb-3">
-                    <label className="form-label text-white-50 small">Stock Mínimo (Suelto)</label>
+                    <label className="form-label small" style={{ color: mutedText }}>Stock Mínimo (Suelto)</label>
                     <input 
                       type="number" 
                       step="0.01" 
@@ -284,9 +299,10 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   </div>
                 </div>
 
+                {/* PROVEEDOR Y ESTADO */}
                 <div className="row">
                   <div className="col-md-6 mb-3">
-                    <label className="form-label text-white-50 small">Proveedor Principal</label>
+                    <label className="form-label small" style={{ color: mutedText }}>Proveedor Principal</label>
                     <select 
                       className="form-select bg-dark border-secondary text-white" 
                       name="idProveedor" 
@@ -301,7 +317,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   </div>
 
                   <div className="col-md-6 mb-3">
-                    <label className="form-label text-white-50 small">Estado</label>
+                    <label className="form-label small" style={{ color: mutedText }}>Estado</label>
                     <select 
                       className="form-select bg-dark border-secondary text-white" 
                       name="estado" 
@@ -317,8 +333,18 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
               </div>
 
               <div className="modal-footer border-top border-secondary py-2">
-                <button type="button" className="btn btn-sm btn-secondary px-4" onClick={onClose}>Cancelar</button>
-                <button type="submit" className="btn btn-sm px-4 fw-bold text-white" style={{ backgroundColor: '#16a34a' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-sm btn-secondary px-4" 
+                  onClick={onClose}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-sm px-4 fw-bold" 
+                  style={{ backgroundColor: '#16a34a', color: '#ffffff' }}
+                >
                   {insumoEditando ? 'Actualizar' : 'Guardar'}
                 </button>
               </div>

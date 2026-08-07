@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Table(name = "Turno")
@@ -20,7 +19,6 @@ public class Turno {
     @JoinColumn(name = "id_usuario")
     private Usuario usuario;
 
-    
     @Column(name = "fecha_apertura", nullable = false)
     private LocalDateTime fechaApertura;
 
@@ -38,6 +36,10 @@ public class Turno {
 
     @Column(name = "diferencia_arqueo")
     private Double diferenciaArqueo;
+
+    // Agregamos el campo para las observaciones de cierre/arqueo
+    @Column(name = "observaciones", columnDefinition = "TEXT")
+    private String observaciones;
 
     @Column(name = "estado", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)

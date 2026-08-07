@@ -10,8 +10,23 @@ import { CuentasCorrientesResumenModal } from '../features/Clientes/CuentasCorri
 import { useClientes } from '../hooks/useClientes';
 import { SuccesModal } from '../components/layouts/SuccesModal';
 import { ClienteFiltros } from '../features/Clientes/ClientesFiltros';
+import { useTheme } from '../Context/ThemeContext';
 
 export const ClienteView = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // Estilos adaptativos de paleta
+  const titleColor = isDark ? '#ffffff' : '#0f172a';
+  const tableContainerBg = isDark ? '#1d1d1d' : '#ffffff';
+  const tableText = isDark ? '#ffffff' : '#0f172a';
+  const tableContainerBorder = isDark ? '#2d2d30' : '#e2e8f0';
+  const tableHeaderBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const tableRowBorder = isDark ? '#2d2d30' : '#e2e8f0';
+  const hoverRowBg = isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc';
+  const emptyTextColor = isDark ? 'text-white-50' : 'text-muted';
+  const modalStepBg = isDark ? '#1e1e24' : '#ffffff';
+
   const { clientes, registrar, cargar } = useClientes();
   const [paso, setPaso] = useState(0); 
   const [clienteConUbicacionSeleccionada, setClienteConUbicacionSeleccionada] = useState<any | null>(null);
@@ -90,18 +105,38 @@ export const ClienteView = () => {
     );
   });
 
+  const obtenerColorSaldo = (saldoDeudor: number, limiteCredito: number) => {
+    const saldo = Math.abs(Number(saldoDeudor || 0));
+    const limite = Number(limiteCredito || 0);
+    if (saldo === 0) return 'text-success';
+    if (limite <= 0) return 'text-danger';
+
+    const porcentaje = (saldo / limite) * 100;
+
+    if (porcentaje >= 100) {
+      return 'text-danger'; 
+    } else if (porcentaje >= 75) { 
+      return 'text-warning'; 
+    } else {
+      return 'text-success'; 
+    }
+  };
+
   return (
-    <>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="fw-bold text-white font-monospace mb-0">Clientes</h1>
-        
-        {/* Botón para Configurar Categorías y Descuentos */}
+    <div className="container-fluid px-0">
+      {/* Título de la Sección */}
+      <div className="d-flex justify-content-center align-items-center mb-4 position-relative">
+        <h1 className="fw-bold m-0 text-center font-monospace" style={{ fontSize: '2.25rem', color: titleColor }}>
+          Clientes
+        </h1>
         <button 
-          className="btn btn-outline-info font-monospace d-flex align-items-center gap-2"
-          onClick={() => setVerCategoriasModal(true)}
-        >
-          <i className="bi bi-tags-fill"></i> Categorías de Clientes
-        </button>
+  type="button" 
+  className="btn btn-info  fw-semibold font-monospace position-absolute end-0 shadow-sm" 
+  style={{ color: '#ffffff' }}
+  onClick={() => setVerCategoriasModal(true)}
+>
+  <i className="bi bi-tag me-2"></i>Categorías de Clientes
+</button>
       </div>
 
       <SuccesModal 
@@ -117,123 +152,160 @@ export const ClienteView = () => {
         setFiltroEstado={setFiltroEstado}
       />
 
-      <div className="table-responsive" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
+      {/* Tabla Adaptativa sin la clase .table de Bootstrap */}
+      <div 
+        className="table-responsive rounded shadow-sm" 
+        style={{ 
+          maxHeight: '60vh', 
+          overflowY: 'auto',
+          backgroundColor: tableContainerBg,
+          border: `1px solid ${tableContainerBorder}`,
+          transition: 'all 0.2s ease-in-out'
+        }}
+      >
+        <table 
+          className="align-middle m-0" 
+          style={{ 
+            width: '100%',
+            borderCollapse: 'separate', 
+            borderSpacing: 0,
+            color: tableText 
+          }}
+        >
           <thead>
-            <tr style={{ borderBottom: '2px solid #3f3f46', textAlign: 'left' }}>
-              <th style={{ padding: '12px' }}>ID</th>
-              <th style={{ padding: '12px' }}>Nombre</th>
-              <th style={{ padding: '12px' }}>Apellido</th>
-              <th style={{ padding: '12px' }}>Documento</th>
-              <th style={{ padding: '12px' }}>Razón Social</th>
-              <th style={{ padding: '12px' }}>Cta. Cte.</th>
-              <th style={{ padding: '12px' }}>Saldo Deudor</th>
-              <th style={{ padding: '12px' }}>Estado</th>
-              <th style={{ padding: '12px', textAlign: 'center' }}>Opciones</th>
+            <tr style={{ borderBottom: `2px solid ${tableHeaderBorder}`, backgroundColor: tableContainerBg }}>
+              <th className="py-3 px-3 font-monospace small" style={{ color: tableText, width: '60px', whiteSpace: 'nowrap' }}>ID</th>
+              <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Nombre</th>
+              <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Apellido</th>
+              <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Documento</th>
+              <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Razón Social</th>
+              <th className="py-3 px-5 font-monospace small" style={{ color: tableText }}>Cta. Cte.</th>
+              <th className="py-3 px-0 font-monospace small" style={{ color: tableText }}>Saldo Deudor</th>
+              <th className="py-3 px-4 font-monospace small" style={{ color: tableText }}>Estado</th>
+              <th className="py-3 px-3 font-monospace small text-center" style={{ color: tableText }}>Opciones</th>
             </tr>
           </thead>
           <tbody>
-            {clientesFiltrados.map((c: any) => {
-              const tieneCtaCte = Number(c.limiteCredito || 0) > 0;
+            {clientesFiltrados && clientesFiltrados.length > 0 ? (
+              clientesFiltrados.map((c: any) => {
+                const tieneCtaCte = Number(c.limiteCredito || 0) > 0;
 
-              return (
-                <tr 
-                  key={c.id_cliente} 
-                  style={{ borderBottom: '1px solid #2d2d30' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#27272a'} 
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <td style={{ padding: '12px' }}>{c.id_cliente}</td>
-                  <td style={{ padding: '12px' }}>{c.persona?.nombre}</td>
-                  <td style={{ padding: '12px' }}>{c.persona?.apellido}</td>
-                  <td style={{ padding: '12px' }}>{c.persona?.numeroDocumento}</td>
-                  <td style={{ padding: '12px' }}>{c.razonSocial}</td>
-                  
-                  {/* Badge indicativo del estado de Cta Cte */}
-                  <td style={{ padding: '12px' }}>
-                    {tieneCtaCte ? (
-                      <span className="badge bg-success font-monospace">Habilitada (${Number(c.limiteCredito).toFixed(0)})</span>
-                    ) : (
-                      <span className="badge bg-secondary font-monospace opacity-75">Sin Cta Cte</span>
-                    )}
-                  </td>
+                return (
+                  <tr 
+                    key={c.id_cliente} 
+                    style={{ borderBottom: `1px solid ${tableRowBorder}`, transition: 'background-color 0.15s ease' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverRowBg} 
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <td className="px-3 py-3 font-monospace small" style={{ color: tableText, whiteSpace: 'nowrap' }}>{c.id_cliente}</td>
+                    <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.persona?.nombre}</td>
+                    <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.apellido}</td>
+                    <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.numeroDocumento}</td>
+                    <td className="px-3 py-3" style={{ color: tableText }}>{c.razonSocial}</td>
+                    
+                    <td className="px-3 py-3">
+                      {tieneCtaCte ? (
+                        <span className="badge rounded-pill bg-success bg-opacity-75 font-monospace px-3 py-2" style={{ color: '#ffffff' }}>
+                          Habilitada (${Number(c.limiteCredito).toFixed(0)})
+                        </span>
+                      ) : (
+                        <span className="badge rounded-pill bg-secondary font-monospace opacity-75 px-3 py-2" style={{ color: '#ffffff' }}>
+                          Sin Cta Cte
+                        </span>
+                      )}
+                    </td>
 
-                  <td style={{ padding: '12px' }}>
-                    <span className={`fw-bold ${Number(c.saldoDeudor || 0) > 0 ? 'text-danger' : 'text-success'}`}>
-                      ${Number(c.saldoDeudor || 0).toFixed(2)}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    <span className={`badge ${c.estado === 'Activo' ? 'bg-success' : 'bg-danger'}`}>
-                      {c.estado}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    <div className="d-flex justify-content-center gap-2">
-                      {/* Botón de Cuenta Corriente (Verde brillante si tiene límite, atenuado si es 0) */}
-                      <button 
-                        className={`btn btn-sm d-flex align-items-center justify-content-center ${
-                          tieneCtaCte ? 'btn-outline-success' : 'btn-outline-secondary opacity-50'
-                        }`} 
-                        style={{ width: '32px', height: '32px' }} 
-                        title={tieneCtaCte ? "Gestionar Cuenta Corriente" : "Sin Cta. Cte. (Haz clic para asignar límite)"} 
-                        onClick={() => setClienteCuentaCorriente(c)}
-                      >
-                        <i className="bi bi-wallet2"></i>
-                      </button>
+                    <td className="px-3 py-3">
+                      <span className={`fw-bold ${obtenerColorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
+                        ${Number(c.saldoDeudor || 0).toFixed(2)}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <span className={`badge rounded-pill px-3 py-2 ${c.estado === 'Activo' ? 'bg-success bg-opacity-75' : 'bg-danger bg-opacity-75'}`} style={{ color: '#ffffff' }}>
+                        {c.estado}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="d-flex justify-content-center gap-2">
+                        <button 
+                          className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
+                            tieneCtaCte ? 'btn-outline-success' : 'btn-outline-secondary opacity-50'
+                          }`} 
+                          style={{ width: '34px', height: '34px' }} 
+                          title={tieneCtaCte ? "Gestionar Cuenta Corriente" : "Sin Cta. Cte. (Haz clic para asignar límite)"} 
+                          onClick={() => setClienteCuentaCorriente(c)}
+                        >
+                          <i className="bi bi-wallet2 fs-6"></i>
+                        </button>
 
-                      <button 
-                        className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center" 
-                        style={{ width: '32px', height: '32px' }} 
-                        title="Modificar Cliente" 
-                        onClick={() => setClienteAEditar(c)}
-                      >
-                        <i className="bi bi-pencil-square"></i>
-                      </button>
-                      
-                      <button 
-                        className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center" 
-                        style={{ width: '32px', height: '32px', color: '#ffc107', borderColor: '#ffc107' }} 
-                        title="Ver Ubicación" 
-                        onClick={() => setClienteConUbicacionSeleccionada(c)}
-                      >
-                        <i className="bi bi-house-door"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                        <button 
+                          className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                          style={{ width: '34px', height: '34px' }} 
+                          title="Modificar Cliente" 
+                          onClick={() => setClienteAEditar(c)}
+                        >
+                          <i className="bi bi-pencil-square fs-6"></i>
+                        </button>
+                        
+                        <button 
+                          className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                          style={{ width: '34px', height: '34px' }} 
+                          title="Ver Ubicación" 
+                          onClick={() => setClienteConUbicacionSeleccionada(c)}
+                        >
+                          <i className="bi bi-house-door fs-6"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={9} className={`text-center py-5 ${emptyTextColor}`}>
+                  <i className="bi bi-search display-5 d-block mb-2 opacity-50"></i>
+                  <span className="font-monospace">No se han registrado o encontrado clientes en el sistema.</span>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Barra Inferior de Acciones */}
-      <div className="d-flex justify-content-between align-items-center w-100 mt-4">
-        <button onClick={() => navigate('/dashboard')} className="btn btn-danger" style={{ borderRadius: '6px' }}>
-          Volver
+      {/* Botonera Inferior con texto blanco estático */}
+      <div className={`d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 border-top ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
+        <button 
+          onClick={() => navigate('/dashboard')} 
+          className="btn btn-danger px-4 py-2 fw-semibold" 
+          style={{ color: '#ffffff' }}
+        >
+          <i className="bi bi-arrow-left me-2"></i>Volver
         </button>
 
-        <div className="d-flex gap-2">
-          {/* Botón para ver el Resumen de todas las Cuentas Corrientes Activas */}
+        <div className="d-flex flex-wrap gap-2">
           <button 
-            className="btn btn-outline-warning font-monospace fw-bold d-flex align-items-center gap-2"
-            onClick={() => setVerResumenCuentasModal(true)}
-          >
-            <i className="bi bi-wallet2"></i> Ver Cuentas Corrientes Activas
-          </button>
+  className="btn px-4 py-2 fw-semibold shadow-sm font-monospace d-flex align-items-center gap-2" 
+  style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}
+  onClick={() => setVerResumenCuentasModal(true)}
+>
+  <i className="bi bi-wallet2"></i> Ver Cuentas Corrientes Activas
+</button>
 
-          <button className="btn btn-success" onClick={() => setPaso(1)}>
-            Registrar Nuevo Cliente
+          <button 
+            className="btn btn-success px-4 py-2 fw-semibold shadow-sm" 
+            style={{ color: '#ffffff' }}
+            onClick={() => setPaso(1)}
+          >
+            <i className="bi bi-plus-circle me-2"></i>Registrar Nuevo Cliente
           </button>
         </div>
       </div>
 
       {/* Modales de Flujo de Registro y Edición */}
       {paso === 1 && (
-        <div className="modal d-block" style={{background:'rgba(0,0,0,0.8)'}}>
-          <div className="modal-dialog">
-            <div className="modal-content bg-dark text-white p-4">
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content p-4 shadow-lg" style={{ backgroundColor: modalStepBg, color: tableText }}>
               <PersonaForm formData={formData} setFormData={setFormData} onSiguiente={() => setPaso(2)} onVolver={() => setPaso(0)} />
             </div>
           </div>
@@ -243,10 +315,8 @@ export const ClienteView = () => {
       {clienteAEditar && <ClienteEditModal cliente={clienteAEditar} onCerrar={() => setClienteAEditar(null)} onConfirmar={handleConfirmarEdicion} />}
       {clienteConUbicacionSeleccionada && <UbicacionViewModal cliente={clienteConUbicacionSeleccionada} onCerrar={() => setClienteConUbicacionSeleccionada(null)} onConfirmar={handleConfirmarEdicion} />}
       
-      {/* Modal de Configurar Categorías */}
       {verCategoriasModal && <CategoriaClienteModal onCerrar={() => setVerCategoriasModal(false)} />}
       
-      {/* Modal Resumen de Cuentas Corrientes Activas */}
       {verResumenCuentasModal && (
         <CuentasCorrientesResumenModal 
           clientes={clientes} 
@@ -255,17 +325,15 @@ export const ClienteView = () => {
         />
       )}
 
-      {/* Modal Individual de Cuenta Corriente */}
       {clienteCuentaCorriente && (
         <CuentaCorrienteModal 
           cliente={clienteCuentaCorriente} 
           onCerrar={() => setClienteCuentaCorriente(null)} 
           onActualizar={() => {
             cargar();
-            setClienteCuentaCorriente(null);
           }} 
         />
       )}
-    </>
+    </div>
   );
 };
