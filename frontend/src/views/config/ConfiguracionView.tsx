@@ -289,7 +289,7 @@ export const ConfiguracionView: React.FC = () => {
 
   return (
     <div className={`container-fluid font-monospace pb-5 ${esOscuro ? 'text-white' : 'text-dark'}`}>
-      <div className="mb-4 pb-3 border-bottom border-secondary" style={{ borderColor: esOscuro ? '#2d2d30' : '#dee2e6' }}>
+      <div className="mb-4 pb-3" style={{ borderColor: esOscuro ? '#2d2d30' : '#dee2e6' }}>
         <div className="text-center">
           <h3 className="fw-bold mb-0" style={{ color: textColor, fontSize: '1.8rem' }}>Configuración y Respaldo</h3>
         </div>
@@ -404,11 +404,11 @@ export const ConfiguracionView: React.FC = () => {
                   </div>
 
                   <button 
-                    type="submit" 
-                    disabled={cargandoUsuario}
-                    className="btn w-100 py-2 fw-bold text-white shadow" 
-                    style={{ backgroundColor: '#8e45e0', borderRadius: '8px' }}
-                  >
+  type="submit" 
+  disabled={cargandoUsuario}
+  className="btn w-100 py-2 fw-bold shadow" 
+  style={{ backgroundColor: '#8e45e0', color: '#ffffff', borderRadius: '8px' }}
+>
                     {cargandoUsuario ? 'Actualizando...' : 'Guardar Nuevo Usuario'}
                   </button>
                 </form>
@@ -464,11 +464,11 @@ export const ConfiguracionView: React.FC = () => {
                   </div>
 
                   <button 
-                    type="submit" 
-                    disabled={cargandoPass}
-                    className="btn w-100 py-2 fw-bold text-white shadow" 
-                    style={{ backgroundColor: '#8e45e0', borderRadius: '8px' }}
-                  >
+  type="submit" 
+  disabled={cargandoPass}
+  className="btn w-100 py-2 fw-bold shadow" 
+  style={{ backgroundColor: '#8e45e0', color: '#ffffff', borderRadius: '8px' }}
+>
                     {cargandoPass ? 'Actualizando...' : 'Actualizar Contraseña'}
                   </button>
                 </form>
@@ -512,11 +512,11 @@ export const ConfiguracionView: React.FC = () => {
                   </div>
 
                   <button 
-                    type="submit" 
-                    disabled={cargandoEmail}
-                    className="btn w-100 py-2 fw-bold text-white shadow" 
-                    style={{ backgroundColor: '#8e45e0', borderRadius: '8px' }}
-                  >
+  type="submit" 
+  disabled={cargandoEmail}
+  className="btn w-100 py-2 fw-bold shadow" 
+  style={{ backgroundColor: '#8e45e0', color: '#ffffff', borderRadius: '8px' }}
+>
                     {cargandoEmail ? 'Actualizando...' : 'Guardar Nuevo Email'}
                   </button>
                 </form>
@@ -536,11 +536,11 @@ export const ConfiguracionView: React.FC = () => {
                 <p className={`${mutedTextColor} small mb-0`}>Generación y carga de datos para contingencias operativas</p>
               </div>
               <button 
-                onClick={handleGenerarRespaldo}
-                disabled={cargandoRespaldo}
-                className="btn btn-info fw-bold text-dark px-3 shadow"
-                style={{ borderRadius: '8px' }}
-              >
+  onClick={handleGenerarRespaldo}
+  disabled={cargandoRespaldo}
+  className="btn fw-bold px-3 shadow"
+  style={{ backgroundColor: '#0da6c5', color: '#ffffff', borderRadius: '8px' }}
+>
                 <i className="bi bi-download me-2"></i>
                 {cargandoRespaldo ? 'Generando...' : 'Generar Respaldo Ahora'}
               </button>

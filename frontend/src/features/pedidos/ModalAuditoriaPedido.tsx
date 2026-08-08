@@ -91,16 +91,55 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedi
                                 <td className="px-3 py-3 font-monospace">#{pago.id_comprobante || idx + 1}</td>
                                 <td className="py-3">
                                   <div className="d-flex align-items-center gap-1">
-                                    <span className="badge" style={{ backgroundColor: badgeBg, color: badgeText }}>{pago.tipoPago || 'EFECTIVO'}</span>
-                                    
-                                    {esUnico ? (
-                                      <span className="badge" style={{ backgroundColor: 'rgba(13, 202, 240, 0.2)', color: '#0dcaf0', border: '1px solid #0dcaf0' }}>Total</span>
-                                    ) : esPrimero ? (
-                                      <span className="badge" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#22c55e', border: '1px solid #22c55e' }}>Seña Inicial</span>
-                                    ) : (
-                                      <span className="badge" style={{ backgroundColor: 'rgba(255, 193, 7, 0.2)', color: '#ffc107', border: '1px solid #ffc107' }}>Pago Parcial</span>
-                                    )}
-                                  </div>
+  <span 
+    className="px-2 py-1 rounded fw-semibold d-inline-block" 
+    style={{ 
+      backgroundColor: '#4b5563', 
+      color: '#ffffff', 
+      fontSize: '0.60rem' 
+    }}
+  >
+    {pago.tipoPago || 'EFECTIVO'}
+  </span>
+
+  {esUnico ? (
+    <span 
+      className="px-2 py-1 rounded fw-semibold d-inline-block" 
+      style={{ 
+        backgroundColor: '#0284c7', 
+        color: '#ffffff', 
+        border: '1px solid #0284c7', 
+        fontSize: '0.60rem' 
+      }}
+    >
+      Total
+    </span>
+  ) : esPrimero ? (
+    <span 
+      className="px-2 py-1 rounded fw-semibold d-inline-block" 
+      style={{ 
+        backgroundColor: '#15803d', 
+        color: '#f7f7f7', 
+        border: '1px solid #15803d', 
+        fontSize: '0.60rem' 
+      }}
+    >
+      Seña Inicial
+    </span>
+  ) : (
+    <span 
+      className="px-2 py-1 rounded fw-semibold d-inline-block" 
+      style={{ 
+        backgroundColor: 'rgba(235, 162, 6, 0.9)', 
+        color: '#f5f2f1', 
+        border: '1px solid #rgba(235, 162, 6, 0.9)', 
+        fontSize: '0.60rem' 
+      }}
+    >
+      Pago Parcial
+    </span>
+  )}
+</div>
                                 </td>
                                 <td className="text-center py-3">
                                   <div className="d-flex justify-content-center align-items-center gap-1">

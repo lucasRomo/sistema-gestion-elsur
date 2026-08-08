@@ -266,14 +266,56 @@ export const CajaView: React.FC = () => {
 
   const renderBadgeCategoria = (m: any) => {
     if (m.categoria === 'EGRESO_MANTENIMIENTO') {
-      return <span className="badge bg-warning text-dark fw-bold"><i className="bi bi-tools me-1"></i>MANTENIMIENTO</span>;
+      return (
+        <span 
+          className="d-inline-block px-2 py-1 rounded fw-semibold"
+          style={{
+            backgroundColor: isDark ? 'rgba(234, 179, 8, 0.2)' : '#fef3c7',
+            color: isDark ? '#facc15' : '#b45309',
+            border: `1px solid ${isDark ? '#eab308' : '#f59e0b'}`,
+            fontSize: '0.75rem'
+          }}
+        >
+          <i className="bi bi-tools me-1"></i>MANTENIMIENTO
+        </span>
+      );
     }
+
     if (m.categoria === 'INSUMOS') {
-      return <span className="badge bg-info text-dark fw-bold"><i className="bi bi-truck me-1"></i>INSUMOS</span>;
+      return (
+        <span 
+          className="d-inline-block px-2 py-1 rounded fw-semibold"
+          style={{
+            backgroundColor: isDark ? 'rgba(14, 165, 233, 0.2)' : '#e0f2fe',
+            color: isDark ? '#38bdf8' : '#0369a1',
+            border: `1px solid ${isDark ? '#0ea5e9' : '#0284c7'}`,
+            fontSize: '0.75rem'
+          }}
+        >
+          <i className="bi bi-truck me-1"></i>INSUMOS
+        </span>
+      );
     }
+
+    const esGanancia = m.tipoMovimiento === 'INGRESO';
+
     return (
-      <span className={`badge ${m.tipoMovimiento === 'INGRESO' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
-        {m.tipoMovimiento === 'INGRESO' ? 'Ganancia' : 'Egreso'}
+      <span 
+        className="d-inline-block px-2 py-1 rounded fw-semibold"
+        style={{
+          backgroundColor: esGanancia 
+            ? (isDark ? '#1c9b4a' : '#1c9b4a') 
+            : (isDark ? '#ef4444' : '#ef4444'),
+          color: esGanancia 
+            ? (isDark ? '#f4f7f5' : '#f4f7f5') 
+            : (isDark ? '#f4f7f5' : '#f4f7f5'),
+          border: `1px solid ${esGanancia 
+            ? (isDark ? '#1c9b4a' : '#1c9b4a') 
+            : (isDark ? '#ef4444' : '#ef4444')}`,
+          fontSize: '0.75rem'
+        }}
+      >
+        {esGanancia ? 'Ganancia' : 'Egreso'}
       </span>
     );
   };

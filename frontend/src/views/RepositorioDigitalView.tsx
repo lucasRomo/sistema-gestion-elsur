@@ -10,7 +10,7 @@ export const RepositorioDigitalView: React.FC = () => {
   const isDarkMode = theme === 'dark';
 
   // Colores dinámicos para modo Claro / Oscuro
-  const pageBg = isDarkMode ? '#1b1b1b' : '#f8f9fa';
+  const pageBg = isDarkMode ? '#1b1b1b' : '#e5e7eb';
   const cardBg = isDarkMode ? '#1b1b1b' : '#ffffff';
   const textColor = isDarkMode ? 'text-white' : 'text-dark';
   const cardBorder = isDarkMode ? '#3f3f46' : '#dee2e6';

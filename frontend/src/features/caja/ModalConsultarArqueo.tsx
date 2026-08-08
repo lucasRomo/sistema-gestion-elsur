@@ -140,9 +140,23 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
                             </span>
                           </td>
                           <td>
-                            <span className={`badge ${m.tipoMovimiento === 'INGRESO' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
-                              {m.tipoMovimiento === 'INGRESO' ? 'Ganancia' : 'Egreso'}
-                            </span>
+                            <span 
+  className="d-inline-block px-2 py-1 rounded fw-semibold"
+  style={{
+    backgroundColor: m.tipoMovimiento === 'INGRESO' 
+      ? (isDark ? '#1c9b4a' : '#1c9b4a') 
+      : (isDark ? '#ef4444' : '#ef4444'),
+    color: m.tipoMovimiento === 'INGRESO' 
+      ? (isDark ? '#ffffff' : '#ffffff') 
+      : (isDark ? '#ffffff' : '#ffffff'),
+    border: `1px solid ${m.tipoMovimiento === 'INGRESO' 
+      ? (isDark ? '#1c9b4a' : '#1c9b4a') 
+      : (isDark ? '#ef4444' : '#ef4444')}`,
+    fontSize: '0.60rem'
+  }}
+>
+  {m.tipoMovimiento === 'INGRESO' ? 'Ganancia' : 'Egreso'}
+</span>
                           </td>
                           <td className="text-start text-truncate" style={{ maxWidth: '200px' }}>
                             {m.descripcion || '-'}

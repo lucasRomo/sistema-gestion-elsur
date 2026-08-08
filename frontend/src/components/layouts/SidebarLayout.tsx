@@ -252,17 +252,18 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
               onClick={() => navigate('/dashboard')}
             >
               <img 
-                src={logoSur} 
-                alt="El SUR" 
-                style={{ 
-                  width: '32px',    
-                  height: 'auto',    
-                  objectFit: 'contain' 
-                }} 
-              />
+  src={logoSur} 
+  alt="El SUR" 
+  style={{ 
+    width: '32px',    
+    height: 'auto',    
+    objectFit: 'contain',
+    filter: esOscuro ? 'none' : 'drop-shadow(0px 0px 1px #000000) drop-shadow(0px 0px 1px #000000)'
+  }} 
+/>
               {!colapsado && (
                 <span className="fw-bold font-monospace" style={{ fontSize: '1rem', letterSpacing: '1px', color: textColor }}>
-                  el SUR
+                  El SUR
                 </span>
               )}
             </div>
@@ -297,8 +298,19 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
                 Fecha: <span style={{ color: mutedText }}>{fechaActual}</span>
               </div>
               <div className="small font-monospace mt-1" style={{ fontSize: '0.8rem', color: textColor }}>
-                Rol: <span className="badge ms-2" style={{ backgroundColor: esOscuro ? '#000000' : '#e2e8f0', color: '#8e45e0', border: '1px solid #8e45e0', fontSize: '0.68rem' }}>{rolUsuario}</span>
-              </div>
+  Rol: <span 
+    className="d-inline-block ms-2 px-2 py-1 rounded fw-semibold" 
+    style={{ 
+      backgroundColor: esOscuro ? '#222122' : '#f3e8ff', 
+      color: esOscuro ? '#a855f7' : '#7e22ce', 
+      border: `1px solid ${esOscuro ? '#8e45e0' : '#c084fc'}`, 
+      fontSize: '0.68rem',
+      lineHeight: '1'
+    }}
+  >
+    {rolUsuario}
+  </span>
+</div>
             </div>
           ) : (
             <div 
