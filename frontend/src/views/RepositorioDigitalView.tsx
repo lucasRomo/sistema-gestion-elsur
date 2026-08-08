@@ -2,9 +2,19 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { repositorioService } from '../services/repositorioService';
 import type { DocumentoDigital, AreaCurso, Institucion } from '../types/Repositorio';
+import { useTheme } from '../Context/ThemeContext'; 
 
 export const RepositorioDigitalView: React.FC = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+
+  // Colores dinámicos para modo Claro / Oscuro
+  const pageBg = isDarkMode ? '#1b1b1b' : '#f8f9fa';
+  const cardBg = isDarkMode ? '#1b1b1b' : '#ffffff';
+  const textColor = isDarkMode ? 'text-white' : 'text-dark';
+  const cardBorder = isDarkMode ? '#3f3f46' : '#dee2e6';
+  const inputBg = isDarkMode ? '#1b1b1b' : '#ffffff';
 
   const [documentos, setDocumentos] = useState<DocumentoDigital[]>([]);
   const [areas, setAreas] = useState<AreaCurso[]>([]);
@@ -191,29 +201,30 @@ export const RepositorioDigitalView: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid text-white min-vh-100 p-2 font-monospace">
+    <div className={`container-fluid p-3 font-monospace ${textColor}`} style={{ backgroundColor: pageBg, minHeight: '100vh' }}>
       {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="fw-bold mb-0 text-white">Repositorio Digital</h2>
+        <h2 className="fw-bold mb-0">Repositorio Digital</h2>
         <i className="bi bi-question-circle text-info fs-4" style={{ cursor: 'pointer' }}></i>
       </div>
 
       <div className="row g-3">
         {/* PANEL IZQUIERDO */}
         <div className="col-lg-7">
-          <div className="card bg-dark text-white p-3 border-secondary rounded-3">
-            <h5 className="fw-bold mb-3 text-light">Buscador y Filtros</h5>
+          <div className="card p-3 rounded-3" style={{ backgroundColor: cardBg, borderColor: cardBorder, color: 'inherit' }}>
+            <h5 className="fw-bold mb-3">Buscador y Filtros</h5>
 
             {/* BÚSQUEDA */}
             <div className="input-group mb-3">
               <input
                 type="text"
-                className="form-control bg-dark text-white border-secondary"
+                className={`form-control ${textColor}`}
+                style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                 placeholder="Buscar por título, autor o materia..."
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
               />
-              <span className="input-group-text bg-dark border-secondary text-secondary">
+              <span className="input-group-text border-secondary text-secondary" style={{ backgroundColor: inputBg, borderColor: cardBorder }}>
                 <i className="bi bi-search"></i>
               </span>
             </div>
@@ -223,7 +234,8 @@ export const RepositorioDigitalView: React.FC = () => {
               <div className="col-md-5">
                 <label className="small text-secondary fw-bold mb-1">Filtrar por Materia:</label>
                 <select
-                  className="form-select bg-dark text-white border-secondary form-select-sm"
+                  className={`form-select form-select-sm ${textColor}`}
+                  style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                   value={filtroMateria}
                   onChange={(e) => setFiltroMateria(e.target.value)}
                 >
@@ -239,7 +251,8 @@ export const RepositorioDigitalView: React.FC = () => {
               <div className="col-md-4">
                 <label className="small text-secondary fw-bold mb-1">Filtrar por Institución:</label>
                 <select
-                  className="form-select bg-dark text-white border-secondary form-select-sm"
+                  className={`form-select form-select-sm ${textColor}`}
+                  style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                   value={filtroInstitucion}
                   onChange={(e) => setFiltroInstitucion(e.target.value)}
                 >
@@ -254,76 +267,119 @@ export const RepositorioDigitalView: React.FC = () => {
 
               <div className="col-md-3 d-flex align-items-end">
                 <button
-                  className="btn btn-sm w-100 fw-bold text-white mt-3"
-                  style={{ backgroundColor: '#28a745' }}
-                  onClick={() => setModalAgregar(true)}
-                >
-                  Agregar Documento
-                </button>
+  className="btn btn-sm w-100 fw-bold mt-3"
+  style={{ backgroundColor: '#28a745', color: '#ffffff' }}
+  onClick={() => setModalAgregar(true)}
+>
+  Agregar Documento
+</button>
               </div>
             </div>
 
             {/* TABLA DE ARCHIVOS */}
-            <div className="table-responsive" style={{ maxHeight: '420px', overflowY: 'auto' }}>
-              <table className="table table-dark table-hover align-middle mb-0">
-                <thead>
-                  <tr className="text-secondary border-secondary small">
-                    <th>Icono</th>
-                    <th>Nombre Arch.</th>
-                    <th>Materia</th>
-                    <th>Carrera / Inst.</th>
-                    <th className="text-center">Opciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cargando ? (
-                    <tr>
-                      <td colSpan={5} className="text-center py-4 text-muted">
-                        Cargando repositorio...
-                      </td>
-                    </tr>
-                  ) : documentosFiltrados.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="text-center py-4 text-muted">
-                        No se encontraron archivos en el repositorio.
-                      </td>
-                    </tr>
-                  ) : (
-                    documentosFiltrados.map((doc) => {
-                      const esSeleccionado = documentoSeleccionado?.idDocumento === doc.idDocumento;
-                      return (
-                        <tr
-                          key={doc.idDocumento}
-                          onClick={() => setDocumentoSeleccionado(doc)}
-                          style={{
-                            cursor: 'pointer',
-                            backgroundColor: esSeleccionado ? '#2d2d30' : 'transparent',
-                            borderLeft: esSeleccionado ? '4px solid #8e45e0' : 'none',
-                          }}
-                        >
-                          <td>{getIconoArchivo(doc.tipoArchivo)}</td>
-                          <td className="fw-bold text-truncate" style={{ maxWidth: '150px' }}>
-                            {doc.titulo}
-                          </td>
-                          <td className="text-truncate" style={{ maxWidth: '120px' }}>
-                            {doc.area?.nombreArea || 'S/N'}
-                          </td>
-                          <td className="text-truncate" style={{ maxWidth: '120px' }}>
-                            {doc.area?.institucion?.nombreInstitucion || 'S/N'}
-                          </td>
-                          <td className="text-center">
-                            <button
-                              className="btn btn-sm text-danger border-0 p-0 ms-1"
-                              title="Eliminar de forma lógica"
-                              onClick={(e) => handleEliminar(e, doc.idDocumento)}
-                            >
-                              <i className="bi bi-x-square-fill fs-5"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
+<div 
+  className="table-responsive rounded-3 shadow-sm font-monospace" 
+  style={{ 
+    backgroundColor: cardBg,
+    border: `1px solid ${cardBorder}`,
+    maxHeight: '420px', 
+    overflowY: 'auto' 
+  }}
+>
+  <table 
+    className="table table-borderless align-middle m-0" 
+    style={{ 
+      color: isDarkMode ? '#ffffff' : '#0f172a',
+      backgroundColor: 'transparent',
+      '--bs-table-bg': 'transparent',
+      '--bs-table-color': isDarkMode ? '#ffffff' : '#0f172a'
+    } as React.CSSProperties}
+  >
+    <thead>
+      <tr 
+        style={{ 
+          borderBottom: `2px solid ${cardBorder}`, 
+          backgroundColor: cardBg,
+          fontSize: '0.85rem'
+        }}
+        className="text-uppercase fw-bold text-secondary"
+      >
+        <th className="py-3 px-3">Icono</th>
+        <th className="py-3 px-3">Nombre Arch.</th>
+        <th className="py-3 px-3">Materia</th>
+        <th className="py-3 px-3">Carrera / Inst.</th>
+        <th className="py-3 px-3 text-center">Opciones</th>
+      </tr>
+    </thead>
+    <tbody style={{ fontSize: '0.9rem' }}>
+      {cargando ? (
+        <tr>
+          <td colSpan={5} className="text-center py-4 text-muted">
+            Cargando repositorio...
+          </td>
+        </tr>
+      ) : documentosFiltrados.length === 0 ? (
+        <tr>
+          <td colSpan={5} className="text-center py-4 text-muted">
+            No se encontraron archivos en el repositorio.
+          </td>
+        </tr>
+      ) : (
+        documentosFiltrados.map((doc) => {
+          const esSeleccionado = documentoSeleccionado?.idDocumento === doc.idDocumento;
+          
+          // Color de la fila según selección y tema
+          const bgFila = esSeleccionado 
+            ? (isDarkMode ? '#1b1b1b' : '#f8f8f8') 
+            : 'transparent';
+
+          return (
+            <tr
+              key={doc.idDocumento}
+              onClick={() => setDocumentoSeleccionado(doc)}
+              style={{
+                cursor: 'pointer',
+                backgroundColor: bgFila,
+                borderBottom: `1px solid ${cardBorder}`,
+                borderLeft: esSeleccionado ? '4px solid #8e45e0' : '4px solid transparent',
+                transition: 'background-color 0.15s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!esSeleccionado) {
+                  e.currentTarget.style.backgroundColor = isDarkMode ? '#27272a' : '#f8fafc';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!esSeleccionado) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
+              }}
+            >
+              <td className="py-3 px-3">
+                {getIconoArchivo(doc.tipoArchivo)}
+              </td>
+              <td className="py-3 px-3 fw-bold text-truncate" style={{ maxWidth: '150px' }}>
+                {doc.titulo}
+              </td>
+              <td className="py-3 px-3 text-truncate" style={{ maxWidth: '120px' }}>
+                {doc.area?.nombreArea || 'S/N'}
+              </td>
+              <td className="py-3 px-3 text-truncate" style={{ maxWidth: '120px' }}>
+                {doc.area?.institucion?.nombreInstitucion || 'S/N'}
+              </td>
+              <td className="py-3 px-3 text-center">
+                <button
+                  className="btn btn-sm text-danger border-0 p-0 ms-1"
+                  title="Eliminar de forma lógica"
+                  onClick={(e) => handleEliminar(e, doc.idDocumento)}
+                >
+                  <i className="bi bi-x-square-fill fs-5"></i>
+                </button>
+              </td>
+            </tr>
+          );
+        })
+      )}
                 </tbody>
               </table>
             </div>
@@ -333,15 +389,15 @@ export const RepositorioDigitalView: React.FC = () => {
         {/* PANEL DERECHO */}
         <div className="col-lg-5">
           <div
-            className="card bg-dark text-white p-3 border-secondary rounded-3 d-flex flex-column justify-content-between"
-            style={{ minHeight: '520px' }}
+            className="card p-3 rounded-3 d-flex flex-column justify-content-between"
+            style={{ backgroundColor: cardBg, borderColor: cardBorder, color: 'inherit', minHeight: '520px' }}
           >
             {documentoSeleccionado ? (
               <>
                 <div>
                   <div
                     className="d-flex flex-column align-items-center justify-content-center p-4 rounded mb-3"
-                    style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', minHeight: '200px' }}
+                    style={{ backgroundColor: isDarkMode ? '#1a1919' : '#ececec', border: `1px solid ${cardBorder}`, minHeight: '200px' }}
                   >
                     {getIconoArchivo(documentoSeleccionado.tipoArchivo)}
                     <span className="fw-bold mt-2 text-info fs-5 text-center">
@@ -382,14 +438,14 @@ export const RepositorioDigitalView: React.FC = () => {
 
                 <div className="d-flex gap-2 mt-3">
                   <button
-                    className="btn btn-primary btn-sm flex-fill fw-bold"
+                    className="btn btn-primary btn-sm flex-fill fw-bold text-white"
                     style={{ backgroundColor: '#5a8ab8', border: 'none' }}
                     onClick={() => setModalPrevisualizar(true)}
                   >
                     Ver (Pantalla Completa)
                   </button>
                   <button
-                    className="btn btn-success btn-sm flex-fill fw-bold"
+                    className="btn btn-success btn-sm flex-fill fw-bold text-white"
                     style={{ backgroundColor: '#28a745', border: 'none' }}
                     onClick={() => navigate('/crear-pedido')}
                   >
@@ -412,13 +468,13 @@ export const RepositorioDigitalView: React.FC = () => {
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div
-              className="modal-content bg-dark text-white p-4"
-              style={{ border: '2px solid #8e45e0', borderRadius: '12px' }}
+              className={`modal-content p-4 ${textColor}`}
+              style={{ backgroundColor: cardBg, border: '2px solid #8e45e0', borderRadius: '12px' }}
             >
               <div className="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-3">
                 <h5 className="modal-title fw-bold">Registrar Archivo en Repositorio</h5>
                 <button
-                  className="btn-close btn-close-white"
+                  className={`btn-close ${isDarkMode ? 'btn-close-white' : ''}`}
                   onClick={() => setModalAgregar(false)}
                 ></button>
               </div>
@@ -429,7 +485,8 @@ export const RepositorioDigitalView: React.FC = () => {
                     <label className="form-label small text-secondary fw-bold">Título del Documento *</label>
                     <input
                       type="text"
-                      className="form-control bg-dark text-white border-secondary"
+                      className={`form-control ${textColor}`}
+                      style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                       required
                       value={titulo}
                       onChange={(e) => setTitulo(e.target.value)}
@@ -440,7 +497,8 @@ export const RepositorioDigitalView: React.FC = () => {
                     <label className="form-label small text-secondary fw-bold">Autor / Docente *</label>
                     <input
                       type="text"
-                      className="form-control bg-dark text-white border-secondary"
+                      className={`form-control ${textColor}`}
+                      style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                       required
                       value={autor}
                       onChange={(e) => setAutor(e.target.value)}
@@ -452,7 +510,8 @@ export const RepositorioDigitalView: React.FC = () => {
                     <label className="form-label small text-secondary fw-bold">Cátedra / Materia (Área) *</label>
                     <div className="input-group">
                       <select
-                        className="form-select bg-dark text-white border-secondary"
+                        className={`form-select ${textColor}`}
+                        style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                         required
                         value={idArea}
                         onChange={(e) => setIdArea(e.target.value)}
@@ -466,7 +525,7 @@ export const RepositorioDigitalView: React.FC = () => {
                       </select>
                       <button
                         type="button"
-                        className="btn btn-outline-light"
+                        className="btn btn-outline-secondary"
                         title="Administrar / Agregar Cátedra"
                         onClick={() => setModalNuevaArea(true)}
                       >
@@ -487,7 +546,8 @@ export const RepositorioDigitalView: React.FC = () => {
                     <label className="form-label small text-secondary fw-bold">Precio Base ($)</label>
                     <input
                       type="number"
-                      className="form-control bg-dark text-white border-secondary"
+                      className={`form-control ${textColor}`}
+                      style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                       min="0"
                       step="0.01"
                       value={precioBase}
@@ -501,7 +561,8 @@ export const RepositorioDigitalView: React.FC = () => {
                     </label>
                     <input
                       type="number"
-                      className="form-control bg-dark text-white border-secondary"
+                      className={`form-control ${textColor}`}
+                      style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                       min="1"
                       placeholder="Auto-detectado si se deja vacío"
                       value={cantidadPaginas}
@@ -512,7 +573,8 @@ export const RepositorioDigitalView: React.FC = () => {
                   <div className="col-12">
                     <label className="form-label small text-secondary fw-bold">Descripción / Notas</label>
                     <textarea
-                      className="form-control bg-dark text-white border-secondary"
+                      className={`form-control ${textColor}`}
+                      style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                       rows={2}
                       value={descripcion}
                       onChange={(e) => setDescripcion(e.target.value)}
@@ -525,7 +587,8 @@ export const RepositorioDigitalView: React.FC = () => {
                     </label>
                     <input
                       type="file"
-                      className="form-control bg-dark text-white border-secondary"
+                      className={`form-control ${textColor}`}
+                      style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                       required
                       accept=".pdf,.docx,.doc,.jpg,.jpeg,.png"
                       onChange={(e) => {
@@ -539,15 +602,16 @@ export const RepositorioDigitalView: React.FC = () => {
 
                 <div className="d-flex justify-content-end gap-2 mt-4">
                   <button
-                    type="button"
-                    className="btn btn-secondary btn-sm px-3"
-                    onClick={() => setModalAgregar(false)}
-                  >
-                    Cancelar
-                  </button>
+  type="button"
+  className="btn btn-danger btn-sm px-3 fw-bold"
+  style={{ color: '#ffffff' }}
+  onClick={() => setModalAgregar(false)}
+>
+  Cancelar
+</button>
                   <button
                     type="submit"
-                    className="btn btn-success btn-sm px-4 fw-bold"
+                    className="btn btn-success btn-sm px-4 fw-bold text-white"
                     disabled={guardando}
                   >
                     {guardando ? 'Guardando...' : 'Guardar en Repositorio'}
@@ -563,12 +627,12 @@ export const RepositorioDigitalView: React.FC = () => {
       {modalNuevaInst && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1070 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content bg-dark text-white border-info p-3">
+            <div className={`modal-content border-info p-3 ${textColor}`} style={{ backgroundColor: cardBg }}>
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h6 className="fw-bold mb-0 text-info">
                   <i className="bi bi-building-gear me-2"></i>Nueva Institución
                 </h6>
-                <button className="btn-close btn-close-white" onClick={() => setModalNuevaInst(false)}></button>
+                <button className={`btn-close ${isDarkMode ? 'btn-close-white' : ''}`} onClick={() => setModalNuevaInst(false)}></button>
               </div>
 
               <form onSubmit={handleCrearInstitucionRapida}>
@@ -576,7 +640,8 @@ export const RepositorioDigitalView: React.FC = () => {
                   <label className="form-label small text-secondary">Nombre de Institución *</label>
                   <input
                     type="text"
-                    className="form-control bg-dark text-white border-secondary"
+                    className={`form-control ${textColor}`}
+                    style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                     placeholder="Ej: UNL, UTN, Colegio Nacional..."
                     required
                     value={nombreInstNueva}
@@ -586,7 +651,8 @@ export const RepositorioDigitalView: React.FC = () => {
                 <div className="mb-3">
                   <label className="form-label small text-secondary">Tipo</label>
                   <select
-                    className="form-select bg-dark text-white border-secondary"
+                    className={`form-select ${textColor}`}
+                    style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                     value={tipoInstNueva}
                     onChange={(e) => setTipoInstNueva(e.target.value)}
                   >
@@ -599,12 +665,12 @@ export const RepositorioDigitalView: React.FC = () => {
                 <div className="d-flex justify-content-end gap-2">
                   <button
                     type="button"
-                    className="btn btn-sm btn-secondary"
+                    className="btn btn-sm btn-secondary text-white"
                     onClick={() => setModalNuevaInst(false)}
                   >
                     Cancelar
                   </button>
-                  <button type="submit" className="btn btn-sm btn-info fw-bold">
+                  <button type="submit" className="btn btn-sm btn-info fw-bold text-white">
                     Guardar Institución
                   </button>
                 </div>
@@ -618,19 +684,20 @@ export const RepositorioDigitalView: React.FC = () => {
       {modalNuevaArea && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1070 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content bg-dark text-white border-warning p-3">
+            <div className={`modal-content border-warning p-3 ${textColor}`} style={{ backgroundColor: cardBg }}>
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h6 className="fw-bold mb-0 text-warning">
                   <i className="bi bi-gear-fill me-2"></i>Nueva Cátedra / Área
                 </h6>
-                <button className="btn-close btn-close-white" onClick={() => setModalNuevaArea(false)}></button>
+                <button className={`btn-close ${isDarkMode ? 'btn-close-white' : ''}`} onClick={() => setModalNuevaArea(false)}></button>
               </div>
 
               <form onSubmit={handleCrearAreaRapida}>
                 <div className="mb-3">
                   <label className="form-label small text-secondary">Institución Perteneciente *</label>
                   <select
-                    className="form-select bg-dark text-white border-secondary"
+                    className={`form-select ${textColor}`}
+                    style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                     required
                     value={idInstParaArea}
                     onChange={(e) => setIdInstParaArea(e.target.value)}
@@ -648,7 +715,8 @@ export const RepositorioDigitalView: React.FC = () => {
                   <label className="form-label small text-secondary">Nombre de la Cátedra / Materia *</label>
                   <input
                     type="text"
-                    className="form-control bg-dark text-white border-secondary"
+                    className={`form-control ${textColor}`}
+                    style={{ backgroundColor: inputBg, borderColor: cardBorder }}
                     placeholder="Ej: Análisis Matemático I, Historia..."
                     required
                     value={nombreAreaNueva}
@@ -659,12 +727,12 @@ export const RepositorioDigitalView: React.FC = () => {
                 <div className="d-flex justify-content-end gap-2">
                   <button
                     type="button"
-                    className="btn btn-sm btn-secondary"
+                    className="btn btn-sm btn-secondary text-white"
                     onClick={() => setModalNuevaArea(false)}
                   >
                     Cancelar
                   </button>
-                  <button type="submit" className="btn btn-sm btn-warning fw-bold text-dark">
+                  <button type="submit" className="btn btn-sm btn-warning fw-bold text-white">
                     Guardar Cátedra
                   </button>
                 </div>
@@ -678,14 +746,14 @@ export const RepositorioDigitalView: React.FC = () => {
       {modalPrevisualizar && documentoSeleccionado && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.92)', zIndex: 1060 }}>
           <div className="modal-dialog modal-fullscreen p-3">
-            <div className="modal-content bg-dark text-white border-secondary d-flex flex-column h-100">
+            <div className={`modal-content border-secondary d-flex flex-column h-100 ${textColor}`} style={{ backgroundColor: cardBg }}>
               <div className="modal-header border-secondary py-2">
                 <h5 className="modal-title font-monospace fw-bold text-info">
                   Previsualización: {documentoSeleccionado.titulo}
                 </h5>
                 <button
                   type="button"
-                  className="btn-close btn-close-white"
+                  className={`btn-close ${isDarkMode ? 'btn-close-white' : ''}`}
                   onClick={() => setModalPrevisualizar(false)}
                 ></button>
               </div>
@@ -713,7 +781,7 @@ export const RepositorioDigitalView: React.FC = () => {
                       href={repositorioService.getUrlArchivo(documentoSeleccionado.urlArchivoLocal)}
                       target="_blank"
                       rel="noreferrer"
-                      className="btn btn-outline-info mt-2"
+                      className="btn btn-outline-info mt-2 text-white"
                     >
                       Descargar / Abrir Archivo
                     </a>

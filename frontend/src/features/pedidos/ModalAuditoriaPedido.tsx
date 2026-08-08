@@ -53,18 +53,18 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedi
                       Pago Vinculada a Cuenta Corriente
                     </div>
                     <button 
-                      type="button" 
-                      className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1"
-                      style={{ backgroundColor: '#198d43', border: 'none', borderRadius: '6px', fontSize: '0.75rem', padding: '4px 10px' }}
-                      onClick={() => {
-                        if (onAbrirCuentaCorriente) {
-                          onAbrirCuentaCorriente(pedido.cliente);
-                        }
-                      }}
-                      title="Ver detalle de Cuenta Corriente del Cliente"
-                    >
-                      <i className="bi bi-wallet2"></i> Ver Cuenta Corriente
-                    </button>
+  type="button" 
+  className="btn btn-sm fw-bold d-flex align-items-center gap-1"
+  style={{ backgroundColor: '#198d43', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', padding: '4px 10px' }}
+  onClick={() => {
+    if (onAbrirCuentaCorriente) {
+      onAbrirCuentaCorriente(pedido.cliente);
+    }
+  }}
+  title="Ver detalle de Cuenta Corriente del Cliente"
+>
+  <i className="bi bi-wallet2"></i> Ver Cuenta Corriente
+</button>
                   </div>
                 )}
 

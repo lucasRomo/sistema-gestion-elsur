@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import type { Maquina } from '../../types/Maquina';
 import type { Incidencia, Empleado } from '../../types/Incidencia';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface Props {
   show: boolean;
@@ -10,24 +11,37 @@ interface Props {
 }
 
 export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maquinaProp, onClose, onIncidenciaResuelta }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // Variables de tema
+  const modalBg = isDark ? '#1e1e24' : '#ffffff';
+  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const textColor = isDark ? '#ffffff' : '#0f172a';
+  const textSubtle = isDark ? '#a1a1aa' : '#64748b';
+  const cardBg = isDark ? '#18181b' : '#f8fafc';
+  const cardSectionBg = isDark ? '#27272a' : '#f1f5f9';
+  const inputBg = isDark ? '#121214' : '#ffffff';
+  const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
+
   const [maquina, setMaquina] = useState<Maquina | null>(maquinaProp);
   const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
   const [cargando, setCargando] = useState(false);
 
-  // Formularios en línea para cambios de estado
+  // Formularios en línea
   const [idAccionActiva, setIdAccionActiva] = useState<number | null>(null);
   const [tipoAccion, setTipoAccion] = useState<'MANTENIMIENTO' | 'RESOLVER' | null>(null);
   const [textoNota, setTextoNota] = useState('');
   const [errorValidacion, setErrorValidacion] = useState('');
 
-  // Modal para Registro de Pago de Arreglo
+  // Pago de Arreglo
   const [incidenciaAPagar, setIncidenciaAPagar] = useState<Incidencia | null>(null);
   const [montoPago, setMontoPago] = useState('');
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [conceptoPago, setConceptoPago] = useState('');
   const [procesandoPago, setProcesandoPago] = useState(false);
 
-  // Modal de advertencia por saldo insuficiente
+  // Advertencia saldo insuficiente
   const [showModalSaldoInsuficiente, setShowModalSaldoInsuficiente] = useState(false);
   const [mensajeErrorSaldo, setMensajeErrorSaldo] = useState('');
 
@@ -209,29 +223,29 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-xl modal-dialog-centered">
-        <div className="modal-content" style={{ backgroundColor: '#1e1e24', color: '#ffffff', borderRadius: '12px', border: '1px solid #3f3f46' }}>
+        <div className="modal-content" style={{ backgroundColor: modalBg, color: textColor, borderRadius: '12px', border: `1px solid ${modalBorder}` }}>
           
           {/* Header */}
-          <div className="modal-header d-flex justify-content-between align-items-center" style={{ borderBottom: '2px solid #3f3f46', padding: '16px 24px' }}>
+          <div className="modal-header d-flex justify-content-between align-items-center" style={{ borderBottom: `2px solid ${modalBorder}`, padding: '16px 24px' }}>
             <div className="d-flex align-items-center gap-3">
-              <h5 className="modal-title font-monospace fw-bold text-white mb-0 d-flex align-items-center gap-2">
+              <h5 className="modal-title font-monospace fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: textColor }}>
                 <i className="bi bi-clock-history text-info"></i>
                 Historial de Incidencias: <span className="text-warning">{maquina.nombre}</span>
               </h5>
               {renderBadgeEstado(maquina.estado)}
             </div>
-            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
+            <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose}></button>
           </div>
 
           {/* Body */}
           <div className="modal-body p-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
             {cargando ? (
-              <div className="text-center py-5 text-white-50 font-monospace">
+              <div className="text-center py-5 font-monospace" style={{ color: textSubtle }}>
                 <div className="spinner-border spinner-border-sm me-2" role="status"></div>
                 Cargando historial de incidencias...
               </div>
             ) : incidencias.length === 0 ? (
-              <div className="text-center py-5 text-white-50 font-monospace" style={{ backgroundColor: '#27272a', borderRadius: '8px', border: '1px solid #3f3f46' }}>
+              <div className="text-center py-5 font-monospace" style={{ backgroundColor: cardSectionBg, borderRadius: '8px', border: `1px solid ${modalBorder}`, color: textSubtle }}>
                 <i className="bi bi-check-circle-fill text-success fs-2 d-block mb-2"></i>
                 Sin registros técnicos para este equipo.
               </div>
@@ -241,20 +255,18 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                   const esResuelta = inc.estadoIncidencia === 'RESUELTA';
                   const tieneMantenimiento = Boolean(inc.notaMantenimiento);
                   const esMantenimientoActivo = !esResuelta && (maquina.estado === 'MANTENIMIENTO' || tieneMantenimiento);
-                  
-                  // Se lee directamente la bandera persistida en la BD
                   const esPagado = Boolean(inc.pagado);
 
                   return (
                     <div 
                       key={inc.idIncidencia} 
                       className="p-3 rounded-3 shadow" 
-                      style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}
+                      style={{ backgroundColor: cardBg, border: `1px solid ${modalBorder}` }}
                     >
                       {/* Cabecera Tarjeta */}
-                      <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary">
+                      <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style={{ borderColor: modalBorder }}>
                         <div className="d-flex align-items-center gap-2">
-                          <span className="fw-bold font-monospace text-white-50">Incidencia #{inc.idIncidencia}</span>
+                          <span className="fw-bold font-monospace" style={{ color: textSubtle }}>Incidencia #{inc.idIncidencia}</span>
                           <span className={`badge ${
                             inc.prioridad === 'CRITICA' || inc.prioridad === 'ALTA' ? 'bg-danger' :
                             inc.prioridad === 'MEDIA' ? 'bg-warning text-dark' : 'bg-info text-dark'
@@ -264,7 +276,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                         </div>
                         <div className="d-flex align-items-center gap-2">
                           
-                          {/* BOTÓN BASADO EN LA BD */}
                           {esPagado ? (
                             <span 
                               className="bg-success text-white font-semibold px-2 py-1 rounded flex items-center gap-1 fw-bold"
@@ -300,7 +311,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                         {/* ETAPA 1: REPORTADO / FALLA */}
                         <div className="col-md-4">
                           <div className="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style={{ 
-                            backgroundColor: '#27272a', 
+                            backgroundColor: cardSectionBg, 
                             borderLeft: '4px solid #dc3545'
                           }}>
                             <div>
@@ -308,17 +319,17 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                                 <span className="badge bg-danger d-flex align-items-center gap-1">
                                   <i className="bi bi-exclamation-octagon-fill"></i> 1. REPORTADO
                                 </span>
-                                <small className="text-white-50" style={{ fontSize: '0.72rem' }}>
+                                <small style={{ color: textSubtle, fontSize: '0.72rem' }}>
                                   {inc.fechaReporte ? new Date(inc.fechaReporte).toLocaleString() : '-'}
                                 </small>
                               </div>
-                              <p className="mb-2 text-white fw-medium" style={{ fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>
+                              <p className="mb-2 fw-medium" style={{ fontSize: '0.85rem', whiteSpace: 'pre-wrap', color: textColor }}>
                                 {inc.descripcion}
                               </p>
                             </div>
-                            <div className="text-white-50 small pt-2 border-top border-secondary mt-2" style={{ fontSize: '0.75rem' }}>
+                            <div className="small pt-2 border-top mt-2" style={{ borderColor: modalBorder, fontSize: '0.75rem', color: textSubtle }}>
                               <i className="bi bi-person-fill text-warning me-1"></i>
-                              Reportó: <strong className="text-white">{formatEmpleado(inc.empleadoReporta, 'Sistema')}</strong>
+                              Reportó: <strong style={{ color: textColor }}>{formatEmpleado(inc.empleadoReporta, 'Sistema')}</strong>
                             </div>
                           </div>
                         </div>
@@ -326,7 +337,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                         {/* ETAPA 2: NOTA DE MANTENIMIENTO */}
                         <div className="col-md-4">
                           <div className="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style={{ 
-                            backgroundColor: '#27272a', 
+                            backgroundColor: cardSectionBg, 
                             borderLeft: `4px solid ${tieneMantenimiento || esMantenimientoActivo ? '#ffc107' : '#6c757d'}`
                           }}>
                             <div>
@@ -334,7 +345,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                                 <span className={`badge ${tieneMantenimiento || esMantenimientoActivo ? 'bg-warning text-dark' : 'bg-secondary'} d-flex align-items-center gap-1`}>
                                   <i className="bi bi-tools"></i> 2. MANTENIMIENTO
                                 </span>
-                                <small className="text-white-50" style={{ fontSize: '0.72rem' }}>
+                                <small style={{ color: textSubtle, fontSize: '0.72rem' }}>
                                   {inc.fechaMantenimiento ? new Date(inc.fechaMantenimiento).toLocaleString() : (esResuelta ? 'COMPLETADO' : 'PENDIENTE')}
                                 </small>
                               </div>
@@ -342,7 +353,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                               {idAccionActiva === inc.idIncidencia && tipoAccion === 'MANTENIMIENTO' ? (
                                 <div className="mt-1">
                                   <textarea
-                                    className="form-control form-control-sm bg-dark text-white border-secondary mb-2"
+                                    className="form-control form-control-sm mb-2"
+                                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                                     rows={2}
                                     value={textoNota}
                                     onChange={(e) => {
@@ -353,7 +365,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                                   />
                                   {errorValidacion && <small className="text-danger d-block mb-1">{errorValidacion}</small>}
                                   <div className="d-flex gap-1 justify-content-end">
-                                    <button className="btn btn-xs btn-outline-light py-0 px-2" onClick={limpiarFormulario}>Cancelar</button>
+                                    <button className={`btn btn-xs ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'} py-0 px-2`} onClick={limpiarFormulario}>Cancelar</button>
                                     <button className="btn btn-xs btn-warning fw-bold text-dark py-0 px-2" onClick={() => handlePonerEnMantenimiento(inc.idIncidencia!)}>Guardar</button>
                                   </div>
                                 </div>
@@ -362,33 +374,32 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                                   {inc.notaMantenimiento}
                                 </p>
                               ) : maquina.estado === 'OPERATIVA' ? (
-                                /* VALIDACIÓN: SI ESTÁ EN OPERATIVA NO SE PUEDE PONER EN MANTENIMIENTO */
                                 <div className="text-center py-2">
-                                  <span className="badge bg-secondary text-white-50 p-2 d-block">
+                                  <span className="badge bg-secondary p-2 d-block" style={{ color: textSubtle }}>
                                     <i className="bi bi-info-circle me-1"></i> Se pasó a operativo. No requiere mantenimiento.
                                   </span>
                                 </div>
                               ) : (
                                 <div className="text-center py-2">
-                                  <button
-                                    className="btn btn-outline-warning btn-sm fw-bold px-2 py-1 shadow"
-                                    style={{ fontSize: '0.78rem' }}
-                                    onClick={() => {
-                                      setIdAccionActiva(inc.idIncidencia!);
-                                      setTipoAccion('MANTENIMIENTO');
-                                      setTextoNota('');
-                                      setErrorValidacion('');
-                                    }}
-                                  >
-                                    <i className="bi bi-tools me-1"></i> Pasar a Mantenimiento
-                                  </button>
-                                </div>
+  <button
+    className="btn btn-warning text-dark fw-bold btn-sm px-3 py-1 shadow"
+    style={{ fontSize: '0.78rem' }}
+    onClick={() => {
+      setIdAccionActiva(inc.idIncidencia!);
+      setTipoAccion('MANTENIMIENTO');
+      setTextoNota('');
+      setErrorValidacion('');
+    }}
+  >
+    <i className="bi bi-tools me-1"></i> Pasar a Mantenimiento
+  </button>
+</div>
                               )}
                             </div>
 
-                            <div className="text-white-50 small pt-2 border-top border-secondary mt-2" style={{ fontSize: '0.75rem' }}>
+                            <div className="small pt-2 border-top mt-2" style={{ borderColor: modalBorder, fontSize: '0.75rem', color: textSubtle }}>
                               <i className="bi bi-gear-fill text-info me-1"></i>
-                              Técnico: <strong className="text-white">{formatEmpleado(inc.empleadoMantenimiento, 'En taller')}</strong>
+                              Técnico: <strong style={{ color: textColor }}>{formatEmpleado(inc.empleadoMantenimiento, 'En taller')}</strong>
                             </div>
                           </div>
                         </div>
@@ -396,7 +407,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                         {/* ETAPA 3: RESOLUCIÓN / ALTA */}
                         <div className="col-md-4">
                           <div className="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style={{ 
-                            backgroundColor: '#27272a', 
+                            backgroundColor: cardSectionBg, 
                             borderLeft: `4px solid ${esResuelta ? '#20c997' : '#6c757d'}`
                           }}>
                             <div>
@@ -405,7 +416,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                                   <i className="bi bi-check-circle-fill"></i> 3. ALTA OPERATIVA
                                 </span>
                                 {esResuelta && (
-                                  <small className="text-white-50" style={{ fontSize: '0.72rem' }}>
+                                  <small style={{ color: textSubtle, fontSize: '0.72rem' }}>
                                     {inc.fechaResolucion ? new Date(inc.fechaResolucion).toLocaleString() : '-'}
                                   </small>
                                 )}
@@ -414,7 +425,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                               {idAccionActiva === inc.idIncidencia && tipoAccion === 'RESOLVER' ? (
                                 <div className="mt-1">
                                   <textarea
-                                    className="form-control form-control-sm bg-dark text-white border-secondary mb-2"
+                                    className="form-control form-control-sm mb-2"
+                                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                                     rows={2}
                                     value={textoNota}
                                     onChange={(e) => {
@@ -425,7 +437,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                                   />
                                   {errorValidacion && <small className="text-danger d-block mb-1">{errorValidacion}</small>}
                                   <div className="d-flex gap-1 justify-content-end">
-                                    <button className="btn btn-xs btn-outline-light py-0 px-2" onClick={limpiarFormulario}>Cancelar</button>
+                                    <button className={`btn btn-xs ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'} py-0 px-2`} onClick={limpiarFormulario}>Cancelar</button>
                                     <button className="btn btn-xs btn-success fw-bold py-0 px-2" onClick={() => handleResolver(inc.idIncidencia!)}>Dar Alta</button>
                                   </div>
                                 </div>
@@ -451,9 +463,9 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                               )}
                             </div>
 
-                            <div className="text-white-50 small pt-2 border-top border-secondary mt-2" style={{ fontSize: '0.75rem' }}>
+                            <div className="small pt-2 border-top mt-2" style={{ borderColor: modalBorder, fontSize: '0.75rem', color: textSubtle }}>
                               <i className="bi bi-wrench-adjustable text-success me-1"></i>
-                              Resuelto por: <strong className="text-white">{formatEmpleado(inc.empleadoResuelve, 'Pendiente')}</strong>
+                              Resuelto por: <strong style={{ color: textColor }}>{formatEmpleado(inc.empleadoResuelve, 'Pendiente')}</strong>
                             </div>
                           </div>
                         </div>
@@ -466,8 +478,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
             )}
           </div>
 
-          <div className="modal-footer" style={{ borderTop: '1px solid #3f3f46', padding: '12px 24px' }}>
-            <button type="button" className="btn btn-outline-light font-monospace" onClick={onClose}>
+          <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}`, padding: '12px 24px' }}>
+            <button type="button" className={`btn ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'} font-monospace`} onClick={onClose}>
               Cerrar
             </button>
           </div>
@@ -475,19 +487,19 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
         </div>
       </div>
 
-      {/* --- MODAL PARA REGISTRAR PAGO DE MANTENIMIENTO --- */}
+      {/* --- MODAL REGISTRO DE PAGO --- */}
       {incidenciaAPagar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1100 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content text-white font-monospace" style={{ backgroundColor: '#18181b', border: '1px solid #dc3545', borderRadius: '12px' }}>
-              <div className="modal-header border-bottom border-secondary">
+            <div className="modal-content font-monospace" style={{ backgroundColor: modalBg, color: textColor, border: '1px solid #dc3545', borderRadius: '12px' }}>
+              <div className="modal-header" style={{ borderBottom: `1px solid ${modalBorder}` }}>
                 <h5 className="modal-title fw-bold text-danger">
                   <i className="bi bi-cash-stack me-2"></i>Registrar Egreso por Mantenimiento
                 </h5>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setIncidenciaAPagar(null)}></button>
+                <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setIncidenciaAPagar(null)}></button>
               </div>
               <div className="modal-body">
-                <p className="small text-white-50 mb-3">
+                <p className="small mb-3" style={{ color: textSubtle }}>
                   Este egreso quedará categorizado como <strong className="text-warning">"EGRESO_MANTENIMIENTO"</strong> e impactará directamente sobre el saldo del turno de caja activo.
                 </p>
 
@@ -497,7 +509,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                     type="number"
                     step="0.01"
                     min="1"
-                    className="form-control bg-dark text-white border-secondary fs-5"
+                    className="form-control fs-5"
+                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                     value={montoPago}
                     onChange={(e) => setMontoPago(e.target.value)}
                     placeholder="0.00"
@@ -508,7 +521,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                 <div className="mb-3">
                   <label className="form-label fw-bold">Medio de Pago:</label>
                   <select
-                    className="form-select bg-dark text-white border-secondary"
+                    className="form-select"
+                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                     value={metodoPago}
                     onChange={(e) => setMetodoPago(e.target.value)}
                   >
@@ -523,15 +537,16 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                   <label className="form-label fw-bold">Concepto / Detalle:</label>
                   <input
                     type="text"
-                    className="form-control bg-dark text-white border-secondary"
+                    className="form-control"
+                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                     value={conceptoPago}
                     onChange={(e) => setConceptoPago(e.target.value)}
                   />
                 </div>
               </div>
 
-              <div className="modal-footer border-top border-secondary">
-                <button type="button" className="btn btn-outline-light" onClick={() => setIncidenciaAPagar(null)} disabled={procesandoPago}>
+              <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
+                <button type="button" className={`btn ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'}`} onClick={() => setIncidenciaAPagar(null)} disabled={procesandoPago}>
                   Cancelar
                 </button>
                 <button type="button" className="btn btn-danger fw-bold px-4" onClick={() => ejecutarPagoMantenimiento(false)} disabled={procesandoPago}>
@@ -547,24 +562,24 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
       {showModalSaldoInsuficiente && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1200 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content text-white font-monospace" style={{ backgroundColor: '#18181b', border: '1px solid #ffc107', borderRadius: '12px' }}>
-              <div className="modal-header border-bottom border-secondary">
+            <div className="modal-content font-monospace" style={{ backgroundColor: modalBg, color: textColor, border: '1px solid #ffc107', borderRadius: '12px' }}>
+              <div className="modal-header" style={{ borderBottom: `1px solid ${modalBorder}` }}>
                 <h5 className="modal-title fw-bold text-warning">
                   <i className="bi bi-exclamation-triangle-fill me-2"></i>Saldo en Caja Insuficiente
                 </h5>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setShowModalSaldoInsuficiente(false)}></button>
+                <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setShowModalSaldoInsuficiente(false)}></button>
               </div>
               <div className="modal-body py-4">
-                <p className="text-white">{mensajeErrorSaldo}</p>
-                <p className="small text-white-50 m-0">
+                <p style={{ color: textColor }}>{mensajeErrorSaldo}</p>
+                <p className="small m-0" style={{ color: textSubtle }}>
                   ¿Desea autorizar y registrar este egreso de todos modos dejando la caja en negativo?
                 </p>
               </div>
-              <div className="modal-footer border-top border-secondary">
+              <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
                 <button type="button" className="btn btn-secondary px-3" onClick={() => setShowModalSaldoInsuficiente(false)} disabled={procesandoPago}>
                   Cancelar
                 </button>
-                <button type="button" className="btn btn-warning fw-bold text-dark px-4" onClick={() => ejecutarPagoMantenimiento(true)} disabled={procesandoPago}>
+                <button type="button" className="btn btn-warning fw-bold text-white px-4" style={{ color: '#ffffff' }} onClick={() => ejecutarPagoMantenimiento(true)} disabled={procesandoPago}>
                   {procesandoPago ? 'Procesando...' : 'Aceptar igual'}
                 </button>
               </div>

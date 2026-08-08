@@ -1,99 +1,76 @@
-import React, { useState } from 'react';
-import type { Cliente } from '../../types/Cliente';
+import React from 'react';
+import { useTheme } from '../../Context/ThemeContext';
 
-export const ClienteForm = ({ onGuardar, onVolver }: { onGuardar: () => void, onVolver: () => void }) => {
-  const [paso, setPaso] = useState(1);
-  
-  // Estado inicial ajustado para coincidir con la entidad Java
-  const [formData, setFormData] = useState<Cliente>({
-    razonSocial: '', 
-    saldoDeudor: 0, 
-    limiteCredito: 0, 
-    estado: 'Activo',
-    personaDeContacto: '', 
-    condicionDePago: 'Efectivo',
-    persona: { 
-      nombre: '', 
-      apellido: '', 
-      email: '', 
-      numeroDocumento: '', 
-      telefono: '',
-      tipoDocumento: { idTipoDocumento: 1 },
-      tipoPersona: { idTipoPersona: 1 },
-      direccion: { calle: '', numero: '', ciudad: '', provincia: '', pais: 'Argentina', codigoPostal: '' }
-    }
-  });
+interface UsuariosFiltrosProps {
+  filtroTexto: string;
+  setFiltroTexto: (val: string) => void;
+  filtroEstado: string;
+  setFiltroEstado: (val: string) => void;
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Construimos el objeto plano y limpio que el backend espera
-    const payload = {
-      ...formData,
-      persona: {
-        ...formData.persona,
-        tipoDocumento: { idTipoDocumento: formData.persona.tipoDocumento.idTipoDocumento },
-        tipoPersona: { idTipoPersona: formData.persona.tipoPersona.idTipoPersona }
-      }
-    };
+export const UsuariosFiltros: React.FC<UsuariosFiltrosProps> = ({
+  filtroTexto,
+  setFiltroTexto,
+  filtroEstado,
+  setFiltroEstado,
+}) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
-    try {
-      const res = await fetch('http://localhost:8080/api/clientes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      if (res.ok) {
-        onGuardar();
-      } else {
-        const errorText = await res.text();
-        alert("Error al guardar: " + errorText);
-      }
-    } catch (err) {
-      console.error("Error de red:", err);
-      alert("Error al conectar con el servidor.");
-    }
-  };
+  // Contenedor adaptativo alineado al diseño de ClientesFiltros
+  const containerBg = isDark ? '#1d1d1d' : '#ffffff';
+  const containerBorder = isDark ? '#2d2d30' : '#e2e8f0';
+  const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
+  const inputBg = isDark ? '#121214' : '#ffffff';
+  const inputTextColor = isDark ? '#ffffff' : '#0f172a';
+  const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
 
   return (
-    <form onSubmit={handleSubmit} className="text-white p-3">
-      {paso === 1 && (
-        <div className="row g-3">
-          <h5>1. Datos Personales</h5>
-          <div className="col-6"><label>Nombre</label><input className="form-control" value={formData.persona.nombre} onChange={e => setFormData({...formData, persona: {...formData.persona, nombre: e.target.value}})} required/></div>
-          <div className="col-6"><label>Apellido</label><input className="form-control" value={formData.persona.apellido} onChange={e => setFormData({...formData, persona: {...formData.persona, apellido: e.target.value}})} required/></div>
-          <div className="col-6"><label>Email</label><input type="email" className="form-control" value={formData.persona.email} onChange={e => setFormData({...formData, persona: {...formData.persona, email: e.target.value}})} /></div>
-          <div className="col-6"><label>Teléfono</label><input className="form-control" value={formData.persona.telefono} onChange={e => setFormData({...formData, persona: {...formData.persona, telefono: e.target.value}})} /></div>
-        </div>
-      )}
-
-      {paso === 2 && (
-        <div className="row g-3">
-          <h5>2. Ubicación</h5>
-          <div className="col-6"><label>Calle</label><input className="form-control" value={formData.persona.direccion.calle} onChange={e => setFormData({...formData, persona: {...formData.persona, direccion: {...formData.persona.direccion, calle: e.target.value}}})} /></div>
-          <div className="col-2"><label>Nro</label><input className="form-control" value={formData.persona.direccion.numero} onChange={e => setFormData({...formData, persona: {...formData.persona, direccion: {...formData.persona.direccion, numero: e.target.value}}})} /></div>
-          <div className="col-4"><label>Ciudad</label><input className="form-control" value={formData.persona.direccion.ciudad} onChange={e => setFormData({...formData, persona: {...formData.persona, direccion: {...formData.persona.direccion, ciudad: e.target.value}}})} /></div>
-        </div>
-      )}
-
-      {paso === 3 && (
-        <div className="row g-3">
-          <h5>3. Datos Comerciales</h5>
-          <div className="col-6"><label>Razón Social</label><input className="form-control" value={formData.razonSocial} onChange={e => setFormData({...formData, razonSocial: e.target.value})} /></div>
-          <div className="col-6"><label>Condición de Pago</label>
-            <select className="form-select" value={formData.condicionDePago} onChange={e => setFormData({...formData, condicionDePago: e.target.value})}>
-              <option value="Efectivo">Efectivo</option>
-              <option value="Credito">Crédito</option>
-            </select>
-          </div>
-        </div>
-      )}
-
-      <div className="d-flex justify-content-between mt-4">
-        {paso > 1 ? <button type="button" className="btn btn-secondary" onClick={() => setPaso(paso - 1)}>Anterior</button> : <button type="button" className="btn btn-danger" onClick={onVolver}>Cancelar</button>}
-        {paso < 3 ? <button type="button" className="btn btn-primary" onClick={() => setPaso(paso + 1)}>Siguiente</button> : <button type="submit" className="btn btn-success">Finalizar</button>}
+    <div 
+      className="row g-3 align-items-center mb-4 p-3 rounded shadow-sm" 
+      style={{ 
+        backgroundColor: containerBg, 
+        border: `1px solid ${containerBorder}`,
+        transition: 'all 0.2s ease-in-out'
+      }}
+    >
+      <div className="col-md-6">
+        <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
+          Filtrar por Usuario / Nombre / Apellido:
+        </label>
+        <input 
+          type="text"
+          className="form-control py-2 font-monospace"
+          style={{ 
+            backgroundColor: inputBg, 
+            borderColor: inputBorder,
+            color: inputTextColor 
+          }}
+          placeholder="Buscar..." 
+          value={filtroTexto}
+          onChange={(e) => setFiltroTexto(e.target.value)}
+        />
       </div>
-    </form>
+      <div className="col-md-6">
+        <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
+          Filtrar por Estado:
+        </label>
+        <select 
+          className="form-select py-2 font-monospace" 
+          style={{ 
+            backgroundColor: inputBg, 
+            borderColor: inputBorder,
+            color: inputTextColor
+          }}
+          value={filtroEstado} 
+          onChange={(e) => setFiltroEstado(e.target.value)}
+        >
+          <option value="Sin Filtro" style={{ backgroundColor: inputBg, color: inputTextColor }}>Sin Filtro</option>
+          <option value="Activo" style={{ backgroundColor: inputBg, color: inputTextColor }}>Activo</option>
+          <option value="Desactivado" style={{ backgroundColor: inputBg, color: inputTextColor }}>Desactivado</option>
+          <option value="Pendiente" style={{ backgroundColor: inputBg, color: inputTextColor }}>Pendiente</option>
+        </select>
+      </div>
+    </div>
   );
 };

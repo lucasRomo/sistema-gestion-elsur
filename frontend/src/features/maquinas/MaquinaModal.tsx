@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Maquina } from '../../types/Maquina';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface Props {
   show: boolean;
@@ -9,6 +10,18 @@ interface Props {
 }
 
 export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, onGuardar }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // Variables de tema
+  const modalBg = isDark ? '#1e1e24' : '#ffffff';
+  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const textColor = isDark ? '#ffffff' : '#0f172a';
+  const textSubtle = isDark ? '#a1a1aa' : '#64748b';
+  const inputBg = isDark ? '#121214' : '#ffffff';
+  const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const noteBoxBg = isDark ? '#27272a' : '#f8fafc';
+
   const [nombre, setNombre] = useState('');
   const [estado, setEstado] = useState('OPERATIVA');
   const [observacion, setObservacion] = useState('');
@@ -31,7 +44,6 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
 
   if (!show) return null;
 
-  // Detecta si se cambió el estado respecto al original
   const haCambiadoEstado = Boolean(maquinaEditar && maquinaEditar.estado !== estado);
 
   const procesarGuardado = async () => {
@@ -61,13 +73,11 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
       return;
     }
 
-    // Validación estricta: si cambió el estado, exige el mensaje
     if (haCambiadoEstado && !observacion.trim()) {
       setErrorValidacion("Es obligatorio describir el motivo del cambio de estado o la solución aplicada.");
       return;
     }
 
-    // Advertencia si pasa a OPERATIVA directo desde FALLA o FUERA DE SERVICIO sin pasar por MANTENIMIENTO
     if (
       haCambiadoEstado &&
       maquinaEditar?.estado !== 'MANTENIMIENTO' &&
@@ -85,20 +95,19 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
     <>
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content text-white border-secondary" style={{ backgroundColor: '#1e1e24', borderRadius: '12px' }}>
+          <div className="modal-content" style={{ backgroundColor: modalBg, color: textColor, borderRadius: '12px', border: `1px solid ${modalBorder}` }}>
             
-            <div className="modal-header border-secondary">
+            <div className="modal-header" style={{ borderBottom: `1px solid ${modalBorder}` }}>
               <h5 className="modal-title font-monospace fw-bold text-warning">
                 <i className="bi bi-printer me-2"></i>
                 {maquinaEditar ? 'Modificar Equipo' : 'Nuevo Equipo'}
               </h5>
-              <button type="button" className="btn-close btn-close-white" onClick={onClose} disabled={cargando}></button>
+              <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose} disabled={cargando}></button>
             </div>
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body font-monospace">
                 
-                {/* Alerta de Error de Validación */}
                 {errorValidacion && (
                   <div className="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-3">
                     <i className="bi bi-exclamation-triangle-fill"></i>
@@ -107,10 +116,11 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
                 )}
 
                 <div className="mb-3">
-                  <label className="form-label text-light">Nombre del Equipo / Máquina:</label>
+                  <label className="form-label" style={{ color: textColor }}>Nombre del Equipo / Máquina:</label>
                   <input
                     type="text"
-                    className="form-control bg-dark text-white border-secondary"
+                    className="form-control"
+                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                     placeholder="Ej: Impresora Láser Ricoh C5300"
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
@@ -119,9 +129,10 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label text-light">Estado Actual:</label>
+                  <label className="form-label" style={{ color: textColor }}>Estado Actual:</label>
                   <select
-                    className="form-select bg-dark text-white border-secondary"
+                    className="form-select"
+                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                     value={estado}
                     onChange={(e) => {
                       setEstado(e.target.value);
@@ -135,14 +146,14 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
                   </select>
                 </div>
 
-                {/* Mensaje obligatorio al cambiar el estado */}
                 {haCambiadoEstado && (
-                  <div className="p-3 mb-3 rounded" style={{ backgroundColor: '#27272a', border: '1px solid #ffc107' }}>
+                  <div className="p-3 mb-3 rounded" style={{ backgroundColor: noteBoxBg, border: '1px solid #ffc107' }}>
                     <label className="form-label text-warning fw-bold small mb-1">
                       <i className="bi bi-pencil-square me-1"></i> Detalle / Motivo del cambio de estado (Obligatorio):
                     </label>
                     <textarea
-                      className="form-control bg-dark text-white border-secondary"
+                      className="form-control"
+                      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                       rows={3}
                       placeholder="Escriba detalladamente qué se arregló, motivo del cambio o repuestos cambiados..."
                       value={observacion}
@@ -152,7 +163,7 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
                       }}
                       required
                     />
-                    <small className="text-white-50 d-block mt-1" style={{ fontSize: '0.78rem' }}>
+                    <small className="d-block mt-1" style={{ fontSize: '0.78rem', color: textSubtle }}>
                       * El estado cambiará de <strong>"{maquinaEditar?.estado}"</strong> a <strong>"{estado}"</strong>.
                     </small>
                   </div>
@@ -160,11 +171,11 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
 
               </div>
 
-              <div className="modal-footer border-secondary">
-                <button type="button" className="btn btn-outline-secondary" onClick={onClose} disabled={cargando}>
+              <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
+                <button type="button" className={`btn ${isDark ? 'btn-outline-secondary' : 'btn-outline-dark'}`} onClick={onClose} disabled={cargando}>
                   Cancelar
                 </button>
-                <button type="submit" className="btn btn-warning fw-bold px-4 text-dark" disabled={cargando}>
+                <button type="submit" className="btn btn-warning fw-bold px-4 text-white" style={{ color: '#ffffff' }} disabled={cargando}>
                   {cargando ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
@@ -178,26 +189,26 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
       {confirmarSinMantenimiento && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1100 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content text-white border-warning font-monospace" style={{ backgroundColor: '#18181b', borderRadius: '12px' }}>
-              <div className="modal-header border-secondary">
+            <div className="modal-content border-warning font-monospace" style={{ backgroundColor: modalBg, color: textColor, borderRadius: '12px', border: `1px solid ${modalBorder}` }}>
+              <div className="modal-header" style={{ borderBottom: `1px solid ${modalBorder}` }}>
                 <h5 className="modal-title fw-bold text-warning">
                   <i className="bi bi-exclamation-triangle-fill me-2"></i>Advertencia de Cambio Directo
                 </h5>
-                <button type="button" className="btn-close btn-close-white" onClick={() => setConfirmarSinMantenimiento(false)} disabled={cargando}></button>
+                <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setConfirmarSinMantenimiento(false)} disabled={cargando}></button>
               </div>
               <div className="modal-body py-3">
                 <p className="mb-2">
                   El equipo pasará directamente a <strong className="text-success">OPERATIVA</strong> sin haber quedado registrado un ciclo previo de <strong className="text-warning">MANTENIMIENTO</strong>.
                 </p>
-                <p className="small text-white-50 mb-0">
+                <p className="small mb-0" style={{ color: textSubtle }}>
                   ¿Desea confirmar el cambio y dar el alta directa?
                 </p>
               </div>
-              <div className="modal-footer border-secondary">
-                <button type="button" className="btn btn-outline-light" onClick={() => setConfirmarSinMantenimiento(false)} disabled={cargando}>
+              <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
+                <button type="button" className={`btn ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'}`} onClick={() => setConfirmarSinMantenimiento(false)} disabled={cargando}>
                   Cancelar
                 </button>
-                <button type="button" className="btn btn-warning fw-bold text-dark px-4" onClick={procesarGuardado} disabled={cargando}>
+                <button type="button" className="btn btn-warning fw-bold text-white px-4" style={{ color: '#ffffff' }} onClick={procesarGuardado} disabled={cargando}>
                   {cargando ? 'Guardando...' : 'Confirmar y Pasar a Operativa'}
                 </button>
               </div>

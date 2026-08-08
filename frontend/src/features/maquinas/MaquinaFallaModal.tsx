@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Maquina } from '../../types/Maquina';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface Props {
   show: boolean;
@@ -9,6 +10,17 @@ interface Props {
 }
 
 export const MaquinaFallaModal: React.FC<Props> = ({ show, maquinas, onClose, onReportarFalla }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // Variables de tema
+  const modalBg = isDark ? '#1e1e24' : '#ffffff';
+  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const textColor = isDark ? '#ffffff' : '#0f172a';
+  const textSubtle = isDark ? '#a1a1aa' : '#64748b';
+  const inputBg = isDark ? '#121214' : '#ffffff';
+  const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
+
   const [selectedId, setSelectedId] = useState<number | ''>('');
   const [descripcion, setDescripcion] = useState('');
   const [prioridad, setPrioridad] = useState('MEDIA');
@@ -42,25 +54,26 @@ export const MaquinaFallaModal: React.FC<Props> = ({ show, maquinas, onClose, on
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content border-danger" style={{ backgroundColor: '#1e1e24', color: '#ffffff', borderRadius: '12px' }}>
+        <div className="modal-content border-danger" style={{ backgroundColor: modalBg, color: textColor, borderRadius: '12px', border: `1px solid ${modalBorder}` }}>
           
-          <div className="modal-header border-secondary">
+          <div className="modal-header" style={{ borderBottom: `1px solid ${modalBorder}` }}>
             <h5 className="modal-title font-monospace fw-bold text-danger">
               <i className="bi bi-exclamation-triangle-fill me-2"></i>Reportar Falla Técnica
             </h5>
-            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
+            <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose}></button>
           </div>
 
           <form onSubmit={handleSubmit}>
             <div className="modal-body font-monospace">
-              <p className="text-white-50 small mb-3">
+              <p className="small mb-3" style={{ color: textSubtle }}>
                 Al registrar la incidencia, la máquina cambiará a <strong className="text-danger">"Fuera de Servicio"</strong> y el evento quedará guardado para reportes.
               </p>
 
               <div className="mb-3">
-                <label className="form-label text-white fw-bold">Seleccionar Equipo:</label>
+                <label className="form-label fw-bold" style={{ color: textColor }}>Seleccionar Equipo:</label>
                 <select
-                  className="form-select bg-dark text-white border-secondary"
+                  className="form-select"
+                  style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                   value={selectedId}
                   onChange={(e) => setSelectedId(Number(e.target.value))}
                   required
@@ -75,9 +88,10 @@ export const MaquinaFallaModal: React.FC<Props> = ({ show, maquinas, onClose, on
               </div>
 
               <div className="mb-3">
-                <label className="form-label text-white fw-bold">Nivel de Urgencia:</label>
+                <label className="form-label fw-bold" style={{ color: textColor }}>Nivel de Urgencia:</label>
                 <select
-                  className="form-select bg-dark text-white border-secondary"
+                  className="form-select"
+                  style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                   value={prioridad}
                   onChange={(e) => setPrioridad(e.target.value)}
                 >
@@ -89,9 +103,10 @@ export const MaquinaFallaModal: React.FC<Props> = ({ show, maquinas, onClose, on
               </div>
 
               <div className="mb-3">
-                <label className="form-label text-white fw-bold">Descripción del Problema / Falla:</label>
+                <label className="form-label fw-bold" style={{ color: textColor }}>Descripción del Problema / Falla:</label>
                 <textarea
-                  className="form-control bg-dark text-white border-secondary"
+                  className="form-control"
+                  style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                   rows={3}
                   placeholder="Ej: Desalineación de rodillo, atasco constante de papel A3, error de fusor..."
                   value={descripcion}
@@ -101,8 +116,8 @@ export const MaquinaFallaModal: React.FC<Props> = ({ show, maquinas, onClose, on
               </div>
             </div>
 
-            <div className="modal-footer border-secondary">
-              <button type="button" className="btn btn-outline-light" onClick={onClose} disabled={cargando}>
+            <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
+              <button type="button" className={`btn ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'}`} onClick={onClose} disabled={cargando}>
                 Cancelar
               </button>
               <button type="submit" className="btn btn-danger fw-bold px-4" disabled={cargando || maquinasOperativas.length === 0}>

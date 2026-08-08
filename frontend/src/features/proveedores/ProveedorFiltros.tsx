@@ -23,17 +23,16 @@ export const ProveedorFiltros: React.FC<ProveedorFiltrosProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables adaptativas según el tema
-  const containerBg = isDark ? '#1d1d1d' : '#f1f5f9';
-  const containerBorder = isDark ? '#2d2d30' : '#cbd5e1';
-  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
-  const inputBg = isDark ? '#121214' : '#ffffff';
+  const containerBg = isDark ? '#1b1b1b' : '#ffffff';
+  const containerBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
+  const inputBg = isDark ? '#1b1b1b' : '#ffffff';
   const inputTextColor = isDark ? 'text-white' : 'text-dark';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
 
   return (
     <div 
-      className="row g-3 align-items-center mb-4 p-3 rounded shadow-sm" 
+      className="row g-3 align-items-center mb-4 p-3 rounded-3 shadow-sm font-monospace" 
       style={{ 
         backgroundColor: containerBg, 
         border: `1px solid ${containerBorder}`,
@@ -41,7 +40,7 @@ export const ProveedorFiltros: React.FC<ProveedorFiltrosProps> = ({
       }}
     >
       <div className="col-md-4">
-        <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
+        <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Filtrar por Nombre / Contacto:
         </label>
         <input 
@@ -55,7 +54,7 @@ export const ProveedorFiltros: React.FC<ProveedorFiltrosProps> = ({
       </div>
       
       <div className="col-md-4">
-        <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
+        <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Filtrar por Estado:
         </label>
         <select 
@@ -71,7 +70,7 @@ export const ProveedorFiltros: React.FC<ProveedorFiltrosProps> = ({
       </div>
 
       <div className="col-md-4">
-        <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
+        <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Filtrar por Tipo:
         </label>
         <select 

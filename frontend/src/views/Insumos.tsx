@@ -82,22 +82,23 @@ export const Insumos: React.FC = () => {
         }}
       />
 
-      {/* Botonera principal */}
-      <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-3 border-top border-secondary font-monospace">
-        <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2">
+      {/* Botonera principal (se eliminó la línea divisoria 'border-top border-secondary') */}
+      <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-3 font-monospace">
+        <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2" style={{ color: '#ffffff' }}>
           Volver
         </button>
         
         <div className="d-flex gap-3">
           <button 
-            className="btn px-4 py-2 text-white fw-normal" 
-            style={{ backgroundColor: '#17a2b8', borderColor: '#0e5a66' }}
+            className="btn px-4 py-2 fw-normal" 
+            style={{ backgroundColor: '#17a2b8', color: '#ffffff' }}
             onClick={() => setShowAumentoModal(true)}
           >
             Modificar Varios Precios
           </button>
           <button 
             className="btn btn-success px-4 py-2 fw-bold" 
+            style={{ color: '#ffffff' }}
             onClick={() => { setInsumoEditando(null); setShowModalForm(true); }}
           >
             Registrar Nuevo Insumo
@@ -153,18 +154,18 @@ export const Insumos: React.FC = () => {
       {mostrarConfirmacion && (
         <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
-            <div className="modal-content p-4 text-white text-center shadow-lg" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
+            <div className="modal-content p-4 text-white text-center shadow-lg" style={{ border: '2px solid #8e45e0', backgroundColor: isDark ? '#1a1a1c' : '#ffffff', color: titleColor, borderRadius: '12px' }}>
               <i className="bi bi-shield-lock-fill fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
-              <h5 className="fw-bold">¿Confirmar Modificaciones?</h5>
+              <h5 className="fw-bold" style={{ color: titleColor }}>¿Confirmar Modificaciones?</h5>
               <p className="small" style={{ color: mutedText }}>Se sobreescribirán los datos del insumo.</p>
               
               <div className="d-flex justify-content-center gap-2 mt-3">
-                <button className="btn btn-outline-light btn-sm px-3" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} onClick={() => setMostrarConfirmacion(false)}>
+                <button className="btn btn-danger btn-sm px-3" style={{ borderRadius: '6px', color: '#ffffff' }} onClick={() => setMostrarConfirmacion(false)}>
                   Volver
                 </button>
                 <button 
                   className="btn btn-sm px-3 fw-bold text-white" 
-                  style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} 
+                  style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e', color: '#ffffff' }} 
                   onClick={async () => {
                     if (insumoEditando) {
                       await guardar(insumoEditando);

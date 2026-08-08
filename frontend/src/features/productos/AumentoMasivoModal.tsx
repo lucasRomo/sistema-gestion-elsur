@@ -1,6 +1,7 @@
 // src/features/productos/AumentoMasivoModal.tsx
 import React, { useState } from 'react';
 import type { Producto } from '../../types/Producto';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface Props {
   show: boolean;
@@ -20,6 +21,19 @@ export const AumentoMasivoModal: React.FC<Props> = ({
   onClose,
   onConfirmar
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  const modalBg = isDark ? '#1a1a1c' : '#ffffff';
+  const modalBorder = isDark ? '#17a2b8' : '#0dcaf0';
+  const headerBorder = isDark ? '#27272a' : '#e2e8f0';
+  const textColor = isDark ? '#ffffff' : '#0f172a';
+  const labelColor = isDark ? '#a1a1aa' : '#475569';
+  const inputBg = isDark ? '#1d1d1d' : '#ffffff';
+  const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const boxBg = isDark ? '#121214' : '#f8fafc';
+  const mutedText = isDark ? '#a1a1aa' : '#64748b';
+
   const [criterio, setCriterio] = useState<'TODOS' | 'CATEGORIA' | 'SELECCION'>('TODOS');
   const [porcentaje, setPorcentaje] = useState<number>(10);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(null);
@@ -53,7 +67,6 @@ export const AumentoMasivoModal: React.FC<Props> = ({
       return;
     }
 
-    // Validaciones estrictas por criterio antes de procesar
     if (criterio === 'CATEGORIA' && !categoriaSeleccionada) {
       alert("Por favor seleccione una categoría de la lista");
       return;
@@ -83,13 +96,25 @@ export const AumentoMasivoModal: React.FC<Props> = ({
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-lg modal-dialog-centered">
-        <div className="modal-content text-white border-info" style={{ backgroundColor: '#1e1e24', borderRadius: '12px' }}>
+        <div 
+          className="modal-content shadow-lg" 
+          style={{ 
+            backgroundColor: modalBg, 
+            color: textColor, 
+            border: `1.5px solid ${modalBorder}`, 
+            borderRadius: '12px' 
+          }}
+        >
           
-          <div className="modal-header border-secondary">
+          <div className="modal-header" style={{ borderColor: headerBorder }}>
             <h5 className="modal-title font-monospace fw-bold text-info">
               <i className="bi bi-graph-up-arrow me-2"></i>Aplicar Aumento Porcentual Masivo
             </h5>
-            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
+            <button 
+              type="button" 
+              className={`btn-close ${isDark ? 'btn-close-white' : ''}`} 
+              onClick={onClose}
+            ></button>
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -99,11 +124,12 @@ export const AumentoMasivoModal: React.FC<Props> = ({
               <div className="mb-4">
                 <label className="form-label text-warning fw-bold">Porcentaje de Incremento (%):</label>
                 <div className="input-group">
-                  <span className="input-group-text bg-dark text-info border-secondary">%</span>
+                  <span className="input-group-text fw-bold" style={{ backgroundColor: inputBg, color: '#0dcaf0', borderColor: inputBorder }}>%</span>
                   <input
                     type="number"
                     step="0.01"
-                    className="form-control bg-dark text-white border-secondary"
+                    className="form-control shadow-none"
+                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                     value={porcentaje}
                     onChange={(e) => setPorcentaje(parseFloat(e.target.value) || 0)}
                     required
@@ -113,7 +139,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
 
               {/* Selección del Criterio */}
               <div className="mb-3">
-                <label className="form-label fw-bold">Aplicar Aumento A:</label>
+                <label className="form-label fw-bold" style={{ color: labelColor }}>Aplicar Aumento A:</label>
                 <div className="d-flex gap-3">
                   <div className="form-check">
                     <input
@@ -124,7 +150,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
                       checked={criterio === 'TODOS'}
                       onChange={() => setCriterio('TODOS')}
                     />
-                    <label className="form-check-label" htmlFor="critTodos">
+                    <label className="form-check-label" htmlFor="critTodos" style={{ color: textColor }}>
                       Todos los Productos
                     </label>
                   </div>
@@ -138,7 +164,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
                       checked={criterio === 'CATEGORIA'}
                       onChange={() => setCriterio('CATEGORIA')}
                     />
-                    <label className="form-check-label" htmlFor="critCat">
+                    <label className="form-check-label" htmlFor="critCat" style={{ color: textColor }}>
                       Por Categoría
                     </label>
                   </div>
@@ -152,7 +178,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
                       checked={criterio === 'SELECCION'}
                       onChange={() => setCriterio('SELECCION')}
                     />
-                    <label className="form-check-label" htmlFor="critSel">
+                    <label className="form-check-label" htmlFor="critSel" style={{ color: textColor }}>
                       Selección de Productos
                     </label>
                   </div>
@@ -162,9 +188,10 @@ export const AumentoMasivoModal: React.FC<Props> = ({
               {/* Filtro por Categoria */}
               {criterio === 'CATEGORIA' && (
                 <div className="mb-3">
-                  <label className="form-label text-info">Seleccionar Categoría:</label>
+                  <label className="form-label text-info fw-semibold">Seleccionar Categoría:</label>
                   <select
-                    className="form-select bg-dark text-white border-secondary"
+                    className="form-select shadow-none"
+                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                     value={categoriaSeleccionada || ''}
                     onChange={(e) => setCategoriaSeleccionada(Number(e.target.value))}
                     required
@@ -180,8 +207,8 @@ export const AumentoMasivoModal: React.FC<Props> = ({
               {/* Selección manual de Productos */}
               {criterio === 'SELECCION' && (
                 <div className="mb-3">
-                  <label className="form-label text-info">Seleccionar Productos Específicos:</label>
-                  <div className="border border-secondary p-2 rounded bg-dark" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                  <label className="form-label text-info fw-semibold">Seleccionar Productos Específicos:</label>
+                  <div className="p-2 rounded" style={{ backgroundColor: boxBg, border: `1px solid ${inputBorder}`, maxHeight: '200px', overflowY: 'auto' }}>
                     {productos.map((p) => (
                       <div key={p.idProducto} className="form-check text-start">
                         <input
@@ -191,8 +218,8 @@ export const AumentoMasivoModal: React.FC<Props> = ({
                           checked={productosSeleccionados.includes(p.idProducto!)}
                           onChange={() => handleToggleProducto(p.idProducto!)}
                         />
-                        <label className="form-check-label text-white" htmlFor={`p-${p.idProducto}`}>
-                          {p.nombreProducto} <span className="text-muted">(${p.precioBase})</span>
+                        <label className="form-check-label" htmlFor={`p-${p.idProducto}`} style={{ color: textColor }}>
+                          {p.nombreProducto} <span style={{ color: mutedText }}>(${p.precioBase})</span>
                         </label>
                       </div>
                     ))}
@@ -202,11 +229,22 @@ export const AumentoMasivoModal: React.FC<Props> = ({
 
             </div>
 
-            <div className="modal-footer border-secondary">
-              <button type="button" className="btn btn-outline-secondary" onClick={onClose} disabled={cargando}>
+            <div className="modal-footer" style={{ borderColor: headerBorder }}>
+              <button 
+                type="button" 
+                className="btn btn-danger px-4" 
+                onClick={onClose} 
+                disabled={cargando}
+                style={{ color: '#ffffff' }}
+              >
                 Cancelar
               </button>
-              <button type="submit" className="btn btn-info text-dark fw-bold px-4" disabled={cargando}>
+              <button 
+                type="submit" 
+                className="btn btn-info fw-bold px-4" 
+                disabled={cargando}
+                style={{ color: '#ffffff' }}
+              >
                 {cargando ? 'Procesando...' : 'Aplicar Aumento'}
               </button>
             </div>

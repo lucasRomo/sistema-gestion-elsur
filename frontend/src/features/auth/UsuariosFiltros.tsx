@@ -17,12 +17,12 @@ export const UsuariosFiltros: React.FC<UsuariosFiltrosProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables adaptativas según el tema
-  const containerBg = isDark ? '#1d1d1d' : '#f1f5f9';
-  const containerBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
-  const inputBg = isDark ? '#121214' : '#ffffff';
-  const inputTextColor = isDark ? 'text-white' : 'text-dark';
+  // Contenedor adaptativo alineado al diseño de ClientesFiltros
+  const containerBg = isDark ? '#1d1d1d' : '#ffffff';
+  const containerBorder = isDark ? '#2d2d30' : '#e2e8f0';
+  const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
+  const inputBg = isDark ? '#1d1d1d' : '#ffffff';
+  const inputTextColor = isDark ? '#ffffff' : '#0f172a';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
 
   return (
@@ -40,8 +40,12 @@ export const UsuariosFiltros: React.FC<UsuariosFiltrosProps> = ({
         </label>
         <input 
           type="text"
-          className={`form-control ${inputTextColor} py-2`}
-          style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+          className="form-control py-2 font-monospace"
+          style={{ 
+            backgroundColor: inputBg, 
+            borderColor: inputBorder,
+            color: inputTextColor 
+          }}
           placeholder="Buscar..." 
           value={filtroTexto}
           onChange={(e) => setFiltroTexto(e.target.value)}
@@ -52,15 +56,19 @@ export const UsuariosFiltros: React.FC<UsuariosFiltrosProps> = ({
           Filtrar por Estado:
         </label>
         <select 
-          className={`form-select ${inputTextColor} py-2`} 
-          style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+          className="form-select py-2 font-monospace" 
+          style={{ 
+            backgroundColor: inputBg, 
+            borderColor: inputBorder,
+            color: inputTextColor
+          }}
           value={filtroEstado} 
           onChange={(e) => setFiltroEstado(e.target.value)}
         >
-          <option value="Sin Filtro">Sin Filtro</option>
-          <option value="Activo">Activo</option>
-          <option value="Desactivado">Desactivado</option>
-          <option value="Pendiente">Pendiente</option>
+          <option value="Sin Filtro" style={{ backgroundColor: inputBg, color: inputTextColor }}>Sin Filtro</option>
+          <option value="Activo" style={{ backgroundColor: inputBg, color: inputTextColor }}>Activo</option>
+          <option value="Desactivado" style={{ backgroundColor: inputBg, color: inputTextColor }}>Desactivado</option>
+          <option value="Pendiente" style={{ backgroundColor: inputBg, color: inputTextColor }}>Pendiente</option>
         </select>
       </div>
     </div>

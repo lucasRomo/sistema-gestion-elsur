@@ -135,7 +135,7 @@ export const ClienteView = () => {
   style={{ color: '#ffffff' }}
   onClick={() => setVerCategoriasModal(true)}
 >
-  <i className="bi bi-tag me-2"></i>Categorías de Clientes
+  <i className="bi me-2"></i>Categorías de Clientes
 </button>
       </div>
 
@@ -288,7 +288,7 @@ export const ClienteView = () => {
   style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}
   onClick={() => setVerResumenCuentasModal(true)}
 >
-  <i className="bi bi-wallet2"></i> Ver Cuentas Corrientes Activas
+  <i className="bi"></i> Ver Cuentas Corrientes Activas
 </button>
 
           <button 
@@ -296,7 +296,7 @@ export const ClienteView = () => {
             style={{ color: '#ffffff' }}
             onClick={() => setPaso(1)}
           >
-            <i className="bi bi-plus-circle me-2"></i>Registrar Nuevo Cliente
+            <i className="bi me-2"></i>Registrar Nuevo Cliente
           </button>
         </div>
       </div>

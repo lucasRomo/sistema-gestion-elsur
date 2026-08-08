@@ -138,7 +138,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
   };
 
   return (
-    <div className="card im-surface p-4 w-100 rounded" style={{ maxWidth: '1570px' }}>
+    <div className="card p-4 w-100 rounded" style={{ maxWidth: '1570px', backgroundColor: '#1b1b1b' }}>
       <h2 className="text-center mb-4 fw-bold">Configurar Parámetros del Comprobante</h2>
       
       <form onSubmit={handleSubmit} className="row g-3">
@@ -159,7 +159,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
                 : (c.razon_social || `Cliente #${id || index}`);
 
               return (
-                <option key={`cliente-opt-${id ?? index}`} value={id} style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>
+                <option key={`cliente-opt-${id ?? index}`} value={id} style={{ backgroundColor: '#1b1b1b', color: '#fff' }}>
                   {nombreCliente}
                 </option>
               );
@@ -176,7 +176,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
             onChange={(e) => setEmpleadoId(e.target.value)}
             required
           >
-            <option value="" disabled style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>-- Seleccione un Empleado --</option>
+            <option value="" disabled style={{ backgroundColor: '#1b1b1b', color: '#fff' }}>-- Seleccione un Empleado --</option>
             {empleados.map((emp, index) => {
               const id = emp.id_empleado ?? emp.idEmpleado ?? emp.id;
               const nombreCompleto = emp.persona 
@@ -272,7 +272,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
         </div>
 
         {/* Botones Inferiores */}
-        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 w-100 pt-3 border-top border-secondary">
+        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 w-100 pt-3">
           <button 
             type="button" 
             className="btn btn-danger px-4 fw-medium text-white"

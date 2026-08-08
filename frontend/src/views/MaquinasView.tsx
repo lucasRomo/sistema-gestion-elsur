@@ -4,8 +4,21 @@ import { MaquinaTabla } from '../features/maquinas/MaquinaTabla';
 import { MaquinaModal } from '../features/maquinas/MaquinaModal';
 import { MaquinaFallaModal } from '../features/maquinas/MaquinaFallaModal';
 import { HistorialIncidenciasModal } from '../features/maquinas/HistorialIncidenciasModal';
+import { useTheme } from '../Context/ThemeContext';
 
 export const MaquinasView: React.FC = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // Variables de tema
+  const cardBg = isDark ? '#1b1b1b' : '#ffffff';
+  const cardBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const textColor = isDark ? '#ffffff' : '#0f172a';
+  const textSubtle = isDark ? '#a1a1aa' : '#64748b';
+  const inputBg = isDark ? '#121214' : '#ffffff';
+  const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const titleColor = isDark ? '#ffffff' : '#0f172a';
+
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
   const [cargando, setCargando] = useState(true);
   const [filtro, setFiltro] = useState('');
@@ -58,7 +71,6 @@ export const MaquinasView: React.FC = () => {
 
     const method = maquina.idMaquina ? 'PUT' : 'POST';
 
-    // 1. Guardar cambios básicos de la máquina
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
@@ -70,7 +82,6 @@ export const MaquinasView: React.FC = () => {
     });
 
     if (res.ok) {
-      // 2. Sincronización automática con el historial según el estado seleccionado
       if (maquina.idMaquina && maquina.observacion) {
         try {
           const incRes = await fetch(`http://localhost:8080/api/incidencias/maquina/${maquina.idMaquina}`);
@@ -79,7 +90,6 @@ export const MaquinasView: React.FC = () => {
             const pendiente = incidencias.find((i: any) => i.estadoIncidencia === 'PENDIENTE');
 
             if (maquina.estado === 'OPERATIVA' && pendiente) {
-              // Si pasa a OPERATIVA, resuelve la incidencia pendiente
               await fetch(`http://localhost:8080/api/incidencias/${pendiente.idIncidencia}/resolver`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -89,7 +99,6 @@ export const MaquinasView: React.FC = () => {
                 })
               });
             } else if (maquina.estado === 'MANTENIMIENTO' && !pendiente) {
-              // Si pasa a MANTENIMIENTO y no había ticket abierto
               await fetch('http://localhost:8080/api/incidencias/reportar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -101,7 +110,6 @@ export const MaquinasView: React.FC = () => {
                 })
               });
             } else if (['FUERA DE SERVICIO', 'FALLA'].includes(maquina.estado) && !pendiente) {
-              // Si pasa a FUERA DE SERVICIO o FALLA
               await fetch('http://localhost:8080/api/incidencias/reportar', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -160,15 +168,15 @@ export const MaquinasView: React.FC = () => {
   );
 
   return (
-    <div className="container-fluid font-monospace" style={{ color: '#ffffff' }}>
+    <div className="container-fluid font-monospace" style={{ color: textColor }}>
       
       {/* Encabezado */}
-      <div className="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
+      <div className="d-flex justify-content-between align-items-center mb-4 pb-2" style={{ borderBottom: `1px solid ${cardBorder}` }}>
         <div>
-          <h3 className="fw-bold text-white mb-1">
+          <h3 className="fw-bold mb-1" style={{ color: titleColor }}>
             <i className="bi bi-cpu me-2 text-warning"></i>Gestión de Equipos y Máquinas
           </h3>
-          <small className="text-white-50">Control operativo e historial de incidencias técnicas</small>
+          <small style={{ color: textSubtle }}>Control operativo e historial de incidencias técnicas</small>
         </div>
       </div>
 
@@ -176,12 +184,13 @@ export const MaquinasView: React.FC = () => {
       <div className="row mb-3">
         <div className="col-md-4">
           <div className="input-group">
-            <span className="input-group-text bg-dark border-secondary text-white-50">
+            <span className="input-group-text" style={{ backgroundColor: inputBg, borderColor: inputBorder, color: textSubtle }}>
               <i className="bi bi-search"></i>
             </span>
             <input
               type="text"
-              className="form-control bg-dark text-white border-secondary"
+              className="form-control"
+              style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
               placeholder="Buscar por equipo o estado..."
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
@@ -191,10 +200,10 @@ export const MaquinasView: React.FC = () => {
       </div>
 
       {/* Tabla de Equipos */}
-      <div className="card bg-dark border-secondary rounded-3 shadow">
+      <div className="card rounded-3 shadow" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
         <div className="card-body p-0">
           {cargando ? (
-            <div className="text-center py-5 text-white-50">
+            <div className="text-center py-5" style={{ color: textSubtle }}>
               <div className="spinner-border spinner-border-sm me-2" role="status"></div>
               Cargando equipos...
             </div>
@@ -221,10 +230,11 @@ export const MaquinasView: React.FC = () => {
           className="btn btn-danger fw-bold px-3 shadow"
           onClick={() => setShowModalFalla(true)}
         >
-          <i className="bi bi-exclamation-triangle-fill me-2"></i>Reportar Falla
+          <i className="bi me-2"></i>Reportar Falla
         </button>
         <button
-          className="btn btn-warning fw-bold text-dark px-3 shadow"
+          className="btn btn-warning fw-bold px-3 shadow"
+          style={{ color: '#ffffff' }}
           onClick={() => {
             setMaquinaAEditar(null);
             setShowModalCrud(true);

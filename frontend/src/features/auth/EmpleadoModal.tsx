@@ -44,8 +44,6 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
           
 
           <div className="position-absolute top-50 start-50 translate-middle opacity-5 text-center pointer-events-none" style={{ zIndex: 0 }}>
-            <img src={logoGesta} alt="GestaPro" style={{ width: '250px' }} 
-          />
           </div>
 
 

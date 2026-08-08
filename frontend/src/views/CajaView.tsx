@@ -280,7 +280,7 @@ export const CajaView: React.FC = () => {
 
   return (
     <SidebarLayout activeItem="Caja">
-      <div className={`container-fluid p-2 pt-5 mt-2 font-monospace ${textColor}`} style={{ backgroundColor: pageBg, minHeight: '100vh' }}>
+      <div className={`container-fluid p-3 font-monospace ${textColor}`}>
         
         {/* Título Principal */}
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -422,7 +422,7 @@ export const CajaView: React.FC = () => {
               <i className="bi bi-plus-lg fs-4 ms-2"></i>
             </button>
             
-            <button className="btn py-3 d-flex justify-content-between align-items-center fw-semibold text-white px-4" style={{ backgroundColor: '#6f42c1', fontSize: '1.15rem', width: '380px', borderRadius: '10px' }} disabled={!cajaAbierta}>
+            <button className="btn py-3 d-flex justify-content-between align-items-center fw-semibold px-4" style={{ backgroundColor: '#6f42c1', color: '#ffffff', fontSize: '1.15rem', width: '380px', borderRadius: '10px' }} disabled={!cajaAbierta}>
               <span>Compra de Insumos</span>
               <i className="bi bi-truck fs-4 ms-2"></i>
             </button>
@@ -442,7 +442,7 @@ export const CajaView: React.FC = () => {
             <span>Iniciar Caja del Día</span>
           </button>
           
-          <button className="btn d-flex align-items-center justify-content-center fw-semibold text-center text-dark" style={{ backgroundColor: '#10cbd8', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }} disabled={!cajaAbierta} onClick={handleConsultarArqueo}>
+          <button className="btn d-flex align-items-center justify-content-center fw-semibold text-center" style={{ backgroundColor: '#10cbd8', color: '#ffffff', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }} disabled={!cajaAbierta} onClick={handleConsultarArqueo}>
             <span>Consultar Arqueo</span>
           </button>
           

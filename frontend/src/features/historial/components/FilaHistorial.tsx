@@ -7,14 +7,14 @@ interface FilaHistorialProps {
   onSelectTicket: (pedido: any) => void;
   onSubirArchivo: (idPedido: number, file: File) => void;
   onEliminarComprobante: (idPedido: number) => void;
-  onAbrirDevolucion: (pedido: any) => void; // <--- Nueva prop
+  onAbrirDevolucion: (pedido: any) => void;
 }
 
 export const FilaHistorial: React.FC<FilaHistorialProps> = ({
   pedido: p,
   onAbrirAuditoria,
   onSelectTicket,
-  onAbrirDevolucion, // <--- Recibimos el handler
+  onAbrirDevolucion,
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -22,8 +22,10 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
   const filaBg = isDark ? '#1d1d1d' : '#ffffff';
   const filaBgHover = isDark ? '#18181b' : '#f1f5f9';
   const filaBorder = isDark ? '#27272a' : '#e2e8f0';
+  const clienteColor = isDark ? '#ffffff' : '#0f172a';
   const fechaColor = isDark ? '#a9a9aa' : '#64748b';
   const empleadoColor = isDark ? '#d4d4d8' : '#334155';
+  const montoTotalColor = isDark ? '#f8fafc' : '#0f172a';
 
   // Lógica del nombre del cliente
   const nombreCliente = p.cliente?.persona 
@@ -66,12 +68,14 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
   const fechaEntregaFinalFormateada = formatearFechaString(fechaEntregaFinalRaw);
 
   return (
-    <tr style={{ borderBottom: `1px solid ${filaBorder}`, backgroundColor: filaBg, transition: 'background 0.2s' }} 
-    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = filaBgHover}
-    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = filaBg}>
-      <td className="fw-bold" style={{ color:'#0fdae9', padding: '12px 12px 12px 12px' }}>#{p.id_pedido}</td>
+    <tr 
+      style={{ borderBottom: `1px solid ${filaBorder}`, backgroundColor: filaBg, transition: 'background 0.2s' }} 
+      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = filaBgHover}
+      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = filaBg}
+    >
+      <td className="fw-bold" style={{ color: '#0fdae9', padding: '12px' }}>#{p.id_pedido}</td>
       <td style={{ padding: '15px 20px' }}>
-        <span className="fw-semibold text-white">{nombreCliente}</span>
+        <span className="fw-semibold" style={{ color: clienteColor }}>{nombreCliente}</span>
       </td>
       <td style={{ padding: '12px 16px' }}>
         <div className="d-flex gap-1">
@@ -87,10 +91,12 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
           )}
         </div>
       </td>
-      <span style={{ color: empleadoColor }}>
-      <i className="bi bi-person-check text-secondary me-1"></i>
-        {nombreEmpleado}
-      </span>
+      <td style={{ padding: '12px' }}>
+        <span style={{ color: empleadoColor }}>
+          <i className="bi bi-person-check text-secondary me-1"></i>
+          {nombreEmpleado}
+        </span>
+      </td>
 
       {/* FECHA ASIGNACIÓN */}
       <td className="font-monospace" style={{ color: fechaColor, fontSize: '0.82rem', padding: '12px 24px 12px 12px' }}>
@@ -107,19 +113,19 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
         {fechaEntregaFinalFormateada}
       </td>
 
-      <td className="text-center" style={{ padding: '12px 12px' }}>
+      <td className="text-center" style={{ padding: '12px' }}>
         <span className={`badge font-monospace ${p.text_color} ${p.estado === 'CANCELADO' ? 'bg-danger text-white' : p.estado === 'DEVUELTO' ? 'bg-warning text-dark' : p.estado === 'ENTREGADO' ? 'bg-success text-white' : 'bg-secondary text-white'}`}>
           {p.estado}
         </span>
       </td>
 
       {/* MONTO TOTAL */}
-      <td className="text-light fw-bold" style={{ padding: '12px 12px' }}>
+      <td className="fw-bold" style={{ color: montoTotalColor, padding: '12px' }}>
         ${Number(p.monto_total).toFixed(2)}
       </td>
 
       {/* MONTO COBRADO */}
-      <td className="text-success fw-bold" style={{ padding: '12px 12px' }}>
+      <td className="text-success fw-bold" style={{ padding: '12px' }}>
         ${Number(p.monto_pago_adelantado).toFixed(2)}
       </td>
       
@@ -148,7 +154,7 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
             <i className="bi bi-printer" style={{ color: '#ffc107' }}></i>
           </button>
 
-          {/* NUEVO BOTÓN DEVOLUCIÓN */}
+          {/* BOTÓN DEVOLUCIÓN */}
           <button 
             className="rounded d-flex align-items-center justify-content-center" 
             style={{ width: '32px', height: '32px', border: '0.8px solid #fd7e14', backgroundColor: 'transparent', transition: '0.2s' }}

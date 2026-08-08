@@ -31,7 +31,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const containerBg = isDark ? '#18181b' : '#ffffff';
+  const containerBg = isDark ? '#1b1b1b' : '#ffffff';
   const textPrimary = isDark ? '#ffffff' : '#0f172a';
   const borderTheme = isDark ? '#3f3f46' : '#cbd5e1';
   const cardSectionBg = isDark ? '#27272a' : '#f8fafc';
@@ -144,7 +144,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
           border: `1px solid ${borderTheme}` 
         }}
       >
-        <h2 className="text-center mb-4 fw-bold" style={{ color: isDark ? '#0bc9f8' : 'inherit' }}>
+        <h2 className="text-center mb-3 fw-bold" style={{ color: isDark ? '#0bc9f8' : 'inherit' }}>
           Tabla para Calcular y Elegir Productos
         </h2>
         
@@ -179,12 +179,12 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
           <div className="col-md-3">
             <button 
-              className="btn w-100 fw-bold text-white" 
-              style={{ backgroundColor: '#0284c7' }} 
-              onClick={handleAgregar}
-            >
-              Agregar
-            </button>
+  className="btn w-100 fw-bold" 
+  style={{ backgroundColor: '#0284c7', color: '#ffffff' }} 
+  onClick={handleAgregar}
+>
+  Agregar
+</button>
           </div>
         </div>
 
@@ -197,7 +197,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
             <div style={{ width: '20%' }}>SubTotal:</div>
           </div>
           
-          <div style={{ minHeight: '150px', maxHeight: '250px', overflowY: 'auto' }}>
+          <div style={{ maxHeight: '95px', overflowY: 'auto', overflowX: 'hidden' }}>
             {carrito.length === 0 ? (
               <div className="text-center my-4 py-2" style={{ color: mutedText }}>No hay productos en la lista.</div>
             ) : (
@@ -316,7 +316,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
           <div style={{ width: '20%' }}>Stock Resultante:</div>
         </div>
 
-        <div style={{ minHeight: '60px', maxHeight: '160px', overflowY: 'auto' }}>
+        <div style={{ maxHeight: '95px', overflowY: 'auto', overflowX: 'hidden' }}>
           {carrito.length === 0 ? (
             <div className="text-center mt-3 small" style={{ color: mutedText }}>
               Agregue productos arriba para ver el impacto en el stock de insumos.

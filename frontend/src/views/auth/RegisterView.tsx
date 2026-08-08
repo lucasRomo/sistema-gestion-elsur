@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTheme } from '../../Context/ThemeContext';
 import { PersonaForm } from '../../features/auth/PersonaForm';
 import { EmpleadoModal } from '../../features/auth/EmpleadoModal';
 import { ExitoModal } from '../../features/auth/ExitoModal';
@@ -10,6 +11,16 @@ interface RegisterViewProps {
 }
 
 export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // Estilos adaptativos según el tema activo
+  const backgroundGradient = isDark 
+    ? 'linear-gradient(145deg, #240f47 20%, #0c0c0e 80%)' 
+    : 'linear-gradient(145deg, #e2e8f0 20%, #f1f5f9 80%)';
+  const containerBg = isDark ? '#1a1a1c' : '#ffffff';
+  const containerBorder = isDark ? '#3f3f46' : '#cbd5e1';
+
   const [personaData, setPersonaData] = useState({
     nombre: '', apellido: '', tipoDocumento: '', numeroDocumento: '',
     email: '', telefono: '', calle: '', numero: '', piso: '',
@@ -79,7 +90,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
           fechaContratacion: fechaISO,
           cargo: esPrimerAdmin ? 'ADMINISTRADOR' : (empleadoData.cargo || 'OPERARIO'),
           salario: parseFloat(empleadoData.salario) || 0.0,
-          estado: esPrimerAdmin ? 'Activo' : 'Pendiente', // <--- AQUÍ ESTABA EL CAMBIO CLAVE
+          estado: esPrimerAdmin ? 'Activo' : 'Pendiente',
           persona: { idPersona: usuarioGuardado.persona?.idPersona }
         };
 
@@ -119,13 +130,12 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
   return (
     <div 
       className="container-fluid min-vh-100 d-flex justify-content-center align-items-center" 
-      style={{ background: 'linear-gradient(145deg, #240f47 20%, #0c0c0e 80%)', minHeight: '100vh' }}>
+      style={{ background: backgroundGradient, minHeight: '100vh' }}>
       
-      <div className="w-100 p-4 rounded-3 position-relative" 
-           style={{ maxWidth: '750px', backgroundColor: '#1a1a1c', border: '1px solid #3f3f46' }}>
+      <div className="w-100 p-4 rounded-3 position-relative shadow-lg" 
+           style={{ maxWidth: '750px', backgroundColor: containerBg, border: `1px solid ${containerBorder}` }}>
         
         <div className="position-absolute top-50 start-50 translate-middle opacity-10" style={{ zIndex: 0 }}>
-          <img src={logoGestaG} alt="GestaPro" style={{ width: '360px' }} />
         </div>
 
         <div className="position-relative" style={{ zIndex: 1 }}>
