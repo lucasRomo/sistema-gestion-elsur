@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../Context/ThemeContext';
 import { PersonaForm } from '../../features/auth/PersonaForm';
-import { EmpleadoModal } from '../../features/auth/EmpleadoModal';
+import { EmpleadoModal } from '../../features/usuarios/components/EmpleadoModal';
 import { ExitoModal } from '../../features/auth/ExitoModal';
 import type { Usuario } from '../../types/Usuario';
 import logoGestaG from '../../assets/logo-gestaprog.png';

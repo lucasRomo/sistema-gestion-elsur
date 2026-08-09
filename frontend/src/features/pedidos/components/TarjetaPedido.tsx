@@ -51,7 +51,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
   const modalBg = isDark ? 'bg-dark text-white' : 'bg-white text-dark';
   const timelineContainerBg = isDark ? '#09090b' : '#e4e4e4';
   const timelineContainerBorder = isDark ? '#27272a' : '#e2e8f0';
-  const timelineBadgeBg = isDark ? '#18181b' : '#ffffff';
   const timelineCardBg = isDark ? '#18181b' : '#ffffff';
   const timelineCardBorder = isDark ? '#27272a' : '#cbd5e1';
   const timelineTitleText = isDark ? 'text-white' : 'text-dark';

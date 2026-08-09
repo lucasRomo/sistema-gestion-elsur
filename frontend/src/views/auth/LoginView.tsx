@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { LoginFeedbackModal } from '../../features/modals/LoginFeedbackModal';
+import { LoginFeedbackModal } from '../../components/modals/LoginFeedbackModal';
 import fondoImg from '../../assets/fondo-izq.png'; 
 import logoGesta from '../../assets/logo-gestapro.png';
 import logoSur from '../../assets/logo-elsur.png';
-import { useTheme } from '../../Context/ThemeContext'; // Importar contexto
+import { useTheme } from '../../Context/ThemeContext';
 
 interface LoginViewProps {
   onLoginExitoso: (usuario: any) => void;
