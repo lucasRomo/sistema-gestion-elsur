@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// Componentes y Contextos globales
 import { SidebarLayout } from '../../../components/layouts/SidebarLayout';
 import { useTurno } from '../../../Context/TurnoContext';
 import { useTheme } from '../../../Context/ThemeContext';
 
-// Feature Caja: Hooks, Modales y Tipos
 import { useCaja } from '../hooks/useCaja';
 import { ModalNuevoIngreso } from '../components/ModalNuevoIngreso';
 import { ModalConsultarArqueo } from '../components/ModalConsultarArqueo';
 import { ModalCerrarTurno } from '../components/ModalCerrarTurno';
 import type { NuevoMovimientoDTO } from '../types/caja';
+import { ModalCompraInsumos } from '../components/ModalCompraInsumos';
+import type { DatosCompraInsumo } from '../components/ModalCompraInsumos';
 
 export const CajaView: React.FC = () => {
   const navigate = useNavigate();
@@ -31,10 +31,10 @@ export const CajaView: React.FC = () => {
     abrirCaja,
     consultarArqueo,
     guardarMovimiento,
+    comprarInsumo,
     cerrarCaja
   } = useCaja(setCajaAbierta);
 
-  // Modales
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showModalApertura, setShowModalApertura] = useState(false);
   const [montoInicialInput, setMontoInicialInput] = useState('0');
@@ -42,8 +42,8 @@ export const CajaView: React.FC = () => {
   const [showModalCierre, setShowModalCierre] = useState(false);
   const [guardandoCierre, setGuardandoCierre] = useState(false);
   const [showModalArqueo, setShowModalArqueo] = useState(false);
+  const [showModalCompraInsumos, setShowModalCompraInsumos] = useState(false);
 
-  // Estilos
   const textColor = isDark ? 'text-white' : 'text-dark';
   const cardBg = isDark ? '#1e1e1f' : '#ffffff';
   const cardBorder = isDark ? '#242427' : '#e2e8f0';
@@ -102,6 +102,15 @@ export const CajaView: React.FC = () => {
       setIsModalOpen(false);
     } catch (error: any) {
       alert("No se pudo guardar el movimiento: " + error.message);
+    }
+  };
+
+  const handleConfirmarCompraInsumo = async (datos: DatosCompraInsumo) => {
+    try {
+      await comprarInsumo(datos);
+      setShowModalCompraInsumos(false);
+    } catch (error: any) {
+      alert("Error al registrar la compra: " + error.message);
     }
   };
 
@@ -322,7 +331,12 @@ export const CajaView: React.FC = () => {
               <i className="bi bi-plus-lg fs-4 ms-2"></i>
             </button>
             
-            <button className="btn py-3 d-flex justify-content-between align-items-center fw-semibold px-4" style={{ backgroundColor: '#6f42c1', color: '#ffffff', fontSize: '1.15rem', width: '380px', borderRadius: '10px' }} disabled={!cajaAbierta}>
+            <button 
+              className="btn py-3 d-flex justify-content-between align-items-center fw-semibold px-4" 
+              style={{ backgroundColor: '#6f42c1', color: '#ffffff', fontSize: '1.15rem', width: '380px', borderRadius: '10px' }} 
+              disabled={!cajaAbierta}
+              onClick={() => setShowModalCompraInsumos(true)}
+            >
               <span>Compra de Insumos</span>
               <i className="bi bi-truck fs-4 ms-2"></i>
             </button>
@@ -413,6 +427,12 @@ export const CajaView: React.FC = () => {
         onConfirmarCierre={ejecutarCierreCaja}
         guardando={guardandoCierre}
         movimientos={movimientos}
+      />
+
+      <ModalCompraInsumos
+        isOpen={showModalCompraInsumos}
+        onClose={() => setShowModalCompraInsumos(false)}
+        onConfirmar={handleConfirmarCompraInsumo}
       />
     </SidebarLayout>
   );

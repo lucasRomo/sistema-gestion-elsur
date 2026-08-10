@@ -1,3 +1,5 @@
+import type { DatosCompraInsumo } from '../components/ModalCompraInsumos';
+
 export interface MovimientoCaja {
   id_movimiento?: number;
   idMovimiento?: number;
@@ -15,17 +17,6 @@ export interface TotalesCaja {
   totalIngresos: number;
   totalEgresos: number;
   saldoActual: number;
-}
-
-export interface ArqueoCaja {
-  id: number;
-  fechaCierre: string;
-  usuarioCierre: string;
-  montoEsperado: number;
-  montoReal: number;
-  diferencia: number;
-  estado: 'APROBADO' | 'PENDIENTE' | 'OBSERVADO';
-  observacion?: string;
 }
 
 export interface Turno {
@@ -61,7 +52,6 @@ export interface NuevoMovimientoDTO {
 const API_BASE_URL = 'http://localhost:8080/api';
 
 export const cajaService = {
-  // --- MÉTODOS EXISTENTES ---
   obtenerTodos: async (): Promise<MovimientoCaja[]> => {
     try {
       const response = await fetch(`${API_BASE_URL}/movimientos-caja`);
@@ -117,7 +107,6 @@ export const cajaService = {
     }
   },
 
-  // --- MÉTODOS REQUERIDOS PARA LA VISTA DE CAJA ---
   obtenerEstadoCaja: async (): Promise<Turno | null> => {
     try {
       const response = await fetch(`${API_BASE_URL}/turnos/estado-caja`);
@@ -175,5 +164,31 @@ export const cajaService = {
       throw new Error(err || 'Error al cerrar caja');
     }
     return true;
+  }
+};
+
+export const cajaServiceExtended = {
+  ...cajaService,
+
+  registrarCompraInsumo: async (datos: DatosCompraInsumo): Promise<void> => {
+    const usuarioGuardado = localStorage.getItem('usuario_logueado');
+    const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario || 1;
+
+    const payload = {
+      ...datos,
+      idUsuario
+    };
+
+    const response = await fetch(`${API_BASE_URL}/compras-insumos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText || 'Error al registrar la compra de insumos');
+    }
   }
 };
