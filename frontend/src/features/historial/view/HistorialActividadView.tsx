@@ -18,7 +18,7 @@ export const HistorialActividadView: React.FC = () => {
   const inputText = isDark ? '#ffffff' : '#0f172a';
   
   const thBg = isDark ? '#1d1d1d' : '#f8fafc';
-  const thText = isDark ? '#a1a1aa' : '#475569';
+  const thText = isDark ? '#ffffff' : '#334155';
   const rowBorder = isDark ? '#27272a' : '#e2e8f0';
   
   const userTextColor = isDark ? '#ffffff' : '#0f172a';
@@ -67,125 +67,131 @@ export const HistorialActividadView: React.FC = () => {
         </h2>
       </div>
 
-      {/* Tarjeta Contenedora Principal */}
-      <div 
-        className="card border-0 p-4 rounded-3 shadow-sm mb-4"
-        style={{ backgroundColor: mainCardBg, border: `1px solid ${cardBorder}` }}
-      >
-        {/* Filtros Superiores */}
-        <div className="row g-3 mb-4">
-          <div className="col-md-7">
-            <label className="form-label small fw-semibold mb-1" style={{ color: labelColor }}>
-              Filtro por Tabla Modificada:
-            </label>
-            <div className="position-relative">
-              <input
-                type="text"
-                className="form-control shadow-none"
-                style={{ 
-                  backgroundColor: inputBg, 
-                  borderColor: inputBorder, 
-                  color: inputText 
-                }}
-                placeholder="Buscar tabla (ej. clientes, productos)..."
-                value={busquedaTabla}
-                onChange={(e) => setBusquedaTabla(e.target.value)}
-              />
-              <i className="bi bi-search position-absolute end-0 top-50 translate-middle-y me-3" style={{ color: mutedText }}></i>
-            </div>
-          </div>
-
-          <div className="col-md-5">
-            <label className="form-label small fw-semibold mb-1" style={{ color: labelColor }}>
-              Empleado / Usuario:
-            </label>
-            <select
-              className="form-select shadow-none"
+      {/* Filtros Superiores */}
+      <div className="row g-3 mb-4">
+        <div className="col-md-7">
+          <label className="form-label small fw-semibold mb-1" style={{ color: labelColor }}>
+            Filtro por Tabla Modificada:
+          </label>
+          <div className="position-relative">
+            <input
+              type="text"
+              className="form-control shadow-none"
               style={{ 
                 backgroundColor: inputBg, 
                 borderColor: inputBorder, 
                 color: inputText 
               }}
-              value={filtroEmpleado}
-              onChange={(e) => setFiltroEmpleado(e.target.value)}
-            >
-              <option value="Sin Filtro">Todos los usuarios</option>
-              {empleadosUnicos.map((emp) => (
-                <option key={emp} value={emp}>
-                  {emp}
-                </option>
-              ))}
-            </select>
+              placeholder="Buscar tabla (ej. clientes, productos)..."
+              value={busquedaTabla}
+              onChange={(e) => setBusquedaTabla(e.target.value)}
+            />
+            <i className="bi bi-search position-absolute end-0 top-50 translate-middle-y me-3" style={{ color: mutedText }}></i>
           </div>
         </div>
 
-        {/* Tabla con Scroll Interno y Cabecera Fija */}
-        <div 
-          className="table-responsive" 
-          style={{ maxHeight: '60vh', overflowY: 'auto' }}
-        >
-          <table className="w-100 align-middle mb-0" style={{ color: inputText, backgroundColor: 'transparent', borderCollapse: 'collapse' }}>
-            <thead className="sticky-top" style={{ backgroundColor: thBg, zIndex: 1 }}>
-              <tr className="border-bottom" style={{ fontSize: '0.8rem', letterSpacing: '0.3px', borderColor: rowBorder, color: thText }}>
-                <th className="py-3 fw-bold" style={{ width: '18%', backgroundColor: thBg }}>FECHA Y HORA</th>
-                <th className="py-3 fw-bold" style={{ width: '18%', backgroundColor: thBg }}>USUARIO RESPONSABLE</th>
-                <th className="py-3 fw-bold" style={{ width: '15%', backgroundColor: thBg }}>TABLA AFECTADA</th>
-                <th className="py-3 fw-bold" style={{ width: '15%', backgroundColor: thBg }}>COLUMNA AFECTADA</th>
-                <th className="py-3 fw-bold text-center" style={{ width: '10%', backgroundColor: thBg }}>ID ITEM MODIF.</th>
-                <th className="py-3 fw-bold text-start" style={{ width: '12%', backgroundColor: thBg }}>DATO PREVIO</th>
-                <th className="py-3 fw-bold text-start" style={{ width: '12%', backgroundColor: thBg }}>DATO MODIF.</th>
-              </tr>
-            </thead>
-            <tbody style={{ fontSize: '0.88rem' }}>
-              {cargando ? (
-                <tr>
-                  <td colSpan={7} className="py-5 text-center" style={{ color: mutedText }}>
-                    <div className="spinner-border spinner-border-sm me-2" role="status" style={{ color: mutedText }} />
-                    Cargando movimientos...
-                  </td>
-                </tr>
-              ) : actividadesFiltradas.length > 0 ? (
-                actividadesFiltradas.map((act) => (
-                  <tr key={act.idRegAct} className="border-bottom" style={{ borderColor: rowBorder }}>
-                    <td className="font-monospace py-3" style={{ fontSize: '0.85rem', color: mutedText }}>
-                      {new Date(act.fecha).toLocaleString('es-AR', {
-                        year: 'numeric', month: '2-digit', day: '2-digit',
-                        hour: '2-digit', minute: '2-digit', second: '2-digit'
-                      })}
-                    </td>
-                    <td className="fw-semibold py-3" style={{ color: userTextColor }}>
-                      <i className="bi bi-person me-2" style={{ color: mutedText }}></i>
-                      {obtenerNombreUsuario(act)}
-                    </td>
-                    <td className="py-3" style={{ color: mutedText }}>{act.tablaAfectada}</td>
-                    <td className="py-3" style={{ color: mutedText }}>{act.columnaAfectada || '-'}</td>
-                    <td className="text-center font-monospace text-warning py-3">
-                      #{act.idRegistroMod || '-'}
-                    </td>
-                    <td className="text-start py-3" style={{ color: mutedText }}>{formatearDato(act.datosAnteriores)}</td>
-                    <td className="fw-semibold text-success text-start py-3">{formatearDato(act.datosNuevos)}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="py-5 text-center" style={{ color: inputText }}>
-                    No se registraron movimientos en el sistema.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        <div className="col-md-5">
+          <label className="form-label small fw-semibold mb-1" style={{ color: labelColor }}>
+            Empleado / Usuario:
+          </label>
+          <select
+            className="form-select shadow-none"
+            style={{ 
+              backgroundColor: inputBg, 
+              borderColor: inputBorder, 
+              color: inputText 
+            }}
+            value={filtroEmpleado}
+            onChange={(e) => setFiltroEmpleado(e.target.value)}
+          >
+            <option value="Sin Filtro">Todos los usuarios</option>
+            {empleadosUnicos.map((emp) => (
+              <option key={emp} value={emp}>
+                {emp}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Botón Volver */}
-      <div className="d-flex justify-content-start mb-3">
-        <button 
-          className="btn px-4 fw-semibold rounded-2 shadow-sm"
-          style={{ backgroundColor: '#dc3545', borderColor: '#dc3545', color: '#ffffff', fontSize: '0.95rem' }}
-          onClick={() => navigate(-1)}
+      {/* Tabla con Scroll Interno y Tamaño Fijo */}
+      <div 
+        className="table-responsive rounded-3 border mb-3 font-monospace" 
+        style={{ 
+          backgroundColor: mainCardBg, 
+          borderColor: cardBorder,
+          height: '72vh',
+          overflowY: 'auto',
+          display: 'block'
+        }}
+      >
+        <table 
+          className="table-hover m-0 align-middle w-100" 
+          style={{ borderCollapse: 'collapse', color: inputText, backgroundColor: mainCardBg }}
         >
-          Volver
+          <thead style={{ position: 'sticky', top: 0, backgroundColor: thBg, zIndex: 1, color: thText }}>
+            <tr style={{ backgroundColor: thBg, borderBottom: `2px solid ${rowBorder}`, color: thText, fontSize: '0.85rem', textTransform: 'uppercase' }}>
+              <th className="py-3 px-3 fw-bold text-start" style={{ width: '18%' }}>FECHA Y HORA</th>
+              <th className="py-3 px-3 fw-bold text-start" style={{ width: '18%' }}>USUARIO RESPONSABLE</th>
+              <th className="py-3 px-3 fw-bold text-start" style={{ width: '15%' }}>TABLA AFECTADA</th>
+              <th className="py-3 px-3 fw-bold text-start" style={{ width: '15%' }}>COLUMNA AFECTADA</th>
+              <th className="py-3 px-3 fw-bold text-center" style={{ width: '10%' }}>ID ITEM MODIF.</th>
+              <th className="py-3 px-3 fw-bold text-start" style={{ width: '12%' }}>DATO PREVIO</th>
+              <th className="py-3 px-3 fw-bold text-start" style={{ width: '12%' }}>DATO MODIF.</th>
+            </tr>
+          </thead>
+          <tbody style={{ fontSize: '0.88rem' }}>
+            {cargando ? (
+              <tr>
+                <td colSpan={7} className="py-5 text-center border-0" style={{ color: mutedText }}>
+                  <div className="spinner-border spinner-border-sm me-2" role="status" style={{ color: mutedText }} />
+                  Cargando movimientos...
+                </td>
+              </tr>
+            ) : actividadesFiltradas.length > 0 ? (
+              actividadesFiltradas.map((act, index) => (
+                <tr 
+                  key={act.idRegAct} 
+                  style={{ borderBottom: index === actividadesFiltradas.length - 1 ? 'none' : `1px solid ${rowBorder}` }}
+                >
+                  <td className="font-monospace py-3 px-3" style={{ fontSize: '0.85rem', color: mutedText }}>
+                    {new Date(act.fecha).toLocaleString('es-AR', {
+                      year: 'numeric', month: '2-digit', day: '2-digit',
+                      hour: '2-digit', minute: '2-digit', second: '2-digit'
+                    })}
+                  </td>
+                  <td className="fw-semibold py-3 px-3" style={{ color: userTextColor }}>
+                    <i className="bi bi-person me-2" style={{ color: mutedText }}></i>
+                    {obtenerNombreUsuario(act)}
+                  </td>
+                  <td className="py-3 px-3" style={{ color: mutedText }}>{act.tablaAfectada}</td>
+                  <td className="py-3 px-3" style={{ color: mutedText }}>{act.columnaAfectada || '-'}</td>
+                  <td className="text-center font-monospace text-warning py-3 px-3">
+                    #{act.idRegistroMod || '-'}
+                  </td>
+                  <td className="text-start py-3 px-3" style={{ color: mutedText }}>{formatearDato(act.datosAnteriores)}</td>
+                  <td className="fw-semibold text-success text-start py-3 px-3">{formatearDato(act.datosNuevos)}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={7} className="py-5 text-center border-0" style={{ color: inputText }}>
+                  No se registraron movimientos en el sistema.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Botón Inferior Volver */}
+      <div className="d-flex justify-content-start mt-3 mb-4">
+        <button
+          className="btn btn-danger fw-bold px-4 py-2 shadow-sm font-monospace"
+          style={{ color: '#ffffff' }}
+          onClick={() => navigate('/dashboard')}
+        >
+          <i className="bi me-1"></i>Volver
         </button>
       </div>
 

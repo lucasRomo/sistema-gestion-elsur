@@ -18,85 +18,98 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Estilos adaptativos
-  const textColor = isDark ? '#ffffff' : '#0f172a';
-  const textSubtle = isDark ? '#a1a1aa' : '#64748b';
-  const headerBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const rowBorder = isDark ? '#2d2d30' : '#e2e8f0';
-  const hoverBg = isDark ? '#27272a' : '#f8fafc';
+  // Estilos adaptativos estandarizados
+  const tableWrapperBg = isDark ? '#1d1d1d' : '#f8fafc';
+  const tableBg = isDark ? '#1d1d1d' : '#ffffff';
+  const tableText = isDark ? '#e4e4e7' : '#18181b';
+  const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
+  const theadBorder = isDark ? '#27272a' : '#e2e8f0';
+  const theadText = isDark ? '#fafafa' : '#334155';
+  const rowBorder = isDark ? '#27272a' : '#f1f5f9';
+  const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
 
   const renderBadgeEstado = (estado: string) => {
     switch (estado.toUpperCase()) {
       case 'OPERATIVA':
-        return <span className="badge bg-success text-white fw-bold"><i className="bi bi-check-circle me-1"></i>OPERATIVA</span>;
+        return <span className="badge bg-success bg-opacity-75 text-white fw-bold px-3 py-2"><i className="bi bi-check-circle me-1"></i>OPERATIVA</span>;
       case 'FUERA DE SERVICIO':
       case 'FALLA':
-        return <span className="badge bg-danger text-white fw-bold"><i className="bi bi-exclamation-octagon me-1"></i>FUERA DE SERVICIO</span>;
+        return <span className="badge bg-danger bg-opacity-75 text-white fw-bold px-3 py-2"><i className="bi bi-exclamation-octagon me-1"></i>FUERA DE SERVICIO</span>;
       case 'MANTENIMIENTO':
-        return <span className="badge bg-warning text-dark fw-bold"><i className="bi bi-tools me-1"></i>MANTENIMIENTO</span>;
+        return <span className="badge bg-warning bg-opacity-75 text-dark fw-bold px-3 py-2"><i className="bi bi-tools me-1"></i>MANTENIMIENTO</span>;
       default:
-        return <span className="badge bg-secondary text-white">{estado}</span>;
+        return <span className="badge bg-secondary text-white px-3 py-2">{estado}</span>;
     }
   };
 
   return (
-    <div className="table-responsive" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', color: textColor }}>
-        <thead>
-          <tr style={{ borderBottom: `2px solid ${headerBorder}`, textAlign: 'left' }}>
-            <th style={{ padding: '12px', color: textColor }}>ID</th>
-            <th style={{ padding: '12px', color: textColor }}>Nombre del Equipo</th>
-            <th style={{ padding: '12px', color: textColor }}>Estado Actual</th>
-            <th style={{ padding: '12px', textAlign: 'center', color: textColor }}>Opciones</th>
+    <div 
+      className="table-responsive rounded-3 border mb-2 font-monospace" 
+      style={{ 
+        backgroundColor: tableWrapperBg, 
+        borderColor: theadBorder,
+        height: '72vh',
+        overflowY: 'auto',
+        display: 'block'
+      }}
+    >
+      <table 
+        className="table-hover m-0 align-middle w-100" 
+        style={{ borderCollapse: 'collapse', color: tableText, backgroundColor: tableBg }}
+      >
+        <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
+          <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontSize: '0.85rem', textTransform: 'uppercase' }}>
+            <th className="py-3 px-3 text-center">ID</th>
+            <th className="py-3 px-3 text-start">Nombre del Equipo</th>
+            <th className="py-3 px-3 text-center">Estado Actual</th>
+            <th className="py-3 px-3 text-center">Opciones</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody style={{ fontSize: '0.9rem' }}>
           {maquinas.length === 0 ? (
             <tr>
-              <td colSpan={4} className="text-center py-4" style={{ color: textSubtle }}>
-                No se encontraron equipos registrados en el sistema.
+              <td colSpan={4} className="text-center py-5 border-0" style={{ color: '#ffffff' }}>
+                <i className="bi display-5 d-block mb-2 opacity-50"></i>
+                <span>No se encontraron equipos registrados en el sistema.</span>
               </td>
             </tr>
           ) : (
-            maquinas.map((maq) => (
+            maquinas.map((maq, index) => (
               <tr 
                 key={maq.idMaquina} 
-                style={{ borderBottom: `1px solid ${rowBorder}`, transition: 'background-color 0.2s' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverBg} 
+                style={{ borderBottom: index === maquinas.length - 1 ? 'none' : `1px solid ${rowBorder}` }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                <td style={{ padding: '12px', color: textSubtle }} className="fw-bold">#{maq.idMaquina}</td>
-                <td style={{ padding: '12px', color: textColor }} className="fw-semibold">{maq.nombre}</td>
-                <td style={{ padding: '12px' }}>
+                <td className="py-3 px-3 text-center text-info fw-bold">#{maq.idMaquina}</td>
+                <td className="py-3 px-3 fw-semibold text-start" style={{ color: tableText }}>{maq.nombre}</td>
+                <td className="py-3 px-3 text-center">
                   {renderBadgeEstado(maq.estado)}
                 </td>
-                <td style={{ padding: '12px' }}>
+                <td className="py-3 px-3 text-center">
                   <div className="d-flex justify-content-center gap-2">
-                    {/* Ver Historial de Incidencias */}
                     <button 
                       onClick={() => onVerIncidencias(maq)}
-                      className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center"
-                      style={{ width: '32px', height: '32px' }}
+                      className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2"
+                      style={{ width: '34px', height: '34px' }}
                       title="Ver Historial de Incidencias"
                     >
                       <i className="bi bi-clock-history"></i>
                     </button>
 
-                    {/* Editar Equipo */}
                     <button 
                       onClick={() => onEditar(maq)}
-                      className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center"
-                      style={{ width: '32px', height: '32px', color: isDark ? '#ffc107' : '#d97706', borderColor: isDark ? '#ffc107' : '#d97706' }}
+                      className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2"
+                      style={{ width: '34px', height: '34px' }}
                       title="Modificar Equipo"
                     >
                       <i className="bi bi-pencil-square"></i>
                     </button>
 
-                    {/* Eliminar Equipo */}
                     <button 
                       onClick={() => maq.idMaquina && onEliminar(maq.idMaquina)}
-                      className="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center"
-                      style={{ width: '32px', height: '32px' }}
+                      className="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center rounded-2"
+                      style={{ width: '34px', height: '34px' }}
                       title="Eliminar Equipo"
                     >
                       <i className="bi bi-trash"></i>

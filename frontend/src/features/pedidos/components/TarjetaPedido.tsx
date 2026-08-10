@@ -171,17 +171,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
     });
   });
 
-  if (p.ubicacion_estante && p.ubicacion_estante !== 'Taller') {
-    items.push({
-      id: 'ev-ubic-actual',
-      fechaRaw: fechaCreacionRaw,
-      fechaFormateada: formatearHoraOCorta(fechaCreacionRaw),
-      tipo: 'UBICACION',
-      titulo: 'Ubicación Actual',
-      subtitulo: `➔ ${p.ubicacion_estante}`
-    });
-  }
-
   return items.sort((a, b) => new Date(a.fechaRaw).getTime() - new Date(b.fechaRaw).getTime());
   };
 

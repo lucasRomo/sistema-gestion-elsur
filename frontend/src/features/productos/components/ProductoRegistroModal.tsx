@@ -249,7 +249,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
               </div>
               
               <div className={`modal-footer border-top ${borderDivider} py-2`}>
-                <button type="button" className="btn btn-sm btn-secondary px-4" onClick={onClose}>Cancelar</button>
+                <button type="button" className="btn btn-sm btn-danger px-4" onClick={onClose}>Cancelar</button>
                 <button type="submit" className="btn btn-sm btn-info text-dark fw-bold px-4">Guardar</button>
               </div>
             </form>

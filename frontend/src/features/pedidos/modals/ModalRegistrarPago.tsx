@@ -30,6 +30,9 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   const inputBg = isDark ? 'bg-dark' : 'bg-white';
   const inputText = isDark ? 'text-white' : 'text-dark';
   const archivoBg = isDark ? '#121214' : '#f1f5f9';
+  const botonAdjuntarBg = isDark ? '#1a1a1c' : '#f8fafc';
+  const botonAdjuntarBorder = isDark ? '#38bdf8' : '#0284c7';
+  const botonAdjuntarText = isDark ? '#38bdf8' : '#0284c7'; 
 
   // Verificación de Consumidor Final
   const esConsumidorFinal = 
@@ -170,7 +173,7 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
               {/* Adjuntar Comprobante */}
               {tipoPago !== 'EFECTIVO' && tipoPago !== 'CUENTA_CORRIENTE' && (
                 <div className="mb-4">
-                  <label className="form-label small text-dark fw-bold mb-2 d-block">Comprobante de Respaldo:</label>
+                 <label className={`form-label small ${labelClass} fw-bold mb-2 d-block`}>Comprobante de Respaldo:</label>
                   
                   <input 
                     type="file" 
@@ -181,23 +184,23 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                   />
 
                   {!archivo ? (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="btn w-100 d-flex align-items-center justify-content-center gap-2 py-2"
-                      style={{
-                        backgroundColor: '#f8fafc',
-                        border: '1px solid #0284c7',
-                        color: '#0284c7',
-                        borderRadius: '8px',
-                        fontSize: '0.95rem',
-                        fontWeight: '600',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <i className="bi bi-cloud-arrow-up fs-5"></i>
-                      <span>Vincular Comprobante (Opcional)</span>
-                    </button>
+                     <button
+      type="button"
+      onClick={() => fileInputRef.current?.click()}
+      className="btn w-100 d-flex align-items-center justify-content-center gap-2 py-2"
+      style={{
+        backgroundColor: botonAdjuntarBg,
+        border: `1px solid ${botonAdjuntarBorder}`,
+        color: botonAdjuntarText,
+        borderRadius: '8px',
+        fontSize: '0.95rem',
+        fontWeight: '600',
+        transition: 'all 0.2s ease'
+      }}
+    >
+      <i className="bi bi-cloud-arrow-up fs-5"></i>
+      <span>Vincular Comprobante (Opcional)</span>
+    </button>
                   ) : (
                     <div 
   className="d-flex align-items-center justify-content-between p-2 rounded" 

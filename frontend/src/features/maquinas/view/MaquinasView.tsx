@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Maquina } from '../types/Maquina';
 import { MaquinaTabla } from '../components/MaquinaTabla';
 import { MaquinaModal } from '../components//MaquinaModal';
@@ -7,6 +8,7 @@ import { HistorialIncidenciasModal } from '../components//HistorialIncidenciasMo
 import { useTheme } from '../../../Context/ThemeContext';
 
 export const MaquinasView: React.FC = () => {
+  const navigate = useNavigate();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -200,48 +202,56 @@ export const MaquinasView: React.FC = () => {
       </div>
 
       {/* Tabla de Equipos */}
-      <div className="card rounded-3 shadow" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+      <div>
         <div className="card-body p-0">
           {cargando ? (
-            <div className="text-center py-5" style={{ color: textSubtle }}>
-              <div className="spinner-border spinner-border-sm me-2" role="status"></div>
-              Cargando equipos...
-            </div>
-          ) : (
-            <MaquinaTabla
-              maquinas={maquinasFiltradas}
-              onEditar={(m) => {
-                setMaquinaAEditar(m);
-                setShowModalCrud(true);
-              }}
-              onVerIncidencias={(m) => {
-                setMaquinaHistorial(m);
-                setShowModalHistorial(true);
-              }}
-              onEliminar={handleEliminar}
-            />
-          )}
+        <div className="text-center py-5" style={{ color: textSubtle }}>
+          <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+          Cargando equipos...
+        </div>
+      ) : (
+        <MaquinaTabla
+          maquinas={maquinasFiltradas}
+          onEditar={(m) => {
+            setMaquinaAEditar(m);
+            setShowModalCrud(true);
+          }}
+          onVerIncidencias={(m) => {
+            setMaquinaHistorial(m);
+            setShowModalHistorial(true);
+          }}
+          onEliminar={handleEliminar}
+        />
+      )}
         </div>
       </div>
 
-      {/* Botones inferiores */}
-      <div className="d-flex justify-content-end gap-2 mt-3 mb-4">
+      <div className="d-flex justify-content-between align-items-center mt-3 mb-4">
         <button
           className="btn btn-danger fw-bold px-3 shadow"
-          onClick={() => setShowModalFalla(true)}
+          onClick={() => navigate('/dashboard')}
         >
-          <i className="bi me-2"></i>Reportar Falla
+          <i className="bi me-2"></i>Volver
         </button>
-        <button
-          className="btn btn-warning fw-bold px-3 shadow"
-          style={{ color: '#ffffff' }}
-          onClick={() => {
-            setMaquinaAEditar(null);
-            setShowModalCrud(true);
-          }}
-        >
-          <i className="bi bi-plus-circle me-2"></i>Nuevo Equipo
-        </button>
+
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-danger fw-bold px-3 shadow"
+            onClick={() => setShowModalFalla(true)}
+          >
+            Reportar Falla
+          </button>
+          <button
+            className="btn btn-warning fw-bold px-3 shadow"
+            style={{ backgroundColor: "#ce9b0e", borderColor: "#ce9b0e", color: '#ffffff' }}
+            onClick={() => {
+              setMaquinaAEditar(null);
+              setShowModalCrud(true);
+            }}
+          >
+            <i className="bi me-2"></i>Nuevo Equipo
+          </button>
+        </div>
       </div>
 
       {/* Modales */}

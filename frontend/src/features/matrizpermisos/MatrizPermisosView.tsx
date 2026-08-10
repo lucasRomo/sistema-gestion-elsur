@@ -690,7 +690,7 @@ export const MatrizPermisosView: React.FC = () => {
 
             {/* BOTONES DE ACCIÓN */}
             <div className="d-flex justify-content-between mt-3 pt-2 border-top border-secondary border-opacity-25">
-              <button onClick={() => navigate('/dashboard')} className="btn btn-sm px-3 py-1 fw-bold" style={{ backgroundColor: '#a52a2a', borderRadius: '6px', fontSize: '0.85rem', color: '#ffffff' }}>
+              <button onClick={() => navigate('/dashboard')} className="btn btn-sm px-3 py-1 fw-bold" style={{ backgroundColor: '#c93030', borderRadius: '6px', fontSize: '0.85rem', color: '#ffffff' }}>
                 Volver
               </button>
               <button onClick={handleGuardar} className="btn btn-sm px-4 py-1 fw-bold shadow" style={{ backgroundColor: '#2b7a3e', borderRadius: '6px', fontSize: '0.85rem', color: '#ffffff' }}>

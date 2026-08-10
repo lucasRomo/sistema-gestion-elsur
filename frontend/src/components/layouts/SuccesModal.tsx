@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../../Context/ThemeContext';
 
 interface SuccesModalProps {
   show: boolean;
@@ -15,30 +16,38 @@ export const SuccesModal: React.FC<SuccesModalProps> = ({
   title = "¡Éxito!",             
   icon = "bi-check-circle-fill" 
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   if (!show) return null;
+
+  // Estilos adaptativos según el tema activo
+  const modalBg = isDark ? '#18181b' : '#ffffff';
+  const modalText = isDark ? '#ffffff' : '#18181b';
+  const descColor = isDark ? '#a1a1aa' : '#64748b'; // Texto secundario visible y elegante en ambos modos
+  const modalBorder = isDark ? '#8e45e0' : '#cbd5e1';
 
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
       <div className="modal-dialog modal-dialog-centered">
         <div
-          className="modal-content text-white font-monospace"
-          style={{ backgroundColor: '#18181b', border: '1px solid #8e45e0' }}
+          className="modal-content font-monospace shadow-lg"
+          style={{ backgroundColor: modalBg, color: modalText, border: `1px solid ${modalBorder}` }}
         >
           <div className="modal-body text-center py-4">
             
-            {/* ➔ CAMBIO 1: Ahora usa la prop 'icon' dinámica en vez de la clase fija de éxito */}
             <i
               className={`bi ${icon}`}
               style={{ fontSize: '3rem', color: '#8e45e0' }}
             ></i>
             
-            {/* ➔ CAMBIO 2: Ahora usa la prop 'title' dinámica en vez de '¡Éxito!' fijo */}
-            <h4 className="mt-3 fw-bold">{title}</h4>
+            <h4 className="mt-3 fw-bold" style={{ color: modalText }}>{title}</h4>
             
-            <p className="text-white-50">{message}</p>
+            <p style={{ color: descColor }} className="mb-3">{message}</p>
+            
             <button
-              className="btn mt-3 px-4 fw-bold text-white"
-              style={{ backgroundColor: '#e22e2e', borderColor: '#e62020' }}
+              className="btn mt-3 px-4 fw-bold"
+              style={{ backgroundColor: '#e22e2e', borderColor: '#e62020', color: '#ffffff' }}
               onClick={onClose}
             >
               Cerrar

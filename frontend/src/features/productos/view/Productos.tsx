@@ -91,9 +91,9 @@ export const Productos: React.FC = () => {
         onToggleStockVinculado={handleToggleVinculo}
       />
 
-      <div className={`d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 border-top ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
+      <div className={`d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
         <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2 fw-semibold" style={{ color: '#ffffff' }}>
-          <i className="bi bi-arrow-left me-2"></i>Volver
+          <i className="bi me-2"></i>Volver
         </button>
         <div className="d-flex flex-wrap gap-2">
           <button className="btn px-4 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#17a2b8', color: '#ffffff' }} onClick={() => setShowAumentoModal(true)}>

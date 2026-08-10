@@ -135,31 +135,6 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
 
               <div className="mb-3">
                 <label className="form-label small fw-bold mb-1" style={{ color: labelColor }}>
-                  En el caso de ser un Pedido Pendiente, seleccione el ID/Cliente:
-                </label>
-                <select 
-                  className="form-select py-2 px-3 fw-medium" 
-                  style={{ 
-                    borderRadius: '8px', 
-                    cursor: 'pointer',
-                    backgroundColor: inputBg,
-                    color: inputTextColor,
-                    border: `1px solid ${inputBorder}`
-                  }}
-                  onChange={(e) => setIdPedido(e.target.value)}
-                  defaultValue="no-pedido"
-                >
-                  <option value="no-pedido">No es un Pedido</option>
-                  {pedidosPendientes.map((p: any) => (
-                    <option key={p.id_pedido} value={p.id_pedido}>
-                      ID: {p.id_pedido} - {p.cliente?.persona?.nombre || 'Cliente'} {p.cliente?.persona?.apellido || ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label small fw-bold mb-1" style={{ color: labelColor }}>
                   Monto
                 </label>
                 <input 

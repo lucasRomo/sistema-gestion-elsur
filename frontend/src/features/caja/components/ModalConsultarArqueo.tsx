@@ -165,10 +165,14 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
           </div>
 
           <div className="modal-footer border-0 justify-content-end pt-2">
-            <button className="btn btn-secondary px-4 fw-bold" onClick={onClose}>
-              Cerrar
-            </button>
-          </div>
+  <button 
+    className="btn px-4 fw-bold" 
+    style={{ backgroundColor: '#ce1515', border: 'none', color: '#ffffff' }} 
+    onClick={onClose}
+  >
+    Cerrar
+  </button>
+</div>
         </div>
       </div>
     </div>

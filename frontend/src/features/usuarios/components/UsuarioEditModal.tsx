@@ -165,22 +165,6 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
                   </div>
 
                   <div className="col-md-3 px-1">
-                    <label className="form-label small fw-medium" style={{ color: labelColor }}>Rol del Sistema</label>
-                    <select 
-                      className="form-select" 
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }}
-                      value={editData.rol.idRol}
-                      onChange={e => setEditData({ ...editData, rol: { idRol: Number(e.target.value) } })}
-                    >
-                      {roles.map((r: any) => (
-                        <option key={r.idRol} value={r.idRol} style={{ backgroundColor: inputBg, color: inputTextColor }}>
-                          {r.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="col-md-3 px-1">
                     <label className="form-label small fw-medium" style={{ color: labelColor }}>Cargo</label>
                     <input 
                       type="text" 

@@ -18,138 +18,142 @@ export const ProductoTabla: React.FC<Props> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables cromáticas adaptativas según tema activo
-  const containerBg = isDark ? '#1d1d1d' : '#ffffff';
-  const tableText = isDark ? '#ffffff' : '#0f172a';
-  const tableBorder = isDark ? '#3f3f46' : '#e2e8f0';
-  const theadBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const rowBorder = isDark ? '#2d2d30' : '#e2e8f0';
-  const rowHoverBg = isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc';
-  const emptyTextColor = isDark ? 'text-white-50' : 'text-muted';
+  // Variables cromáticas adaptativas según tema activo (Estandarizadas)
+  const tableWrapperBg = isDark ? '#1d1d1d' : '#f8fafc';
+  const tableBg = isDark ? '#1d1d1d' : '#ffffff';
+  const tableText = isDark ? '#e4e4e7' : '#18181b';
+  const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
+  const theadBorder = isDark ? '#27272a' : '#e2e8f0';
+  const theadText = isDark ? '#f8f8f8' : '#334155';
+  const rowBorder = isDark ? '#27272a' : '#f1f5f9';
+  const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
   const noMachineColor = isDark ? 'rgba(255, 255, 255, 0.5)' : '#64748b';
 
   return (
     <div 
-      className="table-responsive rounded shadow-sm" 
+      className="d-flex flex-column flex-grow-1 overflow-hidden mb-2 shadow-sm rounded-3 border font-monospace" 
       style={{ 
-        maxHeight: '60vh', 
-        overflowY: 'auto',
-        backgroundColor: containerBg,
-        border: `1px solid ${tableBorder}`,
-        transition: 'all 0.2s ease-in-out'
+        backgroundColor: tableWrapperBg, 
+        borderColor: theadBorder,
+        height: '65vh'
       }}
     >
-      <table 
-        className="align-middle m-0" 
-        style={{ 
-          width: '100%',
-          borderCollapse: 'separate', 
-          borderSpacing: 0,
-          color: tableText 
-        }}
+      <div 
+        className="table-responsive flex-grow-1" 
+        style={{ backgroundColor: tableWrapperBg, height: '100%', overflowY: 'auto' }}
       >
-        <thead>
-          <tr style={{ borderBottom: `2px solid ${theadBorder}`, backgroundColor: isDark ? '#1d1d1d' : '#f1f5f9' }}>
-            <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>ID</th>
-            <th className="py-3 px-1 font-monospace small" style={{ color: tableText }}>Nombre</th>
-            <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Categoría</th>
-            <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Precio</th>
-            <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Stock</th>
-            <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Máquina</th>
-            <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Estado</th>
-            <th className="py-3 px-3 font-monospace small text-center" style={{ color: tableText }}>Opciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {productos && productos.length > 0 ? (
-            productos.map((p) => (
-              <tr 
-                key={p.idProducto}
-                style={{ borderBottom: `1px solid ${rowBorder}`, transition: 'background-color 0.15s ease' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <td className="px-3 py-3 font-monospace small" style={{ color: tableText }}>{p.idProducto}</td>
-                <td className="px-1 py-3 fw-bold" style={{ color: tableText }}>{p.nombreProducto}</td>
-                <td className="px-3 py-3" style={{ color: tableText }}>{p.categoria?.nombre || '-'}</td>
-                <td className="px-3 py-3 fw-semibold text-info">${Number(p.precioBase).toFixed(2)}</td>
-                <td className="px-3 py-3">
-                  <span className={p.stock > 0 ? "text-success fw-bold me-2" : "text-danger fw-bold me-2"}>
-                    {p.stock}
-                  </span>
-                  {(p as any).stockVinculado && (
-                    <span className="badge bg-info text-dark font-monospace" style={{ fontSize: '0.7rem' }}>
-                      Auto
+        <table 
+          className="table-hover m-0 align-middle" 
+          style={{ 
+            width: '100%',
+            borderCollapse: 'collapse', 
+            color: tableText,
+            backgroundColor: tableBg 
+          }}
+        >
+          <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
+            <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontSize: '0.85rem', textTransform: 'uppercase' }}>
+              <th className="py-3 px-3 text-center">ID</th>
+              <th className="py-3 px-3 text-start">Nombre</th>
+              <th className="py-3 px-3 text-center">Categoría</th>
+              <th className="py-3 px-3 text-center">Precio</th>
+              <th className="py-3 px-3 text-center">Stock</th>
+              <th className="py-3 px-3 text-center">Máquina</th>
+              <th className="py-3 px-3 text-center">Estado</th>
+              <th className="py-3 px-3 text-center">Opciones</th>
+            </tr>
+          </thead>
+          <tbody style={{ fontSize: '0.9rem' }}>
+            {productos && productos.length > 0 ? (
+              productos.map((p) => (
+                <tr 
+                  key={p.idProducto}
+                  style={{ borderBottom: `1px solid ${rowBorder}` }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <td className="px-3 py-3 text-center text-info fw-bold">#{p.idProducto}</td>
+                  <td className="px-3 py-3 fw-bold text-start" style={{ color: tableText }}>{p.nombreProducto}</td>
+                  <td className="px-3 py-3 text-center" style={{ color: tableText }}>{p.categoria?.nombre || '-'}</td>
+                  <td className="px-3 py-3 text-center fw-semibold text-info">${Number(p.precioBase).toFixed(2)}</td>
+                  <td className="px-3 py-3 text-center">
+                    <span className={p.stock > 0 ? "text-success fw-bold me-2" : "text-danger fw-bold me-2"}>
+                      {p.stock}
                     </span>
-                  )}
-                </td>
-                <td 
-  className="px-3 py-3" 
-  style={{ color: p.maquinaNecesaria ? (isDark ? '#ffc107' : '#d97706') : noMachineColor }}
->
-  {p.maquinaNecesaria?.nombre || p.maquinaNecesaria?.nombreMaquina || 'No aplica'}
-</td>
-                <td className="px-3 py-3">
-                  <span className={`badge rounded-pill px-3 py-2 ${p.estado === 'Activo' ? 'bg-success bg-opacity-75' : 'bg-danger bg-opacity-75'}`} style={{ color: '#ffffff' }}>
-                    {p.estado}
-                  </span>
-                </td>
-                <td className="px-3 py-3">
-                  <div className="d-flex justify-content-center gap-2">
-                    {/* Botón Toggle Vínculo de Stock */}
-                    {onToggleStockVinculado && (
-                      <button 
-                        className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
-                          (p as any).stockVinculado 
-                            ? 'btn-info text-dark fw-bold' 
-                            : 'btn-outline-secondary'
-                        }`} 
-                        style={{ 
-                          width: '34px', 
-                          height: '34px'
-                        }}
-                        onClick={() => onToggleStockVinculado(p)}
-                        title={(p as any).stockVinculado ? "Stock vinculado a insumos (Activado)" : "Vincular stock a insumos (Desactivado)"}
-                      >
-                        <i className="bi bi-link-45deg fs-5"></i>
-                      </button>
+                    {(p as any).stockVinculado && (
+                      <span className="badge bg-info text-dark font-monospace" style={{ fontSize: '0.7rem' }}>
+                        Auto
+                      </span>
                     )}
+                  </td>
+                  <td 
+                    className="px-3 py-3 text-center" 
+                    style={{ color: p.maquinaNecesaria ? (isDark ? '#ffc107' : '#d97706') : noMachineColor }}
+                  >
+                    {p.maquinaNecesaria?.nombre || p.maquinaNecesaria?.nombreMaquina || 'No aplica'}
+                  </td>
+                  <td className="px-3 py-3 text-center">
+                    <span className={`badge rounded-pill px-3 py-2 ${p.estado === 'Activo' ? 'bg-success bg-opacity-75' : 'bg-danger bg-opacity-75'}`} style={{ color: '#ffffff' }}>
+                      {p.estado}
+                    </span>
+                  </td>
+                  <td className="px-3 py-3 text-center">
+                    <div className="d-flex justify-content-center gap-2">
+                      {/* Botón Toggle Vínculo de Stock */}
+                      {onToggleStockVinculado && (
+                        <button 
+                          className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
+                            (p as any).stockVinculado 
+                              ? 'btn-info text-dark fw-bold' 
+                              : 'btn-outline-secondary'
+                          }`} 
+                          style={{ 
+                            width: '34px', 
+                            height: '34px'
+                          }}
+                          onClick={() => onToggleStockVinculado(p)}
+                          title={(p as any).stockVinculado ? "Stock vinculado a insumos (Activado)" : "Vincular stock a insumos (Desactivado)"}
+                        >
+                          <i className="bi bi-link-45deg fs-5"></i>
+                        </button>
+                      )}
 
-                    {/* Botón Editar Producto */}
-                    <button 
-                      className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 
-                      style={{ width: '34px', height: '34px' }}
-                      onClick={() => onEditar(p)}
-                      title="Editar Producto"
-                    >
-                      <i className="bi bi-pencil-square fs-6"></i>
-                    </button>
-
-                    {/* Botón Configurar Receta / Insumos */}
-                    {onConfigurarReceta && (
+                      {/* Botón Editar Producto */}
                       <button 
-                        className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                        className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 
                         style={{ width: '34px', height: '34px' }}
-                        onClick={() => onConfigurarReceta(p)}
-                        title="Configurar Receta / Insumos"
+                        onClick={() => onEditar(p)}
+                        title="Editar Producto"
                       >
-                        <i className="bi bi-box-seam fs-6"></i>
+                        <i className="bi bi-pencil-square fs-6"></i>
                       </button>
-                    )}
-                  </div>
+
+                      {/* Botón Configurar Receta / Insumos */}
+                      {onConfigurarReceta && (
+                        <button 
+                          className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                          style={{ width: '34px', height: '34px' }}
+                          onClick={() => onConfigurarReceta(p)}
+                          title="Configurar Receta / Insumos"
+                        >
+                          <i className="bi bi-box-seam fs-6"></i>
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={8} className="text-center py-5" style={{ color: '#ffffff' }}>
+                  <i className="bi bi-box-seam display-5 d-block mb-2 opacity-50"></i>
+                  <span className="font-monospace">No se han registrado o encontrado productos en el sistema</span>
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={8} className={`text-center py-5 ${emptyTextColor}`}>
-                <i className="bi bi-box-seam display-5 d-block mb-2 opacity-50"></i>
-                <span className="font-monospace">No se han registrado o encontrado productos en el sistema</span>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

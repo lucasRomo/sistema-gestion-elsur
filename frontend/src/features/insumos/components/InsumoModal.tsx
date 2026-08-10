@@ -22,9 +22,9 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   const headerBorder = isDark ? '#27272a' : '#e2e8f0';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#a1a1aa' : '#475569';
-  const inputBg = isDark ? '#1d1d1d' : '#ffffff';
+  const inputBg = isDark ? '#18181b' : '#ffffff';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const boxBg = isDark ? '#27272a' : '#f8fafc';
+  const boxBg = isDark ? '#18181b' : '#f8fafc';
   const boxBorder = isDark ? '#3f3f46' : '#e2e8f0';
 
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
@@ -212,7 +212,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                       <button 
                         type="button" 
                         className="btn btn-sm d-flex align-items-center gap-1 py-1 fw-bold"
-                        style={{ backgroundColor: '#0bc9f8', color: '#ffffff' }}
+                        style={{ backgroundColor: '#09a4ca', color: '#ffffff' }}
                         onClick={() => setShowRelacionesModal(true)}
                         title="Ver tabla de relaciones"
                       >

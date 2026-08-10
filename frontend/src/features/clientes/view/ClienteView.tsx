@@ -16,15 +16,16 @@ export const ClienteView = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Estilos adaptativos de paleta
+  // Estilos adaptativos de paleta estandarizados
   const titleColor = isDark ? '#ffffff' : '#0f172a';
-  const tableContainerBg = isDark ? '#1d1d1d' : '#ffffff';
-  const tableText = isDark ? '#ffffff' : '#0f172a';
-  const tableContainerBorder = isDark ? '#2d2d30' : '#e2e8f0';
-  const tableHeaderBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const tableRowBorder = isDark ? '#2d2d30' : '#e2e8f0';
-  const hoverRowBg = isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc';
-  const emptyTextColor = isDark ? 'text-white-50' : 'text-muted';
+  const tableWrapperBg = isDark ? '#1d1d1d' : '#f8fafc';
+  const tableBg = isDark ? '#1d1d1d' : '#ffffff';
+  const tableText = isDark ? '#e4e4e7' : '#18181b';
+  const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
+  const theadBorder = isDark ? '#27272a' : '#e2e8f0';
+  const theadText = isDark ? '#fcfcfc' : '#334155';
+  const rowBorder = isDark ? '#27272a' : '#f1f5f9';
+  const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
   const modalStepBg = isDark ? '#1e1e24' : '#ffffff';
 
   const { clientes, registrarCliente, cargarClientes } = useClientes();
@@ -79,17 +80,17 @@ export const ClienteView = () => {
   };
 
   const handleConfirmarEdicion = async (data: any) => {
-  try { 
-    await registrarCliente(data); // Antes: registrar(data)
-    setMsgSuccess("Cambios guardados correctamente");
-    setShowSuccess(true); 
-    setClienteAEditar(null); 
-    setClienteConUbicacionSeleccionada(null); 
-    await cargarClientes(); // Antes: cargar()
-  }
-  catch (e: any) { 
-    alert("Error: " + e.message); 
-  }
+    try { 
+      await registrarCliente(data);
+      setMsgSuccess("Cambios guardados correctamente");
+      setShowSuccess(true); 
+      setClienteAEditar(null); 
+      setClienteConUbicacionSeleccionada(null); 
+      await cargarClientes();
+    }
+    catch (e: any) { 
+      alert("Error: " + e.message); 
+    }
   };
 
   const clientesFiltrados = clientes.filter((c: any) => {
@@ -131,14 +132,6 @@ export const ClienteView = () => {
         <h1 className="fw-bold m-0 text-center font-monospace" style={{ fontSize: '2.25rem', color: titleColor }}>
           Clientes
         </h1>
-        <button 
-  type="button" 
-  className="btn btn-info  fw-semibold font-monospace position-absolute end-0 shadow-sm" 
-  style={{ color: '#ffffff' }}
-  onClick={() => setVerCategoriasModal(true)}
->
-  <i className="bi me-2"></i>Categorías de Clientes
-</button>
       </div>
 
       <SuccesModal 
@@ -154,144 +147,158 @@ export const ClienteView = () => {
         setFiltroEstado={setFiltroEstado}
       />
 
-      {/* Tabla Adaptativa sin la clase .table de Bootstrap */}
+      {/* Tabla Adaptativa Estandarizada */}
       <div 
-        className="table-responsive rounded shadow-sm" 
+        className="d-flex flex-column flex-grow-1 overflow-hidden mb-2 shadow-sm rounded-3 border font-monospace" 
         style={{ 
-          maxHeight: '60vh', 
-          overflowY: 'auto',
-          backgroundColor: tableContainerBg,
-          border: `1px solid ${tableContainerBorder}`,
-          transition: 'all 0.2s ease-in-out'
+          backgroundColor: tableWrapperBg, 
+          borderColor: theadBorder,
+          height: '64vh'
         }}
       >
-        <table 
-          className="align-middle m-0" 
-          style={{ 
-            width: '100%',
-            borderCollapse: 'separate', 
-            borderSpacing: 0,
-            color: tableText 
-          }}
+        <div 
+          className="table-responsive flex-grow-1" 
+          style={{ backgroundColor: tableWrapperBg, height: '100%', overflowY: 'auto' }}
         >
-          <thead>
-            <tr style={{ borderBottom: `2px solid ${tableHeaderBorder}`, backgroundColor: tableContainerBg }}>
-              <th className="py-3 px-3 font-monospace small" style={{ color: tableText, width: '60px', whiteSpace: 'nowrap' }}>ID</th>
-              <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Nombre</th>
-              <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Apellido</th>
-              <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Documento</th>
-              <th className="py-3 px-3 font-monospace small" style={{ color: tableText }}>Razón Social</th>
-              <th className="py-3 px-5 font-monospace small" style={{ color: tableText }}>Cta. Cte.</th>
-              <th className="py-3 px-0 font-monospace small" style={{ color: tableText }}>Saldo Deudor</th>
-              <th className="py-3 px-4 font-monospace small" style={{ color: tableText }}>Estado</th>
-              <th className="py-3 px-3 font-monospace small text-center" style={{ color: tableText }}>Opciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {clientesFiltrados && clientesFiltrados.length > 0 ? (
-              clientesFiltrados.map((c: any) => {
-                const tieneCtaCte = Number(c.limiteCredito || 0) > 0;
-
-                return (
-                  <tr 
-                    key={c.id_cliente} 
-                    style={{ borderBottom: `1px solid ${tableRowBorder}`, transition: 'background-color 0.15s ease' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverRowBg} 
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                  >
-                    <td className="px-3 py-3 font-monospace small" style={{ color: tableText, whiteSpace: 'nowrap' }}>{c.id_cliente}</td>
-                    <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.persona?.nombre}</td>
-                    <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.apellido}</td>
-                    <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.numeroDocumento}</td>
-                    <td className="px-3 py-3" style={{ color: tableText }}>{c.razonSocial}</td>
-                    
-                    <td className="px-3 py-3">
-                      {tieneCtaCte ? (
-                        <span className="badge rounded-pill bg-success bg-opacity-75 font-monospace px-3 py-2" style={{ color: '#ffffff' }}>
-                          Habilitada (${Number(c.limiteCredito).toFixed(0)})
-                        </span>
-                      ) : (
-                        <span className="badge rounded-pill bg-secondary font-monospace opacity-75 px-3 py-2" style={{ color: '#ffffff' }}>
-                          Sin Cta Cte
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="px-3 py-3">
-                      <span className={`fw-bold ${obtenerColorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
-                        ${Number(c.saldoDeudor || 0).toFixed(2)}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3">
-                      <span className={`badge rounded-pill px-3 py-2 ${c.estado === 'Activo' ? 'bg-success bg-opacity-75' : 'bg-danger bg-opacity-75'}`} style={{ color: '#ffffff' }}>
-                        {c.estado}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3">
-                      <div className="d-flex justify-content-center gap-2">
-                        <button 
-                          className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
-                            tieneCtaCte ? 'btn-outline-success' : 'btn-outline-secondary opacity-50'
-                          }`} 
-                          style={{ width: '34px', height: '34px' }} 
-                          title={tieneCtaCte ? "Gestionar Cuenta Corriente" : "Sin Cta. Cte. (Haz clic para asignar límite)"} 
-                          onClick={() => setClienteCuentaCorriente(c)}
-                        >
-                          <i className="bi bi-wallet2 fs-6"></i>
-                        </button>
-
-                        <button 
-                          className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 
-                          style={{ width: '34px', height: '34px' }} 
-                          title="Modificar Cliente" 
-                          onClick={() => setClienteAEditar(c)}
-                        >
-                          <i className="bi bi-pencil-square fs-6"></i>
-                        </button>
-                        
-                        <button 
-                          className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2" 
-                          style={{ width: '34px', height: '34px' }} 
-                          title="Ver Ubicación" 
-                          onClick={() => setClienteConUbicacionSeleccionada(c)}
-                        >
-                          <i className="bi bi-house-door fs-6"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan={9} className={`text-center py-5 ${emptyTextColor}`}>
-                  <i className="bi bi-search display-5 d-block mb-2 opacity-50"></i>
-                  <span className="font-monospace">No se han registrado o encontrado clientes en el sistema.</span>
-                </td>
+          <table 
+            className="table-hover m-0 align-middle" 
+            style={{ 
+              width: '100%',
+              borderCollapse: 'collapse', 
+              color: tableText,
+              backgroundColor: tableBg 
+            }}
+          >
+            <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
+              <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                <th className="py-3 px-3 text-center">ID</th>
+                <th className="py-3 px-3 text-start">Nombre</th>
+                <th className="py-3 px-3 text-start">Apellido</th>
+                <th className="py-3 px-3 text-center">Documento</th>
+                <th className="py-3 px-3 text-start">Razón Social</th>
+                <th className="py-3 px-3 text-center">Cta. Cte.</th>
+                <th className="py-3 px-3 text-end">Saldo Deudor</th>
+                <th className="py-3 px-3 text-center">Estado</th>
+                <th className="py-3 px-3 text-center">Opciones</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody style={{ fontSize: '0.9rem' }}>
+              {clientesFiltrados && clientesFiltrados.length > 0 ? (
+                clientesFiltrados.map((c: any) => {
+                  const tieneCtaCte = Number(c.limiteCredito || 0) > 0;
+
+                  return (
+                    <tr 
+                      key={c.id_cliente} 
+                      style={{ borderBottom: `1px solid ${rowBorder}` }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      <td className="px-3 py-3 text-center text-info fw-bold">#{c.id_cliente}</td>
+                      <td className="px-3 py-3 fw-bold text-start" style={{ color: tableText }}>{c.persona?.nombre}</td>
+                      <td className="px-3 py-3 text-start" style={{ color: tableText }}>{c.persona?.apellido}</td>
+                      <td className="px-3 py-3 text-center" style={{ color: tableText }}>{c.persona?.numeroDocumento}</td>
+                      <td className="px-3 py-3 text-start" style={{ color: tableText }}>{c.razonSocial}</td>
+                      
+                      <td className="px-3 py-3 text-center">
+                        {tieneCtaCte ? (
+                          <span className="badge rounded-pill bg-success bg-opacity-75 font-monospace px-3 py-2" style={{ color: '#ffffff' }}>
+                            Habilitada (${Number(c.limiteCredito).toFixed(0)})
+                          </span>
+                        ) : (
+                          <span className="badge rounded-pill bg-secondary font-monospace opacity-75 px-3 py-2" style={{ color: '#ffffff' }}>
+                            Sin Cta Cte
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="px-3 py-3 text-end">
+                        <span className={`fw-bold ${obtenerColorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
+                          ${Number(c.saldoDeudor || 0).toFixed(2)}
+                        </span>
+                      </td>
+
+                      <td className="px-3 py-3 text-center">
+                        <span className={`badge rounded-pill px-3 py-2 ${c.estado === 'Activo' ? 'bg-success bg-opacity-75' : 'bg-danger bg-opacity-75'}`} style={{ color: '#ffffff' }}>
+                          {c.estado}
+                        </span>
+                      </td>
+
+                      <td className="px-3 py-3 text-center">
+                        <div className="d-flex justify-content-center gap-2">
+                          <button 
+                            className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
+                              tieneCtaCte ? 'btn-outline-success' : 'btn-outline-secondary opacity-50'
+                            }`} 
+                            style={{ width: '34px', height: '34px' }} 
+                            title={tieneCtaCte ? "Gestionar Cuenta Corriente" : "Sin Cta. Cte. (Haz clic para asignar límite)"} 
+                            onClick={() => setClienteCuentaCorriente(c)}
+                          >
+                            <i className="bi bi-wallet2 fs-6"></i>
+                          </button>
+
+                          <button 
+                            className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                            style={{ width: '34px', height: '34px' }} 
+                            title="Modificar Cliente" 
+                            onClick={() => setClienteAEditar(c)}
+                          >
+                            <i className="bi bi-pencil-square fs-6"></i>
+                          </button>
+                          
+                          <button 
+                            className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                            style={{ width: '34px', height: '34px' }} 
+                            title="Ver Ubicación" 
+                            onClick={() => setClienteConUbicacionSeleccionada(c)}
+                          >
+                            <i className="bi bi-house-door fs-6"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={9} className="text-center py-5" style={{ color: '#ffffff' }}>
+                    <i className="bi display-5 d-block mb-2 opacity-50"></i>
+                    <span className="font-monospace">No se han registrado o encontrado clientes en el sistema.</span>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Botonera Inferior con texto blanco estático */}
-      <div className={`d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 border-top ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
+      <div className={`d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
         <button 
           onClick={() => navigate('/dashboard')} 
           className="btn btn-danger px-4 py-2 fw-semibold" 
           style={{ color: '#ffffff' }}
         >
-          <i className="bi bi-arrow-left me-2"></i>Volver
+          <i className="bi me-2"></i>Volver
         </button>
 
         <div className="d-flex flex-wrap gap-2">
           <button 
-  className="btn px-4 py-2 fw-semibold shadow-sm font-monospace d-flex align-items-center gap-2" 
-  style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}
-  onClick={() => setVerResumenCuentasModal(true)}
->
-  <i className="bi"></i> Ver Cuentas Corrientes Activas
-</button>
+            type="button" 
+            className="btn btn-info px-4 py-2 fw-semibold font-monospace shadow-sm" 
+            style={{ backgroundColor: '#0caccc', borderColor: '#0caccc', color: '#ffffff' }}
+            onClick={() => setVerCategoriasModal(true)}
+          >
+            <i className="bi me-2"></i>Categorías de Clientes
+          </button>
+
+          <button 
+            className="btn px-4 py-2 fw-semibold shadow-sm font-monospace d-flex align-items-center gap-2" 
+            style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}
+            onClick={() => setVerResumenCuentasModal(true)}
+          >
+            <i className="bi"></i> Ver Cuentas Corrientes Activas
+          </button>
 
           <button 
             className="btn btn-success px-4 py-2 fw-semibold shadow-sm" 

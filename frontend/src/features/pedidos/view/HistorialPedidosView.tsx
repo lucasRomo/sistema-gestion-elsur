@@ -17,11 +17,11 @@ export const HistorialPedidosPage: React.FC = () => {
   const isDark = theme === 'dark';
 
   const tableWrapperBg = isDark ? '#1d1d1d' : '#f8fafc';
-  const tableBg = isDark ? '#121214' : '#ffffff';
+  const tableBg = isDark ? '#1d1d1d' : '#ffffff';
   const tableText = isDark ? '#e4e4e7' : '#18181b';
   const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
   const theadBorder = isDark ? '#27272a' : '#e2e8f0';
-  const theadText = isDark ? '#a1a1aa' : '#334155';
+  const theadText = isDark ? '#fefeff' : '#334155';
   const grayText = isDark ? '#a1a1aa' : '#64748b';
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
   const { pedidos, cargando, recargarHistorial } = useHistorialPedidos();

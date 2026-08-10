@@ -193,11 +193,12 @@ export const VentaRapida: React.FC = () => {
     })();
 
     const idUsuario = idUsuarioLogueado || 1;
+    const fechaActualIso = new Date().toISOString().slice(0, 19);
 
     const payloadParaBackend = {
       pedido: {
         cliente: { id_cliente: 1 }, 
-        fecha_entrega_estimada: new Date().toISOString(),
+        fecha_finalizacion: fechaActualIso,     
         monto_total: totalFinal,
         monto_pago_adelantado: 0,
         es_cuenta_corriente: false,

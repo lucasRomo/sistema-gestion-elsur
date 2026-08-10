@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 // Componentes y Contextos globales
 import { SidebarLayout } from '../../../components/layouts/SidebarLayout';
@@ -181,6 +181,35 @@ export const CajaView: React.FC = () => {
     );
   };
 
+  const CustomCajaAreaTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const esEgreso = data.esEgreso;
+    return (
+      <div
+        className="p-2 rounded-3 shadow-lg im-surface"
+        style={{ border: `1px solid ${esEgreso ? '#e22e2e' : '#8e45e0'}`, fontSize: '0.85rem' }}
+      >
+        <div className="d-flex align-items-center justify-content-between gap-3 mb-2 pb-1 border-bottom border-secondary border-opacity-25">
+          <span className="fw-bold text-body-secondary">{label}</span>
+          <span className={`fw-bold badge ${esEgreso ? 'bg-danger' : 'bg-success'}`}>
+            {esEgreso
+              ? `- $${Math.abs(data.montoMovimiento).toLocaleString('es-AR')}`
+              : `+ $${Math.abs(data.montoMovimiento).toLocaleString('es-AR')}`}
+          </span>
+        </div>
+        <div className="d-flex align-items-center justify-content-between gap-2">
+          <span className="text-body-secondary">Estado Caja:</span>
+          <span className="fw-bold" style={{ color: '#20c997' }}>
+            ${data.monto.toLocaleString('es-AR')}
+          </span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+  };
+
   return (
     <SidebarLayout activeItem="Caja">
       <div className={`container-fluid p-3 font-monospace ${textColor}`}>
@@ -238,29 +267,49 @@ export const CajaView: React.FC = () => {
                 </div>
                 
                 <div style={{ width: movimientos.length > 5 ? `${movimientos.length * 80}px` : '100%', height: '140px', minWidth: '100%' }}>
-                  {cajaAbierta && movimientos.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={[...movimientos].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-                        .map(m => ({
-                          hora: new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }),
-                          monto: m.tipoMovimiento === 'EGRESO' ? -Math.abs(m.monto) : m.monto
-                        }))}
-                        margin={{ top: 10, right: 15, left: -15, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
-                        <XAxis dataKey="hora" tick={{ fill: chartTick, fontSize: 11 }} axisLine={{ stroke: chartGrid }} tickLine={false} />
-                        <YAxis domain={['auto', 'auto']} tick={{ fill: chartTick, fontSize: 11 }} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, color: tooltipText, fontSize: '12px' }} labelStyle={{ color: chartTick }} />
-                        <Line type="linear" dataKey="monto" stroke="#6c0beb" strokeWidth={4} dot={{ fill: dotColor, stroke: dotColor, strokeWidth: 2, r: 4 }} activeDot={{ r: 6 }} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="d-flex align-items-center justify-content-center h-100 text-muted small opacity-50" style={{ minHeight: '140px' }}>
-                      <i className="bi bi-graph-up-arrow me-2"></i> No hay datos disponibles para graficar
-                    </div>
-                  )}
-                </div>
+  {cajaAbierta && movimientos.length > 0 ? (
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart
+        data={[...movimientos].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+        .map(m => {
+          const esEgreso = m.tipoMovimiento === 'EGRESO';
+          return {
+            hora: new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }),
+            monto: esEgreso ? -Math.abs(m.monto) : m.monto,
+            esEgreso,
+            montoMovimiento: m.monto
+          };
+        })}
+        margin={{ top: 10, right: 15, left: -15, bottom: 5 }}
+      >
+        <defs>
+          <linearGradient id="colorSaldoCaja" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="#8e45e0" stopOpacity={0.8} />
+            <stop offset="95%" stopColor="#8e45e0" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
+        <XAxis dataKey="hora" tick={{ fill: chartTick, fontSize: 11 }} axisLine={{ stroke: chartGrid }} tickLine={false} />
+        <YAxis domain={['auto', 'auto']} tick={{ fill: chartTick, fontSize: 11 }} axisLine={false} tickLine={false} />
+        <RechartsTooltip content={<CustomCajaAreaTooltip />} />
+        <Area
+          type="monotone"
+          dataKey="monto"
+          stroke="#8e45e0"
+          strokeWidth={3}
+          fillOpacity={1}
+          fill="url(#colorSaldoCaja)"
+          dot={{ fill: dotColor, stroke: dotColor, strokeWidth: 2, r: 4 }}
+          activeDot={{ r: 6 }}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  ) : (
+    <div className="d-flex align-items-center justify-content-center h-100 text-muted small opacity-50" style={{ minHeight: '140px' }}>
+      <i className="bi bi-graph-up-arrow me-2"></i> No hay datos disponibles para graficar
+    </div>
+  )}
+</div>
               </div>
             </div>
           </div>
@@ -272,45 +321,45 @@ export const CajaView: React.FC = () => {
             
             <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: tableWrapBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle, height: '315px' }}>
               <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapBg, height: '100%', overflowY: 'auto' }}>
-                <table className={`table table-hover m-0 align-middle text-center ${isDark ? 'table-dark' : ''}`} style={{ backgroundColor: tableWrapBg }}>
-                  <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
-                    <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
-                      <th style={{ width: '160px' }}>Fecha/Hora</th>
-                      <th style={{ width: '110px' }}>Monto</th>
-                      <th style={{ width: '140px' }}>Categoría</th>
-                      <th className="text-start">Descripción</th>
-                      <th style={{ width: '80px' }}>Usuario</th>
-                      <th style={{ width: '80px' }}>Pedido</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {movimientos.length === 0 ? (
-                      <tr><td colSpan={6} className="py-5 opacity-50">No hay movimientos registrados hoy</td></tr>
-                    ) : (
-                      movimientos.map((m, idx) => (
-                        <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
-                          <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
-                          <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
-                            {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
-                          </td>
-                          <td>{renderBadgeCategoria(m)}</td>
-                          <td>
-                            <div 
-                              className="text-start" 
-                              style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '280px' }}
-                              title={m.descripcion || 'Sin descripción'}
-                            >
-                              {m.descripcion || '-'}
-                            </div>
-                          </td>
-                          <td>{m.usuario?.idUsuario || m.usuario?.id_usuario || '1'}</td>
-                          <td>{m.pedido?.idPedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1] : '-')}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+  <table className="table table-hover m-0 align-middle text-center" style={{ backgroundColor: tableWrapBg, color: isDark ? '#fff' : 'inherit' }}>
+    <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
+      <tr className="border-secondary" style={{ backgroundColor: theadBg, fontSize: '0.9rem' }}>
+        <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '160px' }}>Fecha/Hora</th>
+        <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '110px' }}>Monto</th>
+        <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '140px' }}>Categoría</th>
+        <th className="text-start" style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d' }}>Descripción</th>
+        <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '80px' }}>Usuario</th>
+        <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '80px' }}>Pedido</th>
+      </tr>
+    </thead>
+    <tbody>
+      {movimientos.length === 0 ? (
+        <tr><td colSpan={6} className="py-5 opacity-50" style={{ backgroundColor: tableWrapBg }}>No hay movimientos registrados hoy</td></tr>
+      ) : (
+        movimientos.map((m, idx) => (
+          <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ backgroundColor: tableWrapBg, fontSize: '0.95rem' }}>
+            <td style={{ backgroundColor: 'transparent' }}>{new Date(m.fecha).toLocaleString('es-AR')}</td>
+            <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`} style={{ backgroundColor: 'transparent' }}>
+              {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
+            </td>
+            <td style={{ backgroundColor: 'transparent' }}>{renderBadgeCategoria(m)}</td>
+            <td style={{ backgroundColor: 'transparent' }}>
+              <div 
+                className="text-start" 
+                style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '280px' }}
+                title={m.descripcion || 'Sin descripción'}
+              >
+                {m.descripcion || '-'}
               </div>
+            </td>
+            <td style={{ backgroundColor: 'transparent' }}>{m.usuario?.idUsuario || m.usuario?.id_usuario || '1'}</td>
+            <td style={{ backgroundColor: 'transparent' }}>{m.pedido?.idPedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1] : '-')}</td>
+          </tr>
+        ))
+      )}
+    </tbody>
+  </table>
+</div>
             </div>
           </div>
 

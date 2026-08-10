@@ -270,18 +270,18 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
             {pasoJustificacion ? (
               <>
                 <button 
-                  type="button" 
-                  className="btn px-4 fw-bold border-0 shadow-sm" 
-                  style={{ backgroundColor: '#4b5563', color: '#ffffff' }} 
-                  onClick={() => setPasoJustificacion(false)} 
-                  disabled={guardando}
-                >
-                  Volver a corregir monto
-                </button>
+  type="button" 
+  className="btn px-4 fw-bold border-0 shadow-sm" 
+  style={{ backgroundColor: '#ce1515', color: '#ffffff' }} 
+  onClick={() => setPasoJustificacion(false)} 
+  disabled={guardando}
+>
+  Volver a corregir monto
+</button>
                 <button
                   type="button"
                   className="btn px-4 fw-bold border-0 shadow-sm"
-                  style={{ backgroundColor: '#ec3507', color: '#ffffff' }}
+                  style={{ backgroundColor: '#caa80f', color: '#ffffff' }}
                   onClick={ejecutarCierre}
                   disabled={guardando || !observacion.trim()}
                 >
@@ -291,14 +291,14 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
             ) : (
               <>
                 <button 
-                  type="button" 
-                  className="btn px-4 fw-bold border-0 shadow-sm" 
-                  style={{ backgroundColor: '#4b5563', color: '#ffffff' }} 
-                  onClick={onClose} 
-                  disabled={guardando}
-                >
-                  Cancelar
-                </button>
+  type="button" 
+  className="btn px-4 fw-bold border-0 shadow-sm" 
+  style={{ backgroundColor: '#ce1515', color: '#ffffff' }} 
+  onClick={onClose} 
+  disabled={guardando}
+>
+  Cancelar
+</button>
                 <button 
                   type="submit" 
                   form="form-cierre" 

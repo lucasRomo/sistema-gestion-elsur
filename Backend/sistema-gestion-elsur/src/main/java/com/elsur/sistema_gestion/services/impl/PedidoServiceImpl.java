@@ -99,6 +99,13 @@ public class PedidoServiceImpl implements PedidoService {
         if (!existeCajaAbierta) { 
             throw new RuntimeException("La Caja No está Abierta. Por favor, inicie turno antes de continuar.");
         }
+        LocalDateTime ahora = LocalDateTime.now();
+        if (pedido.getFecha_creacion() == null) {
+        pedido.setFecha_creacion(ahora);
+        }
+        if (pedido.getFecha_entrega_estimada() == null) {
+        pedido.setFecha_entrega_estimada(ahora);
+        }
 
         Integer idCliente = (pedido.getCliente() != null && pedido.getCliente().getIdCliente() != null)  
                             ? pedido.getCliente().getIdCliente() : 1; 

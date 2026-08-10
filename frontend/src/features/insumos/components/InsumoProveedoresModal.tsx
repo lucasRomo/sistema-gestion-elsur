@@ -109,7 +109,7 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="text-center py-4 text-warning">No se encontraron resultados para este estado.</td>
+                      <td colSpan={5} className="text-center py-4">No se encontraron resultados para este estado.</td>
                     </tr>
                   )}
                 </tbody>

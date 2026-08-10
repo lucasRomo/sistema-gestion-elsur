@@ -19,9 +19,9 @@ export const ConvertirInsumoModal: React.FC<ConvertirInsumoModalProps> = ({ show
   const headerBorder = isDark ? '#27272a' : '#e2e8f0';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#a1a1aa' : '#475569';
-  const inputBg = isDark ? '#1d1d1d' : '#ffffff';
+  const inputBg = isDark ? '#18181b' : '#ffffff';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const infoBoxBg = isDark ? '#27272a' : '#f8fafc';
+  const infoBoxBg = isDark ? '#18181b' : '#f8fafc';
   const resultBoxBg = isDark ? '#14532d' : '#dcfce7';
   const resultBoxBorder = isDark ? '#16a34a' : '#86efac';
   const resultTextColor = isDark ? '#ffffff' : '#14532d';
@@ -155,7 +155,7 @@ export const ConvertirInsumoModal: React.FC<ConvertirInsumoModalProps> = ({ show
               <button 
                 type="submit" 
                 className="btn px-4 fw-bold" 
-                style={{ backgroundColor: '#10b981', color: '#ffffff' }}
+                style={{ backgroundColor: '#1b9945', color: '#ffffff' }}
                 disabled={cargando || stockBultos <= 0}
               >
                 {cargando ? 'Procesando...' : 'Confirmar Conversión'}

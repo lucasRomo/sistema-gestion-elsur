@@ -63,16 +63,17 @@ export const VistaTicketModal: React.FC<Props> = ({ pedido, onClose }) => {
 
           {/* Contenedor Envolvente del Ticket Físico (Simula el papel térmico continuo con un recuadro oscuro estético) */}
           <div 
-            id="ticket-imprimible" 
-            className="p-3 font-monospace position-relative" 
-            style={{ 
-              fontSize: '0.88rem', 
-              color: '#000',
-              border: '2px dashed #333',
-              borderRadius: '4px',
-              backgroundColor: '#fff'
-            }}
-          >
+             id="ticket-imprimible" 
+             data-bs-theme="light"
+             className="p-3 font-monospace position-relative" 
+             style={{ 
+               fontSize: '0.88rem', 
+               color: '#000',
+               border: '2px dashed #333',
+               borderRadius: '4px',
+               backgroundColor: '#fff'
+             }}
+           >
             {/* Encabezado General */}
             <div className="text-center mb-3">
               <h4 className="fw-bold mb-0">EL SUR</h4>
@@ -167,7 +168,7 @@ export const VistaTicketModal: React.FC<Props> = ({ pedido, onClose }) => {
 
           {/* Acciones de Control - Ocultas al imprimir */}
           <div className="d-flex justify-content-between mt-4 border-top pt-2 d-print-none">
-            <button className="btn btn-secondary px-3" onClick={onClose}>
+            <button className="btn btn-danger px-3" onClick={onClose}>
               Cerrar
             </button>
             <button 

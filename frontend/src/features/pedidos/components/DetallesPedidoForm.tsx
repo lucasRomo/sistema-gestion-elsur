@@ -278,7 +278,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
             className="btn btn-danger px-4 fw-medium text-white"
             onClick={onVolver}
           >
-            <i className="bi bi-arrow-left me-1"></i> Volver al Carrito
+            <i className="bi me-1"></i> Volver al Carrito
           </button>
 
           <div className="d-flex align-items-center gap-2">
