@@ -4,6 +4,7 @@ import { InsumoTabla } from '../components/InsumoTabla';
 import { InsumoProveedoresModal } from '../components/InsumoProveedoresModal';
 import { InsumoModal } from '../components/InsumoModal';
 import { ConvertirInsumoModal } from '../components/ConvertirInsumoModal';
+import { ModalMermasInsumos } from '../modals/ModalMermasInsumos';
 import { useInsumos } from '../hooks/useInsumos';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { InsumosFiltros } from '../components/InsumosFiltros';
@@ -29,6 +30,7 @@ export const Insumos: React.FC = () => {
   const [showModalForm, setShowModalForm] = useState(false);
   const [showAumentoModal, setShowAumentoModal] = useState(false);
   const [showConvertirModal, setShowConvertirModal] = useState(false);
+  const [showMermasModal, setShowMermasModal] = useState(false);
   
   const [insumoEditando, setInsumoEditando] = useState<Insumo | null>(null);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -82,13 +84,22 @@ export const Insumos: React.FC = () => {
         }}
       />
 
-      {/* Botonera principal (se eliminó la línea divisoria 'border-top border-secondary') */}
+      {/* Botonera principal */}
       <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-3 font-monospace">
         <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2" style={{ color: '#ffffff' }}>
           Volver
         </button>
         
         <div className="d-flex gap-3">
+          {/* BOTÓN DE MERMAS (UBICADO EN EL ESPACIO INDICADO) */}
+          <button 
+            className="btn btn-warning px-4 py-2 fw-bold text-dark"
+            onClick={() => setShowMermasModal(true)}
+          >
+            <i className="bi bi-exclamation-diamond-fill me-2"></i>
+            Mermas
+          </button>
+
           <button 
             className="btn px-4 py-2 fw-normal" 
             style={{ backgroundColor: '#17a2b8', color: '#ffffff' }}
@@ -96,6 +107,7 @@ export const Insumos: React.FC = () => {
           >
             Modificar Varios Precios
           </button>
+          
           <button 
             className="btn btn-success px-4 py-2 fw-bold" 
             style={{ color: '#ffffff' }}
@@ -107,6 +119,18 @@ export const Insumos: React.FC = () => {
       </div>
 
       {/* Modales */}
+      <ModalMermasInsumos
+        show={showMermasModal}
+        insumos={insumos}
+        onClose={() => setShowMermasModal(false)}
+        onExito={async () => {
+          await cargar();
+          setShowMermasModal(false);
+          setMensajeExito('Merma de insumo registrada exitosamente');
+          setMostrarExito(true);
+        }}
+      />
+
       <InsumoProveedoresModal 
         show={!!insumoProveedoresSeleccionado} 
         insumo={insumoProveedoresSeleccionado} 

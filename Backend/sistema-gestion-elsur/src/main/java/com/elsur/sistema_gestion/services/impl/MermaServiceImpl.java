@@ -43,6 +43,8 @@ public class MermaServiceImpl implements MermaService {
                 if (idPed != null) {
                     Pedido pedidoDb = pedidoRepository.findById(idPed).orElse(null);
                     merma.setPedido(pedidoDb);
+                } else {
+                    merma.setPedido(null); // <-- Limpiar la referencia si id_pedido es null
                 }
             }
 
@@ -82,5 +84,10 @@ public class MermaServiceImpl implements MermaService {
     @Override
     public List<Merma> obtenerPorPedido(Long idPedido) {
         return mermaRepository.findByPedidoId(idPedido);
+    }
+
+    @Override
+    public List<Merma> obtenerTodas() {
+        return mermaRepository.findAll();
     }
 }

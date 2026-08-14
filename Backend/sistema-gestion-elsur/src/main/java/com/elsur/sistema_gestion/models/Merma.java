@@ -19,10 +19,9 @@ public class Merma {
     @Column(name = "id_merma")
     private Long idMerma;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "id_pedido", nullable = false)
-    @JsonIgnoreProperties({"detalles", "mermas", "cliente"})
-    private Pedido pedido; // <-- Cambiado de id_pedido a pedido
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "id_pedido", nullable = true)
+    private Pedido pedido;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_producto", nullable = true)

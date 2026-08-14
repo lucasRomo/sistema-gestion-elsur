@@ -6,4 +6,5 @@ import java.util.List;
 public interface MermaService {
     List<Merma> registrarMermas(List<Merma> mermas);
     List<Merma> obtenerPorPedido(Long idPedido);
+    List<Merma> obtenerTodas();
 }

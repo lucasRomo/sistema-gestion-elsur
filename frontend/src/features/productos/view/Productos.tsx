@@ -8,6 +8,7 @@ import { ProductosFiltros } from '../components/ProductosFiltros';
 import { AumentoMasivoModal } from '../components/AumentoMasivoModal';
 import { RecetaModal } from '../components/RecetaModal';
 import { RecetasGlobalModal } from '../components/RecetasGlobalModal';
+import { ModalMermasProductos } from '../modals/ModalMermasProductos';
 import { useProductos } from '../hooks/useProductos';
 import { actualizarPreciosMasivo, toggleStockVinculado, type ActualizarPreciosPayload } from '../services/productoService';
 import type { Producto } from '../types/Producto';
@@ -28,6 +29,8 @@ export const Productos: React.FC = () => {
   const [showAumentoModal, setShowAumentoModal] = useState(false);
   const [showRecetaModal, setShowRecetaModal] = useState(false);
   const [showRecetasGlobalModal, setShowRecetasGlobalModal] = useState(false);
+  const [showMermasModal, setShowMermasModal] = useState(false);
+  
   const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
   const [productoSeleccionadoReceta, setProductoSeleccionadoReceta] = useState<Producto | null>(null);
   
@@ -96,6 +99,9 @@ export const Productos: React.FC = () => {
           <i className="bi bi-arrow-left me-2"></i>Volver
         </button>
         <div className="d-flex flex-wrap gap-2">
+          <button className="btn px-4 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#eab308', color: '#000000' }} onClick={() => setShowMermasModal(true)}>
+            <i className="bi bi-box-seam-fill me-2"></i>Mermas de Productos
+          </button>
           <button className="btn px-4 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#17a2b8', color: '#ffffff' }} onClick={() => setShowAumentoModal(true)}>
             Modificar Varios Precios
           </button>
@@ -156,6 +162,17 @@ export const Productos: React.FC = () => {
           }}
         />
       )}
+
+      <ModalMermasProductos
+        show={showMermasModal}
+        productos={productos}
+        onClose={() => setShowMermasModal(false)}
+        onExito={() => {
+          cargar();
+          setMensajeExito('Merma registrada con éxito');
+          setMostrarExito(true);
+        }}
+      />
 
       {mostrarConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1060 }}>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { mermaService, type MermaEntity } from '../service/mermaService';
+import { mermaService, type MermaEntity } from '../../../services/mermaService';
 import { useTheme } from '../../../Context/ThemeContext';
 
 interface ModalHistorialMermasProps {
@@ -65,40 +65,49 @@ export const ModalHistorialMermas: React.FC<ModalHistorialMermasProps> = ({ pedi
             ) : mermas.length === 0 ? (
               <div className="text-center py-4 text-muted">No hay mermas registradas para este pedido.</div>
             ) : (
-              <table className="table table-dark table-hover align-middle m-0 small">
+              <table className="table table-dark table-hover align-middle m-0 small border-secondary">
                 <thead className="table-secondary text-uppercase font-monospace" style={{ fontSize: '0.75rem' }}>
                   <tr>
                     <th>Fecha</th>
-                    <th className="text-center">Tipo</th>
-                    <th>Item / Insumo</th>
+                    <th>Origen / Ítem</th>
                     <th className="text-center">Cantidad</th>
                     <th>Motivo / Descripción</th>
                   </tr>
                 </thead>
                 <tbody>
                   {mermas.map((m) => {
-                    const esProducto = Boolean(m.producto);
                     const esInsumo = Boolean(m.insumo);
 
                     return (
                       <tr key={m.idMerma || Math.random()}>
                         <td className="text-nowrap">{formatearFecha(m.fechaMerma)}</td>
                         
-                        {/* COLUMNA TIPO */}
-                        <td className="text-center">
-                          {esProducto ? (
-                            <span className="badge bg-primary text-white">PRODUCTO</span>
-                          ) : esInsumo ? (
-                            <span className="badge bg-info text-dark">INSUMO</span>
-                          ) : (
-                            <span className="badge bg-secondary">GENERAL</span>
-                          )}
+                        <td className="py-2">
+                          <div className="d-flex flex-column gap-1">
+                            {esInsumo ? (
+                              <>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span className="badge bg-warning text-dark font-monospace">INSUMO</span>
+                                  <span className="fw-bold text-white">{m.insumo?.nombreInsumo}</span>
+                                </div>
+                                {m.producto?.nombreProducto && (
+                                  <div className="small text-muted ms-1 d-flex align-items-center gap-1">
+                                    <i className="bi bi-arrow-return-right text-warning"></i>
+                                    <span>Pertenece al producto:</span>
+                                    <span className="text-warning fw-semibold">{m.producto.nombreProducto}</span>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <div className="d-flex align-items-center gap-2">
+                                <span className="badge bg-primary text-white font-monospace">PRODUCTO</span>
+                                <span className="fw-bold text-info">{m.producto?.nombreProducto || 'Material/General'}</span>
+                              </div>
+                            )}
+                          </div>
                         </td>
 
-                        <td>
-                          {m.producto?.nombreProducto || m.insumo?.nombreInsumo || 'Material/General'}
-                        </td>
-                        <td className="text-center fw-bold text-warning">{m.cantidad}</td>
+                        <td className="text-center fw-bold text-danger fs-6">-{m.cantidad}</td>
                         <td style={{ maxWidth: '250px', wordBreak: 'break-word' }}>{m.descripcion}</td>
                       </tr>
                     );

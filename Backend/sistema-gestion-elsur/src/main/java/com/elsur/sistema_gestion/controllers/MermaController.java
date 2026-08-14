@@ -1,6 +1,5 @@
 package com.elsur.sistema_gestion.controllers;
 
-
 import com.elsur.sistema_gestion.models.Merma;
 import com.elsur.sistema_gestion.services.MermaService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +15,11 @@ import java.util.List;
 public class MermaController {
 
     private final MermaService mermaService;
+
+    @GetMapping
+    public ResponseEntity<List<Merma>> obtenerTodas() {
+        return ResponseEntity.ok(mermaService.obtenerTodas());
+    }
 
     @PostMapping
     public ResponseEntity<List<Merma>> registrarMermas(@RequestBody List<Merma> mermas) {
