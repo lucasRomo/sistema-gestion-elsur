@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { SelectorProductosForm } from '../components/SelectorProductosForm';
 import { DetallesPedidoForm } from '../components/DetallesPedidoForm';
 import { useRegistrarPedido } from '../hooks/useRegistrarPedido';
+import { crearPedidoService } from '../service/crearPedidoService';
 import type { CartItem } from '../types/Pedido';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 
@@ -22,19 +23,12 @@ export const CrearPedidoView: React.FC = () => {
   const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string } | null>(null);
   const [fileTemporal, setFileTemporal] = useState<File | null>(null);
 
+  // Carga inicial de categorías modularizada
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/categorias-cliente');
-        if (response.ok) {
-          const data = await response.json();
-          const categoriasNormalizadas = data.map((cat: any) => ({
-            idCategoriaCliente: cat.idCategoria ?? cat.id_categoria ?? cat.idCategoriaCliente ?? cat.id,
-            nombreCategoria: cat.nombre ?? cat.nombreCategoria ?? cat.nombre_categoria ?? 'Categoría',
-            porcentajeDescuento: Number(cat.descuentoAutomatico ?? cat.descuento_automatico ?? cat.porcentajeDescuento ?? cat.descuento ?? 0)
-          }));
-          setCategorias(categoriasNormalizadas);
-        }
+        const categoriasNormalizadas = await crearPedidoService.obtenerCategoriasCliente();
+        setCategorias(categoriasNormalizadas);
       } catch (error) {
         console.error("Error al obtener categorías:", error);
       }

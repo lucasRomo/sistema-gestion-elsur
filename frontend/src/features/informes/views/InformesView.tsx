@@ -18,6 +18,7 @@ import { VentasCharts } from '../charts/VentasCharts';
 import { OperacionesCharts } from '../charts/OperacionesCharts';
 import { ClientesCharts } from '../charts/ClientesCharts';
 import { ControlCharts } from '../charts/ControlCharts';
+import { InformeChartRenderer } from '../charts/InformeChartRenderer';
 
 // Tipos y Utilidades
 import type {
@@ -28,18 +29,9 @@ import type {
 } from '../types/informeTypes';
 
 import {
-  MERMAS_MOCK,
-  AVERIAS_MOCK,
   generarPuntosSparkline,
   procesarMetricas as procesarMetricasInforme
 } from '../utils/informesUtils';
-
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid,
-  Tooltip as RechartsTooltip, ResponsiveContainer,
-  BarChart, Bar, PieChart, Pie, Cell, Legend,
-} from 'recharts';
-const COLORES_TORTA = ['#8e45e0', '#20c997', '#e22e2e', '#0dcaf0', '#ffc107'];
 
 export const InformesView: React.FC = () => {
   const hoy = new Date().toLocaleDateString('sv-SE');
@@ -108,7 +100,6 @@ export const InformesView: React.FC = () => {
     cajaLista = movimientosCaja,
     actualizarEstado = true
   ) => {
-    // Pasar únicamente los 4 argumentos que acepta la función
     const resultado = procesarMetricasInforme(
       fDesde,
       fHasta,
@@ -249,43 +240,42 @@ export const InformesView: React.FC = () => {
   };
 
   const abrirModalComparacion = (informe: InformeComparacion) => {
-  setInformeComparacion(informe);
-  setModalFechaDesdeInput(fechaDesdeInput);
-  setModalFechaHastaInput(fechaHastaInput);
-  setModalFechaDesdeCompInput(fechaDesdeInput);
-  setModalFechaHastaCompInput(fechaHastaInput);
-  setTipoComparacion('dia');
+    setInformeComparacion(informe);
+    setModalFechaDesdeInput(fechaDesdeInput);
+    setModalFechaHastaInput(fechaHastaInput);
+    setModalFechaDesdeCompInput(fechaDesdeInput);
+    setModalFechaHastaCompInput(fechaHastaInput);
+    setTipoComparacion('dia');
 
-  // Calcular el período anterior por defecto (ej. mismo rango pero restándole los días correspondientes)
-  const [y, m, d] = fechaDesdeInput.split('-').map(Number);
-  const [yH, mH, dH] = fechaHastaInput.split('-').map(Number);
-  const dAct = new Date(y, m - 1, d);
-  const hAct = new Date(yH, mH - 1, dH);
-  const diffDias = Math.max(1, Math.round((hAct.getTime() - dAct.getTime()) / 86400000) + 1);
-  
-  const antD = new Date(dAct);
-  const antH = new Date(hAct);
-  antD.setDate(antD.getDate() - diffDias);
-  antH.setDate(antH.getDate() - diffDias);
+    const [y, m, d] = fechaDesdeInput.split('-').map(Number);
+    const [yH, mH, dH] = fechaHastaInput.split('-').map(Number);
+    const dAct = new Date(y, m - 1, d);
+    const hAct = new Date(yH, mH - 1, dH);
+    const diffDias = Math.max(1, Math.round((hAct.getTime() - dAct.getTime()) / 86400000) + 1);
+    
+    const antD = new Date(dAct);
+    const antH = new Date(hAct);
+    antD.setDate(antD.getDate() - diffDias);
+    antH.setDate(antH.getDate() - diffDias);
 
-  const antDesdeStr = formatDateForInput(antD);
-  const antHastaStr = formatDateForInput(antH);
+    const antDesdeStr = formatDateForInput(antD);
+    const antHastaStr = formatDateForInput(antH);
 
-  setModalFechaDesdeCompInput(antDesdeStr);
-  setModalFechaHastaCompInput(antHastaStr);
+    setModalFechaDesdeCompInput(antDesdeStr);
+    setModalFechaHastaCompInput(antHastaStr);
 
-  const metricasActuales = procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosRaw, movimientosCaja, false);
-  const metricasAnteriores = procesarMetricas(antDesdeStr, antHastaStr, pedidosRaw, movimientosCaja, false);
+    const metricasActuales = procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosRaw, movimientosCaja, false);
+    const metricasAnteriores = procesarMetricas(antDesdeStr, antHastaStr, pedidosRaw, movimientosCaja, false);
 
-  setComparacionData({
-    actual: metricasActuales,
-    anterior: metricasAnteriores,
-    periodoActual: { desde: fechaDesdeInput, hasta: fechaHastaInput },
-    periodoAnterior: { desde: antDesdeStr, hasta: antHastaStr }
-  });
+    setComparacionData({
+      actual: metricasActuales,
+      anterior: metricasAnteriores,
+      periodoActual: { desde: fechaDesdeInput, hasta: fechaHastaInput },
+      periodoAnterior: { desde: antDesdeStr, hasta: antHastaStr }
+    });
 
-  setModalComparacionAbierto(true);
-};
+    setModalComparacionAbierto(true);
+  };
 
   const cerrarModalComparacion = () => {
     setModalComparacionAbierto(false);
@@ -322,13 +312,13 @@ export const InformesView: React.FC = () => {
   };
 
   const seleccionarTipoComparacion = (tipo: TipoComparacion) => {
-  if (!informeComparacion) return;
-  setTipoComparacion(tipo);
+    if (!informeComparacion) return;
+    setTipoComparacion(tipo);
 
-  const parse = (v: string) => {
-    const [y, m, d] = v.split('-').map(Number);
-    return new Date(y, m - 1, d);
-  };
+    const parse = (v: string) => {
+      const [y, m, d] = v.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    };
 
     const dAct = parse(modalFechaDesdeInput);
     const hAct = parse(modalFechaHastaInput);
@@ -337,316 +327,51 @@ export const InformesView: React.FC = () => {
     let pAnterior = { desde: modalFechaDesdeInput, hasta: modalFechaHastaInput };
 
     if (tipo === 'dia' || tipo === 'personalizado') {
-    const diffDias = Math.max(1, Math.round((hAct.getTime() - dAct.getTime()) / 86400000) + 1);
-    const antD = new Date(dAct);
-    const antH = new Date(hAct);
-    antD.setDate(antD.getDate() - diffDias);
-    antH.setDate(antH.getDate() - diffDias);
+      const diffDias = Math.max(1, Math.round((hAct.getTime() - dAct.getTime()) / 86400000) + 1);
+      const antD = new Date(dAct);
+      const antH = new Date(hAct);
+      antD.setDate(antD.getDate() - diffDias);
+      antH.setDate(antH.getDate() - diffDias);
 
-    pAnterior = { desde: formatDateForInput(antD), hasta: formatDateForInput(antH) };
-  } else if (tipo === 'semana') {
-    const actualHasta = parse(modalFechaHastaInput);
-    const actualDesde = new Date(actualHasta);
-    actualDesde.setDate(actualDesde.getDate() - 6);
+      pAnterior = { desde: formatDateForInput(antD), hasta: formatDateForInput(antH) };
+    } else if (tipo === 'semana') {
+      const actualHasta = parse(modalFechaHastaInput);
+      const actualDesde = new Date(actualHasta);
+      actualDesde.setDate(actualDesde.getDate() - 6);
 
-    const anteriorHasta = new Date(actualDesde);
-    anteriorHasta.setDate(anteriorHasta.getDate() - 1);
-    const anteriorDesde = new Date(anteriorHasta);
-    anteriorDesde.setDate(anteriorDesde.getDate() - 6);
+      const anteriorHasta = new Date(actualDesde);
+      anteriorHasta.setDate(anteriorHasta.getDate() - 1);
+      const anteriorDesde = new Date(anteriorHasta);
+      anteriorDesde.setDate(anteriorDesde.getDate() - 6);
 
-    pActual = { desde: formatDateForInput(actualDesde), hasta: formatDateForInput(actualHasta) };
-    pAnterior = { desde: formatDateForInput(anteriorDesde), hasta: formatDateForInput(anteriorHasta) };
-  } else if (tipo === 'mes') {
-    const actualHasta = parse(modalFechaHastaInput);
-    const actualDesde = new Date(actualHasta.getFullYear(), actualHasta.getMonth(), 1);
-    const anteriorHasta = new Date(actualDesde);
-    anteriorHasta.setDate(anteriorHasta.getDate() - 1);
-    const anteriorDesde = new Date(anteriorHasta.getFullYear(), anteriorHasta.getMonth(), 1);
+      pActual = { desde: formatDateForInput(actualDesde), hasta: formatDateForInput(actualHasta) };
+      pAnterior = { desde: formatDateForInput(anteriorDesde), hasta: formatDateForInput(anteriorHasta) };
+    } else if (tipo === 'mes') {
+      const actualHasta = parse(modalFechaHastaInput);
+      const actualDesde = new Date(actualHasta.getFullYear(), actualHasta.getMonth(), 1);
+      const anteriorHasta = new Date(actualDesde);
+      anteriorHasta.setDate(anteriorHasta.getDate() - 1);
+      const anteriorDesde = new Date(anteriorHasta.getFullYear(), anteriorHasta.getMonth(), 1);
 
-    pActual = { desde: formatDateForInput(actualDesde), hasta: formatDateForInput(actualHasta) };
-    pAnterior = { desde: formatDateForInput(anteriorDesde), hasta: formatDateForInput(anteriorHasta) };
-  }
+      pActual = { desde: formatDateForInput(actualDesde), hasta: formatDateForInput(actualHasta) };
+      pAnterior = { desde: formatDateForInput(anteriorDesde), hasta: formatDateForInput(anteriorHasta) };
+    }
 
-  setModalFechaDesdeInput(pActual.desde);
-  setModalFechaHastaInput(pActual.hasta);
-  setModalFechaDesdeCompInput(pAnterior.desde);
-  setModalFechaHastaCompInput(pAnterior.hasta);
+    setModalFechaDesdeInput(pActual.desde);
+    setModalFechaHastaInput(pActual.hasta);
+    setModalFechaDesdeCompInput(pAnterior.desde);
+    setModalFechaHastaCompInput(pAnterior.hasta);
 
-  const metricasActuales = procesarMetricas(pActual.desde, pActual.hasta, pedidosRaw, movimientosCaja, false);
-  const metricasAnteriores = procesarMetricas(pAnterior.desde, pAnterior.hasta, pedidosRaw, movimientosCaja, false);
+    const metricasActuales = procesarMetricas(pActual.desde, pActual.hasta, pedidosRaw, movimientosCaja, false);
+    const metricasAnteriores = procesarMetricas(pAnterior.desde, pAnterior.hasta, pedidosRaw, movimientosCaja, false);
 
-  setComparacionData({
-    actual: metricasActuales,
-    anterior: metricasAnteriores,
-    periodoActual: pActual,
-    periodoAnterior: pAnterior
-  });
+    setComparacionData({
+      actual: metricasActuales,
+      anterior: metricasAnteriores,
+      periodoActual: pActual,
+      periodoAnterior: pAnterior
+    });
   };
-
-  const CustomAreaTooltip = ({ active, payload, label, esMismoDia }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    const saldoAcumulado = payload[0].value;
-    const esEgreso = data.esEgreso;
-    const montoMovimiento = data.montoMovimiento || 0;
-    return (
-      <div className="p-2 rounded-3 shadow-lg im-surface" style={{ border: `1px solid ${esEgreso ? '#e22e2e' : '#8e45e0'}`, fontSize: '0.85rem' }}>
-        <div className="d-flex align-items-center justify-content-between gap-3 mb-2 pb-1 border-bottom border-secondary border-opacity-25">
-          <span className="fw-bold text-body-secondary">{label}</span>
-          {esMismoDia && (
-            <span className={`fw-bold badge ${esEgreso ? 'bg-danger' : 'bg-success'}`}>
-              {esEgreso ? `- $${Math.abs(montoMovimiento).toLocaleString('es-AR')}` : `+ $${Math.abs(montoMovimiento).toLocaleString('es-AR')}`}
-            </span>
-          )}
-        </div>
-        <div className="d-flex align-items-center justify-content-between gap-2">
-          <span className="text-body-secondary">Estado Caja:</span>
-          <span className="fw-bold" style={{ color: '#20c997' }}>${saldoAcumulado.toLocaleString('es-AR')}</span>
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
-
-const CustomEgresoTooltip = ({ active, payload, esMismoDia }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="p-2 rounded-3 shadow-lg im-surface" style={{ border: '1px solid #e22e2e', fontSize: '0.85rem' }}>
-        <div className="fw-bold text-body-secondary mb-1 border-bottom border-secondary border-opacity-25 pb-1">{data.ejeX}</div>
-        <div className="fw-bold text-danger mb-1">Total Egreso: - ${Math.abs(data.monto).toLocaleString('es-AR')}</div>
-        {esMismoDia && (
-          <div className="small text-body-secondary">
-            <strong className="text-body">Razón / Desc:</strong> {data.descripcion || 'Sin descripción'}
-          </div>
-        )}
-      </div>
-    );
-  }
-  return null;
-};
-
-const CustomEmpleadoTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="p-2 rounded-3 shadow-lg im-surface" style={{ border: '1px solid #0dcaf0', fontSize: '0.85rem' }}>
-        <div className="fw-bold text-info mb-1 border-bottom border-secondary border-opacity-25 pb-1">{data.name}</div>
-        <div className="text-body-secondary">
-          <strong className="text-body">Ventas / Recaudación:</strong> ${Number(data.ventas || 0).toLocaleString('es-AR')}
-        </div>
-        <div className="text-body-secondary">
-          <strong className="text-body">Pedidos completados:</strong> {data.pedidosCompletados || 0}
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
-
-// --- Dentro del componente InformesView, reemplaza tu renderGraficoEspecifico por esto: ---
-const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnterior = false) => {
-  if (!data) return null;
-  const colorBase = esAnterior ? '#71717a' : '#8e45e0';
-
-  switch (informe) {
-    case 'ingresos':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data.ventasPorPeriodo} margin={{ top: 10, right: 35, left: 0, bottom: 15 }}>
-            <defs>
-              <linearGradient id={`colorVentas_${esAnterior ? 'ant' : 'act'}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={colorBase} stopOpacity={0.8} />
-                <stop offset="95%" stopColor={colorBase} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-            <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
-            <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val / 1000 + 'k' : val}`} />
-            <RechartsTooltip content={<CustomAreaTooltip esMismoDia={esMismoDia} />} />
-            <Area type="monotone" dataKey="ventas" stroke={colorBase} strokeWidth={3} fillOpacity={1} fill={`url(#colorVentas_${esAnterior ? 'ant' : 'act'})`} />
-          </AreaChart>
-        </ResponsiveContainer>
-      );
-
-    case 'mediosPago':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={data.distribucionMediosPago} cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none">
-              {data.distribucionMediosPago?.map((_: any, index: number) => (
-                <Cell key={`cell-pago-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
-              ))}
-            </Pie>
-            <RechartsTooltip contentStyle={{ backgroundColor: '#222122', borderColor: '#3f3f46', borderRadius: '8px' }} />
-            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-          </PieChart>
-        </ResponsiveContainer>
-      );
-
-    case 'egresos':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data.detalleEgresos} margin={{ top: 10, right: 30, left: 20, bottom: 10 }} barSize={35}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-            <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
-            <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val / 1000 + 'k' : val}`} />
-            <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEgresoTooltip esMismoDia={esMismoDia} />} />
-            <Bar dataKey="monto" fill={esAnterior ? '#71717a' : '#e22e2e'} radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      );
-
-    case 'estados':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={data.distribucionEstados} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none">
-              {data.distribucionEstados?.map((_: any, index: number) => (
-                <Cell key={`cell-estado-${index}`} fill={COLORES_TORTA[(index + 2) % COLORES_TORTA.length]} />
-              ))}
-            </Pie>
-            <RechartsTooltip contentStyle={{ backgroundColor: '#222122', borderColor: '#3f3f46', borderRadius: '8px' }} />
-            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-          </PieChart>
-        </ResponsiveContainer>
-      );
-
-    case 'productos':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={data.productosMasVendidos} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none">
-              {data.productosMasVendidos?.map((_: any, index: number) => (
-                <Cell key={`cell-prod-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
-              ))}
-            </Pie>
-            <RechartsTooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const item = payload[0].payload;
-                  const colorSlice = item.color || '#20c997';
-                  return (
-                    <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
-                      <p className="fw-bold mb-1" style={{ color: colorSlice }}>{item.nombreReal || item.name}</p>
-                      <p className="small mb-0">{item.name} — Unidades vendidas: <span className="text-white fw-bold">{item.value}</span></p>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-          </PieChart>
-        </ResponsiveContainer>
-      );
-
-    case 'categorias':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data.categoriasMasVendidas} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-            <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
-            <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-            <RechartsTooltip cursor={{ fill: '#222122' }} contentStyle={{ backgroundColor: '#18181b', borderColor: '#8e45e0', borderRadius: '8px', color: '#fff' }} />
-            <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#8e45e0'} radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      );
-
-    case 'recaudacionEmpleados':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data.rendimientoEmpleados} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-            <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
-            <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val / 1000 + 'k' : val}`} />
-            <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEmpleadoTooltip />} />
-            <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#0dcaf0'} radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      );
-
-    case 'pedidosEmpleados':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={data.pedidosCompletadosPorEmpleado} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none">
-              {data.pedidosCompletadosPorEmpleado?.map((_: any, index: number) => (
-                <Cell key={`cell-emp-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
-              ))}
-            </Pie>
-            <RechartsTooltip contentStyle={{ backgroundColor: '#222122', borderColor: '#3f3f46', borderRadius: '8px' }} />
-            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-          </PieChart>
-        </ResponsiveContainer>
-      );
-
-    case 'clientes':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={data.topClientes} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="totalGastado" stroke="none">
-              {data.topClientes?.map((_: any, index: number) => (
-                <Cell key={`cell-cliente-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
-              ))}
-            </Pie>
-            <RechartsTooltip
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const item = payload[0].payload;
-                  const colorSlice = item.color || '#ffc107';
-                  return (
-                    <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
-                      <p className="fw-bold mb-1" style={{ color: colorSlice }}>{item.nombreReal || item.name}</p>
-                      <p className="small mb-1 text-white">Total Pagado: <span className="fw-bold">${Number(item.totalGastado).toLocaleString('es-AR')}</span></p>
-                      <p className="small mb-0 text-white-50">Pedidos creados: {item.cantidadPedidos}</p>
-                      <p className="small mb-0 text-success">Total Ahorrado: <span className="fw-bold">${Number(item.montoAhorrado || 0).toLocaleString('es-AR')}</span></p>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa' }} />
-          </PieChart>
-        </ResponsiveContainer>
-      );
-
-    case 'categoriasCliente':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data.ventasPorCategoriaCliente} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-            <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-            <RechartsTooltip
-              cursor={{ fill: '#222122' }}
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const item = payload[0].payload;
-                  return (
-                    <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #20c997', color: '#fff' }}>
-                      <p className="fw-bold mb-1 text-success">{item.name}</p>
-                      <p className="small mb-1 text-white">Pedidos solicitados: <span className="fw-bold">{item.ventas}</span></p>
-                      <p className="small mb-0 text-white-50">Monto total: <span className="fw-bold text-white">${Number(item.montoTotal || 0).toLocaleString('es-AR')}</span></p>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#20c997'} radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      );
-
-    default:
-      return null;
-  }
-  };
-
 
   const seccionesMenu = [
     {
@@ -800,35 +525,35 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
       )}
 
       {/* SECCIONES Y GRÁFICOS */}
-{seccionActiva === 'finanzas' && (
-  <FinanzasCharts
-    metricas={metricas}
-    esMismoDia={esMismoDia}
-    abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
-  />
-)}
+      {seccionActiva === 'finanzas' && (
+        <FinanzasCharts
+          metricas={metricas}
+          esMismoDia={esMismoDia}
+          abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+        />
+      )}
 
-{seccionActiva === 'ventas' && (
-  <VentasCharts
-    metricas={metricas}
-    abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
-  />
-)}
+      {seccionActiva === 'ventas' && (
+        <VentasCharts
+          metricas={metricas}
+          abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+        />
+      )}
 
-{seccionActiva === 'operaciones' && (
-  <OperacionesCharts
-    metricas={metricas}
-    abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
-  />
-)}
+      {seccionActiva === 'operaciones' && (
+        <OperacionesCharts
+          metricas={metricas}
+          abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+        />
+      )}
 
-{seccionActiva === 'clientes' && (
-  <ClientesCharts
-    metricas={metricas}
-    topClientes={topClientes}
-    abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
-  />
-)}
+      {seccionActiva === 'clientes' && (
+        <ClientesCharts
+          metricas={metricas}
+          topClientes={topClientes}
+          abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+        />
+      )}
 
       {seccionActiva === 'control' && (
         <ControlCharts
@@ -840,34 +565,41 @@ const renderGraficoEspecifico = (informe: InformeComparacion, data: any, esAnter
 
       {/* MODALES */}
       {showModalRegistrosArqueo && (
-      <ModalRegistrosArqueo
-       isOpen={showModalRegistrosArqueo}
-       onClose={() => setShowModalRegistrosArqueo(false)}
-      />
+        <ModalRegistrosArqueo
+          isOpen={showModalRegistrosArqueo}
+          onClose={() => setShowModalRegistrosArqueo(false)}
+        />
       )}
 
       {modalComparacionAbierto && (
-  <ModalComparacion
-    modalComparacionAbierto={modalComparacionAbierto}
-    informeComparacion={informeComparacion}
-    tipoComparacion={tipoComparacion}
-    comparacionData={comparacionData}
-    modalFechaDesdeInput={modalFechaDesdeInput}
-    modalFechaHastaInput={modalFechaHastaInput}
-    modalFechaDesdeCompInput={modalFechaDesdeCompInput}
-    modalFechaHastaCompInput={modalFechaHastaCompInput}
-    setModalFechaDesdeInput={setModalFechaDesdeInput}
-    setModalFechaHastaInput={setModalFechaHastaInput}
-    setModalFechaDesdeCompInput={setModalFechaDesdeCompInput}
-    setModalFechaHastaCompInput={setModalFechaHastaCompInput}
-    cerrarModalComparacion={cerrarModalComparacion}
-    seleccionarTipoComparacion={seleccionarTipoComparacion}
-    handleAnalizarComparacionModal={handleAnalizarComparacionModal}
-    esMismoDia={esMismoDia}
-    obtenerNombreInforme={obtenerNombreInforme}
-    renderGraficoEspecifico={renderGraficoEspecifico}
-  />
-)}
+        <ModalComparacion
+          modalComparacionAbierto={modalComparacionAbierto}
+          informeComparacion={informeComparacion}
+          tipoComparacion={tipoComparacion}
+          comparacionData={comparacionData}
+          modalFechaDesdeInput={modalFechaDesdeInput}
+          modalFechaHastaInput={modalFechaHastaInput}
+          modalFechaDesdeCompInput={modalFechaDesdeCompInput}
+          modalFechaHastaCompInput={modalFechaHastaCompInput}
+          setModalFechaDesdeInput={setModalFechaDesdeInput}
+          setModalFechaHastaInput={setModalFechaHastaInput}
+          setModalFechaDesdeCompInput={setModalFechaDesdeCompInput}
+          setModalFechaHastaCompInput={setModalFechaHastaCompInput}
+          cerrarModalComparacion={cerrarModalComparacion}
+          seleccionarTipoComparacion={seleccionarTipoComparacion}
+          handleAnalizarComparacionModal={handleAnalizarComparacionModal}
+          esMismoDia={esMismoDia}
+          obtenerNombreInforme={obtenerNombreInforme}
+          renderGraficoEspecifico={(informe, data, esAnterior) => (
+            <InformeChartRenderer
+              informe={informe}
+              data={data}
+              esAnterior={esAnterior}
+              esMismoDia={esMismoDia}
+            />
+          )}
+        />
+      )}
     </div>
   );
 };

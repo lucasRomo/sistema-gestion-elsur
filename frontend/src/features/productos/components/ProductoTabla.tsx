@@ -146,7 +146,7 @@ export const ProductoTabla: React.FC<Props> = ({
             ) : (
               <tr>
                 <td colSpan={8} className="text-center py-5" style={{ color: '#ffffff' }}>
-                  <i className="bi bi-box-seam display-5 d-block mb-2 opacity-50"></i>
+                  <i className="bi display-5 d-block mb-2 opacity-50"></i>
                   <span className="font-monospace">No se han registrado o encontrado productos en el sistema</span>
                 </td>
               </tr>

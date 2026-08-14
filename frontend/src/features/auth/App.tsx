@@ -1,21 +1,21 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { WelcomeView } from './WelcomeView';
-import { RegisterView } from './RegisterView';
-import { LoginView } from './LoginView';
+import { WelcomeView } from '../primermenu/view/WelcomeView';
+import { RegisterView } from '../primermenu/view/RegisterView';
+import { LoginView } from '../primermenu/view/LoginView';
 import { ClienteView } from '../../features/clientes/view/ClienteView';
 import { Proveedores } from '../../features/proveedores/view/Proveedores';
 import { Insumos } from '../../features/insumos/view/Insumos';
 import { Productos } from '../../features/productos/view/Productos';
-import { VentaRapida } from '../../features/VentaRapida/view/VentaRapida';
+import { VentaRapida } from '../dashboardprincipal/view/DashboardPrincipalView';
 import { CrearPedidoView } from '../../features/pedidos/view/CrearPedidoView'; 
-import { PedidosPendientesPage } from '../../features/pedidos/view/PedidosPendientesView'; 
+import { PedidosPendientesView } from '../../features/pedidos/view/PedidosPendientesView'; 
 import { HistorialPedidosPage } from '../../features/pedidos/view/HistorialPedidosView'; 
 import { GestionUsuariosView } from '../../features/usuarios/view/GestionUsuariosView'; 
 import { CajaView } from '../../features/caja/view/CajaView';
 import { RepositorioDigitalView } from '../../features/repositorio/view/RepositorioDigitalView';
 import { SidebarLayout } from '../../components/layouts/SidebarLayout';
 import { ProtectedRoute } from '../../components/common/ProtectedRoute';
-import { MatrizPermisosView } from '../../features/matrizpermisos/MatrizPermisosView';
+import { MatrizPermisosView } from '../../features/matrizpermisos/view/MatrizPermisosView';
 import { ConfiguracionView } from '../../features/configuracion/views/ConfiguracionView';
 import { InformesView } from '../../features/informes/views/InformesView';
 import { TurnoProvider } from '../../Context/TurnoContext';
@@ -84,7 +84,7 @@ function App() {
 
             <Route path="/pedidos-pendientes" element={
               <ProtectedRoute permisoRequerido="Pedidos Pendientes">
-                <PedidosPendientesPage />
+                <PedidosPendientesView />
               </ProtectedRoute>
             } />
 

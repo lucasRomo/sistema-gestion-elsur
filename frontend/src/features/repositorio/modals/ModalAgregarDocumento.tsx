@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { AreaCurso } from '../../../types/Repositorio';
+import type { AreaCurso } from '../types/Repositorio';
 import { useTheme } from '../../../Context/ThemeContext';
 
 interface Props {

@@ -283,7 +283,7 @@ export const CustomAreaTooltip: React.FC<any> = ({ active, payload, label, esMis
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const saldoAcumulado = payload[0].value;
-    const esEgreso = data.esEgreso;
+    const esEgreso = data.esEgreso; 
     const montoMovimiento = data.montoMovimiento || 0;
 
     return (

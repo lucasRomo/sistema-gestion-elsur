@@ -1,4 +1,4 @@
-import type { DocumentoDigital, AreaCurso, Institucion } from '../../../types/Repositorio';
+import type { DocumentoDigital, AreaCurso, Institucion } from '../types/Repositorio';
 
 const API_BASE = 'http://localhost:8080/api';
 

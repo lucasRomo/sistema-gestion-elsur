@@ -1,8 +1,8 @@
 import React from 'react';
-import fondoImg from '../../assets/fondo-izq.png';
-import logoGesta from '../../assets/logo-gestapro.png';
-import logoSur from '../../assets/logo-elsur.png';
-import { useTheme } from '../../Context/ThemeContext'; // Importar contexto
+import fondoImg from '/src/assets/fondo-izq.png'; 
+import logoGesta from '/src/assets/logo-gestapro.png';
+import logoSur from '/src/assets/logo-elsur.png';
+import { useTheme } from '../../../Context/ThemeContext'; 
 
 interface WelcomeViewProps {
   onIrARegistro: () => void;

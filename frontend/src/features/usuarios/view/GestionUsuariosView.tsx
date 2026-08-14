@@ -6,7 +6,7 @@ import { useUsuarios } from '../hooks/useUsuarios';
 import { UbicacionViewModal } from '../../../components/modals/UbicacionViewModal';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { UsuariosFiltros } from '../components/UsuariosFiltros';
-import { RegisterView } from '../../../views/auth/RegisterView';
+import { RegisterView } from '../../primermenu/view/RegisterView';
 import { useTheme } from '../../../Context/ThemeContext';
 
 export const GestionUsuariosView: React.FC = () => {
