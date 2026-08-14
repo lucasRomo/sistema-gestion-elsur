@@ -9,6 +9,7 @@ import { FiltrosHistorial } from '../../historial/components/FiltrosHistorial';
 import { FilaHistorial } from '../../historial/components/FilaHistorial';
 import { ModalAuditoriaPedido } from '../modals/ModalAuditoriaPedido';
 import { VistaTicketModal } from '../modals/VistaTicketModal';
+import { ModalHistorialMermas } from '../modals/ModalHistorialMermas'; // <-- Usamos el modal solo lectura
 import { CuentaCorrienteModal } from '../../clientes/components/CuentaCorrienteModal';
 import { useTheme } from '../../../Context/ThemeContext';
 
@@ -24,24 +25,29 @@ export const HistorialPedidosPage: React.FC = () => {
   const theadText = isDark ? '#a1a1aa' : '#334155';
   const grayText = isDark ? '#a1a1aa' : '#64748b';
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
+  
   const { pedidos, cargando, recargarHistorial } = useHistorialPedidos();
   const navigate = useNavigate();
   
-  // Estados unificados para control de modales
+  // Estados para control de modales
   const [pedidoAuditoria, setPedidoAuditoria] = useState<any>(null);
   const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<any>(null);
   const [verTicketPedido, setVerTicketPedido] = useState<any>(null);
+  const [pedidoMermas, setPedidoMermas] = useState<any>(null);
 
   // Estado para el modal de devolución
   const [pedidoDevolucion, setPedidoDevolucion] = useState<any>(null);
   const [descripcionDevolucion, setDescripcionDevolucion] = useState('');
   const [cargandoDevolucion, setCargandoDevolucion] = useState(false);
 
-  // Filtro unificado de búsqueda general y estado histórico
+  // Filtros
   const [filtroTexto, setFiltroTexto] = useState('');
   const [filtroEstadoHistorial, setFiltroEstadoHistorial] = useState('TODOS');
 
-  // Traer los datos completos del pedido con sus historiales y cobros
+  const handleAbrirMermas = async (pedido: any) => {
+    setPedidoMermas(pedido);
+  };
+
   const handleAbrirAuditoria = async (idPedido: number) => {
     try {
       const pedidoCompleto = await pedidoService.obtenerPorId(idPedido);
@@ -84,77 +90,74 @@ export const HistorialPedidosPage: React.FC = () => {
   };
 
   const [suceso, setSuceso] = useState<{ show: boolean; titulo: string; mensaje: string; tipo: string }>({ 
-  show: false, 
-  titulo: '', 
-  mensaje: '', 
-  tipo: 'exito' 
+    show: false, 
+    titulo: '', 
+    mensaje: '', 
+    tipo: 'exito' 
   });
 
   const handleProcesarDevolucion = async (accion: 'REINICIAR' | 'DEVUELTO') => {
-  if (!descripcionDevolucion.trim()) {
-    setSuceso({
-      show: true,
-      titulo: 'Atención',
-      mensaje: 'Por favor, ingresa una descripción para la devolución.',
-      tipo: 'error'
-    });
-    return;
-  }
-
-  setCargandoDevolucion(true);
-  try {
-    const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
-    const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
-
-    if (accion === 'REINICIAR') {
-      // Reabre el pedido cambiándolo explícitamente a PENDIENTE
-      await pedidoService.cambiarEstado(
-        pedidoDevolucion.id_pedido, 
-        'PENDIENTE', 
-        `Devolución (Volver a Hacer): ${descripcionDevolucion}`, 
-        idUsuarioActivo
-      );
-      
+    if (!descripcionDevolucion.trim()) {
       setSuceso({
         show: true,
-        titulo: 'Éxito',
-        mensaje: 'El pedido ha vuelto a ingresar a la cola de pedidos pendientes.',
-        tipo: 'exito'
+        titulo: 'Atención',
+        mensaje: 'Por favor, ingresa una descripción para la devolución.',
+        tipo: 'error'
       });
-    } else {
-      // Guarda el pedido con estado DEVUELTO (Permanecerá únicamente en Historial)
-      await pedidoService.cambiarEstado(
-        pedidoDevolucion.id_pedido, 
-        'DEVUELTO', 
-        `Devolución Final: ${descripcionDevolucion}`, 
-        idUsuarioActivo
-      );
-      
-      setSuceso({
-        show: true,
-        titulo: 'Éxito',
-        mensaje: 'Pedido finalizado y marcado como Devuelto correctamente.',
-        tipo: 'exito'
-      });
+      return;
     }
 
-    setPedidoDevolucion(null);
-    setDescripcionDevolucion('');
-    recargarHistorial(); // Refrescar lista del historial inmediatamente
-  } catch (error: any) {
-    console.error('Error al procesar la devolución:', error);
-    setSuceso({
-      show: true,
-      titulo: 'Error',
-      mensaje: error.message || 'Error al procesar la devolución.',
-      tipo: 'error'
-    });
-  } finally {
-    setCargandoDevolucion(false);
-  }
+    setCargandoDevolucion(true);
+    try {
+      const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
+      const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
+
+      if (accion === 'REINICIAR') {
+        await pedidoService.cambiarEstado(
+          pedidoDevolucion.id_pedido, 
+          'PENDIENTE', 
+          `Devolución (Volver a Hacer): ${descripcionDevolucion}`, 
+          idUsuarioActivo
+        );
+        
+        setSuceso({
+          show: true,
+          titulo: 'Éxito',
+          mensaje: 'El pedido ha vuelto a ingresar a la cola de pedidos pendientes.',
+          tipo: 'exito'
+        });
+      } else {
+        await pedidoService.cambiarEstado(
+          pedidoDevolucion.id_pedido, 
+          'DEVUELTO', 
+          `Devolución Final: ${descripcionDevolucion}`, 
+          idUsuarioActivo
+        );
+        
+        setSuceso({
+          show: true,
+          titulo: 'Éxito',
+          mensaje: 'Pedido finalizado y marcado como Devuelto correctamente.',
+          tipo: 'exito'
+        });
+      }
+
+      setPedidoDevolucion(null);
+      setDescripcionDevolucion('');
+      recargarHistorial();
+    } catch (error: any) {
+      console.error('Error al procesar la devolución:', error);
+      setSuceso({
+        show: true,
+        titulo: 'Error',
+        mensaje: error.message || 'Error al procesar la devolución.',
+        tipo: 'error'
+      });
+    } finally {
+      setCargandoDevolucion(false);
+    }
   };
 
-  // Filtrado de registros en memoria
   const pedidosFiltrados = pedidos.filter(p => {
     const busquedaTermino = filtroTexto.toLowerCase().trim();
 
@@ -211,14 +214,11 @@ export const HistorialPedidosPage: React.FC = () => {
         className="container-fluid px-2 d-flex flex-column pt-3" 
         style={{ height: 'calc(100vh - 45px)', overflow: 'hidden' }}
       >
-        
-        {/* Título Principal */}
         <div className="d-flex justify-content-center align-items-center mb-2 position-relative d-print-none">
           <h1 className="fw-bold tracking-tight text-white m-0 text-center" style={{ fontSize: '1.85rem' }}>Historial de Pedidos</h1>
           <span className="badge bg-dark border border-secondary text-secondary font-monospace position-absolute end-0">Registros Históricos</span>
         </div>
 
-        {/* Panel de Filtros Componentizado */}
         <div className="mt-3 mb-3">
           <FiltrosHistorial 
             filtroTexto={filtroTexto}
@@ -228,7 +228,6 @@ export const HistorialPedidosPage: React.FC = () => {
           />
         </div>
 
-        {/* Tabla del Historial */}
         <div 
           className="d-flex flex-column flex-grow-1 overflow-hidden mb-2 shadow-sm rounded-3 border" 
           style={{ 
@@ -237,30 +236,22 @@ export const HistorialPedidosPage: React.FC = () => {
             height: 'calc(100vh - 165px)' 
           }}
         >
-  <div 
-    className="table-responsive flex-grow-1" 
-    style={{ backgroundColor: tableWrapperBg, height: '100%', overflowY: 'auto' }}
-  >
-    <table 
-      className={`table-hover m-0 align-middle ${isDark ? 'table-dark' : ''}`}
-      style={{ width: '100%', borderCollapse: 'collapse', color: tableText, backgroundColor: tableBg }}
-    >
-              <thead 
-  style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}
->
-  <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontFamily: 'monospace', fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                 <th style={{ padding: '12px 12px 12px 24px' }}>ID</th>
-                 <th style={{ padding: '12px 12px 12px 19px' }}>Cliente</th>
-                 <th style={{ padding: '12px 12px' }}>Contacto</th>
-                 <th style={{ padding: '12px 12px' }}>Operador de Cierre</th> 
-                 <th style={{ padding: '12px 24px 12px 12px' }}>Fecha Creación</th>
-                 <th style={{ padding: '12px 24px 12px 12px' }}>Fecha de Entrega Estimada</th>
-                 <th style={{ padding: '12px 24px 12px 12px' }}>Fecha de Entrega Final</th>  
-                 <th className="text-center" style={{ padding: '12px 12px' }}>Estado Final</th>
-                 <th style={{ padding: '12px 12px' }}>Monto Total</th>
-                 <th style={{ padding: '12px 12px' }}>Monto Cobrado</th>
-                 <th className="text-center" style={{ padding: '12px 8px' }}>Acciones</th>
-                 </tr>
+          <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapperBg, height: '100%', overflowY: 'auto' }}>
+            <table className={`table-hover m-0 align-middle ${isDark ? 'table-dark' : ''}`} style={{ width: '100%', borderCollapse: 'collapse', color: tableText, backgroundColor: tableBg }}>
+              <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
+                <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontFamily: 'monospace', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                  <th style={{ padding: '12px 12px 12px 24px' }}>ID</th>
+                  <th style={{ padding: '12px 12px 12px 19px' }}>Cliente</th>
+                  <th style={{ padding: '12px 12px' }}>Contacto</th>
+                  <th style={{ padding: '12px 12px' }}>Operador de Cierre</th> 
+                  <th style={{ padding: '12px 24px 12px 12px' }}>Fecha Creación</th>
+                  <th style={{ padding: '12px 24px 12px 12px' }}>Fecha de Entrega Estimada</th>
+                  <th style={{ padding: '12px 24px 12px 12px' }}>Fecha de Entrega Final</th>  
+                  <th className="text-center" style={{ padding: '12px 12px' }}>Estado Final</th>
+                  <th style={{ padding: '12px 12px' }}>Monto Total</th>
+                  <th style={{ padding: '12px 12px' }}>Monto Cobrado</th>
+                  <th className="text-center" style={{ padding: '12px 8px' }}>Acciones</th>
+                </tr>
               </thead>
               <tbody>
                 {cargando ? (
@@ -285,6 +276,7 @@ export const HistorialPedidosPage: React.FC = () => {
                       onSubirArchivo={handleSubirArchivoFisico}
                       onEliminarComprobante={handleEliminarComprobanteFisico}
                       onAbrirDevolucion={(p) => setPedidoDevolucion(p)}
+                      onAbrirMermas={handleAbrirMermas}
                     />
                   ))
                 )}
@@ -293,20 +285,24 @@ export const HistorialPedidosPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Botón Volver */}
         <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-1 pb-1 mt-auto">
           <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2">Volver</button>
         </div>
       </div>
 
-      {/* RENDERIZADO DE MODALES DE AUDITORÍA Y TICKET */}
+      {/* RENDERIZADO DE MODAL SOLO LECTURA DE MERMAS */}
+      {pedidoMermas && (
+        <ModalHistorialMermas
+          pedido={pedidoMermas}
+          onClose={() => setPedidoMermas(null)}
+        />
+      )}
+
       {pedidoAuditoria && (
         <ModalAuditoriaPedido 
           pedido={pedidoAuditoria} 
           onClose={() => setPedidoAuditoria(null)}
-          onAbrirCuentaCorriente={(cliente) => {
-            setClienteCuentaCorriente(cliente); 
-          }}
+          onAbrirCuentaCorriente={(cliente) => setClienteCuentaCorriente(cliente)}
         />
       )}
 
@@ -325,42 +321,28 @@ export const HistorialPedidosPage: React.FC = () => {
         />
       )}
 
-    {/* MODAL NOTIFICACIÓN GENÉRICA / SUCESO */}
-    {suceso.show && (
-    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
-    <div className="modal-dialog modal-sm modal-dialog-centered">
-      <div 
-        className="modal-content p-4 text-white text-center" 
-        style={{ 
-          border: '2px solid #8e45e0', 
-          backgroundColor: '#1a1a1c', 
-          borderRadius: '12px',
-          fontFamily: 'monospace'
-        }}>
-        <i 
-          className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-exclamation-circle'} fs-1 mb-2`} 
-          style={{ color: '#8e45e0' }}
-        ></i>
-        <h5 className="fw-bold">{suceso.titulo}</h5>
-        <p className="small" style={{ color: grayText }}>{suceso.mensaje}</p>
-        <button 
-          className={`btn ${suceso.tipo === 'exito' ? 'btn-success' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold`}
-          style={{ borderRadius: '6px' }}
-          onClick={() => {
-            setSuceso({ ...suceso, show: false });
-            if (suceso.tipo === 'exito') {
-              recargarHistorial();
-            }
-          }}
-        >
-          Aceptar
-        </button>
-      </div>
-      </div>
-      </div>
-    )}
-    
-      {/* MODAL DE DEVOLUCIÓN */}
+      {suceso.show && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+            <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px', fontFamily: 'monospace' }}>
+              <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-exclamation-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
+              <h5 className="fw-bold">{suceso.titulo}</h5>
+              <p className="small" style={{ color: grayText }}>{suceso.mensaje}</p>
+              <button 
+                className={`btn ${suceso.tipo === 'exito' ? 'btn-success' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold`}
+                style={{ borderRadius: '6px' }}
+                onClick={() => {
+                  setSuceso({ ...suceso, show: false });
+                  if (suceso.tipo === 'exito') recargarHistorial();
+                }}
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {pedidoDevolucion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '500px' }}>
@@ -370,13 +352,13 @@ export const HistorialPedidosPage: React.FC = () => {
                   <i className="bi bi-arrow-return-left me-2"></i>Devolución de Pedido #{pedidoDevolucion.id_pedido}
                 </h5>
                 <button 
-  type="button" 
-  className={`btn-close ${isDark ? 'btn-close-white' : ''}`}
-  onClick={() => {
-    setPedidoDevolucion(null);
-    setDescripcionDevolucion('');
-  }}
-></button>
+                  type="button" 
+                  className={`btn-close ${isDark ? 'btn-close-white' : ''}`}
+                  onClick={() => {
+                    setPedidoDevolucion(null);
+                    setDescripcionDevolucion('');
+                  }}
+                ></button>
               </div>
 
               <div className="mb-3">
@@ -409,16 +391,16 @@ export const HistorialPedidosPage: React.FC = () => {
                 </button>
 
                 <button 
-    type="button" 
-    disabled={cargandoDevolucion}
-    className="btn btn-outline-secondary fw-bold py-2"
-    onClick={() => {
-      setPedidoDevolucion(null);
-      setDescripcionDevolucion('');
-    }}
-  >
-    Cancelar
-  </button>
+                  type="button" 
+                  disabled={cargandoDevolucion}
+                  className="btn btn-outline-secondary fw-bold py-2"
+                  onClick={() => {
+                    setPedidoDevolucion(null);
+                    setDescripcionDevolucion('');
+                  }}
+                >
+                  Cancelar
+                </button>
               </div>
             </div>
           </div>

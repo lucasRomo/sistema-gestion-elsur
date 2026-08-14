@@ -8,6 +8,7 @@ interface FilaHistorialProps {
   onSubirArchivo: (idPedido: number, file: File) => void;
   onEliminarComprobante: (idPedido: number) => void;
   onAbrirDevolucion: (pedido: any) => void;
+  onAbrirMermas: (pedido: any) => void;
 }
 
 export const FilaHistorial: React.FC<FilaHistorialProps> = ({
@@ -15,6 +16,7 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
   onAbrirAuditoria,
   onSelectTicket,
   onAbrirDevolucion,
+  onAbrirMermas, // <-- 1. Agregado aquí
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -152,6 +154,15 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
             title="Imprimir Ticket"
           >
             <i className="bi bi-printer" style={{ color: '#ffc107' }}></i>
+          </button>
+          
+          {/* BOTÓN MERMAS (Usando `p` en vez de `pedido`) */}
+          <button 
+            className="btn btn-sm btn-outline-warning" 
+            title="Ver / Registrar Mermas"
+            onClick={() => onAbrirMermas(p)} 
+          >
+            <i className="bi bi-exclamation-diamond-fill"></i>
           </button>
 
           {/* BOTÓN DEVOLUCIÓN */}

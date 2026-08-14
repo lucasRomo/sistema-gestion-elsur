@@ -16,6 +16,7 @@ import { ModalGestionarComprobantes } from '../../pedidos/modals/ModalGestionarC
 import { ModalAdvertenciaDeuda } from '../../pedidos/modals/ModalAdvertenciaDeuda';
 import { VistaTicketModal } from '../../pedidos/modals/VistaTicketModal';
 import { CuentaCorrienteModal } from '../../clientes/components/CuentaCorrienteModal';
+import { ModalGestionMermas } from '../../pedidos/modals/ModalGestionMermas';
 import { useTheme } from '../../../Context/ThemeContext';
 
 export const PedidosPendientesPage: React.FC = () => {
@@ -24,6 +25,7 @@ export const PedidosPendientesPage: React.FC = () => {
   const { cajaAbierta } = useTurno();
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
   const [pedidoGestionComprobanteSel, setPedidoGestionComprobanteSel] = useState<any | null>(null);
+  const [pedidoMermaSel, setPedidoMermaSel] = useState<any | null>(null);
   const [filtroEmpleado, setFiltroEmpleado] = useState('');
 
   // Controles de Modales
@@ -455,6 +457,7 @@ export const PedidosPendientesPage: React.FC = () => {
                     empleados={empleados}
                     onCambioEmpleado={handleCambioEmpleado}
                     onSelectComprobantes={(p) => setPedidoGestionComprobanteSel(p)}
+                    onGestionarMermas={(p) => setPedidoMermaSel(p)}
                   />
                 </div>
               ))}
@@ -524,6 +527,18 @@ export const PedidosPendientesPage: React.FC = () => {
           onClose={() => setPedidoGestionComprobanteSel(null)}
           onVincularComprobante={handleVincularComprobante}
           onEliminarComprobante={handleEliminarComprobante} 
+        />
+      )}
+
+      {/* GESTIÓN DE MERMAS */}
+      {pedidoMermaSel && (
+        <ModalGestionMermas
+          pedido={pedidoMermaSel}
+          onClose={() => setPedidoMermaSel(null)}
+          onConfirm={() => {
+            setPedidoMermaSel(null);
+            refrescar();
+          }}
         />
       )}
 
