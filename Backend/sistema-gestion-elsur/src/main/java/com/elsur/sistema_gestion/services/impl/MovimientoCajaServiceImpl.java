@@ -2,7 +2,10 @@ package com.elsur.sistema_gestion.services.impl;
 
 import com.elsur.sistema_gestion.models.EstadoTurno;
 import com.elsur.sistema_gestion.models.MovimientoCaja;
+import com.elsur.sistema_gestion.models.Pedido;
+import com.elsur.sistema_gestion.models.Turno;
 import com.elsur.sistema_gestion.repositories.MovimientoCajaRepository;
+import com.elsur.sistema_gestion.repositories.PedidoRepository;
 import com.elsur.sistema_gestion.repositories.TurnoRepository; 
 import com.elsur.sistema_gestion.services.MovimientoCajaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,18 +29,38 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
     @Autowired
     private TurnoRepository turnoRepository;
 
+    @Autowired
+    private PedidoRepository pedidoRepository;
+
+
     @Override
     public MovimientoCaja buscarPorId(Integer id) {
         return movimientoCajaRepository.findById(id).orElse(null);
     }
 
+
     @Override
     @Transactional
     public MovimientoCaja guardar(MovimientoCaja movimientoCaja) {
+        // 1. Asignación de Turno
         if (movimientoCaja.getTurno() == null) {
             turnoRepository.findFirstByEstado(EstadoTurno.ABIERTO)
                 .ifPresent(movimientoCaja::setTurno);
         }
+
+        // 2. Solución al error de Pedido Transient
+        if (movimientoCaja.getPedido() != null) {
+            Integer idPedido = movimientoCaja.getPedido().getId_pedido(); // Ajustá al nombre exacto del getter del ID
+            if (idPedido != null) {
+                Pedido pedidoPersistido = pedidoRepository.findById(idPedido)
+                    .orElseThrow(() -> new RuntimeException("El pedido indicado no existe: " + idPedido));
+                movimientoCaja.setPedido(pedidoPersistido);
+            } else {
+                // Si vino un objeto pedido vacío desde el frontend, lo seteamos en null
+                movimientoCaja.setPedido(null);
+            }
+        }
+
         return movimientoCajaRepository.save(movimientoCaja);
     }
 

@@ -14,6 +14,8 @@ export interface MovimientoCaja {
   imagenComprobante?: string;
   comprobante_imagen?: string;
   imagen_comprobante?: string;
+  urlComprobante?: string;
+  url_comprobante?: string;
   usuario?: any;
   pedido?: any;
 }

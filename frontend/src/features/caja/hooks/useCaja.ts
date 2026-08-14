@@ -103,6 +103,52 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     return resultado;
   };
 
+  const ajustarMovimiento = async (
+    movimientoOriginal: MovimientoCaja,
+    montoAjuste: number,
+    tipoAjuste: 'INGRESO' | 'EGRESO',
+    motivo: string,
+    metodoPago: string = 'EFECTIVO',
+    comprobanteImagen?: string | null
+  ) => {
+    const usuarioGuardado = localStorage.getItem('usuario_logueado');
+    const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario || 1;
+
+    const idMovOriginal = movimientoOriginal.id_movimiento || movimientoOriginal.idMovimiento;
+
+    const pad = (num: number) => String(num).padStart(2, '0');
+    const ahora = new Date();
+    const fechaMomento = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`;
+
+    const idPedidoRelacionado = movimientoOriginal.pedido?.idPedido || movimientoOriginal.pedido?.id_pedido;
+
+    const contraMovimiento = {
+      monto: Number(montoAjuste),
+      tipoMovimiento: tipoAjuste,
+      categoria: 'AJUSTE',
+      descripcion: `[CORRECCIÓN Mov #${idMovOriginal || '-'}] ${motivo}`,
+      metodoPago: metodoPago,
+      comprobanteImagen: comprobanteImagen || null,
+      usuario: { idUsuario },
+      pedido: idPedidoRelacionado ? { idPedido: Number(idPedidoRelacionado) } : null,
+      fecha: fechaMomento
+    };
+
+    await cajaService.guardarMovimiento(contraMovimiento);
+
+    const montoNum = Number(montoAjuste);
+    if (tipoAjuste === 'INGRESO') {
+      setSaldoCaja((prev) => prev + montoNum);
+      setIngresosTurno((prev) => prev + montoNum);
+    } else {
+      setSaldoCaja((prev) => prev - montoNum);
+      setEgresosTurno((prev) => prev + montoNum);
+    }
+
+    await fetchMovimientos();
+  };
+
   const cerrarCaja = async (montoReal: number, observaciones?: string) => {
     if (!turnoActual) return false;
     await cajaService.cerrarTurno(turnoActual.idTurno, montoReal, observaciones);
@@ -127,6 +173,7 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     consultarArqueo,
     guardarMovimiento,
     comprarInsumo,
+    ajustarMovimiento,
     cerrarCaja
   };
 };

@@ -10,10 +10,10 @@ import { useCaja } from '../hooks/useCaja';
 import { ModalNuevoIngreso } from '../components/ModalNuevoIngreso';
 import { ModalConsultarArqueo } from '../components/ModalConsultarArqueo';
 import { ModalCerrarTurno } from '../components/ModalCerrarTurno';
-import type { NuevoMovimientoDTO } from '../types/caja';
 import { ModalCompraInsumos } from '../components/ModalCompraInsumos';
 import type { DatosCompraInsumo } from '../components/ModalCompraInsumos';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
+import type { NuevoMovimientoDTO } from '../services/cajaService';
 
 export const CajaView: React.FC = () => {
   const navigate = useNavigate();
@@ -33,6 +33,7 @@ export const CajaView: React.FC = () => {
     consultarArqueo,
     guardarMovimiento,
     comprarInsumo,
+    ajustarMovimiento,
     cerrarCaja
   } = useCaja(setCajaAbierta);
 
@@ -49,11 +50,20 @@ export const CajaView: React.FC = () => {
   const [ticketSeleccionado, setTicketSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [imagenComprobanteModal, setImagenComprobanteModal] = useState<string | null>(null);
 
+  // Estados para Modal de Ajuste / Corrección de Cobro
+  const [movimientoAjuste, setMovimientoAjuste] = useState<any | null>(null);
+  const [montoAjuste, setMontoAjuste] = useState('');
+  const [tipoAjuste, setTipoAjuste] = useState<'INGRESO' | 'EGRESO'>('EGRESO');
+  const [metodoPagoAjuste, setMetodoPagoAjuste] = useState<string>('EFECTIVO');
+  const [imagenAjuste, setImagenAjuste] = useState<string | null>(null);
+  const [motivoAjuste, setMotivoAjuste] = useState('');
+  const [guardandoAjuste, setGuardandoAjuste] = useState(false);
+
   const obtenerUrlComprobante = (url?: string | null): string => {
-  if (!url) return '';
-  if (url.startsWith('http') || url.startsWith('data:')) return url;
-  return `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`;
-};
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
+    return `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`;
+  };
 
   const textColor = isDark ? 'text-white' : 'text-dark';
   const cardBg = isDark ? '#1e1e1f' : '#ffffff';
@@ -77,6 +87,17 @@ export const CajaView: React.FC = () => {
   const handleAbrirAperturaModal = () => {
     setMontoInicialInput('0');
     setShowModalApertura(true);
+  };
+
+  const handleImagenAjusteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagenAjuste(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const confirmarAperturaCaja = async (e: React.FormEvent) => {
@@ -151,6 +172,43 @@ export const CajaView: React.FC = () => {
     }
   };
 
+  const handleConfirmarAjuste = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!movimientoAjuste) return;
+
+    const montoNum = Number(montoAjuste);
+    if (isNaN(montoNum) || montoNum <= 0) {
+      alert("Por favor ingrese un monto válido mayor a 0.");
+      return;
+    }
+
+    if (!motivoAjuste.trim()) {
+      alert("Por favor ingrese la razón o motivo del ajuste.");
+      return;
+    }
+
+    setGuardandoAjuste(true);
+    try {
+      await ajustarMovimiento(
+        movimientoAjuste, 
+        montoNum, 
+        tipoAjuste, 
+        motivoAjuste.trim(),
+        metodoPagoAjuste,
+        imagenAjuste
+      );
+      setMovimientoAjuste(null);
+      setMotivoAjuste('');
+      setMontoAjuste('');
+      setMetodoPagoAjuste('EFECTIVO');
+      setImagenAjuste(null);
+    } catch (error: any) {
+      alert("Error al procesar la corrección: " + error.message);
+    } finally {
+      setGuardandoAjuste(false);
+    }
+  };
+
   const handleAbrirCierreModal = async () => {
     if (!turnoActual) {
       alert("No hay un turno activo para cerrar.");
@@ -211,6 +269,22 @@ export const CajaView: React.FC = () => {
   const renderBadgeCategoria = (m: any) => {
     const baseClasses = "d-inline-flex align-items-center gap-1 px-2 py-1 rounded fw-semibold";
     const baseStyle = { fontSize: '0.75rem', lineHeight: 1 };
+
+    if (m.categoria === 'AJUSTE') {
+      return (
+        <span 
+          className={baseClasses}
+          style={{
+            ...baseStyle,
+            backgroundColor: isDark ? 'rgba(234, 88, 12, 0.2)' : '#ffedd5',
+            color: isDark ? '#fb923c' : '#c2410c',
+            border: `1px solid ${isDark ? '#ea580c' : '#f97316'}`
+          }}
+        >
+          <i className="bi bi-arrow-repeat"></i>AJUSTE
+        </span>
+      );
+    }
 
     if (m.categoria === 'EGRESO_MANTENIMIENTO' || m.categoria === 'MANTENIMIENTO') {
       return (
@@ -362,7 +436,7 @@ export const CajaView: React.FC = () => {
                       <th className="text-start">Descripción</th>
                       <th style={{ width: '60px' }}>Usu.</th>
                       <th style={{ width: '60px' }}>Ped.</th>
-                      <th style={{ width: '100px' }}>Acciones</th>
+                      <th style={{ width: '120px' }}>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -375,7 +449,10 @@ export const CajaView: React.FC = () => {
                           m.comprobante || 
                           m.imagenComprobante || 
                           m.comprobante_imagen || 
-                          m.imagen_comprobante;
+                          m.imagen_comprobante ||
+                          m.urlComprobante ||
+                          m.url_comprobante;
+
                         return (
                           <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
                             <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
@@ -398,27 +475,46 @@ export const CajaView: React.FC = () => {
                               </div>
                             </td>
                             <td>{m.usuario?.idUsuario || m.usuario?.id_usuario || '1'}</td>
-                            <td>{m.pedido?.idPedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1] : '-')}</td>
                             <td>
-                            <div className="d-flex justify-content-center gap-1">
-                              {imagenAdjunta && (
+                              {m.pedido?.idPedido || m.pedido?.id_pedido 
+                                ? `#${m.pedido?.idPedido || m.pedido?.id_pedido}` 
+                                : (m.descripcion?.includes('Pedido #') ? `#${m.descripcion.split('#')[1]?.trim()}` : '-')}
+                            </td>
+                            <td>
+                              <div className="d-flex justify-content-center gap-1">
+                                {imagenAdjunta && (
+                                  <button
+                                    className="btn btn-sm btn-outline-info border-0 p-1"
+                                    title="Ver Comprobante de Transferencia"
+                                    onClick={() => setImagenComprobanteModal(imagenAdjunta)}
+                                  >
+                                    <i className="bi bi-eye fs-5"></i>
+                                  </button>
+                                )}
                                 <button
                                   className="btn btn-sm btn-outline-info border-0 p-1"
-                                  title="Ver Comprobante de Transferencia"
-                                  onClick={() => setImagenComprobanteModal(imagenAdjunta)}
+                                  title="Ver Ticket de Comprobante"
+                                  onClick={() => handleVerTicket(m)}
                                 >
-                                  <i className="bi bi-eye fs-5"></i> {/* Icono de ojo */}
+                                  <i className="bi bi-receipt fs-5"></i>
                                 </button>
-                              )}
-                              <button
-                                className="btn btn-sm btn-outline-info border-0 p-1"
-                                title="Ver Ticket de Comprobante"
-                                onClick={() => handleVerTicket(m)}
-                              >
-                                <i className="bi bi-receipt fs-5"></i>
-                              </button>
-                            </div>
-                          </td>
+                                <button
+                                  className="btn btn-sm btn-outline-warning border-0 p-1"
+                                  title="Corregir / Ajustar Cobro"
+                                  disabled={!cajaAbierta || m.categoria === 'AJUSTE'}
+                                  onClick={() => {
+                                    setMovimientoAjuste(m);
+                                    setMontoAjuste(String(m.monto));
+                                    setTipoAjuste(m.tipoMovimiento === 'INGRESO' ? 'EGRESO' : 'INGRESO');
+                                    setMetodoPagoAjuste(m.metodoPago || 'EFECTIVO');
+                                    setImagenAjuste(null);
+                                    setMotivoAjuste('');
+                                  }}
+                                >
+                                  <i className="bi bi-arrow-counterclockwise fs-5"></i>
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         );
                       })
@@ -471,6 +567,7 @@ export const CajaView: React.FC = () => {
         </div>
       </div>
 
+      {/* Modal Apertura */}
       {showModalApertura && (
         <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
@@ -503,6 +600,137 @@ export const CajaView: React.FC = () => {
                   </button>
                   <button type="submit" className="btn btn-success px-4" disabled={guardandoApertura}>
                     {guardandoApertura ? 'Abriendo...' : 'Abrir Caja'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Ajuste / Corrección de Cobro */}
+      {movimientoAjuste && (
+        <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }} role="dialog">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className={`modal-content ${textColor} font-monospace`} style={{ backgroundColor: isDark ? '#18181b' : '#ffffff', border: `1px solid ${cardBorder}`, borderRadius: '12px' }}>
+              <div className="modal-header border-bottom border-secondary">
+                <h5 className="modal-title fw-bold text-warning d-flex align-items-center gap-2">
+                  <i className="bi bi-arrow-counterclockwise"></i> Corrección / Ajuste de Movimiento
+                </h5>
+                <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setMovimientoAjuste(null)}></button>
+              </div>
+              <form onSubmit={handleConfirmarAjuste}>
+                <div className="modal-body py-3">
+                  <div className="p-3 mb-3 rounded" style={{ backgroundColor: isDark ? '#27272a' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
+                    <div className="small text-muted mb-1">Movimiento Original:</div>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <span className="fw-bold">
+                        #{movimientoAjuste.id_movimiento || movimientoAjuste.idMovimiento || '-'} - {movimientoAjuste.descripcion || 'Sin descripción'}
+                      </span>
+                      <span className={`fw-bold ${movimientoAjuste.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
+                        {movimientoAjuste.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(movimientoAjuste.monto).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="row g-2 mb-3">
+                    <div className="col-md-6">
+                      <label className="form-label small text-uppercase fw-semibold">Tipo de Ajuste:</label>
+                      <select
+                        className={`form-select font-monospace ${isDark ? 'bg-dark text-white' : 'bg-light text-dark'} border-secondary`}
+                        value={tipoAjuste}
+                        onChange={(e) => setTipoAjuste(e.target.value as 'INGRESO' | 'EGRESO')}
+                      >
+                        <option value="EGRESO">EGRESO (-)</option>
+                        <option value="INGRESO">INGRESO (+)</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label small text-uppercase fw-semibold">Monto del Ajuste ($):</label>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0.01"
+                        className={`form-control font-monospace ${isDark ? 'bg-dark text-white' : 'bg-light text-dark'} border-secondary`}
+                        value={montoAjuste}
+                        onChange={(e) => setMontoAjuste(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label small text-uppercase fw-semibold">Método de Pago:</label>
+                    <select
+                      className={`form-select font-monospace ${isDark ? 'bg-dark text-white' : 'bg-light text-dark'} border-secondary`}
+                      value={metodoPagoAjuste}
+                      onChange={(e) => setMetodoPagoAjuste(e.target.value)}
+                    >
+                      <option value="EFECTIVO">EFECTIVO</option>
+                      <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                      <option value="DEBITO">DÉBITO</option>
+                      <option value="CREDITO">CRÉDITO</option>
+                    </select>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label small text-uppercase fw-semibold d-flex align-items-center justify-content-between">
+                      <span>Comprobante / Imagen (Opcional):</span>
+                      {imagenAjuste && <span className="text-success small"><i className="bi bi-check-circle-fill me-1"></i>Cargado</span>}
+                    </label>
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      className={`form-control font-monospace ${isDark ? 'bg-dark text-white' : 'bg-light text-dark'} border-secondary`}
+                      onChange={handleImagenAjusteChange}
+                    />
+                    {imagenAjuste && (
+                      <div className="mt-2 text-center">
+                        <img 
+                          src={imagenAjuste} 
+                          alt="Previsualización" 
+                          className="img-thumbnail" 
+                          style={{ maxHeight: '100px', objectFit: 'contain' }} 
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="alert alert-warning py-2 mb-3 small d-flex align-items-center gap-2">
+                    <i className="bi bi-exclamation-triangle-fill fs-5"></i>
+                    <span>
+                      Se registrará un nuevo movimiento de <strong>{tipoAjuste}</strong> por <strong>${Number(montoAjuste || 0).toFixed(2)}</strong> vía <strong>{metodoPagoAjuste}</strong>.
+                    </span>
+                  </div>
+
+                  <div className="mb-2">
+                    <label className="form-label small text-uppercase fw-semibold">Motivo del Ajuste:</label>
+                    <input 
+                      type="text" 
+                      className={`form-control font-monospace ${isDark ? 'bg-dark text-white' : 'bg-light text-dark'} border-secondary`}
+                      placeholder="Ej: Cobro mal efectuado / cambio de medio de pago / error tipográfico"
+                      value={motivoAjuste}
+                      onChange={(e) => setMotivoAjuste(e.target.value)}
+                      required
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer border-top border-secondary">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary px-4" 
+                    onClick={() => {
+                      setMovimientoAjuste(null);
+                      setMetodoPagoAjuste('EFECTIVO');
+                      setImagenAjuste(null);
+                    }} 
+                    disabled={guardandoAjuste}
+                  >
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-warning px-4 text-dark fw-bold" disabled={guardandoAjuste}>
+                    {guardandoAjuste ? 'Procesando...' : 'Confirmar Ajuste'}
                   </button>
                 </div>
               </form>
@@ -551,28 +779,28 @@ export const CajaView: React.FC = () => {
       )}
 
       {imagenComprobanteModal && (
-  <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
-    <div className="modal-dialog modal-lg modal-dialog-centered">
-      <div className={`modal-content p-3 ${textColor}`} style={{ backgroundColor: isDark ? '#18181b' : '#ffffff' }}>
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <h6 className="fw-bold m-0"><i className="bi bi-image me-2"></i>Comprobante de Transferencia</h6>
-          <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setImagenComprobanteModal(null)}></button>
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
+          <div className="modal-dialog modal-lg modal-dialog-centered">
+            <div className={`modal-content p-3 ${textColor}`} style={{ backgroundColor: isDark ? '#18181b' : '#ffffff' }}>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h6 className="fw-bold m-0"><i className="bi bi-image me-2"></i>Comprobante de Transferencia</h6>
+                <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setImagenComprobanteModal(null)}></button>
+              </div>
+              <div className="text-center p-2">
+                <img 
+                  src={obtenerUrlComprobante(imagenComprobanteModal)} 
+                  alt="Comprobante Transferencia" 
+                  className="img-fluid rounded shadow" 
+                  style={{ maxHeight: '70vh', objectFit: 'contain' }} 
+                />
+              </div>
+              <div className="text-end mt-2">
+                <button className="btn btn-secondary btn-sm" onClick={() => setImagenComprobanteModal(null)}>Cerrar</button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="text-center p-2">
-          <img 
-            src={obtenerUrlComprobante(imagenComprobanteModal)} 
-            alt="Comprobante Transferencia" 
-            className="img-fluid rounded shadow" 
-            style={{ maxHeight: '70vh', objectFit: 'contain' }} 
-          />
-        </div>
-        <div className="text-end mt-2">
-          <button className="btn btn-secondary btn-sm" onClick={() => setImagenComprobanteModal(null)}>Cerrar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-)} 
+      )} 
     </SidebarLayout>
   );
 };
