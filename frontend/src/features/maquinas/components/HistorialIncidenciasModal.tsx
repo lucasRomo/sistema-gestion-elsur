@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { Maquina } from '../types/Maquina';
 import type { Incidencia, Empleado } from '../types/Incidencia';
 import { useTheme } from '../../../Context/ThemeContext';
+import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 
 interface Props {
   show: boolean;
@@ -40,6 +41,9 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [conceptoPago, setConceptoPago] = useState('');
   const [procesandoPago, setProcesandoPago] = useState(false);
+
+  // Ticket impresió/visualización
+  const [ticketSeleccionado, setTicketSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
 
   // Advertencia saldo insuficiente
   const [showModalSaldoInsuficiente, setShowModalSaldoInsuficiente] = useState(false);
@@ -176,7 +180,32 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
       const data = await res.json();
 
       if (res.ok) {
-        alert("¡Egreso registrado correctamente en caja como Pago de Mantenimiento!");
+        const idMov = data?.idMovimiento || data?.id_movimiento || data?.id || '-';
+        const conceptoFinal = conceptoPago.trim() || `Pago servicio técnico ${maquina.nombre} - Incidencia #${incidenciaAPagar.idIncidencia}`;
+
+        // Desplegar ticket de pago de egreso listo para imprimir
+        setTicketSeleccionado({
+          pedido: {
+            id_pedido: '-',
+            cliente: {
+              persona: null,
+              razon_social: 'Servicio Técnico / Mantenimiento',
+              nombre: 'Servicio Técnico / Mantenimiento'
+            },
+            monto_total: Number(montoPago),
+            observaciones: conceptoFinal
+          },
+          movimiento: {
+            id_movimiento: idMov,
+            monto: Number(montoPago),
+            tipoMovimiento: 'EGRESO',
+            categoria: 'EGRESO_MANTENIMIENTO',
+            descripcion: conceptoFinal,
+            fecha: new Date().toISOString(),
+            metodoPago
+          }
+        });
+
         setIncidenciaAPagar(null);
         setShowModalSaldoInsuficiente(false);
         setMontoPago('');
@@ -277,12 +306,41 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                         <div className="d-flex align-items-center gap-2">
                           
                           {esPagado ? (
-                            <span 
-                              className="bg-success text-white font-semibold px-2 py-1 rounded flex items-center gap-1 fw-bold"
-                              style={{ fontSize: '0.78rem' }}
-                            >
-                              <i className="bi bi-check-circle-fill me-1"></i> Pago hecho
-                            </span>
+                            <div className="d-flex align-items-center gap-1">
+                              <span 
+                                className="bg-success text-white font-semibold px-2 py-1 rounded flex items-center gap-1 fw-bold"
+                                style={{ fontSize: '0.78rem' }}
+                              >
+                                <i className="bi bi-check-circle-fill me-1"></i> Pago hecho
+                              </span>
+                              <button
+                                className="btn btn-xs btn-outline-info fw-bold py-0 px-2"
+                                style={{ fontSize: '0.78rem' }}
+                                title="Ver / Imprimir Ticket"
+                                onClick={() => {
+                                  const conceptoFinal = (inc as any).conceptoPago || `Pago reparación ${maquina.nombre} - Incidencia #${inc.idIncidencia}`;
+                                  setTicketSeleccionado({
+                                    pedido: {
+                                      id_pedido: '-',
+                                      cliente: { persona: null, razon_social: 'Servicio Técnico / Mantenimiento', nombre: 'Servicio Técnico / Mantenimiento' },
+                                      monto_total: (inc as any).montoPago || (inc as any).monto || 0,
+                                      observaciones: conceptoFinal
+                                    },
+                                    movimiento: {
+                                      id_movimiento: (inc as any).idMovimiento || '-',
+                                      monto: (inc as any).montoPago || (inc as any).monto || 0,
+                                      tipoMovimiento: 'EGRESO',
+                                      categoria: 'EGRESO_MANTENIMIENTO',
+                                      descripcion: conceptoFinal,
+                                      fecha: (inc as any).fechaPago || new Date().toISOString(),
+                                      metodoPago: (inc as any).metodoPago || 'EFECTIVO'
+                                    }
+                                  });
+                                }}
+                              >
+                                <i className="bi bi-receipt"></i>
+                              </button>
+                            </div>
                           ) : (
                             <button 
                               className="btn btn-xs btn-outline-danger fw-bold py-0 px-2"
@@ -290,7 +348,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                               onClick={() => {
                                 setIncidenciaAPagar(inc);
                                 setMontoPago('');
-                                setConceptoPago(`Pago mantenimiento ${maquina.nombre} - Ticket #${inc.idIncidencia}`);
+                                setConceptoPago(`Pago mantenimiento ${maquina.nombre} - Incidencia #${inc.idIncidencia}`);
                               }}
                             >
                               <i className="bi bi-cash-coin me-1"></i> Pagar Arreglo
@@ -381,19 +439,19 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                                 </div>
                               ) : (
                                 <div className="text-center py-2">
-  <button
-    className="btn btn-warning text-dark fw-bold btn-sm px-3 py-1 shadow"
-    style={{ fontSize: '0.78rem' }}
-    onClick={() => {
-      setIdAccionActiva(inc.idIncidencia!);
-      setTipoAccion('MANTENIMIENTO');
-      setTextoNota('');
-      setErrorValidacion('');
-    }}
-  >
-    <i className="bi bi-tools me-1"></i> Pasar a Mantenimiento
-  </button>
-</div>
+                                  <button
+                                    className="btn btn-warning text-dark fw-bold btn-sm px-3 py-1 shadow"
+                                    style={{ fontSize: '0.78rem' }}
+                                    onClick={() => {
+                                      setIdAccionActiva(inc.idIncidencia!);
+                                      setTipoAccion('MANTENIMIENTO');
+                                      setTextoNota('');
+                                      setErrorValidacion('');
+                                    }}
+                                  >
+                                    <i className="bi bi-tools me-1"></i> Pasar a Mantenimiento
+                                  </button>
+                                </div>
                               )}
                             </div>
 
@@ -586,6 +644,16 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
             </div>
           </div>
         </div>
+      )}
+
+      {/* --- TICKET DE IMPRESIÓN PAGO TÉCNICO --- */}
+      {ticketSeleccionado && (
+        <VistaTicketPagoModal
+          pedido={ticketSeleccionado.pedido}
+          movimiento={ticketSeleccionado.movimiento}
+          onClose={() => setTicketSeleccionado(null)}
+          esVentaRapida={true}
+        />
       )}
 
     </div>

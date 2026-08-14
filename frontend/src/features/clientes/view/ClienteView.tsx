@@ -11,12 +11,12 @@ import { useClientes } from '../hooks/useClientes';
 import { UbicacionViewModal } from '../../../components/modals/UbicacionViewModal';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
+import { exportarClientesExcel, exportarClientesPDF } from '../utils/exportClientesUtils';
 
 export const ClienteView = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Estilos adaptativos de paleta
   const titleColor = isDark ? '#ffffff' : '#0f172a';
   const tableContainerBg = isDark ? '#1d1d1d' : '#ffffff';
   const tableText = isDark ? '#ffffff' : '#0f172a';
@@ -79,17 +79,17 @@ export const ClienteView = () => {
   };
 
   const handleConfirmarEdicion = async (data: any) => {
-  try { 
-    await registrarCliente(data); // Antes: registrar(data)
-    setMsgSuccess("Cambios guardados correctamente");
-    setShowSuccess(true); 
-    setClienteAEditar(null); 
-    setClienteConUbicacionSeleccionada(null); 
-    await cargarClientes(); // Antes: cargar()
-  }
-  catch (e: any) { 
-    alert("Error: " + e.message); 
-  }
+    try { 
+      await registrarCliente(data);
+      setMsgSuccess("Cambios guardados correctamente");
+      setShowSuccess(true); 
+      setClienteAEditar(null); 
+      setClienteConUbicacionSeleccionada(null); 
+      await cargarClientes();
+    }
+    catch (e: any) { 
+      alert("Error: " + e.message); 
+    }
   };
 
   const clientesFiltrados = clientes.filter((c: any) => {
@@ -126,19 +126,18 @@ export const ClienteView = () => {
 
   return (
     <div className="container-fluid px-0">
-      {/* Título de la Sección */}
       <div className="d-flex justify-content-center align-items-center mb-4 position-relative">
         <h1 className="fw-bold m-0 text-center font-monospace" style={{ fontSize: '2.25rem', color: titleColor }}>
           Clientes
         </h1>
         <button 
-  type="button" 
-  className="btn btn-info  fw-semibold font-monospace position-absolute end-0 shadow-sm" 
-  style={{ color: '#ffffff' }}
-  onClick={() => setVerCategoriasModal(true)}
->
-  <i className="bi me-2"></i>Categorías de Clientes
-</button>
+          type="button" 
+          className="btn btn-info fw-semibold font-monospace position-absolute end-0 shadow-sm" 
+          style={{ color: '#ffffff' }}
+          onClick={() => setVerCategoriasModal(true)}
+        >
+          <i className="bi me-2"></i>Categorías de Clientes
+        </button>
       </div>
 
       <SuccesModal 
@@ -154,7 +153,28 @@ export const ClienteView = () => {
         setFiltroEstado={setFiltroEstado}
       />
 
-      {/* Tabla Adaptativa sin la clase .table de Bootstrap */}
+      <div className="d-flex justify-content-end gap-2 mb-3 font-monospace">
+        <button 
+          className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
+          onClick={() => exportarClientesExcel(clientesFiltrados)}
+          disabled={clientesFiltrados.length === 0}
+          title="Exportar listado actual a Excel"
+        >
+          <i className="bi bi-file-earmark-excel-fill fs-5"></i>
+          Exportar Excel
+        </button>
+
+        <button 
+          className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2"
+          onClick={() => exportarClientesPDF(clientesFiltrados)}
+          disabled={clientesFiltrados.length === 0}
+          title="Exportar listado actual a PDF"
+        >
+          <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
+          Exportar PDF
+        </button>
+      </div>
+
       <div 
         className="table-responsive rounded shadow-sm" 
         style={{ 
@@ -194,12 +214,12 @@ export const ClienteView = () => {
 
                 return (
                   <tr 
-                    key={c.id_cliente} 
+                    key={c.id_cliente || c.idCliente} 
                     style={{ borderBottom: `1px solid ${tableRowBorder}`, transition: 'background-color 0.15s ease' }}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverRowBg} 
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    <td className="px-3 py-3 font-monospace small" style={{ color: tableText, whiteSpace: 'nowrap' }}>{c.id_cliente}</td>
+                    <td className="px-3 py-3 font-monospace small" style={{ color: tableText, whiteSpace: 'nowrap' }}>{c.id_cliente || c.idCliente}</td>
                     <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.persona?.nombre}</td>
                     <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.apellido}</td>
                     <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.numeroDocumento}</td>
@@ -274,7 +294,6 @@ export const ClienteView = () => {
         </table>
       </div>
 
-      {/* Botonera Inferior con texto blanco estático */}
       <div className={`d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 border-top ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
         <button 
           onClick={() => navigate('/dashboard')} 
@@ -286,12 +305,12 @@ export const ClienteView = () => {
 
         <div className="d-flex flex-wrap gap-2">
           <button 
-  className="btn px-4 py-2 fw-semibold shadow-sm font-monospace d-flex align-items-center gap-2" 
-  style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}
-  onClick={() => setVerResumenCuentasModal(true)}
->
-  <i className="bi"></i> Ver Cuentas Corrientes Activas
-</button>
+            className="btn px-4 py-2 fw-semibold shadow-sm font-monospace d-flex align-items-center gap-2" 
+            style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}
+            onClick={() => setVerResumenCuentasModal(true)}
+          >
+            <i className="bi bi-wallet2"></i> Ver Cuentas Corrientes Activas
+          </button>
 
           <button 
             className="btn btn-success px-4 py-2 fw-semibold shadow-sm" 
@@ -303,7 +322,6 @@ export const ClienteView = () => {
         </div>
       </div>
 
-      {/* Modales de Flujo de Registro y Edición */}
       {paso === 1 && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered">

@@ -2,9 +2,8 @@ package com.elsur.sistema_gestion.controllers;
 
 import com.elsur.sistema_gestion.models.Pedido;
 import com.elsur.sistema_gestion.services.PedidoService;
-
-import tools.jackson.databind.ObjectMapper;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +21,12 @@ public class PedidoController {
     @Autowired
     private PedidoService pedidoService;
 
+    private ObjectMapper crearObjectMapperConfigurado() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        return mapper;
+    }
+
     @GetMapping
     public List<Pedido> listar() {
         return pedidoService.listarTodos();
@@ -38,7 +43,7 @@ public class PedidoController {
         @RequestPart(value = "comprobante", required = false) MultipartFile comprobante
     ) {
         try {
-            ObjectMapper mapper = new ObjectMapper(); 
+            ObjectMapper mapper = crearObjectMapperConfigurado();
             Map<String, Object> payload = mapper.readValue(payloadJson, Map.class);
             return procesarYGuardarPedido(payload, comprobante);
         } catch (Exception e) {
@@ -72,7 +77,7 @@ public class PedidoController {
 
     private ResponseEntity<?> procesarYGuardarPedido(Map<String, Object> payload, MultipartFile comprobante) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
+            ObjectMapper mapper = crearObjectMapperConfigurado();
             Pedido pedido = mapper.convertValue(payload.get("pedido"), Pedido.class); 
             
             Integer idEmpleado = payload.get("idEmpleado") != null ?  
@@ -125,15 +130,13 @@ public class PedidoController {
         @PathVariable Integer id, 
         @RequestBody Map<String, String> payload) {
     
-    // Captura el valor enviado desde el frontend o el Map
-    String nuevaUbicacion = payload.get("ubicacionEstante");
-    if (nuevaUbicacion == null) {
-        nuevaUbicacion = payload.get("ubicacion_estante"); // Por si viene con guion bajo desde el JSON
-    }
+        String nuevaUbicacion = payload.get("ubicacionEstante");
+        if (nuevaUbicacion == null) {
+            nuevaUbicacion = payload.get("ubicacion_estante");
+        }
 
-    pedidoService.actualizarUbicacion(id, nuevaUbicacion);
-    
-    return ResponseEntity.ok().build();
+        pedidoService.actualizarUbicacion(id, nuevaUbicacion);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping(value = "/{id}/pagos", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -143,7 +146,7 @@ public class PedidoController {
         @RequestPart(value = "comprobante", required = false) MultipartFile comprobante
     ) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
+            ObjectMapper mapper = crearObjectMapperConfigurado();
             Map<String, Object> payload = mapper.readValue(payloadJson, Map.class);
 
             Double monto = Double.valueOf(payload.get("monto").toString());

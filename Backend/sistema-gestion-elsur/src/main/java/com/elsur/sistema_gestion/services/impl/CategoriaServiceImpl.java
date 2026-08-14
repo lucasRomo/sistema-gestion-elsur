@@ -23,6 +23,9 @@ public class CategoriaServiceImpl implements CategoriaService {
     @Override
     @Transactional
     public Categoria guardar(Categoria categoria) {
+        if (categoria.getIdCategoria() == null && categoriaRepository.existsByNombreIgnoreCase(categoria.getNombre())) {
+            throw new RuntimeException("La categoría '" + categoria.getNombre() + "' ya existe.");
+        }
         return categoriaRepository.save(categoria);
     }
 

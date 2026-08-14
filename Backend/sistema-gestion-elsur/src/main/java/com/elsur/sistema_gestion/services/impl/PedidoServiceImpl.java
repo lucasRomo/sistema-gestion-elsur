@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -58,38 +59,41 @@ public class PedidoServiceImpl implements PedidoService {
             pedido.getComprobantes().size(); 
         }
 
+        if (pedido.getMovimientos() != null) {
+            pedido.getMovimientos().size();
+        }
+
         return pedido;
     }
 
-   @Override
-   @Transactional
+    @Override
+    @Transactional
     public void actualizarUbicacion(Integer idPedido, String nuevaUbicacion) {
-    Pedido pedido = pedidoRepository.findById(idPedido)
-            .orElseThrow(() -> new EntityNotFoundException("Pedido no encontrado con ID: " + idPedido));
+        Pedido pedido = pedidoRepository.findById(idPedido)
+                .orElseThrow(() -> new EntityNotFoundException("Pedido no encontrado con ID: " + idPedido));
 
-    String ubicacionAnterior = pedido.getUbicacion_estante() != null ? pedido.getUbicacion_estante() : "Taller";
+        String ubicacionAnterior = pedido.getUbicacion_estante() != null ? pedido.getUbicacion_estante() : "Taller";
 
-    if (ubicacionAnterior.equals(nuevaUbicacion)) {
-        return;
-    }
+        if (ubicacionAnterior.equals(nuevaUbicacion)) {
+            return;
+        }
 
-    pedido.setUbicacion_estante(nuevaUbicacion);
-    pedidoRepository.save(pedido);
+        pedido.setUbicacion_estante(nuevaUbicacion);
+        pedidoRepository.save(pedido);
 
+        HistorialEstadoPedido historial = new HistorialEstadoPedido();
+        historial.setPedido(pedido);
+        historial.setFecha_cambio(LocalDateTime.now());
+        historial.setEstado_anterior("UBICACION: " + ubicacionAnterior);
+        historial.setEstado_nuevo("UBICACION: " + nuevaUbicacion);
+        historial.setObservaciones("Cambio de ubicación del pedido en el local");
 
-    HistorialEstadoPedido historial = new HistorialEstadoPedido();
-    historial.setPedido(pedido);
-    historial.setFecha_cambio(LocalDateTime.now());
-    historial.setEstado_anterior("UBICACION: " + ubicacionAnterior);
-    historial.setEstado_nuevo("UBICACION: " + nuevaUbicacion);
-    historial.setObservaciones("Cambio de ubicación del pedido en el local");
+        Usuario usuario = usuarioRepository.findAll().stream()
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Error: No existe ningún usuario para registrar el historial."));
+        historial.setUsuarioResponsable(usuario);
 
-    Usuario usuario = usuarioRepository.findAll().stream()
-        .findFirst()
-        .orElseThrow(() -> new RuntimeException("Error: No existe ningún usuario para registrar el historial."));
-    historial.setUsuarioResponsable(usuario);
-
-    historialRepository.save(historial);
+        historialRepository.save(historial);
     }
 
     @Override
@@ -149,7 +153,7 @@ public class PedidoServiceImpl implements PedidoService {
         if (seña != null && seña.compareTo(BigDecimal.ZERO) > 0) {
             
             if (p.getComprobantes() == null) {
-                p.setComprobantes(new java.util.ArrayList<>());
+                p.setComprobantes(new ArrayList<>());
             }
             
             ComprobantePago nuevoCobro = new ComprobantePago();
@@ -179,18 +183,18 @@ public class PedidoServiceImpl implements PedidoService {
             p.getComprobantes().add(nuevoCobro);
 
             try {
+                // GENERACIÓN DEL TICKET MEDIANTE MOVIMIENTO DE CAJA
                 MovimientoCaja movimiento = new MovimientoCaja();
                 movimiento.setTipoMovimiento("INGRESO"); 
+                movimiento.setCategoria("VENTA");
                 movimiento.setMonto(seña);
                 movimiento.setMetodoPago(tipoDePagoFinal);
                 movimiento.setFecha(LocalDateTime.now());
                 movimiento.setPedido(p);
                 movimiento.setDescripcion("Seña/Adelanto inicial - Pedido #" + p.getId_pedido());
+                movimiento.setComprobanteImagen(urlDeImagen);
 
-                Turno turnoActivo = TurnoRepository.findAll().stream()
-                    .filter(t -> t.getEstado() == EstadoTurno.ABIERTO)
-                    .findFirst()
-                    .orElse(null);
+                Turno turnoActivo = TurnoRepository.findTurnoAbiertoHoy();
                 movimiento.setTurno(turnoActivo);
 
                 Usuario usuarioResponsable = null;
@@ -204,9 +208,15 @@ public class PedidoServiceImpl implements PedidoService {
                 }
                 movimiento.setUsuario(usuarioResponsable);
 
-                cajaRepository.save(movimiento);
+                MovimientoCaja movGuardado = cajaRepository.save(movimiento);
+
+                if (p.getMovimientos() == null) {
+                    p.setMovimientos(new ArrayList<>());
+                }
+                p.getMovimientos().add(movGuardado);
+
             } catch (Exception e) {
-                System.err.println("Error al registrar movimiento automático de seña en caja: " + e.getMessage());
+                System.err.println("Error al registrar movimiento de ticket en caja: " + e.getMessage());
                 e.printStackTrace(); 
             }
         }
@@ -235,7 +245,6 @@ public class PedidoServiceImpl implements PedidoService {
             }
         }
         
-        // Descuento automático de stock si se trata de Venta Rápida
         if (p.getObservaciones() != null && p.getObservaciones().contains("Venta Rápida")) {
             try {
                 this.procesarDescuentoStock(p.getId_pedido());
@@ -276,7 +285,7 @@ public class PedidoServiceImpl implements PedidoService {
         nuevaAsignacion.setFecha_asignacion(LocalDateTime.now());
 
         if (pedido.getAsignaciones() == null) {
-            pedido.setAsignaciones(new java.util.ArrayList<>());
+            pedido.setAsignaciones(new ArrayList<>());
         }
         pedido.getAsignaciones().add(nuevaAsignacion);
 
@@ -338,7 +347,6 @@ public class PedidoServiceImpl implements PedidoService {
         for (DetallePedido detalle : pedido.getDetalles()) {
             Producto producto = detalle.getProducto();
             
-            // 1. Descuento del stock directo del producto final (si aplica)
             if (producto.getStock() != null) {
                 int nuevoStock = producto.getStock() - detalle.getCantidad();
                 if (nuevoStock < 0) {
@@ -348,7 +356,6 @@ public class PedidoServiceImpl implements PedidoService {
                 productoRepository.save(producto);
             }
 
-            // 2. Descuento del stock de insumos según la Receta (US GP.34)
             List<ProductoInsumo> receta = productoInsumoRepository.findByIdIdProducto(producto.getIdProducto());
             for (ProductoInsumo pi : receta) {
                 Insumo insumo = pi.getInsumo();
@@ -497,6 +504,7 @@ public class PedidoServiceImpl implements PedidoService {
 
         MovimientoCaja mov = new MovimientoCaja();
         mov.setTipoMovimiento("INGRESO"); 
+        mov.setCategoria("VENTA");
         mov.setMonto(montoBD);
         mov.setMetodoPago(tipoPago);    
         mov.setFecha(LocalDateTime.now());
@@ -514,7 +522,14 @@ public class PedidoServiceImpl implements PedidoService {
                             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         mov.setUsuario(usuario);
 
-        cajaRepository.save(mov); 
+        mov.setComprobanteImagen(urlComprobante);
+
+        MovimientoCaja movGuardado = cajaRepository.save(mov); 
+
+        if (pedido.getMovimientos() == null) {
+            pedido.setMovimientos(new ArrayList<>());
+        }
+        pedido.getMovimientos().add(movGuardado);
 
         return pedido;
     }
@@ -611,7 +626,7 @@ public class PedidoServiceImpl implements PedidoService {
         }
 
         if (pedido.getComprobantes() == null) {
-            pedido.setComprobantes(new java.util.ArrayList<>());
+            pedido.setComprobantes(new ArrayList<>());
         }
         
         ComprobantePago nuevoCobro = new ComprobantePago();
@@ -626,6 +641,7 @@ public class PedidoServiceImpl implements PedidoService {
 
         MovimientoCaja mov = new MovimientoCaja();
         mov.setTipoMovimiento("INGRESO"); 
+        mov.setCategoria("VENTA");
         mov.setMonto(montoBD);
         mov.setMetodoPago(tipoPago);
         mov.setFecha(LocalDateTime.now());
@@ -641,7 +657,14 @@ public class PedidoServiceImpl implements PedidoService {
                             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         mov.setUsuario(usuario);
 
-        cajaRepository.save(mov); 
+        mov.setComprobanteImagen(urlDeImagen);
+
+        MovimientoCaja movGuardado = cajaRepository.save(mov); 
+
+        if (pedido.getMovimientos() == null) {
+            pedido.setMovimientos(new ArrayList<>());
+        }
+        pedido.getMovimientos().add(movGuardado);
 
         return pedido;
     }

@@ -93,12 +93,14 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
   };
 
   const comprarInsumo = async (datos: DatosCompraInsumo) => {
-    await cajaServiceExtended.registrarCompraInsumo(datos);
+    const resultado = await cajaServiceExtended.registrarCompraInsumo(datos);
 
     setSaldoCaja((prev) => prev - datos.montoTotal);
     setEgresosTurno((prev) => prev + datos.montoTotal);
 
     await fetchMovimientos();
+
+    return resultado;
   };
 
   const cerrarCaja = async (montoReal: number, observaciones?: string) => {

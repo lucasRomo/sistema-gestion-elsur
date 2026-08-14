@@ -4,10 +4,16 @@ import { useTheme } from '../../../Context/ThemeContext';
 interface ModalAuditoriaPedidoProps {
   pedido: any;
   onClose: () => void;
-  onAbrirCuentaCorriente?: (cliente: any) => void; // <--- 1. Agregamos esta prop opcional
+  onAbrirCuentaCorriente?: (cliente: any) => void;
+  onVerTicket?: (pedido: any, cobro?: any) => void;
 }
 
-export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedido, onClose, onAbrirCuentaCorriente }) => {
+export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ 
+  pedido, 
+  onClose, 
+  onAbrirCuentaCorriente,
+  onVerTicket 
+}) => {
   if (!pedido) return null;
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -53,18 +59,18 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedi
                       Pago Vinculada a Cuenta Corriente
                     </div>
                     <button 
-  type="button" 
-  className="btn btn-sm fw-bold d-flex align-items-center gap-1"
-  style={{ backgroundColor: '#198d43', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', padding: '4px 10px' }}
-  onClick={() => {
-    if (onAbrirCuentaCorriente) {
-      onAbrirCuentaCorriente(pedido.cliente);
-    }
-  }}
-  title="Ver detalle de Cuenta Corriente del Cliente"
->
-  <i className="bi bi-wallet2"></i> Ver Cuenta Corriente
-</button>
+                      type="button" 
+                      className="btn btn-sm fw-bold d-flex align-items-center gap-1"
+                      style={{ backgroundColor: '#198d43', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '0.75rem', padding: '4px 10px' }}
+                      onClick={() => {
+                        if (onAbrirCuentaCorriente) {
+                          onAbrirCuentaCorriente(pedido.cliente);
+                        }
+                      }}
+                      title="Ver detalle de Cuenta Corriente del Cliente"
+                    >
+                      <i className="bi bi-wallet2"></i> Ver Cuenta Corriente
+                    </button>
                   </div>
                 )}
 
@@ -81,68 +87,100 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedi
                       </thead>
                       <tbody>
                         {[...pedido.comprobantes]
-                          .sort((a, b) => new Date(a.fechaCarga).getTime() - new Date(b.fechaCarga).getTime())
+                          .sort((a, b) => new Date(a.fechaCarga || a.fecha_carga || a.fecha).getTime() - new Date(b.fechaCarga || b.fecha_carga || b.fecha).getTime())
                           .map((pago: any, idx: number, arrayOriginal: any[]) => {
                             const esUnico = arrayOriginal.length === 1;
                             const esPrimero = idx === 0;
 
+                            const idCobro = pago.id_comprobante || pago.idComprobante || pago.id;
+                            const montoCobro = pago.montoPago || pago.monto_pago || pago.monto || 0;
+                            const tipoPagoCobro = pago.tipoPago || pago.tipo_pago || pago.metodoPago || 'EFECTIVO';
+                            const fechaCobro = pago.fechaCarga || pago.fecha_carga || pago.fecha;
+
                             return (
                               <tr key={idx} style={{ borderBottom: `1px solid ${rowBorder}` }}>
-                                <td className="px-3 py-3 font-monospace">#{pago.id_comprobante || idx + 1}</td>
+                                <td className="px-3 py-3 font-monospace">#{idCobro || idx + 1}</td>
                                 <td className="py-3">
                                   <div className="d-flex align-items-center gap-1">
-  <span 
-    className="px-2 py-1 rounded fw-semibold d-inline-block" 
-    style={{ 
-      backgroundColor: '#4b5563', 
-      color: '#ffffff', 
-      fontSize: '0.60rem' 
-    }}
-  >
-    {pago.tipoPago || 'EFECTIVO'}
-  </span>
+                                    <span 
+                                      className="px-2 py-1 rounded fw-semibold d-inline-block" 
+                                      style={{ 
+                                        backgroundColor: '#4b5563', 
+                                        color: '#ffffff', 
+                                        fontSize: '0.60rem' 
+                                      }}
+                                    >
+                                      {tipoPagoCobro}
+                                    </span>
 
-  {esUnico ? (
-    <span 
-      className="px-2 py-1 rounded fw-semibold d-inline-block" 
-      style={{ 
-        backgroundColor: '#0284c7', 
-        color: '#ffffff', 
-        border: '1px solid #0284c7', 
-        fontSize: '0.60rem' 
-      }}
-    >
-      Total
-    </span>
-  ) : esPrimero ? (
-    <span 
-      className="px-2 py-1 rounded fw-semibold d-inline-block" 
-      style={{ 
-        backgroundColor: '#15803d', 
-        color: '#f7f7f7', 
-        border: '1px solid #15803d', 
-        fontSize: '0.60rem' 
-      }}
-    >
-      Seña Inicial
-    </span>
-  ) : (
-    <span 
-      className="px-2 py-1 rounded fw-semibold d-inline-block" 
-      style={{ 
-        backgroundColor: 'rgba(235, 162, 6, 0.9)', 
-        color: '#f5f2f1', 
-        border: '1px solid #rgba(235, 162, 6, 0.9)', 
-        fontSize: '0.60rem' 
-      }}
-    >
-      Pago Parcial
-    </span>
-  )}
-</div>
+                                    {esUnico ? (
+                                      <span 
+                                        className="px-2 py-1 rounded fw-semibold d-inline-block" 
+                                        style={{ 
+                                          backgroundColor: '#0284c7', 
+                                          color: '#ffffff', 
+                                          border: '1px solid #0284c7', 
+                                          fontSize: '0.60rem' 
+                                        }}
+                                      >
+                                        Total
+                                      </span>
+                                    ) : esPrimero ? (
+                                      <span 
+                                        className="px-2 py-1 rounded fw-semibold d-inline-block" 
+                                        style={{ 
+                                          backgroundColor: '#15803d', 
+                                          color: '#f7f7f7', 
+                                          border: '1px solid #15803d', 
+                                          fontSize: '0.60rem' 
+                                        }}
+                                      >
+                                        Seña Inicial
+                                      </span>
+                                    ) : (
+                                      <span 
+                                        className="px-2 py-1 rounded fw-semibold d-inline-block" 
+                                        style={{ 
+                                          backgroundColor: 'rgba(235, 162, 6, 0.9)', 
+                                          color: '#f5f2f1', 
+                                          border: '1px solid rgba(235, 162, 6, 0.9)', 
+                                          fontSize: '0.60rem' 
+                                        }}
+                                      >
+                                        Pago Parcial
+                                      </span>
+                                    )}
+                                  </div>
                                 </td>
                                 <td className="text-center py-3">
                                   <div className="d-flex justify-content-center align-items-center gap-1">
+                                    {/* BOTÓN IMPRIMIR TICKET DE ESTE COBRO */}
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        if (onVerTicket) {
+                                          onVerTicket(pedido, {
+                                            id: idCobro,
+                                            monto: montoCobro,
+                                            metodoPago: tipoPagoCobro,
+                                            fecha: fechaCobro
+                                          });
+                                        }
+                                      }}
+                                      className="btn btn-sm" 
+                                      title="Imprimir Ticket de Cobro" 
+                                      style={{ 
+                                        backgroundColor: 'transparent', 
+                                        border: '1px solid #ffc107', 
+                                        color: '#ffc107', 
+                                        padding: '2px 8px', 
+                                        borderRadius: '4px', 
+                                        fontSize: '0.9rem' 
+                                      }}
+                                    >
+                                      <i className="bi bi-printer"></i>
+                                    </button>
+
                                     {pago.urlArchivoComprobante && (
                                       <a 
                                         href={`http://localhost:8080${pago.urlArchivoComprobante}`} 
@@ -164,10 +202,9 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedi
                                       </a>
                                     )}
 
-                                    {pago.tipoPago === 'CUENTA_CORRIENTE' && (
+                                    {tipoPagoCobro === 'CUENTA_CORRIENTE' && (
                                       <button 
                                         onClick={() => {
-                                          // 2. Invocamos la función pasando el objeto cliente asociado al pedido
                                           if (onAbrirCuentaCorriente) {
                                             onAbrirCuentaCorriente(pedido.cliente);
                                           }
@@ -176,8 +213,8 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedi
                                         title="Ver detalle de Cuenta Corriente" 
                                         style={{ 
                                           backgroundColor: 'transparent', 
-                                          border: '1px solid #ffc107', 
-                                          color: '#ffc107', 
+                                          border: '1px solid #25d164', 
+                                          color: '#25d164', 
                                           padding: '2px 8px', 
                                           borderRadius: '4px', 
                                           fontSize: '0.9rem' 
@@ -188,7 +225,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({ pedi
                                     )}
                                   </div>
                                 </td>
-                                <td className="text-end px-3 py-3 fw-bold text-success font-monospace">+${Number(pago.montoPago || 0).toFixed(2)}</td>
+                                <td className="text-end px-3 py-3 fw-bold text-success font-monospace">+${Number(montoCobro).toFixed(2)}</td>
                               </tr>
                             );
                           })}

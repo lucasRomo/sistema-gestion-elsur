@@ -9,7 +9,8 @@ import { FiltrosHistorial } from '../../historial/components/FiltrosHistorial';
 import { FilaHistorial } from '../../historial/components/FilaHistorial';
 import { ModalAuditoriaPedido } from '../modals/ModalAuditoriaPedido';
 import { VistaTicketModal } from '../modals/VistaTicketModal';
-import { ModalHistorialMermas } from '../modals/ModalHistorialMermas'; // <-- Usamos el modal solo lectura
+import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal'; // <-- 1. IMPORTAR COMPONENTE
+import { ModalHistorialMermas } from '../modals/ModalHistorialMermas';
 import { CuentaCorrienteModal } from '../../clientes/components/CuentaCorrienteModal';
 import { useTheme } from '../../../Context/ThemeContext';
 
@@ -33,6 +34,7 @@ export const HistorialPedidosPage: React.FC = () => {
   const [pedidoAuditoria, setPedidoAuditoria] = useState<any>(null);
   const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<any>(null);
   const [verTicketPedido, setVerTicketPedido] = useState<any>(null);
+  const [ticketPagoSeleccionado, setTicketPagoSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null); // <-- 2. ESTADO PARA TICKET DE COBRO
   const [pedidoMermas, setPedidoMermas] = useState<any>(null);
 
   // Estado para el modal de devolución
@@ -298,11 +300,22 @@ export const HistorialPedidosPage: React.FC = () => {
         />
       )}
 
+      {/* 3. PASAR LA PROP onVerTicket A ModalAuditoriaPedido */}
       {pedidoAuditoria && (
         <ModalAuditoriaPedido 
           pedido={pedidoAuditoria} 
           onClose={() => setPedidoAuditoria(null)}
           onAbrirCuentaCorriente={(cliente) => setClienteCuentaCorriente(cliente)}
+          onVerTicket={(pedido, cobro) => setTicketPagoSeleccionado({ pedido, movimiento: cobro })}
+        />
+      )}
+
+      {/* 4. RENDERIZAR VistaTicketPagoModal */}
+      {ticketPagoSeleccionado && (
+        <VistaTicketPagoModal 
+          pedido={ticketPagoSeleccionado.pedido}
+          movimiento={ticketPagoSeleccionado.movimiento}
+          onClose={() => setTicketPagoSeleccionado(null)}
         />
       )}
 

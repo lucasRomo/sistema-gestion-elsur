@@ -29,7 +29,8 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [unidadesMedida, setUnidadesMedida] = useState<UnidadMedida[]>([]);
-  
+  const [errorUnidad, setErrorUnidad] = useState('');
+
   // Modales secundarios
   const [showGestionUnidadesModal, setShowGestionUnidadesModal] = useState(false);
   const [showRelacionesModal, setShowRelacionesModal] = useState(false);
@@ -43,10 +44,10 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
     stockEmpaquetado: 0,
     stockMinimo: 0,
     factorConversion: '',
-    idUnidad: '',
-    idUnidadCompra: '',
+    nombreUnidad: '',
+    nombreUnidadCompra: '',
     estado: 'Activo',
-    idProveedor: ''
+    nombreProveedor: ''
   });
 
   const cargarUnidadesMedida = () => {
@@ -83,6 +84,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   }, [show]);
 
   useEffect(() => {
+    setErrorUnidad('');
     if (insumoEditando) {
       setFormData({
         idInsumo: insumoEditando.idInsumo?.toString() || '',
@@ -92,10 +94,10 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
         stockEmpaquetado: insumoEditando.stockEmpaquetado || 0,
         stockMinimo: insumoEditando.stockMinimo || 0,
         factorConversion: insumoEditando.factorConversion?.toString() || '',
-        idUnidad: insumoEditando.unidadMedida?.idUnidad?.toString() || '',
-        idUnidadCompra: insumoEditando.unidadCompra?.idUnidad?.toString() || '',
+        nombreUnidad: insumoEditando.unidadMedida?.nombre || '',
+        nombreUnidadCompra: insumoEditando.unidadCompra?.nombre || '',
         estado: insumoEditando.estado || 'Activo',
-        idProveedor: insumoEditando.proveedor?.idProveedor?.toString() || ''
+        nombreProveedor: insumoEditando.proveedor?.nombreComercial || ''
       });
     } else {
       setFormData({
@@ -106,10 +108,10 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
         stockEmpaquetado: 0,
         stockMinimo: 0,
         factorConversion: '',
-        idUnidad: '',
-        idUnidadCompra: '',
+        nombreUnidad: '',
+        nombreUnidadCompra: '',
         estado: 'Activo',
-        idProveedor: ''
+        nombreProveedor: ''
       });
     }
   }, [insumoEditando, show]);
@@ -120,7 +122,28 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const unidadSuelteTrim = formData.nombreUnidad.trim().toLowerCase();
+    const unidadCompraTrim = formData.nombreUnidadCompra.trim().toLowerCase();
+
+    if (unidadSuelteTrim && unidadCompraTrim && unidadSuelteTrim === unidadCompraTrim) {
+      setErrorUnidad('La unidad suelta y la unidad de empaque no pueden ser iguales.');
+      return;
+    }
+
+    setErrorUnidad('');
     
+    // Mapeo dinámico por nombre o generación de nuevo objeto si no existía el ID
+    const unidadEncontrada = unidadesMedida.find(
+      u => u.nombre?.toLowerCase() === formData.nombreUnidad.trim().toLowerCase()
+    );
+    const unidadCompraEncontrada = unidadesMedida.find(
+      u => u.nombre?.toLowerCase() === formData.nombreUnidadCompra.trim().toLowerCase()
+    );
+    const proveedorEncontrado = proveedores.find(
+      p => p.nombreComercial.toLowerCase() === formData.nombreProveedor.trim().toLowerCase()
+    );
+
     const insumoAGuardar = {
       ...(formData.idInsumo && { idInsumo: parseInt(formData.idInsumo) }),
       nombreInsumo: formData.nombreInsumo,
@@ -130,9 +153,18 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
       stockMinimo: parseFloat(formData.stockMinimo.toString()),
       factorConversion: formData.factorConversion ? parseFloat(formData.factorConversion) : null,
       estado: formData.estado,
-      ...(formData.idUnidad && { unidadMedida: { idUnidad: parseInt(formData.idUnidad) } }),
-      ...(formData.idUnidadCompra && { unidadCompra: { idUnidad: parseInt(formData.idUnidadCompra) } }),
-      ...(formData.idProveedor && { proveedor: { idProveedor: parseInt(formData.idProveedor) } })
+      
+      unidadMedida: unidadEncontrada 
+        ? { idUnidad: unidadEncontrada.idUnidad, nombre: unidadEncontrada.nombre }
+        : formData.nombreUnidad.trim() ? { nombre: formData.nombreUnidad.trim() } : null,
+
+      unidadCompra: unidadCompraEncontrada 
+        ? { idUnidad: unidadCompraEncontrada.idUnidad, nombre: unidadCompraEncontrada.nombre }
+        : formData.nombreUnidadCompra.trim() ? { nombre: formData.nombreUnidadCompra.trim() } : null,
+
+      proveedor: proveedorEncontrado 
+        ? { idProveedor: proveedorEncontrado.idProveedor }
+        : formData.nombreProveedor.trim() ? { nombreComercial: formData.nombreProveedor.trim() } : null
     };
 
     onGuardar(insumoAGuardar);
@@ -168,6 +200,13 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body p-4">
+
+                {errorUnidad && (
+                  <div className="alert alert-danger py-2 small mb-3" role="alert">
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                    {errorUnidad}
+                  </div>
+                )}
                 
                 {/* Nombre y Precio */}
                 <div className="row">
@@ -183,7 +222,6 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                       required 
                       onInvalid={(e: any) => {
                         if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre de Insumo No puede Estar Vacío");
-                        else if (e.target.validity.patternMismatch) e.target.setCustomValidity("El Campo de Nombre de Insumo solo debe contener Letras");
                       }}
                       onInput={(e: any) => e.target.setCustomValidity("")}
                     />
@@ -235,34 +273,38 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   <div className="row">
                     <div className="col-md-4 mb-2">
                       <label className="form-label small fw-semibold" style={{ color: labelColor }}>Unidad Suelta (Consumo)</label>
-                      <select 
-                        className="form-select shadow-none" 
+                      <input 
+                        list="unidades-sueltas-list"
+                        className="form-control shadow-none" 
                         style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                        name="idUnidad" 
-                        value={formData.idUnidad} 
+                        placeholder="Ej. Hoja / ml / Unidad"
+                        name="nombreUnidad" 
+                        value={formData.nombreUnidad} 
                         onChange={handleChange}
-                      >
-                        <option value="">Ej. Hoja / ml / Unidad</option>
+                      />
+                      <datalist id="unidades-sueltas-list">
                         {unidadesMedida.map(u => (
-                          <option key={u.idUnidad} value={u.idUnidad}>{u.nombre}</option>
+                          <option key={u.idUnidad} value={u.nombre || ''} />
                         ))}
-                      </select>
+                      </datalist>
                     </div>
 
                     <div className="col-md-4 mb-2">
                       <label className="form-label small fw-semibold" style={{ color: labelColor }}>Unidad Empaque (Compra)</label>
-                      <select 
-                        className="form-select shadow-none" 
+                      <input 
+                        list="unidades-compra-list"
+                        className="form-control shadow-none" 
                         style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                        name="idUnidadCompra" 
-                        value={formData.idUnidadCompra} 
+                        placeholder="Ej. Resma / Caja / Botella"
+                        name="nombreUnidadCompra" 
+                        value={formData.nombreUnidadCompra} 
                         onChange={handleChange}
-                      >
-                        <option value="">Ej. Resma / Caja / Botella</option>
+                      />
+                      <datalist id="unidades-compra-list">
                         {unidadesMedida.map(u => (
-                          <option key={u.idUnidad} value={u.idUnidad}>{u.nombre}</option>
+                          <option key={u.idUnidad} value={u.nombre} />
                         ))}
-                      </select>
+                      </datalist>
                     </div>
 
                     <div className="col-md-4 mb-2">
@@ -330,18 +372,20 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                 <div className="row">
                   <div className="col-md-6 mb-3">
                     <label className="form-label small fw-semibold" style={{ color: labelColor }}>Proveedor Principal</label>
-                    <select 
-                      className="form-select shadow-none" 
+                    <input 
+                      list="proveedores-list"
+                      className="form-control shadow-none" 
                       style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                      name="idProveedor" 
-                      value={formData.idProveedor} 
+                      placeholder="Escriba para buscar o ingresar un proveedor..."
+                      name="nombreProveedor" 
+                      value={formData.nombreProveedor} 
                       onChange={handleChange}
-                    >
-                      <option value="">Seleccione un proveedor...</option>
+                    />
+                    <datalist id="proveedores-list">
                       {proveedores.map(p => (
-                        <option key={p.idProveedor} value={p.idProveedor}>{p.nombreComercial}</option>
+                        <option key={p.idProveedor} value={p.nombreComercial} />
                       ))}
-                    </select>
+                    </datalist>
                   </div>
 
                   <div className="col-md-6 mb-3">

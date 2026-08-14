@@ -12,8 +12,9 @@ import { ModalMermasProductos } from '../modals/ModalMermasProductos';
 import { useProductos } from '../hooks/useProductos';
 import { actualizarPreciosMasivo, toggleStockVinculado, type ActualizarPreciosPayload } from '../services/productoService';
 import type { Producto } from '../types/Producto';
+import { exportarProductosExcel, exportarProductosPDF } from '../utils/exportProductosUtils';
 
-// Componentes y contextos compartidos globales (suben 3 niveles a src)
+// Componentes y contextos compartidos globales
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
 
@@ -50,7 +51,8 @@ export const Productos: React.FC = () => {
   const handleAplicarAumentoMasivo = async (data: ActualizarPreciosPayload) => {
     await actualizarPreciosMasivo(data);
     await cargar();
-    setMensajeExito(`Precios aumentados exitosamente un ${data.porcentaje}%`);
+    const accion = data.porcentaje >= 0 ? 'Aumento' : 'Descuento';
+    setMensajeExito(`${accion} de ${Math.abs(data.porcentaje)}% aplicado a los productos seleccionados`);
     setMostrarExito(true);
   };
 
@@ -80,6 +82,29 @@ export const Productos: React.FC = () => {
         filtroEstado={filtroEstado} 
         setFiltroEstado={setFiltroEstado}
       />
+
+      {/* BOTONES DE EXPORTACIÓN (EXCEL Y PDF) */}
+      <div className="d-flex justify-content-end gap-2 mb-3 font-monospace">
+        <button 
+          className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
+          onClick={() => exportarProductosExcel(productosFiltrados)}
+          disabled={productosFiltrados.length === 0}
+          title="Exportar listado actual a Excel"
+        >
+          <i className="bi bi-file-earmark-excel-fill fs-5"></i>
+          Exportar Excel
+        </button>
+
+        <button 
+          className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2"
+          onClick={() => exportarProductosPDF(productosFiltrados)}
+          disabled={productosFiltrados.length === 0}
+          title="Exportar listado actual a PDF"
+        >
+          <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
+          Exportar PDF
+        </button>
+      </div>
 
       <ProductoTabla 
         productos={productosFiltrados} 

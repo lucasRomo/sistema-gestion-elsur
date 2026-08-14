@@ -15,6 +15,7 @@ import { ModalRegistrarPago } from '../../pedidos/modals/ModalRegistrarPago';
 import { ModalGestionarComprobantes } from '../../pedidos/modals/ModalGestionarComprobantes';
 import { ModalAdvertenciaDeuda } from '../../pedidos/modals/ModalAdvertenciaDeuda';
 import { VistaTicketModal } from '../../pedidos/modals/VistaTicketModal';
+import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { CuentaCorrienteModal } from '../../clientes/components/CuentaCorrienteModal';
 import { ModalGestionMermas } from '../../pedidos/modals/ModalGestionMermas';
 import { useTheme } from '../../../Context/ThemeContext';
@@ -33,6 +34,7 @@ export const PedidosPendientesPage: React.FC = () => {
   const [nuevoEstadoPendiente, setNuevoEstadoPendiente] = useState<string>('');
   const [pedidoPagoSel, setPedidoPagoSel] = useState<any>(null);
   const [verTicketPedido, setVerTicketPedido] = useState<any>(null);
+  const [ticketPagoSel, setTicketPagoSel] = useState<{ pedido: any; movimiento?: any } | null>(null);
   const [sucesoError, setSucesoError] = useState<{ show: boolean; mensaje: string }>({ show: false, mensaje: '' });
   const [empleados, setEmpleados] = useState<any[]>([]);
   const [modalNotif, setModalNotif] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
@@ -242,13 +244,14 @@ export const PedidosPendientesPage: React.FC = () => {
         throw new Error(errorText || "Error al procesar el pago");
       }
 
-      setSuceso({ 
-        show: true, 
-        titulo: "Éxito", 
-        mensaje: "Pago registrado correctamente", 
-        tipo: "exito" 
-      });
+      const pedidoActualizado = await response.json().catch(() => pedidoPagoSel);
+
       setPedidoPagoSel(null);
+      setTicketPagoSel({
+        pedido: pedidoActualizado,
+        movimiento: { metodoPago: tipoPago, fecha: new Date(), monto }
+      });
+      await refrescar();
     } catch (error: any) {
       console.error(error);
       setSuceso({
@@ -520,6 +523,15 @@ export const PedidosPendientesPage: React.FC = () => {
         />
       )}
 
+      {/* VISTA TICKET PAGO (CAJA) */}
+      {ticketPagoSel && (
+        <VistaTicketPagoModal 
+          pedido={ticketPagoSel.pedido}
+          movimiento={ticketPagoSel.movimiento}
+          onClose={() => setTicketPagoSel(null)}
+        />
+      )}
+
       {/* GESTIÓN DE COMPROBANTES */}
       {pedidoGestionComprobanteSel && (
         <ModalGestionarComprobantes
@@ -527,6 +539,10 @@ export const PedidosPendientesPage: React.FC = () => {
           onClose={() => setPedidoGestionComprobanteSel(null)}
           onVincularComprobante={handleVincularComprobante}
           onEliminarComprobante={handleEliminarComprobante} 
+          onVerTicket={(pedido, cobro) => {
+            // Mandamos el pedido y el movimiento seleccionado a VistaTicketPagoModal
+            setTicketPagoSel({ pedido, movimiento: cobro });
+          }}
         />
       )}
 

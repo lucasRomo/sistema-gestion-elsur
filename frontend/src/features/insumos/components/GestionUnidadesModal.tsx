@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { UnidadMedida } from '../types/Insumo';
 import { useTheme } from '../../../Context/ThemeContext';
 
@@ -29,14 +29,34 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
   const mutedText = isDark ? '#a1a1aa' : '#64748b';
 
   const [nuevoNombre, setNuevoNombre] = useState('');
+  const [busqueda, setBusqueda] = useState('');
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Filtrado dinámico de la lista de unidades existentes
+  const unidadesFiltradas = useMemo(() => {
+    if (!busqueda.trim()) return unidades;
+    return unidades.filter(u => 
+      u.nombre?.toLowerCase().includes(busqueda.toLowerCase())
+    );
+  }, [unidades, busqueda]);
 
   if (!show) return null;
 
   const handleAgregar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nuevoNombre.trim()) return;
+    const nombreLimpio = nuevoNombre.trim();
+    if (!nombreLimpio) return;
+
+    // Validar duplicados localmente antes de consultar al servidor
+    const existeDuplicado = unidades.some(
+      u => u.nombre?.trim().toLowerCase() === nombreLimpio.toLowerCase()
+    );
+
+    if (existeDuplicado) {
+      setError(`Ya existe una unidad de medida llamada "${nombreLimpio}".`);
+      return;
+    }
 
     try {
       setCargando(true);
@@ -44,10 +64,13 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
       const res = await fetch('http://localhost:8080/api/unidades-medida', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: nuevoNombre.trim() })
+        body: JSON.stringify({ nombre: nombreLimpio })
       });
 
-      if (!res.ok) throw new Error('Error al guardar la unidad de medida');
+      if (!res.ok) {
+        const errorMsg = await res.text();
+        throw new Error(errorMsg || 'Error al guardar la unidad de medida');
+      }
 
       setNuevoNombre('');
       onActualizar();
@@ -105,9 +128,17 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
 
           <div className="modal-body p-4">
             {error && (
-              <div className="alert alert-danger py-2 small" role="alert">
-                <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                {error}
+              <div className="alert alert-danger py-2 small d-flex align-items-center justify-content-between" role="alert">
+                <span>
+                  <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                  {error}
+                </span>
+                <button 
+                  type="button" 
+                  className="btn-close btn-close-white ms-2" 
+                  style={{ fontSize: '0.75rem' }} 
+                  onClick={() => setError(null)}
+                />
               </div>
             )}
 
@@ -121,7 +152,10 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
                   style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                   placeholder="Ej. Gramos, Rollos, Litros"
                   value={nuevoNombre}
-                  onChange={(e) => setNuevoNombre(e.target.value)}
+                  onChange={(e) => {
+                    setNuevoNombre(e.target.value);
+                    if (error) setError(null);
+                  }}
                   disabled={cargando}
                 />
                 <button 
@@ -135,16 +169,32 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
               </div>
             </form>
 
-            {/* Lista de unidades */}
-            <label className="form-label small mb-2 fw-semibold" style={{ color: labelColor }}>Unidades Existentes</label>
+            {/* Buscador y Lista de unidades */}
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <label className="form-label small mb-0 fw-semibold" style={{ color: labelColor }}>
+                Unidades Existentes ({unidadesFiltradas.length})
+              </label>
+            </div>
+
+            <div className="mb-2">
+              <input 
+                type="text" 
+                className="form-control form-control-sm shadow-none" 
+                style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                placeholder="Buscar unidad..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+            </div>
+
             <div className="border rounded overflow-auto" style={{ maxHeight: '200px', backgroundColor: listBoxBg, borderColor: inputBorder }}>
               <ul className="list-group list-group-flush">
-                {unidades.length === 0 ? (
+                {unidadesFiltradas.length === 0 ? (
                   <li className="list-group-item bg-transparent text-center py-3 small" style={{ color: mutedText }}>
-                    No hay unidades registradas
+                    {busqueda ? 'No hay coincidencia en la búsqueda' : 'No hay unidades registradas'}
                   </li>
                 ) : (
-                  unidades.map((u) => (
+                  unidadesFiltradas.map((u) => (
                     <li 
                       key={u.idUnidad ?? u.nombre} 
                       className="list-group-item bg-transparent d-flex justify-content-between align-items-center py-2"

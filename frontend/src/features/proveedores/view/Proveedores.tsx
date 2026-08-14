@@ -8,6 +8,7 @@ import { ProveedorModal } from '../components/ProveedorModal';
 import { ProveedorUbicacionModal } from '../components/ProveedorUbicacionModal';
 import { useProveedores } from '../hooks/useProveedores';
 import type { Proveedor } from '../types/Proveedor';
+import { exportarProveedoresExcel, exportarProveedoresPDF } from '../utils/exportProveedoresUtils';
 
 // Componentes globales compartidos
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
@@ -61,6 +62,29 @@ export const Proveedores: React.FC = () => {
         filtroTipo={filtroTipo} setFiltroTipo={setFiltroTipo}
         tiposUnicos={tiposUnicos}
       />
+
+      {/* BOTONES DE EXPORTACIÓN (EXCEL Y PDF) */}
+      <div className="d-flex justify-content-end gap-2 mb-3">
+        <button 
+          className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
+          onClick={() => exportarProveedoresExcel(proveedoresFiltrados)}
+          disabled={proveedoresFiltrados.length === 0}
+          title="Exportar listado actual a Excel"
+        >
+          <i className="bi bi-file-earmark-excel-fill fs-5"></i>
+          Exportar Excel
+        </button>
+
+        <button 
+          className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2"
+          onClick={() => exportarProveedoresPDF(proveedoresFiltrados)}
+          disabled={proveedoresFiltrados.length === 0}
+          title="Exportar listado actual a PDF"
+        >
+          <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
+          Exportar PDF
+        </button>
+      </div>
 
       <ProveedorTabla 
         proveedores={proveedoresFiltrados}

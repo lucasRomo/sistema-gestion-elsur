@@ -3,6 +3,7 @@ import type { Producto } from '../types/Producto';
 import { mermaService, type MermaEntity } from '../../../services/mermaService';
 import { useTheme } from '../../../Context/ThemeContext';
 
+
 interface ModalMermasProductosProps {
   show: boolean;
   productos: Producto[];

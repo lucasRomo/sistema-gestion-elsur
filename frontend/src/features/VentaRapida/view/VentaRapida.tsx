@@ -9,6 +9,7 @@ import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
 import { PedidosPendientesCard } from '../components/PedidosPendientesCard';
 import { VistaTicketModal } from '../../pedidos/modals/VistaTicketModal';
+import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { NotificacionesCard } from '../components/NotificacionesCard';
 import { useTheme } from '../../../Context/ThemeContext'; 
 
@@ -33,7 +34,7 @@ export const VentaRapida: React.FC = () => {
     return guardado ? JSON.parse(guardado) : null;
   });
 
-  const [verTicketPedido, setVerTicketPedido] = useState<any | null>(null);
+  const [verTicketPedido, setVerTicketPedido] = useState<{ pedido: any; tipo: 'cliente' | 'pago' } | null>(null);
 
   // Modal de advertencia de máquinas fuera de servicio
   const [showModalMaquinas, setShowModalMaquinas] = useState(false);
@@ -197,9 +198,9 @@ export const VentaRapida: React.FC = () => {
     const payloadParaBackend = {
       pedido: {
         cliente: { id_cliente: 1 }, 
-        fecha_entrega_estimada: new Date().toISOString(),
+        fecha_entrega_estimada: new Date().toISOString().slice(0, 19),
         monto_total: totalFinal,
-        monto_pago_adelantado: 0,
+        monto_pago_adelantado: totalFinal, // Forzar directamente el total pagado
         es_cuenta_corriente: false,
         es_presupuesto: false,
         observaciones: `Venta Rápida ${porcentajeDescuento > 0 ? `(Categoría: ${categoriaActual?.nombreCategoria} - ${porcentajeDescuento}% Desc.)` : ''}`,
@@ -229,6 +230,14 @@ export const VentaRapida: React.FC = () => {
       const idPedido = pedidoGuardado.id_pedido || pedidoGuardado.idPedido;
 
       await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Enriquecer el objeto para asegurar que figure como pagado al 100% en los tickets
+      const pedidoParaTicket = {
+        ...pedidoGuardado,
+        monto_pago_adelantado: totalFinal,
+        monto_total: totalFinal,
+        estado: 'FINALIZADO'
+      };
       
       // 2. Registrar el Pago en Caja
       const formDataPago = new FormData();
@@ -270,8 +279,8 @@ export const VentaRapida: React.FC = () => {
       await fetchProductos();
 
       // PERSISTIR EL ÚLTIMO PEDIDO PARA TICKET
-      setUltimoPedidoRealizado(pedidoGuardado);
-      localStorage.setItem('ultimo_pedido_venta_rapida', JSON.stringify(pedidoGuardado));
+      setUltimoPedidoRealizado(pedidoParaTicket);
+      localStorage.setItem('ultimo_pedido_venta_rapida', JSON.stringify(pedidoParaTicket));
 
       setCarrito([]);
       setCategoriaSeleccionadaId('');
@@ -323,20 +332,14 @@ export const VentaRapida: React.FC = () => {
             color: #0f172a !important;
             border-color: #cbd5e1 !important;
           }
-
           select.form-select:focus,
-          select.form-select:focus-visible,
-          select.form-select:active,
-          input.form-control:focus,
-          input.form-control:focus-visible,
-          input.form-control:active {
+          input.form-control:focus {
             background-color: #ffffff !important;
             color: #0f172a !important;
             border-color: #8e45e0 !important;
             box-shadow: 0 0 0 0.25rem rgba(142, 69, 224, 0.2) !important;
             outline: none !important;
           }
-
           select.form-select option {
             background-color: #ffffff !important;
             color: #0f172a !important;
@@ -396,14 +399,23 @@ export const VentaRapida: React.FC = () => {
           onCancelar={handleCancelar} 
           onCompletar={handleValidarYCompletarVenta} 
           ultimoPedido={ultimoPedidoRealizado}
-          onImprimirTicket={() => setVerTicketPedido(ultimoPedidoRealizado)}
+          onImprimirTicketCliente={() => setVerTicketPedido({ pedido: ultimoPedidoRealizado, tipo: 'cliente' })}
+          onImprimirTicketPago={() => setVerTicketPedido({ pedido: ultimoPedidoRealizado, tipo: 'pago' })}
         />
       </div>
 
-      {/* MODAL DE VISTA PREVIA DEL TICKET */}
-      {verTicketPedido && (
+      {/* MODAL DE VISTA PREVIA SEGÚN EL TIPO SELECCIONADO */}
+      {verTicketPedido?.tipo === 'cliente' && (
         <VistaTicketModal 
-          pedido={verTicketPedido}
+          pedido={verTicketPedido.pedido}
+          onClose={() => setVerTicketPedido(null)}
+        />
+      )}
+
+      {verTicketPedido?.tipo === 'pago' && (
+        <VistaTicketPagoModal 
+          pedido={verTicketPedido.pedido}
+          tipo="pago"
           onClose={() => setVerTicketPedido(null)}
         />
       )}
@@ -468,7 +480,7 @@ export const VentaRapida: React.FC = () => {
       {/* MODAL SUCESO */}
       {suceso.show && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
-          <div className="modal-dialog modal-sm modal-dialog-centered">
+          <div className="modal-dialog modal-md modal-dialog-centered">
             <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
               <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-x-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">{suceso.titulo}</h5>
@@ -476,18 +488,30 @@ export const VentaRapida: React.FC = () => {
               
               <div className="d-flex flex-column gap-2 mt-3">
                 {suceso.tipo === 'exito' && suceso.titulo === '¡Éxito!' && ultimoPedidoRealizado && (
-                  <button 
-                    className="btn fw-bold text-dark btn-sm px-3 py-2" 
-                    style={{ backgroundColor: '#eab308' }}
-                    onClick={() => {
-                      setSuceso({ ...suceso, show: false });
-                      setVerTicketPedido(ultimoPedidoRealizado);
-                    }}
-                  >
-                    <i className="bi bi-printer-fill me-1"></i> Imprimir Ticket
-                  </button>
+                  <div className="d-flex gap-2 justify-content-center">
+                    <button 
+                      className="btn fw-bold text-dark btn-sm px-3 py-2 flex-grow-1" 
+                      style={{ backgroundColor: '#eab308' }}
+                      onClick={() => {
+                        setSuceso({ ...suceso, show: false });
+                        setVerTicketPedido({ pedido: ultimoPedidoRealizado, tipo: 'cliente' });
+                      }}
+                    >
+                      <i className="bi bi-printer-fill me-1"></i> Ticket Cliente #{ultimoPedidoRealizado.id_pedido || ultimoPedidoRealizado.idPedido}
+                    </button>
+                    <button 
+                      className="btn fw-bold text-dark btn-sm px-3 py-2 flex-grow-1" 
+                      style={{ backgroundColor: '#38bdf8' }}
+                      onClick={() => {
+                        setSuceso({ ...suceso, show: false });
+                        setVerTicketPedido({ pedido: ultimoPedidoRealizado, tipo: 'pago' });
+                      }}
+                    >
+                      <i className="bi bi-receipt me-1"></i> Ticket Pago #{ultimoPedidoRealizado.id_pedido || ultimoPedidoRealizado.idPedido}
+                    </button>
+                  </div>
                 )}
-                <button style={{ backgroundColor: 'rgb(175, 58, 50)', border: 'none' }} className="btn btn-secondary btn-sm px-4 fw-bold" onClick={() => setSuceso({ ...suceso, show: false })}>
+                <button style={{ backgroundColor: 'rgb(175, 58, 50)', border: 'none' }} className="btn btn-secondary btn-sm px-4 fw-bold mt-2" onClick={() => setSuceso({ ...suceso, show: false })}>
                   Cerrar
                 </button>
               </div>

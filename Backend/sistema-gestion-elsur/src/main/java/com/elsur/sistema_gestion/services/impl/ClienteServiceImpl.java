@@ -55,7 +55,6 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional
     public Cliente guardar(Cliente cliente, Integer idUsuario) {
-        // Rehidratamos referencias de TipoDocumento y TipoPersona
         if (cliente.getPersona() != null) {
             Persona persona = cliente.getPersona();
             
@@ -72,13 +71,10 @@ public class ClienteServiceImpl implements ClienteService {
             }
         }
 
-        // --- LÓGICA DE AUDITORÍA EN EDICIÓN ---
         if (cliente.getIdCliente() != null && clienteRepository.existsById(cliente.getIdCliente())) {
-            
             Cliente clienteViejo = clienteRepository.findById(cliente.getIdCliente()).orElse(null);
 
             if (clienteViejo != null) {
-                // Buscamos el usuario real enviado desde el Frontend; si no viene, usamos fallback
                 Usuario usuarioActual = null;
                 if (idUsuario != null) {
                     usuarioActual = usuarioRepository.findById(idUsuario).orElse(null);
@@ -87,7 +83,6 @@ public class ClienteServiceImpl implements ClienteService {
                     usuarioActual = usuarioRepository.findAll().stream().findFirst().orElse(null);
                 }
 
-                // 1. Campos de Cliente
                 compararYRegistrar(usuarioActual, "Cliente", "razonSocial", cliente.getIdCliente(),
                         clienteViejo.getRazonSocial(), cliente.getRazonSocial());
 
@@ -106,7 +101,6 @@ public class ClienteServiceImpl implements ClienteService {
                 compararYRegistrar(usuarioActual, "Cliente", "saldoDeudor", cliente.getIdCliente(),
                         clienteViejo.getSaldoDeudor(), cliente.getSaldoDeudor());
 
-                // 2. Campos de Persona y Dirección
                 if (clienteViejo.getPersona() != null && cliente.getPersona() != null) {
                     Persona pVieja = clienteViejo.getPersona();
                     Persona pNuev = cliente.getPersona();
@@ -126,7 +120,6 @@ public class ClienteServiceImpl implements ClienteService {
                     compararYRegistrar(usuarioActual, "Persona", "email", cliente.getIdCliente(),
                             pVieja.getEmail(), pNuev.getEmail());
 
-                    // ⬇️ SECCIÓN AGREGADA: Auditoría de Dirección ⬇️
                     if (pVieja.getDireccion() != null && pNuev.getDireccion() != null) {
                         Direccion dVieja = pVieja.getDireccion();
                         Direccion dNueva = pNuev.getDireccion();
@@ -173,7 +166,6 @@ public class ClienteServiceImpl implements ClienteService {
 
         boolean sonIguales = false;
 
-        // Manejo especial para valores numéricos/moneda (evita falsos "0.00" vs "0")
         if (viejoVal instanceof Number || nuevoVal instanceof Number) {
             try {
                 BigDecimal bdViejo = viejoVal != null ? new BigDecimal(viejoVal.toString()) : BigDecimal.ZERO;

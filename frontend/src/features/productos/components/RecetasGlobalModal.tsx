@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
 
@@ -25,18 +25,43 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
   const mutedText = isDark ? '#a1a1aa' : '#64748b';
 
   const [busqueda, setBusqueda] = useState('');
+  const [idsConReceta, setIdsConReceta] = useState<Set<number>>(new Set());
+  const [cargando, setCargando] = useState(false);
+
+  // Al abrir el modal, consultamos la tabla Producto_Insumo en el backend
+  useEffect(() => {
+    if (show) {
+      setCargando(true);
+      fetch('http://localhost:8080/api/producto-insumo')
+        .then(res => res.json())
+        .then((data: any[]) => {
+          const ids = new Set<number>();
+          data.forEach(item => {
+            // Mapea los ID de producto presentes en la tabla asociativa
+            const idProd = item.id?.idProducto || item.producto?.idProducto;
+            if (idProd) ids.add(idProd);
+          });
+          setIdsConReceta(ids);
+        })
+        .catch(err => console.error("Error al obtener recetas:", err))
+        .finally(() => setCargando(false));
+    }
+  }, [show]);
 
   if (!show) return null;
 
-  const productosFiltrados = productos.filter(p => 
-    p.nombreProducto.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  // Filtrar los productos cuyo idProducto esté registrado en la tabla asociativa
+  const productosFiltrados = productos.filter(p => {
+    const tieneReceta = p.idProducto ? idsConReceta.has(p.idProducto) : false;
+    const coincideBusqueda = p.nombreProducto?.toLowerCase().includes(busqueda.toLowerCase());
+    return tieneReceta && coincideBusqueda;
+  });
 
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-xl modal-dialog-centered">
         <div 
-          className="modal-content shadow-lg" 
+          className="modal-content shadow-lg font-monospace" 
           style={{ 
             backgroundColor: modalBg, 
             color: textColor, 
@@ -44,10 +69,9 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
             borderRadius: '12px' 
           }}
         >
-          
           <div className="modal-header border-bottom" style={{ borderColor: headerBorder }}>
             <h5 className="modal-title fw-bold" style={{ color: '#a78bfa' }}>
-              <i className="bi bi-journal-text me-2"></i>Gestión de Productos y sus Recetas
+              <i className="bi bi-journal-text me-2"></i>Productos con Receta Registrada
             </h5>
             <button 
               type="button" 
@@ -76,14 +100,20 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
                     <th className="py-3 px-3 fw-bold" style={{ backgroundColor: thBg }}>Producto</th>
                     <th className="py-3 px-3 fw-bold" style={{ backgroundColor: thBg }}>Categoría</th>
                     <th className="py-3 px-3 fw-bold" style={{ backgroundColor: thBg }}>Estado</th>
-                    <th className="py-3 px-3 fw-bold text-center" style={{ backgroundColor: thBg }}>Configurar Receta</th>
+                    <th className="py-3 px-3 fw-bold text-center" style={{ backgroundColor: thBg }}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody style={{ fontSize: '0.9rem' }}>
-                  {productosFiltrados.length === 0 ? (
+                  {cargando ? (
                     <tr>
                       <td colSpan={5} className="text-center py-4" style={{ color: mutedText }}>
-                        No se encontraron productos.
+                        Cargando productos con receta...
+                      </td>
+                    </tr>
+                  ) : productosFiltrados.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-4" style={{ color: mutedText }}>
+                        No se encontraron productos con insumos configurados en su receta.
                       </td>
                     </tr>
                   ) : (
@@ -117,7 +147,6 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
           <div className="modal-footer border-top" style={{ borderColor: headerBorder }}>
             <button className="btn btn-secondary px-4" onClick={onClose}>Cerrar</button>
           </div>
-
         </div>
       </div>
     </div>

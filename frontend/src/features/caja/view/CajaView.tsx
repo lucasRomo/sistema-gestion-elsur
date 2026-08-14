@@ -13,6 +13,7 @@ import { ModalCerrarTurno } from '../components/ModalCerrarTurno';
 import type { NuevoMovimientoDTO } from '../types/caja';
 import { ModalCompraInsumos } from '../components/ModalCompraInsumos';
 import type { DatosCompraInsumo } from '../components/ModalCompraInsumos';
+import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 
 export const CajaView: React.FC = () => {
   const navigate = useNavigate();
@@ -43,6 +44,16 @@ export const CajaView: React.FC = () => {
   const [guardandoCierre, setGuardandoCierre] = useState(false);
   const [showModalArqueo, setShowModalArqueo] = useState(false);
   const [showModalCompraInsumos, setShowModalCompraInsumos] = useState(false);
+
+  // Estados para tickets y comprobante de transferencia
+  const [ticketSeleccionado, setTicketSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
+  const [imagenComprobanteModal, setImagenComprobanteModal] = useState<string | null>(null);
+
+  const obtenerUrlComprobante = (url?: string | null): string => {
+  if (!url) return '';
+  if (url.startsWith('http') || url.startsWith('data:')) return url;
+  return `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
   const textColor = isDark ? 'text-white' : 'text-dark';
   const cardBg = isDark ? '#1e1e1f' : '#ffffff';
@@ -107,8 +118,34 @@ export const CajaView: React.FC = () => {
 
   const handleConfirmarCompraInsumo = async (datos: DatosCompraInsumo) => {
     try {
-      await comprarInsumo(datos);
+      const resultado = await comprarInsumo(datos);
       setShowModalCompraInsumos(false);
+
+      const movimientoInsumo = {
+        id_movimiento: resultado?.idMovimiento || resultado?.id_movimiento,
+        monto: datos.montoTotal,
+        tipoMovimiento: 'EGRESO',
+        categoria: 'INSUMOS',
+        descripcion: datos.concepto,
+        fecha: new Date().toISOString(),
+        metodoPago: datos.metodoPago
+      };
+
+      const pedidoAdaptado = {
+        id_pedido: resultado?.idCompra || resultado?.id_compra || '-',
+        cliente: {
+          persona: null,
+          razon_social: 'Compra Insumos / Proveedor',
+          nombre: 'Compra Insumos / Proveedor'
+        },
+        monto_total: datos.montoTotal,
+        observaciones: datos.concepto
+      };
+
+      setTicketSeleccionado({
+        pedido: pedidoAdaptado,
+        movimiento: movimientoInsumo
+      });
     } catch (error: any) {
       alert("Error al registrar la compra: " + error.message);
     }
@@ -140,35 +177,69 @@ export const CajaView: React.FC = () => {
     }
   };
 
+  const handleVerTicket = async (m: any) => {
+    const idPedidoRaw = m.pedido?.idPedido || m.pedido?.id_pedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1]?.trim() : null);
+
+    if (idPedidoRaw && !isNaN(Number(idPedidoRaw))) {
+      const idPedido = Number(idPedidoRaw);
+      try {
+        const response = await fetch(`http://localhost:8080/api/pedidos/${idPedido}`);
+        if (response.ok) {
+          const pedidoCompleto = await response.json();
+          setTicketSeleccionado({ pedido: pedidoCompleto, movimiento: m });
+          return;
+        }
+      } catch (error) {
+        console.error("Error consultando datos completos del pedido:", error);
+      }
+    }
+
+    const pedidoAdaptado = {
+      id_pedido: idPedidoRaw || '-',
+      cliente: {
+        persona: null,
+        razon_social: m.categoria === 'INSUMOS' ? 'Compra Insumos / Proveedor' : 'Consumidor Final',
+        nombre: m.categoria === 'INSUMOS' ? 'Compra Insumos / Proveedor' : 'Consumidor Final'
+      },
+      monto_total: m.monto,
+      observaciones: m.descripcion || 'Movimiento registrado en caja'
+    };
+
+    setTicketSeleccionado({ pedido: pedidoAdaptado, movimiento: m });
+  };
+
   const renderBadgeCategoria = (m: any) => {
-    if (m.categoria === 'EGRESO_MANTENIMIENTO') {
+    const baseClasses = "d-inline-flex align-items-center gap-1 px-2 py-1 rounded fw-semibold";
+    const baseStyle = { fontSize: '0.75rem', lineHeight: 1 };
+
+    if (m.categoria === 'EGRESO_MANTENIMIENTO' || m.categoria === 'MANTENIMIENTO') {
       return (
         <span 
-          className="d-inline-block px-2 py-1 rounded fw-semibold"
+          className={baseClasses}
           style={{
+            ...baseStyle,
             backgroundColor: isDark ? 'rgba(234, 179, 8, 0.2)' : '#fef3c7',
             color: isDark ? '#facc15' : '#b45309',
-            border: `1px solid ${isDark ? '#eab308' : '#f59e0b'}`,
-            fontSize: '0.75rem'
+            border: `1px solid ${isDark ? '#eab308' : '#f59e0b'}`
           }}
         >
-          <i className="bi bi-tools me-1"></i>MANTENIMIENTO
+          <i className="bi bi-tools"></i>MANTENIMIENTO
         </span>
       );
     }
 
-    if (m.categoria === 'INSUMOS') {
+    if (m.categoria === 'INSUMOS' || m.categoria === 'EGRESO_INSUMOS') {
       return (
         <span 
-          className="d-inline-block px-2 py-1 rounded fw-semibold"
+          className={baseClasses}
           style={{
+            ...baseStyle,
             backgroundColor: isDark ? 'rgba(14, 165, 233, 0.2)' : '#e0f2fe',
             color: isDark ? '#38bdf8' : '#0369a1',
-            border: `1px solid ${isDark ? '#0ea5e9' : '#0284c7'}`,
-            fontSize: '0.75rem'
+            border: `1px solid ${isDark ? '#0ea5e9' : '#0284c7'}`
           }}
         >
-          <i className="bi bi-truck me-1"></i>INSUMOS
+          <i className="bi bi-truck"></i>INSUMOS
         </span>
       );
     }
@@ -177,12 +248,12 @@ export const CajaView: React.FC = () => {
 
     return (
       <span 
-        className="d-inline-block px-2 py-1 rounded fw-semibold"
+        className={baseClasses}
         style={{
-          backgroundColor: '#1c9b4a',
+          ...baseStyle,
+          backgroundColor: esGanancia ? '#1c9b4a' : '#ce1515',
           color: '#f4f7f5',
-          border: '1px solid #1c9b4a',
-          fontSize: '0.75rem'
+          border: `1px solid ${esGanancia ? '#1c9b4a' : '#ce1515'}`
         }}
       >
         {esGanancia ? 'Ganancia' : 'Egreso'}
@@ -284,38 +355,73 @@ export const CajaView: React.FC = () => {
                 <table className={`table table-hover m-0 align-middle text-center ${isDark ? 'table-dark' : ''}`} style={{ backgroundColor: tableWrapBg }}>
                   <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
                     <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
-                      <th style={{ width: '160px' }}>Fecha/Hora</th>
-                      <th style={{ width: '110px' }}>Monto</th>
-                      <th style={{ width: '140px' }}>Categoría</th>
+                      <th style={{ width: '140px' }}>Fecha/Hora</th>
+                      <th style={{ width: '90px' }}>Monto</th>
+                      <th style={{ width: '110px' }}>Método</th>
+                      <th style={{ width: '120px' }}>Categoría</th>
                       <th className="text-start">Descripción</th>
-                      <th style={{ width: '80px' }}>Usuario</th>
-                      <th style={{ width: '80px' }}>Pedido</th>
+                      <th style={{ width: '60px' }}>Usu.</th>
+                      <th style={{ width: '60px' }}>Ped.</th>
+                      <th style={{ width: '100px' }}>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {movimientos.length === 0 ? (
-                      <tr><td colSpan={6} className="py-5 opacity-50">No hay movimientos registrados hoy</td></tr>
+                      <tr><td colSpan={8} className="py-5 opacity-50">No hay movimientos registrados hoy</td></tr>
                     ) : (
-                      movimientos.map((m, idx) => (
-                        <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
-                          <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
-                          <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
-                            {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
-                          </td>
-                          <td>{renderBadgeCategoria(m)}</td>
-                          <td>
-                            <div 
-                              className="text-start" 
-                              style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '280px' }}
-                              title={m.descripcion || 'Sin descripción'}
-                            >
-                              {m.descripcion || '-'}
+                      movimientos.map((m, idx) => {
+                        const imagenAdjunta = 
+                          m.comprobanteImagen || 
+                          m.comprobante || 
+                          m.imagenComprobante || 
+                          m.comprobante_imagen || 
+                          m.imagen_comprobante;
+                        return (
+                          <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
+                            <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
+                            <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
+                              {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
+                            </td>
+                            <td>
+                              <span className="badge bg-secondary font-monospace">
+                                {m.metodoPago || 'EFECTIVO'}
+                              </span>
+                            </td>
+                            <td>{renderBadgeCategoria(m)}</td>
+                            <td>
+                              <div 
+                                className="text-start" 
+                                style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '200px' }}
+                                title={m.descripcion || 'Sin descripción'}
+                              >
+                                {m.descripcion || '-'}
+                              </div>
+                            </td>
+                            <td>{m.usuario?.idUsuario || m.usuario?.id_usuario || '1'}</td>
+                            <td>{m.pedido?.idPedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1] : '-')}</td>
+                            <td>
+                            <div className="d-flex justify-content-center gap-1">
+                              {imagenAdjunta && (
+                                <button
+                                  className="btn btn-sm btn-outline-info border-0 p-1"
+                                  title="Ver Comprobante de Transferencia"
+                                  onClick={() => setImagenComprobanteModal(imagenAdjunta)}
+                                >
+                                  <i className="bi bi-eye fs-5"></i> {/* Icono de ojo */}
+                                </button>
+                              )}
+                              <button
+                                className="btn btn-sm btn-outline-info border-0 p-1"
+                                title="Ver Ticket de Comprobante"
+                                onClick={() => handleVerTicket(m)}
+                              >
+                                <i className="bi bi-receipt fs-5"></i>
+                              </button>
                             </div>
                           </td>
-                          <td>{m.usuario?.idUsuario || m.usuario?.id_usuario || '1'}</td>
-                          <td>{m.pedido?.idPedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1] : '-')}</td>
-                        </tr>
-                      ))
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -434,6 +540,39 @@ export const CajaView: React.FC = () => {
         onClose={() => setShowModalCompraInsumos(false)}
         onConfirmar={handleConfirmarCompraInsumo}
       />
+
+      {ticketSeleccionado && (
+        <VistaTicketPagoModal
+          pedido={ticketSeleccionado.pedido}
+          movimiento={ticketSeleccionado.movimiento}
+          onClose={() => setTicketSeleccionado(null)}
+          esVentaRapida={!ticketSeleccionado.pedido.id_pedido || ticketSeleccionado.pedido.id_pedido === '-'}
+        />
+      )}
+
+      {imagenComprobanteModal && (
+  <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
+    <div className="modal-dialog modal-lg modal-dialog-centered">
+      <div className={`modal-content p-3 ${textColor}`} style={{ backgroundColor: isDark ? '#18181b' : '#ffffff' }}>
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <h6 className="fw-bold m-0"><i className="bi bi-image me-2"></i>Comprobante de Transferencia</h6>
+          <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setImagenComprobanteModal(null)}></button>
+        </div>
+        <div className="text-center p-2">
+          <img 
+            src={obtenerUrlComprobante(imagenComprobanteModal)} 
+            alt="Comprobante Transferencia" 
+            className="img-fluid rounded shadow" 
+            style={{ maxHeight: '70vh', objectFit: 'contain' }} 
+          />
+        </div>
+        <div className="text-end mt-2">
+          <button className="btn btn-secondary btn-sm" onClick={() => setImagenComprobanteModal(null)}>Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+)} 
     </SidebarLayout>
   );
 };

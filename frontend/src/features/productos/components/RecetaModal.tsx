@@ -34,7 +34,7 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
 
   const [insumosDisponibles, setInsumosDisponibles] = useState<any[]>([]);
   const [recetaActual, setRecetaActual] = useState<InsumoItem[]>([]);
-  const [insumoSeleccionado, setInsumoSeleccionado] = useState<string>('');
+  const [busquedaInsumo, setBusquedaInsumo] = useState<string>('');
   const [cantidad, setCantidad] = useState<number | ''>('');
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -83,13 +83,22 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
   };
 
   const handleAgregarInsumo = () => {
-    if (!insumoSeleccionado || !cantidad || Number(cantidad) <= 0) return;
+    if (!busquedaInsumo.trim() || !cantidad || Number(cantidad) <= 0) return;
 
-    const idIns = Number(insumoSeleccionado);
-    const insumoObj = insumosDisponibles.find(i => i.idInsumo === idIns);
-    if (!insumoObj) return;
+    // Buscar si lo que se tipeó coincide con algún insumo existente
+    const insumoObj = insumosDisponibles.find(i => {
+      const etiqueta = `${i.nombreInsumo} (${obtenerNombreUnidad(i.unidadMedida)})`;
+      return i.nombreInsumo.toLowerCase() === busquedaInsumo.trim().toLowerCase() || etiqueta.toLowerCase() === busquedaInsumo.trim().toLowerCase();
+    });
 
+    if (!insumoObj) {
+      alert("Por favor selecciona un insumo válido de la lista.");
+      return;
+    }
+
+    const idIns = insumoObj.idInsumo;
     const yaExiste = recetaActual.some(item => item.idInsumo === idIns);
+
     if (yaExiste) {
       setRecetaActual(recetaActual.map(item => 
         item.idInsumo === idIns 
@@ -108,7 +117,7 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
       ]);
     }
 
-    setInsumoSeleccionado('');
+    setBusquedaInsumo('');
     setCantidad('');
   };
 
@@ -172,24 +181,29 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
           <div className="modal-body">
             <div className="row g-2 mb-4 align-items-end p-3 rounded" style={{ backgroundColor: boxBg, border: `1px solid ${inputBorder}` }}>
               <div className="col-md-6">
-                <label className="form-label small fw-semibold" style={{ color: labelColor }}>Seleccionar Insumo</label>
-                <select 
-                  className="form-select shadow-none"
+                <label className="form-label small fw-semibold" style={{ color: labelColor }}>Buscar Insumo</label>
+                
+                {/* Input autocancelable con datalist para auto-completado */}
+                <input 
+                  list="insumos-list"
+                  className="form-control shadow-none"
                   style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                  value={insumoSeleccionado}
-                  onChange={(e) => setInsumoSeleccionado(e.target.value)}
-                >
-                  <option value="">-- Seleccionar --</option>
+                  placeholder="Escribe el nombre del insumo..."
+                  value={busquedaInsumo}
+                  onChange={(e) => setBusquedaInsumo(e.target.value)}
+                />
+                <datalist id="insumos-list">
                   {insumosDisponibles.map(i => {
                     const nombreUnidad = obtenerNombreUnidad(i.unidadMedida);
                     return (
-                      <option key={i.idInsumo} value={i.idInsumo}>
+                      <option key={i.idInsumo} value={i.nombreInsumo}>
                         {i.nombreInsumo} ({nombreUnidad}) - Stock: {i.stockActual}
                       </option>
                     );
                   })}
-                </select>
+                </datalist>
               </div>
+
               <div className="col-md-4">
                 <label className="form-label small fw-semibold" style={{ color: labelColor }}>Cantidad a consumir</label>
                 <input 
@@ -203,6 +217,7 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
                   onChange={(e) => setCantidad(e.target.value === '' ? '' : Number(e.target.value))}
                 />
               </div>
+
               <div className="col-md-2">
                 <button 
                   className="btn btn-warning w-100 fw-bold" 

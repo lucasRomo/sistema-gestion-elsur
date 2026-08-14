@@ -1,13 +1,17 @@
 package com.elsur.sistema_gestion.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "MovimientoCaja")
+@Table(name = "movimientos_caja")
 public class MovimientoCaja {
 
     @Id
@@ -15,7 +19,7 @@ public class MovimientoCaja {
     private Integer id_movimiento;
 
     @Column(columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime fecha;
+    private LocalDateTime fecha = LocalDateTime.now();
 
     @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal monto;
@@ -31,20 +35,32 @@ public class MovimientoCaja {
 
     @ManyToOne
     @JoinColumn(name = "id_usuario", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Usuario usuario;
 
     @ManyToOne
     @JoinColumn(name = "id_pedido", nullable = true)
+    @JsonIgnoreProperties("movimientos")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Pedido pedido;
 
     @ManyToOne
     @JoinColumn(name = "id_incidencia", nullable = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Incidencia incidencia;
 
     @ManyToOne
     @JoinColumn(name = "id_turno", nullable = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Turno turno;
 
     @Column(length = 20, nullable = true) 
     private String metodoPago; // 'EFECTIVO', 'TRANSFERENCIA', 'DEBITO', 'CREDITO'
+
+    @Column(name = "comprobante_imagen", columnDefinition = "TEXT")
+    private String comprobanteImagen;
 }

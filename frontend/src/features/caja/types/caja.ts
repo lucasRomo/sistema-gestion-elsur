@@ -6,6 +6,9 @@ export interface MovimientoCaja {
   categoria?: string;
   descripcion: string;
   metodoPago?: string;
+  comprobanteImagen?: string;
+  comprobante?: string;
+  imagenComprobante?: string;
   fecha: string;
   usuario?: {
     idUsuario?: number;

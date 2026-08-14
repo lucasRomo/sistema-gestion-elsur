@@ -5,9 +5,9 @@ import com.elsur.sistema_gestion.services.MovimientoCajaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/movimientos-caja")
@@ -17,50 +17,44 @@ public class MovimientoCajaController {
     @Autowired
     private MovimientoCajaService movimientoCajaService;
 
-    @Autowired
-    private MovimientoCajaService movimientoService;
-
     @GetMapping("/{id}")
-    public MovimientoCaja buscarPorId(@PathVariable Integer id) {
-        return movimientoCajaService.buscarPorId(id);
+    public ResponseEntity<MovimientoCaja> buscarPorId(@PathVariable Integer id) {
+        MovimientoCaja movimiento = movimientoCajaService.buscarPorId(id);
+        return movimiento != null ? ResponseEntity.ok(movimiento) : ResponseEntity.notFound().build();
     }
 
     @GetMapping("/dia")
-    public List<MovimientoCaja> listarMovimientosDelDia() { 
-    return movimientoCajaService.listarMovimientosDelDia();
-}
+    public ResponseEntity<List<MovimientoCaja>> listarMovimientosDelDia() { 
+        return ResponseEntity.ok(movimientoCajaService.listarMovimientosDelDia());
+    }
 
     @PostMapping
-    public MovimientoCaja crear(@RequestBody MovimientoCaja movimientoCaja) {
-        return movimientoCajaService.guardar(movimientoCaja);
+    public ResponseEntity<MovimientoCaja> crear(@RequestBody MovimientoCaja movimientoCaja) {
+        return ResponseEntity.ok(movimientoCajaService.guardar(movimientoCaja));
     }
 
     @GetMapping("/{id}/movimientos")
-    public List<MovimientoCaja> listarMovimientosPorPedido(@PathVariable Integer id) {
-        return movimientoCajaService.listarMovimientosPorPedido(id);
+    public ResponseEntity<List<MovimientoCaja>> listarMovimientosPorPedido(@PathVariable Integer id) {
+        return ResponseEntity.ok(movimientoCajaService.listarMovimientosPorPedido(id));
     }
 
     @GetMapping("/totales")
-    public ResponseEntity<?> obtenerTotalesCaja() {
-    // Aquí invocas a tu servicio para sumar los movimientos del turno abierto
-    Map<String, Double> totales = movimientoService.calcularTotalesDelDia(); 
-    return ResponseEntity.ok(totales);
-}
+    public ResponseEntity<Map<String, Double>> obtenerTotalesCaja() {
+        return ResponseEntity.ok(movimientoCajaService.calcularTotalesDelDia());
+    }
+
     @GetMapping
     public ResponseEntity<List<MovimientoCaja>> obtenerTodos() {
-        List<MovimientoCaja> movimientos = movimientoCajaService.obtenerTodos();
-        return ResponseEntity.ok(movimientos);
+        return ResponseEntity.ok(movimientoCajaService.obtenerTodos());
     }
 
     @GetMapping("/desglose-arqueo")
-    public ResponseEntity<?> obtenerDesgloseArqueo() {
-    Map<String, Double> desglose = movimientoCajaService.obtenerDesgloseArqueo();
-    return ResponseEntity.ok(desglose);
+    public ResponseEntity<Map<String, Double>> obtenerDesgloseArqueo() {
+        return ResponseEntity.ok(movimientoCajaService.obtenerDesgloseArqueo());
     }
 
     @GetMapping("/turno/{idTurno}")
     public ResponseEntity<List<MovimientoCaja>> listarMovimientosPorTurno(@PathVariable Integer idTurno) {
-    List<MovimientoCaja> movimientos = movimientoCajaService.listarMovimientosPorTurno(idTurno);
-    return ResponseEntity.ok(movimientos);
+        return ResponseEntity.ok(movimientoCajaService.listarMovimientosPorTurno(idTurno));
     }
 }

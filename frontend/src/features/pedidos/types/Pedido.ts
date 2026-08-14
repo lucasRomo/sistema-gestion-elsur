@@ -1,4 +1,18 @@
-import type { Producto, } from '../../productos/types/Producto';
+import type { Producto } from '../../productos/types/Producto';
+
+export interface MovimientoCaja {
+  id_movimiento?: number;
+  fecha?: string;
+  monto: number;
+  tipoMovimiento: string;
+  categoria?: string;
+  descripcion?: string;
+  metodoPago?: string;
+  usuario?: {
+    id_usuario: number;
+    nombre_usuario?: string;
+  };
+}
 
 export interface DetallePedido {
   id_detalle?: number;
@@ -42,10 +56,10 @@ export interface Pedido {
   ubicacion_estante?: string;
   es_cuenta_corriente: boolean;
   es_presupuesto: boolean;
-  
-  // ➔ AGREGAR ESTO PARA QUE REACT LEA EL HISTORIAL
   historiales?: HistorialEstadoPedido[]; 
+  movimientos?: MovimientoCaja[];
 }
+
 export interface CartItem {
   producto: Producto;
   cantidad: number;

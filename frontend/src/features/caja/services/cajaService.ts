@@ -9,6 +9,11 @@ export interface MovimientoCaja {
   fecha: string;
   metodoPago?: string;
   categoria?: string;
+  comprobanteImagen?: string;
+  comprobante?: string;
+  imagenComprobante?: string;
+  comprobante_imagen?: string;
+  imagen_comprobante?: string;
   usuario?: any;
   pedido?: any;
 }
@@ -170,7 +175,7 @@ export const cajaService = {
 export const cajaServiceExtended = {
   ...cajaService,
 
-  registrarCompraInsumo: async (datos: DatosCompraInsumo): Promise<void> => {
+  registrarCompraInsumo: async (datos: DatosCompraInsumo): Promise<any> => {
     const usuarioGuardado = localStorage.getItem('usuario_logueado');
     const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
     const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario || 1;
@@ -189,6 +194,12 @@ export const cajaServiceExtended = {
     if (!response.ok) {
       const errText = await response.text();
       throw new Error(errText || 'Error al registrar la compra de insumos');
+    }
+
+    try {
+      return await response.json();
+    } catch {
+      return null;
     }
   }
 };

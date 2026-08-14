@@ -43,6 +43,18 @@ public class InsumoServiceImpl implements InsumoService {
     @Override
     @Transactional
     public Insumo guardar(Insumo insumo, Integer idUsuario) {
+        // Validar que la unidad suelta y la unidad de empaque no sean iguales
+        if (insumo.getUnidadMedida() != null && insumo.getUnidadCompra() != null) {
+            String nomSuelta = insumo.getUnidadMedida().getNombre();
+            String nomCompra = insumo.getUnidadCompra().getNombre();
+
+            if (nomSuelta != null && nomCompra != null &&
+                !nomSuelta.trim().isEmpty() &&
+                nomSuelta.trim().equalsIgnoreCase(nomCompra.trim())) {
+                throw new RuntimeException("La unidad suelta y la unidad de empaque no pueden ser iguales.");
+            }
+        }
+
         if (insumo.getPrecio() != null && insumo.getPrecio().compareTo(BigDecimal.ZERO) < 0) {
             throw new RuntimeException("El precio no puede ser negativo");
         }
@@ -182,6 +194,10 @@ public class InsumoServiceImpl implements InsumoService {
             BigDecimal factor = BigDecimal.valueOf(1.0 + (porcentaje / 100.0));
             BigDecimal nuevoPrecio = precioViejo.multiply(factor).setScale(2, RoundingMode.HALF_UP);
 
+            if (nuevoPrecio.compareTo(BigDecimal.ZERO) < 0) {
+                nuevoPrecio = BigDecimal.ZERO;
+            }
+
             ins.setPrecio(nuevoPrecio);
 
             compararYRegistrar(usuarioActual, "Insumo", "precio", ins.getIdInsumo(), precioViejo, nuevoPrecio);
@@ -190,7 +206,6 @@ public class InsumoServiceImpl implements InsumoService {
         insumoRepository.saveAll(aModificar);
     }
 
-    // GP.33: Registrar Conversión de Insumos (Atómica)
     @Override
     @Transactional
     public Insumo convertirStock(Integer idInsumo, BigDecimal cantidadBultos, Integer idUsuario) {
@@ -212,7 +227,6 @@ public class InsumoServiceImpl implements InsumoService {
         BigDecimal stockEmpaquetadoAnterior = stockEmp;
         BigDecimal stockActualAnterior = insumo.getStockActual() != null ? insumo.getStockActual() : BigDecimal.ZERO;
 
-        // Operación atómica: restar de empaques y sumar a consumo suelto
         BigDecimal nuevoStockEmpaquetado = stockEmp.subtract(cantidadBultos);
         BigDecimal incrementoUnidadesSueltas = cantidadBultos.multiply(insumo.getFactorConversion());
         BigDecimal nuevoStockActual = stockActualAnterior.add(incrementoUnidadesSueltas);

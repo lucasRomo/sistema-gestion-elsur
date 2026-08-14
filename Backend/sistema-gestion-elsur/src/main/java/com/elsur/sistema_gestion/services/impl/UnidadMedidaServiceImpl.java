@@ -21,6 +21,21 @@ public class UnidadMedidaServiceImpl implements UnidadMedidaService {
 
     @Override
     public UnidadMedida guardar(UnidadMedida unidadMedida) {
+        if (unidadMedida.getNombre() == null || unidadMedida.getNombre().trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre de la unidad de medida no puede estar vacío.");
+        }
+
+        String nombreFormateado = unidadMedida.getNombre().trim();
+
+        // Validar si existe una unidad con el mismo nombre (insensible a mayúsculas/minúsculas)
+        boolean existe = unidadMedidaRepository.findAll().stream()
+                .anyMatch(u -> u.getNombre() != null && u.getNombre().trim().equalsIgnoreCase(nombreFormateado));
+
+        if (existe) {
+            throw new IllegalArgumentException("Ya existe una unidad de medida registrada con el nombre '" + nombreFormateado + "'.");
+        }
+
+        unidadMedida.setNombre(nombreFormateado);
         return unidadMedidaRepository.save(unidadMedida);
     }
 
