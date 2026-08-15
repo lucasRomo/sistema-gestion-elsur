@@ -1,7 +1,6 @@
 const BASE_URL = 'http://localhost:8080/api';
 
 export const clienteService = {
-  // Clientes
   getClientes: async () => {
     const res = await fetch(`${BASE_URL}/clientes`);
     if (!res.ok) throw new Error("Error al obtener clientes");
@@ -27,7 +26,6 @@ export const clienteService = {
     return res;
   },
 
-  // Categorías
   getCategorias: async () => {
     const res = await fetch(`${BASE_URL}/categorias-cliente`);
     if (!res.ok) throw new Error("Error al obtener categorías");
@@ -60,7 +58,6 @@ export const clienteService = {
     return res;
   },
 
-  // Cuentas Corrientes
   getMovimientos: async (idCliente: number) => {
     const res = await fetch(`${BASE_URL}/cuentas-corrientes/cliente/${idCliente}/movimientos`);
     if (!res.ok) throw new Error("Error al obtener movimientos");
@@ -77,13 +74,29 @@ export const clienteService = {
     return res;
   },
 
-  registrarPago: async (idCliente: number, monto: number, descripcion: string) => {
+  registrarPago: async (
+    idCliente: number, 
+    monto: number, 
+    descripcion: string, 
+    metodoPago: string = 'EFECTIVO', 
+    comprobanteImagen?: string
+  ) => {
+    const usuarioGuardado = localStorage.getItem('usuario_logueado');
+    const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario;
+
     const res = await fetch(`${BASE_URL}/cuentas-corrientes/cliente/${idCliente}/registrar-pago`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ monto, descripcion })
+      body: JSON.stringify({ 
+        monto, 
+        descripcion, 
+        metodoPago, 
+        comprobanteImagen, 
+        idUsuario 
+      })
     });
     if (!res.ok) throw new Error("Error al registrar pago");
-    return res;
+    return res.json();
   }
 };

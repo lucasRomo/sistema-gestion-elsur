@@ -1,3 +1,5 @@
+import type { DatosCompraInsumo } from '../components/ModalCompraInsumos';
+
 export interface MovimientoCaja {
   id_movimiento?: number;
   idMovimiento?: number;
@@ -7,6 +9,13 @@ export interface MovimientoCaja {
   fecha: string;
   metodoPago?: string;
   categoria?: string;
+  comprobanteImagen?: string;
+  comprobante?: string;
+  imagenComprobante?: string;
+  comprobante_imagen?: string;
+  imagen_comprobante?: string;
+  urlComprobante?: string;
+  url_comprobante?: string;
   usuario?: any;
   pedido?: any;
 }
@@ -15,17 +24,6 @@ export interface TotalesCaja {
   totalIngresos: number;
   totalEgresos: number;
   saldoActual: number;
-}
-
-export interface ArqueoCaja {
-  id: number;
-  fechaCierre: string;
-  usuarioCierre: string;
-  montoEsperado: number;
-  montoReal: number;
-  diferencia: number;
-  estado: 'APROBADO' | 'PENDIENTE' | 'OBSERVADO';
-  observacion?: string;
 }
 
 export interface Turno {
@@ -52,16 +50,17 @@ export interface DatosArqueo {
 }
 
 export interface NuevoMovimientoDTO {
-  monto: string;
+  monto: string | number;
   concepto: string;
-  tipoMovimiento: string;
-  idPedido: string | null;
+  tipoMovimiento: 'INGRESO' | 'EGRESO';
+  categoria?: string;
+  idPedido?: string | null;
+  metodoPago?: string;
 }
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
 export const cajaService = {
-  // --- MÉTODOS EXISTENTES ---
   obtenerTodos: async (): Promise<MovimientoCaja[]> => {
     try {
       const response = await fetch(`${API_BASE_URL}/movimientos-caja`);
@@ -117,7 +116,6 @@ export const cajaService = {
     }
   },
 
-  // --- MÉTODOS REQUERIDOS PARA LA VISTA DE CAJA ---
   obtenerEstadoCaja: async (): Promise<Turno | null> => {
     try {
       const response = await fetch(`${API_BASE_URL}/turnos/estado-caja`);
@@ -154,15 +152,32 @@ export const cajaService = {
   },
 
   guardarMovimiento: async (movimiento: any): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/movimientos-caja`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(movimiento)
-    });
-    if (!response.ok) {
-      const err = await response.text();
-      throw new Error(err || 'Error al guardar movimiento');
-    }
+  const usuarioGuardado = localStorage.getItem('usuario_logueado');
+  const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+  const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario || 1;
+
+  const payload = {
+    monto: Number(movimiento.monto),
+    tipoMovimiento: movimiento.tipoMovimiento,
+    categoria: movimiento.categoria || 'INGRESO',
+    descripcion: movimiento.descripcion || movimiento.concepto,
+    metodoPago: movimiento.metodoPago || 'EFECTIVO',
+    comprobanteImagen: movimiento.comprobanteImagen || null,
+    fecha: movimiento.fecha || new Date().toISOString(),
+    pedido: movimiento.pedido || (movimiento.idPedido ? { idPedido: Number(movimiento.idPedido) } : null),
+    usuario: movimiento.usuario || { idUsuario }
+  };
+
+  const response = await fetch(`${API_BASE_URL}/movimientos-caja`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(err || 'Error al guardar movimiento');
+  }
   },
 
   cerrarTurno: async (idTurno: number, montoReal: number, observaciones?: string): Promise<boolean> => {
@@ -175,5 +190,37 @@ export const cajaService = {
       throw new Error(err || 'Error al cerrar caja');
     }
     return true;
+  }
+};
+
+export const cajaServiceExtended = {
+  ...cajaService,
+
+  registrarCompraInsumo: async (datos: DatosCompraInsumo): Promise<any> => {
+    const usuarioGuardado = localStorage.getItem('usuario_logueado');
+    const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario || 1;
+
+    const payload = {
+      ...datos,
+      idUsuario
+    };
+
+    const response = await fetch(`${API_BASE_URL}/compras-insumos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText || 'Error al registrar la compra de insumos');
+    }
+
+    try {
+      return await response.json();
+    } catch {
+      return null;
+    }
   }
 };

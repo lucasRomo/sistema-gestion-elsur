@@ -14,7 +14,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Estilos adaptativos según el tema activo
   const modalBg = isDark ? '#1e1e24' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const subModalBg = isDark ? '#18181b' : '#ffffff';
@@ -35,7 +34,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     nombreProducto: '',
     precioBase: '',
     stock: '0',
-    idCategoria: '',
+    nombreCategoria: '',
     idMaquinaNecesaria: '',
     estado: 'Activo'
   });
@@ -67,19 +66,19 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
 
       if (producto) {
         setFormData({
-          nombreProducto: producto.nombreProducto,
-          precioBase: producto.precioBase.toString(),
+          nombreProducto: producto.nombreProducto || '',
+          precioBase: producto.precioBase?.toString() || '',
           stock: producto.stock?.toString() || '0',
-          idCategoria: producto.categoria?.idCategoria?.toString() || '',
+          nombreCategoria: producto.categoria?.nombre || '',
           idMaquinaNecesaria: (producto as any).maquinaNecesaria?.idMaquina?.toString() || '',
-          estado: producto.estado
+          estado: producto.estado || 'Activo'
         });
       } else {
         setFormData({
           nombreProducto: '',
           precioBase: '',
           stock: '0',
-          idCategoria: '',
+          nombreCategoria: '',
           idMaquinaNecesaria: '',
           estado: 'Activo'
         });
@@ -88,18 +87,35 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   }, [show, producto]);
 
   const handleCrearCategoria = async () => {
-    if (!nuevaCategoria.trim()) return;
+    const nombreLimpio = nuevaCategoria.trim();
+    if (!nombreLimpio) return;
+
+    // Validación preventiva en React
+    const yaExiste = categorias.some(
+      c => c.nombre.toLowerCase() === nombreLimpio.toLowerCase()
+    );
+
+    if (yaExiste) {
+      alert(`La categoría "${nombreLimpio}" ya existe.`);
+      return;
+    }
+
     try {
       const res = await fetch('http://localhost:8080/api/categorias', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: nuevaCategoria.trim() })
+        body: JSON.stringify({ nombre: nombreLimpio })
       });
+
       if (res.ok) {
         setNuevaCategoria('');
         cargarCategorias();
+      } else {
+        alert("No se pudo crear la categoría.");
       }
-    } catch (error) { alert("Error al guardar la nueva categoría"); }
+    } catch (error) { 
+      alert("Error al conectar con el servidor."); 
+    }
   };
 
   const handleEliminarCategoria = async (id: number) => {
@@ -109,8 +125,9 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
         method: 'DELETE'
       });
       if (res.ok) {
-        if (formData.idCategoria === id.toString()) {
-          setFormData(prev => ({ ...prev, idCategoria: '' }));
+        const catEliminada = categorias.find(c => c.idCategoria === id);
+        if (catEliminada && formData.nombreCategoria === catEliminada.nombre) {
+          setFormData(prev => ({ ...prev, nombreCategoria: '' }));
         }
         cargarCategorias();
       } else {
@@ -123,13 +140,19 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const catEncontrada = categorias.find(
+      c => c.nombre.toLowerCase() === formData.nombreCategoria.trim().toLowerCase()
+    );
     
     const payload = {
       ...producto,
       nombreProducto: formData.nombreProducto,
       precioBase: parseFloat(formData.precioBase),
       stock: parseInt(formData.stock) || 0,
-      categoria: formData.idCategoria ? { idCategoria: parseInt(formData.idCategoria) } : null,
+      categoria: catEncontrada 
+        ? { idCategoria: catEncontrada.idCategoria, nombre: catEncontrada.nombre }
+        : formData.nombreCategoria.trim() ? { nombre: formData.nombreCategoria.trim() } : null,
       maquinaNecesaria: formData.idMaquinaNecesaria ? { idMaquina: parseInt(formData.idMaquinaNecesaria) } : null,
       estado: formData.estado
     };
@@ -231,16 +254,20 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                 <div className="mb-3">
                   <label className="form-label small fw-semibold" style={{ color: mutedText }}>Categoría</label>
                   <div className="input-group">
-                    <select 
-                      className={`form-select ${textColor}`} 
+                    <input 
+                      list="categorias-list"
+                      className={`form-control ${textColor}`} 
                       style={{ backgroundColor: inputBg, borderColor: inputBorder }}
-                      value={formData.idCategoria} 
-                      onChange={e => setFormData({...formData, idCategoria: e.target.value})} 
+                      placeholder="Escribe para buscar o ingresar categoría..."
+                      value={formData.nombreCategoria} 
+                      onChange={e => setFormData({...formData, nombreCategoria: e.target.value})} 
                       required
-                    >
-                      <option value="">Seleccionar Categoría</option>
-                      {categorias.map(c => <option key={c.idCategoria} value={c.idCategoria}>{c.nombre}</option>)}
-                    </select>
+                    />
+                    <datalist id="categorias-list">
+                      {categorias.map(c => (
+                        <option key={c.idCategoria} value={c.nombre} />
+                      ))}
+                    </datalist>
                     <button type="button" className="btn btn-outline-info" onClick={() => setShowCategorias(true)}>
                       <i className="bi bi-gear-fill"></i>
                     </button>

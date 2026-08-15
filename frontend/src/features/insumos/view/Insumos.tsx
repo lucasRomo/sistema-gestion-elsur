@@ -4,6 +4,8 @@ import { InsumoTabla } from '../components/InsumoTabla';
 import { InsumoProveedoresModal } from '../components/InsumoProveedoresModal';
 import { InsumoModal } from '../components/InsumoModal';
 import { ConvertirInsumoModal } from '../components/ConvertirInsumoModal';
+import { ModalMermasInsumos } from '../modals/ModalMermasInsumos';
+import { RelacionesModal } from '../components/RelacionesModal';
 import { useInsumos } from '../hooks/useInsumos';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { InsumosFiltros } from '../components/InsumosFiltros';
@@ -11,6 +13,7 @@ import { AumentoMasivoInsumosModal } from '../components/AumentoMasivoInsumosMod
 import { actualizarInsumosMasivo } from '../services/insumoService';
 import { useTheme } from '../../../Context/ThemeContext';
 import type { Insumo } from '../types/Insumo';
+import { exportarInsumosExcel, exportarInsumosPDF } from '../utils/exportInsumosUtils';
 
 export const Insumos: React.FC = () => {
   const { theme } = useTheme();
@@ -29,6 +32,8 @@ export const Insumos: React.FC = () => {
   const [showModalForm, setShowModalForm] = useState(false);
   const [showAumentoModal, setShowAumentoModal] = useState(false);
   const [showConvertirModal, setShowConvertirModal] = useState(false);
+  const [showMermasModal, setShowMermasModal] = useState(false);
+  const [showRelacionesModal, setShowRelacionesModal] = useState(false);
   
   const [insumoEditando, setInsumoEditando] = useState<Insumo | null>(null);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -48,13 +53,13 @@ export const Insumos: React.FC = () => {
   }) => {
     await actualizarInsumosMasivo(data);
     await cargar();
-    setMensajeExito(`Aumento de ${data.porcentaje}% aplicado a los insumos seleccionados`);
+    const accion = data.porcentaje >= 0 ? 'Aumento' : 'Descuento';
+    setMensajeExito(`${accion} de ${Math.abs(data.porcentaje)}% aplicado correctamente`);
     setMostrarExito(true);
   };
 
   return (
     <div className="container-fluid px-0">
-      {/* Título de vista adaptativo */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div className="w-100 text-center position-relative">
           <h1 className="fw-bold tracking-wider font-monospace m-0" style={{ fontSize: '2.5rem', color: titleColor }}>
@@ -63,7 +68,6 @@ export const Insumos: React.FC = () => {
         </div>
       </div>
 
-      {/* Componente de Filtros */}
       <InsumosFiltros 
         filtroNombre={filtroNombre}
         setFiltroNombre={setFiltroNombre}
@@ -71,7 +75,6 @@ export const Insumos: React.FC = () => {
         setFiltroEstado={setFiltroEstado}
       />
 
-      {/* Tabla con soporte de acciones integradas */}
       <InsumoTabla 
         insumos={insumosFiltrados}
         onEditar={(insumo) => { setInsumoEditando(insumo); setShowModalForm(true); }}
@@ -82,13 +85,51 @@ export const Insumos: React.FC = () => {
         }}
       />
 
-      {/* Botonera principal (se eliminó la línea divisoria 'border-top border-secondary') */}
+      {/* Botonera Inferior: Volver + Exportar + Acciones de Insumos */}
       <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-3 font-monospace">
         <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-4 py-2" style={{ color: '#ffffff' }}>
           Volver
         </button>
         
-        <div className="d-flex gap-3">
+        <div className="d-flex gap-2 flex-wrap">
+          <button 
+            className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
+            onClick={() => exportarInsumosExcel(insumosFiltrados)}
+            disabled={insumosFiltrados.length === 0}
+            title="Exportar listado actual a Excel"
+          >
+            <i className="bi bi-file-earmark-excel-fill fs-5"></i>
+            Exportar Excel
+          </button>
+
+          <button 
+            className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2"
+            onClick={() => exportarInsumosPDF(insumosFiltrados)}
+            disabled={insumosFiltrados.length === 0}
+            title="Exportar listado actual a PDF"
+          >
+            <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
+            Exportar PDF
+          </button>
+
+          <button 
+            type="button"
+            className="btn px-4 py-2 fw-bold d-flex align-items-center gap-2"
+            style={{ backgroundColor: '#0bc9f8', color: '#ffffff' }}
+            onClick={() => setShowRelacionesModal(true)}
+          >
+            <i className="bi bi-diagram-3-fill"></i>
+            Ver Relaciones
+          </button>
+
+          <button 
+            className="btn btn-warning px-4 py-2 fw-bold text-dark"
+            onClick={() => setShowMermasModal(true)}
+          >
+            <i className="bi bi-exclamation-diamond-fill me-2"></i>
+            Mermas
+          </button>
+
           <button 
             className="btn px-4 py-2 fw-normal" 
             style={{ backgroundColor: '#17a2b8', color: '#ffffff' }}
@@ -96,6 +137,7 @@ export const Insumos: React.FC = () => {
           >
             Modificar Varios Precios
           </button>
+          
           <button 
             className="btn btn-success px-4 py-2 fw-bold" 
             style={{ color: '#ffffff' }}
@@ -106,7 +148,23 @@ export const Insumos: React.FC = () => {
         </div>
       </div>
 
-      {/* Modales */}
+      <RelacionesModal
+        show={showRelacionesModal}
+        onClose={() => setShowRelacionesModal(false)}
+      />
+
+      <ModalMermasInsumos
+        show={showMermasModal}
+        insumos={insumos}
+        onClose={() => setShowMermasModal(false)}
+        onExito={async () => {
+          await cargar();
+          setShowMermasModal(false);
+          setMensajeExito('Merma de insumo registrada exitosamente');
+          setMostrarExito(true);
+        }}
+      />
+
       <InsumoProveedoresModal 
         show={!!insumoProveedoresSeleccionado} 
         insumo={insumoProveedoresSeleccionado} 
@@ -118,14 +176,18 @@ export const Insumos: React.FC = () => {
         insumoEditando={insumoEditando}
         onClose={() => setShowModalForm(false)}
         onGuardar={async (data) => {
-          if (insumoEditando) {
-            setInsumoEditando(data); 
-            setMostrarConfirmacion(true); 
-          } else {
-            await guardar(data);
-            setShowModalForm(false);
-            setMensajeExito('Insumo Creado Correctamente');
-            setMostrarExito(true);
+          try {
+            if (insumoEditando) {
+              setInsumoEditando(data); 
+              setMostrarConfirmacion(true); 
+            } else {
+              await guardar(data);
+              setShowModalForm(false);
+              setMensajeExito('Insumo Creado Correctamente');
+              setMostrarExito(true);
+            }
+          } catch (err: any) {
+            console.error("Error al guardar insumo:", err);
           }
         }}
       />

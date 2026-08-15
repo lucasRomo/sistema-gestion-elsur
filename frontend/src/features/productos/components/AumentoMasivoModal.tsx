@@ -1,5 +1,4 @@
-// src/features/productos/AumentoMasivoModal.tsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
 
@@ -14,7 +13,7 @@ interface Props {
     idsProductos?: number[];
   }) => Promise<void>;
 }
-  
+
 export const AumentoMasivoModal: React.FC<Props> = ({
   show,
   productos,
@@ -35,10 +34,20 @@ export const AumentoMasivoModal: React.FC<Props> = ({
   const mutedText = isDark ? '#a1a1aa' : '#64748b';
 
   const [criterio, setCriterio] = useState<'TODOS' | 'CATEGORIA' | 'SELECCION'>('TODOS');
+  const [tipoOperacion, setTipoOperacion] = useState<'AUMENTO' | 'DESCUENTO'>('AUMENTO');
   const [porcentaje, setPorcentaje] = useState<number>(10);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<number | null>(null);
   const [productosSeleccionados, setProductosSeleccionados] = useState<number[]>([]);
+  const [busquedaProducto, setBusquedaProducto] = useState('');
   const [cargando, setCargando] = useState(false);
+
+  // Buscador dinámico para selección manual
+  const productosFiltradosManual = useMemo(() => {
+    if (!busquedaProducto.trim()) return productos;
+    return productos.filter(p =>
+      p.nombreProducto?.toLowerCase().includes(busquedaProducto.toLowerCase())
+    );
+  }, [productos, busquedaProducto]);
 
   if (!show) return null;
 
@@ -59,10 +68,22 @@ export const AumentoMasivoModal: React.FC<Props> = ({
     }
   };
 
+  const handleToggleTodosVisibles = () => {
+    const idsVisibles = productosFiltradosManual.map(p => p.idProducto!).filter(Boolean);
+    const todosSeleccionados = idsVisibles.every(id => productosSeleccionados.includes(id));
+
+    if (todosSeleccionados) {
+      setProductosSeleccionados(productosSeleccionados.filter(id => !idsVisibles.includes(id)));
+    } else {
+      const nuevos = Array.from(new Set([...productosSeleccionados, ...idsVisibles]));
+      setProductosSeleccionados(nuevos);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (porcentaje <= 0) {
+    if (!porcentaje || porcentaje <= 0) {
       alert("Ingrese un porcentaje válido mayor a 0");
       return;
     }
@@ -77,17 +98,20 @@ export const AumentoMasivoModal: React.FC<Props> = ({
       return;
     }
 
+    // Convertir a negativo si es un descuento/disminución de precio
+    const porcentajeFinal = tipoOperacion === 'DESCUENTO' ? -Math.abs(porcentaje) : Math.abs(porcentaje);
+
     setCargando(true);
     try {
       await onConfirmar({
         criterio,
-        porcentaje,
+        porcentaje: porcentajeFinal,
         idCategoria: criterio === 'CATEGORIA' ? categoriaSeleccionada : null,
         idsProductos: criterio === 'SELECCION' ? productosSeleccionados : []
       });
       onClose();
     } catch (err: any) {
-      alert("Error al aplicar aumentos: " + err.message);
+      alert("Error al aplicar modificaciones de precio: " + err.message);
     } finally {
       setCargando(false);
     }
@@ -97,7 +121,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-lg modal-dialog-centered">
         <div 
-          className="modal-content shadow-lg" 
+          className="modal-content shadow-lg font-monospace" 
           style={{ 
             backgroundColor: modalBg, 
             color: textColor, 
@@ -107,8 +131,8 @@ export const AumentoMasivoModal: React.FC<Props> = ({
         >
           
           <div className="modal-header" style={{ borderColor: headerBorder }}>
-            <h5 className="modal-title font-monospace fw-bold text-info">
-              <i className="bi bi-graph-up-arrow me-2"></i>Aplicar Aumento Porcentual Masivo
+            <h5 className="modal-title fw-bold text-info">
+              <i className="bi bi-currency-exchange me-2"></i>Modificación Masiva de Precios de Productos
             </h5>
             <button 
               type="button" 
@@ -118,16 +142,55 @@ export const AumentoMasivoModal: React.FC<Props> = ({
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="modal-body font-monospace">
+            <div className="modal-body">
               
+              {/* Selector Aumento / Descuento */}
+              <div className="mb-3">
+                <label className="form-label text-warning fw-bold">Tipo de Acción:</label>
+                <div className="d-flex gap-4">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="tipoOperacionProd"
+                      id="opAumentoProd"
+                      checked={tipoOperacion === 'AUMENTO'}
+                      onChange={() => setTipoOperacion('AUMENTO')}
+                    />
+                    <label className="form-check-label fw-bold text-success" htmlFor="opAumentoProd">
+                      <i className="bi bi-arrow-up-circle me-1"></i> Aumento (+)
+                    </label>
+                  </div>
+
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="tipoOperacionProd"
+                      id="opDescuentoProd"
+                      checked={tipoOperacion === 'DESCUENTO'}
+                      onChange={() => setTipoOperacion('DESCUENTO')}
+                    />
+                    <label className="form-check-label fw-bold text-danger" htmlFor="opDescuentoProd">
+                      <i className="bi bi-arrow-down-circle me-1"></i> Descuento / Disminución (-)
+                    </label>
+                  </div>
+                </div>
+              </div>
+
               {/* Porcentaje */}
               <div className="mb-4">
-                <label className="form-label text-warning fw-bold">Porcentaje de Incremento (%):</label>
+                <label className="form-label text-warning fw-bold">
+                  Porcentaje de {tipoOperacion === 'AUMENTO' ? 'Incremento' : 'Disminución'} (%):
+                </label>
                 <div className="input-group">
-                  <span className="input-group-text fw-bold" style={{ backgroundColor: inputBg, color: '#0dcaf0', borderColor: inputBorder }}>%</span>
+                  <span className={`input-group-text fw-bold ${tipoOperacion === 'AUMENTO' ? 'text-success' : 'text-danger'}`} style={{ backgroundColor: inputBg, borderColor: inputBorder }}>
+                    {tipoOperacion === 'AUMENTO' ? '+' : '-'}%
+                  </span>
                   <input
                     type="number"
                     step="0.01"
+                    min="0.01"
                     className="form-control shadow-none"
                     style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                     value={porcentaje}
@@ -137,10 +200,10 @@ export const AumentoMasivoModal: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Selección del Criterio */}
+              {/* Criterio de Selección */}
               <div className="mb-3">
-                <label className="form-label fw-bold" style={{ color: labelColor }}>Aplicar Aumento A:</label>
-                <div className="d-flex gap-3">
+                <label className="form-label fw-bold" style={{ color: labelColor }}>Aplicar A:</label>
+                <div className="d-flex gap-3 flex-wrap">
                   <div className="form-check">
                     <input
                       className="form-check-input"
@@ -179,13 +242,13 @@ export const AumentoMasivoModal: React.FC<Props> = ({
                       onChange={() => setCriterio('SELECCION')}
                     />
                     <label className="form-check-label" htmlFor="critSel" style={{ color: textColor }}>
-                      Selección de Productos
+                      Selección Manual
                     </label>
                   </div>
                 </div>
               </div>
 
-              {/* Filtro por Categoria */}
+              {/* Filtro por Categoría */}
               {criterio === 'CATEGORIA' && (
                 <div className="mb-3">
                   <label className="form-label text-info fw-semibold">Seleccionar Categoría:</label>
@@ -204,25 +267,53 @@ export const AumentoMasivoModal: React.FC<Props> = ({
                 </div>
               )}
 
-              {/* Selección manual de Productos */}
+              {/* Selección manual de Productos con Buscador */}
               {criterio === 'SELECCION' && (
                 <div className="mb-3">
-                  <label className="form-label text-info fw-semibold">Seleccionar Productos Específicos:</label>
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <label className="form-label text-info fw-semibold mb-0">Seleccionar Productos Específicos:</label>
+                    <button
+                      type="button"
+                      className="btn btn-link btn-sm text-decoration-none p-0 fw-bold"
+                      style={{ color: '#0dcaf0' }}
+                      onClick={handleToggleTodosVisibles}
+                    >
+                      Marcar / Desmarcar Visibles
+                    </button>
+                  </div>
+
+                  {/* Input del buscador dinámico */}
+                  <input
+                    type="text"
+                    className="form-control form-control-sm mb-2 shadow-none"
+                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                    placeholder="Escriba para filtrar productos..."
+                    value={busquedaProducto}
+                    onChange={(e) => setBusquedaProducto(e.target.value)}
+                  />
+
                   <div className="p-2 rounded" style={{ backgroundColor: boxBg, border: `1px solid ${inputBorder}`, maxHeight: '200px', overflowY: 'auto' }}>
-                    {productos.map((p) => (
-                      <div key={p.idProducto} className="form-check text-start">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          id={`p-${p.idProducto}`}
-                          checked={productosSeleccionados.includes(p.idProducto!)}
-                          onChange={() => handleToggleProducto(p.idProducto!)}
-                        />
-                        <label className="form-check-label" htmlFor={`p-${p.idProducto}`} style={{ color: textColor }}>
-                          {p.nombreProducto} <span style={{ color: mutedText }}>(${p.precioBase})</span>
-                        </label>
+                    {productosFiltradosManual.length === 0 ? (
+                      <div className="text-center py-2 small" style={{ color: mutedText }}>
+                        No hay productos que coincidan con la búsqueda
                       </div>
-                    ))}
+                    ) : (
+                      productosFiltradosManual.map((p) => (
+                        <div key={p.idProducto} className="form-check text-start">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id={`p-${p.idProducto}`}
+                            checked={productosSeleccionados.includes(p.idProducto!)}
+                            onChange={() => handleToggleProducto(p.idProducto!)}
+                          />
+                          <label className="form-check-label d-flex justify-content-between pe-2 w-100" htmlFor={`p-${p.idProducto}`} style={{ color: textColor }}>
+                            <span>{p.nombreProducto}</span>
+                            <span style={{ color: mutedText }}>Precio Base: ${p.precioBase}</span>
+                          </label>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
@@ -241,11 +332,11 @@ export const AumentoMasivoModal: React.FC<Props> = ({
               </button>
               <button 
                 type="submit" 
-                className="btn btn-info fw-bold px-4" 
+                className={`btn fw-bold px-4 ${tipoOperacion === 'AUMENTO' ? 'btn-info' : 'btn-warning'}`} 
                 disabled={cargando}
                 style={{ color: '#ffffff' }}
               >
-                {cargando ? 'Procesando...' : 'Aplicar Aumento'}
+                {cargando ? 'Procesando...' : (tipoOperacion === 'AUMENTO' ? 'Aplicar Aumento' : 'Aplicar Descuento')}
               </button>
             </div>
           </form>

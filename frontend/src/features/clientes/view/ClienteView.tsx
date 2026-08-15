@@ -11,6 +11,7 @@ import { useClientes } from '../hooks/useClientes';
 import { UbicacionViewModal } from '../../../components/modals/UbicacionViewModal';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
+import { exportarClientesExcel, exportarClientesPDF } from '../utils/exportClientesUtils';
 
 export const ClienteView = () => {
   const { theme } = useTheme();
@@ -127,7 +128,6 @@ export const ClienteView = () => {
 
   return (
     <div className="container-fluid px-0">
-      {/* Título de la Sección */}
       <div className="d-flex justify-content-center align-items-center mb-4 position-relative">
         <h1 className="fw-bold m-0 text-center font-monospace" style={{ fontSize: '2.25rem', color: titleColor }}>
           Clientes
@@ -147,7 +147,6 @@ export const ClienteView = () => {
         setFiltroEstado={setFiltroEstado}
       />
 
-      {/* Tabla Adaptativa Estandarizada */}
       <div 
         className="d-flex flex-column flex-grow-1 overflow-hidden mb-2 shadow-sm rounded-3 border font-monospace" 
         style={{ 
@@ -187,30 +186,30 @@ export const ClienteView = () => {
                 clientesFiltrados.map((c: any) => {
                   const tieneCtaCte = Number(c.limiteCredito || 0) > 0;
 
-                  return (
-                    <tr 
-                      key={c.id_cliente} 
-                      style={{ borderBottom: `1px solid ${rowBorder}` }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <td className="px-3 py-3 text-center text-info fw-bold">#{c.id_cliente}</td>
-                      <td className="px-3 py-3 fw-bold text-start" style={{ color: tableText }}>{c.persona?.nombre}</td>
-                      <td className="px-3 py-3 text-start" style={{ color: tableText }}>{c.persona?.apellido}</td>
-                      <td className="px-3 py-3 text-center" style={{ color: tableText }}>{c.persona?.numeroDocumento}</td>
-                      <td className="px-3 py-3 text-start" style={{ color: tableText }}>{c.razonSocial}</td>
-                      
-                      <td className="px-3 py-3 text-center">
-                        {tieneCtaCte ? (
-                          <span className="badge rounded-pill bg-success bg-opacity-75 font-monospace px-3 py-2" style={{ color: '#ffffff' }}>
-                            Habilitada (${Number(c.limiteCredito).toFixed(0)})
-                          </span>
-                        ) : (
-                          <span className="badge rounded-pill bg-secondary font-monospace opacity-75 px-3 py-2" style={{ color: '#ffffff' }}>
-                            Sin Cta Cte
-                          </span>
-                        )}
-                      </td>
+                return (
+                  <tr 
+                    key={c.id_cliente || c.idCliente} 
+                    style={{ borderBottom: `1px solid ${rowBorder}`, transition: 'background-color 0.15s ease' }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <td className="px-3 py-3 font-monospace small" style={{ color: tableText, whiteSpace: 'nowrap' }}>{c.id_cliente || c.idCliente}</td>
+                    <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.persona?.nombre}</td>
+                    <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.apellido}</td>
+                    <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.numeroDocumento}</td>
+                    <td className="px-3 py-3" style={{ color: tableText }}>{c.razonSocial}</td>
+                    
+                    <td className="px-3 py-3">
+                      {tieneCtaCte ? (
+                        <span className="badge rounded-pill bg-success bg-opacity-75 font-monospace px-3 py-2" style={{ color: '#ffffff' }}>
+                          Habilitada (${Number(c.limiteCredito).toFixed(0)})
+                        </span>
+                      ) : (
+                        <span className="badge rounded-pill bg-secondary font-monospace opacity-75 px-3 py-2" style={{ color: '#ffffff' }}>
+                          Sin Cta Cte
+                        </span>
+                      )}
+                    </td>
 
                       <td className="px-3 py-3 text-end">
                         <span className={`fw-bold ${obtenerColorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
@@ -272,24 +271,44 @@ export const ClienteView = () => {
         </div>
       </div>
 
-      {/* Botonera Inferior con texto blanco estático */}
+      {/* Botonera Inferior: Volver + Exportar + Categorías + Cta Cte + Nuevo Cliente */}
       <div className={`d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
         <button 
           onClick={() => navigate('/dashboard')} 
           className="btn btn-secondary px-4 py-2 fw-semibold" 
           style={{ color: '#ffffff' }}
         >
-          <i className="bi"></i>Volver
+          Volver
         </button>
 
         <div className="d-flex flex-wrap gap-2">
+          <button 
+            className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
+            onClick={() => exportarClientesExcel(clientesFiltrados)}
+            disabled={clientesFiltrados.length === 0}
+            title="Exportar listado actual a Excel"
+          >
+            <i className="bi bi-file-earmark-excel-fill fs-5"></i>
+            Exportar Excel
+          </button>
+
+          <button 
+            className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2"
+            onClick={() => exportarClientesPDF(clientesFiltrados)}
+            disabled={clientesFiltrados.length === 0}
+            title="Exportar listado actual a PDF"
+          >
+            <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
+            Exportar PDF
+          </button>
+
           <button 
             type="button" 
             className="btn btn-info px-4 py-2 fw-semibold font-monospace shadow-sm" 
             style={{ backgroundColor: '#0caccc', borderColor: '#0caccc', color: '#ffffff' }}
             onClick={() => setVerCategoriasModal(true)}
           >
-            <i className="bi me-2"></i>Categorías de Clientes
+            Categorías de Clientes
           </button>
 
           <button 
@@ -297,7 +316,7 @@ export const ClienteView = () => {
             style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}
             onClick={() => setVerResumenCuentasModal(true)}
           >
-            <i className="bi"></i> Ver Cuentas Corrientes Activas
+            <i className="bi bi-wallet2"></i> Ver Cuentas Corrientes Activas
           </button>
 
           <button 
@@ -305,12 +324,11 @@ export const ClienteView = () => {
             style={{ color: '#ffffff' }}
             onClick={() => setPaso(1)}
           >
-            <i className="bi me-2"></i>Registrar Nuevo Cliente
+            Registrar Nuevo Cliente
           </button>
         </div>
-      </div>
+      </div>  
 
-      {/* Modales de Flujo de Registro y Edición */}
       {paso === 1 && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered">

@@ -5,17 +5,19 @@ import { usePedidosPendientes } from '../hooks/usePedidosPendientes';
 import { PedidoPendienteService } from '../service/pedidoPendienteService';
 import { empleadoService } from '../../../services/empleadoService';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
-import { useTheme } from '../../../Context/ThemeContext';
 
-// Importación de Componentes y Modales
-import { FiltrosPedidos } from '../components/FiltrosPedidos';
-import { TarjetaPedido } from '../components/TarjetaPedido'; 
-import { ModalCambioEstado } from '../modals/ModalCambioEstado';
-import { ModalRegistrarPago } from '../modals/ModalRegistrarPago';
-import { ModalGestionarComprobantes } from '../modals/ModalGestionarComprobantes';
-import { ModalAdvertenciaDeuda } from '../modals/ModalAdvertenciaDeuda';
-import { VistaTicketModal } from '../modals/VistaTicketModal';
+// Importación de Componentes y Modales Centralizados
+import { FiltrosPedidos } from '../../pedidos/components/FiltrosPedidos';
+import { TarjetaPedido } from '../../pedidos/components/TarjetaPedido'; 
+import { ModalCambioEstado } from '../../pedidos/modals/ModalCambioEstado';
+import { ModalRegistrarPago } from '../../pedidos/modals/ModalRegistrarPago';
+import { ModalGestionarComprobantes } from '../../pedidos/modals/ModalGestionarComprobantes';
+import { ModalAdvertenciaDeuda } from '../../pedidos/modals/ModalAdvertenciaDeuda';
+import { VistaTicketModal } from '../../pedidos/modals/VistaTicketModal';
+import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { CuentaCorrienteModal } from '../../clientes/components/CuentaCorrienteModal';
+import { ModalGestionMermas } from '../../pedidos/modals/ModalGestionMermas';
+import { useTheme } from '../../../Context/ThemeContext';
 
 // Modales Auxiliares
 import { ModalErrorStock } from '../modals/ModalErrorStock';
@@ -32,6 +34,7 @@ export const PedidosPendientesView: React.FC = () => {
   const [empleados, setEmpleados] = useState<any[]>([]);
   const [filtroCliente, setFiltroCliente] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
+  const [pedidoMermaSel, setPedidoMermaSel] = useState<any | null>(null);
   const [filtroEmpleado, setFiltroEmpleado] = useState('');
 
   // Estados de Modales y Pedidos
@@ -44,6 +47,7 @@ export const PedidosPendientesView: React.FC = () => {
 
   // Estados de Notificación y Confirmación
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
+  const [ticketPagoSel, setTicketPagoSel] = useState<{ pedido: any; movimiento?: any } | null>(null);
   const [sucesoError, setSucesoError] = useState<{ show: boolean; mensaje: string }>({ show: false, mensaje: '' });
   const [modalNotif, setModalNotif] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
   const [confirmarDesvincular, setConfirmarDesvincular] = useState<{ show: boolean; idComprobante: number | null }>({
@@ -189,7 +193,7 @@ export const PedidosPendientesView: React.FC = () => {
       const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
       const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
 
-      await PedidoPendienteService.registrarPago(
+      const pedidoActualizado = await PedidoPendienteService.registrarPago(
         pedidoPagoSel.id_pedido,
         monto,
         tipoPago,
@@ -199,6 +203,11 @@ export const PedidosPendientesView: React.FC = () => {
 
       setSuceso({ show: true, titulo: "Éxito", mensaje: "Pago registrado correctamente", tipo: "exito" });
       setPedidoPagoSel(null);
+      setTicketPagoSel({
+        pedido: pedidoActualizado || pedidoPagoSel,
+        movimiento: { metodoPago: tipoPago, fecha: new Date(), monto }
+      });
+      await refrescar();
     } catch (error: any) {
       console.error(error);
       setSuceso({ show: true, titulo: "Error", mensaje: error.message || "Error al registrar el pago", tipo: "error" });
@@ -368,6 +377,7 @@ export const PedidosPendientesView: React.FC = () => {
                     empleados={empleados}
                     onCambioEmpleado={handleCambioEmpleado}
                     onSelectComprobantes={(p) => setPedidoGestionComprobanteSel(p)}
+                    onGestionarMermas={(p) => setPedidoMermaSel(p)}
                   />
                 </div>
               ))}
@@ -417,15 +427,41 @@ export const PedidosPendientesView: React.FC = () => {
         />
       )}
 
+      {/* VISTA TICKET PAGO (CAJA) */}
+      {ticketPagoSel && (
+        <VistaTicketPagoModal 
+          pedido={ticketPagoSel.pedido}
+          movimiento={ticketPagoSel.movimiento}
+          onClose={() => setTicketPagoSel(null)}
+        />
+      )}
+
+      {/* GESTIÓN DE COMPROBANTES */}
       {pedidoGestionComprobanteSel && (
         <ModalGestionarComprobantes
           pedido={pedidoGestionComprobanteSel}
           onClose={() => setPedidoGestionComprobanteSel(null)}
           onVincularComprobante={handleVincularComprobante}
           onEliminarComprobante={async (idComp) => setConfirmarDesvincular({ show: true, idComprobante: idComp })} 
+          onVerTicket={(pedido, cobro) => {
+            setTicketPagoSel({ pedido, movimiento: cobro });
+          }}
         />
       )}
 
+      {/* GESTIÓN DE MERMAS */}
+      {pedidoMermaSel && (
+        <ModalGestionMermas
+          pedido={pedidoMermaSel}
+          onClose={() => setPedidoMermaSel(null)}
+          onConfirm={() => {
+            setPedidoMermaSel(null);
+            refrescar();
+          }}
+        />
+      )}
+
+      {/* MODAL ERROR STOCK */}
       <ModalErrorStock 
         show={sucesoError.show}
         mensaje={sucesoError.mensaje}
@@ -435,12 +471,14 @@ export const PedidosPendientesView: React.FC = () => {
         }}
       />
 
+      {/* MODAL CONFIRMAR DESVINCULAR COMPROBANTE */}
       <ModalConfirmarDesvincular 
         show={confirmarDesvincular.show}
         onClose={() => setConfirmarDesvincular({ show: false, idComprobante: null })}
         onConfirm={ejecutarEliminarComprobante}
       />
 
+      {/* MODAL AVISO CUENTA CORRIENTE */}
       <ModalAvisoCuentaCorriente 
         show={modalAvisoCuentaCorriente.show}
         isDarkMode={isDarkMode}

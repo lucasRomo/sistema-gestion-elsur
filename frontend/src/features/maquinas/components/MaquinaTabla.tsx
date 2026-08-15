@@ -45,7 +45,7 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
       style={{ 
         backgroundColor: tableWrapperBg, 
         borderColor: theadBorder,
-        height: '72vh',
+        height: '75vh',
         overflowY: 'auto',
         display: 'block'
       }}

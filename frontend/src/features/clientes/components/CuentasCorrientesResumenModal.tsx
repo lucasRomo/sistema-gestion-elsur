@@ -15,7 +15,6 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables adaptativas del tema
   const modalBg = isDark ? '#1b1b1b' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const titleColor = isDark ? '#ffffff' : '#0f172a';
@@ -26,7 +25,6 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
   const inputTextColor = isDark ? 'text-white' : 'text-dark';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
 
-  // Estilos específicos de la tabla adaptativa
   const tableContainerBg = isDark ? '#1a1a1c' : '#ffffff';
   const tableText = isDark ? '#ffffff' : '#0f172a';
   const tableContainerBorder = isDark ? '#2d2d30' : '#e2e8f0';
@@ -38,7 +36,6 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
   const [busqueda, setBusqueda] = useState('');
   const [soloConDeuda, setSoloConDeuda] = useState(false);
 
-  // Filtrar solo los clientes que tienen Cuenta Corriente Habilitada (Límite Crédito > 0)
   const cuentasActivas = clientes.filter((c) => {
     const tieneCuenta = Number(c.limiteCredito || 0) > 0;
     if (!tieneCuenta) return false;
@@ -55,7 +52,6 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
     );
   });
 
-  // Totales acumulados
   const totalDeuda = cuentasActivas.reduce((acc, c) => acc + Number(c.saldoDeudor || 0), 0);
   const totalLimite = cuentasActivas.reduce((acc, c) => acc + Number(c.limiteCredito || 0), 0);
 
@@ -72,7 +68,6 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
           </div>
 
           <div className="modal-body p-4">
-            {/* Tarjetas de Métricas Rápidas */}
             <div className="row g-3 mb-4">
               <div className="col-md-4">
                 <div className="p-3 rounded border" style={{ backgroundColor: cardBg, borderColor: inputBorder }}>
@@ -96,7 +91,6 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
               </div>
             </div>
 
-            {/* Controles de Búsqueda y Filtros */}
             <div className="row g-3 mb-3 align-items-center">
               <div className="col-md-7">
                 <div className="input-group">
@@ -129,7 +123,6 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
               </div>
             </div>
 
-            {/* Tabla de Cuentas Corrientes Adaptativa (sin la clase .table) */}
             <div 
               className="table-responsive rounded shadow-sm" 
               style={{ 
@@ -161,36 +154,39 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {cuentasActivas.map((c: any) => (
-                    <tr 
-                      key={c.id_cliente} 
-                      style={{ borderBottom: `1px solid ${tableRowBorder}`, transition: 'background-color 0.15s ease' }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverRowBg}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <td className="px-3 py-3 font-monospace small" style={{ color: tableText, whiteSpace: 'nowrap' }}>{c.id_cliente}</td>
-                      <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.persona?.nombre} {c.persona?.apellido}</td>
-                      <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.numeroDocumento || '-'}</td>
-                      <td className="px-3 py-3" style={{ color: tableText }}>{c.razonSocial || '-'}</td>
-                      <td className="px-3 py-3 text-end font-monospace text-warning fw-semibold">
-                        ${Number(c.limiteCredito || 0).toFixed(2)}
-                      </td>
-                      <td className={`px-3 py-3 text-end font-monospace fw-bold ${Number(c.saldoDeudor || 0) > 0 ? 'text-danger' : 'text-success'}`}>
-                        ${Number(c.saldoDeudor || 0).toFixed(2)}
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <button
-                          className="btn btn-outline-success btn-sm font-monospace rounded-2 px-3 py-1"
-                          onClick={() => {
-                            onCerrar();
-                            onSeleccionarCliente(c);
-                          }}
-                        >
-                          <i className="bi bi-wallet2 me-1"></i> Gestionar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {cuentasActivas.map((c: any) => {
+                    const idC = c.id_cliente || c.idCliente;
+                    return (
+                      <tr 
+                        key={idC} 
+                        style={{ borderBottom: `1px solid ${tableRowBorder}`, transition: 'background-color 0.15s ease' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverRowBg}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        <td className="px-3 py-3 font-monospace small" style={{ color: tableText, whiteSpace: 'nowrap' }}>{idC}</td>
+                        <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.persona?.nombre} {c.persona?.apellido}</td>
+                        <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.numeroDocumento || '-'}</td>
+                        <td className="px-3 py-3" style={{ color: tableText }}>{c.razonSocial || '-'}</td>
+                        <td className="px-3 py-3 text-end font-monospace text-warning fw-semibold">
+                          ${Number(c.limiteCredito || 0).toFixed(2)}
+                        </td>
+                        <td className={`px-3 py-3 text-end font-monospace fw-bold ${Number(c.saldoDeudor || 0) > 0 ? 'text-danger' : 'text-success'}`}>
+                          ${Number(c.saldoDeudor || 0).toFixed(2)}
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <button
+                            className="btn btn-outline-success btn-sm font-monospace rounded-2 px-3 py-1"
+                            onClick={() => {
+                              onCerrar();
+                              onSeleccionarCliente(c);
+                            }}
+                          >
+                            <i className="bi bi-wallet2 me-1"></i> Gestionar
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {cuentasActivas.length === 0 && (
                     <tr>
                       <td colSpan={7} className={`text-center py-5 ${emptyTextColor}`}>

@@ -6,7 +6,7 @@ import { ClienteView } from '../../features/clientes/view/ClienteView';
 import { Proveedores } from '../../features/proveedores/view/Proveedores';
 import { Insumos } from '../../features/insumos/view/Insumos';
 import { Productos } from '../../features/productos/view/Productos';
-import { VentaRapida } from '../dashboardprincipal/view/DashboardPrincipalView';
+import { DashboardPrincipal } from '../dashboardprincipal/view/DashboardPrincipalView';
 import { CrearPedidoView } from '../../features/pedidos/view/CrearPedidoView'; 
 import { PedidosPendientesView } from '../../features/pedidos/view/PedidosPendientesView'; 
 import { HistorialPedidosPage } from '../../features/pedidos/view/HistorialPedidosView'; 
@@ -37,7 +37,7 @@ function App() {
             <Route path="/dashboard" element={
               <ProtectedRoute permisoRequerido="Panel Principal">
                 <SidebarLayout activeItem="Panel Principal">
-                  <VentaRapida />
+                  <DashboardPrincipal />
                 </SidebarLayout>
               </ProtectedRoute>
             } />

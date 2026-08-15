@@ -13,13 +13,14 @@ interface TarjetaPedidoProps {
   onEliminarComprobante: (idPedido: number) => void;
   onCambioEmpleado: (idPedido: number, idEmpleado: string) => void;
   onSelectComprobantes: (pedido: any) => void;
+  onGestionarMermas?: (pedido: any) => void;
 }
 
 interface TimelineItem {
   id: string;
   fechaRaw: string;
   fechaFormateada: string;
-  tipo: 'CREACION' | 'ESTADO' | 'EMPLEADO' | 'PAGO' | 'UBICACION';
+  tipo: 'CREACION' | 'ESTADO' | 'EMPLEADO' | 'PAGO' | 'UBICACION' | 'MERMA';
   titulo: string;
   subtitulo?: string;
   monto?: string;
@@ -33,7 +34,8 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
   onCambioEmpleado,
   onSelectPago,
   onSelectTicket,
-  onSelectComprobantes
+  onSelectComprobantes,
+  onGestionarMermas
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -41,7 +43,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
   const [expandido, setExpandido] = useState<boolean>(false);
   const [mostrarObsModal, setMostrarObsModal] = useState<boolean>(false);
   const [ubicacionInput, setUbicacionInput] = useState<string>(p.ubicacion_estante || 'Taller');
-
 
   const cardBg = isDark ? '#121214' : '#ffffff';
   const cardBorder = isDark ? '#27272a' : '#e2e8f0';
@@ -102,76 +103,109 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
   const fechaCreacionFormateada = formatearFechaString(fechaCreacionRaw, true);
   const fechaEntregaFormateada = formatearFechaString(p.fecha_entrega_estimada, true);
 
-  // --- RECOPILACIÓN Y ORDENAMIENTO DE TODAS LAS INTERACCIONES ---
   const obtenerTimelineInteracciones = (): TimelineItem[] => {
-  const items: TimelineItem[] = [];
+    const items: TimelineItem[] = [];
 
-  // 1. Creación del Pedido
-  if (fechaCreacionRaw) {
-    items.push({
-      id: 'ev-creacion',
-      fechaRaw: fechaCreacionRaw,
-      fechaFormateada: formatearHoraOCorta(fechaCreacionRaw),
-      tipo: 'CREACION',
-      titulo: 'Pedido Creado',
-      subtitulo: `Estado: PENDIENTE`
+    // 1. Creación del Pedido
+    if (fechaCreacionRaw) {
+      items.push({
+        id: 'ev-creacion',
+        fechaRaw: fechaCreacionRaw,
+        fechaFormateada: formatearHoraOCorta(fechaCreacionRaw),
+        tipo: 'CREACION',
+        titulo: 'Pedido Creado',
+        subtitulo: `Estado: PENDIENTE`
+      });
+    }
+
+    // 2. Historial de Cambios de Estado / Asignaciones / Ubicación
+    const historiales = p.historiales || p.historialEstadoPedidos || [];
+    historiales.forEach((h: any, idx: number) => {
+      const f = h.fecha_cambio;
+      if (!f) return;
+
+      const estadoAnt = h.estado_anterior || 'PENDIENTE';
+      const estadoNue = h.estado_nuevo || 'MODIFICADO';
+      const esCambioEmpleado = estadoAnt.startsWith('ASIGNADO:') || estadoNue.startsWith('ASIGNADO:');
+      const esCambioUbicacion = estadoAnt.startsWith('UBICACION:') || estadoNue.startsWith('UBICACION:');
+
+      let titulo: string;
+      let tipoEvento: TimelineItem['tipo'] = 'ESTADO';
+
+      if (esCambioEmpleado) {
+        const nombreAnterior = estadoAnt.replace(/^ASIGNADO:\s*/i, '').trim();
+        const nombreNuevo = estadoNue.replace(/^ASIGNADO:\s*/i, '').trim();
+        titulo = `Cambio de Empleado: ${nombreAnterior} ➔ ${nombreNuevo}`;
+        tipoEvento = 'EMPLEADO';
+      } else if (esCambioUbicacion) {
+        const ubicAnterior = estadoAnt.replace(/^UBICACION:\s*/i, '').trim();
+        const ubicNueva = estadoNue.replace(/^UBICACION:\s*/i, '').trim();
+        titulo = `Cambio Ubicación: ${ubicAnterior} ➔ ${ubicNueva}`;
+        tipoEvento = 'UBICACION';
+      } else {
+        titulo = `${estadoAnt} ➔ ${estadoNue}`;
+      }
+
+      items.push({
+        id: `ev-hist-${idx}`,
+        fechaRaw: f,
+        fechaFormateada: formatearHoraOCorta(f),
+        tipo: tipoEvento,
+        titulo,
+        subtitulo: h.observaciones || undefined
+      });
     });
-  }
 
-  // 2. Historial de Cambios de Estado (HistorialEstadoPedido: fecha_cambio, estado_anterior, estado_nuevo)
-  const historiales = p.historiales || p.historialEstadoPedidos || [];
-  historiales.forEach((h: any, idx: number) => {
-  const f = h.fecha_cambio;
-  if (!f) return;
-
-  const estadoAnt = h.estado_anterior || 'PENDIENTE';
-  const estadoNue = h.estado_nuevo || 'MODIFICADO';
-  const esCambioEmpleado = estadoAnt.startsWith('ASIGNADO:') || estadoNue.startsWith('ASIGNADO:');
-  const esCambioUbicacion = estadoAnt.startsWith('UBICACION:') || estadoNue.startsWith('UBICACION:'); // NUEVO
-
-  let titulo: string;
-  let tipoEvento: TimelineItem['tipo'] = 'ESTADO';
-
-  if (esCambioEmpleado) {
-    const nombreAnterior = estadoAnt.replace(/^ASIGNADO:\s*/i, '').trim();
-    const nombreNuevo = estadoNue.replace(/^ASIGNADO:\s*/i, '').trim();
-    titulo = `Cambio de Empleado Asignado: ${nombreAnterior} ➔ ${nombreNuevo}`;
-    tipoEvento = 'EMPLEADO';
-  } else if (esCambioUbicacion) { // NUEVO
-    const ubicAnterior = estadoAnt.replace(/^UBICACION:\s*/i, '').trim();
-    const ubicNueva = estadoNue.replace(/^UBICACION:\s*/i, '').trim();
-    titulo = `Cambio de Ubicación: ${ubicAnterior} ➔ ${ubicNueva}`;
-    tipoEvento = 'UBICACION';
-  } else {
-    titulo = `${estadoAnt} ➔ ${estadoNue}`;
-  }
-
-  items.push({
-    id: `ev-hist-${idx}`,
-    fechaRaw: f,
-    fechaFormateada: formatearHoraOCorta(f),
-    tipo: tipoEvento,
-    titulo,
-    subtitulo: h.observaciones || undefined
-  });
-  });
-
-  const pagos = p.comprobantes || [];
-  pagos.forEach((pago: any, idx: number) => {
-    const f = pago.fechaCarga;
-    if (!f) return; // NUEVO
-    const montoVal = Number(pago.montoPago ?? 0).toFixed(2);
-    items.push({
-      id: `ev-pago-${idx}`,
-      fechaRaw: f,
-      fechaFormateada: formatearHoraOCorta(f),
-      tipo: 'PAGO',
-      titulo: pago.tipoPago ? `Pago Registrado (${pago.tipoPago})` : 'Ingreso de Monto',  
-      monto: `+$${montoVal}`
+    // 3. Pagos Registrados
+    const pagos = p.comprobantes || [];
+    pagos.forEach((pago: any, idx: number) => {
+      const f = pago.fechaCarga;
+      if (!f) return;
+      const montoVal = Number(pago.montoPago ?? 0).toFixed(2);
+      items.push({
+        id: `ev-pago-${idx}`,
+        fechaRaw: f,
+        fechaFormateada: formatearHoraOCorta(f),
+        tipo: 'PAGO',
+        titulo: pago.tipoPago ? `Pago (${pago.tipoPago})` : 'Ingreso de Monto',  
+        monto: `+$${montoVal}`
+      });
     });
-  });
 
-  return items.sort((a, b) => new Date(a.fechaRaw).getTime() - new Date(b.fechaRaw).getTime());
+    // 4. Mermas Registradas en el Pedido
+    const mermas = p.mermas || [];
+    mermas.forEach((merma: any, idx: number) => {
+      const f = merma.fechaMerma || merma.fecha_merma || merma.fecha;
+      if (!f) return;
+
+      const nombreItem = merma.producto?.nombreProducto 
+        || merma.insumo?.nombreInsumo 
+        || merma.nombreItem 
+        || 'Insumo / Producto';
+
+      items.push({
+        id: `ev-merma-${idx}`,
+        fechaRaw: f,
+        fechaFormateada: formatearHoraOCorta(f),
+        tipo: 'MERMA',
+        titulo: `Merma: ${nombreItem}`,
+        subtitulo: `Cantidad: ${merma.cantidad}${merma.motivo ? ` - ${merma.motivo}` : ''}`
+      });
+    });
+
+    // 5. Ubicación Actual (si aplica)
+    if (p.ubicacion_estante && p.ubicacion_estante !== 'Taller') {
+      items.push({
+        id: 'ev-ubic-actual',
+        fechaRaw: fechaCreacionRaw,
+        fechaFormateada: formatearHoraOCorta(fechaCreacionRaw),
+        tipo: 'UBICACION',
+        titulo: 'Ubicación Actual',
+        subtitulo: `➔ ${p.ubicacion_estante}`
+      });
+    }
+
+    return items.sort((a, b) => new Date(a.fechaRaw).getTime() - new Date(b.fechaRaw).getTime());
   };
 
   const timelineEvents = obtenerTimelineInteracciones();
@@ -212,16 +246,16 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
   );
 
   useEffect(() => {
-  setUbicacionInput(p.ubicacion_estante || 'Taller');
+    setUbicacionInput(p.ubicacion_estante || 'Taller');
   }, [p.ubicacion_estante]);
 
   const confirmarUbicacion = () => {
-  const valor = ubicacionInput.trim();
-  if (valor && valor !== p.ubicacion_estante && onCambioUbicacion) {
-    onCambioUbicacion(p.id_pedido, valor);
-  } else if (!valor) {
-    setUbicacionInput(p.ubicacion_estante || 'Taller'); 
-  }
+    const valor = ubicacionInput.trim();
+    if (valor && valor !== p.ubicacion_estante && onCambioUbicacion) {
+      onCambioUbicacion(p.id_pedido, valor);
+    } else if (!valor) {
+      setUbicacionInput(p.ubicacion_estante || 'Taller'); 
+    }
   };
 
   return (
@@ -234,7 +268,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
           borderRadius: '12px'
         }}
       >
-        {/* FILA SUPERIOR COMPACTA (SIEMPRE VISIBLE) */}
+        {/* FILA SUPERIOR COMPACTA */}
         <div className="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom border-secondary border-opacity-25">
           <div className="d-flex align-items-center gap-2">
             <span className="fw-bold text-info font-monospace fs-5">#{p.id_pedido}</span>
@@ -250,24 +284,24 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
             )}
             <span className="fw-bold fs-6 text-white me-1">{nombreCliente}</span>
             {tieneObservaciones && (
-            <button 
-             className="btn btn-link p-0 text-warning border-0"
-             onClick={() => setMostrarObsModal(true)}
-             title="Ver observaciones"
-            > 
-            <i className="bi bi-chat-left-text-fill fs-6"></i>
-            </button>
+              <button 
+                className="btn btn-link p-0 text-warning border-0"
+                onClick={() => setMostrarObsModal(true)}
+                title="Ver observaciones"
+              > 
+                <i className="bi bi-chat-left-text-fill fs-6"></i>
+              </button>
             )}
             {esDevolucionReabierta && (
-            <button 
-             className="btn btn-link p-0 text-warning border-0"
-             onClick={() => setMostrarObsModal(true)}
-             title="Pedido devuelto / reabierto"
-            >
-            <i className="bi bi-arrow-return-left fs-6"></i>
-            </button>
+              <button 
+                className="btn btn-link p-0 text-warning border-0"
+                onClick={() => setMostrarObsModal(true)}
+                title="Pedido devuelto / reabierto"
+              >
+                <i className="bi bi-arrow-return-left fs-6"></i>
+              </button>
             )}
-           </div>
+          </div>
 
           <div className="d-flex align-items-center gap-2">
             <span className="text-muted small">Tiempo Restante/Sobrepasado:</span>
@@ -296,102 +330,102 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
         {expandido && (
           <div className="p-4 d-flex flex-column gap-4">
             
-            {/* LÍNEA DE TIEMPO / TIPO MÉTRICA FINANCIAL */}
-<div 
-  className="p-4 rounded-3 border" 
-  style={{ 
-    backgroundColor: timelineContainerBg, 
-    borderColor: timelineContainerBorder,
-    boxShadow: isDark ? 'inset 0 0 20px rgba(0,0,0,0.5)' : 'none'
-  }}
->
-  <div className="d-flex align-items-center justify-content-between mb-4">
-    <span className="text-muted small font-monospace text-uppercase tracking-wider">
-      <i className="bi bi-activity text-purple me-2" style={{ color: '#a855f7' }}></i>
-      Historial Traza del Pedido
-    </span>
-  </div>
-
-  {/* CONTENEDOR DE LA LÍNEA Y NODOS */}
-  <div className="position-relative overflow-x-auto py-3">
-    {/* Línea horizontal que conecta solo entre el primer y el último punto */}
-    {timelineEvents.length > 1 && (
-      <div 
-        className="position-absolute" 
-        style={{ 
-          height: '2px', 
-          top: '49px', 
-          left: '80px', 
-          right: '80px', 
-          backgroundColor: '#8b5cf6',
-          boxShadow: '0 0 8px #8b5cf6',
-          zIndex: 0 
-        }} 
-      />
-    )}
-
-    <div className="d-flex justify-content-between align-items-start position-relative" style={{ minWidth: `${Math.max(650, timelineEvents.length * 150)}px` }}>
-      {timelineEvents.map((item) => (
-        <div key={item.id} className="d-flex flex-column align-items-center text-center px-2" style={{ width: '160px', zIndex: 1 }}>
-          
-          {/* Fecha arriba */}
-          <span className="text-muted font-monospace mb-2" style={{ fontSize: '0.70rem', lineHeight: '14px' }}>
-            {item.fechaFormateada}
-          </span>
-
-          {/* Punto Neón con fondo de la tarjeta detrás para tapar la línea interna */}
-          <div className="p-1 rounded-circle" style={{ backgroundColor: timelineContainerBg }}>
+            {/* LÍNEA DE TIEMPO (TIMELINE) */}
             <div 
-              className="rounded-circle"
+              className="p-4 rounded-3 border" 
               style={{ 
-                width: '14px', 
-                height: '14px', 
-                backgroundColor: isDark ? '#ffffff' : '#8b5cf6',
-                border: '3px solid #8b5cf6',
-                boxShadow: '0 0 10px #a855f7',
-                flexShrink: 0 
-              }} 
-            />
-          </div>
-
-          {/* Card / Detalle */}
-          <div 
-            className="mt-3 p-2 rounded-2 w-100 border text-start transition-all shadow-sm"
-            style={{ 
-              backgroundColor: timelineCardBg, 
-              borderColor: item.tipo === 'PAGO' ? '#10b981' : timelineCardBorder
-            }}
-          >
-            <div className={`fw-bold font-monospace ${timelineTitleText}`} style={{ fontSize: '0.78rem' }}>
-              {item.titulo}
-            </div>
-
-            {item.subtitulo && (
-              <div className="text-muted font-monospace" style={{ fontSize: '0.72rem' }}>
-                {item.subtitulo}
+                backgroundColor: timelineContainerBg, 
+                borderColor: timelineContainerBorder,
+                boxShadow: isDark ? 'inset 0 0 20px rgba(0,0,0,0.5)' : 'none'
+              }}
+            >
+              <div className="d-flex align-items-center justify-content-between mb-4">
+                <span className="text-muted small font-monospace text-uppercase tracking-wider">
+                  <i className="bi bi-activity text-purple me-2" style={{ color: '#a855f7' }}></i>
+                  Historial Traza del Pedido
+                </span>
               </div>
-            )}
 
-            {item.monto && (
-              <div className="badge font-monospace mt-1" style={{
-               fontSize: '0.75rem',
-               backgroundColor: '#059669',
-               color: '#ffffff',
-               border: '1px solid #10b981',
-               whiteSpace: 'nowrap'
-              }}>
-                {item.monto}
-              </div>
-            )}
-          </div>
+              <div className="position-relative overflow-x-auto py-3">
+                {timelineEvents.length > 1 && (
+                  <div 
+                    className="position-absolute" 
+                    style={{ 
+                      height: '2px', 
+                      top: '49px', 
+                      left: '80px', 
+                      right: '80px', 
+                      backgroundColor: '#8b5cf6',
+                      boxShadow: '0 0 8px #8b5cf6',
+                      zIndex: 0 
+                    }} 
+                  />
+                )}
 
-        </div>
-      ))}
+                <div className="d-flex justify-content-between align-items-start position-relative" style={{ minWidth: `${Math.max(650, timelineEvents.length * 150)}px` }}>
+                  {timelineEvents.map((item) => {
+                    const esMerma = item.tipo === 'MERMA';
+                    const esPago = item.tipo === 'PAGO';
+
+                    return (
+                      <div key={item.id} className="d-flex flex-column align-items-center text-center px-2" style={{ width: '160px', zIndex: 1 }}>
+                        
+                        <span className="text-muted font-monospace mb-2" style={{ fontSize: '0.70rem', lineHeight: '14px' }}>
+                          {item.fechaFormateada}
+                        </span>
+
+                        <div className="p-1 rounded-circle" style={{ backgroundColor: timelineContainerBg }}>
+                          <div 
+                            className="rounded-circle"
+                            style={{ 
+                              width: '14px', 
+                              height: '14px', 
+                              backgroundColor: esMerma ? '#ef4444' : isDark ? '#ffffff' : '#8b5cf6',
+                              border: `3px solid ${esMerma ? '#dc2626' : '#8b5cf6'}`,
+                              boxShadow: `0 0 10px ${esMerma ? '#ef4444' : '#a855f7'}`,
+                              flexShrink: 0 
+                            }} 
+                          />
+                        </div>
+
+                        <div 
+                          className="mt-3 p-2 rounded-2 w-100 border text-start transition-all shadow-sm"
+                          style={{ 
+                            backgroundColor: timelineCardBg, 
+                            borderColor: esPago ? '#10b981' : esMerma ? '#ef4444' : timelineCardBorder
+                          }}
+                        >
+                          <div className={`fw-bold font-monospace ${esMerma ? 'text-danger' : timelineTitleText}`} style={{ fontSize: '0.78rem' }}>
+                            {item.titulo}
+                          </div>
+
+                          {item.subtitulo && (
+                            <div className="text-muted font-monospace" style={{ fontSize: '0.72rem' }}>
+                              {item.subtitulo}
+                            </div>
+                          )}
+
+                          {item.monto && (
+                            <div className="badge font-monospace mt-1" style={{
+                              fontSize: '0.75rem',
+                              backgroundColor: '#059669',
+                              color: '#ffffff',
+                              border: '1px solid #10b981',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {item.monto}
+                            </div>
+                          )}
+                        </div>
+
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
-            {/* SECCIÓN DATOS SECUNDARIOS Y ACCIONES */}
+            {/* DATOS SECUNDARIOS Y BOTONERA DE ACCIONES */}
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 pt-2">
               <div className="d-flex gap-4">
                 <div>
@@ -425,6 +459,14 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
                 </button>
 
                 <button 
+                  className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
+                  onClick={() => onGestionarMermas && onGestionarMermas(p)}
+                >
+                  <i className="bi bi-trash3"></i>
+                  <span>Mermas</span>
+                </button>
+
+                <button 
                   className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
                   disabled={esDevolucionReabierta}
                   onClick={() => !esDevolucionReabierta && onSelectPago(p)}
@@ -443,7 +485,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
               </div>
             </div>
 
-            {/* FORMULARIOS / SELECTS */}
+            {/* FORMULARIOS / CONTROLES DE EDICIÓN */}
             <div className="row g-3 pt-3 border-top border-secondary border-opacity-25">
               <div className="col-12 col-md-4">
                 <label className="text-muted small font-monospace mb-1">Modificar Estado Proceso</label>
@@ -520,7 +562,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
         )}
       </div>
 
-      {/* MODAL DE OBSERVACIONES */}
+      {/* MODAL OBSERVACIONES */}
       {mostrarObsModal && (
         <div 
           className="modal d-block" 

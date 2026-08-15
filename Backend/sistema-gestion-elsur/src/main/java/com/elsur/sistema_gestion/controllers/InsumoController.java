@@ -29,19 +29,27 @@ public class InsumoController {
     }
 
     @PostMapping
-    public ResponseEntity<Insumo> crear(
+    public ResponseEntity<?> crear(
             @RequestBody Insumo insumo,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
-        return ResponseEntity.ok(insumoService.guardar(insumo, idUsuario));
+        try {
+            return ResponseEntity.ok(insumoService.guardar(insumo, idUsuario));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Insumo> actualizar(
+    public ResponseEntity<?> actualizar(
             @PathVariable Integer id,
             @RequestBody Insumo insumo,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
-        insumo.setIdInsumo(id);
-        return ResponseEntity.ok(insumoService.guardar(insumo, idUsuario));
+        try {
+            insumo.setIdInsumo(id);
+            return ResponseEntity.ok(insumoService.guardar(insumo, idUsuario));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/{id}/convertir")

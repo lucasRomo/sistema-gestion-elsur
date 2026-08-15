@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { Producto } from '../../productos/types/Producto';
 import type { CartItem } from '../types/Pedido';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
@@ -38,6 +38,8 @@ export const SelectorProductosForm: React.FC<Props> = ({
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
 
   const [productoId, setProductoId] = useState('');
+  const [busquedaProducto, setBusquedaProducto] = useState('');
+  const [mostrarDropdown, setMostrarDropdown] = useState(false);
   const [cantidad, setCantidad] = useState('1');
 
   // Modal para máquinas fuera de servicio
@@ -47,6 +49,14 @@ export const SelectorProductosForm: React.FC<Props> = ({
     maquinaNombre: string;
     estado: string;
   }[]>([]);
+
+  // Filtrado reactivo de productos según lo que escriba el usuario
+  const productosFiltrados = useMemo(() => {
+    if (!busquedaProducto.trim()) return productos;
+    return productos.filter(p => 
+      p.nombreProducto.toLowerCase().includes(busquedaProducto.toLowerCase())
+    );
+  }, [productos, busquedaProducto]);
 
   const handleAgregar = () => {
     if (!productoId || Number(cantidad) <= 0) return;
@@ -62,6 +72,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
     setCarrito([...carrito, nuevoItem]);
     setProductoId('');
+    setBusquedaProducto('');
     setCantidad('1');
   };
 
@@ -133,6 +144,67 @@ export const SelectorProductosForm: React.FC<Props> = ({
   const montoDescuento = (subtotal * porcentajeDescuento) / 100;
   const totalFinal = subtotal - montoDescuento;
 
+  // Agrupa y calcula el consumo total de insumos según los productos del carrito con sanitización defensiva
+  const insumosAfectados = React.useMemo(() => {
+    const mapaInsumos = new Map<string | number, {
+      id: string | number;
+      nombre: string;
+      unidad: string;
+      cantidadRequerida: number;
+      stockActual: number;
+    }>();
+
+    carrito.forEach((item) => {
+      const prod = item.producto as any;
+      if (!prod) return;
+
+      const listaInsumos = Array.isArray(prod.productoInsumos) ? prod.productoInsumos :
+                           Array.isArray(prod.insumos) ? prod.insumos :
+                           Array.isArray(prod.receta) ? prod.receta : [];
+
+      listaInsumos.forEach((pi: any) => {
+        if (!pi) return;
+
+        const insumoObj = pi.insumo || pi;
+        const id = insumoObj?.idInsumo ?? insumoObj?.id_insumo ?? insumoObj?.id ?? pi?.idInsumo;
+
+        if (id === undefined || id === null) return;
+
+        const rawNombre = insumoObj?.nombreInsumo ?? insumoObj?.nombre ?? insumoObj?.nombre_insumo;
+        const nombre = typeof rawNombre === 'object' && rawNombre !== null 
+          ? String(rawNombre.nombre || 'Insumo sin nombre') 
+          : String(rawNombre || 'Insumo sin nombre');
+
+        const rawUnidad = insumoObj?.unidadMedida ?? insumoObj?.unidad_medida ?? pi?.unidadMedida;
+        const unidad = typeof rawUnidad === 'object' && rawUnidad !== null 
+          ? String(rawUnidad.nombre || rawUnidad.simbolo || rawUnidad.abreviatura || '') 
+          : String(rawUnidad || '');
+
+        const stockNum = Number(insumoObj?.stockActual ?? insumoObj?.stock_actual ?? insumoObj?.stock ?? 0);
+        const stockActual = isNaN(stockNum) ? 0 : stockNum;
+
+        const cantConsumoNum = Number(pi?.cantidadConsumo ?? pi?.cantidadRequerida ?? pi?.cantidad_requerida ?? pi?.cantidad ?? 1);
+        const cantUnitaria = isNaN(cantConsumoNum) ? 1 : cantConsumoNum;
+
+        const totalRequerido = cantUnitaria * (Number(item.cantidad) || 1);
+
+        if (mapaInsumos.has(id)) {
+          mapaInsumos.get(id)!.cantidadRequerida += totalRequerido;
+        } else {
+          mapaInsumos.set(id, {
+            id,
+            nombre,
+            unidad,
+            cantidadRequerida: totalRequerido,
+            stockActual
+          });
+        }
+      });
+    });
+
+    return Array.from(mapaInsumos.values());
+  }, [carrito]);
+
   return (
     <div className="w-100 font-monospace">
       <div 
@@ -148,22 +220,59 @@ export const SelectorProductosForm: React.FC<Props> = ({
           Tabla para Calcular y Elegir Productos
         </h2>
         
-        {/* Selector de Producto y Cantidad */}
+        {/* Selector de Producto Buscable y Cantidad */}
         <div className="row g-3 mb-4 align-items-end">
-          <div className="col-md-7">
-            <label className="form-label small fw-bold" style={{ color: mutedText }}>Producto:</label>
-            <select 
-              className={`form-select ${isDark ? 'bg-dark text-white border-secondary' : ''}`}
-              value={productoId}
-              onChange={(e) => setProductoId(e.target.value)}
-            >
-              <option value="">Seleccione un producto...</option>
-              {productos.map(p => (
-                <option key={p.idProducto} value={p.idProducto}>
-                  {p.nombreProducto} - ${p.precioBase}
-                </option>
-              ))}
-            </select>
+          <div className="col-md-7 position-relative">
+            <label className="form-label small fw-bold" style={{ color: mutedText }}>Buscar Producto:</label>
+            <input 
+              type="text"
+              className={`form-control ${isDark ? 'bg-dark text-white border-secondary' : ''}`}
+              placeholder="Escriba el nombre del producto..."
+              value={busquedaProducto}
+              onChange={(e) => {
+                setBusquedaProducto(e.target.value);
+                setProductoId('');
+                setMostrarDropdown(true);
+              }}
+              onFocus={() => setMostrarDropdown(true)}
+              onBlur={() => setTimeout(() => setMostrarDropdown(false), 200)}
+            />
+
+            {/* Menú desplegable flotante para resultados de búsqueda */}
+            {mostrarDropdown && (
+              <div 
+                className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+                style={{ maxHeight: '220px', zIndex: 1050, border: `1px solid ${borderTheme}`, left: 0 }}
+              >
+                {productosFiltrados.length === 0 ? (
+                  <div className="p-3 small text-muted text-center">No se encontraron productos coincidentes</div>
+                ) : (
+                  productosFiltrados.map((p) => {
+                    const esSeleccionado = String(p.idProducto) === productoId;
+                    return (
+                      <div
+                        key={p.idProducto}
+                        className="p-2 border-bottom d-flex justify-content-between align-items-center"
+                        style={{ 
+                          cursor: 'pointer',
+                          backgroundColor: esSeleccionado 
+                            ? '#0284c7' 
+                            : (isDark ? '#27272a' : '#f8fafc')
+                        }}
+                        onMouseDown={() => {
+                          setProductoId(String(p.idProducto));
+                          setBusquedaProducto(`${p.nombreProducto} - $${p.precioBase}`);
+                          setMostrarDropdown(false);
+                        }}
+                      >
+                        <span className="fw-semibold small">{p.nombreProducto}</span>
+                        <span className="badge bg-secondary ms-2">${p.precioBase}</span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </div>
           
           <div className="col-md-2">
@@ -179,12 +288,13 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
           <div className="col-md-3">
             <button 
-  className="btn w-100 fw-bold" 
-  style={{ backgroundColor: '#0284c7', color: '#ffffff' }} 
-  onClick={handleAgregar}
->
-  Agregar
-</button>
+              className="btn w-100 fw-bold" 
+              style={{ backgroundColor: '#0284c7', color: '#ffffff' }} 
+              onClick={handleAgregar}
+              disabled={!productoId}
+            >
+              Agregar
+            </button>
           </div>
         </div>
 
@@ -305,35 +415,46 @@ export const SelectorProductosForm: React.FC<Props> = ({
         }}
       >
         <div className="d-flex align-items-center gap-2 mb-3">
-          <i className="bi bi-boxes text-info"></i>
-          <span className="small fw-bold">Impacto Estimado en el Stock de Insumos:</span>
+          <i className="bi bi-boxes text-info fs-5"></i>
+          <span className="small fw-bold">Impacto Estimado en el Stock de Insumos / Materia Prima:</span>
         </div>
 
         <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted" style={{ borderColor: borderTheme }}>
-          <div style={{ width: '40%' }}>Insumo Afectado:</div>
-          <div style={{ width: '20%' }}>Cantidad Requerida:</div>
+          <div style={{ width: '35%' }}>Insumo Afectado:</div>
+          <div style={{ width: '20%' }}>Cant. Requerida:</div>
           <div style={{ width: '20%' }}>Stock Actual:</div>
-          <div style={{ width: '20%' }}>Stock Resultante:</div>
+          <div style={{ width: '25%' }}>Stock Resultante:</div>
         </div>
 
-        <div style={{ maxHeight: '95px', overflowY: 'auto', overflowX: 'hidden' }}>
-          {carrito.length === 0 ? (
+        <div style={{ maxHeight: '140px', overflowY: 'auto', overflowX: 'hidden' }}>
+          {insumosAfectados.length === 0 ? (
             <div className="text-center mt-3 small" style={{ color: mutedText }}>
-              Agregue productos arriba para ver el impacto en el stock de insumos.
+              {carrito.length === 0 
+                ? "Agregue productos arriba para ver el impacto en el stock de insumos." 
+                : "Los productos seleccionados no tienen insumos o recetas asociadas."}
             </div>
           ) : (
-            carrito.map((item, index) => (
-              <div 
-                key={index} 
-                className="d-flex align-items-center mb-2 border-bottom pb-1 small" 
-                style={{ borderColor: isDark ? '#2d2d30' : '#e2e8f0' }}
-              >
-                <div style={{ width: '40%' }}>{item.producto.nombreProducto}</div>
-                <div style={{ width: '20%' }}>{item.cantidad} unidad(es)</div>
-                <div style={{ width: '20%' }}>${item.producto.precioBase.toFixed(2)}</div>
-                <div style={{ width: '20%' }} className="fw-bold">${item.subtotal.toFixed(2)}</div>
-              </div>
-            ))
+            insumosAfectados.map((item) => {
+              const stockResultante = item.stockActual - item.cantidadRequerida;
+              const esInsuficiente = stockResultante < 0;
+
+              return (
+                <div 
+                  key={String(item.id)} 
+                  className="d-flex align-items-center mb-2 border-bottom pb-1 small" 
+                  style={{ borderColor: isDark ? '#2d2d30' : '#e2e8f0' }}
+                >
+                  <div style={{ width: '35%' }} className="fw-semibold text-truncate">{item.nombre}</div>
+                  <div style={{ width: '20%' }} className="fw-bold">{item.cantidadRequerida} {item.unidad}</div>
+                  <div style={{ width: '20%' }}>{item.stockActual} {item.unidad}</div>
+                  <div style={{ width: '25%' }}>
+                    <span className={`badge ${esInsuficiente ? 'bg-danger text-white' : 'bg-success text-white'}`}>
+                      {stockResultante} {item.unidad} {esInsuficiente ? '(Insuficiente)' : ''}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
       </div>

@@ -15,14 +15,30 @@ export const useRegistrarPedido = () => {
   useEffect(() => {
     const cargarDatosIniciales = async () => {
       try {
-        const [resProductos, resClientes, resEmpleados, resMaquinas] = await Promise.all([
+        const [resProductos, resClientes, resEmpleados, resMaquinas, resProductoInsumo] = await Promise.all([
           fetch(`${API_BASE_URL}/productos`),
           fetch(`${API_BASE_URL}/clientes`),
           fetch(`${API_BASE_URL}/empleados`),
-          fetch(`${API_BASE_URL}/maquinas`)
+          fetch(`${API_BASE_URL}/maquinas`),
+          fetch(`${API_BASE_URL}/producto-insumo`)
         ]);
 
-        if (resProductos.ok) setProductos(await resProductos.json());
+        const rawProductos = resProductos.ok ? await resProductos.json() : [];
+        const rawRecetas = resProductoInsumo.ok ? await resProductoInsumo.json() : [];
+
+        // Mapea y vincula la lista de ProductoInsumo a la propiedad productoInsumos de cada Producto
+        const productosConRecetas = rawProductos.map((p: any) => {
+          const recetaAsociada = rawRecetas.filter((pi: any) => 
+            (pi.id && pi.id.idProducto === p.idProducto) || 
+            (pi.producto && pi.producto.idProducto === p.idProducto)
+          );
+          return {
+            ...p,
+            productoInsumos: recetaAsociada
+          };
+        });
+
+        setProductos(productosConRecetas);
         if (resClientes.ok) setClientes(await resClientes.json());
         if (resEmpleados.ok) setEmpleados(await resEmpleados.json());
         if (resMaquinas.ok) setMaquinas(await resMaquinas.json());

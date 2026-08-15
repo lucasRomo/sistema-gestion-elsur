@@ -2,19 +2,23 @@ package com.elsur.sistema_gestion.services.impl;
 
 import com.elsur.sistema_gestion.models.EstadoTurno;
 import com.elsur.sistema_gestion.models.MovimientoCaja;
+import com.elsur.sistema_gestion.models.Pedido;
+import com.elsur.sistema_gestion.models.Turno;
 import com.elsur.sistema_gestion.repositories.MovimientoCajaRepository;
+import com.elsur.sistema_gestion.repositories.PedidoRepository;
+import com.elsur.sistema_gestion.repositories.TurnoRepository; 
 import com.elsur.sistema_gestion.services.MovimientoCajaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.elsur.sistema_gestion.models.EstadoTurno;
-import com.elsur.sistema_gestion.repositories.TurnoRepository; 
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
-import java.util.HashMap;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class MovimientoCajaServiceImpl implements MovimientoCajaService {
@@ -25,17 +29,38 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
     @Autowired
     private TurnoRepository turnoRepository;
 
+    @Autowired
+    private PedidoRepository pedidoRepository;
+
+
     @Override
     public MovimientoCaja buscarPorId(Integer id) {
         return movimientoCajaRepository.findById(id).orElse(null);
     }
 
+
     @Override
+    @Transactional
     public MovimientoCaja guardar(MovimientoCaja movimientoCaja) {
+        // 1. Asignación de Turno
         if (movimientoCaja.getTurno() == null) {
             turnoRepository.findFirstByEstado(EstadoTurno.ABIERTO)
                 .ifPresent(movimientoCaja::setTurno);
         }
+
+        // 2. Solución al error de Pedido Transient
+        if (movimientoCaja.getPedido() != null) {
+            Integer idPedido = movimientoCaja.getPedido().getId_pedido(); // Ajustá al nombre exacto del getter del ID
+            if (idPedido != null) {
+                Pedido pedidoPersistido = pedidoRepository.findById(idPedido)
+                    .orElseThrow(() -> new RuntimeException("El pedido indicado no existe: " + idPedido));
+                movimientoCaja.setPedido(pedidoPersistido);
+            } else {
+                // Si vino un objeto pedido vacío desde el frontend, lo seteamos en null
+                movimientoCaja.setPedido(null);
+            }
+        }
+
         return movimientoCajaRepository.save(movimientoCaja);
     }
 
@@ -46,37 +71,34 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
         return movimientoCajaRepository.findByFechaBetween(inicioDia, finDia);
     }
 
-   @Override
+    @Override
     public List<MovimientoCaja> listarMovimientosPorPedido(Integer idPedido) {
-    return movimientoCajaRepository.buscarPorPedido(idPedido);
+        return movimientoCajaRepository.buscarPorPedido(idPedido);
     }
 
     @Override
     public Map<String, Double> calcularTotalesDelDia() {
-    List<MovimientoCaja> movimientos = listarMovimientosDelDia();
-    
-    // Usamos BigDecimal para los acumuladores para que coincidan con el tipo de dato del monto
-    java.math.BigDecimal totalIngresos = java.math.BigDecimal.ZERO;
-    java.math.BigDecimal totalEgresos = java.math.BigDecimal.ZERO;
+        List<MovimientoCaja> movimientos = listarMovimientosDelDia();
+        
+        BigDecimal totalIngresos = BigDecimal.ZERO;
+        BigDecimal totalEgresos = BigDecimal.ZERO;
 
-    for (MovimientoCaja m : movimientos) {
-        // Asegúrate de que m.getMonto() devuelva BigDecimal
-        if ("INGRESO".equals(m.getTipoMovimiento())) {
-            totalIngresos = totalIngresos.add(m.getMonto());
-        } else if ("EGRESO". equals(m.getTipoMovimiento())) {
-            totalEgresos = totalEgresos.add(m.getMonto());
+        for (MovimientoCaja m : movimientos) {
+            if ("INGRESO".equalsIgnoreCase(m.getTipoMovimiento())) {
+                totalIngresos = totalIngresos.add(m.getMonto());
+            } else if ("EGRESO".equalsIgnoreCase(m.getTipoMovimiento())) {
+                totalEgresos = totalEgresos.add(m.getMonto());
+            }
         }
+
+        Map<String, Double> totales = new HashMap<>();
+        totales.put("totalIngresos", totalIngresos.doubleValue());
+        totales.put("totalEgresos", totalEgresos.doubleValue());
+        totales.put("saldoActual", totalIngresos.subtract(totalEgresos).doubleValue());
+        
+        return totales;
     }
 
-    Map<String, Double> totales = new HashMap<>();
-    
-    // Convertimos a double solo al final para enviarlo al frontend como número
-    totales.put("totalIngresos", totalIngresos.doubleValue());
-    totales.put("totalEgresos", totalEgresos.doubleValue());
-    totales.put("saldoActual", totalIngresos.subtract(totalEgresos).doubleValue());
-    
-    return totales;
-}
     @Override
     public List<MovimientoCaja> obtenerTodos() {
         return movimientoCajaRepository.findAll();
@@ -84,53 +106,51 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
 
     @Override
     public Map<String, Double> obtenerDesgloseArqueo() {
-    List<MovimientoCaja> movimientos = listarMovimientosDelDia();
-    
-    java.math.BigDecimal efectivoIngresos = java.math.BigDecimal.ZERO;
-    java.math.BigDecimal efectivoEgresos = java.math.BigDecimal.ZERO;
-    java.math.BigDecimal transferenciaIngresos = java.math.BigDecimal.ZERO;
-    java.math.BigDecimal transferenciaEgresos = java.math.BigDecimal.ZERO;
-
-    for (MovimientoCaja m : movimientos) {
-        // Asumiendo que m.getMetodoPago() devuelve "EFECTIVO" o "TRANSFERENCIA"
-        // Si no está seteado, por defecto se asume EFECTIVO.
-        String metodo = (m.getMetodoPago() != null) ? m.getMetodoPago().toUpperCase() : "EFECTIVO";
+        List<MovimientoCaja> movimientos = listarMovimientosDelDia();
         
-        if ("INGRESO".equalsIgnoreCase(m.getTipoMovimiento())) {
-            if ("TRANSFERENCIA".equals(metodo)) {
-                transferenciaIngresos = transferenciaIngresos.add(m.getMonto());
-            } else {
-                efectivoIngresos = efectivoIngresos.add(m.getMonto());
-            }
-        } else if ("EGRESO".equalsIgnoreCase(m.getTipoMovimiento())) {
-            if ("TRANSFERENCIA".equals(metodo)) {
-                transferenciaEgresos = transferenciaEgresos.add(m.getMonto());
-            } else {
-                efectivoEgresos = efectivoEgresos.add(m.getMonto());
+        BigDecimal efectivoIngresos = BigDecimal.ZERO;
+        BigDecimal efectivoEgresos = BigDecimal.ZERO;
+        BigDecimal transferenciaIngresos = BigDecimal.ZERO;
+        BigDecimal transferenciaEgresos = BigDecimal.ZERO;
+
+        for (MovimientoCaja m : movimientos) {
+            String metodo = (m.getMetodoPago() != null) ? m.getMetodoPago().toUpperCase() : "EFECTIVO";
+            
+            if ("INGRESO".equalsIgnoreCase(m.getTipoMovimiento())) {
+                if ("TRANSFERENCIA".equals(metodo)) {
+                    transferenciaIngresos = transferenciaIngresos.add(m.getMonto());
+                } else {
+                    efectivoIngresos = efectivoIngresos.add(m.getMonto());
+                }
+            } else if ("EGRESO".equalsIgnoreCase(m.getTipoMovimiento())) {
+                if ("TRANSFERENCIA".equals(metodo)) {
+                    transferenciaEgresos = transferenciaEgresos.add(m.getMonto());
+                } else {
+                    efectivoEgresos = efectivoEgresos.add(m.getMonto());
+                }
             }
         }
-    }
 
-    Map<String, Double> desglose = new HashMap<>();
-    
-    double totalEfectivo = efectivoIngresos.subtract(efectivoEgresos).doubleValue();
-    double totalTransferencias = transferenciaIngresos.subtract(transferenciaEgresos).doubleValue();
+        Map<String, Double> desglose = new HashMap<>();
+        
+        double totalEfectivo = efectivoIngresos.subtract(efectivoEgresos).doubleValue();
+        double totalTransferencias = transferenciaIngresos.subtract(transferenciaEgresos).doubleValue();
 
-    desglose.put("efectivoIngresos", efectivoIngresos.doubleValue());
-    desglose.put("efectivoEgresos", efectivoEgresos.doubleValue());
-    desglose.put("totalEfectivo", totalEfectivo);
+        desglose.put("efectivoIngresos", efectivoIngresos.doubleValue());
+        desglose.put("efectivoEgresos", efectivoEgresos.doubleValue());
+        desglose.put("totalEfectivo", totalEfectivo);
 
-    desglose.put("transferenciaIngresos", transferenciaIngresos.doubleValue());
-    desglose.put("transferenciaEgresos", transferenciaEgresos.doubleValue());
-    desglose.put("totalTransferencias", totalTransferencias);
+        desglose.put("transferenciaIngresos", transferenciaIngresos.doubleValue());
+        desglose.put("transferenciaEgresos", transferenciaEgresos.doubleValue());
+        desglose.put("totalTransferencias", totalTransferencias);
 
-    desglose.put("saldoTotal", totalEfectivo + totalTransferencias);
+        desglose.put("saldoTotal", totalEfectivo + totalTransferencias);
 
-    return desglose;
+        return desglose;
     }
 
     @Override
     public List<MovimientoCaja> listarMovimientosPorTurno(Integer idTurno) {
-    return movimientoCajaRepository.findByTurno_IdTurno(idTurno);
+        return movimientoCajaRepository.findByTurno_IdTurno(idTurno);
     }
 }

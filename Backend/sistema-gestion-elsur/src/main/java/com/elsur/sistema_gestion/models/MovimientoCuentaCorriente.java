@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "MovimientoCuentaCorriente")
+@Table(name = "movimiento_cuenta_corriente")
 @Data
 public class MovimientoCuentaCorriente {
 
@@ -33,4 +33,10 @@ public class MovimientoCuentaCorriente {
 
     @Column(length = 255)
     private String descripcion;
+
+    @Column(name = "metodo_pago", length = 30)
+    private String metodoPago = "EFECTIVO";
+
+    @Column(name = "comprobante_imagen", columnDefinition = "TEXT")
+    private String comprobanteImagen;
 }

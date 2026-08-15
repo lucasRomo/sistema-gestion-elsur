@@ -7,6 +7,7 @@ import lombok.ToString;
 
 import org.hibernate.annotations.ColumnDefault;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -36,12 +37,15 @@ public class Pedido {
 
     @Column(nullable = false, updatable = false)
     @ColumnDefault("CURRENT_TIMESTAMP")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fecha_creacion = LocalDateTime.now();
 
     @Column(nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fecha_entrega_estimada;
 
     @Column
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fecha_finalizacion;
 
     @Column(length = 45, nullable = false)
@@ -87,4 +91,12 @@ public class Pedido {
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
     private List<HistorialEstadoPedido> historiales;
+
+    // Relación vinculada con los movimientos de caja (Tickets generados para el pedido)
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("pedido")
+    @JsonProperty("movimientos")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private List<MovimientoCaja> movimientos;
 }

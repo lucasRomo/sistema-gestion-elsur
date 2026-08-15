@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
+import { clienteService } from '../services/clienteService';
+import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 
 interface Props {
   cliente: any;
@@ -11,7 +13,6 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables adaptativas según el tema
   const modalBg = isDark ? '#1b1b1b' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const textColor = isDark ? 'text-white' : 'text-dark';
@@ -26,51 +27,63 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   const tableHeaderBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const tableRowBorder = isDark ? '#2d2d30' : '#e2e8f0';
 
-  
+  const idCliente = cliente.id_cliente || cliente.idCliente;
 
+  // Estado local para saldo deudor para actualización inmediata en UI
+  const [saldoDeudorLocal, setSaldoDeudorLocal] = useState<number>(Number(cliente.saldoDeudor || 0));
   const [limite, setLimite] = useState<number>(cliente.limiteCredito || 0);
   const [movimientos, setMovimientos] = useState<any[]>([]);
   const [montoPago, setMontoPago] = useState<number>(0);
   const [descripcionPago, setDescripcionPago] = useState<string>('Pago parcial / total');
-  
-  // Estado para controlar el modal personalizado de éxito/error
+  const [metodoPago, setMetodoPago] = useState<string>('EFECTIVO');
+  const [comprobanteImagen, setComprobanteImagen] = useState<string | null>(null);
+
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
+  const [ticketData, setTicketData] = useState<{ pedido: any; movimiento: any } | null>(null);
+  const [imagenModalUrl, setImagenModalUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSaldoDeudorLocal(Number(cliente.saldoDeudor || 0));
+    setLimite(Number(cliente.limiteCredito || 0));
+  }, [cliente]);
 
   const cargarMovimientos = async () => {
     try {
-      const res = await fetch(`http://localhost:8080/api/cuentas-corrientes/cliente/${cliente.id_cliente}/movimientos`);
-      if (res.ok) {
-        const data = await res.json();
-        setMovimientos(data);
-      }
+      const data = await clienteService.getMovimientos(idCliente);
+      setMovimientos(data);
     } catch (e) {
-      console.error(e);
+      console.error("Error al cargar movimientos:", e);
     }
   };
 
   useEffect(() => {
-    cargarMovimientos();
-  }, [cliente.id_cliente]);
+    if (idCliente) {
+      cargarMovimientos();
+    }
+  }, [idCliente]);
+
+  const handleImagenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setComprobanteImagen(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleActualizarLimite = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch(`http://localhost:8080/api/cuentas-corrientes/cliente/${cliente.id_cliente}/limite`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ limiteCredito: Number(limite) })
+      await clienteService.actualizarLimiteCredito(idCliente, Number(limite));
+      setSuceso({
+        show: true,
+        titulo: "¡Éxito!",
+        mensaje: "Límite de crédito actualizado correctamente.",
+        tipo: "exito"
       });
-      if (res.ok) {
-        setSuceso({
-          show: true,
-          titulo: "¡Éxito!",
-          mensaje: "Límite de crédito actualizado correctamente.",
-          tipo: "exito"
-        });
-        onActualizar();
-      } else {
-        throw new Error("No se pudo actualizar el límite");
-      }
+      onActualizar();
     } catch (e) {
       setSuceso({
         show: true,
@@ -92,33 +105,93 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
       });
       return;
     }
-    try {
-      const res = await fetch(`http://localhost:8080/api/cuentas-corrientes/cliente/${cliente.id_cliente}/registrar-pago`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ monto: montoPago, descripcion: descripcionPago })
+
+    if (metodoPago === 'TRANSFERENCIA' && !comprobanteImagen) {
+      setSuceso({
+        show: true,
+        titulo: "Comprobante Requerido",
+        mensaje: "Por favor adjunte la imagen del comprobante de transferencia.",
+        tipo: "error"
       });
-      if (res.ok) {
-        setMontoPago(0);
-        setSuceso({
-          show: true,
-          titulo: "¡Éxito!",
-          mensaje: "Pago registrado correctamente.",
-          tipo: "exito"
-        });
-        cargarMovimientos();
-        onActualizar();
-      } else {
-        throw new Error("Error al registrar pago");
-      }
+      return;
+    }
+
+    try {
+      const resPago = await clienteService.registrarPago(
+        idCliente,
+        montoPago,
+        descripcionPago,
+        metodoPago,
+        comprobanteImagen || undefined
+      );
+
+      const idMovGenerado = resPago?.idMovimiento || resPago?.id_movimiento || Date.now();
+      const fechaMov = resPago?.fecha || new Date().toISOString();
+
+      // Actualizar saldo deudor local al instante
+      setSaldoDeudorLocal(prev => prev - montoPago);
+
+      setMontoPago(0);
+      setDescripcionPago('Pago parcial / total');
+      setMetodoPago('EFECTIVO');
+      setComprobanteImagen(null);
+
+      setSuceso({
+        show: true,
+        titulo: "¡Éxito!",
+        mensaje: "Pago e ingreso a caja registrados correctamente.",
+        tipo: "exito"
+      });
+
+      cargarMovimientos();
+      onActualizar();
+
+      setTicketData({
+        pedido: {
+          id_pedido: '-',
+          cliente: cliente,
+          monto_total: montoPago,
+          observaciones: descripcionPago
+        },
+        movimiento: {
+          id_movimiento: idMovGenerado,
+          fecha: fechaMov,
+          monto: montoPago,
+          metodoPago: metodoPago,
+          tipoMovimiento: 'INGRESO',
+          categoria: 'COBRO_CTA_CTE',
+          descripcion: `Cobro Cta. Cte. - ${cliente.persona?.nombre || ''} ${cliente.persona?.apellido || ''}`
+        }
+      });
+
     } catch (e) {
       setSuceso({
         show: true,
         titulo: "Error",
-        mensaje: "Error al registrar pago",
+        mensaje: "Error al registrar el pago.",
         tipo: "error"
       });
     }
+  };
+
+  const abrirTicketHistorial = (m: any) => {
+    setTicketData({
+      pedido: {
+        id_pedido: '-',
+        cliente: cliente,
+        monto_total: m.monto,
+        observaciones: m.descripcion
+      },
+      movimiento: {
+        id_movimiento: m.idMovimiento || m.id_movimiento,
+        fecha: m.fecha,
+        monto: m.monto,
+        metodoPago: m.metodoPago || 'EFECTIVO',
+        tipoMovimiento: m.tipo === 'PAGO' ? 'INGRESO' : 'EGRESO',
+        categoria: 'COBRO_CTA_CTE',
+        descripcion: m.descripcion
+      }
+    });
   };
 
   return (
@@ -134,16 +207,15 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
             </div>
             <div className="modal-body p-4">
               
-              {/* Fila de Resumen y Asignación de Límite */}
               <div className="row g-3 mb-4">
                 <div className="col-md-4">
                   <div className="p-3 rounded border" style={{ backgroundColor: cardBg, borderColor: inputBorder }}>
                     <small className="font-monospace fw-semibold" style={{ color: mutedText }}>Saldo Deudor Actual</small>
                     {(() => {
-                      const saldo = Math.abs(Number(cliente.saldoDeudor || 0));
-                      const limiteVal = Number(cliente.limiteCredito || 0);
+                      const saldo = Math.abs(saldoDeudorLocal);
+                      const limiteVal = Number(limite || 0);
                       let colorClase = 'text-success';
-                      if (saldo > 0) {
+                      if (saldoDeudorLocal > 0) {
                         if (limiteVal > 0) {
                           const porcentaje = (saldo / limiteVal) * 100;
                           if (porcentaje >= 100) {
@@ -159,7 +231,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                       }
                       return (
                         <h3 className={`fw-bold mb-0 ${colorClase}`}>
-                          ${Number(cliente.saldoDeudor || 0).toFixed(2)}
+                          ${saldoDeudorLocal.toFixed(2)}
                         </h3>
                       );
                     })()}
@@ -180,17 +252,17 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                       />
                     </div>
                     <button type="submit" className="btn fw-bold" style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}>
-  Actualizar Límite
-</button>
+                      Actualizar Límite
+                    </button>
                   </form>
                 </div>
               </div>
 
-              {/* Fila de Registro de Liquidación / Pago */}
               <form onSubmit={handleRegistrarPago} className="p-3 mb-4 rounded border" style={{ backgroundColor: cardBg, borderColor: inputBorder }}>
-                <h6 className="font-monospace text-warning mb-2 fw-bold">Registrar Cobro / Liquidación de Saldo</h6>
+                <h6 className="font-monospace text-warning mb-3 fw-bold">Registrar Cobro / Liquidación de Saldo</h6>
                 <div className="row g-2">
-                  <div className="col-md-4">
+                  <div className="col-md-3">
+                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Monto ($)</label>
                     <input 
                       type="number" 
                       step="0.01" 
@@ -202,69 +274,146 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                       required 
                     />
                   </div>
-                  <div className="col-md-5">
+
+                  <div className="col-md-3">
+                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Medio de Pago</label>
+                    <select
+                      className={`form-select ${textColor}`}
+                      style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+                      value={metodoPago}
+                      onChange={e => setMetodoPago(e.target.value)}
+                    >
+                      <option value="EFECTIVO">Efectivo</option>
+                      <option value="TRANSFERENCIA">Transferencia</option>
+                      <option value="DEBITO">Débito</option>
+                      <option value="CREDITO">Crédito</option>
+                    </select>
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Observaciones / Comprobante</label>
                     <input 
                       type="text" 
-                      placeholder="Observaciones / Nro de Comprobante" 
+                      placeholder="Ej: Pago parcial / Transferencia CBU..." 
                       className={`form-control ${textColor}`} 
                       style={{ backgroundColor: inputBg, borderColor: inputBorder }}
                       value={descripcionPago} 
                       onChange={e => setDescripcionPago(e.target.value)} 
                     />
                   </div>
-                  <div className="col-md-3">
-                    <button type="submit" className="btn btn-success w-100 fw-bold">Imputar Pago</button>
+
+                  {metodoPago === 'TRANSFERENCIA' && (
+                    <div className="col-12 mt-2">
+                      <label className="form-label small fw-semibold text-info">
+                        <i className="bi bi-paperclip me-1"></i> Adjuntar Comprobante de Transferencia (Imagen)
+                      </label>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        className={`form-control ${textColor}`}
+                        style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+                        onChange={handleImagenChange}
+                        required
+                      />
+                      {comprobanteImagen && (
+                        <div className="mt-2 d-flex align-items-center gap-2">
+                          <small className="text-success fw-bold"><i className="bi bi-check-circle me-1"></i>Imagen cargada</small>
+                          <button type="button" className="btn btn-sm btn-outline-info" onClick={() => setImagenModalUrl(comprobanteImagen)}>
+                            Ver vista previa
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="col-12 mt-3 d-flex justify-content-end">
+                    <button type="submit" className="btn btn-success px-4 fw-bold">Imputar Pago</button>
                   </div>
                 </div>
               </form>
 
-              {/* Tabla de Histórico de Movimientos */}
               <h6 className="font-monospace mb-2 fw-bold">Histórico de Compras y Pagos</h6>
               <div 
-              className="table-responsive rounded shadow-sm" 
-              style={{ 
-                maxHeight: '45vh', 
-                overflowY: 'auto',
-                backgroundColor: tableContainerBg,
-                border: `1px solid ${tableContainerBorder}`,
-                transition: 'all 0.2s ease-in-out'
-              }}
-            >
-              <table 
-                className="align-middle m-0" 
+                className="table-responsive rounded shadow-sm" 
                 style={{ 
-                  width: '100%',
-                  borderCollapse: 'separate', 
-                  borderSpacing: 0,
-                  color: tableText 
+                  maxHeight: '45vh', 
+                  overflowY: 'auto',
+                  backgroundColor: tableContainerBg,
+                  border: `1px solid ${tableContainerBorder}`,
+                  transition: 'all 0.2s ease-in-out'
                 }}
               >
+                <table 
+                  className="align-middle m-0" 
+                  style={{ 
+                    width: '100%',
+                    borderCollapse: 'separate', 
+                    borderSpacing: 0,
+                    color: tableText 
+                  }}
+                >
                   <thead>
                     <tr style={{ borderBottom: `2px solid ${tableHeaderBorder}` }}>
                       <th style={{ padding: '10px' }}>Fecha</th>
                       <th style={{ padding: '10px' }}>Tipo</th>
+                      <th style={{ padding: '10px' }}>Medio Pago</th>
                       <th style={{ padding: '10px' }}>Descripción</th>
                       <th style={{ padding: '10px' }} className="text-end">Monto</th>
+                      <th style={{ padding: '10px' }} className="text-center">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {movimientos.map((m: any) => (
-                      <tr key={m.idMovimiento} style={{ borderBottom: `1px solid ${tableRowBorder}` }}>
-                        <td style={{ padding: '10px' }}>{new Date(m.fecha).toLocaleString()}</td>
-                        <td style={{ padding: '10px' }}>
-                          <span className={`badge ${m.tipo === 'PAGO' ? 'bg-success' : 'bg-danger'}`}>
-                            {m.tipo}
-                          </span>
-                        </td>
-                        <td style={{ padding: '10px' }}>{m.descripcion}</td>
-                        <td style={{ padding: '10px' }} className={`text-end fw-bold ${m.tipo === 'PAGO' ? 'text-success' : 'text-danger'}`}>
-                          {m.tipo === 'PAGO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
+                    {movimientos.map((m: any) => {
+                      const idMov = m.idMovimiento || m.id_movimiento;
+                      const tieneImagen = !!(m.comprobanteImagen || m.comprobante);
+
+                      return (
+                        <tr key={idMov || Math.random()} style={{ borderBottom: `1px solid ${tableRowBorder}` }}>
+                          <td style={{ padding: '10px' }}>{new Date(m.fecha).toLocaleString()}</td>
+                          <td style={{ padding: '10px' }}>
+                            <span className={`badge ${m.tipo === 'PAGO' ? 'bg-success' : 'bg-danger'}`}>
+                              {m.tipo}
+                            </span>
+                          </td>
+                          <td style={{ padding: '10px' }}>
+                            <span className="badge bg-secondary font-monospace">
+                              {m.metodoPago || 'EFECTIVO'}
+                            </span>
+                          </td>
+                          <td style={{ padding: '10px' }}>{m.descripcion}</td>
+                          <td style={{ padding: '10px' }} className={`text-end fw-bold ${m.tipo === 'PAGO' ? 'text-success' : 'text-danger'}`}>
+                            {m.tipo === 'PAGO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
+                          </td>
+                          <td style={{ padding: '10px' }} className="text-center">
+                            <div className="d-flex justify-content-center gap-2">
+                              {tieneImagen && (
+                                <button 
+                                  type="button"
+                                  className="btn btn-sm btn-outline-info"
+                                  title="Ver Comprobante de Transferencia"
+                                  onClick={() => setImagenModalUrl(m.comprobanteImagen || m.comprobante)}
+                                >
+                                  <i className="bi bi-file-image"></i>
+                                </button>
+                              )}
+                              {m.tipo === 'PAGO' && (
+                                <button 
+                                  type="button"
+                                  className="btn btn-sm btn-outline-success"
+                                  title="Ver / Imprimir Ticket"
+                                  onClick={() => abrirTicketHistorial(m)}
+                                >
+                                  <i className="bi bi-receipt"></i>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {movimientos.length === 0 && (
                       <tr>
-                        <td colSpan={4} className={`text-center py-4 ${textColor}`}>No existen movimientos registrados en la cuenta corriente.</td>
+                        <td colSpan={6} className={`text-center py-4 ${textColor}`}>No existen movimientos registrados en la cuenta corriente.</td>
                       </tr>
                     )}
                   </tbody>
@@ -281,7 +430,33 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
         </div>
       </div>
 
-      {/* Modal Suceso con zIndex superior para superponerse correctamente */}
+      {ticketData && (
+        <VistaTicketPagoModal
+          pedido={ticketData.pedido}
+          movimiento={ticketData.movimiento}
+          onClose={() => setTicketData(null)}
+        />
+      )}
+
+      {imagenModalUrl && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
+          <div className="modal-dialog modal-lg modal-dialog-centered">
+            <div className={`modal-content p-3 ${textColor}`} style={{ backgroundColor: modalBg }}>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h6 className="fw-bold m-0"><i className="bi bi-image me-2"></i>Comprobante de Transferencia</h6>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setImagenModalUrl(null)}></button>
+              </div>
+              <div className="text-center p-2">
+                <img src={imagenModalUrl} alt="Comprobante" className="img-fluid rounded shadow" style={{ maxHeight: '70vh', objectFit: 'contain' }} />
+              </div>
+              <div className="text-end mt-2">
+                <button className="btn btn-secondary btn-sm" onClick={() => setImagenModalUrl(null)}>Cerrar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {suceso.show && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">

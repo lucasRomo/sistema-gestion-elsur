@@ -34,7 +34,8 @@ export const useVentaRapida = () => {
     return guardado ? JSON.parse(guardado) : null;
   });
 
-  const [verTicketPedido, setVerTicketPedido] = useState<any | null>(null);
+  // Soporta null u objeto con { pedido: any, tipo: 'cliente' | 'pago' }
+  const [verTicketPedido, setVerTicketPedido] = useState<{ pedido: any; tipo: 'cliente' | 'pago' } | null>(null);
 
   // --- PETICIONES A LA API (FETCHING) ---
   const fetchProductos = async () => {
@@ -199,9 +200,9 @@ export const useVentaRapida = () => {
     const payloadParaBackend = {
       pedido: {
         cliente: { id_cliente: 1 },
-        fecha_finalizacion: fechaActualIso,
+        fecha_entrega_estimada: fechaActualIso,
         monto_total: totalFinal,
-        monto_pago_adelantado: 0,
+        monto_pago_adelantado: totalFinal, // Sincronizado con la rama Lucas
         es_cuenta_corriente: false,
         es_presupuesto: false,
         observaciones: `Venta Rápida ${porcentajeDescuento > 0 ? `(Categoría: ${categoriaActual?.nombreCategoria} - ${porcentajeDescuento}% Desc.)` : ''}`,
@@ -272,8 +273,16 @@ export const useVentaRapida = () => {
       // 4. Refrescar catálogo para actualizar el stock descontado
       await fetchProductos();
 
-      setUltimoPedidoRealizado(pedidoGuardado);
-      localStorage.setItem('ultimo_pedido_venta_rapida', JSON.stringify(pedidoGuardado));
+      // Construcción del objeto enriquecido para tickets inmediatos (Rama Lucas)
+      const pedidoParaTicket = {
+        ...pedidoGuardado,
+        monto_pago_adelantado: totalFinal,
+        monto_total: totalFinal,
+        estado: 'FINALIZADO'
+      };
+
+      setUltimoPedidoRealizado(pedidoParaTicket);
+      localStorage.setItem('ultimo_pedido_venta_rapida', JSON.stringify(pedidoParaTicket));
 
       vaciarCarrito();
       setSuceso({

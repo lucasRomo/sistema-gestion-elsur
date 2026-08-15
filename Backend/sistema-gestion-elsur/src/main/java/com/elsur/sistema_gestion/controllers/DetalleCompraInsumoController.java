@@ -20,6 +20,7 @@ public class DetalleCompraInsumoController {
         return detalleCompraInsumoService.findAll();
     }
 
+
     @PostMapping
     public DetalleCompraInsumo create(@RequestBody DetalleCompraInsumo detalleCompraInsumo) {
         return detalleCompraInsumoService.save(detalleCompraInsumo);

@@ -29,7 +29,7 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
       style={{ 
         backgroundColor: tableWrapperBg, 
         borderColor: theadBorder,
-        height: '67vh'
+        height: '66vh'
       }}
     >
       <div 

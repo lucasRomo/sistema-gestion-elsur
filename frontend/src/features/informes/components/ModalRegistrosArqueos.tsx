@@ -1,12 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { cajaService, type MovimientoCaja, type Turno } from '../../../features/caja/services/cajaService';
+import { renderBadgeCategoria } from '../../../features/caja/components/renderBadgeCategoria';
+import { useTheme } from '../../../Context/ThemeContext';
 
 interface ModalRegistrosArqueoProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const CATEGORIAS_FILTRO = [
+  { value: 'TODAS', label: 'Todas las categorías' },
+  { value: 'INGRESO', label: 'Ingreso' },
+  { value: 'EGRESO', label: 'Egreso' },
+  { value: 'MANTENIMIENTO', label: 'Mantenimiento' },
+  { value: 'INSUMOS', label: 'Insumos' },
+  { value: 'CTA_CTE', label: 'Cuenta Corriente' },
+  { value: 'AJUSTE', label: 'Ajuste' },
+];
+
 export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOpen, onClose }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [vista, setVista] = useState<'lista' | 'detalle'>('lista');
 
   const [turnos, setTurnos] = useState<Turno[]>([]);
@@ -18,6 +33,11 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
   const [turnoSeleccionado, setTurnoSeleccionado] = useState<Turno | null>(null);
   const [movimientosTurno, setMovimientosTurno] = useState<MovimientoCaja[]>([]);
   const [cargandoMovimientos, setCargandoMovimientos] = useState(false);
+
+  // Filtros para la tabla de movimientos dentro del detalle de turno
+  const [filtroCategoriaMov, setFiltroCategoriaMov] = useState('TODAS');
+  const [filtroHoraDesde, setFiltroHoraDesde] = useState('');
+  const [filtroHoraHasta, setFiltroHoraHasta] = useState('');
 
   useEffect(() => {
     if (!isOpen) return;
@@ -44,6 +64,9 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
   const handleVerDetalle = async (turno: Turno) => {
     setTurnoSeleccionado(turno);
     setVista('detalle');
+    setFiltroCategoriaMov('TODAS');
+    setFiltroHoraDesde('');
+    setFiltroHoraHasta('');
     setCargandoMovimientos(true);
     try {
       const data = await cajaService.obtenerMovimientosPorTurno(turno.idTurno);
@@ -57,12 +80,18 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
     setVista('lista');
     setTurnoSeleccionado(null);
     setMovimientosTurno([]);
+    setFiltroCategoriaMov('TODAS');
+    setFiltroHoraDesde('');
+    setFiltroHoraHasta('');
   };
 
   const handleClose = () => {
     setVista('lista');
     setTurnoSeleccionado(null);
     setMovimientosTurno([]);
+    setFiltroCategoriaMov('TODAS');
+    setFiltroHoraDesde('');
+    setFiltroHoraHasta('');
     onClose();
   };
 
@@ -98,6 +127,41 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
     const coincideFecha = !filtroFecha || fechaLocalISO(turno.fechaApertura) === filtroFecha;
     const coincideEstado = filtroEstado === 'TODOS' || turno.estado === filtroEstado;
     return coincideFecha && coincideEstado;
+  });
+
+  // Determina la "categoría efectiva" de un movimiento para poder filtrarlo,
+  // usando la misma lógica de agrupamiento que renderBadgeCategoria (para que
+  // el filtro sea 100% consistente con lo que se ve pintado en el badge).
+  const obtenerCategoriaEfectiva = (m: MovimientoCaja): string => {
+    if (m.categoria === 'AJUSTE') return 'AJUSTE';
+    if (m.categoria === 'EGRESO_MANTENIMIENTO' || m.categoria === 'MANTENIMIENTO') return 'MANTENIMIENTO';
+    if (m.categoria === 'INSUMOS' || m.categoria === 'EGRESO_INSUMOS') return 'INSUMOS';
+    if (
+      m.categoria === 'CTA_CTE' ||
+      m.categoria === 'CUENTA_CORRIENTE' ||
+      m.categoria === 'COBRO_CTA_CTE' ||
+      m.descripcion?.toLowerCase().includes('cta. cte')
+    ) return 'CTA_CTE';
+    return m.tipoMovimiento === 'INGRESO' ? 'INGRESO' : 'EGRESO';
+  };
+
+  // Extrae la hora local del movimiento en formato HH:mm para poder compararla
+  // contra el rango horario elegido en el filtro.
+  const horaLocalHHmm = (fecha?: string | null) => {
+    if (!fecha) return '';
+    const d = new Date(fecha);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const movimientosFiltrados = movimientosTurno.filter((m) => {
+    const coincideCategoria = filtroCategoriaMov === 'TODAS' || obtenerCategoriaEfectiva(m) === filtroCategoriaMov;
+
+    const horaMov = horaLocalHHmm(m.fecha);
+    const coincideDesde = !filtroHoraDesde || horaMov >= filtroHoraDesde;
+    const coincideHasta = !filtroHoraHasta || horaMov <= filtroHoraHasta;
+
+    return coincideCategoria && coincideDesde && coincideHasta;
   });
 
   const formatDescripcionMovimiento = (m: MovimientoCaja) => {
@@ -264,7 +328,62 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
                 )}
 
                 {/* Movimientos del turno */}
-                <h6 className="fw-bold text-body-secondary mb-2">Movimientos registrados en el turno</h6>
+                <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                  <h6 className="fw-bold text-body-secondary m-0">Movimientos registrados en el turno</h6>
+                  {(filtroCategoriaMov !== 'TODAS' || filtroHoraDesde || filtroHoraHasta) && (
+                    <span className="small text-body-secondary">
+                      Mostrando {movimientosFiltrados.length} de {movimientosTurno.length} movimientos
+                    </span>
+                  )}
+                </div>
+
+                {/* FILTROS DE MOVIMIENTOS: Categoría + Rango Horario */}
+                <div className="p-3 rounded-3 mb-3 border border-secondary border-opacity-25 im-surface">
+                  <div className="row g-3 align-items-end">
+                    <div className="col-12 col-md-4">
+                      <label className="form-label small text-body-secondary mb-1">Filtro por Categoría:</label>
+                      <select
+                        className="form-select"
+                        value={filtroCategoriaMov}
+                        onChange={(e) => setFiltroCategoriaMov(e.target.value)}
+                      >
+                        {CATEGORIAS_FILTRO.map((c) => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-6 col-md-3">
+                      <label className="form-label small text-body-secondary mb-1">Hora Desde:</label>
+                      <input
+                        type="time"
+                        className="form-control"
+                        value={filtroHoraDesde}
+                        onChange={(e) => setFiltroHoraDesde(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-6 col-md-3">
+                      <label className="form-label small text-body-secondary mb-1">Hora Hasta:</label>
+                      <input
+                        type="time"
+                        className="form-control"
+                        value={filtroHoraHasta}
+                        onChange={(e) => setFiltroHoraHasta(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-12 col-md-2 d-grid">
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm"
+                        title="Limpiar filtros"
+                        onClick={() => { setFiltroCategoriaMov('TODAS'); setFiltroHoraDesde(''); setFiltroHoraHasta(''); }}
+                        disabled={filtroCategoriaMov === 'TODAS' && !filtroHoraDesde && !filtroHoraHasta}
+                      >
+                        <i className="bi bi-x-lg"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {cargandoMovimientos ? (
                   <div className="text-center py-5">
                     <div className="spinner-border text-info mb-3"></div>
@@ -283,20 +402,22 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
                           </tr>
                         </thead>
                         <tbody>
-                          {movimientosTurno.length === 0 ? (
-                            <tr><td colSpan={5} className="py-4 text-body-secondary">No hay movimientos registrados en este turno</td></tr>
+                          {movimientosFiltrados.length === 0 ? (
+                            <tr>
+                              <td colSpan={5} className="py-4 text-body-secondary">
+                                {movimientosTurno.length === 0
+                                  ? 'No hay movimientos registrados en este turno'
+                                  : 'No hay movimientos que coincidan con el filtro'}
+                              </td>
+                            </tr>
                           ) : (
-                            movimientosTurno.map((m) => (
+                            movimientosFiltrados.map((m) => (
                               <tr key={m.id_movimiento || m.idMovimiento} className="border-bottom border-secondary border-opacity-10" style={{ fontSize: '0.95rem' }}>
                                 <td className="text-body">{formatFecha(m.fecha)}</td>
                                 <td className="fw-bold" style={{ color: m.tipoMovimiento === 'INGRESO' ? '#20c997' : '#e22e2e' }}>
                                   {m.tipoMovimiento === 'INGRESO' ? '+' : '-'}{formatMonto(m.monto)}
                                 </td>
-                                <td>
-                                  <span className={`badge ${m.tipoMovimiento === 'INGRESO' ? 'bg-success' : 'bg-danger'}`}>
-                                    {m.tipoMovimiento === 'INGRESO' ? 'Ganancia' : 'Egreso'}
-                                  </span>
-                                </td>
+                                <td>{renderBadgeCategoria(m, isDark)}</td>
                                 <td>
                                   <div
                                     className="text-start text-body"

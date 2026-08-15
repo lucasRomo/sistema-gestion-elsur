@@ -8,6 +8,7 @@ import { ProveedorModal } from '../components/ProveedorModal';
 import { ProveedorUbicacionModal } from '../components/ProveedorUbicacionModal';
 import { useProveedores } from '../hooks/useProveedores';
 import type { Proveedor } from '../types/Proveedor';
+import { exportarProveedoresExcel, exportarProveedoresPDF } from '../utils/exportProveedoresUtils';
 
 // Componentes globales compartidos
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
@@ -71,6 +72,7 @@ export const Proveedores: React.FC = () => {
         }}
       />
 
+      {/* Barra Inferior: Volver + Exportar + Nuevo Proveedor */}
       <div className="d-flex justify-content-between align-items-center mt-4">
         <button 
           onClick={() => navigate('/dashboard')} 
@@ -79,10 +81,31 @@ export const Proveedores: React.FC = () => {
         >
           Volver
         </button>
+
         <div className="d-flex gap-2">
           <button 
+            className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
+            onClick={() => exportarProveedoresExcel(proveedoresFiltrados)}
+            disabled={proveedoresFiltrados.length === 0}
+            title="Exportar listado actual a Excel"
+          >
+            <i className="bi bi-file-earmark-excel-fill fs-5"></i>
+            Exportar Excel
+          </button>
+
+          <button 
+            className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2"
+            onClick={() => exportarProveedoresPDF(proveedoresFiltrados)}
+            disabled={proveedoresFiltrados.length === 0}
+            title="Exportar listado actual a PDF"
+          >
+            <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
+            Exportar PDF
+          </button>
+
+          <button 
             onClick={() => { setIsEditing(false); setProveedorSeleccionado(null); setShowModal(true); }} 
-            className="btn btn-success fw-semibold px-4 py-2"
+            className="btn btn-success fw-semibold px-4 py-2 ms-2"
             style={{ color: '#ffffff' }}
           >
             Registrar Nuevo Proveedor

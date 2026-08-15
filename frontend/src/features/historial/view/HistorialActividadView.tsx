@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useHistorialActividad } from '../hooks/useHistorialActividad';
 import type { RegistroActividad } from '../types/RegistroActividad';
+import {
+  exportarHistorialActividadExcel,
+  exportarHistorialActividadPDF,
+} from '../utils/exportHistorialActividadUtils';
 
 export const HistorialActividadView: React.FC = () => {
   const { theme } = useTheme();
@@ -110,29 +114,29 @@ export const HistorialActividadView: React.FC = () => {
           </div>
         </div>
 
-        <div className="col-md-5">
-          <label className="form-label small fw-semibold mb-1" style={{ color: labelColor }}>
-            Empleado / Usuario:
-          </label>
-          <select
-            className="form-select shadow-none"
-            style={{ 
-              backgroundColor: inputBg, 
-              borderColor: inputBorder, 
-              color: inputText 
-            }}
-            value={filtroEmpleado}
-            onChange={(e) => setFiltroEmpleado(e.target.value)}
-          >
-            <option value="Sin Filtro">Todos los usuarios</option>
-            {empleadosUnicos.map((emp) => (
-              <option key={emp} value={emp}>
-                {emp}
-              </option>
-            ))}
-          </select>
+          <div className="col-md-5">
+            <label className="form-label small fw-semibold mb-1" style={{ color: labelColor }}>
+              Empleado / Usuario:
+            </label>
+            <select
+              className="form-select shadow-none"
+              style={{ 
+                backgroundColor: inputBg, 
+                borderColor: inputBorder, 
+                color: inputText 
+              }}
+              value={filtroEmpleado}
+              onChange={(e) => setFiltroEmpleado(e.target.value)}
+            >
+              <option value="Sin Filtro">Todos los usuarios</option>
+              {empleadosUnicos.map((emp) => (
+                <option key={emp} value={emp}>
+                  {emp}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
 
       {/* Tabla con Scroll Interno y Tamaño Fijo */}
       <div 
@@ -140,7 +144,7 @@ export const HistorialActividadView: React.FC = () => {
         style={{ 
           backgroundColor: mainCardBg, 
           borderColor: cardBorder,
-          height: '72vh',
+          height: '65vh',
           overflowY: 'auto',
           display: 'block'
         }}
@@ -201,15 +205,37 @@ export const HistorialActividadView: React.FC = () => {
         </table>
       </div>
 
-      {/* Botón Inferior Volver */}
-      <div className="d-flex justify-content-start mt-3 mb-4">
+      {/* Barra Inferior: Botón Volver y Exportaciones */}
+      <div className="d-flex justify-content-between align-items-center mt-3 mb-4">
         <button
           className="btn btn-secondary fw-bold px-4 py-2 shadow-sm font-monospace"
           style={{ color: '#ffffff' }}
           onClick={() => navigate('/dashboard')}
         >
-          <i className="bi"></i>Volver
+          Volver
         </button>
+
+        <div className="d-flex gap-2">
+          <button 
+            className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
+            onClick={() => exportarHistorialActividadExcel(actividadesFiltradas)}
+            disabled={actividadesFiltradas.length === 0 || cargando}
+            title="Exportar historial actual a Excel"
+          >
+            <i className="bi bi-file-earmark-excel-fill fs-5"></i>
+            Exportar Excel
+          </button>
+
+          <button 
+            className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2"
+            onClick={() => exportarHistorialActividadPDF(actividadesFiltradas)}
+            disabled={actividadesFiltradas.length === 0 || cargando}
+            title="Exportar historial actual a PDF"
+          >
+            <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
+            Exportar PDF
+          </button>
+        </div>
       </div>
 
     </div>

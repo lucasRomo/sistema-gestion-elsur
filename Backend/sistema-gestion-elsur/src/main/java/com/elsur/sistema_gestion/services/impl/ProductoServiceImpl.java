@@ -143,14 +143,20 @@ public class ProductoServiceImpl implements ProductoService {
         if (aModificar.isEmpty()) return;
 
         Usuario usuarioActual = obtenerUsuarioOperador(idUsuario);
-        BigDecimal factor = new BigDecimal(porcentaje / 100.0).add(BigDecimal.ONE);
+        BigDecimal factor = BigDecimal.valueOf(1.0 + (porcentaje / 100.0));
 
         for (Producto p : aModificar) {
             if (p.getPrecioBase() != null) {
                 BigDecimal precioAnterior = p.getPrecioBase();
                 BigDecimal nuevoPrecio = precioAnterior.multiply(factor).setScale(2, RoundingMode.HALF_UP);
+
+                // Evitar precios negativos en caso de un porcentaje de descuento excesivo
+                if (nuevoPrecio.compareTo(BigDecimal.ZERO) < 0) {
+                    nuevoPrecio = BigDecimal.ZERO;
+                }
+
                 p.setPrecioBase(nuevoPrecio);
-                compararYRegistrar(usuarioActual, "Producto", "precioBase (Aumento Masivo)", p.getIdProducto(), precioAnterior, nuevoPrecio);
+                compararYRegistrar(usuarioActual, "Producto", "precioBase (Modificación Masiva)", p.getIdProducto(), precioAnterior, nuevoPrecio);
             }
         }
 

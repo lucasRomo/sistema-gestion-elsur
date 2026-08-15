@@ -35,7 +35,7 @@ export const ProductoTabla: React.FC<Props> = ({
       style={{ 
         backgroundColor: tableWrapperBg, 
         borderColor: theadBorder,
-        height: '65vh'
+        height: '64vh'
       }}
     >
       <div 

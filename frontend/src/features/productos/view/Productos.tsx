@@ -8,11 +8,13 @@ import { ProductosFiltros } from '../components/ProductosFiltros';
 import { AumentoMasivoModal } from '../components/AumentoMasivoModal';
 import { RecetaModal } from '../components/RecetaModal';
 import { RecetasGlobalModal } from '../components/RecetasGlobalModal';
+import { ModalMermasProductos } from '../modals/ModalMermasProductos';
 import { useProductos } from '../hooks/useProductos';
 import { actualizarPreciosMasivo, toggleStockVinculado, type ActualizarPreciosPayload } from '../services/productoService';
 import type { Producto } from '../types/Producto';
+import { exportarProductosExcel, exportarProductosPDF } from '../utils/exportProductosUtils';
 
-// Componentes y contextos compartidos globales (suben 3 niveles a src)
+// Componentes y contextos compartidos globales
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
 
@@ -28,6 +30,8 @@ export const Productos: React.FC = () => {
   const [showAumentoModal, setShowAumentoModal] = useState(false);
   const [showRecetaModal, setShowRecetaModal] = useState(false);
   const [showRecetasGlobalModal, setShowRecetasGlobalModal] = useState(false);
+  const [showMermasModal, setShowMermasModal] = useState(false);
+  
   const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
   const [productoSeleccionadoReceta, setProductoSeleccionadoReceta] = useState<Producto | null>(null);
   
@@ -47,7 +51,8 @@ export const Productos: React.FC = () => {
   const handleAplicarAumentoMasivo = async (data: ActualizarPreciosPayload) => {
     await actualizarPreciosMasivo(data);
     await cargar();
-    setMensajeExito(`Precios aumentados exitosamente un ${data.porcentaje}%`);
+    const accion = data.porcentaje >= 0 ? 'Aumento' : 'Descuento';
+    setMensajeExito(`${accion} de ${Math.abs(data.porcentaje)}% aplicado a los productos seleccionados`);
     setMostrarExito(true);
   };
 
@@ -91,17 +96,45 @@ export const Productos: React.FC = () => {
         onToggleStockVinculado={handleToggleVinculo}
       />
 
+      {/* Botonera Inferior: Volver + Exportaciones + Acciones de Productos */}
       <div className={`d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
         <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-4 py-2 fw-semibold" style={{ color: '#ffffff' }}>
-          <i className="bi me"></i>Volver
+          Volver
         </button>
+
         <div className="d-flex flex-wrap gap-2">
+          <button 
+            className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
+            onClick={() => exportarProductosExcel(productosFiltrados)}
+            disabled={productosFiltrados.length === 0}
+            title="Exportar listado actual a Excel"
+          >
+            <i className="bi bi-file-earmark-excel-fill fs-5"></i>
+            Exportar Excel
+          </button>
+
+          <button 
+            className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2"
+            onClick={() => exportarProductosPDF(productosFiltrados)}
+            disabled={productosFiltrados.length === 0}
+            title="Exportar listado actual a PDF"
+          >
+            <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
+            Exportar PDF
+          </button>
+
+          <button className="btn px-4 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#eab308', color: '#000000' }} onClick={() => setShowMermasModal(true)}>
+            <i className="bi bi-box-seam-fill me-2"></i>Mermas de Productos
+          </button>
+
           <button className="btn px-4 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#17a2b8', color: '#ffffff' }} onClick={() => setShowAumentoModal(true)}>
             Modificar Varios Precios
           </button>
+
           <button className="btn px-4 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#6f42c1', color: '#ffffff' }} onClick={() => setShowRecetasGlobalModal(true)}>
             Ver Productos con Receta
           </button>
+
           <button className="btn px-4 py-2 fw-semibold shadow-sm" style={{ backgroundColor: '#156e45', color: '#ffffff' }} onClick={() => { setProductoEditando(null); setShowModal(true); }}>
             Registrar Nuevo Producto
           </button>
@@ -156,6 +189,17 @@ export const Productos: React.FC = () => {
           }}
         />
       )}
+
+      <ModalMermasProductos
+        show={showMermasModal}
+        productos={productos}
+        onClose={() => setShowMermasModal(false)}
+        onExito={() => {
+          cargar();
+          setMensajeExito('Merma registrada con éxito');
+          setMostrarExito(true);
+        }}
+      />
 
       {mostrarConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1060 }}>

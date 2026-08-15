@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
-import type { NuevoMovimientoDTO } from '../types/caja';
+import type { NuevoMovimientoDTO } from '../services/cajaService';
 
 interface ModalProps {
   isOpen: boolean;
@@ -11,7 +11,8 @@ interface ModalProps {
 export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGuardar }) => {
   const [monto, setMonto] = useState('');
   const [concepto, setConcepto] = useState('');
-  const [tipoMovimiento, setTipoMovimiento] = useState('INGRESO');
+  const [categoria, setCategoria] = useState('INGRESO');
+  const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [idPedido, setIdPedido] = useState<string | null>(null);
   const [pedidosPendientes, setPedidosPendientes] = useState<any[]>([]);
   const [fechaPlaceholder, setFechaPlaceholder] = useState('');
@@ -54,17 +55,37 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
 
   if (!isOpen) return null;
 
+  // Determina si una categoría dada es de tipo EGRESO
+  const esEgreso = (cat: string) => {
+    return ['EGRESO', 'INSUMOS', 'EGRESO_INSUMOS', 'MANTENIMIENTO', 'EGRESO_MANTENIMIENTO'].includes(cat);
+  };
+
   const handleSubmit = () => {
-    if (!monto || !concepto) {
-      alert("Por favor complete el Monto y la Descripción.");
+    if (!monto || Number(monto) <= 0) {
+      alert("Por favor ingrese un monto válido mayor a 0.");
       return;
     }
+    if (!concepto.trim()) {
+      alert("Por favor ingrese la descripción o concepto del movimiento.");
+      return;
+    }
+
+    const tipoMovimiento = esEgreso(categoria) ? 'EGRESO' : 'INGRESO';
+
     onGuardar({
-      monto,
-      concepto,
-      tipoMovimiento,
-      idPedido: idPedido === "no-pedido" ? null : idPedido
+    monto: Number(monto),
+    concepto: concepto.trim(),
+    tipoMovimiento: esEgreso(categoria) ? 'EGRESO' : 'INGRESO',
+    categoria,
+    metodoPago,
+    idPedido: idPedido === "no-pedido" ? null : idPedido
     });
+
+    // Resetear formulario
+    setMonto('');
+    setConcepto('');
+    setCategoria('INGRESO');
+    setMetodoPago('EFECTIVO');
   };
 
   return (
@@ -96,7 +117,7 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
             <div className="position-relative" style={{ zIndex: 1 }}>
               <div className="mb-3">
                 <label className="form-label small fw-bold mb-1" style={{ color: labelColor }}>
-                  Fecha de Nuevo Movimiento de Caja
+                  Fecha del Movimiento
                 </label>
                 <input 
                   type="text" 
@@ -112,33 +133,67 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
                 />
               </div>
 
-              <div className="mb-3">
-                <label className="form-label small fw-bold mb-1" style={{ color: labelColor }}>
-                  Seleccione el Tipo de Movimiento
-                </label>
-                <select 
-                  className="form-select py-2 px-3 fw-medium" 
-                  style={{ 
-                    borderRadius: '8px', 
-                    cursor: 'pointer', 
-                    backgroundColor: inputBg,
-                    color: inputTextColor,
-                    border: `1px solid ${inputBorder}`
-                  }}
-                  value={tipoMovimiento}
-                  onChange={(e) => setTipoMovimiento(e.target.value)}
-                >
-                  <option value="INGRESO">Ingreso</option>
-                  <option value="EGRESO">Egreso</option>
-                </select>
+              <div className="row g-3 mb-3">
+                <div className="col-md-6">
+                  <label className="form-label small fw-bold mb-1" style={{ color: labelColor }}>
+                    Categoría del Movimiento
+                  </label>
+                  <select 
+                    className="form-select py-2 px-3 fw-medium" 
+                    style={{ 
+                      borderRadius: '8px', 
+                      cursor: 'pointer', 
+                      backgroundColor: inputBg,
+                      color: inputTextColor,
+                      border: `1px solid ${inputBorder}`
+                    }}
+                    value={categoria}
+                    onChange={(e) => setCategoria(e.target.value)}
+                  >
+                    <optgroup label="Ingresos (+)">
+                      <option value="INGRESO">Ingreso comun</option>
+                      <option value="CTA_CTE">Cobro Cuenta Corriente</option>
+                    </optgroup>
+                    <optgroup label="Egresos (-)">
+                      <option value="EGRESO">Egreso comun</option>
+                      <option value="INSUMOS">Compra de Insumos</option>
+                      <option value="MANTENIMIENTO">Gastos de Mantenimiento</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <div className="col-md-6">
+                  <label className="form-label small fw-bold mb-1" style={{ color: labelColor }}>
+                    Método de Pago
+                  </label>
+                  <select 
+                    className="form-select py-2 px-3 fw-medium" 
+                    style={{ 
+                      borderRadius: '8px', 
+                      cursor: 'pointer', 
+                      backgroundColor: inputBg,
+                      color: inputTextColor,
+                      border: `1px solid ${inputBorder}`
+                    }}
+                    value={metodoPago}
+                    onChange={(e) => setMetodoPago(e.target.value)}
+                  >
+                    <option value="EFECTIVO">EFECTIVO</option>
+                    <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                    <option value="DEBITO">DÉBITO</option>
+                    <option value="CREDITO">CRÉDITO</option>
+                  </select>
+                </div>
               </div>
 
               <div className="mb-3">
                 <label className="form-label small fw-bold mb-1" style={{ color: labelColor }}>
-                  Monto
+                  Monto ($)
                 </label>
                 <input 
                   type="number" 
+                  step="0.01"
+                  min="0.01"
                   placeholder="Ej: 2500.00" 
                   className="form-control py-2 px-3 fw-medium" 
                   style={{ 
@@ -154,11 +209,11 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
 
               <div className="mb-2">
                 <label className="form-label small fw-bold mb-1" style={{ color: labelColor }}>
-                  Descripción del Movimiento de Caja
+                  Descripción / Detalle
                 </label>
                 <input 
                   type="text" 
-                  placeholder="Ej: Venta de Caja de Lápices" 
+                  placeholder="Ej: Cobro de saldo pendiente / Reparación de impresora" 
                   className="form-control py-2 px-3 fw-medium" 
                   style={{ 
                     borderRadius: '8px',

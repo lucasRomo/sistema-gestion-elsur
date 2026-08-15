@@ -6,6 +6,9 @@ export interface MovimientoCaja {
   categoria?: string;
   descripcion: string;
   metodoPago?: string;
+  comprobanteImagen?: string;
+  comprobante?: string;
+  imagenComprobante?: string;
   fecha: string;
   usuario?: {
     idUsuario?: number;
@@ -33,8 +36,18 @@ export interface DatosArqueo {
 }
 
 export interface NuevoMovimientoDTO {
-  monto: string;
+  monto: string | number;
   concepto: string;
-  tipoMovimiento: string;
-  idPedido: string | null;
+  tipoMovimiento: 'INGRESO' | 'EGRESO';
+  categoria?: string;
+  idPedido?: string | null;
+  metodoPago?: string;
+}
+
+export interface UsuarioCaja {
+  idUsuario?: number;
+  id_usuario?: number;
+  nombre?: string;
+  apellido?: string;
+  username?: string;
 }

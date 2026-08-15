@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { cajaService } from '../services/cajaService';
+import { cajaService, cajaServiceExtended } from '../services/cajaService';
+import type { DatosCompraInsumo } from '../components/ModalCompraInsumos';
 import type { MovimientoCaja, DatosArqueo, NuevoMovimientoDTO, Turno } from '../services/cajaService';
 
 export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
@@ -69,13 +70,14 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     const fechaMomento = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`;
 
     const nuevoMovimiento = {
-      monto: Number(data.monto),
-      tipoMovimiento: data.tipoMovimiento,
-      categoria: data.tipoMovimiento === 'EGRESO' ? 'VARIOS' : 'VENTA',
-      descripcion: data.concepto,
-      usuario: { idUsuario },
-      pedido: data.idPedido ? { idPedido: Number(data.idPedido) } : null,
-      fecha: fechaMomento
+    monto: Number(data.monto),
+    tipoMovimiento: data.tipoMovimiento,
+    categoria: data.categoria || (data.tipoMovimiento === 'EGRESO' ? 'VARIOS' : 'VENTA'), 
+    descripcion: data.concepto,
+    metodoPago: data.metodoPago, 
+    usuario: { idUsuario },
+    pedido: data.idPedido ? { idPedido: Number(data.idPedido) } : null,
+    fecha: fechaMomento
     };
 
     await cajaService.guardarMovimiento(nuevoMovimiento);
@@ -88,6 +90,63 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
       setSaldoCaja((prev) => prev - montoNum);
       setEgresosTurno((prev) => prev + montoNum);
     }
+    await fetchMovimientos();
+  };
+
+  const comprarInsumo = async (datos: DatosCompraInsumo) => {
+    const resultado = await cajaServiceExtended.registrarCompraInsumo(datos);
+
+    setSaldoCaja((prev) => prev - datos.montoTotal);
+    setEgresosTurno((prev) => prev + datos.montoTotal);
+
+    await fetchMovimientos();
+
+    return resultado;
+  };
+
+  const ajustarMovimiento = async (
+    movimientoOriginal: MovimientoCaja,
+    montoAjuste: number,
+    tipoAjuste: 'INGRESO' | 'EGRESO',
+    motivo: string,
+    metodoPago: string = 'EFECTIVO',
+    comprobanteImagen?: string | null
+  ) => {
+    const usuarioGuardado = localStorage.getItem('usuario_logueado');
+    const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario || 1;
+
+    const idMovOriginal = movimientoOriginal.id_movimiento || movimientoOriginal.idMovimiento;
+
+    const pad = (num: number) => String(num).padStart(2, '0');
+    const ahora = new Date();
+    const fechaMomento = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`;
+
+    const idPedidoRelacionado = movimientoOriginal.pedido?.idPedido || movimientoOriginal.pedido?.id_pedido;
+
+    const contraMovimiento = {
+      monto: Number(montoAjuste),
+      tipoMovimiento: tipoAjuste,
+      categoria: 'AJUSTE',
+      descripcion: `[CORRECCIÓN Mov #${idMovOriginal || '-'}] ${motivo}`,
+      metodoPago: metodoPago,
+      comprobanteImagen: comprobanteImagen || null,
+      usuario: { idUsuario },
+      pedido: idPedidoRelacionado ? { idPedido: Number(idPedidoRelacionado) } : null,
+      fecha: fechaMomento
+    };
+
+    await cajaService.guardarMovimiento(contraMovimiento);
+
+    const montoNum = Number(montoAjuste);
+    if (tipoAjuste === 'INGRESO') {
+      setSaldoCaja((prev) => prev + montoNum);
+      setIngresosTurno((prev) => prev + montoNum);
+    } else {
+      setSaldoCaja((prev) => prev - montoNum);
+      setEgresosTurno((prev) => prev + montoNum);
+    }
+
     await fetchMovimientos();
   };
 
@@ -114,6 +173,8 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     abrirCaja,
     consultarArqueo,
     guardarMovimiento,
+    comprarInsumo,
+    ajustarMovimiento,
     cerrarCaja
   };
 };

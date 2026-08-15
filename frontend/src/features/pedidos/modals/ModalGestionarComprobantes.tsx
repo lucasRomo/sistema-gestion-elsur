@@ -5,11 +5,13 @@ interface ModalGestionarComprobantesProps {
   onClose: () => void;
   onVincularComprobante: (idComprobante: number, archivo: File) => Promise<void>;
   onEliminarComprobante: (idComprobante: number) => Promise<void>;
+  onVerTicket?: (pedido: any, cobro?: any) => void;
 }
 
 const formatearFechaYHora = (fechaStr: string) => {
   if (!fechaStr) return "-";
   const fecha = new Date(fechaStr);
+  if (isNaN(fecha.getTime())) return fechaStr;
   
   const dia = String(fecha.getDate()).padStart(2, '0');
   const mes = String(fecha.getMonth() + 1).padStart(2, '0');
@@ -26,6 +28,7 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
   onClose,
   onVincularComprobante,
   onEliminarComprobante,
+  onVerTicket
 }) => {
   const [comprobanteSeleccionado, setComprobanteSeleccionado] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,6 +48,8 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
     }
   };
 
+  const listaComprobantes = pedido?.comprobantes || pedido?.pagos || pedido?.movimientos || [];
+
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-lg modal-dialog-centered">
@@ -58,14 +63,14 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
         >
           <div className="modal-header border-0 pb-0">
             <h5 className="modal-title fw-bold" style={{ color: '#a855f7', fontFamily: 'monospace' }}>
-              Gestionar Comprobantes - Pedido #{pedido.id_pedido}
+              Gestionar Comprobantes - Pedido #{pedido?.id_pedido ?? pedido?.idPedido ?? pedido?.id}
             </h5>
             <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
           </div>
 
           <div className="modal-body">
             <p className="small mb-4 text-body-secondary" style={{ fontFamily: 'monospace' }}>
-              A continuación se listan los cobros realizados para este pedido. Podés vincular comprobantes físicos a cobros de tipo transferencia o eliminar comprobantes existentes.
+              A continuación se listan los cobros realizados para este pedido. Podés vincular comprobantes, imprimirlos o eliminar registros.
             </p>
 
             <input 
@@ -87,43 +92,72 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
                   </tr>
                 </thead>
                 <tbody style={{ fontFamily: 'monospace' }}>
-                  {pedido.comprobantes && pedido.comprobantes.length > 0 ? (
-                    [...pedido.comprobantes]
-                    .sort((a, b) => new Date(a.fechaCarga).getTime() - new Date(b.fechaCarga).getTime())
+                  {listaComprobantes.length > 0 ? (
+                    [...listaComprobantes]
+                    .sort((a, b) => {
+                      const fechaA = new Date(a.fechaCarga ?? a.fecha_carga ?? a.fecha ?? 0).getTime();
+                      const fechaB = new Date(b.fechaCarga ?? b.fecha_carga ?? b.fecha ?? 0).getTime();
+                      return fechaA - fechaB;
+                    })
                     .map((cobro) => {
-                      const tieneArchivo = !!cobro.urlArchivoComprobante;
-                      const esDigital = cobro.tipoPago === 'TRANSFERENCIA';
+                      const idCobro = cobro.id_comprobante ?? cobro.idComprobante ?? cobro.id;
+                      const fechaCobro = cobro.fechaCarga ?? cobro.fecha_carga ?? cobro.fecha;
+                      const montoCobro = cobro.montoPago ?? cobro.monto_pago ?? cobro.monto ?? 0;
+                      const tipoPagoCobro = cobro.tipoPago ?? cobro.tipo_pago ?? cobro.metodoPago ?? cobro.metodo_pago ?? 'EFECTIVO';
+                      const urlArchivo = cobro.urlArchivoComprobante ?? cobro.url_archivo_comprobante ?? cobro.urlComprobante;
+
+                      const tieneArchivo = !!urlArchivo;
+                      const esDigital = String(tipoPagoCobro).toUpperCase() === 'TRANSFERENCIA' || String(tipoPagoCobro).toUpperCase() === 'DIGITAL';
 
                       return (
-                        <tr key={cobro.id_comprobante}>
+                        <tr key={idCobro}>
                           <td className="fw-bold text-success">
-                            ${cobro.montoPago.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            ${Number(montoCobro).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                           </td>
-                          <td>{formatearFechaYHora(cobro.fechaCarga)}</td>
+                          <td>{formatearFechaYHora(fechaCobro)}</td>
                           <td>
                             <span 
-  className="d-inline-block px-2 py-1 rounded font-monospace" 
-  style={{ 
-    backgroundColor: esDigital ? '#dcfce7' : '#e2e8f0', 
-    color: esDigital ? '#15803d' : '#1e293b', 
-    border: esDigital ? '1px solid #86efac' : '1px solid #cbd5e1',
-    fontWeight: '700',
-    fontSize: '0.75rem',
-    lineHeight: '1.2',
-    letterSpacing: '0.025em'
-  }}
->
-  {cobro.tipoPago}
-</span>
+                              className="d-inline-block px-2 py-1 rounded font-monospace" 
+                              style={{ 
+                                backgroundColor: esDigital ? '#dcfce7' : '#e2e8f0', 
+                                color: esDigital ? '#15803d' : '#1e293b', 
+                                border: esDigital ? '1px solid #86efac' : '1px solid #cbd5e1',
+                                fontWeight: '700',
+                                fontSize: '0.75rem',
+                                lineHeight: '1.2',
+                                letterSpacing: '0.025em'
+                              }}
+                            >
+                              {tipoPagoCobro}
+                            </span>
                           </td>
                           <td>
                             <div className="d-flex justify-content-center gap-2">
+                              {/* Botón Imprimir Ticket de Cobro específico */}
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-warning d-flex align-items-center gap-1"
+                                title="Imprimir Ticket de Cobro"
+                                onClick={() => {
+                                  if (onVerTicket) {
+                                    onVerTicket(pedido, {
+                                      id: idCobro,
+                                      monto: montoCobro,
+                                      metodoPago: tipoPagoCobro,
+                                      fecha: fechaCobro
+                                    });
+                                  }
+                                }}
+                              >
+                                <i className="bi bi-printer"></i> Ticket
+                              </button>
+
                               {esDigital && !tieneArchivo && (
                                 <button
                                   type="button"
                                   className="btn btn-sm d-flex align-items-center gap-1 btn-outline-purple"
                                   style={{ border: '1px solid #8e45e0', color: '#a855f7' }}
-                                  onClick={() => abrirSelectorArchivo(cobro.id_comprobante)}
+                                  onClick={() => abrirSelectorArchivo(idCobro)}
                                 >
                                   <i className="bi bi-file-earmark-arrow-up"></i> Vincular
                                 </button>
@@ -132,11 +166,11 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
                               {tieneArchivo && (
                                 <>
                                   <a
-                                    href={`http://localhost:8080${cobro.urlArchivoComprobante}`}
+                                    href={`http://localhost:8080${urlArchivo}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="btn btn-sm btn-outline-info"
-                                    title="Ver Comprobante"
+                                    title="Ver Comprobante Adjunto"
                                   >
                                     <i className="bi bi-eye"></i>
                                   </a>
@@ -144,15 +178,11 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
                                     type="button"
                                     className="btn btn-sm btn-outline-danger"
                                     title="Eliminar Comprobante"
-                                    onClick={() => onEliminarComprobante(cobro.id_comprobante)}
+                                    onClick={() => onEliminarComprobante(idCobro)}
                                   >
                                     <i className="bi bi-trash"></i>
                                   </button>
                                 </>
-                              )}
-
-                              {!esDigital && !tieneArchivo && (
-                                <span className="text-muted small">-</span>
                               )}
                             </div>
                           </td>

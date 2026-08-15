@@ -11,17 +11,6 @@ export interface Maquina {
   estado?: string;
 }
 
-export interface Producto {
-  idProducto?: number;
-  nombreProducto: string;
-  precioBase: number;
-  stock: number;
-  stockVinculado?: boolean;
-  categoria: Categoria;
-  maquinaNecesaria?: Maquina | null;
-  estado: 'Activo' | 'Desactivado';
-}
-
 export interface Insumo {
   idInsumo: number;
   nombreInsumo: string;
@@ -33,4 +22,16 @@ export interface RecetaItem {
   idProductoInsumo?: number;
   insumo: Insumo;
   cantidadConsumo: number;
+}
+
+export interface Producto {
+  idProducto?: number;
+  nombreProducto: string;
+  precioBase: number;
+  stock: number;
+  stockVinculado?: boolean;
+  categoria: Categoria;
+  maquinaNecesaria?: Maquina | null;
+  estado: 'Activo' | 'Desactivado';
+  receta?: RecetaItem[]; // Relación con los insumos asignados al producto
 }

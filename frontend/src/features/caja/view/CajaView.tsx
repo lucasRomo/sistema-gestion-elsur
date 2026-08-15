@@ -2,17 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
-// Componentes y Contextos globales
 import { SidebarLayout } from '../../../components/layouts/SidebarLayout';
 import { useTurno } from '../../../Context/TurnoContext';
 import { useTheme } from '../../../Context/ThemeContext';
 
-// Feature Caja: Hooks, Modales y Tipos
 import { useCaja } from '../hooks/useCaja';
 import { ModalNuevoIngreso } from '../components/ModalNuevoIngreso';
 import { ModalConsultarArqueo } from '../components/ModalConsultarArqueo';
 import { ModalCerrarTurno } from '../components/ModalCerrarTurno';
-import type { NuevoMovimientoDTO } from '../types/caja';
+import { ModalCompraInsumos } from '../components/ModalCompraInsumos';
+import type { DatosCompraInsumo } from '../components/ModalCompraInsumos';
+import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
+import type { NuevoMovimientoDTO } from '../services/cajaService';
+import { renderBadgeCategoria } from '../components/renderBadgeCategoria';
 
 export const CajaView: React.FC = () => {
   const navigate = useNavigate();
@@ -31,10 +33,11 @@ export const CajaView: React.FC = () => {
     abrirCaja,
     consultarArqueo,
     guardarMovimiento,
+    comprarInsumo,
+    ajustarMovimiento,
     cerrarCaja
   } = useCaja(setCajaAbierta);
 
-  // Modales
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showModalApertura, setShowModalApertura] = useState(false);
   const [montoInicialInput, setMontoInicialInput] = useState('0');
@@ -42,8 +45,27 @@ export const CajaView: React.FC = () => {
   const [showModalCierre, setShowModalCierre] = useState(false);
   const [guardandoCierre, setGuardandoCierre] = useState(false);
   const [showModalArqueo, setShowModalArqueo] = useState(false);
+  const [showModalCompraInsumos, setShowModalCompraInsumos] = useState(false);
 
-  // Estilos
+  // Estados para tickets y comprobante de transferencia
+  const [ticketSeleccionado, setTicketSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
+  const [imagenComprobanteModal, setImagenComprobanteModal] = useState<string | null>(null);
+
+  // Estados para Modal de Ajuste / Corrección de Cobro
+  const [movimientoAjuste, setMovimientoAjuste] = useState<any | null>(null);
+  const [montoAjuste, setMontoAjuste] = useState('');
+  const [tipoAjuste, setTipoAjuste] = useState<'INGRESO' | 'EGRESO'>('EGRESO');
+  const [metodoPagoAjuste, setMetodoPagoAjuste] = useState<string>('EFECTIVO');
+  const [imagenAjuste, setImagenAjuste] = useState<string | null>(null);
+  const [motivoAjuste, setMotivoAjuste] = useState('');
+  const [guardandoAjuste, setGuardandoAjuste] = useState(false);
+
+  const obtenerUrlComprobante = (url?: string | null): string => {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
+    return `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   const textColor = isDark ? 'text-white' : 'text-dark';
   const cardBg = isDark ? '#1e1e1f' : '#ffffff';
   const cardBorder = isDark ? '#242427' : '#e2e8f0';
@@ -63,6 +85,17 @@ export const CajaView: React.FC = () => {
   const handleAbrirAperturaModal = () => {
     setMontoInicialInput('0');
     setShowModalApertura(true);
+  };
+
+  const handleImagenAjusteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagenAjuste(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const confirmarAperturaCaja = async (e: React.FormEvent) => {
@@ -102,6 +135,78 @@ export const CajaView: React.FC = () => {
     }
   };
 
+  const handleConfirmarCompraInsumo = async (datos: DatosCompraInsumo) => {
+    try {
+      const resultado = await comprarInsumo(datos);
+      setShowModalCompraInsumos(false);
+
+      const movimientoInsumo = {
+        id_movimiento: resultado?.idMovimiento || resultado?.id_movimiento,
+        monto: datos.montoTotal,
+        tipoMovimiento: 'EGRESO',
+        categoria: 'INSUMOS',
+        descripcion: datos.concepto,
+        fecha: new Date().toISOString(),
+        metodoPago: datos.metodoPago
+      };
+
+      const pedidoAdaptado = {
+        id_pedido: resultado?.idCompra || resultado?.id_compra || '-',
+        cliente: {
+          persona: null,
+          razon_social: 'Compra Insumos / Proveedor',
+          nombre: 'Compra Insumos / Proveedor'
+        },
+        monto_total: datos.montoTotal,
+        observaciones: datos.concepto
+      };
+
+      setTicketSeleccionado({
+        pedido: pedidoAdaptado,
+        movimiento: movimientoInsumo
+      });
+    } catch (error: any) {
+      alert("Error al registrar la compra: " + error.message);
+    }
+  };
+
+  const handleConfirmarAjuste = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!movimientoAjuste) return;
+
+    const montoNum = Number(montoAjuste);
+    if (isNaN(montoNum) || montoNum <= 0) {
+      alert("Por favor ingrese un monto válido mayor a 0.");
+      return;
+    }
+
+    if (!motivoAjuste.trim()) {
+      alert("Por favor ingrese la razón o motivo del ajuste.");
+      return;
+    }
+
+    setGuardandoAjuste(true);
+    try {
+      await ajustarMovimiento(
+        movimientoAjuste, 
+        montoNum, 
+        tipoAjuste, 
+        motivoAjuste.trim(),
+        metodoPagoAjuste,
+        imagenAjuste
+      );
+      setMovimientoAjuste(null);
+      setMotivoAjuste('');
+      setMontoAjuste('');
+      setMetodoPagoAjuste('EFECTIVO');
+      setImagenAjuste(null);
+    } catch (error: any) {
+      alert("Error al procesar la corrección: " + error.message);
+    } finally {
+      setGuardandoAjuste(false);
+    }
+  };
+
   const handleAbrirCierreModal = async () => {
     if (!turnoActual) {
       alert("No hay un turno activo para cerrar.");
@@ -128,58 +233,35 @@ export const CajaView: React.FC = () => {
     }
   };
 
-  const renderBadgeCategoria = (m: any) => {
-    if (m.categoria === 'EGRESO_MANTENIMIENTO') {
-      return (
-        <span 
-          className="d-inline-block px-2 py-1 rounded fw-semibold"
-          style={{
-            backgroundColor: isDark ? 'rgba(234, 179, 8, 0.2)' : '#fef3c7',
-            color: isDark ? '#facc15' : '#b45309',
-            border: `1px solid ${isDark ? '#eab308' : '#f59e0b'}`,
-            fontSize: '0.75rem'
-          }}
-        >
-          <i className="bi bi-tools me-1"></i>MANTENIMIENTO
-        </span>
-      );
+  const handleVerTicket = async (m: any) => {
+    const idPedidoRaw = m.pedido?.idPedido || m.pedido?.id_pedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1]?.trim() : null);
+
+    if (idPedidoRaw && !isNaN(Number(idPedidoRaw))) {
+      const idPedido = Number(idPedidoRaw);
+      try {
+        const response = await fetch(`http://localhost:8080/api/pedidos/${idPedido}`);
+        if (response.ok) {
+          const pedidoCompleto = await response.json();
+          setTicketSeleccionado({ pedido: pedidoCompleto, movimiento: m });
+          return;
+        }
+      } catch (error) {
+        console.error("Error consultando datos completos del pedido:", error);
+      }
     }
 
-    if (m.categoria === 'INSUMOS') {
-      return (
-        <span 
-          className="d-inline-block px-2 py-1 rounded fw-semibold"
-          style={{
-            backgroundColor: isDark ? 'rgba(14, 165, 233, 0.2)' : '#e0f2fe',
-            color: isDark ? '#38bdf8' : '#0369a1',
-            border: `1px solid ${isDark ? '#0ea5e9' : '#0284c7'}`,
-            fontSize: '0.75rem'
-          }}
-        >
-          <i className="bi bi-truck me-1"></i>INSUMOS
-        </span>
-      );
-    }
+    const pedidoAdaptado = {
+      id_pedido: idPedidoRaw || '-',
+      cliente: {
+        persona: null,
+        razon_social: m.categoria === 'INSUMOS' ? 'Compra Insumos / Proveedor' : 'Consumidor Final',
+        nombre: m.categoria === 'INSUMOS' ? 'Compra Insumos / Proveedor' : 'Consumidor Final'
+      },
+      monto_total: m.monto,
+      observaciones: m.descripcion || 'Movimiento registrado en caja'
+    };
 
-    const esGanancia = m.tipoMovimiento === 'INGRESO';
-
-    return (
-      <span 
-        className="d-inline-block px-2 py-1 rounded fw-semibold"
-        style={{
-          backgroundColor: esGanancia 
-            ? (isDark ? 'rgba(28, 155, 74, 0.2)' : '#d1fae5') 
-            : (isDark ? 'rgba(226, 46, 46, 0.2)' : '#fee2e2'),
-          color: esGanancia 
-            ? (isDark ? '#4ade80' : '#065f46') 
-            : (isDark ? '#f87171' : '#991b1b'),
-          border: `1px solid ${esGanancia ? '#1c9b4a' : '#e22e2e'}`,
-          fontSize: '0.75rem'
-        }}
-      >
-        {esGanancia ? 'Ingreso' : 'Egreso'}
-      </span>
-    );
+    setTicketSeleccionado({ pedido: pedidoAdaptado, movimiento: m });
   };
 
   const CustomCajaAreaTooltip = ({ active, payload, label }: any) => {
@@ -324,43 +406,143 @@ export const CajaView: React.FC = () => {
             
             <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: tableWrapBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle, height: '315px' }}>
               <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapBg, height: '100%', overflowY: 'auto' }}>
-                <table className="table table-hover m-0 align-middle text-center" style={{ backgroundColor: tableWrapBg, color: isDark ? '#fff' : 'inherit' }}>
+               <table className="table table-hover m-0 align-middle text-center" style={{ '--bs-table-bg': tableWrapBg,
+                 '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.075)', color: isDark ? '#fff' : 'inherit' } as React.CSSProperties}>
                   <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
-                    <tr className="border-secondary" style={{ backgroundColor: theadBg, fontSize: '0.9rem' }}>
-                      <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '160px' }}>Fecha/Hora</th>
-                      <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '110px' }}>Monto</th>
-                      <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '130px' }}>Categoría</th>
-                      <th className="text-start" style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d' }}>Descripción</th>
-                      <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '140px' }}>Usuario</th>
-                      <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '80px' }}>Pedido</th>
+                    <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
+                      <th style={{ width: '140px' }}>Fecha/Hora</th>
+                      <th style={{ width: '90px' }}>Monto</th>
+                      <th style={{ width: '110px' }}>Método</th>
+                      <th style={{ width: '120px' }}>Categoría</th>
+                      <th className="text-start">Descripción</th>
+                      <th style={{ width: '60px' }}>Usu.</th>
+                      <th style={{ width: '60px' }}>Ped.</th>
+                      <th style={{ width: '120px' }}>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {movimientos.length === 0 ? (
-                      <tr><td colSpan={6} className="py-5 opacity-50" style={{ backgroundColor: tableWrapBg }}>No hay movimientos registrados hoy</td></tr>
+                      <tr><td colSpan={8} className="py-5 opacity-50">No hay movimientos registrados hoy</td></tr>
                     ) : (
-                      movimientos.map((m, idx) => (
-                        <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ backgroundColor: tableWrapBg, fontSize: '0.95rem' }}>
-                          <td style={{ backgroundColor: 'transparent' }}>{new Date(m.fecha).toLocaleString('es-AR')}</td>
-                          <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`} style={{ backgroundColor: 'transparent' }}>
-                            {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
-                          </td>
-                          <td style={{ backgroundColor: 'transparent' }}>{renderBadgeCategoria(m)}</td>
-                          <td style={{ backgroundColor: 'transparent' }}>
-                            <div 
-                              className="text-start" 
-                              style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '460px' }}
-                              title={m.descripcion || 'Sin descripción'}
-                            >
-                              {m.descripcion || '-'}
-                            </div>
-                          </td>
-                          <td style={{ backgroundColor: 'transparent' }}>
-                            {m.usuario?.nombre || m.usuario?.nombreUsuario || m.usuario?.idUsuario || m.usuario?.id_usuario || 'Lisandro Romero'}
-                          </td>
-                          <td style={{ backgroundColor: 'transparent' }}>{m.pedido?.idPedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1] : '-')}</td>
-                        </tr>
-                      ))
+                      movimientos.map((m, idx) => {
+                        const imagenAdjunta = 
+                          m.comprobanteImagen || 
+                          m.comprobante || 
+                          m.imagenComprobante || 
+                          m.comprobante_imagen || 
+                          m.imagen_comprobante ||
+                          m.urlComprobante ||
+                          m.url_comprobante;
+
+                        return (
+                          <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
+                            <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
+                            <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
+                              {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
+                            </td>
+                            <td>
+                              <span className="badge bg-secondary font-monospace">
+                                {m.metodoPago || 'EFECTIVO'}
+                              </span>
+                            </td>
+                            <td>{renderBadgeCategoria(m, isDark)}</td>
+                            <td>
+                              <div 
+                                className="text-start" 
+                                style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '360px' }}
+                                title={m.descripcion || 'Sin descripción'}
+                              >
+                                {m.descripcion || '-'}
+                              </div>
+                            </td>
+                            <td>
+                              {(() => {
+                                const u = m.usuario;
+
+                                // 1. Si viene como objeto desde el backend
+                                if (u && typeof u === 'object') {
+                                  // Nombre completo (nombre + apellido)
+                                  const nombreCompleto = `${u.nombre || u.first_name || ''} ${u.apellido || u.last_name || ''}`.trim();
+                                  if (nombreCompleto) return nombreCompleto;
+
+                                  // Si solo tiene nombre de usuario
+                                  if (u.nombreUsuario) return u.nombreUsuario;
+                                  if (u.username) return u.username;
+                                  if (u.nombre_usuario) return u.nombre_usuario;
+                                }
+
+                                // 2. Si el backend envió directamente un string (ej: "LISANDRO")
+                                if (typeof u === 'string' && isNaN(Number(u))) {
+                                  return u;
+                                }
+
+                                // 3. Fallback: Buscar en localStorage (probando las claves más usuales de tu app)
+                                try {
+                                  const localData = 
+                                    localStorage.getItem('usuario_logueado') || 
+                                    localStorage.getItem('usuario') || 
+                                    localStorage.getItem('user');
+
+                                  if (localData) {
+                                    const parsed = JSON.parse(localData);
+                                    
+                                    const nombreLocal = `${parsed.nombre || parsed.first_name || ''} ${parsed.apellido || parsed.last_name || ''}`.trim();
+                                    if (nombreLocal) return nombreLocal;
+                                    
+                                    if (parsed.nombreUsuario) return parsed.nombreUsuario;
+                                    if (parsed.username) return parsed.username;
+                                    if (parsed.nombre_usuario) return parsed.nombre_usuario;
+                                  }
+                                } catch (e) {
+                                  // Error de lectura/parseo
+                                }
+
+                                return 'No se Encuentra al Usaurio';
+                              })()}
+                            </td>
+                            <td>
+                              {m.pedido?.idPedido || m.pedido?.id_pedido 
+                                ? `#${m.pedido?.idPedido || m.pedido?.id_pedido}` 
+                                : (m.descripcion?.includes('Pedido #') ? `#${m.descripcion.split('#')[1]?.trim()}` : '-')}
+                            </td>
+                            <td>
+                              <div className="d-flex justify-content-center gap-1">
+                                {imagenAdjunta && (
+                                  <button
+                                    className="btn btn-sm btn-outline-info border-0 p-1"
+                                    title="Ver Comprobante de Transferencia"
+                                    onClick={() => setImagenComprobanteModal(imagenAdjunta)}
+                                  >
+                                    <i className="bi bi-eye fs-5"></i>
+                                  </button>
+                                )}
+                                <button
+                                  className="btn btn-sm btn-outline-info border-0 p-1"
+                                  title="Ver Ticket de Comprobante"
+                                  onClick={() => handleVerTicket(m)}
+                                >
+                                  <i className="bi bi-receipt fs-5"></i>
+                                </button>
+                                <button
+                                  className="btn btn-sm btn-outline-warning border-0 p-1"
+                                  title="Corregir / Ajustar Cobro"
+                                  disabled={!cajaAbierta || m.categoria === 'AJUSTE'}
+                                  onClick={() => {
+                                    setMovimientoAjuste(m);
+                                    setMontoAjuste(String(m.monto));
+                                    setTipoAjuste(m.tipoMovimiento === 'INGRESO' ? 'EGRESO' : 'INGRESO');
+                                    setMetodoPagoAjuste(m.metodoPago || 'EFECTIVO');
+                                    setImagenAjuste(null);
+                                    setMotivoAjuste('');
+                                  }}
+                                >
+                                  <i className="bi bi-arrow-counterclockwise fs-5"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -377,7 +559,12 @@ export const CajaView: React.FC = () => {
               <i className="bi bi-plus-lg fs-4 ms-2"></i>
             </button>
             
-            <button className="btn py-3 d-flex justify-content-between align-items-center fw-semibold px-4 w-100" style={{ backgroundColor: '#6f42c1', color: '#ffffff', fontSize: '1.1rem', maxWidth: '380px', borderRadius: '10px' }} disabled={!cajaAbierta}>
+            <button 
+              className="btn py-3 d-flex justify-content-between align-items-center fw-semibold px-4" 
+              style={{ backgroundColor: '#6f42c1', color: '#ffffff', fontSize: '1.15rem', width: '380px', borderRadius: '10px' }} 
+              disabled={!cajaAbierta}
+              onClick={() => setShowModalCompraInsumos(true)}
+            >
               <span>Compra de Insumos</span>
               <i className="bi bi-truck fs-4 ms-2"></i>
             </button>
@@ -406,6 +593,7 @@ export const CajaView: React.FC = () => {
         </div>
       </div>
 
+      {/* Modal Apertura */}
       {showModalApertura && (
         <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
@@ -446,6 +634,137 @@ export const CajaView: React.FC = () => {
         </div>
       )}
 
+      {/* Modal Ajuste / Corrección de Cobro */}
+      {movimientoAjuste && (
+        <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }} role="dialog">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className={`modal-content ${textColor} font-monospace`} style={{ backgroundColor: isDark ? '#18181b' : '#ffffff', border: `1px solid ${cardBorder}`, borderRadius: '12px' }}>
+              <div className="modal-header border-bottom border-secondary">
+                <h5 className="modal-title fw-bold text-warning d-flex align-items-center gap-2">
+                  <i className="bi bi-arrow-counterclockwise"></i> Corrección / Ajuste de Movimiento
+                </h5>
+                <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setMovimientoAjuste(null)}></button>
+              </div>
+              <form onSubmit={handleConfirmarAjuste}>
+                <div className="modal-body py-3">
+                  <div className="p-3 mb-3 rounded" style={{ backgroundColor: isDark ? '#27272a' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
+                    <div className="small text-muted mb-1">Movimiento Original:</div>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <span className="fw-bold">
+                        #{movimientoAjuste.id_movimiento || movimientoAjuste.idMovimiento || '-'} - {movimientoAjuste.descripcion || 'Sin descripción'}
+                      </span>
+                      <span className={`fw-bold ${movimientoAjuste.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
+                        {movimientoAjuste.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(movimientoAjuste.monto).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="row g-2 mb-3">
+                    <div className="col-md-6">
+                      <label className="form-label small text-uppercase fw-semibold">Tipo de Ajuste:</label>
+                      <select
+                        className={`form-select font-monospace ${isDark ? 'bg-dark text-white' : 'bg-light text-dark'} border-secondary`}
+                        value={tipoAjuste}
+                        onChange={(e) => setTipoAjuste(e.target.value as 'INGRESO' | 'EGRESO')}
+                      >
+                        <option value="EGRESO">EGRESO (-)</option>
+                        <option value="INGRESO">INGRESO (+)</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label small text-uppercase fw-semibold">Monto del Ajuste ($):</label>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0.01"
+                        className={`form-control font-monospace ${isDark ? 'bg-dark text-white' : 'bg-light text-dark'} border-secondary`}
+                        value={montoAjuste}
+                        onChange={(e) => setMontoAjuste(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label small text-uppercase fw-semibold">Método de Pago:</label>
+                    <select
+                      className={`form-select font-monospace ${isDark ? 'bg-dark text-white' : 'bg-light text-dark'} border-secondary`}
+                      value={metodoPagoAjuste}
+                      onChange={(e) => setMetodoPagoAjuste(e.target.value)}
+                    >
+                      <option value="EFECTIVO">EFECTIVO</option>
+                      <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                      <option value="DEBITO">DÉBITO</option>
+                      <option value="CREDITO">CRÉDITO</option>
+                    </select>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label small text-uppercase fw-semibold d-flex align-items-center justify-content-between">
+                      <span>Comprobante / Imagen (Opcional):</span>
+                      {imagenAjuste && <span className="text-success small"><i className="bi bi-check-circle-fill me-1"></i>Cargado</span>}
+                    </label>
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      className={`form-control font-monospace ${isDark ? 'bg-dark text-white' : 'bg-light text-dark'} border-secondary`}
+                      onChange={handleImagenAjusteChange}
+                    />
+                    {imagenAjuste && (
+                      <div className="mt-2 text-center">
+                        <img 
+                          src={imagenAjuste} 
+                          alt="Previsualización" 
+                          className="img-thumbnail" 
+                          style={{ maxHeight: '100px', objectFit: 'contain' }} 
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="alert alert-warning py-2 mb-3 small d-flex align-items-center gap-2">
+                    <i className="bi bi-exclamation-triangle-fill fs-5"></i>
+                    <span>
+                      Se registrará un nuevo movimiento de <strong>{tipoAjuste}</strong> por <strong>${Number(montoAjuste || 0).toFixed(2)}</strong> vía <strong>{metodoPagoAjuste}</strong>.
+                    </span>
+                  </div>
+
+                  <div className="mb-2">
+                    <label className="form-label small text-uppercase fw-semibold">Motivo del Ajuste:</label>
+                    <input 
+                      type="text" 
+                      className={`form-control font-monospace ${isDark ? 'bg-dark text-white' : 'bg-light text-dark'} border-secondary`}
+                      placeholder="Ej: Cobro mal efectuado / cambio de medio de pago / error tipográfico"
+                      value={motivoAjuste}
+                      onChange={(e) => setMotivoAjuste(e.target.value)}
+                      required
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer border-top border-secondary">
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary px-4" 
+                    onClick={() => {
+                      setMovimientoAjuste(null);
+                      setMetodoPagoAjuste('EFECTIVO');
+                      setImagenAjuste(null);
+                    }} 
+                    disabled={guardandoAjuste}
+                  >
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-warning px-4 text-dark fw-bold" disabled={guardandoAjuste}>
+                    {guardandoAjuste ? 'Procesando...' : 'Confirmar Ajuste'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ModalNuevoIngreso 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -469,6 +788,45 @@ export const CajaView: React.FC = () => {
         guardando={guardandoCierre}
         movimientos={movimientos}
       />
+
+      <ModalCompraInsumos
+        isOpen={showModalCompraInsumos}
+        onClose={() => setShowModalCompraInsumos(false)}
+        onConfirmar={handleConfirmarCompraInsumo}
+      />
+
+      {ticketSeleccionado && (
+        <VistaTicketPagoModal
+          pedido={ticketSeleccionado.pedido}
+          movimiento={ticketSeleccionado.movimiento}
+          onClose={() => setTicketSeleccionado(null)}
+          esVentaRapida={!ticketSeleccionado.pedido.id_pedido || ticketSeleccionado.pedido.id_pedido === '-'}
+        />
+      )}
+
+      {imagenComprobanteModal && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
+          <div className="modal-dialog modal-lg modal-dialog-centered">
+            <div className={`modal-content p-3 ${textColor}`} style={{ backgroundColor: isDark ? '#18181b' : '#ffffff' }}>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h6 className="fw-bold m-0"><i className="bi bi-image me-2"></i>Comprobante de Transferencia</h6>
+                <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setImagenComprobanteModal(null)}></button>
+              </div>
+              <div className="text-center p-2">
+                <img 
+                  src={obtenerUrlComprobante(imagenComprobanteModal)} 
+                  alt="Comprobante Transferencia" 
+                  className="img-fluid rounded shadow" 
+                  style={{ maxHeight: '70vh', objectFit: 'contain' }} 
+                />
+              </div>
+              <div className="text-end mt-2">
+                <button className="btn btn-secondary btn-sm" onClick={() => setImagenComprobanteModal(null)}>Cerrar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )} 
     </SidebarLayout>
   );
 };

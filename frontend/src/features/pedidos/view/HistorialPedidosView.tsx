@@ -6,12 +6,14 @@ import { historialPedidoService } from '../service/historialPedidoService';
 import { useTheme } from '../../../Context/ThemeContext';
 
 // Componentes Modularizados
-import { FiltrosHistorial } from '../../historial/components/FiltrosHistorial';
-import { FilaHistorial } from '../../historial/components/FilaHistorial';
+import { FiltrosHistorial } from '../components/FiltrosHistorial';
+import { FilaHistorial } from '../components/FilaHistorial';
 
 // Modales
 import { ModalAuditoriaPedido } from '../modals/ModalAuditoriaPedido';
 import { VistaTicketModal } from '../modals/VistaTicketModal';
+import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
+import { ModalHistorialMermas } from '../modals/ModalHistorialMermas';
 import { CuentaCorrienteModal } from '../../clientes/components/CuentaCorrienteModal';
 import { ModalDevolucionPedido } from '../modals/ModalDevolucionPedido';
 
@@ -27,27 +29,35 @@ export const HistorialPedidosPage: React.FC = () => {
   const theadText = isDark ? '#fefeff' : '#334155';
   const grayText = isDark ? '#a1a1aa' : '#64748b';
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
-
+  
   const { pedidos, cargando, recargarHistorial } = useHistorialPedidos();
   const navigate = useNavigate();
   
-  // Estados de Modales
+  // Estados para control de modales
   const [pedidoAuditoria, setPedidoAuditoria] = useState<any>(null);
   const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<any>(null);
   const [verTicketPedido, setVerTicketPedido] = useState<any>(null);
+  const [ticketPagoSeleccionado, setTicketPagoSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
+  const [pedidoMermas, setPedidoMermas] = useState<any>(null);
+
+  // Estado para el modal de devolución
   const [pedidoDevolucion, setPedidoDevolucion] = useState<any>(null);
 
   // Filtros
   const [filtroTexto, setFiltroTexto] = useState('');
   const [filtroEstadoHistorial, setFiltroEstadoHistorial] = useState('TODOS');
 
-  // Estado de Suceso/Notificación
+  // Estado de Suceso / Notificación
   const [suceso, setSuceso] = useState<{ show: boolean; titulo: string; mensaje: string; tipo: string }>({ 
     show: false, 
     titulo: '', 
     mensaje: '', 
     tipo: 'exito' 
   });
+
+  const handleAbrirMermas = async (pedido: any) => {
+    setPedidoMermas(pedido);
+  };
 
   // Operaciones de Servicio
   const handleAbrirAuditoria = async (idPedido: number) => {
@@ -91,7 +101,19 @@ export const HistorialPedidosPage: React.FC = () => {
     }
   };
 
-  const handleProcesarDevolucion = async (accion: 'REINICIAR' | 'DEVUELTO', descripcion: string) => {
+  const handleProcesarDevolucion = async (accion: 'REINICIAR' | 'DEVUELTO', descripcionEntrante?: string) => {
+    const textoDescripcion = descripcionEntrante || '';
+
+    if (!textoDescripcion.trim()) {
+      setSuceso({
+        show: true,
+        titulo: 'Atención',
+        mensaje: 'Por favor, ingresa una descripción para la devolución.',
+        tipo: 'error'
+      });
+      return;
+    }
+
     try {
       const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
       const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
@@ -102,7 +124,7 @@ export const HistorialPedidosPage: React.FC = () => {
       await historialPedidoService.procesarDevolucion(
         pedidoDevolucion.id_pedido,
         nuevoEstado,
-        `${obsPrefix}${descripcion}`,
+        `${obsPrefix}${textoDescripcion}`,
         idUsuarioActivo
       );
 
@@ -128,7 +150,6 @@ export const HistorialPedidosPage: React.FC = () => {
     }
   };
 
-  // Filtrado de registros en memoria
   const pedidosFiltrados = pedidos.filter(p => {
     const busquedaTermino = filtroTexto.toLowerCase().trim();
 
@@ -250,6 +271,7 @@ export const HistorialPedidosPage: React.FC = () => {
                       onSubirArchivo={handleSubirArchivoFisico}
                       onEliminarComprobante={handleEliminarComprobanteFisico}
                       onAbrirDevolucion={(p) => setPedidoDevolucion(p)}
+                      onAbrirMermas={handleAbrirMermas}
                     />
                   ))
                 )}
@@ -263,12 +285,27 @@ export const HistorialPedidosPage: React.FC = () => {
         </div>
       </div>
 
-      {/* RENDERIZADO DE MODALES */}
+      {pedidoMermas && (
+        <ModalHistorialMermas
+          pedido={pedidoMermas}
+          onClose={() => setPedidoMermas(null)}
+        />
+      )}
+
       {pedidoAuditoria && (
         <ModalAuditoriaPedido 
           pedido={pedidoAuditoria} 
           onClose={() => setPedidoAuditoria(null)}
           onAbrirCuentaCorriente={(cliente) => setClienteCuentaCorriente(cliente)}
+          onVerTicket={(pedido, cobro) => setTicketPagoSeleccionado({ pedido, movimiento: cobro })}
+        />
+      )}
+
+      {ticketPagoSeleccionado && (
+        <VistaTicketPagoModal 
+          pedido={ticketPagoSeleccionado.pedido}
+          movimiento={ticketPagoSeleccionado.movimiento}
+          onClose={() => setTicketPagoSeleccionado(null)}
         />
       )}
 

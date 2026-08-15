@@ -209,7 +209,7 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
 </h5>
                 
                 <div className="row g-3 mb-2 mx-0">
-                  <div className="col-md-4 px-1">
+                  <div className="col-md-6 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Razón Social</label>
                     <input 
                       type="text" 
@@ -220,7 +220,7 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                     />
                   </div>
 
-                  <div className="col-md-4 px-1">
+                  <div className="col-md-6 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Persona de Contacto</label>
                     <input 
                       type="text" 
@@ -231,37 +231,7 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                     />
                   </div>
 
-                  <div className="col-md-4 px-1">
-                    <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Límite de Crédito</label>
-                    <input 
-                      type="number" 
-                      className="form-control text-white" 
-                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
-                      value={editData.limiteCredito} 
-                      onChange={e => setEditData({ ...editData, limiteCredito: Number(e.target.value) })} 
-                    />
-                  </div>
-
-                  <div className="col-md-6 px-1">
-                    <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Condición de Pago</label>
-                    <input 
-                      type="text" 
-                      className="form-control text-white" 
-                      style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }}
-                      placeholder="Ej: Efectivo, Cuenta Corriente, 30 días..." 
-                      value={editData.condicionDePago} 
-                      onChange={e => setEditData({ ...editData, condicionDePago: e.target.value })} 
-                      required 
-                      pattern="[A-Za-z0-9Á-Úá-ú\s]+"
-                      onInvalid={(e: any) => {
-                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Condición de Pago No puede Estar Vacío");
-                        else e.target.setCustomValidity("La Condición de Pago contiene caracteres no válidos");
-                      }}
-                      onInput={(e: any) => e.target.setCustomValidity("")} 
-                    />
-                  </div>
-
-                  <div className="col-md-6 px-1">
+                  <div className="col-md-12 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Estado</label>
                     <select 
                       className="form-select text-white" 

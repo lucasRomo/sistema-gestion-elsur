@@ -1,15 +1,16 @@
-  import React from 'react';
+import React from 'react';
 import { FaltaStockCard } from '../components/FaltaStockCard';
 import { SelectorProducto } from '../components/SelectorProducto';
 import { CarritoLista } from '../components/CarritoLista';
 import { ResumenVenta } from '../components/ResumenVenta';
 import { PedidosPendientesCard } from '../components/PedidosPendientesCard';
 import { VistaTicketModal } from '../../pedidos/modals/VistaTicketModal';
+import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { NotificacionesCard } from '../components/NotificacionesCard';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useVentaRapida } from '../hooks/useVentaRapida';
 
-export const VentaRapida: React.FC = () => {
+export const DashboardPrincipal: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -91,7 +92,7 @@ export const VentaRapida: React.FC = () => {
         <div className="col-12 col-md-4"><FaltaStockCard /></div>
       </div>
 
-      {/* --- PANEL INFERIOR --- */}
+      {/* --- PANEL INFERIOR DE VENTA RÁPIDA --- */}
       <div 
         className="card p-4 flex-grow-1 d-flex flex-column justify-content-between" 
         style={{ 
@@ -123,16 +124,26 @@ export const VentaRapida: React.FC = () => {
           onCancelar={() => setConfirmarCancelacion(true)} 
           onCompletar={handleValidarYCompletarVenta} 
           ultimoPedido={ultimoPedidoRealizado}
-          onImprimirTicket={() => setVerTicketPedido(ultimoPedidoRealizado)}
+          onImprimirTicketCliente={() => setVerTicketPedido({ pedido: ultimoPedidoRealizado, tipo: 'cliente' })}
+          onImprimirTicketPago={() => setVerTicketPedido({ pedido: ultimoPedidoRealizado, tipo: 'pago' })}
         />
       </div>
 
-      {/* MODAL DE VISTA PREVIA DEL TICKET */}
-      {verTicketPedido && (
+      {/* MODAL VISTA PREVIA TICKET CLIENTE */}
+      {verTicketPedido?.tipo === 'cliente' && (
         <VistaTicketModal 
-          pedido={verTicketPedido}
+          pedido={verTicketPedido.pedido}
           onClose={() => setVerTicketPedido(null)}
           esVentaRapida={true}
+        />
+      )}
+
+      {/* MODAL VISTA PREVIA TICKET PAGO */}
+      {verTicketPedido?.tipo === 'pago' && (
+        <VistaTicketPagoModal 
+          pedido={verTicketPedido.pedido}
+          tipo="pago"
+          onClose={() => setVerTicketPedido(null)}
         />
       )}
 
@@ -200,18 +211,30 @@ export const VentaRapida: React.FC = () => {
               
               <div className="d-flex flex-column gap-2 mt-3">
                 {suceso.tipo === 'exito' && suceso.titulo === '¡Éxito!' && ultimoPedidoRealizado && (
-                  <button 
-                    className="btn fw-bold text-dark btn-sm px-3 py-2" 
-                    style={{ backgroundColor: '#eab308' }}
-                    onClick={() => {
-                      setSuceso({ ...suceso, show: false });
-                      setVerTicketPedido(ultimoPedidoRealizado);
-                    }}
-                  >
-                    <i className="bi bi-printer-fill me-1"></i> Imprimir Ticket
-                  </button>
+                  <div className="d-flex gap-2 justify-content-center">
+                    <button 
+                      className="btn fw-bold text-dark btn-sm flex-fill py-2" 
+                      style={{ backgroundColor: '#eab308' }}
+                      onClick={() => {
+                        setSuceso({ ...suceso, show: false });
+                        setVerTicketPedido({ pedido: ultimoPedidoRealizado, tipo: 'cliente' });
+                      }}
+                    >
+                      <i className="bi bi-printer-fill me-1"></i> T. Cliente
+                    </button>
+                    <button 
+                      className="btn fw-bold text-dark btn-sm flex-fill py-2" 
+                      style={{ backgroundColor: '#38bdf8' }}
+                      onClick={() => {
+                        setSuceso({ ...suceso, show: false });
+                        setVerTicketPedido({ pedido: ultimoPedidoRealizado, tipo: 'pago' });
+                      }}
+                    >
+                      <i className="bi bi-receipt me-1"></i> T. Pago
+                    </button>
+                  </div>
                 )}
-                <button className="btn btn-secondary px-4 fw-semibold" onClick={() => setSuceso({ ...suceso, show: false })}>
+                <button className="btn btn-secondary px-4 fw-semibold mt-1" onClick={() => setSuceso({ ...suceso, show: false })}>
                   Cerrar
                 </button>
               </div>
