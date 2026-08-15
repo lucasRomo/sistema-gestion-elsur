@@ -362,9 +362,9 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
       <div className="d-flex justify-content-between mt-4 border-top pt-3 mx-1" style={{ borderColor: inputBorder }}>
         <button 
           type="button" 
-          className="btn btn-danger px-5 fw-semibold" 
+          className="btn btn-secondary px-5 fw-semibold" 
           onClick={onVolver} 
-          style={{ backgroundColor: '#b91c1c', border: 'none', borderRadius: '8px', color: '#ffffff' }}
+          style={{ borderRadius: '8px', color: '#ffffff' }}
         >
           Volver
         </button>

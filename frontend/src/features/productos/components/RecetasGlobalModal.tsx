@@ -115,7 +115,7 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
           </div>
 
           <div className="modal-footer border-top" style={{ borderColor: headerBorder }}>
-  <button className="btn btn-danger px-4" onClick={onClose}>Cerrar</button>
+  <button className="btn btn-secondary px-4" onClick={onClose}>Cerrar</button>
 </div>
 
         </div>

@@ -171,10 +171,10 @@ export const GestionUsuariosView: React.FC = () => {
           <div className="d-flex justify-content-between align-items-center gap-3 mt-4 font-monospace">
             <button 
               onClick={() => navigate('/dashboard')} 
-              className="btn btn-danger px-4 py-2 fw-semibold"
+              className="btn btn-secondary px-4 py-2 fw-semibold"
               style={{ color: '#ffffff' }}
             >
-              <i className="bi me-2"></i>Volver
+              <i className="bi"></i>Volver
             </button>
 
             <button 

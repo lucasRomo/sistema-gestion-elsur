@@ -285,13 +285,13 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                       <i className="bi bi-pencil-square me-1"></i>Habilitar Edición
                     </button>
                   ) : (
-                    <button type="button" className="btn btn-outline-secondary px-3 font-monospace" style={{ borderRadius: '8px' }} onClick={() => setModoEdicion(false)}>
+                    <button type="button" className="btn btn-outline-danger px-3 font-monospace" style={{ borderRadius: '8px' }} onClick={() => setModoEdicion(false)}>
                       Cancelar Edición
                     </button>
                   )}
                 </div>
                 <div className="d-flex gap-2">
-                  <button type="button" className="btn btn-danger px-4 fw-semibold font-monospace" style={{ borderRadius: '8px', color: '#ffffff' }} onClick={onCerrar}>
+                  <button type="button" className="btn btn-secondary px-4 fw-semibold font-monospace" style={{ borderRadius: '8px', color: '#ffffff' }} onClick={onCerrar}>
                     Cerrar
                   </button>
                   {modoEdicion && (

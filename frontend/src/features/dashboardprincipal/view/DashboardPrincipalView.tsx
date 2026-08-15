@@ -1,4 +1,4 @@
-import React from 'react';
+  import React from 'react';
 import { FaltaStockCard } from '../components/FaltaStockCard';
 import { SelectorProducto } from '../components/SelectorProducto';
 import { CarritoLista } from '../components/CarritoLista';
@@ -132,6 +132,7 @@ export const VentaRapida: React.FC = () => {
         <VistaTicketModal 
           pedido={verTicketPedido}
           onClose={() => setVerTicketPedido(null)}
+          esVentaRapida={true}
         />
       )}
 
@@ -210,7 +211,7 @@ export const VentaRapida: React.FC = () => {
                     <i className="bi bi-printer-fill me-1"></i> Imprimir Ticket
                   </button>
                 )}
-                <button style={{ backgroundColor: 'rgb(175, 58, 50)', border: 'none' }} className="btn btn-secondary btn-sm px-4 fw-bold" onClick={() => setSuceso({ ...suceso, show: false })}>
+                <button className="btn btn-secondary px-4 fw-semibold" onClick={() => setSuceso({ ...suceso, show: false })}>
                   Cerrar
                 </button>
               </div>

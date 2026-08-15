@@ -481,6 +481,37 @@ export const InformesView: React.FC = () => {
           background-color: #3f3f46;
           color: #fff;
         }
+
+        /* --- NUEVO: ESTILOS DE SCROLLBAR PARA GRÁFICOS --- */
+        .im-chart-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: #52525b transparent;
+        }
+        .im-chart-scroll::-webkit-scrollbar {
+          height: 8px; /* Alto del scroll horizontal */
+        }
+        .im-chart-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .im-chart-scroll::-webkit-scrollbar-thumb {
+          background-color: #52525b;
+          border-radius: 10px;
+        }
+        .im-chart-scroll::-webkit-scrollbar-thumb:hover {
+          background-color: #a1a1aa;
+        }
+
+        /* Scrollbar vertical para las leyendas de los gráficos de torta */
+        .recharts-legend-wrapper::-webkit-scrollbar {
+          width: 6px;
+        }
+        .recharts-legend-wrapper::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .recharts-legend-wrapper::-webkit-scrollbar-thumb {
+          background-color: #52525b;
+          border-radius: 10px;
+        }
       `}</style>
 
       {/* HEADER DE CONTROL */}

@@ -224,10 +224,6 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
             {/* ---------- VISTA DETALLE DE TURNO ---------- */}
             {vista === 'detalle' && turnoSeleccionado && (
               <>
-                <button className="btn btn-sm btn-outline-secondary mb-3" onClick={handleVolverALista}>
-                  <i className="bi bi-arrow-left me-1"></i> Volver al listado
-                </button>
-
                 {/* Resumen del arqueo */}
                 <div className="row g-3 mb-4">
                   <div className="col-6 col-md-3">
@@ -323,11 +319,26 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
             )}
           </div>
 
-          <div className="modal-footer border-top border-secondary border-opacity-25">
-            <button type="button" className="btn btn-secondary px-4" onClick={handleClose}>
-              Cerrar
-            </button>
-          </div>
+          <div className="modal-footer border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+  {/* Botón Volver (solo visible en la vista de detalle) */}
+  <div>
+    {vista === 'detalle' && (
+      <button 
+        type="button" 
+        className="btn btn-secondary px-4" 
+        style={{ backgroundColor: '#4076a5', color: '#ffffff', borderColor: '#4076a5' }}
+        onClick={handleVolverALista}
+      >
+        <i className="bi bi-arrow-left me-1"></i> Volver al listado
+      </button>
+    )}
+  </div>
+
+  {/* Botón Cerrar */}
+  <button type="button" className="btn btn-secondary px-4" onClick={handleClose}>
+    Cerrar Ventana
+  </button>
+</div>
         </div>
       </div>
     </div>

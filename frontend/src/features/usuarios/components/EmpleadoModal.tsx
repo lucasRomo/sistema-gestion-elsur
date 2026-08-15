@@ -102,7 +102,7 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
 
               <div className="d-flex flex-column gap-2 mt-2">
                 <button type="submit" className="btn btn-success w-100 py-2 fw-semibold" style={{ backgroundColor: '#3b7a44', border: 'none' }}>Registrar Nuevo Empleado</button>
-                <button type="button" className="btn btn-danger w-100 py-2" onClick={onCerrar} style={{ backgroundColor: '#a13b3b', border: 'none' }}>Volver</button>
+                <button type="button" className="btn btn-secondary w-100 py-2" onClick={onCerrar} style={{ border: 'none' }}>Volver</button>
               </div>
             </form>
           </div>

@@ -276,10 +276,10 @@ export const ClienteView = () => {
       <div className={`d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
         <button 
           onClick={() => navigate('/dashboard')} 
-          className="btn btn-danger px-4 py-2 fw-semibold" 
+          className="btn btn-secondary px-4 py-2 fw-semibold" 
           style={{ color: '#ffffff' }}
         >
-          <i className="bi me-2"></i>Volver
+          <i className="bi"></i>Volver
         </button>
 
         <div className="d-flex flex-wrap gap-2">

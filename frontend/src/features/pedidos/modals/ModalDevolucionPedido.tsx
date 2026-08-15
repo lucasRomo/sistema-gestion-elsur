@@ -85,10 +85,10 @@ export const ModalDevolucionPedido: React.FC<Props> = ({
             <button 
               type="button" 
               disabled={cargando}
-              className="btn btn-outline-secondary fw-bold py-2"
+              className="btn btn-secondary fw-bold py-2"
               onClick={onClose}
             >
-              Cancelar
+              Volver
             </button>
           </div>
         </div>

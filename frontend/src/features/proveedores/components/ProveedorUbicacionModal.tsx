@@ -143,11 +143,11 @@ export const ProveedorUbicacionModal: React.FC<ProveedorUbicacionModalProps> = (
                       <i className="bi bi-pencil-square me-1"></i>Habilitar Edición
                     </button>
                   ) : (
-                    <button type="button" className="btn btn-outline-secondary btn-sm px-3" onClick={() => setIsEditable(false)}>Cancelar Edición</button>
+                    <button type="button" className="btn btn-outline-danger btn-sm px-3" onClick={() => setIsEditable(false)}>Cancelar Edición</button>
                   )}
                 </div>
                 <div className="d-flex gap-2">
-                  <button type="button" className="btn btn-danger btn-sm px-4 fw-bold" style={{ color: '#ffffff' }} onClick={onClose}>
+                  <button type="button" className="btn btn-secondary btn-sm px-4 fw-bold" style={{ color: '#ffffff' }} onClick={onClose}>
                     Cerrar
                   </button>
                   {isEditable && (
@@ -155,7 +155,7 @@ export const ProveedorUbicacionModal: React.FC<ProveedorUbicacionModalProps> = (
                       type="submit" 
                       className="btn btn-info btn-sm px-4 fw-semibold"
                       style={{ 
-                        color: isDark ? '#000000' : '#ffffff', 
+                        color: isDark ? '#ffffff' : '#ffffff', 
                         backgroundColor: isDark ? '#0dcaf0' : '#0284c7', 
                         borderColor: 'transparent' 
                       }}

@@ -27,3 +27,9 @@ export interface ComparacionDataState {
   periodoActual: PeriodoRango;
   periodoAnterior: PeriodoRango;
 }
+
+export type TipoGraficoInforme =
+  | InformeComparacion
+  | 'mermas'
+  | 'averias'
+  | 'incongruencias';

@@ -32,7 +32,8 @@ export const guardarMaquinaAPI = async (maquina: Maquina & { observacion?: strin
     body: JSON.stringify({
       idMaquina: maquina.idMaquina,
       nombre: maquina.nombre,
-      estado: maquina.estado
+      estado: maquina.estado,
+      activo: maquina.activo ?? true
     })
   });
 

@@ -57,6 +57,26 @@ export const HistorialActividadView: React.FC = () => {
     return coincideEmpleado && coincideTabla;
   });
 
+  const formatearFecha = (fechaRaw?: string | null) => {
+  if (!fechaRaw) return '-';
+  const isoString = fechaRaw.endsWith('Z') || fechaRaw.includes('+') 
+    ? fechaRaw 
+    : `${fechaRaw}Z`;
+
+  const fechaObj = new Date(isoString);
+  if (isNaN(fechaObj.getTime())) return '-';
+
+  return fechaObj.toLocaleString('es-AR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  });
+  };
+
   return (
     <div className="container-fluid p-3 font-sans" style={{ minHeight: '100vh' }}>
       
@@ -155,11 +175,8 @@ export const HistorialActividadView: React.FC = () => {
                   style={{ borderBottom: index === actividadesFiltradas.length - 1 ? 'none' : `1px solid ${rowBorder}` }}
                 >
                   <td className="font-monospace py-3 px-3" style={{ fontSize: '0.85rem', color: mutedText }}>
-                    {new Date(act.fecha).toLocaleString('es-AR', {
-                      year: 'numeric', month: '2-digit', day: '2-digit',
-                      hour: '2-digit', minute: '2-digit', second: '2-digit'
-                    })}
-                  </td>
+  {formatearFecha(act.fecha)}
+</td>
                   <td className="fw-semibold py-3 px-3" style={{ color: userTextColor }}>
                     <i className="bi bi-person me-2" style={{ color: mutedText }}></i>
                     {obtenerNombreUsuario(act)}
@@ -187,11 +204,11 @@ export const HistorialActividadView: React.FC = () => {
       {/* Botón Inferior Volver */}
       <div className="d-flex justify-content-start mt-3 mb-4">
         <button
-          className="btn btn-danger fw-bold px-4 py-2 shadow-sm font-monospace"
+          className="btn btn-secondary fw-bold px-4 py-2 shadow-sm font-monospace"
           style={{ color: '#ffffff' }}
           onClick={() => navigate('/dashboard')}
         >
-          <i className="bi me-1"></i>Volver
+          <i className="bi"></i>Volver
         </button>
       </div>
 

@@ -13,7 +13,6 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables de tema
   const modalBg = isDark ? '#1e1e24' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const textColor = isDark ? '#ffffff' : '#0f172a';
@@ -24,6 +23,7 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
 
   const [nombre, setNombre] = useState('');
   const [estado, setEstado] = useState('OPERATIVA');
+  const [activo, setActivo] = useState(true);
   const [observacion, setObservacion] = useState('');
   const [errorValidacion, setErrorValidacion] = useState('');
   const [cargando, setCargando] = useState(false);
@@ -33,9 +33,11 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
     if (maquinaEditar) {
       setNombre(maquinaEditar.nombre || '');
       setEstado(maquinaEditar.estado || 'OPERATIVA');
+      setActivo(maquinaEditar.activo ?? true);
     } else {
       setNombre('');
       setEstado('OPERATIVA');
+      setActivo(true);
     }
     setObservacion('');
     setErrorValidacion('');
@@ -44,21 +46,25 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
 
   if (!show) return null;
 
+  // Verificamos si cambió el estado operativo
   const haCambiadoEstado = Boolean(maquinaEditar && maquinaEditar.estado !== estado);
 
   const procesarGuardado = async () => {
     setCargando(true);
+    setErrorValidacion('');
     try {
       await onGuardar({
         idMaquina: maquinaEditar?.idMaquina,
         nombre: nombre.trim(),
         estado,
+        activo,
         observacion: observacion.trim()
       });
       setConfirmarSinMantenimiento(false);
       onClose();
     } catch (error: any) {
-      alert("Error al guardar la máquina: " + error.message);
+      console.error("Error al guardar la máquina:", error);
+      setErrorValidacion("Error al guardar: " + (error.message || "Respuesta no válida del servidor."));
     } finally {
       setCargando(false);
     }
@@ -73,8 +79,9 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
       return;
     }
 
+    // Solo exigimos observación si REALMENTE cambió el estado operativo (OPERATIVA/FALLA/MANTENIMIENTO)
     if (haCambiadoEstado && !observacion.trim()) {
-      setErrorValidacion("Es obligatorio describir el motivo del cambio de estado o la solución aplicada.");
+      setErrorValidacion("Es obligatorio describir el motivo del cambio de estado u observación.");
       return;
     }
 
@@ -129,7 +136,7 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label" style={{ color: textColor }}>Estado Actual:</label>
+                  <label className="form-label" style={{ color: textColor }}>Estado Operativo:</label>
                   <select
                     className="form-select"
                     style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
@@ -145,6 +152,30 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
                     <option value="MANTENIMIENTO">MANTENIMIENTO</option>
                   </select>
                 </div>
+
+                <div className="mb-3">
+  <label className="form-label" style={{ color: textColor }}>Habilitación / Disponibilidad:</label>
+  <select
+    className="form-select"
+    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+    value={activo ? 'true' : 'false'}
+    onChange={(e) => {
+      const esActivo = e.target.value === 'true';
+      setActivo(esActivo);
+      
+      if (esActivo) {
+        setEstado('OPERATIVA');
+      } else {
+        setEstado('FUERA DE SERVICIO');
+      }
+      
+      if (errorValidacion) setErrorValidacion('');
+    }}
+  >
+    <option value="true">ACTIVO (Habilitada en el sistema)</option>
+    <option value="false">DESACTIVADO (Dada de baja / Inhabilitada)</option>
+  </select>
+</div>
 
                 {haCambiadoEstado && (
                   <div className="p-3 mb-3 rounded" style={{ backgroundColor: noteBoxBg, border: '1px solid #ffc107' }}>
@@ -172,7 +203,7 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
               </div>
 
               <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
-                <button type="button" className={`btn ${isDark ? 'btn-outline-secondary' : 'btn-outline-dark'}`} onClick={onClose} disabled={cargando}>
+                <button type="button" className={`btn ${isDark ? 'btn-secondary' : 'btn-secondary'}`} onClick={onClose} disabled={cargando}>
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn-warning fw-bold px-4 text-white" style={{ color: '#ffffff' }} disabled={cargando}>

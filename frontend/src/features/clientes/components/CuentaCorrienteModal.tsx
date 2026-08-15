@@ -273,7 +273,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
 
             </div>
             <div className={`modal-footer border-top ${borderDivider}`}>
-              <button className="btn btn-danger px-4 fw-semibold" style={{ color: '#ffffff' }} onClick={onCerrar}>
+              <button className="btn btn-secondary px-4 fw-semibold" style={{ color: '#ffffff' }} onClick={onCerrar}>
   Volver
 </button>
             </div>

@@ -44,6 +44,16 @@ export const clienteService = {
     return res.json();
   },
 
+  actualizarCategoria: async (id: number, categoria: { nombre: string; descuentoAutomatico: number }) => {
+    const res = await fetch(`${BASE_URL}/categorias-cliente/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(categoria)
+    });
+    if (!res.ok) throw new Error("Error al actualizar categoría");
+    return res.json();
+  },
+
   eliminarCategoria: async (id: number) => {
     const res = await fetch(`${BASE_URL}/categorias-cliente/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error("Error al eliminar categoría");

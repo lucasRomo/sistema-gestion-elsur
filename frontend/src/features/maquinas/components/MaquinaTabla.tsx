@@ -6,19 +6,16 @@ interface MaquinaTablaProps {
   maquinas: Maquina[];
   onEditar: (maquina: Maquina) => void;
   onVerIncidencias: (maquina: Maquina) => void;
-  onEliminar: (idMaquina: number) => void;
 }
 
 export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({ 
   maquinas, 
   onEditar, 
-  onVerIncidencias, 
-  onEliminar 
+  onVerIncidencias 
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Estilos adaptativos estandarizados
   const tableWrapperBg = isDark ? '#1d1d1d' : '#f8fafc';
   const tableBg = isDark ? '#1d1d1d' : '#ffffff';
   const tableText = isDark ? '#e4e4e7' : '#18181b';
@@ -61,14 +58,15 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
           <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontSize: '0.85rem', textTransform: 'uppercase' }}>
             <th className="py-3 px-3 text-center">ID</th>
             <th className="py-3 px-3 text-start">Nombre del Equipo</th>
-            <th className="py-3 px-3 text-center">Estado Actual</th>
+            <th className="py-3 px-3 text-center">Estado Operativo</th>
+            <th className="py-3 px-3 text-center">Disponibilidad</th>
             <th className="py-3 px-3 text-center">Opciones</th>
           </tr>
         </thead>
         <tbody style={{ fontSize: '0.9rem' }}>
           {maquinas.length === 0 ? (
             <tr>
-              <td colSpan={4} className="text-center py-5 border-0" style={{ color: '#ffffff' }}>
+              <td colSpan={5} className="text-center py-5 border-0" style={{ color: '#ffffff' }}>
                 <i className="bi display-5 d-block mb-2 opacity-50"></i>
                 <span>No se encontraron equipos registrados en el sistema.</span>
               </td>
@@ -77,7 +75,7 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
             maquinas.map((maq, index) => (
               <tr 
                 key={maq.idMaquina} 
-                style={{ borderBottom: index === maquinas.length - 1 ? 'none' : `1px solid ${rowBorder}` }}
+                style={{ borderBottom: index === maquinas.length - 1 ? 'none' : `1px solid ${rowBorder}`, opacity: maq.activo === false ? 0.6 : 1 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
@@ -86,6 +84,17 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
                 <td className="py-3 px-3 text-center">
                   {renderBadgeEstado(maq.estado)}
                 </td>
+                <td className="text-center align-middle">
+  {maq.activo ? (
+    <span className="badge bg-success text-white px-2 py-1">
+      <i className="bi bi-toggle-on me-1"></i> ACTIVO
+    </span>
+  ) : (
+    <span className="badge bg-danger text-white px-2 py-1">
+      <i className="bi bi-toggle-off me-1"></i> INACTIVO
+    </span>
+  )}
+</td>
                 <td className="py-3 px-3 text-center">
                   <div className="d-flex justify-content-center gap-2">
                     <button 
@@ -104,15 +113,6 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
                       title="Modificar Equipo"
                     >
                       <i className="bi bi-pencil-square"></i>
-                    </button>
-
-                    <button 
-                      onClick={() => maq.idMaquina && onEliminar(maq.idMaquina)}
-                      className="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center rounded-2"
-                      style={{ width: '34px', height: '34px' }}
-                      title="Eliminar Equipo"
-                    >
-                      <i className="bi bi-trash"></i>
                     </button>
                   </div>
                 </td>

@@ -275,7 +275,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
         <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 w-100 pt-3">
           <button 
             type="button" 
-            className="btn btn-danger px-4 fw-medium text-white"
+            className="btn btn-secondary px-4 fw-semibold"
             onClick={onVolver}
           >
             <i className="bi me-1"></i> Volver al Carrito
@@ -324,7 +324,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
             className="btn btn-success px-4 fw-bold" 
             style={{ backgroundColor: '#288f47', border: 'none' }}
           >
-            {estado === 'PRESUPUESTO' ? 'Guardar Presupuesto' : 'Confirmar Pedido'} <i className="bi bi-check-lg ms-1"></i>
+            {estado === 'PRESUPUESTO' ? 'Guardar Presupuesto' : 'Confirmar Pedido'} <i className="bi ms-1"></i>
           </button>
         </div>
       </form>

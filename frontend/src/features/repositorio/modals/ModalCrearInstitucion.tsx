@@ -70,7 +70,7 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
               </select>
             </div>
             <div className="d-flex justify-content-end gap-2">
-              <button type="button" className="btn btn-sm btn-secondary text-white" onClick={onClose}>
+              <button type="button" className="btn btn-sm btn-danger text-white" onClick={onClose}>
                 Cancelar
               </button>
               <button type="submit" className="btn btn-sm btn-info fw-bold text-white">

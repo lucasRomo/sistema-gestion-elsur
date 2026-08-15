@@ -16,5 +16,8 @@ public class Maquina {
     private String nombre;
 
     @Column(length = 20)
-    private String estado = "OPERATIVA"; // 'OPERATIVA', 'FALLA', 'MANTENIMIENTO'
+    private String estado = "OPERATIVA"; 
+
+    @Column(nullable = false)
+    private Boolean activo = true;
 }

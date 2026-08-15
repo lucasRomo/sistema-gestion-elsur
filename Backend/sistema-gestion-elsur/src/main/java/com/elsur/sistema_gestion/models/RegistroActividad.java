@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import com.fasterxml.jackson.annotation.JsonFormat; // Importante
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Data
@@ -19,7 +20,9 @@ public class RegistroActividad {
     @Column(name = "id_reg_act")
     private Integer idRegAct;
 
-    @Column(name = "fecha", insertable = false, updatable = false)
+    // --- CAMBIO AQUÍ ---
+    @Column(name = "fecha")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", timezone = "UTC")
     private Timestamp fecha;
 
     @ManyToOne(fetch = FetchType.EAGER)

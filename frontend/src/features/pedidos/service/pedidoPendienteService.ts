@@ -131,14 +131,20 @@ export const PedidoPendienteService = {
     const response = await fetch(`${API_URL}/${idPedido}/ubicacion`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ubicacion: nuevaUbicacion })
+      body: JSON.stringify({ 
+        ubicacion: nuevaUbicacion,
+        ubicacionEstante: nuevaUbicacion,
+        ubicacion_estante: nuevaUbicacion
+      })
     });
 
     if (!response.ok) {
-      throw new Error("No se pudo actualizar la ubicación del pedido.");
+      const errorText = await response.text();
+      throw new Error(errorText || "No se pudo actualizar la ubicación del pedido.");
     }
 
-    return await response.json();
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
   },
 
   /**

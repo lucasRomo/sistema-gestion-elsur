@@ -2,15 +2,23 @@ import React, { useEffect, useState } from 'react';
 import type { Maquina } from '../types/Maquina';
 import type { Incidencia, Empleado } from '../types/Incidencia';
 import { useTheme } from '../../../Context/ThemeContext';
+import { incidenciaService } from '../service/incidenciaService';
 
 interface Props {
   show: boolean;
   maquina: Maquina | null;
   onClose: () => void;
   onIncidenciaResuelta: () => void;
+  onPagoExitoso?: (mensaje: string) => void;
 }
 
-export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maquinaProp, onClose, onIncidenciaResuelta }) => {
+export const HistorialIncidenciasModal: React.FC<Props> = ({ 
+  show, 
+  maquina: maquinaProp, 
+  onClose, 
+  onIncidenciaResuelta,
+  onPagoExitoso 
+}) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -40,6 +48,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [conceptoPago, setConceptoPago] = useState('');
   const [procesandoPago, setProcesandoPago] = useState(false);
+  const [errorPago, setErrorPago] = useState<string | null>(null);
 
   // Advertencia saldo insuficiente
   const [showModalSaldoInsuficiente, setShowModalSaldoInsuficiente] = useState(false);
@@ -53,11 +62,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
     if (!maquina?.idMaquina) return;
     setCargando(true);
     try {
-      const res = await fetch(`http://localhost:8080/api/incidencias/maquina/${maquina.idMaquina}`);
-      if (res.ok) {
-        const data = await res.json();
-        setIncidencias(data);
-      }
+      const data = await incidenciaService.getByMaquinaId(maquina.idMaquina);
+      setIncidencias(data);
     } catch (error) {
       console.error("Error al cargar historial:", error);
     } finally {
@@ -105,23 +111,18 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
     }
 
     try {
-      const res = await fetch(`http://localhost:8080/api/incidencias/${idIncidencia}/mantenimiento`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          notaMantenimiento: textoNota.trim(),
-          idEmpleadoMantenimiento: getUsuarioActualId()
-        })
-      });
+      await incidenciaService.ponerEnMantenimiento(
+        idIncidencia, 
+        textoNota.trim(), 
+        getUsuarioActualId()
+      );
 
-      if (res.ok) {
-        setMaquina({ ...maquina, estado: 'MANTENIMIENTO' });
-        limpiarFormulario();
-        cargarHistorial();
-        onIncidenciaResuelta();
-      }
+      setMaquina({ ...maquina, estado: 'MANTENIMIENTO' });
+      limpiarFormulario();
+      cargarHistorial();
+      onIncidenciaResuelta();
     } catch (err) {
-      alert("Error al pasar a mantenimiento.");
+      console.error("Error al pasar a mantenimiento:", err);
     }
   };
 
@@ -132,51 +133,48 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
     }
 
     try {
-      const res = await fetch(`http://localhost:8080/api/incidencias/${idIncidencia}/resolver`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          resolucion: textoNota.trim(),
-          idEmpleadoResuelve: getUsuarioActualId()
-        })
-      });
+      await incidenciaService.resolver(
+        idIncidencia, 
+        textoNota.trim(), 
+        getUsuarioActualId()
+      );
 
-      if (res.ok) {
-        setMaquina({ ...maquina, estado: 'OPERATIVA' });
-        limpiarFormulario();
-        cargarHistorial();
-        onIncidenciaResuelta();
-      }
+      setMaquina({ ...maquina, estado: 'OPERATIVA' });
+      limpiarFormulario();
+      cargarHistorial();
+      onIncidenciaResuelta();
     } catch (err) {
-      alert("Error al resolver la incidencia.");
+      console.error("Error al resolver la incidencia:", err);
     }
   };
 
   const ejecutarPagoMantenimiento = async (forzar: boolean = false) => {
     if (!incidenciaAPagar?.idIncidencia) return;
+    
     if (!montoPago || Number(montoPago) <= 0) {
-      alert("Ingrese un monto válido.");
+      setErrorPago("Ingrese un monto válido mayor a 0.");
       return;
     }
 
+    setErrorPago(null);
     setProcesandoPago(true);
+
     try {
-      const res = await fetch(`http://localhost:8080/api/incidencias/${incidenciaAPagar.idIncidencia}/pago-mantenimiento`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { ok, data } = await incidenciaService.registrarPagoMantenimiento(
+        incidenciaAPagar.idIncidencia,
+        {
           monto: Number(montoPago),
           metodoPago,
           descripcion: conceptoPago.trim() || `Pago reparación ${maquina.nombre}`,
           idUsuario: getUsuarioActualId(),
           forzarSaldoInsuficiente: forzar
-        })
-      });
+        }
+      );
 
-      const data = await res.json();
-
-      if (res.ok) {
-        alert("¡Egreso registrado correctamente en caja como Pago de Mantenimiento!");
+      if (ok) {
+        if (onPagoExitoso) {
+          onPagoExitoso("¡Egreso registrado correctamente en caja como Pago de Mantenimiento!");
+        }
         setIncidenciaAPagar(null);
         setShowModalSaldoInsuficiente(false);
         setMontoPago('');
@@ -184,16 +182,16 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
         cargarHistorial();
       } else {
         if (data.code === 'CAJA_CERRADA') {
-          alert("Error: La caja se encuentra CERRADA. Inicie el turno de caja antes de realizar pagos.");
+          setErrorPago("Error: La caja se encuentra CERRADA. Inicie el turno de caja antes de realizar pagos.");
         } else if (data.code === 'SALDO_INSUFFICIENT') {
           setMensajeErrorSaldo(data.message || 'El saldo en caja es menor al monto ingresado.');
           setShowModalSaldoInsuficiente(true);
         } else {
-          alert(data.message || "Error al procesar el pago.");
+          setErrorPago(data.message || "Error al procesar el pago.");
         }
       }
     } catch (err) {
-      alert("Error de conexión al registrar pago.");
+      setErrorPago("Error de conexión al registrar pago con el servidor.");
     } finally {
       setProcesandoPago(false);
     }
@@ -290,6 +288,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                               onClick={() => {
                                 setIncidenciaAPagar(inc);
                                 setMontoPago('');
+                                setErrorPago(null);
                                 setConceptoPago(`Pago mantenimiento ${maquina.nombre} - Ticket #${inc.idIncidencia}`);
                               }}
                             >
@@ -365,8 +364,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                                   />
                                   {errorValidacion && <small className="text-danger d-block mb-1">{errorValidacion}</small>}
                                   <div className="d-flex gap-1 justify-content-end">
-                                    <button className={`btn btn-xs ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'} py-0 px-2`} onClick={limpiarFormulario}>Cancelar</button>
-                                    <button className="btn btn-xs btn-warning fw-bold text-dark py-0 px-2" onClick={() => handlePonerEnMantenimiento(inc.idIncidencia!)}>Guardar</button>
+                                    <button className={`btn btn-xs ${isDark ? 'btn-secondary' : 'btn-secondary'} py-0 px-2`} onClick={limpiarFormulario}>Cancelar</button>
+                                    <button className="btn btn-xs btn-warning fw-bold py-0 px-2" onClick={() => handlePonerEnMantenimiento(inc.idIncidencia!)}>Guardar</button>
                                   </div>
                                 </div>
                               ) : inc.notaMantenimiento ? (
@@ -381,19 +380,19 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                                 </div>
                               ) : (
                                 <div className="text-center py-2">
-  <button
-    className="btn btn-warning text-dark fw-bold btn-sm px-3 py-1 shadow"
-    style={{ fontSize: '0.78rem' }}
-    onClick={() => {
-      setIdAccionActiva(inc.idIncidencia!);
-      setTipoAccion('MANTENIMIENTO');
-      setTextoNota('');
-      setErrorValidacion('');
-    }}
-  >
-    <i className="bi bi-tools me-1"></i> Pasar a Mantenimiento
-  </button>
-</div>
+                                  <button
+                                    className="btn btn-warning text-dark fw-bold btn-sm px-3 py-1 shadow"
+                                    style={{ fontSize: '0.78rem' }}
+                                    onClick={() => {
+                                      setIdAccionActiva(inc.idIncidencia!);
+                                      setTipoAccion('MANTENIMIENTO');
+                                      setTextoNota('');
+                                      setErrorValidacion('');
+                                    }}
+                                  >
+                                    <i className="bi bi-tools me-1"></i> Pasar a Mantenimiento
+                                  </button>
+                                </div>
                               )}
                             </div>
 
@@ -479,7 +478,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
           </div>
 
           <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}`, padding: '12px 24px' }}>
-            <button type="button" className={`btn ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'} font-monospace`} onClick={onClose}>
+            <button type="button" className={`btn ${isDark ? 'btn-secondary' : 'btn-secondary'} font-monospace`} onClick={onClose}>
               Cerrar
             </button>
           </div>
@@ -503,6 +502,13 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                   Este egreso quedará categorizado como <strong className="text-warning">"EGRESO_MANTENIMIENTO"</strong> e impactará directamente sobre el saldo del turno de caja activo.
                 </p>
 
+                {errorPago && (
+                  <div className="alert alert-danger font-monospace py-2 px-3 small mb-3 border-0 rounded-3 d-flex align-items-center gap-2">
+                    <i className="bi bi-exclamation-triangle-fill fs-5"></i>
+                    <span>{errorPago}</span>
+                  </div>
+                )}
+
                 <div className="mb-3">
                   <label className="form-label fw-bold">Monto pagado ($):</label>
                   <input
@@ -512,7 +518,10 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                     className="form-control fs-5"
                     style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                     value={montoPago}
-                    onChange={(e) => setMontoPago(e.target.value)}
+                    onChange={(e) => {
+                      setMontoPago(e.target.value);
+                      if (errorPago) setErrorPago(null);
+                    }}
                     placeholder="0.00"
                     autoFocus
                   />
@@ -546,7 +555,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
               </div>
 
               <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
-                <button type="button" className={`btn ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'}`} onClick={() => setIncidenciaAPagar(null)} disabled={procesandoPago}>
+                <button type="button" className={`btn ${isDark ? 'btn-secondary' : 'btn-secondary'}`} onClick={() => setIncidenciaAPagar(null)} disabled={procesandoPago}>
                   Cancelar
                 </button>
                 <button type="button" className="btn btn-danger fw-bold px-4" onClick={() => ejecutarPagoMantenimiento(false)} disabled={procesandoPago}>
@@ -576,7 +585,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({ show, maquina: maqu
                 </p>
               </div>
               <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
-                <button type="button" className="btn btn-secondary px-3" onClick={() => setShowModalSaldoInsuficiente(false)} disabled={procesandoPago}>
+                <button type="button" className="btn btn-danger px-3" onClick={() => setShowModalSaldoInsuficiente(false)} disabled={procesandoPago}>
                   Cancelar
                 </button>
                 <button type="button" className="btn btn-warning fw-bold text-white px-4" style={{ color: '#ffffff' }} onClick={() => ejecutarPagoMantenimiento(true)} disabled={procesandoPago}>

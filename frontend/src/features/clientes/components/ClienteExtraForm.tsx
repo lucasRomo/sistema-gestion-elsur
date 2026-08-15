@@ -39,7 +39,7 @@ export const ClienteExtraForm = ({ formData, setFormData, onRegistrar, onCerrar 
               <input type="number" className="form-control" value={formData.limiteCredito} onChange={e => handleChange('limiteCredito', e.target.value)} required />
             </div>
             <div className="d-flex gap-2">
-              <button type="button" className="btn btn-danger w-100" onClick={onCerrar}>Volver</button>
+              <button type="button" className="btn btn-secondary w-100" onClick={onCerrar}>Volver</button>
               <button type="submit" className="btn btn-success w-100">Registrar Cliente</button>
             </div>
           </form>

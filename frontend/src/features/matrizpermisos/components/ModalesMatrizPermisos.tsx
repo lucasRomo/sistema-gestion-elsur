@@ -80,8 +80,8 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
                     : `Estás modificando la plantilla del Perfil Global.`}
                 </p>
                 <div className="d-flex justify-content-center gap-2 mt-3">
-                  <button className="btn btn-sm px-3 fw-bold text-white w-50" style={{ backgroundColor: '#a52a2a' }} onClick={() => setMostrarModalConfirmacion(false)}>Cancelar</button>
-                  <button className="btn btn-sm px-3 fw-bold text-white w-50" style={{ backgroundColor: '#2b7a3e' }} onClick={confirmarGuardado}>Confirmar</button>
+                  <button className="btn btn-sm px-3 fw-bold w-50" style={{ backgroundColor: '#a52a2a', color: '#ffffff', border: 'none' }} onClick={() => setMostrarModalConfirmacion(false)}>Cancelar</button>
+                  <button className="btn btn-sm px-3 fw-bold w-50" style={{ backgroundColor: '#2b7a3e', color: '#ffffff', border: 'none' }} onClick={confirmarGuardado}>Confirmar</button>
                 </div>
               </div>
             </div>
@@ -96,12 +96,12 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
             <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #20c997', borderRadius: '12px' }}>
               <div className="modal-body text-center py-3">
                 <div className="d-flex justify-content-center mb-2">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', backgroundColor: '#132e27', border: '2px solid #20c997' }}>
+                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', backgroundColor: 'transparent', border: '2px solid #20c997' }}>
                     <i className="bi bi-check-lg text-success" style={{ fontSize: '2rem' }}></i>
                   </div>
                 </div>
                 <h6 className="fw-bold my-2 text-white">{mensajeExitoTexto}</h6>
-                <button className="btn btn-sm px-4 fw-bold text-white mt-2" style={{ backgroundColor: '#a52a2a', borderRadius: '6px' }} onClick={() => setMostrarModalExito(false)}>Cerrar</button>
+                <button className="btn btn-sm px-4 fw-bold mt-2" style={{ backgroundColor: '#a52a2a', color: '#ffffff', borderRadius: '6px', border: 'none' }} onClick={() => setMostrarModalExito(false)}>Cerrar</button>
               </div>
             </div>
           </div>

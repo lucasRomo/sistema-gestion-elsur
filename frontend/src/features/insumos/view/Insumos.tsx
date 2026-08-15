@@ -84,7 +84,7 @@ export const Insumos: React.FC = () => {
 
       {/* Botonera principal (se eliminó la línea divisoria 'border-top border-secondary') */}
       <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-3 font-monospace">
-        <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2" style={{ color: '#ffffff' }}>
+        <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-4 py-2" style={{ color: '#ffffff' }}>
           Volver
         </button>
         

@@ -25,6 +25,15 @@ public class CategoriaClienteController {
         return repository.save(categoria);
     }
 
+    @PutMapping("/{id}")
+    public categoriaCliente actualizar(@PathVariable Integer id, @RequestBody categoriaCliente categoriaDetalles) {
+        return repository.findById(id).map(categoria -> {
+            categoria.setNombre(categoriaDetalles.getNombre());
+            categoria.setDescuentoAutomatico(categoriaDetalles.getDescuentoAutomatico());
+            return repository.save(categoria);
+        }).orElseThrow(() -> new RuntimeException("Categoría no encontrada con id: " + id));
+    }
+
     @DeleteMapping("/{id}")
     public void eliminar(@PathVariable Integer id) {
         repository.deleteById(id);

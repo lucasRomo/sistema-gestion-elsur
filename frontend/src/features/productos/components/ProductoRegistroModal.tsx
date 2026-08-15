@@ -250,7 +250,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
               
               <div className={`modal-footer border-top ${borderDivider} py-2`}>
                 <button type="button" className="btn btn-sm btn-danger px-4" onClick={onClose}>Cancelar</button>
-                <button type="submit" className="btn btn-sm btn-info text-dark fw-bold px-4">Guardar</button>
+                <button type="submit" className="btn btn-sm btn-info px-4" style={{ backgroundColor: '#278114', borderColor: "#278114", color: 'white' }} >Guardar</button>
               </div>
             </form>
           </div>

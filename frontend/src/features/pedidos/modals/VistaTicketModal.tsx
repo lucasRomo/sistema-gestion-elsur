@@ -3,9 +3,14 @@ import React, { useState } from 'react';
 interface Props {
   pedido: any;
   onClose: () => void;
+  esVentaRapida?: boolean;
 }
 
-export const VistaTicketModal: React.FC<Props> = ({ pedido, onClose }) => {
+export const VistaTicketModal: React.FC<Props> = ({ 
+  pedido, 
+  onClose, 
+  esVentaRapida = false 
+}) => {
   if (!pedido) return null;
 
   // Estado para alternar la previsualización en pantalla ('cliente' o 'comanda')
@@ -34,6 +39,9 @@ export const VistaTicketModal: React.FC<Props> = ({ pedido, onClose }) => {
     document.title = originalTitle;
   };
 
+  // Comprobar si el pedido proviene de Venta Rápida
+  const esProcesoVentaRapida = esVentaRapida || pedido.estado === 'VENTA_RAPIDA';
+
   return (
     <div className="modal d-block show" tabIndex={-1} style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
       <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '480px' }}>
@@ -61,7 +69,7 @@ export const VistaTicketModal: React.FC<Props> = ({ pedido, onClose }) => {
             </button>
           </div>
 
-          {/* Contenedor Envolvente del Ticket Físico (Simula el papel térmico continuo con un recuadro oscuro estético) */}
+          {/* Contenedor Envolvente del Ticket Físico */}
           <div 
              id="ticket-imprimible" 
              data-bs-theme="light"
@@ -98,9 +106,13 @@ export const VistaTicketModal: React.FC<Props> = ({ pedido, onClose }) => {
                   <p className="mb-1"><strong>Estado Operativo:</strong> {pedido.estado}</p>
                   <p className="mb-1"><strong>Estante/Ubicación:</strong> <span className="p-1 bg-dark text-white rounded px-2 fw-bold">{pedido.ubicacion_estante || 'Taller'}</span></p>
                   <p className="mb-1"><strong>Operario Asignado:</strong> {nombreEmpleado}</p>
-                  <p className="mb-1 text-danger">
-                    <strong>Egreso Estimado:</strong> {pedido.fecha_entrega_estimada ? new Date(pedido.fecha_entrega_estimada).toLocaleString('es-AR') : 'Prioritario / Sín definir'}
-                  </p>
+                  
+                  {/* Se oculta el Egreso Estimado en Venta Rápida */}
+                  {!esProcesoVentaRapida && (
+                    <p className="mb-1 text-danger">
+                      <strong>Egreso Estimado:</strong> {pedido.fecha_entrega_estimada ? new Date(pedido.fecha_entrega_estimada).toLocaleString('es-AR') : 'Prioritario / Sín definir'}
+                    </p>
+                  )}
                 </>
               )}
             </div>
@@ -168,7 +180,7 @@ export const VistaTicketModal: React.FC<Props> = ({ pedido, onClose }) => {
 
           {/* Acciones de Control - Ocultas al imprimir */}
           <div className="d-flex justify-content-between mt-4 border-top pt-2 d-print-none">
-            <button className="btn btn-danger px-3" onClick={onClose}>
+            <button className="btn btn-secondary px-3" onClick={onClose}>
               Cerrar
             </button>
             <button 
@@ -197,7 +209,7 @@ export const VistaTicketModal: React.FC<Props> = ({ pedido, onClose }) => {
             left: 0;
             top: 0;
             width: 100%;
-            border: none !important; /* Quita el borde punteado en papel real para ahorrar espacio */
+            border: none !important;
             padding: 0;
             margin: 0;
           }

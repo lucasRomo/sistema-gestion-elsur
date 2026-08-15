@@ -398,7 +398,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
                   type="submit" 
                   className="btn btn-info fw-bold px-4" 
                   style={{ 
-                    color: isDark ? '#000000' : '#ffffff', 
+                    color: isDark ? '#fffefe' : '#ffffff', 
                     backgroundColor: isDark ? '#0dcaf0' : '#0284c7', 
                     borderColor: 'transparent' 
                   }}
@@ -512,7 +512,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
               <div className="modal-footer py-2" style={{ borderTop: `1px solid ${modalBorder}` }}>
                 <button 
                   type="button" 
-                  className="btn btn-sm btn-danger px-3 fw-bold" 
+                  className="btn btn-sm btn-secondary px-3 fw-bold" 
                   style={{ color: '#ffffff' }}
                   onClick={() => setShowCategorias(false)}
                 >

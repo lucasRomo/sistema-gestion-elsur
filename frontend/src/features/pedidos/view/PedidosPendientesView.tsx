@@ -282,7 +282,9 @@ export const PedidosPendientesView: React.FC = () => {
 
   // Filtrado de pedidos
   const pedidosFiltrados = pedidos.filter(p => {
-    const esVentaRapida = p.observaciones?.toLowerCase().includes('venta rápida') || p.observacion?.toLowerCase().includes('venta rápida') || p.estante === 'Venta Rápida';
+    const esVentaRapida = (p.observaciones?.toLowerCase().includes('venta rápida') || 
+                         p.observacion?.toLowerCase().includes('venta rápida') || 
+                         p.estante === 'Venta Rápida') && p.estado !== 'PENDIENTE';
     if (esVentaRapida) return false;
 
     const nombreCliente = p.cliente?.persona 
@@ -373,8 +375,8 @@ export const PedidosPendientesView: React.FC = () => {
           )}
         </div>
 
-        <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-2 border-top border-secondary pb-1 mt-auto">
-          <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2">Volver</button>
+        <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-2 border-secondary pb-1 mt-auto">
+          <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-4 py-2">Volver</button>
         </div>
       </div>
 

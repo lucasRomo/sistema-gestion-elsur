@@ -503,7 +503,12 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
       value={ubicacionInput}
       onChange={(e) => setUbicacionInput(e.target.value)}
       onBlur={confirmarUbicacion}
-      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+      onKeyDown={(e) => { 
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          confirmarUbicacion();
+        } 
+      }}
       maxLength={20}
       placeholder="Ej: Taller, Mostrador, Depósito..."
     />

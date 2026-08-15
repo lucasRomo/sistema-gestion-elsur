@@ -54,9 +54,6 @@ export const CajaView: React.FC = () => {
 
   const chartGrid = isDark ? '#2d2d30' : '#e2e8f0';
   const chartTick = isDark ? '#aaa' : '#64748b';
-  const tooltipBg = isDark ? '#1e1e1f' : '#ffffff';
-  const tooltipBorder = isDark ? '#2d2d30' : '#e2e8f0';
-  const tooltipText = isDark ? '#fff' : '#18181b';
   const dotColor = isDark ? '#ffffff' : '#1e1e1f';
 
   useEffect(() => {
@@ -170,44 +167,48 @@ export const CajaView: React.FC = () => {
       <span 
         className="d-inline-block px-2 py-1 rounded fw-semibold"
         style={{
-          backgroundColor: '#1c9b4a',
-          color: '#f4f7f5',
-          border: '1px solid #1c9b4a',
+          backgroundColor: esGanancia 
+            ? (isDark ? 'rgba(28, 155, 74, 0.2)' : '#d1fae5') 
+            : (isDark ? 'rgba(226, 46, 46, 0.2)' : '#fee2e2'),
+          color: esGanancia 
+            ? (isDark ? '#4ade80' : '#065f46') 
+            : (isDark ? '#f87171' : '#991b1b'),
+          border: `1px solid ${esGanancia ? '#1c9b4a' : '#e22e2e'}`,
           fontSize: '0.75rem'
         }}
       >
-        {esGanancia ? 'Ganancia' : 'Egreso'}
+        {esGanancia ? 'Ingreso' : 'Egreso'}
       </span>
     );
   };
 
   const CustomCajaAreaTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    const esEgreso = data.esEgreso;
-    return (
-      <div
-        className="p-2 rounded-3 shadow-lg im-surface"
-        style={{ border: `1px solid ${esEgreso ? '#e22e2e' : '#8e45e0'}`, fontSize: '0.85rem' }}
-      >
-        <div className="d-flex align-items-center justify-content-between gap-3 mb-2 pb-1 border-bottom border-secondary border-opacity-25">
-          <span className="fw-bold text-body-secondary">{label}</span>
-          <span className={`fw-bold badge ${esEgreso ? 'bg-danger' : 'bg-success'}`}>
-            {esEgreso
-              ? `- $${Math.abs(data.montoMovimiento).toLocaleString('es-AR')}`
-              : `+ $${Math.abs(data.montoMovimiento).toLocaleString('es-AR')}`}
-          </span>
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      const esEgreso = data.esEgreso;
+      return (
+        <div
+          className="p-2 rounded-3 shadow-lg im-surface"
+          style={{ border: `1px solid ${esEgreso ? '#e22e2e' : '#8e45e0'}`, fontSize: '0.85rem' }}
+        >
+          <div className="d-flex align-items-center justify-content-between gap-3 mb-2 pb-1 border-bottom border-secondary border-opacity-25">
+            <span className="fw-bold text-body-secondary">{label}</span>
+            <span className={`fw-bold badge ${esEgreso ? 'bg-danger' : 'bg-success'}`}>
+              {esEgreso
+                ? `- $${Math.abs(data.montoMovimiento).toLocaleString('es-AR')}`
+                : `+ $${Math.abs(data.montoMovimiento).toLocaleString('es-AR')}`}
+            </span>
+          </div>
+          <div className="d-flex align-items-center justify-content-between gap-2">
+            <span className="text-body-secondary">Estado Caja:</span>
+            <span className="fw-bold" style={{ color: '#20c997' }}>
+              ${data.monto.toLocaleString('es-AR')}
+            </span>
+          </div>
         </div>
-        <div className="d-flex align-items-center justify-content-between gap-2">
-          <span className="text-body-secondary">Estado Caja:</span>
-          <span className="fw-bold" style={{ color: '#20c997' }}>
-            ${data.monto.toLocaleString('es-AR')}
-          </span>
-        </div>
-      </div>
-    );
-  }
-  return null;
+      );
+    }
+    return null;
   };
 
   return (
@@ -267,124 +268,129 @@ export const CajaView: React.FC = () => {
                 </div>
                 
                 <div style={{ width: movimientos.length > 5 ? `${movimientos.length * 80}px` : '100%', height: '140px', minWidth: '100%' }}>
-  {cajaAbierta && movimientos.length > 0 ? (
-    <ResponsiveContainer width="100%" height="100%">
-      <AreaChart
-        data={[...movimientos].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-        .map(m => {
-          const esEgreso = m.tipoMovimiento === 'EGRESO';
-          return {
-            hora: new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }),
-            monto: esEgreso ? -Math.abs(m.monto) : m.monto,
-            esEgreso,
-            montoMovimiento: m.monto
-          };
-        })}
-        margin={{ top: 10, right: 15, left: -15, bottom: 5 }}
-      >
-        <defs>
-          <linearGradient id="colorSaldoCaja" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#8e45e0" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="#8e45e0" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
-        <XAxis dataKey="hora" tick={{ fill: chartTick, fontSize: 11 }} axisLine={{ stroke: chartGrid }} tickLine={false} />
-        <YAxis domain={['auto', 'auto']} tick={{ fill: chartTick, fontSize: 11 }} axisLine={false} tickLine={false} />
-        <RechartsTooltip content={<CustomCajaAreaTooltip />} />
-        <Area
-          type="monotone"
-          dataKey="monto"
-          stroke="#8e45e0"
-          strokeWidth={3}
-          fillOpacity={1}
-          fill="url(#colorSaldoCaja)"
-          dot={{ fill: dotColor, stroke: dotColor, strokeWidth: 2, r: 4 }}
-          activeDot={{ r: 6 }}
-        />
-      </AreaChart>
-    </ResponsiveContainer>
-  ) : (
-    <div className="d-flex align-items-center justify-content-center h-100 text-muted small opacity-50" style={{ minHeight: '140px' }}>
-      <i className="bi bi-graph-up-arrow me-2"></i> No hay datos disponibles para graficar
-    </div>
-  )}
-</div>
+                  {cajaAbierta && movimientos.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={[...movimientos].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+                        .map(m => {
+                          const esEgreso = m.tipoMovimiento === 'EGRESO';
+                          return {
+                            hora: new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                            monto: esEgreso ? -Math.abs(m.monto) : m.monto,
+                            esEgreso,
+                            montoMovimiento: m.monto
+                          };
+                        })}
+                        margin={{ top: 10, right: 15, left: -15, bottom: 5 }}
+                      >
+                        <defs>
+                          <linearGradient id="colorSaldoCaja" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#8e45e0" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="#8e45e0" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
+                        <XAxis dataKey="hora" tick={{ fill: chartTick, fontSize: 11 }} axisLine={{ stroke: chartGrid }} tickLine={false} />
+                        <YAxis domain={['auto', 'auto']} tick={{ fill: chartTick, fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <RechartsTooltip content={<CustomCajaAreaTooltip />} />
+                        <Area
+                          type="monotone"
+                          dataKey="monto"
+                          stroke="#8e45e0"
+                          strokeWidth={3}
+                          fillOpacity={1}
+                          fill="url(#colorSaldoCaja)"
+                          dot={{ fill: dotColor, stroke: dotColor, strokeWidth: 2, r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="d-flex align-items-center justify-content-center h-100 text-muted small opacity-50" style={{ minHeight: '140px' }}>
+                      <i className="bi bi-graph-up-arrow me-2"></i> No hay datos disponibles para graficar
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Sección de Movimientos y Acciones Ajustada */}
         <div className="row g-4 align-items-stretch mb-4">
-          <div className="col-lg-8 d-flex flex-column">
+          {/* Ampliado a col-lg-9 para expandir horizontalmente la tabla */}
+          <div className="col-lg-9 d-flex flex-column">
             <h5 className="mb-3 fw-semibold">Registro de Movimientos Manuales</h5>
             
             <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: tableWrapBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle, height: '315px' }}>
               <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapBg, height: '100%', overflowY: 'auto' }}>
-  <table className="table table-hover m-0 align-middle text-center" style={{ backgroundColor: tableWrapBg, color: isDark ? '#fff' : 'inherit' }}>
-    <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
-      <tr className="border-secondary" style={{ backgroundColor: theadBg, fontSize: '0.9rem' }}>
-        <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '160px' }}>Fecha/Hora</th>
-        <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '110px' }}>Monto</th>
-        <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '140px' }}>Categoría</th>
-        <th className="text-start" style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d' }}>Descripción</th>
-        <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '80px' }}>Usuario</th>
-        <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '80px' }}>Pedido</th>
-      </tr>
-    </thead>
-    <tbody>
-      {movimientos.length === 0 ? (
-        <tr><td colSpan={6} className="py-5 opacity-50" style={{ backgroundColor: tableWrapBg }}>No hay movimientos registrados hoy</td></tr>
-      ) : (
-        movimientos.map((m, idx) => (
-          <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ backgroundColor: tableWrapBg, fontSize: '0.95rem' }}>
-            <td style={{ backgroundColor: 'transparent' }}>{new Date(m.fecha).toLocaleString('es-AR')}</td>
-            <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`} style={{ backgroundColor: 'transparent' }}>
-              {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
-            </td>
-            <td style={{ backgroundColor: 'transparent' }}>{renderBadgeCategoria(m)}</td>
-            <td style={{ backgroundColor: 'transparent' }}>
-              <div 
-                className="text-start" 
-                style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '280px' }}
-                title={m.descripcion || 'Sin descripción'}
-              >
-                {m.descripcion || '-'}
+                <table className="table table-hover m-0 align-middle text-center" style={{ backgroundColor: tableWrapBg, color: isDark ? '#fff' : 'inherit' }}>
+                  <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
+                    <tr className="border-secondary" style={{ backgroundColor: theadBg, fontSize: '0.9rem' }}>
+                      <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '160px' }}>Fecha/Hora</th>
+                      <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '110px' }}>Monto</th>
+                      <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '130px' }}>Categoría</th>
+                      <th className="text-start" style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d' }}>Descripción</th>
+                      <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '140px' }}>Usuario</th>
+                      <th style={{ backgroundColor: theadBg, color: isDark ? '#a1a1aa' : '#6c757d', width: '80px' }}>Pedido</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {movimientos.length === 0 ? (
+                      <tr><td colSpan={6} className="py-5 opacity-50" style={{ backgroundColor: tableWrapBg }}>No hay movimientos registrados hoy</td></tr>
+                    ) : (
+                      movimientos.map((m, idx) => (
+                        <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ backgroundColor: tableWrapBg, fontSize: '0.95rem' }}>
+                          <td style={{ backgroundColor: 'transparent' }}>{new Date(m.fecha).toLocaleString('es-AR')}</td>
+                          <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`} style={{ backgroundColor: 'transparent' }}>
+                            {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
+                          </td>
+                          <td style={{ backgroundColor: 'transparent' }}>{renderBadgeCategoria(m)}</td>
+                          <td style={{ backgroundColor: 'transparent' }}>
+                            <div 
+                              className="text-start" 
+                              style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '460px' }}
+                              title={m.descripcion || 'Sin descripción'}
+                            >
+                              {m.descripcion || '-'}
+                            </div>
+                          </td>
+                          <td style={{ backgroundColor: 'transparent' }}>
+                            {m.usuario?.nombre || m.usuario?.nombreUsuario || m.usuario?.idUsuario || m.usuario?.id_usuario || 'Lisandro Romero'}
+                          </td>
+                          <td style={{ backgroundColor: 'transparent' }}>{m.pedido?.idPedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1] : '-')}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
-            </td>
-            <td style={{ backgroundColor: 'transparent' }}>{m.usuario?.idUsuario || m.usuario?.id_usuario || '1'}</td>
-            <td style={{ backgroundColor: 'transparent' }}>{m.pedido?.idPedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1] : '-')}</td>
-          </tr>
-        ))
-      )}
-    </tbody>
-  </table>
-</div>
             </div>
           </div>
 
-          <div className="col-lg-4 d-flex flex-column justify-content-start align-items-center gap-3 pt-0">
+          {/* Ajustado a col-lg-3 para balancear el layout */}
+          <div className="col-lg-3 d-flex flex-column justify-content-start align-items-center gap-3 pt-0">
             <h5 className="mb-3 fw-semibold align-self-start" style={{ visibility: 'hidden' }}>Acciones</h5>
             
-            <button className="btn btn-success py-3 d-flex justify-content-between align-items-center fw-semibold px-4" style={{ fontSize: '1.15rem', width: '380px', borderRadius: '10px' }} disabled={!cajaAbierta} onClick={() => setIsModalOpen(true)}>
+            <button className="btn btn-success py-3 d-flex justify-content-between align-items-center fw-semibold px-4 w-100" style={{ fontSize: '1.1rem', maxWidth: '380px', borderRadius: '10px' }} disabled={!cajaAbierta} onClick={() => setIsModalOpen(true)}>
               <span>Crear Nuevo Movimiento</span>
               <i className="bi bi-plus-lg fs-4 ms-2"></i>
             </button>
             
-            <button className="btn py-3 d-flex justify-content-between align-items-center fw-semibold px-4" style={{ backgroundColor: '#6f42c1', color: '#ffffff', fontSize: '1.15rem', width: '380px', borderRadius: '10px' }} disabled={!cajaAbierta}>
+            <button className="btn py-3 d-flex justify-content-between align-items-center fw-semibold px-4 w-100" style={{ backgroundColor: '#6f42c1', color: '#ffffff', fontSize: '1.1rem', maxWidth: '380px', borderRadius: '10px' }} disabled={!cajaAbierta}>
               <span>Compra de Insumos</span>
               <i className="bi bi-truck fs-4 ms-2"></i>
             </button>
             
-            <button className="btn btn-dark py-3 d-flex justify-content-between align-items-center fw-semibold border-secondary text-light opacity-75 px-4" style={{ backgroundColor: '#2d2d30', fontSize: '1.15rem', width: '380px', borderRadius: '10px' }} disabled={!cajaAbierta}>
+            <button className="btn btn-dark py-3 d-flex justify-content-between align-items-center fw-semibold border-secondary text-light opacity-75 px-4 w-100" style={{ backgroundColor: '#2d2d30', fontSize: '1.1rem', maxWidth: '380px', borderRadius: '10px' }} disabled={!cajaAbierta}>
               <span>Descargar PDF Caja</span>
               <i className="bi bi-download fs-4 ms-2"></i>
             </button>
           </div>
         </div>
 
-        <div className="d-flex flex-wrap gap-3 justify-content-center w-100 mt-4 px-2 m-0 pb-3">
-          <button onClick={() => navigate('/dashboard')} className="btn btn-danger px-4 py-2" style={{ backgroundColor: '#ce1515', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }}>Volver</button>
+        <div className="d-flex flex-wrap gap-3 justify-content-center w-100 mt-5 pt-2 px-2 m-0 pb-3">
+          <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-4 py-2">Volver</button>
 
           <button className="btn btn-success d-flex align-items-center justify-content-center fw-semibold text-center text-white" style={{ height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }} disabled={cajaAbierta} onClick={handleAbrirAperturaModal}>
             <span>Iniciar Caja del Día</span>

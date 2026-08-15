@@ -170,7 +170,7 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
           <div className="modal-footer border-top py-2" style={{ borderColor: headerBorder }}>
             <button 
               type="button" 
-              className="btn btn-danger px-4" 
+              className="btn btn-secondary px-4" 
               onClick={onClose}
               style={{ color: '#ffffff' }}
             >

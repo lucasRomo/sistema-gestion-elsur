@@ -281,9 +281,9 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
         {/* Botones de Navegación */}
         <div className="d-flex justify-content-between mt-3">
-          <button className="btn btn-danger px-4" onClick={onCancelar}>
-            Volver
-          </button>
+          <button className="btn btn-secondary px-4 fw-semibold" onClick={onCancelar}>
+  Volver
+</button>
           <button 
             className="btn btn-success px-5 fw-bold" 
             onClick={handleContinuarSiguiente} 
