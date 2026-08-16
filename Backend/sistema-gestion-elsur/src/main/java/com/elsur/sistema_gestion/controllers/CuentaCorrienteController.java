@@ -105,4 +105,52 @@ public class CuentaCorrienteController {
 
         return ResponseEntity.ok(guardado);
     }
+
+    @GetMapping("/resumen-deudores")
+    public ResponseEntity<List<Map<String, Object>>> obtenerResumenDeudores() {
+ 
+        // 1. Traemos la suma de pagos por cliente y la convertimos en un mapa
+        //    { idCliente -> totalPagado } para buscarla en O(1) más abajo.
+        Map<Integer, BigDecimal> mapaPagos = new java.util.HashMap<>();
+        for (Object[] fila : movimientoCtaCteRepository.sumarPagosPorCliente()) {
+            Integer idCliente = (Integer) fila[0];
+            BigDecimal totalPagado = (BigDecimal) fila[1];
+            mapaPagos.put(idCliente, totalPagado);
+        }
+ 
+        // 2. Recorremos todos los clientes con saldo deudor > 0 y armamos
+        //    el resumen final que necesita el gráfico de Informes.
+        List<Map<String, Object>> resumen = new java.util.ArrayList<>();
+ 
+        for (Cliente cliente : clienteRepository.findAll()) {
+            BigDecimal saldoDeudor = cliente.getSaldoDeudor() != null ? cliente.getSaldoDeudor() : BigDecimal.ZERO;
+ 
+            if (saldoDeudor.compareTo(BigDecimal.ZERO) <= 0) {
+                continue; // Solo nos interesan los que efectivamente deben algo
+            }
+ 
+            String nombreCliente = (cliente.getPersona() != null)
+                    ? cliente.getPersona().getNombre() + " " + cliente.getPersona().getApellido()
+                    : cliente.getRazonSocial();
+ 
+            BigDecimal totalPagado = mapaPagos.getOrDefault(cliente.getIdCliente(), BigDecimal.ZERO);
+ 
+            Map<String, Object> fila = new java.util.HashMap<>();
+            fila.put("idCliente", cliente.getIdCliente());
+            fila.put("nombre", nombreCliente);
+            fila.put("limiteCredito", cliente.getLimiteCredito());
+            fila.put("saldoDeudor", saldoDeudor);
+            fila.put("totalPagado", totalPagado);
+ 
+            resumen.add(fila);
+        }
+ 
+        // 3. Ordenamos de mayor a menor deuda (el que más debe, primero)
+        resumen.sort((a, b) ->
+            ((BigDecimal) b.get("saldoDeudor")).compareTo((BigDecimal) a.get("saldoDeudor"))
+        );
+ 
+        return ResponseEntity.ok(resumen);
+    }
+    
 }

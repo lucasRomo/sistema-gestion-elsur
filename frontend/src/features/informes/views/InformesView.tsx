@@ -46,6 +46,7 @@ export const InformesView: React.FC = () => {
 
   const [pedidosRaw, setPedidosRaw] = useState<any[]>([]);
   const [movimientosCaja, setMovimientosCaja] = useState<MovimientoCaja[]>([]);
+  const [mermasRaw, setMermasRaw] = useState<any[]>([]);
   const [cargando, setCargando] = useState(false);
   const [, setListaProductos] = useState<any[]>([]);
   const [topClientes, setTopClientes] = useState<any[]>([]);
@@ -62,6 +63,7 @@ export const InformesView: React.FC = () => {
   const [modalFechaHastaInput, setModalFechaHastaInput] = useState(fechaHastaInput);
   const [modalFechaDesdeCompInput, setModalFechaDesdeCompInput] = useState(fechaDesdeInput);
   const [modalFechaHastaCompInput, setModalFechaHastaCompInput] = useState(fechaHastaInput);
+  const [deudoresRaw, setDeudoresRaw] = useState<any[]>([]);
 
   const [comparacionData, setComparacionData] = useState<ComparacionDataState | null>(null);
 
@@ -84,6 +86,7 @@ export const InformesView: React.FC = () => {
     distribucionEstados: [],
     rendimientoEmpleados: [],
     pedidosCompletadosPorEmpleado: [],
+    pedidosDevueltosPorEmpleado: [],
     detalleEgresos: [],
     mermasPorPeriodo: [],
     averiasPorPeriodo: [],
@@ -98,13 +101,17 @@ export const InformesView: React.FC = () => {
     fHasta: string,
     pedidosLista = pedidosRaw,
     cajaLista = movimientosCaja,
-    actualizarEstado = true
+    actualizarEstado = true,
+    mermasListaParam = mermasRaw,
+    deudoresListaParam = deudoresRaw
   ) => {
     const resultado = procesarMetricasInforme(
       fDesde,
       fHasta,
       pedidosLista,
-      cajaLista
+      cajaLista,
+      mermasListaParam,
+      deudoresListaParam 
     );
 
     if (actualizarEstado) {
@@ -125,20 +132,26 @@ export const InformesView: React.FC = () => {
     const cargarDatosIniciales = async () => {
       setCargando(true);
       try {
-        const [dataPedidos, dataCaja, dataProductos] = await Promise.all([
+        const [dataPedidos, dataCaja, dataProductos, resMermas, resDeudores] = await Promise.all([
           pedidoService.obtenerTodos(),
           cajaService.obtenerTodos(),
-          getProductos()
+          getProductos(),
+          fetch('http://localhost:8080/api/mermas') ,
+          fetch('http://localhost:8080/api/cuentas-corrientes/resumen-deudores')
         ]);
 
         const pedidosValidos = dataPedidos || [];
         const cajaValida = dataCaja || [];
+        const mermasValidas = resMermas.ok ? await resMermas.json() : [];
+        const deudoresValidos = resDeudores.ok ? await resDeudores.json() : [];
 
         setPedidosRaw(pedidosValidos);
         setMovimientosCaja(cajaValida);
         setListaProductos(dataProductos || []);
+        setMermasRaw(mermasValidas);
+        setDeudoresRaw(deudoresValidos);
 
-        procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida, true);
+        procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida, true, mermasValidas, deudoresValidos);
       } catch (error) {
         console.error("Error al cargar los informes iniciales:", error);
       } finally {
@@ -155,18 +168,24 @@ export const InformesView: React.FC = () => {
       setFechaDesde(fechaDesdeInput);
       setFechaHasta(fechaHastaInput);
 
-      const [nuevosPedidos, nuevosMovimientos] = await Promise.all([
+      const [nuevosPedidos, nuevosMovimientos, resMermas, resDeudores] = await Promise.all([
         pedidoService.obtenerTodos(),
-        cajaService.obtenerTodos()
+        cajaService.obtenerTodos(),
+        fetch('http://localhost:8080/api/mermas'),
+        fetch('http://localhost:8080/api/cuentas-corrientes/resumen-deudores')
       ]);
 
       const pedidosValidos = nuevosPedidos || [];
       const cajaValida = nuevosMovimientos || [];
+      const mermasValidas = resMermas.ok ? await resMermas.json() : [];
+      const deudoresValidos = resDeudores.ok ? await resDeudores.json() : [];
 
       setPedidosRaw(pedidosValidos);
       setMovimientosCaja(cajaValida);
+      setMermasRaw(mermasValidas);
+      setDeudoresRaw(deudoresValidos);
 
-      procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida, true);
+      procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida, true, mermasValidas, deudoresValidos);
     } catch (error) {
       console.error("Error al recalcular informes:", error);
     } finally {
@@ -188,7 +207,7 @@ export const InformesView: React.FC = () => {
     setFechaDesde(fechaStr);
     setFechaHasta(fechaStr);
 
-    procesarMetricas(fechaStr, fechaStr, pedidosRaw, movimientosCaja, true);
+    procesarMetricas(fechaStr, fechaStr, pedidosRaw, movimientosCaja, true, mermasRaw);
   };
 
   const handleSeleccionarEstaSemana = () => {
@@ -204,7 +223,7 @@ export const InformesView: React.FC = () => {
     setFechaDesde(desdeStr);
     setFechaHasta(hastaStr);
 
-    procesarMetricas(desdeStr, hastaStr, pedidosRaw, movimientosCaja, true);
+    procesarMetricas(desdeStr, hastaStr, pedidosRaw, movimientosCaja, true, mermasRaw);
   };
 
   const handleSeleccionarEsteMes = () => {
@@ -219,24 +238,33 @@ export const InformesView: React.FC = () => {
     setFechaDesde(desdeStr);
     setFechaHasta(hastaStr);
 
-    procesarMetricas(desdeStr, hastaStr, pedidosRaw, movimientosCaja, true);
+    procesarMetricas(desdeStr, hastaStr, pedidosRaw, movimientosCaja, true, mermasRaw);
   };
 
   const obtenerNombreInforme = (informe: InformeComparacion | null): string => {
-    if (!informe) return '';
-    const nombres: Record<InformeComparacion, string> = {
-      ingresos: 'Evolución de Ingresos a Caja',
-      mediosPago: 'Tipos / Medios de Pago',
-      egresos: 'Egresos y Salidas de Caja Detallados',
-      estados: 'Distribución por Estados',
-      productos: 'Productos Más Vendidos',
-      categorias: 'Categorías Más Vendidas',
-      recaudacionEmpleados: 'Recaudación de Empleado por Pago Completado',
-      pedidosEmpleados: 'Pedidos Completados por Empleado',
-      clientes: 'Clientes Más Activos',
-      categoriasCliente: 'Ventas por Categoría de Cliente'
-    };
-    return nombres[informe] || '';
+  if (!informe) return '';
+  const nombres: Record<InformeComparacion, string> = {
+    ingresos: 'Evolución de Ingresos a Caja',
+    mediosPago: 'Tipos / Medios de Pago',
+    egresos: 'Egresos y Salidas de Caja Detallados',
+    estados: 'Distribución por Estados',
+    productos: 'Productos Más Vendidos',
+    categorias: 'Categorías Más Vendidas',
+    recaudacionEmpleados: 'Recaudación de Empleado por Pago Completado',
+    pedidosEmpleados: 'Pedidos Completados por Empleado',
+    pedidosdevueltosempleado: 'Pedidos Devueltos / Cancelados por Empleado',
+    clientes: 'Clientes Más Activos',
+    deudores: 'Clientes con más Deuda',
+    categoriasCliente: 'Ventas por Categoría de Cliente',
+    categoriasIngresos: 'Movimientos por Categorías de Ingresos',
+    categoriasEgresos: 'Movimientos por Categorías de Egresos',
+    tiempoPromedioPedido: 'Promedio de Tiempo de Finalizacion de Pedido',
+    tiempoMaximoEmpleado: 'Tiempo Maximo de Tardanza de Finalización de Empleado',
+    mermas: 'Registro de Mermas',
+    averias: 'Registro de Averías',
+    incongruencias: 'Incongruencias de Arqueo'
+  };
+  return nombres[informe] || '';
   };
 
   const abrirModalComparacion = (informe: InformeComparacion) => {
@@ -634,3 +662,4 @@ export const InformesView: React.FC = () => {
     </div>
   );
 };
+export default InformesView;

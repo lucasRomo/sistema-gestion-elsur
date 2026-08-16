@@ -16,6 +16,7 @@ export const ClientesCharts: React.FC<ClientesProps> = ({ metricas, topClientes 
         </h3>
       </div>
 
+      {/* FILA 1: Clientes Más Activos + Cuentas Corrientes */}
       <div className="row g-4 mb-4 align-items-stretch">
         <div className="col-12 col-xl-6">
           <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between im-surface">
@@ -44,6 +45,27 @@ export const ClientesCharts: React.FC<ClientesProps> = ({ metricas, topClientes 
         </div>
 
         <div className="col-12 col-xl-6">
+          <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between im-surface">
+            <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
+              <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+                <i className="bi bi-credit-card-2-front-fill me-2" style={{ color: '#f43f5e' }}></i>Cuentas Corrientes (Top Deudores)
+              </h5>
+            </div>
+
+            {metricas.topDeudores && metricas.topDeudores.length > 0 ? (
+              <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+                <InformeChartRenderer informe="deudores" data={metricas} />
+              </div>
+            ) : (
+              <div className="text-white-50 text-center py-4">No hay clientes con saldo deudor.</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* FILA 2: Ventas por Categoría de Cliente (ancho completo) */}
+      <div className="row g-4 mb-4 align-items-stretch">
+        <div className="col-12">
           <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between im-surface">
             <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
               <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>

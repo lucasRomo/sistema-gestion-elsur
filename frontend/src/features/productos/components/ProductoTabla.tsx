@@ -100,24 +100,19 @@ export const ProductoTabla: React.FC<Props> = ({
                   <td className="px-3 py-3 text-center">
                     <div className="d-flex justify-content-center gap-2">
                       {/* Botón Toggle Vínculo de Stock */}
-                      {onToggleStockVinculado && (
-                        <button 
-                          className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
-                            (p as any).stockVinculado 
-                              ? 'btn-info text-dark fw-bold' 
-                              : 'btn-outline-secondary'
-                          }`} 
-                          style={{ 
-                            width: '34px', 
-                            height: '34px'
-                          }}
-                          onClick={() => onToggleStockVinculado(p)}
-                          title={(p as any).stockVinculado ? "Stock vinculado a insumos (Activado)" : "Vincular stock a insumos (Desactivado)"}
-                        >
-                          <i className="bi bi-link-45deg fs-5"></i>
-                        </button>
-                      )}
-
+                     {onToggleStockVinculado && (
+                    <button 
+                     className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
+                       p.stockVinculado 
+                       ? 'btn-info text-dark fw-bold' 
+                       : 'btn-outline-secondary'
+                      }`} 
+                      style={{ width: '34px', height: '34px' }}
+                      onClick={() => onToggleStockVinculado(p)}
+                      title={p.stockVinculado ? "Stock vinculado a insumos (Activado)" : "Vincular stock a insumos (Desactivado)"}>
+                     <i className="bi bi-link-45deg fs-5"></i>
+                    </button>
+                    )}
                       {/* Botón Editar Producto */}
                       <button 
                         className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 

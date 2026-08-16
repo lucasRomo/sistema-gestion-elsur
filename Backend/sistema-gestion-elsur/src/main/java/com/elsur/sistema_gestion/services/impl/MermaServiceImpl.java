@@ -4,6 +4,7 @@ import com.elsur.sistema_gestion.models.Insumo;
 import com.elsur.sistema_gestion.models.Merma;
 import com.elsur.sistema_gestion.models.Pedido;
 import com.elsur.sistema_gestion.models.Producto;
+import com.elsur.sistema_gestion.models.Usuario;
 import com.elsur.sistema_gestion.repositories.InsumoRepository;
 import com.elsur.sistema_gestion.repositories.MermaRepository;
 import com.elsur.sistema_gestion.repositories.PedidoRepository; // <-- Importar
@@ -12,6 +13,7 @@ import com.elsur.sistema_gestion.services.MermaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.elsur.sistema_gestion.repositories.UsuarioRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,29 +28,37 @@ public class MermaServiceImpl implements MermaService {
     private final ProductoRepository productoRepository;
     private final InsumoRepository insumoRepository;
     private final PedidoRepository pedidoRepository; // <-- Inyectar
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     @Transactional
     public List<Merma> registrarMermas(List<Merma> mermas) {
         List<Merma> guardadas = new ArrayList<>();
-
+ 
         for (Merma merma : mermas) {
             if (merma.getFechaMerma() == null) {
                 merma.setFechaMerma(LocalDateTime.now());
             }
-
-            // Asignar el Pedido persistido en la BD
+ 
+            // Asignar el Pedido persistido en la BD (ya existía)
             if (merma.getPedido() != null) {
-                Integer idPed = merma.getPedido().getId_pedido(); // Se cambia Long por Integer
+                Integer idPed = merma.getPedido().getId_pedido();
                 if (idPed != null) {
                     Pedido pedidoDb = pedidoRepository.findById(idPed).orElse(null);
                     merma.setPedido(pedidoDb);
                 } else {
-                    merma.setPedido(null); // <-- Limpiar la referencia si id_pedido es null
+                    merma.setPedido(null);
                 }
             }
-
-            // 1. Descuento de stock en Producto
+ 
+            // 👇 AGREGAR ESTE BLOQUE — resolver el Usuario real
+            if (merma.getUsuario() != null && merma.getUsuario().getIdUsuario() != null) {
+    Integer idUsr = merma.getUsuario().getIdUsuario();
+    Usuario usuarioDb = usuarioRepository.findById(idUsr).orElse(null);
+    merma.setUsuario(usuarioDb);
+}
+ 
+            // 1. Descuento de stock en Producto (ya existía, sin cambios)
             if (merma.getProducto() != null && merma.getProducto().getIdProducto() != null) {
                 Producto prod = productoRepository.findById(merma.getProducto().getIdProducto()).orElse(null);
                 if (prod != null && prod.getStock() != null) {
@@ -57,15 +67,15 @@ public class MermaServiceImpl implements MermaService {
                     productoRepository.save(prod);
                 }
             }
-
-            // 2. Descuento de stock en Insumo
+ 
+            // 2. Descuento de stock en Insumo (ya existía, sin cambios)
             if (merma.getInsumo() != null && merma.getInsumo().getIdInsumo() != null) {
                 Insumo ins = insumoRepository.findById(merma.getInsumo().getIdInsumo()).orElse(null);
                 if (ins != null && ins.getStockActual() != null) {
-                    BigDecimal cantidad = merma.getCantidad() != null 
-                        ? BigDecimal.valueOf(merma.getCantidad()) 
+                    BigDecimal cantidad = merma.getCantidad() != null
+                        ? BigDecimal.valueOf(merma.getCantidad())
                         : BigDecimal.ZERO;
-
+ 
                     BigDecimal nuevoStock = ins.getStockActual().subtract(cantidad);
                     if (nuevoStock.compareTo(BigDecimal.ZERO) < 0) {
                         nuevoStock = BigDecimal.ZERO;
@@ -74,10 +84,10 @@ public class MermaServiceImpl implements MermaService {
                     insumoRepository.save(ins);
                 }
             }
-
+ 
             guardadas.add(mermaRepository.save(merma));
         }
-
+ 
         return guardadas;
     }
 

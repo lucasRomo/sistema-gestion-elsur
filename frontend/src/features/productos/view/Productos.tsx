@@ -41,6 +41,8 @@ export const Productos: React.FC = () => {
   const [mensajeExito, setMensajeExito] = useState('');
   const [filtroNombre, setFiltroNombre] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Sin Filtro');
+  const [showSinRecetaModal, setShowSinRecetaModal] = useState(false);
+  const [productoSinReceta, setProductoSinReceta] = useState<Producto | null>(null);
 
   const productosFiltrados = productos.filter((p: Producto) => {
     const cumpleNombre = p.nombreProducto?.toLowerCase().includes(filtroNombre.toLowerCase());
@@ -57,14 +59,32 @@ export const Productos: React.FC = () => {
   };
 
   const handleToggleVinculo = async (producto: Producto) => {
-    if (!producto.idProducto) return;
+  if (!producto.idProducto) return;
+  if (!producto.stockVinculado) {
     try {
-      await toggleStockVinculado(producto.idProducto);
-      await cargar();
+      const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`);
+      if (res.ok) {
+        const recetaData = await res.json();
+        
+        if (!recetaData || recetaData.length === 0) {
+          setProductoSinReceta(producto);
+          setShowSinRecetaModal(true);
+          return; 
+        }
+      }
     } catch (err) {
-      console.error("Error al cambiar estado de vínculo de stock:", err);
+      console.error("Error al verificar la receta del producto:", err);
     }
+  }
+  try {
+    await toggleStockVinculado(producto.idProducto);
+    await cargar();
+  } catch (err) {
+    console.error("Error al cambiar estado de vínculo de stock:", err);
+  }
   };
+
+
 
   return (
     <div className="container-fluid px-0">
@@ -189,6 +209,55 @@ export const Productos: React.FC = () => {
           }}
         />
       )}
+
+    {showSinRecetaModal && (
+    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+    <div className="modal-dialog modal-dialog-centered">
+      <div 
+        className="modal-content p-4 text-center shadow-lg font-monospace" 
+        style={{ 
+          border: '2px solid #ef4444', 
+          backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+          color: isDark ? '#ffffff' : '#0f172a', 
+          borderRadius: '12px' 
+        }}
+      >
+        <i className="bi bi-exclamation-triangle-fill fs-1 text-danger mb-2"></i>
+        <h5 className="fw-bold text-danger">No se puede vincular el stock</h5>
+        <p className="small my-3" style={{ color: mutedText }}>
+          El producto <strong className="text-warning">"{productoSinReceta?.nombreProducto}"</strong> no tiene asignada ninguna receta ni insumos registrados. Configura su receta antes de vincular el stock.
+        </p>
+        
+        <div className="d-flex justify-content-center gap-2 mt-2">
+          <button 
+            className="btn btn-secondary btn-sm px-4 fw-semibold" 
+            onClick={() => {
+              setShowSinRecetaModal(false);
+              setProductoSinReceta(null);
+            }}
+          >
+            Cerrar
+          </button>
+          
+          <button 
+            className="btn btn-warning btn-sm px-4 fw-bold" 
+            onClick={() => {
+              const prod = productoSinReceta;
+              setShowSinRecetaModal(false);
+              setProductoSinReceta(null);
+              if (prod) {
+                setProductoSeleccionadoReceta(prod);
+                setShowRecetaModal(true);
+              }
+            }}
+          >
+            Configurar Receta
+          </button>
+        </div>
+      </div>
+    </div>
+    </div>
+    )}
 
       <ModalMermasProductos
         show={showMermasModal}

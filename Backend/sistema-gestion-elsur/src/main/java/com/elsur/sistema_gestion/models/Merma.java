@@ -3,6 +3,7 @@ package com.elsur.sistema_gestion.models;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+import com.elsur.sistema_gestion.models.Usuario;
 
 import java.time.LocalDateTime;
 
@@ -42,6 +43,8 @@ public class Merma {
     @Builder.Default
     private LocalDateTime fechaMerma = LocalDateTime.now();
 
-    @Column(name = "id_usuario")
-    private Long idUsuario;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_usuario", nullable = true)
+    @JsonIgnoreProperties({"password", "rol"})
+    private Usuario usuario;    
 }

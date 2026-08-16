@@ -21,7 +21,7 @@ export interface InformeChartRendererProps {
   esMismoDia?: boolean;
 }
 
-// --- TOOLTIPS PERSONALIZADOS (única fuente de verdad, no se duplican en otros archivos) ---
+// --- TOOLTIPS PERSONALIZADOS ---
 
 const CustomAreaTooltip = ({ active, payload, label, esMismoDia }: any) => {
   if (active && payload && payload.length) {
@@ -99,19 +99,51 @@ const CustomEmpleadoTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+const CustomTiempoTooltip = ({ active, payload, titulo }: any) => {
+  if (active && payload && payload.length) {
+    const item = payload[0].payload;
+    const minutos = Number(item.valor || 0);
+    const horas = Math.floor(minutos / 60);
+    const minRestantes = minutos % 60;
+    const tiempoFormateado = horas > 0 ? `${horas}h ${minRestantes}m` : `${minutos} min`;
+
+    return (
+      <div className="p-2 rounded-3 shadow-lg im-surface" style={{ border: '1px solid #0dcaf0', fontSize: '0.85rem' }}>
+        <div className="fw-bold mb-1 border-bottom border-secondary border-opacity-25 pb-1">
+          {item.name}
+        </div>
+        <div className="text-body-secondary">
+          <strong className="text-body">{titulo}:</strong> {minutos} min ({tiempoFormateado})
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 const CustomMermaTooltip = ({ active, payload, esMismoDia }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
       <div className="p-2 rounded-3 shadow-lg im-surface" style={{ border: '1px solid #ffc107', fontSize: '0.85rem' }}>
         <div className="fw-bold text-warning mb-1 border-bottom border-secondary border-opacity-25 pb-1">
-          {data.ejeX} - {data.cantidad} un. desperdiciadas
+          {data.horaLabel || data.ejeX} - {data.cantidad} un. desperdiciadas
         </div>
         {esMismoDia && (
           <div className="mt-2">
             {data.insumo && (
               <div className="small text-body mb-1">
                 <strong className="text-warning">Insumo:</strong> {data.insumo}
+              </div>
+            )}
+            {data.producto && (
+              <div className="small text-body mb-1">
+                <strong className="text-warning">Producto:</strong> {data.producto}
+              </div>
+            )}
+            {data.empleado && (
+              <div className="small text-body mb-1">
+                <strong className="text-warning">Empleado:</strong> {data.empleado}
               </div>
             )}
             {data.motivo && (
@@ -171,6 +203,23 @@ const CustomArqueoTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+const CustomDevueltosTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const item = payload[0].payload;
+    return (
+      <div className="p-2 rounded-3 shadow-lg im-surface" style={{ border: '1px solid #e22e2e', fontSize: '0.85rem' }}>
+        <div className="fw-bold text-danger mb-1 border-bottom border-secondary border-opacity-25 pb-1">
+          {item.name}
+        </div>
+        <div className="text-body-secondary">
+          <strong className="text-body">Pedidos Devueltos / Cancelados:</strong> {item.value || 0}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
   informe,
   data,
@@ -195,15 +244,15 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
               <XAxis 
-  dataKey="name" 
-  stroke="#a1a1aa" 
-  tick={{ fill: '#a1a1aa', fontSize: 11 }} 
-  axisLine={false} 
-  tickLine={false} 
-  dy={15} 
-  interval={0} 
-  angle={-25}  
-/>
+                dataKey="name" 
+                stroke="#a1a1aa" 
+                tick={{ fill: '#a1a1aa', fontSize: 11 }} 
+                axisLine={false} 
+                tickLine={false} 
+                dy={15} 
+                interval={0} 
+                angle={-25}  
+              />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val / 1000 + 'k' : val}`} />
               <RechartsTooltip content={<CustomAreaTooltip esMismoDia={esMismoDia} />} />
               <Area type="monotone" dataKey="ventas" stroke={colorBase} strokeWidth={3} fillOpacity={1} fill={`url(#colorVentas_${esAnterior ? 'ant' : 'act'})`} />
@@ -273,8 +322,8 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
                   const colorSlice = item.color || '#20c997';
                   return (
                     <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
-                      <p className="fw-bold mb-1" style={{ color: colorSlice }}>{item.nombreReal || item.name}</p>
-                      <p className="small mb-0">{item.name} — Unidades: <span className="text-white fw-bold">{item.value}</span></p>
+                      <p className="fw-bold mb-1" style={{ color: colorSlice }}>{item.name}</p>
+                      <p className="small mb-0">Top {item.rank} — Unidades: <span className="text-white fw-bold">{item.value}</span></p>
                     </div>
                   );
                 }
@@ -331,6 +380,51 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
         </ResponsiveContainer>
       );
 
+    case 'pedidosdevueltosempleado':
+      return (
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie data={data.pedidosDevueltosPorEmpleado} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none">
+              {data.pedidosDevueltosPorEmpleado?.map((entry: any, index: number) => (
+                <Cell key={`cell-dev-${index}`} fill={entry.color || COLORES_TORTA[index % COLORES_TORTA.length]} />
+              ))}
+            </Pie>
+            <RechartsTooltip content={<CustomDevueltosTooltip />} />
+            <Legend verticalAlign="bottom" height={60} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa', overflowY: 'auto', maxHeight: '60px' }} />
+          </PieChart>
+        </ResponsiveContainer>
+      );
+
+    case 'tiempoMaximoEmpleado':
+      return (
+        <ChartScrollWrapper cantidadItems={data.tiempoMaximoEmpleado?.length || 0} anchoPorItem={70} height="100%">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data.tiempoMaximoEmpleado} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+              <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}m`} />
+              <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomTiempoTooltip titulo="Máximo" />} />
+              <Bar dataKey="valor" fill={esAnterior ? '#71717a' : '#ffc107'} radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartScrollWrapper>
+      );
+
+    case 'tiempoPromedioPedido':
+      return (
+        <ChartScrollWrapper cantidadItems={data.tiempoPromedioPedidoPorEmpleado?.length || 0} anchoPorItem={70} height="100%">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data.tiempoPromedioPedidoPorEmpleado} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={40}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
+              <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}m`} />
+              <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomTiempoTooltip titulo="Promedio" />} />
+              <Bar dataKey="valor" fill={esAnterior ? '#71717a' : '#b66b09'} radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartScrollWrapper>
+      );
+
     case 'clientes':
       return (
         <ResponsiveContainer width="100%" height="100%">
@@ -347,9 +441,46 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
                   const colorSlice = item.color || '#ffc107';
                   return (
                     <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
-                      <p className="fw-bold mb-1" style={{ color: colorSlice }}>{item.nombreReal || item.name}</p>
-                      <p className="small mb-1 text-white">Total Pagado: <span className="fw-bold">${Number(item.totalGastado).toLocaleString('es-AR')}</span></p>
+                      <p className="fw-bold mb-1" style={{ color: colorSlice }}>{item.name}</p>
+                      <p className="small mb-1 text-white">Top {item.rank} — Total Pagado: <span className="fw-bold">${Number(item.totalGastado).toLocaleString('es-AR')}</span></p>
                       <p className="small mb-0 text-white-50">Pedidos creados: {item.cantidadPedidos}</p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <Legend verticalAlign="bottom" height={60} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa', overflowY: 'auto', maxHeight: '60px' }} />
+          </PieChart>
+        </ResponsiveContainer>
+      );
+
+      case 'deudores':
+      return (
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie data={data.topDeudores} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="saldoDeudor" stroke="none">
+              {data.topDeudores?.map((_: any, index: number) => (
+                <Cell key={`cell-deudor-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
+              ))}
+            </Pie>
+            <RechartsTooltip
+              content={({ active, payload }: any) => {
+                if (active && payload && payload.length) {
+                  const item = payload[0].payload;
+                  const colorSlice = item.color || '#f43f5e';
+                  return (
+                    <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${colorSlice}`, color: '#fff' }}>
+                      <p className="fw-bold mb-1" style={{ color: colorSlice }}>{item.name}</p>
+                      <p className="small mb-1 text-white">
+                        Debe: <span className="fw-bold text-danger">${Number(item.saldoDeudor).toLocaleString('es-AR')}</span>
+                      </p>
+                      <p className="small mb-1 text-white">
+                        Ya pagó: <span className="fw-bold text-success">${Number(item.totalPagado).toLocaleString('es-AR')}</span>
+                      </p>
+                      <p className="small mb-0 text-white-50">
+                        Límite registrado: ${Number(item.limiteCredito).toLocaleString('es-AR')}
+                      </p>
                     </div>
                   );
                 }
@@ -378,7 +509,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
                       <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #20c997', color: '#fff' }}>
                         <p className="fw-bold mb-1 text-success">{item.name}</p>
                         <p className="small mb-1 text-white">Pedidos: <span className="fw-bold">{item.ventas}</span></p>
-                        <p className="small mb-0 text-white-50">Monto total: <span className="fw-bold text-white">${Number(item.montoTotal || 0).toLocaleString('es-AR')}</span></p>
+                        <p className="small mb-0 text-white-50">Monto total Ahorrado: <span className="fw-bold text-white">${Number(item.montoTotal || 0).toLocaleString('es-AR')}</span></p>
                       </div>
                     );
                   }
@@ -397,7 +528,14 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data.mermasPorPeriodo} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barSize={30}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-              <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
+              <XAxis
+                dataKey="ejeX"
+                stroke="#a1a1aa"
+                tick={{ fill: '#a1a1aa' }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(value: string) => (value?.includes('#') ? value.split('#')[0] : value)}
+              />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <RechartsTooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} content={<CustomMermaTooltip esMismoDia={esMismoDia} />} />
               <Bar dataKey="cantidad" fill={esAnterior ? '#71717a' : '#ffc107'} radius={[6, 6, 0, 0]} />
@@ -434,6 +572,82 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
             </BarChart>
           </ResponsiveContainer>
         </ChartScrollWrapper>
+      );
+
+    case 'categoriasIngresos':
+      return (
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data.distribucionCategoriasIngreso}
+              cx="50%"
+              cy="45%"
+              innerRadius={60}
+              outerRadius={95}
+              paddingAngle={5}
+              dataKey="value"
+              stroke="none"
+            >
+              {data.distribucionCategoriasIngreso?.map((entry: any, index: number) => (
+                <Cell key={`cell-cat-ing-${index}`} fill={entry.color || COLORES_TORTA[index % COLORES_TORTA.length]} />
+              ))}
+            </Pie>
+            <RechartsTooltip
+              content={({ active, payload }: any) => {
+                if (active && payload && payload.length) {
+                  const item = payload[0].payload;
+                  return (
+                    <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${item.color}`, color: '#fff' }}>
+                      <p className="fw-bold mb-1" style={{ color: item.color }}>{item.name}</p>
+                      <p className="small mb-1 text-white">Monto Total: <span className="fw-bold">${Number(item.value).toLocaleString('es-AR')}</span></p>
+                      <p className="small mb-0">Movimientos: {item.cantidad}</p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <Legend verticalAlign="bottom" height={60} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa', overflowY: 'auto', maxHeight: '60px' }} />
+          </PieChart>
+        </ResponsiveContainer>
+      );
+
+    case 'categoriasEgresos':
+      return (
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data.distribucionCategoriasEgreso}
+              cx="50%"
+              cy="45%"
+              innerRadius={60}
+              outerRadius={95}
+              paddingAngle={5}
+              dataKey="value"
+              stroke="none"
+            >
+              {data.distribucionCategoriasEgreso?.map((entry: any, index: number) => (
+                <Cell key={`cell-cat-egr-${index}`} fill={entry.color || COLORES_TORTA[(index + 2) % COLORES_TORTA.length]} />
+              ))}
+            </Pie>
+            <RechartsTooltip
+              content={({ active, payload }: any) => {
+                if (active && payload && payload.length) {
+                  const item = payload[0].payload;
+                  return (
+                    <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: `1px solid ${item.color}`, color: '#fff' }}>
+                      <p className="fw-bold mb-1" style={{ color: item.color }}>{item.name}</p>
+                      <p className="small mb-1 text-white">Monto Total: <span className="fw-bold">${Number(item.value).toLocaleString('es-AR')}</span></p>
+                      <p className="small mb-0">Movimientos: {item.cantidad}</p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <Legend verticalAlign="bottom" height={60} iconType="circle" wrapperStyle={{ fontSize: '0.85rem', color: '#a1a1aa', overflowY: 'auto', maxHeight: '60px' }} />
+          </PieChart>
+        </ResponsiveContainer>
       );
 
     default:

@@ -4,7 +4,9 @@ export type TipoComparacion = 'dia' | 'semana' | 'mes' | 'personalizado';
 export type InformeComparacion = 
   | 'ingresos' | 'mediosPago' | 'egresos' | 'estados' 
   | 'productos' | 'categorias' | 'recaudacionEmpleados' 
-  | 'pedidosEmpleados' | 'clientes' | 'categoriasCliente';
+  | 'pedidosEmpleados' | 'clientes' | 'categoriasCliente' | 'deudores' | 'categoriasIngresos' | 'categoriasEgresos'
+  | 'tiempoPromedioPedido' | 'tiempoMaximoEmpleado' | 'pedidosdevueltosempleado' | 'mermas'
+  | 'averias' | 'incongruencias'; 
 
 export interface KpiCard {
   label: string;
@@ -28,8 +30,28 @@ export interface ComparacionDataState {
   periodoAnterior: PeriodoRango;
 }
 
-export type TipoGraficoInforme =
-  | InformeComparacion
+export interface MetricaDevolucionesEmpleado {
+  empleado: string;
+  cantidad: number;
+}
+
+export type TipoGraficoInforme = 
+  | 'ingresos' 
+  | 'mediosPago' 
+  | 'egresos' 
+  | 'estados' 
+  | 'productos' 
+  | 'categorias' 
+  | 'recaudacionEmpleados' 
+  | 'pedidosEmpleados' 
+  | 'clientes' 
+  | 'deudores' 
+  | 'categoriasCliente'
+  | 'categoriasIngresos'
+  | 'categoriasEgresos'
   | 'mermas'
   | 'averias'
-  | 'incongruencias';
+  | 'incongruencias'
+  | 'pedidosdevueltosempleado'
+  | 'tiempoPromedioPedido'
+  | 'tiempoMaximoEmpleado';

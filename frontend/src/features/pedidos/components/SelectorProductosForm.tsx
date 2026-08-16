@@ -58,22 +58,32 @@ export const SelectorProductosForm: React.FC<Props> = ({
     );
   }, [productos, busquedaProducto]);
 
-  const handleAgregar = () => {
-    if (!productoId || Number(cantidad) <= 0) return;
-    
-    const prodSeleccionado = productos.find(p => p.idProducto === Number(productoId));
-    if (!prodSeleccionado) return;
+  const handleAgregar = async () => {
+  if (!productoId || Number(cantidad) <= 0) return;
+  const prodSeleccionado = productos.find(p => p.idProducto === Number(productoId));
+  if (!prodSeleccionado) return;
+  let recetaInsumos: any[] = [];
+  try {
+    const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${prodSeleccionado.idProducto}`);
+    if (res.ok) {
+      recetaInsumos = await res.json();
+    }
+  } catch (error) {
+    console.error("Error al obtener la receta del producto:", error);
+  }
+  const nuevoItem: CartItem & { receta?: any[] } = {
+    producto: {
+      ...prodSeleccionado,
+      receta: recetaInsumos 
+    },
+    cantidad: Number(cantidad),
+    subtotal: prodSeleccionado.precioBase * Number(cantidad)
+  };
 
-    const nuevoItem: CartItem = {
-      producto: prodSeleccionado,
-      cantidad: Number(cantidad),
-      subtotal: prodSeleccionado.precioBase * Number(cantidad)
-    };
-
-    setCarrito([...carrito, nuevoItem]);
-    setProductoId('');
-    setBusquedaProducto('');
-    setCantidad('1');
+  setCarrito([...carrito, nuevoItem]);
+  setProductoId('');
+  setBusquedaProducto('');
+  setCantidad('1');
   };
 
   const handleEliminar = (index: number) => {
@@ -130,6 +140,8 @@ export const SelectorProductosForm: React.FC<Props> = ({
     }
   };
 
+
+
   const subtotal = carrito.reduce((sum, item) => sum + item.subtotal, 0);
 
   const catActual = categorias.find(c => {
@@ -146,63 +158,61 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
   // Agrupa y calcula el consumo total de insumos según los productos del carrito con sanitización defensiva
   const insumosAfectados = React.useMemo(() => {
-    const mapaInsumos = new Map<string | number, {
-      id: string | number;
-      nombre: string;
-      unidad: string;
-      cantidadRequerida: number;
-      stockActual: number;
-    }>();
+  const mapaInsumos = new Map<string | number, {
+    id: string | number;
+    nombre: string;
+    unidad: string;
+    cantidadRequerida: number;
+    stockActual: number;
+  }>();
 
-    carrito.forEach((item) => {
-      const prod = item.producto as any;
-      if (!prod) return;
+  carrito.forEach((item) => {
+    const prod = item.producto as any;
+    if (!prod) return;
 
-      const listaInsumos = Array.isArray(prod.productoInsumos) ? prod.productoInsumos :
-                           Array.isArray(prod.insumos) ? prod.insumos :
-                           Array.isArray(prod.receta) ? prod.receta : [];
+    // Si deseas que solo aplique impacto si stockVinculado está activo:
+    // if (prod.stockVinculado === false) return;
 
-      listaInsumos.forEach((pi: any) => {
-        if (!pi) return;
+    // Obtener la lista de la receta que guardamos previamente
+    const listaInsumos = Array.isArray(prod.receta) ? prod.receta : 
+                         Array.isArray(prod.productoInsumos) ? prod.productoInsumos : [];
 
-        const insumoObj = pi.insumo || pi;
-        const id = insumoObj?.idInsumo ?? insumoObj?.id_insumo ?? insumoObj?.id ?? pi?.idInsumo;
+    listaInsumos.forEach((pi: any) => {
+      if (!pi) return;
 
-        if (id === undefined || id === null) return;
+      // Estructura de la API: pi.insumo contiene el Insumo completo
+      const insumoObj = pi.insumo || pi;
+      const id = insumoObj?.idInsumo ?? pi?.idInsumo;
 
-        const rawNombre = insumoObj?.nombreInsumo ?? insumoObj?.nombre ?? insumoObj?.nombre_insumo;
-        const nombre = typeof rawNombre === 'object' && rawNombre !== null 
-          ? String(rawNombre.nombre || 'Insumo sin nombre') 
-          : String(rawNombre || 'Insumo sin nombre');
+      if (id === undefined || id === null) return;
 
-        const rawUnidad = insumoObj?.unidadMedida ?? insumoObj?.unidad_medida ?? pi?.unidadMedida;
-        const unidad = typeof rawUnidad === 'object' && rawUnidad !== null 
-          ? String(rawUnidad.nombre || rawUnidad.simbolo || rawUnidad.abreviatura || '') 
-          : String(rawUnidad || '');
+      const nombre = insumoObj?.nombreInsumo || 'Insumo sin nombre';
 
-        const stockNum = Number(insumoObj?.stockActual ?? insumoObj?.stock_actual ?? insumoObj?.stock ?? 0);
-        const stockActual = isNaN(stockNum) ? 0 : stockNum;
+      // Tratamiento de unidad de medida (si es string u objeto)
+      const uMedida = insumoObj?.unidadMedida;
+      const unidad = typeof uMedida === 'object' && uMedida !== null 
+        ? (uMedida.nombre || uMedida.simbolo || '') 
+        : String(uMedida || '');
 
-        const cantConsumoNum = Number(pi?.cantidadConsumo ?? pi?.cantidadRequerida ?? pi?.cantidad_requerida ?? pi?.cantidad ?? 1);
-        const cantUnitaria = isNaN(cantConsumoNum) ? 1 : cantConsumoNum;
+      const stockActual = Number(insumoObj?.stockActual ?? 0);
+      const cantUnitaria = Number(pi?.cantidadConsumo ?? 1);
+      const totalRequerido = cantUnitaria * (Number(item.cantidad) || 1);
 
-        const totalRequerido = cantUnitaria * (Number(item.cantidad) || 1);
-
-        if (mapaInsumos.has(id)) {
-          mapaInsumos.get(id)!.cantidadRequerida += totalRequerido;
-        } else {
-          mapaInsumos.set(id, {
-            id,
-            nombre,
-            unidad,
-            cantidadRequerida: totalRequerido,
-            stockActual
-          });
-        }
-      });
+      if (mapaInsumos.has(id)) {
+        mapaInsumos.get(id)!.cantidadRequerida += totalRequerido;
+      } else {
+        mapaInsumos.set(id, {
+          id,
+          nombre,
+          unidad,
+          cantidadRequerida: totalRequerido,
+          stockActual
+        });
+      }
     });
+  });
 
-    return Array.from(mapaInsumos.values());
+  return Array.from(mapaInsumos.values());
   }, [carrito]);
 
   return (

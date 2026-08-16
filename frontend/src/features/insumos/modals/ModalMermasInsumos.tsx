@@ -101,14 +101,14 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
     const idUsuario = userLogueado.idUsuario ?? userLogueado.id_usuario ?? 1;
 
     const payload: any[] = ids.map(idInsumo => ({
-      idUsuario,
+      usuario: { idUsuario },
       cantidad: Number(selections[idInsumo].cantidad) || 1,
       descripcion: selections[idInsumo].descripcion || 'Merma de insumo en stock',
       insumo: { idInsumo, id_insumo: idInsumo },
       producto: null,
       pedido: null
     }));
-
+    
     setGuardando(true);
     try {
       await mermaService.registrarMermas(payload);

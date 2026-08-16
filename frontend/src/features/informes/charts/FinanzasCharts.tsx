@@ -17,6 +17,7 @@ export const FinanzasCharts: React.FC<FinanzasProps> = ({ metricas, esMismoDia =
       </div>
 
       <div className="row g-4 mb-4 align-items-stretch">
+        {/* EVOLUCIÓN DE INGRESOS A CAJA */}
         <div className="col-12 col-xl-8">
           <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between im-surface">
             <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
@@ -33,11 +34,12 @@ export const FinanzasCharts: React.FC<FinanzasProps> = ({ metricas, esMismoDia =
               </button>
             </div>
             <div className="my-auto" style={{ height: '340px', width: '100%' }}>
-  <InformeChartRenderer informe="ingresos" data={metricas} esMismoDia={esMismoDia} />
-</div>
+              <InformeChartRenderer informe="ingresos" data={metricas} esMismoDia={esMismoDia} />
+            </div>
           </div>
         </div>
 
+        {/* TIPOS / MEDIOS DE PAGO */}
         <div className="col-12 col-xl-4">
           <div className="p-4 rounded-4 h-100 shadow-sm d-flex flex-column justify-content-between im-surface">
             <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
@@ -59,6 +61,7 @@ export const FinanzasCharts: React.FC<FinanzasProps> = ({ metricas, esMismoDia =
           </div>
         </div>
 
+        {/* EGRESOS Y SALIDAS DE CAJA DETALLADOS */}
         <div className="col-12">
           <div className="p-4 rounded-4 shadow-sm im-surface">
             <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
@@ -81,6 +84,50 @@ export const FinanzasCharts: React.FC<FinanzasProps> = ({ metricas, esMismoDia =
             ) : (
               <div className="text-white-50 text-center py-4">No hay egresos registrados en el período seleccionado.</div>
             )}
+          </div>
+        </div>
+
+        {/* CATEGORÍAS DE INGRESOS DE CAJA */}
+        <div className="col-12 col-xl-6">
+          <div className="p-4 rounded-4 shadow-sm im-surface h-100 d-flex flex-column justify-content-between">
+            <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
+              <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+                <i className="bi bi-tags-fill me-2" style={{ color: '#0dcaf0' }}></i>Categorías de Ingresos
+              </h5>
+              <button
+                type="button"
+                onClick={() => abrirModalComparacion('categoriasIngresos')}
+                className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+                style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #0dcaf0', color: '#0dcaf0' }}
+              >
+                <i className="bi bi-arrow-left-right"></i> Comparar
+              </button>
+            </div>
+            <div className="my-auto" style={{ height: '300px', width: '100%' }}>
+              <InformeChartRenderer informe="categoriasIngresos" data={metricas} esMismoDia={esMismoDia} />
+            </div>
+          </div>
+        </div>
+
+        {/* CATEGORÍAS DE EGRESOS DE CAJA */}
+        <div className="col-12 col-xl-6">
+          <div className="p-4 rounded-4 shadow-sm im-surface h-100 d-flex flex-column justify-content-between">
+            <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
+              <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
+                <i className="bi bi-pie-chart me-2" style={{ color: '#ffc107' }}></i>Categorías de Egresos
+              </h5>
+              <button
+                type="button"
+                onClick={() => abrirModalComparacion('categoriasEgresos')}
+                className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+                style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #ffc107', color: '#ffc107' }}
+              >
+                <i className="bi bi-arrow-left-right"></i> Comparar
+              </button>
+            </div>
+            <div className="my-auto" style={{ height: '300px', width: '100%' }}>
+              <InformeChartRenderer informe="categoriasEgresos" data={metricas} esMismoDia={esMismoDia} />
+            </div>
           </div>
         </div>
       </div>

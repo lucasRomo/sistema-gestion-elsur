@@ -176,7 +176,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
     const payload: MermaEntity[] = keys.map((k) => {
       const item = selections[k];
       return {
-        idUsuario,
+        usuario: { idUsuario },
         cantidad: Number(item.cantidad) || 1,
         descripcion: item.descripcion || 'Merma de producto/insumo en stock',
         producto: item.idProducto ? { idProducto: item.idProducto, id_producto: item.idProducto } : undefined,

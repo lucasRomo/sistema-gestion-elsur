@@ -26,7 +26,15 @@ export type InformeComparacion =
   | 'recaudacionEmpleados' 
   | 'pedidosEmpleados' 
   | 'clientes' 
-  | 'categoriasCliente';
+  | 'categoriasCliente'
+  | 'categoriasIngresos'
+  | 'categoriasEgresos'
+  | 'mermas'
+  | 'averias'
+  | 'incongruencias'
+  | 'pedidosdevueltosempleado'
+  | 'tiempoPromedioPedido'
+  | 'tiempoMaximoEmpleado';
 
 // Convierte un objeto Date a formato YYYY-MM-DD
 export function formatDateForInput(date: Date): string {
@@ -143,16 +151,24 @@ export function agruparPorPeriodo<T>(
 // Retorna el nombre legible del informe seleccionado
 export function obtenerNombreInforme(informe: InformeComparacion | null): string {
   const nombres: Record<InformeComparacion, string> = {
-    ingresos: 'Evolución de Ingresos a Caja',
-    mediosPago: 'Tipos / Medios de Pago',
-    egresos: 'Egresos y Salidas de Caja Detallados',
-    estados: 'Distribución por Estados',
-    productos: 'Productos Más Vendidos',
-    categorias: 'Categorías Más Vendidas',
-    recaudacionEmpleados: 'Recaudación de Empleado por Pago Completado',
-    pedidosEmpleados: 'Pedidos Completados por Empleado',
-    clientes: 'Clientes Más Activos',
-    categoriasCliente: 'Ventas por Categoría de Cliente'
+      ingresos: 'Evolución de Ingresos a Caja',
+      mediosPago: 'Tipos / Medios de Pago',
+      egresos: 'Egresos y Salidas de Caja Detallados',
+      estados: 'Distribución por Estados',
+      productos: 'Productos Más Vendidos',
+      categorias: 'Categorías Más Vendidas',
+      recaudacionEmpleados: 'Recaudación de Empleado por Pago Completado',
+      pedidosEmpleados: 'Pedidos Completados por Empleado',
+      pedidosdevueltosempleado: 'Pedidos Devueltos / Cancelados por Empleado', // <-- AGREGAR ESTA LÍNEA
+      clientes: 'Clientes Más Activos',
+      categoriasCliente: 'Ventas por Categoría de Cliente',
+      categoriasIngresos: 'Movimientos por Categorías de Ingresos',
+      categoriasEgresos: 'Movimientos por Categorías de Egresos',
+      tiempoPromedioPedido: 'Promedio de Tiempo de Finalizacion de Pedido',
+      tiempoMaximoEmpleado: 'Tiempo Maximo de Tardanza de Finalización de Empleado',
+      mermas: 'Registro de Mermas',
+      averias: 'Registro de Averías',
+      incongruencias: 'Incongruencias de Arqueo'
   };
   return informe ? nombres[informe] : '';
 }
@@ -217,7 +233,9 @@ export function procesarMetricas(
   fDesde: string,
   fHasta: string,
   pedidosLista: any[] = [],
-  cajaLista: any[] = []
+  cajaLista: any[] = [],
+  mermasLista: any[] = [],
+  deudoresLista: any[] = []
 ) {
   const parseFechaLocal = (fechaStr: string) => {
     if (!fechaStr) return new Date();
@@ -280,6 +298,62 @@ export function procesarMetricas(
   const ticketPromedio = ticketsFinales > 0 ? (totalIngresosBrutos / ticketsFinales).toFixed(2) : '0.00';
 
   const cantidadMovimientos = movimientosEnRango.length;
+
+  // --- AGRUPAMIENTO DE MOVIMIENTOS POR CATEGORÍA DE INGRESOS Y EGRESOS ---
+  const mapaCategoriasIngreso: { [key: string]: { cantidad: number; total: number } } = {};
+  const mapaCategoriasEgreso: { [key: string]: { cantidad: number; total: number } } = {};
+
+  movimientosEnRango.forEach((m: any) => {
+    const esEgreso = esMovimientoEgreso(m);
+    const montoAbs = Math.abs(Number(m.monto || 0));
+    
+    let cat = (m.categoria || m.tipoCategoria || m.categoriaMovimiento || '').toString().toUpperCase().trim();
+    if (!cat) {
+      cat = esEgreso ? 'EGRESOS GENERALES' : 'INGRESOS GENERALES';
+    }
+
+    if (cat === 'CTA_CTE' || cat === 'CUENTA_CORRIENTE' || cat === 'COBRO_CTA_CTE') {
+      cat = 'Cuenta Corriente';
+    } else if (cat === 'MANTENIMIENTO' || cat === 'EGRESO_MANTENIMIENTO') {
+      cat = 'Mantenimiento';
+    } else if (cat === 'INSUMOS' || cat === 'EGRESO_INSUMOS') {
+      cat = 'Insumos';
+    } else if (cat === 'INGRESO' || cat === 'INGRESOS') {
+      cat = 'Ingresos Generales';
+    } else if (
+      cat === 'EGRESO' || 
+      cat === 'EGRESOS' || 
+      cat === 'VARIOS' || 
+      cat === 'EGRESO_VARIOS' || 
+      cat === 'GASTOS VARIOS'
+    ) {
+      cat = 'Egresos Generales';  
+    }
+
+    if (esEgreso) {
+      if (!mapaCategoriasEgreso[cat]) mapaCategoriasEgreso[cat] = { cantidad: 0, total: 0 };
+      mapaCategoriasEgreso[cat].cantidad += 1;
+      mapaCategoriasEgreso[cat].total += montoAbs;
+    } else {
+      if (!mapaCategoriasIngreso[cat]) mapaCategoriasIngreso[cat] = { cantidad: 0, total: 0 };
+      mapaCategoriasIngreso[cat].cantidad += 1;
+      mapaCategoriasIngreso[cat].total += montoAbs;
+    }
+  });
+
+  const distribucionCategoriasIngreso = Object.keys(mapaCategoriasIngreso).map((cat, index) => ({
+    name: cat,
+    value: mapaCategoriasIngreso[cat].total,
+    cantidad: mapaCategoriasIngreso[cat].cantidad,
+    color: COLORES_TORTA[index % COLORES_TORTA.length]
+  }));
+
+  const distribucionCategoriasEgreso = Object.keys(mapaCategoriasEgreso).map((cat, index) => ({
+    name: cat,
+    value: mapaCategoriasEgreso[cat].total,
+    cantidad: mapaCategoriasEgreso[cat].cantidad,
+    color: COLORES_TORTA[(index + 2) % COLORES_TORTA.length]
+  }));
 
   // --- PRODUCTOS Y CATEGORÍAS MÁS VENDIDAS ---
   const mapaProductos: { [key: string]: { cantidad: number; nombre: string } } = {};
@@ -352,8 +426,8 @@ export function procesarMetricas(
     .slice(0, 5);
 
   const productosMasVendidos = top5Productos.map((item, index) => ({
-    name: `Top ${index + 1}`,
-    nombreReal: item.nombre,
+    name: item.nombre,
+    rank: index + 1, 
     value: item.cantidad,
     color: COLORES_TORTA[index % COLORES_TORTA.length]
   }));
@@ -372,8 +446,19 @@ export function procesarMetricas(
     montoAhorrado: mapaCategoriasCliente[nombreCat].ahorro
   }));
 
-  // --- RECAUDACIÓN Y RENDIMIENTO DE EMPLEADOS ---
-  const mapaEmpleados: { [key: string]: { ventas: number; pedidos: number } } = {};
+  // --- RECAUDACIÓN, RENDIMIENTO Y TIEMPOS DE EMPLEADOS (OPERACIONES Y RRHH) ---
+  const mapaEmpleados: { 
+    [key: string]: { 
+      ventas: number; 
+      pedidos: number; 
+      sumaMinutos: number; 
+      maxMinutos: number;
+    } 
+  } = {};
+
+  const mapaDevueltosPorEmpleado: { [key: string]: number } = {};
+  const normalizarTexto = (str: any) =>
+  (str || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
   const obtenerNombreOperario = (empObj: any) => {
     if (!empObj) return 'Sin Asignar';
@@ -383,9 +468,62 @@ export function procesarMetricas(
   };
 
   const pedidosContados = new Set<string | number>();
+  let sumaTiempoGeneralMinutos = 0;
+  let tiempoMaximoGeneralMinutos = 0;
+  let cantidadPedidosConTiempo = 0;
+
   pedidosEnRango.forEach((p) => {
     const idPed = p.idPedido || p.id_pedido || p.id;
     const estado = (p.estado || '').toUpperCase();
+
+    // Métrica de Pedidos Devueltos / Cancelados por Empleado
+    const listaHistoriales = p.historiales || p.historialEstadoPedidos || [];
+ 
+const historialDevolucion = listaHistoriales.find((h: any) =>
+  h.estado_nuevo === 'DEVUELTO' ||
+  h.estadoNuevo === 'DEVUELTO' ||
+  normalizarTexto(h.observaciones).includes('devolucion')
+);
+ 
+const huboDevolucion =
+  estado === 'DEVUELTO' ||
+  estado === 'CANCELADO' ||
+  estado === 'DEVOLUCION' ||
+  normalizarTexto(p.observaciones).includes('devolucion') ||
+  Boolean(historialDevolucion);
+ 
+if (huboDevolucion) {
+  const ultimaAsignacion =
+    p.asignaciones && p.asignaciones.length > 0 ? p.asignaciones[p.asignaciones.length - 1] : null;
+ 
+  const nombreEmp = obtenerNombreOperario(ultimaAsignacion?.empleado || p.empleado);
+ 
+  mapaDevueltosPorEmpleado[nombreEmp] = (mapaDevueltosPorEmpleado[nombreEmp] || 0) + 1;
+}
+
+    // Cálculo de tiempos de resolución
+    const fechaInicioStr = p.fecha_creacion || p.fechaCreacion || p.fecha;
+    const fechaFinStr = p.fecha_finalizacion || p.fechaFinalizacion || p.fecha_entrega || p.fechaEntrega;
+
+    let duracionMinutos = 0;
+    let tieneTiempoValido = false;
+
+    if (fechaInicioStr && fechaFinStr) {
+      const inicio = new Date(fechaInicioStr).getTime();
+      const fin = new Date(fechaFinStr).getTime();
+      if (!isNaN(inicio) && !isNaN(fin) && fin >= inicio) {
+        duracionMinutos = Math.round((fin - inicio) / (1000 * 60));
+        tieneTiempoValido = true;
+      }
+    }
+
+    if (tieneTiempoValido) {
+      sumaTiempoGeneralMinutos += duracionMinutos;
+      cantidadPedidosConTiempo += 1;
+      if (duracionMinutos > tiempoMaximoGeneralMinutos) {
+        tiempoMaximoGeneralMinutos = duracionMinutos;
+      }
+    }
 
     if (estado === 'ENTREGADO' || estado === 'COMPLETADO' || estado === 'FINALIZADO') {
       const ultimaAsignacion =
@@ -393,13 +531,27 @@ export function procesarMetricas(
       const nombreEmp = obtenerNombreOperario(ultimaAsignacion?.empleado || p.empleado);
 
       if (!mapaEmpleados[nombreEmp]) {
-        mapaEmpleados[nombreEmp] = { ventas: 0, pedidos: 0 };
+        mapaEmpleados[nombreEmp] = { ventas: 0, pedidos: 0, sumaMinutos: 0, maxMinutos: 0 };
       }
 
       mapaEmpleados[nombreEmp].pedidos += 1;
+      
+      if (tieneTiempoValido) {
+        mapaEmpleados[nombreEmp].sumaMinutos += duracionMinutos;
+        if (duracionMinutos > mapaEmpleados[nombreEmp].maxMinutos) {
+          mapaEmpleados[nombreEmp].maxMinutos = duracionMinutos;
+        }
+      }
+
       if (idPed) pedidosContados.add(idPed);
     }
   });
+
+  const pedidosDevueltosPorEmpleado = Object.keys(mapaDevueltosPorEmpleado).map((nombre, index) => ({
+    name: nombre,
+    value: mapaDevueltosPorEmpleado[nombre],
+    color: COLORES_TORTA[index % COLORES_TORTA.length]
+  }));
 
   ingresosCaja.forEach((m: any) => {
     let nombreEmp = 'Sin Asignar';
@@ -414,7 +566,7 @@ export function procesarMetricas(
     }
 
     if (!mapaEmpleados[nombreEmp]) {
-      mapaEmpleados[nombreEmp] = { ventas: 0, pedidos: 0 };
+      mapaEmpleados[nombreEmp] = { ventas: 0, pedidos: 0, sumaMinutos: 0, maxMinutos: 0 };
     }
 
     mapaEmpleados[nombreEmp].ventas += Math.abs(Number(m.monto || 0));
@@ -434,7 +586,7 @@ export function procesarMetricas(
     const nombreEmp = obtenerNombreOperario(ultimaAsignacion?.empleado || p.empleado);
 
     if (!mapaEmpleados[nombreEmp]) {
-      mapaEmpleados[nombreEmp] = { ventas: 0, pedidos: 0 };
+      mapaEmpleados[nombreEmp] = { ventas: 0, pedidos: 0, sumaMinutos: 0, maxMinutos: 0 };
     }
     mapaEmpleados[nombreEmp].ventas += Number(p.monto_total || p.total || 0);
   });
@@ -444,6 +596,29 @@ export function procesarMetricas(
     ventas: mapaEmpleados[nombre].ventas,
     pedidosCompletados: mapaEmpleados[nombre].pedidos
   }));
+
+  const tiempoPromedioPedidoPorEmpleado = Object.keys(mapaEmpleados).map((nombre, index) => {
+    const emp = mapaEmpleados[nombre];
+    const promedio = emp.pedidos > 0 ? Math.round(emp.sumaMinutos / emp.pedidos) : 0;
+    return {
+      name: nombre,
+      valor: promedio,
+      color: COLORES_TORTA[index % COLORES_TORTA.length]
+    };
+  });
+
+  const tiempoMaximoEmpleado = Object.keys(mapaEmpleados).map((nombre, index) => {
+    const emp = mapaEmpleados[nombre];
+    return {
+      name: nombre,
+      valor: emp.maxMinutos,
+      color: COLORES_TORTA[(index + 1) % COLORES_TORTA.length]
+    };
+  });
+
+  const tiempoPromedioGeneralMinutos = cantidadPedidosConTiempo > 0 
+    ? Math.round(sumaTiempoGeneralMinutos / cantidadPedidosConTiempo) 
+    : 0;
 
   // --- AGRUPAMIENTO POR PERÍODO ---
   const diffTiempoMs = Math.abs(hasta.getTime() - desde.getTime());
@@ -542,19 +717,37 @@ export function procesarMetricas(
   }
 
   // --- MERMAS Y AVERÍAS ---
-  const mermasEnRango = MERMAS_MOCK.filter((item) => {
-    const f = new Date(item.fecha);
+  const obtenerNombreUsuarioMerma = (usuarioObj: any) => {
+    if (!usuarioObj) return 'Sin Asignar';
+    return usuarioObj.persona
+      ? `${usuarioObj.persona.nombre} ${usuarioObj.persona.apellido}`
+      : usuarioObj.nombreUsuario || `Usuario #${usuarioObj.idUsuario}`;
+  };
+ 
+  const mermasEnRango = (mermasLista || []).filter((item) => {
+    const f = new Date(item.fecha_merma || item.fechaMerma);
     return f >= desde && f <= hasta;
   });
-
+ 
   let mermasPorPeriodo: any[] = [];
   if (esUnSoloDia) {
-    mermasPorPeriodo = mermasEnRango.map((item) => ({
-      ejeX: new Date(item.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }),
-      cantidad: item.cantidad,
-      insumo: item.insumo,
-      motivo: item.motivo
-    }));
+    mermasPorPeriodo = mermasEnRango.map((item, idx) => {
+      const horaLabel = new Date(item.fecha_merma || item.fechaMerma).toLocaleTimeString('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+ 
+      return {
+        ejeX: `${horaLabel}#${idx}`,   // clave ÚNICA para el eje (evita colisiones de Recharts)
+        horaLabel,                      // texto real que se muestra
+        cantidad: Number(item.cantidad) || 0,
+        insumo: item.insumo?.nombreInsumo || null,
+        producto: item.producto?.nombreProducto || null,
+        empleado: obtenerNombreUsuarioMerma(item.usuario),
+        motivo: item.descripcion || item.motivo || ''
+      };
+    });
   } else {
     const mermasAgrupadas = agruparPorPeriodo(
       mermasEnRango,
@@ -564,10 +757,10 @@ export function procesarMetricas(
       esPorSemanas,
       esPorMeses,
       esPorAnios,
-      (item) => new Date(item.fecha),
-      (item) => item.cantidad
+      (item) => new Date(item.fecha_merma || item.fechaMerma),
+      (item) => Number(item.cantidad) || 0
     );
-
+ 
     mermasPorPeriodo = mermasAgrupadas.map((item) => ({
       ejeX: item.name,
       cantidad: item.valor
@@ -717,10 +910,23 @@ export function procesarMetricas(
     .filter((item) => item.totalGastado > 0)
     .slice(0, 5)
     .map((item, index) => ({
-      name: `Top ${index + 1}`,
-      nombreReal: item.nombre,
+      name: item.nombre,
+      rank: index + 1,
       totalGastado: item.totalGastado,
       cantidadPedidos: item.cantidadPedidos,
+      color: COLORES_TORTA[index % COLORES_TORTA.length]
+    }));
+
+    const topDeudores = (deudoresLista || [])
+    .slice() 
+    .sort((a: any, b: any) => Number(b.saldoDeudor) - Number(a.saldoDeudor))
+    .slice(0, 5)
+    .map((item: any, index: number) => ({
+      name: item.nombre,                         
+      rank: index + 1,
+      saldoDeudor: Number(item.saldoDeudor) || 0,
+      limiteCredito: Number(item.limiteCredito) || 0,
+      totalPagado: Number(item.totalPagado) || 0,
       color: COLORES_TORTA[index % COLORES_TORTA.length]
     }));
 
@@ -768,17 +974,35 @@ export function procesarMetricas(
     ticketsGenerados: ticketsFinales,
     ticketPromedio,
     cantidadMovimientos,
+    tiempoPromedioGeneralMinutos,
+    tiempoMaximoGeneralMinutos,
+    tiempoPromedioPedidoPorEmpleado: tiempoPromedioPedidoPorEmpleado.length > 0
+      ? tiempoPromedioPedidoPorEmpleado
+      : [{ name: 'Sin datos', valor: 0, color: '#52525b' }],
+    tiempoMaximoEmpleado: tiempoMaximoEmpleado.length > 0
+      ? tiempoMaximoEmpleado
+      : [{ name: 'Sin datos', valor: 0, color: '#52525b' }],
     ventasPorPeriodo,
     distribucionMediosPago: distribucionMediosPago.length > 0 ? distribucionMediosPago : [{ name: 'EFECTIVO', value: totalIngresosBrutos }],
     distribucionEstados: distribucionEstados.length > 0 ? distribucionEstados : [{ name: 'Sin datos', value: 1 }],
     rendimientoEmpleados: rendimientoEmpleados.length > 0 ? rendimientoEmpleados : [{ name: 'Sin datos', ventas: 0 }],
     pedidosCompletadosPorEmpleado: pedidosCompletadosPorEmpleado.length > 0 ? pedidosCompletadosPorEmpleado : [{ name: 'Sin datos', value: 0 }],
+    pedidosDevueltosPorEmpleado: pedidosDevueltosPorEmpleado.length > 0 
+      ? pedidosDevueltosPorEmpleado 
+      : [{ name: 'Sin datos', value: 0, color: '#52525b' }],
     detalleEgresos,
     mermasPorPeriodo,
     averiasPorPeriodo,
     productosMasVendidos: productosMasVendidos.length > 0 ? productosMasVendidos : [{ name: 'Sin datos', value: 1 }],
     categoriasMasVendidas: categoriasMasVendidas.length > 0 ? categoriasMasVendidas : [{ name: 'Sin datos', ventas: 0 }],
     ventasPorCategoriaCliente: ventasPorCategoriaCliente.length > 0 ? ventasPorCategoriaCliente : [{ name: 'Sin datos', ventas: 0, montoTotal: 0 }],
-    topClientes: topClientesFormateados
+    topClientes: topClientesFormateados,
+    topDeudores,
+    distribucionCategoriasIngreso: distribucionCategoriasIngreso.length > 0 
+      ? distribucionCategoriasIngreso 
+      : [{ name: 'Sin datos', value: 0, cantidad: 0, color: '#52525b' }],
+    distribucionCategoriasEgreso: distribucionCategoriasEgreso.length > 0 
+      ? distribucionCategoriasEgreso 
+      : [{ name: 'Sin datos', value: 0, cantidad: 0, color: '#52525b' }]
   };
 }
