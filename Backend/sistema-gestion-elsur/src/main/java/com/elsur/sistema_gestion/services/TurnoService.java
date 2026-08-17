@@ -10,7 +10,7 @@ public interface TurnoService {
 
     Turno abrirTurno(Turno turno);
 
-    Turno cerrarTurno(Integer idTurno, Double montoReal, String observaciones);
+    Turno cerrarTurno(Integer idTurno, Double montoReal, String observaciones, Integer idUsuario);
 
     Optional<Turno> obtenerTurnoAbiertoHoy();
 

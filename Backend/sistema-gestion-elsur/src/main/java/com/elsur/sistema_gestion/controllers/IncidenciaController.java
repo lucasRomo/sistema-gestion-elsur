@@ -82,4 +82,9 @@ public class IncidenciaController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("code", "ERROR", "message", e.getMessage()));
         }
     }
+
+    @GetMapping
+    public ResponseEntity<List<Incidencia>> listarTodas() {
+    return ResponseEntity.ok(incidenciaService.listarTodas());
+    }
 }

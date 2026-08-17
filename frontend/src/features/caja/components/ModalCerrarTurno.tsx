@@ -58,13 +58,14 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
   const inputTextColor = isDark ? '#ffffff' : '#0f172a';
 
   const ejecutarCierre = async () => {
-    try {
-      await onConfirmarCierre(valorContado, observacion);
-      setDiferenciaFinal(diferenciaEfectivo);
-      setShowExitoModal(true);
-    } catch (error) {
-      console.error("Error al cerrar el turno:", error);
-    }
+  try {
+    const montoRealTotal = valorContado + (datosArqueo?.totalTransferencias || 0);
+    await onConfirmarCierre(montoRealTotal, observacion);
+    setDiferenciaFinal(diferenciaEfectivo);
+    setShowExitoModal(true);
+  } catch (error) {
+    console.error("Error al cerrar el turno:", error);
+  }
   };
 
   const handleValidarYSiguiente = (e: React.FormEvent) => {

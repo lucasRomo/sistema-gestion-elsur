@@ -56,6 +56,7 @@ export interface NuevoMovimientoDTO {
   categoria?: string;
   idPedido?: string | null;
   metodoPago?: string;
+  comprobanteImagen?: string | null;
 }
 
 const API_BASE_URL = 'http://localhost:8080/api';
@@ -90,6 +91,19 @@ export const cajaService = {
       return await response.json();
     } catch (error) {
       console.error('Error en cajaService.obtenerTotales:', error);
+      return null;
+    }
+  },
+
+  // NUEVO: totales de Ingresos/Egresos/Saldo filtrados por el turno activo,
+  // en vez de por el día calendario completo.
+  obtenerTotalesPorTurno: async (idTurno: number): Promise<TotalesCaja | null> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/movimientos-caja/totales/turno/${idTurno}`);
+      if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('Error en cajaService.obtenerTotalesPorTurno:', error);
       return null;
     }
   },
@@ -151,6 +165,14 @@ export const cajaService = {
     return response.json();
   },
 
+  // NUEVO: desglose Efectivo/Transferencias filtrado por el turno activo,
+  // en vez de por el día calendario completo.
+  obtenerDesgloseArqueoPorTurno: async (idTurno: number): Promise<DatosArqueo> => {
+    const response = await fetch(`${API_BASE_URL}/movimientos-caja/desglose-arqueo/turno/${idTurno}`);
+    if (!response.ok) throw new Error('Error al obtener desglose de arqueo del turno');
+    return response.json();
+  },
+
   guardarMovimiento: async (movimiento: any): Promise<void> => {
   const usuarioGuardado = localStorage.getItem('usuario_logueado');
   const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
@@ -180,18 +202,17 @@ export const cajaService = {
   }
   },
 
-  cerrarTurno: async (idTurno: number, montoReal: number, observaciones?: string): Promise<boolean> => {
-    const url = `${API_BASE_URL}/turnos/${idTurno}/cerrar?montoReal=${montoReal}${
-      observaciones ? `&observaciones=${encodeURIComponent(observaciones)}` : ''
-    }`;
-    const response = await fetch(url, { method: 'POST' });
-    if (!response.ok) {
-      const err = await response.text();
-      throw new Error(err || 'Error al cerrar caja');
-    }
-    return true;
+  cerrarTurno: async (idTurno: number, montoReal: number, observaciones?: string, idUsuario?: number): Promise<boolean> => {
+  const url = `${API_BASE_URL}/turnos/${idTurno}/cerrar?montoReal=${montoReal}${
+    observaciones ? `&observaciones=${encodeURIComponent(observaciones)}` : ''
+  }${idUsuario ? `&idUsuario=${idUsuario}` : ''}`;
+  const response = await fetch(url, { method: 'POST' });
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(err || 'Error al cerrar caja');
   }
-};
+  return true;
+ }};
 
 export const cajaServiceExtended = {
   ...cajaService,

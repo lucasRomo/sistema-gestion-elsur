@@ -2,10 +2,13 @@ package com.elsur.sistema_gestion.services.impl;
 
 import com.elsur.sistema_gestion.models.EstadoTurno;
 import com.elsur.sistema_gestion.models.Turno;
+import com.elsur.sistema_gestion.repositories.MovimientoCajaRepository;
 import com.elsur.sistema_gestion.repositories.TurnoRepository;
+import com.elsur.sistema_gestion.repositories.UsuarioRepository;
 import com.elsur.sistema_gestion.services.TurnoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.elsur.sistema_gestion.models.MovimientoCaja;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -17,12 +20,18 @@ public class TurnoServiceImpl implements TurnoService {
     @Autowired
     private TurnoRepository turnoRepository;
 
+    @Autowired
+    private MovimientoCajaRepository MovimientoCajaRepository ;
+
+    @Autowired
+    private UsuarioRepository UsuarioRepository;
+
     @Override
     public Turno abrirTurno(Turno turno) {
         if (existeTurnoAbiertoHoy()) {
             throw new RuntimeException("¡Error! Ya existe una caja abierta en este momento.");
         }
-        turno.setFechaApertura(LocalDateTime.now());
+        turno.setFechaApertura(LocalDateTime.now());    
         turno.setEstado(EstadoTurno.ABIERTO);
         
         // Seteamos inicialmente el monto esperado igual al monto con el que inicia
@@ -33,29 +42,38 @@ public class TurnoServiceImpl implements TurnoService {
     }
 
     @Override
-    public Turno cerrarTurno(Integer idTurno, Double montoReal, String observaciones) {
-        Turno turno = turnoRepository.findById(idTurno)
-                .orElseThrow(() -> new RuntimeException("No se encontró el turno con ID: " + idTurno));
+    public Turno cerrarTurno(Integer idTurno, Double montoReal, String observaciones, Integer idUsuario) {
+    Turno turno = turnoRepository.findById(idTurno)
+            .orElseThrow(() -> new RuntimeException("No se encontró el turno con ID: " + idTurno));
 
-        // Cambiamos el estado y registramos la fecha de cierre
-        turno.setEstado(EstadoTurno.CERRADO);
-        turno.setFechaCierre(LocalDateTime.now());
-        turno.setMontoRealContado(montoReal);
+    turno.setEstado(EstadoTurno.CERRADO);
+    turno.setFechaCierre(LocalDateTime.now());
+    turno.setMontoRealContado(montoReal);
 
-        // Calculamos el monto esperado. Si está en null, tomamos provisoriamente el montoInicial.
-        double esperado = (turno.getMontoEsperadoSistema() != null) 
-                ? turno.getMontoEsperadoSistema() 
-                : turno.getMontoInicial();
-        
-        turno.setMontoEsperadoSistema(esperado);
+    List<MovimientoCaja> movimientosTurno = MovimientoCajaRepository.findByTurno_IdTurno(idTurno);
 
-        // Calculamos la diferencia del arqueo (Real ingresado - Esperado por sistema)
-        turno.setDiferenciaArqueo(montoReal - esperado);
-        
-        // Asignamos la justificación/observación ingresada en el frontend
-        turno.setObservaciones(observaciones);
+    double totalIngresos = movimientosTurno.stream()
+            .filter(m -> "INGRESO".equals(m.getTipoMovimiento()))
+            .mapToDouble(m -> m.getMonto().doubleValue())
+            .sum();
 
-        return turnoRepository.save(turno);
+    double totalEgresos = movimientosTurno.stream()
+            .filter(m -> "EGRESO".equals(m.getTipoMovimiento()))
+            .mapToDouble(m -> m.getMonto().doubleValue())
+            .sum();
+
+    double esperado = turno.getMontoInicial() + totalIngresos - totalEgresos;
+    turno.setMontoEsperadoSistema(esperado);
+
+    turno.setDiferenciaArqueo(montoReal - esperado);
+
+    turno.setObservaciones(observaciones);
+
+    if (idUsuario != null) {
+        UsuarioRepository.findById(idUsuario).ifPresent(turno::setUsuario);
+    }
+
+    return turnoRepository.save(turno);
     }
     
     @Override

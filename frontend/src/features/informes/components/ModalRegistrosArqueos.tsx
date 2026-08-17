@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { cajaService, type MovimientoCaja, type Turno } from '../../../features/caja/services/cajaService';
-import { renderBadgeCategoria } from '../../../features/caja/components/renderBadgeCategoria';
+import { renderBadgeCategoria } from '../../../features/caja/components/RenderBadgeCategoria';
 import { useTheme } from '../../../Context/ThemeContext';
 
 interface ModalRegistrosArqueoProps {

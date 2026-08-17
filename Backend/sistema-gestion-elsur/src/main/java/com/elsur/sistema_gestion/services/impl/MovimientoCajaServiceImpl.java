@@ -77,9 +77,30 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
     }
 
     @Override
+    public List<MovimientoCaja> listarMovimientosPorTurno(Integer idTurno) {
+        return movimientoCajaRepository.findByTurno_IdTurno(idTurno);
+    }
+
+    @Override
+    public List<MovimientoCaja> obtenerTodos() {
+        return movimientoCajaRepository.findAll();
+    }
+
+    // ==========================================================
+    // TOTALES (Ingresos / Egresos / Saldo)
+    // ==========================================================
+
+    @Override
     public Map<String, Double> calcularTotalesDelDia() {
-        List<MovimientoCaja> movimientos = listarMovimientosDelDia();
-        
+        return calcularTotales(listarMovimientosDelDia());
+    }
+
+    @Override
+    public Map<String, Double> calcularTotalesPorTurno(Integer idTurno) {
+        return calcularTotales(listarMovimientosPorTurno(idTurno));
+    }
+
+    private Map<String, Double> calcularTotales(List<MovimientoCaja> movimientos) {
         BigDecimal totalIngresos = BigDecimal.ZERO;
         BigDecimal totalEgresos = BigDecimal.ZERO;
 
@@ -95,19 +116,25 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
         totales.put("totalIngresos", totalIngresos.doubleValue());
         totales.put("totalEgresos", totalEgresos.doubleValue());
         totales.put("saldoActual", totalIngresos.subtract(totalEgresos).doubleValue());
-        
+
         return totales;
     }
 
-    @Override
-    public List<MovimientoCaja> obtenerTodos() {
-        return movimientoCajaRepository.findAll();
-    }
+    // ==========================================================
+    // DESGLOSE DE ARQUEO (Efectivo / Transferencias)
+    // ==========================================================
 
     @Override
     public Map<String, Double> obtenerDesgloseArqueo() {
-        List<MovimientoCaja> movimientos = listarMovimientosDelDia();
-        
+        return calcularDesglose(listarMovimientosDelDia());
+    }
+
+    @Override
+    public Map<String, Double> obtenerDesgloseArqueoPorTurno(Integer idTurno) {
+        return calcularDesglose(listarMovimientosPorTurno(idTurno));
+    }
+
+    private Map<String, Double> calcularDesglose(List<MovimientoCaja> movimientos) {
         BigDecimal efectivoIngresos = BigDecimal.ZERO;
         BigDecimal efectivoEgresos = BigDecimal.ZERO;
         BigDecimal transferenciaIngresos = BigDecimal.ZERO;
@@ -115,7 +142,7 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
 
         for (MovimientoCaja m : movimientos) {
             String metodo = (m.getMetodoPago() != null) ? m.getMetodoPago().toUpperCase() : "EFECTIVO";
-            
+
             if ("INGRESO".equalsIgnoreCase(m.getTipoMovimiento())) {
                 if ("TRANSFERENCIA".equals(metodo)) {
                     transferenciaIngresos = transferenciaIngresos.add(m.getMonto());
@@ -132,7 +159,7 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
         }
 
         Map<String, Double> desglose = new HashMap<>();
-        
+
         double totalEfectivo = efectivoIngresos.subtract(efectivoEgresos).doubleValue();
         double totalTransferencias = transferenciaIngresos.subtract(transferenciaEgresos).doubleValue();
 
@@ -147,10 +174,5 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
         desglose.put("saldoTotal", totalEfectivo + totalTransferencias);
 
         return desglose;
-    }
-
-    @Override
-    public List<MovimientoCaja> listarMovimientosPorTurno(Integer idTurno) {
-        return movimientoCajaRepository.findByTurno_IdTurno(idTurno);
     }
 }

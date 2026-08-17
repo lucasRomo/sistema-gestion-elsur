@@ -30,7 +30,8 @@ import type {
 
 import {
   generarPuntosSparkline,
-  procesarMetricas as procesarMetricasInforme
+  procesarMetricas as procesarMetricasInforme,
+  calcularIncongruenciasArqueo
 } from '../utils/informesUtils';
 
 export const InformesView: React.FC = () => {
@@ -51,6 +52,9 @@ export const InformesView: React.FC = () => {
   const [, setListaProductos] = useState<any[]>([]);
   const [topClientes, setTopClientes] = useState<any[]>([]);
   const [incongruenciasArqueo, setIncongruenciasArqueo] = useState<any[]>([]);
+  const [turnosRaw, setTurnosRaw] = useState<any[]>([]);
+  const [averiasRaw, setAveriasRaw] = useState<any[]>([]);
+  const [categoriasClienteRaw, setCategoriasClienteRaw] = useState<any[]>([]);
 
   // Modales
   const [showModalRegistrosArqueo, setShowModalRegistrosArqueo] = useState(false);
@@ -103,7 +107,10 @@ export const InformesView: React.FC = () => {
     cajaLista = movimientosCaja,
     actualizarEstado = true,
     mermasListaParam = mermasRaw,
-    deudoresListaParam = deudoresRaw
+    deudoresListaParam = deudoresRaw,
+    turnosListaParam = turnosRaw,
+    averiasListaParam = averiasRaw,
+    categoriasListaParam = categoriasClienteRaw  
   ) => {
     const resultado = procesarMetricasInforme(
       fDesde,
@@ -111,18 +118,15 @@ export const InformesView: React.FC = () => {
       pedidosLista,
       cajaLista,
       mermasListaParam,
-      deudoresListaParam 
+      deudoresListaParam,
+      averiasListaParam,
+      categoriasListaParam  
     );
 
     if (actualizarEstado) {
       setMetricas(resultado);
       setTopClientes(resultado.topClientes);
-      setIncongruenciasArqueo([
-        { empleado: 'Pepe', montoDiferencia: 1500, cantidadIncongruencias: 2 },
-        { empleado: 'Martina', montoDiferencia: 850, cantidadIncongruencias: 1 },
-        { empleado: 'Luca', montoDiferencia: 400, cantidadIncongruencias: 1 },
-        { empleado: 'Anabel', montoDiferencia: 200, cantidadIncongruencias: 1 }
-      ]);
+      setIncongruenciasArqueo(calcularIncongruenciasArqueo(turnosListaParam, fDesde, fHasta));
     }
 
     return resultado;
@@ -132,26 +136,34 @@ export const InformesView: React.FC = () => {
     const cargarDatosIniciales = async () => {
       setCargando(true);
       try {
-        const [dataPedidos, dataCaja, dataProductos, resMermas, resDeudores] = await Promise.all([
+        const [dataPedidos, dataCaja, dataProductos, resMermas, resDeudores, dataTurnos, resAverias, resCategorias] = await Promise.all([
           pedidoService.obtenerTodos(),
           cajaService.obtenerTodos(),
           getProductos(),
           fetch('http://localhost:8080/api/mermas') ,
-          fetch('http://localhost:8080/api/cuentas-corrientes/resumen-deudores')
+          fetch('http://localhost:8080/api/cuentas-corrientes/resumen-deudores') ,
+          cajaService.obtenerTodosLosTurnos() ,
+          fetch('http://localhost:8080/api/incidencias') ,
+          fetch('http://localhost:8080/api/categorias-cliente')
         ]);
 
         const pedidosValidos = dataPedidos || [];
         const cajaValida = dataCaja || [];
         const mermasValidas = resMermas.ok ? await resMermas.json() : [];
         const deudoresValidos = resDeudores.ok ? await resDeudores.json() : [];
+        const averiasValidas = resAverias.ok ? await resAverias.json() : [];
+        const categoriasValidas = resCategorias.ok ? await resCategorias.json() : [];
 
+        setTurnosRaw(dataTurnos || []); 
         setPedidosRaw(pedidosValidos);
         setMovimientosCaja(cajaValida);
         setListaProductos(dataProductos || []);
         setMermasRaw(mermasValidas);
         setDeudoresRaw(deudoresValidos);
+        setAveriasRaw(averiasValidas);
+        setCategoriasClienteRaw(categoriasValidas); 
 
-        procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida, true, mermasValidas, deudoresValidos);
+        procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida, true, mermasValidas, deudoresValidos, dataTurnos, averiasValidas, categoriasValidas);
       } catch (error) {
         console.error("Error al cargar los informes iniciales:", error);
       } finally {
@@ -168,24 +180,32 @@ export const InformesView: React.FC = () => {
       setFechaDesde(fechaDesdeInput);
       setFechaHasta(fechaHastaInput);
 
-      const [nuevosPedidos, nuevosMovimientos, resMermas, resDeudores] = await Promise.all([
+      const [nuevosPedidos, nuevosMovimientos, resMermas, resDeudores, nuevosTurnos, resAverias, resCategorias] = await Promise.all([
         pedidoService.obtenerTodos(),
         cajaService.obtenerTodos(),
         fetch('http://localhost:8080/api/mermas'),
-        fetch('http://localhost:8080/api/cuentas-corrientes/resumen-deudores')
+        fetch('http://localhost:8080/api/cuentas-corrientes/resumen-deudores') ,
+        cajaService.obtenerTodosLosTurnos(),
+        fetch('http://localhost:8080/api/incidencias'),
+        fetch('http://localhost:8080/api/categorias-cliente') 
       ]);
 
       const pedidosValidos = nuevosPedidos || [];
       const cajaValida = nuevosMovimientos || [];
       const mermasValidas = resMermas.ok ? await resMermas.json() : [];
       const deudoresValidos = resDeudores.ok ? await resDeudores.json() : [];
+      const averiasValidas = resAverias.ok ? await resAverias.json() : [];
+      const categoriasValidas = resCategorias.ok ? await resCategorias.json() : [];
 
+      setTurnosRaw(nuevosTurnos || []); 
       setPedidosRaw(pedidosValidos);
       setMovimientosCaja(cajaValida);
       setMermasRaw(mermasValidas);
       setDeudoresRaw(deudoresValidos);
+      setAveriasRaw(averiasValidas);
+      setCategoriasClienteRaw(categoriasValidas); 
 
-      procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida, true, mermasValidas, deudoresValidos);
+      procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida, true, mermasValidas, deudoresValidos, nuevosTurnos, averiasValidas, categoriasValidas);
     } catch (error) {
       console.error("Error al recalcular informes:", error);
     } finally {
@@ -296,11 +316,18 @@ export const InformesView: React.FC = () => {
     const metricasAnteriores = procesarMetricas(antDesdeStr, antHastaStr, pedidosRaw, movimientosCaja, false);
 
     setComparacionData({
-      actual: metricasActuales,
-      anterior: metricasAnteriores,
-      periodoActual: { desde: fechaDesdeInput, hasta: fechaHastaInput },
-      periodoAnterior: { desde: antDesdeStr, hasta: antHastaStr }
-    });
+    actual: {
+      ...metricasActuales,
+      incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, fechaDesdeInput, fechaHastaInput)
+    },
+    anterior: {
+      ...metricasAnteriores,
+      incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, antDesdeStr, antHastaStr)
+    },
+    periodoActual: { desde: fechaDesdeInput, hasta: fechaHastaInput },
+    periodoAnterior: { desde: antDesdeStr, hasta: antHastaStr }
+  });
+
 
     setModalComparacionAbierto(true);
   };
@@ -331,12 +358,18 @@ export const InformesView: React.FC = () => {
       false
     );
 
-    setComparacionData({
-      actual: metricasActuales,
-      anterior: metricasAnteriores,
-      periodoActual: { desde: modalFechaDesdeInput, hasta: modalFechaHastaInput },
-      periodoAnterior: { desde: modalFechaDesdeCompInput, hasta: modalFechaHastaCompInput }
-    });
+     setComparacionData({
+    actual: {
+      ...metricasActuales,
+      incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, modalFechaDesdeInput, modalFechaHastaInput) // 👈 agregar
+    },
+    anterior: {
+      ...metricasAnteriores,
+      incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, modalFechaDesdeCompInput, modalFechaHastaCompInput) // 👈 agregar
+    },
+    periodoActual: { desde: modalFechaDesdeInput, hasta: modalFechaHastaInput },
+    periodoAnterior: { desde: modalFechaDesdeCompInput, hasta: modalFechaHastaCompInput }
+  });
   };
 
   const seleccionarTipoComparacion = (tipo: TipoComparacion) => {
@@ -615,12 +648,13 @@ export const InformesView: React.FC = () => {
       )}
 
       {seccionActiva === 'control' && (
-        <ControlCharts
-          metricas={metricas}
-          incongruenciasArqueo={incongruenciasArqueo}
-          esMismoDia={esMismoDia}
-        />
-      )}
+  <ControlCharts
+    metricas={metricas}
+    incongruenciasArqueo={incongruenciasArqueo}
+    esMismoDia={esMismoDia}
+    abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+  />
+)}
 
       {/* MODALES */}
       {showModalRegistrosArqueo && (

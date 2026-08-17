@@ -509,7 +509,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
                       <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #20c997', color: '#fff' }}>
                         <p className="fw-bold mb-1 text-success">{item.name}</p>
                         <p className="small mb-1 text-white">Pedidos: <span className="fw-bold">{item.ventas}</span></p>
-                        <p className="small mb-0 text-white-50">Monto total Ahorrado: <span className="fw-bold text-white">${Number(item.montoTotal || 0).toLocaleString('es-AR')}</span></p>
+                        <p className="small mb-0 text-white-50">Monto total Generado: <span className="fw-bold text-white">${Number(item.montoTotal || 0).toLocaleString('es-AR')}</span></p>
                       </div>
                     );
                   }

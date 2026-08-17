@@ -37,12 +37,13 @@ public class TurnoController {
      * Cierra el turno especificado realizando el arqueo.
      */
     @PostMapping("/{id}/cerrar")
-    public ResponseEntity<?> cerrarCaja( 
-        @PathVariable Integer id, 
-        @RequestParam Double montoReal,
-        @RequestParam(required = false) String observaciones) {
+    public ResponseEntity<?> cerrarCaja(
+    @PathVariable Integer id,
+    @RequestParam Double montoReal,
+    @RequestParam(required = false) String observaciones,
+    @RequestParam(required = false) Integer idUsuario) {
     try {
-        Turno turnoCerrado = turnoService.cerrarTurno(id, montoReal, observaciones);
+        Turno turnoCerrado = turnoService.cerrarTurno(id, montoReal, observaciones, idUsuario);
         return ResponseEntity.ok(turnoCerrado);
     } catch (RuntimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

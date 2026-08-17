@@ -199,6 +199,12 @@ public class PedidoServiceImpl implements PedidoService {
                 movimiento.setFecha(LocalDateTime.now());
                 movimiento.setPedido(p);
                 movimiento.setDescripcion("Seña/Adelanto inicial - Pedido #" + p.getId_pedido());
+                boolean esVentaRapida = p.getObservaciones() != null && p.getObservaciones().contains("Venta Rápida");
+                if (esVentaRapida) {
+                    movimiento.setDescripcion("Venta Rápida");
+                } else {
+                    movimiento.setDescripcion("Seña/Adelanto inicial - Pedido #" + p.getId_pedido());
+                }
                 movimiento.setComprobanteImagen(urlDeImagen);
 
                 Turno turnoActivo = TurnoRepository.findTurnoAbiertoHoy();
@@ -531,6 +537,8 @@ public class PedidoServiceImpl implements PedidoService {
 
         mov.setComprobanteImagen(urlComprobante);
 
+        mov.setPedido(pedido);
+
         MovimientoCaja movGuardado = cajaRepository.save(mov); 
 
         if (pedido.getMovimientos() == null) {
@@ -665,6 +673,8 @@ public class PedidoServiceImpl implements PedidoService {
         mov.setUsuario(usuario);
 
         mov.setComprobanteImagen(urlDeImagen);
+
+        mov.setPedido(pedido);
 
         MovimientoCaja movGuardado = cajaRepository.save(mov); 
 

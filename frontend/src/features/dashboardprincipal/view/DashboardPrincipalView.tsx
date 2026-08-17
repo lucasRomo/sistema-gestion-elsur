@@ -9,6 +9,7 @@ import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPago
 import { NotificacionesCard } from '../components/NotificacionesCard';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useVentaRapida } from '../hooks/useVentaRapida';
+import { ModalElegirMetodoPago } from '../components/ModalElegirMetodoPago';
 
 export const DashboardPrincipal: React.FC = () => {
   const { theme } = useTheme();
@@ -32,6 +33,8 @@ export const DashboardPrincipal: React.FC = () => {
     suceso,
     setSuceso,
     showModalMaquinas,
+    showModalMetodoPago,    
+    setShowModalMetodoPago, 
     setShowModalMaquinas,
     conflictosMaquinas,
     ultimoPedidoRealizado,
@@ -113,6 +116,13 @@ export const DashboardPrincipal: React.FC = () => {
           />
           <CarritoLista carrito={carrito} onEliminar={handleEliminarItem} />
         </div>
+
+        <ModalElegirMetodoPago
+         show={showModalMetodoPago}
+         onClose={() => setShowModalMetodoPago(false)}
+         total={totalFinal}
+         onConfirmarPago={(datosPago) => ejecutarCompletarVenta(datosPago)}
+         />
         
         <ResumenVenta 
           subtotal={subtotalVenta}
@@ -189,7 +199,7 @@ export const DashboardPrincipal: React.FC = () => {
                   style={{ backgroundColor: '#ffc107', border: '1px solid #ffc107', borderRadius: '6px', fontWeight: 'bold' }}
                   onClick={() => {
                     setShowModalMaquinas(false);
-                    ejecutarCompletarVenta();
+                    setShowModalMetodoPago(true);
                   }}
                 >
                   Continuar de todos modos

@@ -108,15 +108,15 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
 
     // 1. Creación del Pedido
     if (fechaCreacionRaw) {
-      items.push({
-        id: 'ev-creacion',
-        fechaRaw: fechaCreacionRaw,
-        fechaFormateada: formatearHoraOCorta(fechaCreacionRaw),
-        tipo: 'CREACION',
-        titulo: 'Pedido Creado',
-        subtitulo: `Estado: PENDIENTE`
-      });
-    }
+  items.push({
+    id: 'ev-creacion',
+    fechaRaw: fechaCreacionRaw,
+    fechaFormateada: formatearHoraOCorta(fechaCreacionRaw),
+    tipo: 'CREACION',
+    titulo: 'Pedido Creado',
+    subtitulo: `Estado: ${p.estado || 'PENDIENTE'}`
+  });
+}
 
     // 2. Historial de Cambios de Estado / Asignaciones / Ubicación
     const historiales = p.historiales || p.historialEstadoPedidos || [];

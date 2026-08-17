@@ -57,4 +57,14 @@ public class MovimientoCajaController {
     public ResponseEntity<List<MovimientoCaja>> listarMovimientosPorTurno(@PathVariable Integer idTurno) {
         return ResponseEntity.ok(movimientoCajaService.listarMovimientosPorTurno(idTurno));
     }
+
+    @GetMapping("/totales/turno/{idTurno}")
+    public ResponseEntity<Map<String, Double>> obtenerTotalesPorTurno(@PathVariable Integer idTurno) {
+    return ResponseEntity.ok(movimientoCajaService.calcularTotalesPorTurno(idTurno));
+    }
+
+    @GetMapping("/desglose-arqueo/turno/{idTurno}")
+    public ResponseEntity<Map<String, Double>> obtenerDesgloseArqueoPorTurno(@PathVariable Integer idTurno) {
+    return ResponseEntity.ok(movimientoCajaService.obtenerDesgloseArqueoPorTurno(idTurno));
+    }
 }

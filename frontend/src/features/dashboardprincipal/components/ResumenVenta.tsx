@@ -146,7 +146,7 @@ export const ResumenVenta: React.FC<Props> = ({
           style={{ backgroundColor: '#3d824b', border: 'none', flex: '1 1 150px' }}
           onClick={onCompletar}
         >
-          Completar Venta Rápida
+          Elegir Metodo de Pago
         </button>
       </div>
     </div>

@@ -50,6 +50,14 @@ export const ClientesCharts: React.FC<ClientesProps> = ({ metricas, topClientes 
               <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
                 <i className="bi bi-credit-card-2-front-fill me-2" style={{ color: '#f43f5e' }}></i>Cuentas Corrientes (Top Deudores)
               </h5>
+              <button
+                type="button"
+                onClick={() => abrirModalComparacion('deudores')}
+                className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
+                style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #f43f5e', color: '#f43f5e' }}
+              >
+                <i className="bi bi-arrow-left-right"></i> Comparar
+              </button>
             </div>
 
             {metricas.topDeudores && metricas.topDeudores.length > 0 ? (

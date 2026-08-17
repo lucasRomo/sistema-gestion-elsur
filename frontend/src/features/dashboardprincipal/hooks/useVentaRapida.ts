@@ -22,6 +22,7 @@ export const useVentaRapida = () => {
   const [confirmarCancelacion, setConfirmarCancelacion] = useState(false);
   const [suceso, setSuceso] = useState({ show: false, titulo: '', mensaje: '', tipo: 'exito' });
   const [showModalMaquinas, setShowModalMaquinas] = useState(false);
+  const [showModalMetodoPago, setShowModalMetodoPago] = useState(false); // NUEVO
   const [conflictosMaquinas, setConflictosMaquinas] = useState<{
     productoNombre: string;
     maquinaNombre: string;
@@ -34,7 +35,6 @@ export const useVentaRapida = () => {
     return guardado ? JSON.parse(guardado) : null;
   });
 
-  // Soporta null u objeto con { pedido: any, tipo: 'cliente' | 'pago' }
   const [verTicketPedido, setVerTicketPedido] = useState<{ pedido: any; tipo: 'cliente' | 'pago' } | null>(null);
 
   // --- PETICIONES A LA API (FETCHING) ---
@@ -175,12 +175,20 @@ export const useVentaRapida = () => {
       setConflictosMaquinas(conflictos);
       setShowModalMaquinas(true);
     } else {
-      ejecutarCompletarVenta();
+      setShowModalMetodoPago(true); // Se abre el modal para elegir pago
     }
   };
 
-  // --- REGISTRO Y COMPLETADO DE VENTA EN 3 PASOS ---
-  const ejecutarCompletarVenta = async () => {
+  // --- REGISTRO Y COMPLETADO DE VENTA CON MÉTODO DE PAGO Y COMPROBANTE ---
+  const ejecutarCompletarVenta = async (datosPago?: {
+    tipoPago: 'EFECTIVO' | 'TRANSFERENCIA' | 'DEBITO' | 'CUENTA_CORRIENTE';
+    idCliente?: number;
+    comprobanteFile?: File | null;
+  }) => {
+    const tipoPagoElegido = datosPago?.tipoPago || 'EFECTIVO';
+    const esCuentaCorriente = tipoPagoElegido === 'CUENTA_CORRIENTE';
+    const idClienteAsignado = esCuentaCorriente && datosPago?.idCliente ? datosPago.idCliente : 1;
+
     const idUsuarioLogueado = (() => {
       const usuarioJson = localStorage.getItem('usuario_logueado');
       if (usuarioJson) {
@@ -199,11 +207,11 @@ export const useVentaRapida = () => {
 
     const payloadParaBackend = {
       pedido: {
-        cliente: { id_cliente: 1 },
+        cliente: { id_cliente: idClienteAsignado },
         fecha_entrega_estimada: fechaActualIso,
         monto_total: totalFinal,
-        monto_pago_adelantado: totalFinal, // Sincronizado con la rama Lucas
-        es_cuenta_corriente: false,
+        monto_pago_adelantado: esCuentaCorriente ? 0 : totalFinal,
+        es_cuenta_corriente: esCuentaCorriente,
         es_presupuesto: false,
         observaciones: `Venta Rápida ${porcentajeDescuento > 0 ? `(Categoría: ${categoriaActual?.nombreCategoria} - ${porcentajeDescuento}% Desc.)` : ''}`,
         detalles: carrito.map((item) => ({
@@ -215,16 +223,30 @@ export const useVentaRapida = () => {
       },
       idEmpleado: idUsuario,
       idUsuario: idUsuario,
-      tipoPago: 'EFECTIVO'
+      tipoPago: tipoPagoElegido
     };
 
     try {
-      // 1. Crear el Pedido
-      const resCrear = await fetch(`${API_BASE}/pedidos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payloadParaBackend)
-      });
+      let resCrear: Response;
+
+      // 1. Envío según la presencia de comprobante adjunto
+      if (datosPago?.comprobanteFile) {
+        const formData = new FormData();
+        // NOTA: Debe llamarse 'payload' para que el @RequestPart("payload") de Spring Boot lo interprete
+        formData.append('payload', JSON.stringify(payloadParaBackend));
+        formData.append('comprobante', datosPago.comprobanteFile);
+
+        resCrear = await fetch(`${API_BASE}/pedidos`, {
+          method: 'POST',
+          body: formData
+        });
+      } else {
+        resCrear = await fetch(`${API_BASE}/pedidos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payloadParaBackend)
+        });
+      }
 
       if (!resCrear.ok) throw new Error(await resCrear.text());
 
@@ -233,28 +255,7 @@ export const useVentaRapida = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 300));
 
-      // 2. Registrar el Pago en Caja
-      const formDataPago = new FormData();
-      formDataPago.append(
-        'payload',
-        JSON.stringify({
-          monto: totalFinal,
-          tipoPago: 'EFECTIVO',
-          idUsuario: idUsuario
-        })
-      );
-
-      const resPago = await fetch(`${API_BASE}/pedidos/${idPedido}/pagos`, {
-        method: 'POST',
-        body: formDataPago
-      });
-
-      if (!resPago.ok) {
-        const errorText = await resPago.text();
-        throw new Error(errorText || 'Error al registrar el cobro en el sistema de caja.');
-      }
-
-      // 3. Cambiar el estado a FINALIZADO
+      // 2. Cambiar el estado a FINALIZADO
       const resEstado = await fetch(`${API_BASE}/pedidos/${idPedido}/cambiar-estado`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -270,13 +271,12 @@ export const useVentaRapida = () => {
         throw new Error(errorText || 'Error al actualizar estado del pedido.');
       }
 
-      // 4. Refrescar catálogo para actualizar el stock descontado
+      // 3. Refrescar catálogo para actualizar el stock descontado
       await fetchProductos();
 
-      // Construcción del objeto enriquecido para tickets inmediatos (Rama Lucas)
       const pedidoParaTicket = {
         ...pedidoGuardado,
-        monto_pago_adelantado: totalFinal,
+        monto_pago_adelantado: esCuentaCorriente ? 0 : totalFinal,
         monto_total: totalFinal,
         estado: 'FINALIZADO'
       };
@@ -285,10 +285,12 @@ export const useVentaRapida = () => {
       localStorage.setItem('ultimo_pedido_venta_rapida', JSON.stringify(pedidoParaTicket));
 
       vaciarCarrito();
+      setShowModalMetodoPago(false);
+
       setSuceso({
         show: true,
         titulo: '¡Éxito!',
-        mensaje: `Venta realizada con éxito ($${totalFinal.toFixed(2)}), registrada en Caja y stock descontado.`,
+        mensaje: `Venta realizada con éxito ($${totalFinal.toFixed(2)}), registrada con método ${tipoPagoElegido} y stock descontado.`,
         tipo: 'exito'
       });
     } catch (error: any) {
@@ -337,6 +339,8 @@ export const useVentaRapida = () => {
     setSuceso,
     showModalMaquinas,
     setShowModalMaquinas,
+    showModalMetodoPago,         // NUEVO
+    setShowModalMetodoPago,      // NUEVO
     conflictosMaquinas,
     ultimoPedidoRealizado,
     verTicketPedido,

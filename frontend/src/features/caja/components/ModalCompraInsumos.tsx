@@ -22,6 +22,7 @@ export interface DatosCompraInsumo {
   idUsuario?: number;
   idProveedor?: number;
   items: ItemCompraInsumo[];
+  comprobanteImagen?: string | null;
 }
 
 interface ModalCompraInsumosProps {
@@ -64,6 +65,10 @@ export const ModalCompraInsumos: React.FC<ModalCompraInsumosProps> = ({
   const [metodoPago, setMetodoPago] = useState<string>('EFECTIVO');
   const [observaciones, setObservaciones] = useState<string>('');
   const [modificadoManualmente, setModificadoManualmente] = useState(false);
+
+  // Estados para manejo del comprobante
+  const [comprobanteImagen, setComprobanteImagen] = useState<string | null>(null);
+  const [nombreArchivo, setNombreArchivo] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -115,6 +120,8 @@ export const ModalCompraInsumos: React.FC<ModalCompraInsumosProps> = ({
     setMetodoPago('EFECTIVO');
     setObservaciones('');
     setModificadoManualmente(false);
+    setComprobanteImagen(null);
+    setNombreArchivo('');
   };
 
   const resetFormItem = () => {
@@ -126,6 +133,18 @@ export const ModalCompraInsumos: React.FC<ModalCompraInsumosProps> = ({
     setFactorConversion(1);
     setIdUnidad('');
     setIdUnidadCompra('');
+  };
+
+  const handleImagenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNombreArchivo(file.name);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setComprobanteImagen(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSelectInsumo = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -220,7 +239,8 @@ export const ModalCompraInsumos: React.FC<ModalCompraInsumosProps> = ({
         metodoPago,
         concepto: `Compra de Insumos: ${resumenInsumos}${textoProveedor}${observaciones ? ` - ${observaciones}` : ''}`,
         idProveedor: idProveedorSel ? Number(idProveedorSel) : undefined,
-        items: itemsCompra
+        items: itemsCompra,
+        comprobanteImagen: metodoPago === 'TRANSFERENCIA' ? comprobanteImagen : null
       });
 
       onClose();
@@ -468,7 +488,13 @@ export const ModalCompraInsumos: React.FC<ModalCompraInsumosProps> = ({
                     className="form-select font-monospace"
                     style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                     value={metodoPago}
-                    onChange={(e) => setMetodoPago(e.target.value)}
+                    onChange={(e) => {
+                      setMetodoPago(e.target.value);
+                      if (e.target.value !== 'TRANSFERENCIA') {
+                        setComprobanteImagen(null);
+                        setNombreArchivo('');
+                      }
+                    }}
                   >
                     <option value="EFECTIVO">Efectivo</option>
                     <option value="TRANSFERENCIA">Transferencia</option>
@@ -511,13 +537,69 @@ export const ModalCompraInsumos: React.FC<ModalCompraInsumosProps> = ({
 
             </div>
 
-            <div className="modal-footer border-top border-secondary">
-              <button type="button" className="btn btn-secondary px-4" onClick={onClose} disabled={loading}>
-                Cancelar
-              </button>
-              <button type="submit" className="btn btn-purple px-4 text-white fw-bold" style={{ backgroundColor: '#6f42c1' }} disabled={loading}>
-                {loading ? 'Procesando...' : 'Confirmar Compra'}
-              </button>
+            {/* Modal Footer con botón/tarjeta a la izquierda de Cancelar y Confirmar */}
+            <div className="modal-footer border-top border-secondary d-flex justify-content-between align-items-center">
+              <div>
+                {metodoPago === 'TRANSFERENCIA' && (
+                  !comprobanteImagen ? (
+                    <label 
+                      className="btn btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-2 m-0 shadow-sm" 
+                      style={{ 
+                        backgroundColor: isDark ? '#1a1a1c' : '#f8fafc', 
+                        border: `1px solid ${isDark ? '#38bdf8' : '#0284c7'}`, 
+                        color: isDark ? '#38bdf8' : '#0284c7', 
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <i className="bi bi-cloud-arrow-up fs-6"></i>
+                      <span className="text-truncate" style={{ fontSize: '0.85rem' }}>
+                        Vincular Comprobante
+                      </span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleImagenChange} 
+                        style={{ display: 'none' }} 
+                      />
+                    </label>
+                  ) : (
+                    <div 
+                      className="d-flex align-items-center gap-2 p-1 px-2 rounded shadow-sm" 
+                      style={{ 
+                        backgroundColor: isDark ? '#121214' : '#f1f5f9', 
+                        border: `1px solid ${cardBorder}` 
+                      }}
+                    >
+                      <i className="bi bi-file-earmark-image text-primary fs-6"></i>
+                      <span className="small text-truncate" style={{ maxWidth: '200px', fontSize: '0.85rem' }}>
+                        {nombreArchivo || 'comprobante.png'}
+                      </span>
+                      <button 
+                        type="button" 
+                        className="btn btn-sm btn-outline-danger border-0 p-1 d-flex align-items-center" 
+                        onClick={() => {
+                          setComprobanteImagen(null);
+                          setNombreArchivo('');
+                        }}
+                        title="Quitar comprobante"
+                      >
+                        <i className="bi bi-trash-fill fs-6"></i>
+                      </button>
+                    </div>
+                  )
+                )}
+              </div>
+
+              <div className="d-flex gap-2">
+                <button type="button" className="btn btn-secondary px-4" onClick={onClose} disabled={loading}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-purple px-4 text-white fw-bold" style={{ backgroundColor: '#6f42c1' }} disabled={loading}>
+                  {loading ? 'Procesando...' : 'Confirmar Compra'}
+                </button>
+              </div>
             </div>
           </form>
 

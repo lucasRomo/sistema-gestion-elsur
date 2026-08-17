@@ -14,8 +14,9 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
   const [categoria, setCategoria] = useState('INGRESO');
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [idPedido, setIdPedido] = useState<string | null>(null);
-  const [pedidosPendientes, setPedidosPendientes] = useState<any[]>([]);
   const [fechaPlaceholder, setFechaPlaceholder] = useState('');
+  const [comprobanteImagen, setComprobanteImagen] = useState<string | null>(null);
+  const [nombreArchivo, setNombreArchivo] = useState<string>('');
   
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -34,30 +35,25 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
       const hoy = new Date();
       const fechaFormato = `${hoy.getDate().toString().padStart(2, '0')}/${(hoy.getMonth() + 1).toString().padStart(2, '0')}/${hoy.getFullYear().toString().substring(2)} - ${hoy.toLocaleTimeString()}`;
       setFechaPlaceholder(fechaFormato);
-      
-      const cargarPedidosSelector = async () => {
-        try {
-          const res = await fetch('http://localhost:8080/api/pedidos/pendientes');
-          if (res.ok) {
-            const data = await res.json();
-            setPedidosPendientes(Array.isArray(data) ? data : []);
-          } else {
-            setPedidosPendientes([]); 
-          }
-        } catch (e) {
-          console.error("Error cargando pedidos para el selector:", e);
-          setPedidosPendientes([]);
-        }
-      };
-      cargarPedidosSelector();
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  // Determina si una categoría dada es de tipo EGRESO
   const esEgreso = (cat: string) => {
     return ['EGRESO', 'INSUMOS', 'EGRESO_INSUMOS', 'MANTENIMIENTO', 'EGRESO_MANTENIMIENTO'].includes(cat);
+  };
+
+  const handleImagenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNombreArchivo(file.name);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setComprobanteImagen(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = () => {
@@ -70,22 +66,22 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
       return;
     }
 
-    const tipoMovimiento = esEgreso(categoria) ? 'EGRESO' : 'INGRESO';
-
     onGuardar({
-    monto: Number(monto),
-    concepto: concepto.trim(),
-    tipoMovimiento: esEgreso(categoria) ? 'EGRESO' : 'INGRESO',
-    categoria,
-    metodoPago,
-    idPedido: idPedido === "no-pedido" ? null : idPedido
+      monto: Number(monto),
+      concepto: concepto.trim(),
+      tipoMovimiento: esEgreso(categoria) ? 'EGRESO' : 'INGRESO',
+      categoria,
+      metodoPago,
+      idPedido: idPedido === "no-pedido" ? null : idPedido,
+      comprobanteImagen: metodoPago === 'TRANSFERENCIA' ? comprobanteImagen : null
     });
 
-    // Resetear formulario
     setMonto('');
     setConcepto('');
     setCategoria('INGRESO');
     setMetodoPago('EFECTIVO');
+    setComprobanteImagen(null);
+    setNombreArchivo('');
   };
 
   return (
@@ -176,7 +172,13 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
                       border: `1px solid ${inputBorder}`
                     }}
                     value={metodoPago}
-                    onChange={(e) => setMetodoPago(e.target.value)}
+                    onChange={(e) => {
+                      setMetodoPago(e.target.value);
+                      if (e.target.value !== 'TRANSFERENCIA') {
+                        setComprobanteImagen(null);
+                        setNombreArchivo('');
+                      }
+                    }}
                   >
                     <option value="EFECTIVO">EFECTIVO</option>
                     <option value="TRANSFERENCIA">TRANSFERENCIA</option>
@@ -225,20 +227,85 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
                   onChange={(e) => setConcepto(e.target.value)}
                 />
               </div>
+
+              {/* Contenedor de Comprobante Adjuntado (Estilo Registrar Pago) */}
+              {metodoPago === 'TRANSFERENCIA' && comprobanteImagen && (
+                <div className="mt-3">
+                  <div 
+                    className="d-flex align-items-center justify-content-between p-2 rounded shadow-sm" 
+                    style={{ 
+                      backgroundColor: isDark ? '#121214' : '#f1f5f9', 
+                      border: `1px solid ${modalBorder}` 
+                    }}
+                  >
+                    <div className="d-flex align-items-center gap-2 overflow-hidden">
+                      <i className="bi bi-file-earmark-image text-primary fs-5"></i>
+                      <span className="small text-truncate" style={{ color: labelColor, maxWidth: '280px' }}>
+                        {nombreArchivo || 'comprobante.png'}
+                      </span>
+                    </div>
+                    <button 
+                      type="button" 
+                      className="btn btn-sm btn-outline-danger border-0 p-1 d-flex align-items-center" 
+                      onClick={() => {
+                        setComprobanteImagen(null);
+                        setNombreArchivo('');
+                      }}
+                      title="Quitar comprobante"
+                    >
+                      <i className="bi bi-trash-fill fs-6"></i>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="modal-footer border-0 d-flex justify-content-between pt-3 px-0">
+          {/* Modal Footer */}
+          <div className="modal-footer border-0 d-flex justify-content-between align-items-center pt-3 px-0">
             <button 
-              className="btn px-4 py-2 fw-bold border-0 shadow-sm" 
-              style={{ backgroundColor: '#a52a2a', color: '#ffffff', borderRadius: '8px', width: '35%' }}
+              className="btn btn-sm px-3 py-2 fw-bold border-0 shadow-sm" 
+              style={{ backgroundColor: '#a52a2a', color: '#ffffff', borderRadius: '6px', width: '30%' }}
               onClick={onClose}
             >
               Cancelar
             </button>
+
+            {metodoPago === 'TRANSFERENCIA' && (
+              <label 
+                className="btn btn-sm px-2 py-2 fw-bold d-flex justify-content-center align-items-center gap-2 m-0 shadow-sm" 
+                style={{ 
+                  backgroundColor: isDark ? '#1a1a1c' : '#f8fafc', 
+                  border: `1px solid ${isDark ? '#38bdf8' : '#0284c7'}`, 
+                  color: isDark ? '#38bdf8' : '#0284c7', 
+                  borderRadius: '8px', 
+                  width: '35%',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <i className="bi bi-cloud-arrow-up fs-6"></i>
+                <span className="text-truncate" style={{ fontSize: '0.85rem' }}>
+                  {comprobanteImagen ? 'Cambiar Comprobante' : 'Vincular Comprobante'}
+                </span>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleImagenChange} 
+                  style={{ display: 'none' }} 
+                />
+              </label>
+            )}
+
             <button 
-              className="btn px-4 py-2 fw-bold border-0 shadow-sm" 
-              style={{ backgroundColor: '#2b7a3e', color: '#ffffff', borderRadius: '8px', width: '45%' }}
+              className="btn btn-sm px-3 py-2 fw-bold border-0 shadow-sm" 
+              style={{ 
+                backgroundColor: '#2b7a3e', 
+                color: '#ffffff', 
+                borderRadius: '6px', 
+                width: '30%',
+                marginLeft: metodoPago !== 'TRANSFERENCIA' ? 'auto' : undefined 
+              }}
               onClick={handleSubmit}
             >
               Guardar Movimiento

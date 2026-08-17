@@ -7,6 +7,7 @@ interface Props {
   empleados: any[]; 
   total: number;
   porcentajeDescuento?: number;
+  categoriaNombre?: string;
   carrito: CartItem[];
   onVolver: () => void;
   onGuardar: (payload: { pedido: Pedido; idEmpleado: number; tipoPago: string; fileComprobante?: File | null }) => void;
@@ -17,6 +18,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
   empleados, 
   total, 
   porcentajeDescuento = 0,
+  categoriaNombre = '',
   carrito, 
   onVolver, 
   onGuardar 
@@ -163,11 +165,14 @@ export const DetallesPedidoForm: React.FC<Props> = ({
       fechaFinalEntrega = `${anio}-${mes}-${dia}T${hora}:${min}:00`;
     }
 
-    const textoDescuento = porcentajeDescuento > 0 ? ` [Descuento aplicado: ${porcentajeDescuento}%]` : '';
+    const textoDescuento = porcentajeDescuento > 0 
+      ? ` [Descuento aplicado: ${porcentajeDescuento}% - Cat: ${categoriaNombre}]` 
+      : (categoriaNombre ? ` [Cat: ${categoriaNombre}]` : '');
 
     const nuevoPedido: Pedido = {
       cliente: { id_cliente: Number(clienteId) },
       detalles: detallesFormateados,
+      fecha_creacion: new Date().toISOString().substring(0, 19),
       fecha_entrega_estimada: fechaFinalEntrega,
       estado: estado,
       monto_total: total,
@@ -252,13 +257,14 @@ export const DetallesPedidoForm: React.FC<Props> = ({
 
           {/* Estado y Método Comercial */}
           <div className="col-md-6">
-            <label className="form-label small text-secondary fw-bold">Tipo / Estado de Registro:</label>
-            <select className="form-select" value={estado} onChange={(e) => setEstado(e.target.value)}>
-              <option value="PENDIENTE" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>PENDIENTE (A Producción)</option>
-              <option value="EN PROCESO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>EN PROCESO (Taller)</option>
-              <option value="PRESUPUESTO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>PRESUPUESTO (Solo Guardar)</option>
-            </select>
-          </div>
+  <label className="form-label small text-secondary fw-bold">Tipo / Estado de Registro:</label>
+  <select className="form-select" value={estado} onChange={(e) => setEstado(e.target.value)}>
+    <option value="PENDIENTE" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>PENDIENTE (A Producción)</option>
+    <option value="EN PROCESO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>EN PROCESO (Taller)</option>
+    <option value="ENTREGADO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>ENTREGADO (Terminado)</option>
+    <option value="PRESUPUESTO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>PRESUPUESTO (Solo Guardar)</option>
+  </select>
+</div>
 
           <div className="col-md-6">
             <label className="form-label small text-secondary fw-bold">Método Comercial:</label>

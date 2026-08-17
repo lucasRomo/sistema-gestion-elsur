@@ -11,17 +11,17 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
   const [movimientos, setMovimientos] = useState<MovimientoCaja[]>([]);
   const [datosArqueo, setDatosArqueo] = useState<DatosArqueo | null>(null);
 
-  const fetchTotales = useCallback(async (montoInicial: number = 0) => {
-    const data = await cajaService.obtenerTotales();
-    if (data) {
-      setIngresosTurno(data.totalIngresos);
-      setEgresosTurno(data.totalEgresos);
-      setSaldoCaja(montoInicial + data.saldoActual);
-    }
+  const fetchTotales = useCallback(async (idTurno: number, montoInicial: number = 0) => {
+  const data = await cajaService.obtenerTotalesPorTurno(idTurno);
+  if (data) {
+    setIngresosTurno(data.totalIngresos);
+    setEgresosTurno(data.totalEgresos);
+    setSaldoCaja(montoInicial + data.saldoActual);
+  }
   }, []);
 
-  const fetchMovimientos = useCallback(async () => {
-    const data = await cajaService.obtenerMovimientosDia();
+  const fetchMovimientos = useCallback(async (idTurno: number) => {
+    const data = await cajaService.obtenerMovimientosPorTurno(idTurno);
     setMovimientos(data);
   }, []);
 
@@ -30,11 +30,12 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     if (data && data.estado === 'ABIERTO') {
       setCajaAbierta(true);
       setTurnoActual(data);
-      await fetchMovimientos();
-      await fetchTotales(data.montoInicial || 0);
+      await fetchMovimientos(data.idTurno);
+      await fetchTotales(data.idTurno, data.montoInicial || 0);
     } else {
       setCajaAbierta(false);
       setTurnoActual(null);
+      setMovimientos([]);
     }
   }, [setCajaAbierta, fetchMovimientos, fetchTotales]);
 
@@ -46,14 +47,15 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     setIngresosTurno(0);
     setEgresosTurno(0);
     setMovimientos([]);
-    await fetchMovimientos();
-    await fetchTotales(nuevoTurno.montoInicial || montoInicial);
+    await fetchMovimientos(nuevoTurno.idTurno);
+    await fetchTotales(nuevoTurno.idTurno, nuevoTurno.montoInicial || montoInicial);
   };
 
   const consultarArqueo = async () => {
-    const data = await cajaService.obtenerDesgloseArqueo();
-    setDatosArqueo(data);
-    return data;
+  if (!turnoActual) return null;
+  const data = await cajaService.obtenerDesgloseArqueoPorTurno(turnoActual.idTurno);
+  setDatosArqueo(data);
+  return data;
   };
 
   const guardarMovimiento = async (data: NuevoMovimientoDTO) => {
@@ -75,6 +77,7 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     categoria: data.categoria || (data.tipoMovimiento === 'EGRESO' ? 'VARIOS' : 'VENTA'), 
     descripcion: data.concepto,
     metodoPago: data.metodoPago, 
+    comprobanteImagen: data.comprobanteImagen || null,
     usuario: { idUsuario },
     pedido: data.idPedido ? { idPedido: Number(data.idPedido) } : null,
     fecha: fechaMomento
@@ -90,7 +93,7 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
       setSaldoCaja((prev) => prev - montoNum);
       setEgresosTurno((prev) => prev + montoNum);
     }
-    await fetchMovimientos();
+    if (turnoActual) await fetchMovimientos(turnoActual.idTurno);
   };
 
   const comprarInsumo = async (datos: DatosCompraInsumo) => {
@@ -99,7 +102,7 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     setSaldoCaja((prev) => prev - datos.montoTotal);
     setEgresosTurno((prev) => prev + datos.montoTotal);
 
-    await fetchMovimientos();
+    if (turnoActual) await fetchMovimientos(turnoActual.idTurno);
 
     return resultado;
   };
@@ -147,19 +150,24 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
       setEgresosTurno((prev) => prev + montoNum);
     }
 
-    await fetchMovimientos();
+    if (turnoActual) await fetchMovimientos(turnoActual.idTurno);
   };
 
   const cerrarCaja = async (montoReal: number, observaciones?: string) => {
-    if (!turnoActual) return false;
-    await cajaService.cerrarTurno(turnoActual.idTurno, montoReal, observaciones);
-    setCajaAbierta(false);
-    setTurnoActual(null);
-    setMovimientos([]);
-    setSaldoCaja(0);
-    setIngresosTurno(0);
-    setEgresosTurno(0);
-    return true;
+  if (!turnoActual) return false;
+
+  const usuarioGuardado = localStorage.getItem('usuario_logueado');
+  const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+  const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario;
+
+  await cajaService.cerrarTurno(turnoActual.idTurno, montoReal, observaciones, idUsuario);
+  setCajaAbierta(false);
+  setTurnoActual(null);
+  setMovimientos([]);
+  setSaldoCaja(0);
+  setIngresosTurno(0);
+  setEgresosTurno(0);
+  return true;
   };
 
   return {

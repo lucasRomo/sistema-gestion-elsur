@@ -14,7 +14,7 @@ import { ModalCompraInsumos } from '../components/ModalCompraInsumos';
 import type { DatosCompraInsumo } from '../components/ModalCompraInsumos';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import type { NuevoMovimientoDTO } from '../services/cajaService';
-import { renderBadgeCategoria } from '../components/renderBadgeCategoria';
+import { renderBadgeCategoria } from '../components/RenderBadgeCategoria';
 
 export const CajaView: React.FC = () => {
   const navigate = useNavigate();
@@ -407,145 +407,149 @@ export const CajaView: React.FC = () => {
             <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: tableWrapBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle, height: '315px' }}>
               <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapBg, height: '100%', overflowY: 'auto' }}>
                <table className="table table-hover m-0 align-middle text-center" style={{ '--bs-table-bg': tableWrapBg,
-                 '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.075)', color: isDark ? '#fff' : 'inherit' } as React.CSSProperties}>
-                  <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
-                    <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
-                      <th style={{ width: '140px' }}>Fecha/Hora</th>
-                      <th style={{ width: '90px' }}>Monto</th>
-                      <th style={{ width: '110px' }}>Método</th>
-                      <th style={{ width: '120px' }}>Categoría</th>
-                      <th className="text-start">Descripción</th>
-                      <th style={{ width: '60px' }}>Usu.</th>
-                      <th style={{ width: '60px' }}>Ped.</th>
-                      <th style={{ width: '120px' }}>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {movimientos.length === 0 ? (
-                      <tr><td colSpan={8} className="py-5 opacity-50">No hay movimientos registrados hoy</td></tr>
-                    ) : (
-                      movimientos.map((m, idx) => {
-                        const imagenAdjunta = 
-                          m.comprobanteImagen || 
-                          m.comprobante || 
-                          m.imagenComprobante || 
-                          m.comprobante_imagen || 
-                          m.imagen_comprobante ||
-                          m.urlComprobante ||
-                          m.url_comprobante;
+  '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.075)', color: isDark ? '#fff' : 'inherit' } as React.CSSProperties}>
+   <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
+     <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
+       {/* 1. Nueva columna ID a la izquierda de Fecha/Hora */}
+       <th style={{ width: '60px' }}>ID</th>
+       <th style={{ width: '140px' }}>Fecha/Hora</th>
+       <th style={{ width: '90px' }}>Monto</th>
+       <th style={{ width: '110px' }}>Método</th>
+       <th style={{ width: '120px' }}>Categoría</th>
+       <th className="text-start">Descripción</th>
+       <th style={{ width: '60px' }}>Usu.</th>
+       <th style={{ width: '60px' }}>Ped.</th>
+       <th style={{ width: '120px' }}>Acciones</th>
+     </tr>
+   </thead>
+   <tbody>
+     {movimientos.length === 0 ? (
+       <tr><td colSpan={9} className="py-5 opacity-50">No hay movimientos registrados hoy</td></tr>
+     ) : (
+       [...movimientos].reverse().map((m, idx) => {
+         const imagenAdjunta = 
+           m.comprobanteImagen || 
+           m.comprobante || 
+           m.imagenComprobante || 
+           m.comprobante_imagen || 
+           m.imagen_comprobante ||
+           m.urlComprobante ||
+           m.url_comprobante;
 
-                        return (
-                          <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
-                            <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
-                            <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
-                              {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
-                            </td>
-                            <td>
-                              <span className="badge bg-secondary font-monospace">
-                                {m.metodoPago || 'EFECTIVO'}
-                              </span>
-                            </td>
-                            <td>{renderBadgeCategoria(m, isDark)}</td>
-                            <td>
-                              <div 
-                                className="text-start" 
-                                style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', maxWidth: '360px' }}
-                                title={m.descripcion || 'Sin descripción'}
-                              >
-                                {m.descripcion || '-'}
-                              </div>
-                            </td>
-                            <td>
-                              {(() => {
-                                const u = m.usuario;
+         return (
+           <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
+             {/* 1. Celda con el ID del Movimiento de Caja */}
+             <td className="fw-bold opacity-75">
+               #{m.id_movimiento || m.idMovimiento || '-'}
+             </td>
+             <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
+             <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
+               {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
+             </td>
+             <td>
+               <span className="badge bg-secondary font-monospace">
+                 {m.metodoPago || 'EFECTIVO'}
+               </span>
+             </td>
+             <td>{renderBadgeCategoria(m, isDark)}</td>
+             
+             {/* 2. Descripción configurada para expandir verticalmente cuando es larga */}
+             <td>
+               <div 
+                 className="text-start" 
+                 style={{ wordBreak: 'break-word', minWidth: '180px' }}
+                 title={m.descripcion || 'Sin descripción'}
+               >
+                 {m.descripcion || '-'}
+               </div>
+             </td>
+             
+             <td>
+               {(() => {
+                 const u = m.usuario;
 
-                                // 1. Si viene como objeto desde el backend
-                                if (u && typeof u === 'object') {
-                                  // Nombre completo (nombre + apellido)
-                                  const nombreCompleto = `${u.nombre || u.first_name || ''} ${u.apellido || u.last_name || ''}`.trim();
-                                  if (nombreCompleto) return nombreCompleto;
+                 if (u && typeof u === 'object') {
+                   const nombreCompleto = `${u.nombre || u.first_name || ''} ${u.apellido || u.last_name || ''}`.trim();
+                   if (nombreCompleto) return nombreCompleto;
 
-                                  // Si solo tiene nombre de usuario
-                                  if (u.nombreUsuario) return u.nombreUsuario;
-                                  if (u.username) return u.username;
-                                  if (u.nombre_usuario) return u.nombre_usuario;
-                                }
+                   if (u.nombreUsuario) return u.nombreUsuario;
+                   if (u.username) return u.username;
+                   if (u.nombre_usuario) return u.nombre_usuario;
+                 }
 
-                                // 2. Si el backend envió directamente un string (ej: "LISANDRO")
-                                if (typeof u === 'string' && isNaN(Number(u))) {
-                                  return u;
-                                }
+                 if (typeof u === 'string' && isNaN(Number(u))) {
+                   return u;
+                 }
 
-                                // 3. Fallback: Buscar en localStorage (probando las claves más usuales de tu app)
-                                try {
-                                  const localData = 
-                                    localStorage.getItem('usuario_logueado') || 
-                                    localStorage.getItem('usuario') || 
-                                    localStorage.getItem('user');
+                 try {
+                   const localData = 
+                     localStorage.getItem('usuario_logueado') || 
+                     localStorage.getItem('usuario') || 
+                     localStorage.getItem('user');
 
-                                  if (localData) {
-                                    const parsed = JSON.parse(localData);
-                                    
-                                    const nombreLocal = `${parsed.nombre || parsed.first_name || ''} ${parsed.apellido || parsed.last_name || ''}`.trim();
-                                    if (nombreLocal) return nombreLocal;
-                                    
-                                    if (parsed.nombreUsuario) return parsed.nombreUsuario;
-                                    if (parsed.username) return parsed.username;
-                                    if (parsed.nombre_usuario) return parsed.nombre_usuario;
-                                  }
-                                } catch (e) {
-                                  // Error de lectura/parseo
-                                }
+                   if (localData) {
+                     const parsed = JSON.parse(localData);
+                     
+                     const nombreLocal = `${parsed.nombre || parsed.first_name || ''} ${parsed.apellido || parsed.last_name || ''}`.trim();
+                     if (nombreLocal) return nombreLocal;
+                     
+                     if (parsed.nombreUsuario) return parsed.nombreUsuario;
+                     if (parsed.username) return parsed.username;
+                     if (parsed.nombre_usuario) return parsed.nombre_usuario;
+                   }
+                 } catch (e) {
+                   // Error de lectura/parseo
+                 }
 
-                                return 'No se Encuentra al Usaurio';
-                              })()}
-                            </td>
-                            <td>
-                              {m.pedido?.idPedido || m.pedido?.id_pedido 
-                                ? `#${m.pedido?.idPedido || m.pedido?.id_pedido}` 
-                                : (m.descripcion?.includes('Pedido #') ? `#${m.descripcion.split('#')[1]?.trim()}` : '-')}
-                            </td>
-                            <td>
-                              <div className="d-flex justify-content-center gap-1">
-                                {imagenAdjunta && (
-                                  <button
-                                    className="btn btn-sm btn-outline-info border-0 p-1"
-                                    title="Ver Comprobante de Transferencia"
-                                    onClick={() => setImagenComprobanteModal(imagenAdjunta)}
-                                  >
-                                    <i className="bi bi-eye fs-5"></i>
-                                  </button>
-                                )}
-                                <button
-                                  className="btn btn-sm btn-outline-info border-0 p-1"
-                                  title="Ver Ticket de Comprobante"
-                                  onClick={() => handleVerTicket(m)}
-                                >
-                                  <i className="bi bi-receipt fs-5"></i>
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-outline-warning border-0 p-1"
-                                  title="Corregir / Ajustar Cobro"
-                                  disabled={!cajaAbierta || m.categoria === 'AJUSTE'}
-                                  onClick={() => {
-                                    setMovimientoAjuste(m);
-                                    setMontoAjuste(String(m.monto));
-                                    setTipoAjuste(m.tipoMovimiento === 'INGRESO' ? 'EGRESO' : 'INGRESO');
-                                    setMetodoPagoAjuste(m.metodoPago || 'EFECTIVO');
-                                    setImagenAjuste(null);
-                                    setMotivoAjuste('');
-                                  }}
-                                >
-                                  <i className="bi bi-arrow-counterclockwise fs-5"></i>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
+                 return 'No se Encuentra al Usaurio';
+               })()}
+             </td>
+             <td>
+               {m.pedido?.idPedido || m.pedido?.id_pedido 
+                 ? `#${m.pedido?.idPedido || m.pedido?.id_pedido}` 
+                 : (m.descripcion?.includes('Pedido #') ? `#${m.descripcion.split('#')[1]?.trim()}` : '-')}
+             </td>
+             <td>
+               <div className="d-flex justify-content-center gap-1">
+                 {imagenAdjunta && (
+                   <button
+                     className="btn btn-sm btn-outline-info border-0 p-1"
+                     title="Ver Comprobante de Transferencia"
+                     onClick={() => setImagenComprobanteModal(imagenAdjunta)}
+                   >
+                     <i className="bi bi-eye fs-5"></i>
+                   </button>
+                 )}
+                 <button
+                   className="btn btn-sm btn-outline-info border-0 p-1"
+                   title="Ver Ticket de Comprobante"
+                   onClick={() => handleVerTicket(m)}
+                 >
+                   <i className="bi bi-receipt fs-5"></i>
+                 </button>
+                 <button
+                   className="btn btn-sm btn-outline-warning border-0 p-1"
+                   title="Corregir / Ajustar Cobro"
+                   disabled={!cajaAbierta || m.categoria === 'AJUSTE'}
+                   onClick={() => {
+                     setMovimientoAjuste(m);
+                     setMontoAjuste(String(m.monto));
+                     setTipoAjuste(m.tipoMovimiento === 'INGRESO' ? 'EGRESO' : 'INGRESO');
+                     setMetodoPagoAjuste(m.metodoPago || 'EFECTIVO');
+                     setImagenAjuste(null);
+                     setMotivoAjuste('');
+                   }}
+                 >
+                   <i className="bi bi-arrow-counterclockwise fs-5"></i>
+                 </button>
+               </div>
+             </td>
+           </tr>
+         );
+       })
+     )}
+   </tbody>
+</table>
               </div>
             </div>
           </div>

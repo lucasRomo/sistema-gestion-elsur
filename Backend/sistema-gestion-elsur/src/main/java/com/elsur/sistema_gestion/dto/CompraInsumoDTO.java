@@ -16,6 +16,7 @@ public class CompraInsumoDTO {
     private Long idUsuario;
     private Integer idProveedor;
     private List<DetalleItemCompraDTO> items;
+    private String comprobanteImagen;
 
     @Data
     @NoArgsConstructor

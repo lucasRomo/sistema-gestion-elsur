@@ -127,6 +127,7 @@ public class CompraInsumoServiceImpl implements CompraInsumoService {
         movimiento.setDescripcion(dto.getConcepto());
         movimiento.setMetodoPago(dto.getMetodoPago());
         movimiento.setFecha(LocalDateTime.now());
+        movimiento.setComprobanteImagen(dto.getComprobanteImagen());
 
         // Vincula el movimiento al turno de caja actualmente abierto.
         // Sin esto, el movimiento no aparecía en el detalle de arqueo por turno,

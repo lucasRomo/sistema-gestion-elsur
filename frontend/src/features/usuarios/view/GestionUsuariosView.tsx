@@ -158,7 +158,7 @@ export const GestionUsuariosView: React.FC = () => {
                 ) : (
                   <tr>
                     <td colSpan={10} className={`text-center py-5 border-0 ${emptyTextColor}`}>
-                      <i className="bi bi-search display-5 d-block mb-2 opacity-50"></i>
+                      <i className="bi display-5 d-block mb-2 opacity-50"></i>
                       <span>No se encontraron usuarios registrados o no coinciden con la búsqueda.</span>
                     </td>
                   </tr>

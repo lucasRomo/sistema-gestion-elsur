@@ -6,6 +6,7 @@ import { useRegistrarPedido } from '../hooks/useRegistrarPedido';
 import { crearPedidoService } from '../service/crearPedidoService';
 import type { CartItem, Pedido, MovimientoCaja } from '../types/Pedido';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
+import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 
 export const CrearPedidoView: React.FC = () => {
   const navigate = useNavigate();
@@ -25,8 +26,6 @@ export const CrearPedidoView: React.FC = () => {
 
   const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string } | null>(null);
   const [fileTemporal, setFileTemporal] = useState<File | null>(null);
-
-  const ticketRef = useRef<HTMLDivElement>(null);
 
   // Carga inicial de categorías modularizada
   useEffect(() => {
@@ -52,9 +51,15 @@ export const CrearPedidoView: React.FC = () => {
   const porcentajeDescuento = catActual 
     ? Number(catActual.porcentajeDescuento ?? (catActual as any).descuentoAutomatico ?? (catActual as any).descuento_automatico ?? 0) 
     : 0;
-
+  
+  const categoriaNombre = catActual 
+    ? (catActual.nombreCategoria ?? (catActual as any).nombre ?? 'General')
+    : '';
+  
+    
   const montoDescuento = (subtotalCarrito * porcentajeDescuento) / 100;
   const totalConDescuento = subtotalCarrito - montoDescuento;
+  
 
   const handlePreGuardar = async (payloadEstructurado: { 
     pedido: any; 
@@ -122,10 +127,6 @@ export const CrearPedidoView: React.FC = () => {
     }
   };
 
-  const handleImprimirTicket = () => {
-    window.print();
-  };
-
   const handleCerrarTicket = () => {
     setTicketGenerado(null);
     navigate('/dashboard');
@@ -160,6 +161,7 @@ export const CrearPedidoView: React.FC = () => {
             empleados={empleados}
             total={totalConDescuento}
             porcentajeDescuento={porcentajeDescuento}
+            categoriaNombre={categoriaNombre}
             carrito={carrito}
             onVolver={() => setPaso(1)}
             onGuardar={handlePreGuardar}
@@ -205,71 +207,11 @@ export const CrearPedidoView: React.FC = () => {
 
       {/* Modal de Ticket de Movimiento de Caja */}
       {ticketGenerado && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1070 }}>
-          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>
-            <div className="modal-content bg-white text-dark p-4 shadow-lg rounded" ref={ticketRef}>
-              <div className="text-center border-bottom pb-2 mb-3">
-                <h4 className="fw-bold m-0" style={{ letterSpacing: '1px' }}>EL SUR</h4>
-                <small className="text-muted d-block fw-semibold">Centro de Copiado & Grafica</small>
-                <span className="badge bg-secondary mt-1">TICKET DE MOVIMIENTO DE CAJA</span>
-              </div>
-
-              <div className="small font-monospace mb-3">
-                <div className="d-flex justify-content-between">
-                  <span>N° Movimiento:</span>
-                  <strong>#{ticketGenerado.movimiento?.id_movimiento || 'S/N'}</strong>
-                </div>
-                <div className="d-flex justify-content-between">
-                  <span>Pedido N°:</span>
-                  <strong>#{ticketGenerado.pedido.id_pedido || 'N/A'}</strong>
-                </div>
-                <div className="d-flex justify-content-between">
-                  <span>Fecha:</span>
-                  <span>{ticketGenerado.movimiento?.fecha ? new Date(ticketGenerado.movimiento.fecha).toLocaleString() : new Date().toLocaleString()}</span>
-                </div>
-                <div className="d-flex justify-content-between">
-                  <span>Método Pago:</span>
-                  <strong>{ticketGenerado.movimiento?.metodoPago || payloadTemporal?.tipoPago}</strong>
-                </div>
-              </div>
-
-              <div className="border-top border-bottom py-2 my-2 font-monospace small">
-                <div className="d-flex justify-content-between">
-                  <span>Monto Total Pedido:</span>
-                  <span>${ticketGenerado.pedido.monto_total?.toFixed(2)}</span>
-                </div>
-                <div className="d-flex justify-content-between fw-bold text-success fs-6 mt-1">
-                  <span>Abonado / Seña:</span>
-                  <span>${(ticketGenerado.movimiento?.monto || ticketGenerado.pedido.monto_pago_adelantado)?.toFixed(2)}</span>
-                </div>
-                <div className="d-flex justify-content-between text-danger mt-1">
-                  <span>Saldo Pendiente:</span>
-                  <span>${(ticketGenerado.pedido.monto_total - (ticketGenerado.movimiento?.monto || ticketGenerado.pedido.monto_pago_adelantado))?.toFixed(2)}</span>
-                </div>
-              </div>
-
-              <div className="text-center mt-3 font-monospace small text-muted">
-                <p className="m-0">¡Gracias por su compra!</p>
-                <small>Conserve este ticket como comprobante de pago.</small>
-              </div>
-
-              <div className="d-flex gap-2 justify-content-center mt-4 d-print-none">
-                <button 
-                  className="btn btn-secondary btn-sm px-3" 
-                  onClick={handleImprimirTicket}
-                >
-                  <i className="bi bi-printer me-1"></i> Imprimir
-                </button>
-                <button 
-                  className="btn btn-success btn-sm px-4 fw-bold" 
-                  onClick={handleCerrarTicket}
-                >
-                  Aceptar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      <VistaTicketPagoModal 
+       pedido={ticketGenerado.pedido}
+       movimiento={ticketGenerado.movimiento}
+       onClose={handleCerrarTicket}
+      />
       )}
 
       {/* Modal de Resultado sin ticket */}

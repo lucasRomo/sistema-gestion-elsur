@@ -310,14 +310,14 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
         {/* Lista de Productos Agregados */}
         <div className="mb-4">
-          <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted" style={{ borderColor: borderTheme }}>
+          <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted" style={{ borderColor: borderTheme}}>
             <div style={{ width: '40%' }}>Lista de Productos:</div>
             <div style={{ width: '20%' }}>Cantidad:</div>
             <div style={{ width: '20%' }}>Precio Unitario:</div>
             <div style={{ width: '20%' }}>SubTotal:</div>
           </div>
           
-          <div style={{ maxHeight: '95px', overflowY: 'auto', overflowX: 'hidden' }}>
+          <div style={{ height: '135px', overflowY: 'auto', overflowX: 'hidden' }}>
             {carrito.length === 0 ? (
               <div className="text-center my-4 py-2" style={{ color: mutedText }}>No hay productos en la lista.</div>
             ) : (
@@ -436,7 +436,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
           <div style={{ width: '25%' }}>Stock Resultante:</div>
         </div>
 
-        <div style={{ maxHeight: '140px', overflowY: 'auto', overflowX: 'hidden' }}>
+        <div style={{ height: '68px', overflowY: 'auto', overflowX: 'hidden' }}>
           {insumosAfectados.length === 0 ? (
             <div className="text-center mt-3 small" style={{ color: mutedText }}>
               {carrito.length === 0 

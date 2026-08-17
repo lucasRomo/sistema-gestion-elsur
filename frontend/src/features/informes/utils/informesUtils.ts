@@ -1,12 +1,3 @@
-// --- MOCK DATA TEMPORAL DE MERMAS Y AVERÍAS ---
-export const MERMAS_MOCK = [
-  { id: 1, fecha: new Date().toISOString(), cantidad: 3, insumo: 'Papel Ilustración 300g (A3)', motivo: 'Error de impresión / Mancha de tinta' },
-  { id: 2, fecha: new Date(Date.now() - 3600000 * 2).toISOString(), cantidad: 1, insumo: 'Vinilo Impreso M2', motivo: 'Corte defectuoso de guillotina' },
-  { id: 3, fecha: new Date(Date.now() - 86400000 * 1).toISOString(), cantidad: 5, insumo: 'Papel Obra 80g (A4)', motivo: 'Papel atascado y arrugado' },
-  { id: 4, fecha: new Date(Date.now() - 86400000 * 3).toISOString(), cantidad: 2, insumo: 'Lona Frontlit M2', motivo: 'Vinilo mal alineado' },
-  { id: 5, fecha: new Date(Date.now() - 86400000 * 30).toISOString(), cantidad: 8, insumo: 'Tinta Negra Sublimación (ml)', motivo: 'Fallo de calibración de color' }
-];
-
 export const AVERIAS_MOCK = [
   { id: 1, fecha: new Date().toISOString(), cantidad: 1, maquina: 'Plotter Roland VG3', detalle: 'Atasco en cabezal principal' },
   { id: 2, fecha: new Date(Date.now() - 3600000 * 3).toISOString(), cantidad: 1, maquina: 'Guillotina Industrial', detalle: 'Fallo en sensor de seguridad' },
@@ -36,10 +27,16 @@ export type InformeComparacion =
   | 'tiempoPromedioPedido'
   | 'tiempoMaximoEmpleado';
 
+  export interface IncongruenciaEmpleado {
+  empleado: string;
+  montoDiferencia: number;
+  cantidadIncongruencias: number;
+  }
+
 // Convierte un objeto Date a formato YYYY-MM-DD
-export function formatDateForInput(date: Date): string {
+  export function formatDateForInput(date: Date): string {
   return date.toISOString().split('T')[0];
-}
+  }
 
 // Genera un sparkline "tipo bolsa": variaciones chicas y acotadas
 export function generarPuntosSparkline(
@@ -173,6 +170,43 @@ export function obtenerNombreInforme(informe: InformeComparacion | null): string
   return informe ? nombres[informe] : '';
 }
 
+  export function calcularIncongruenciasArqueo(
+  turnos: any[],
+  fDesde: string,
+  fHasta: string
+  ): IncongruenciaEmpleado[] {
+  const desde = new Date(`${fDesde}T00:00:00`);
+  const hasta = new Date(`${fHasta}T23:59:59.999`);
+
+  const acumulado: Record<string, { monto: number; cantidad: number }> = {};
+
+  (turnos || []).forEach((turno) => {
+    if (turno.estado !== 'CERRADO' || !turno.fechaCierre) return;
+
+    const fechaCierre = new Date(turno.fechaCierre);
+    if (fechaCierre < desde || fechaCierre > hasta) return;
+
+    const diferencia = Number(turno.diferenciaArqueo || 0);
+    if (Math.abs(diferencia) <= 0.01) return; // arqueo exacto, no es incongruencia
+
+    const nombreEmpleado = turno.usuario?.nombreUsuario || 'Sin usuario asignado';
+
+    if (!acumulado[nombreEmpleado]) {
+      acumulado[nombreEmpleado] = { monto: 0, cantidad: 0 };
+    }
+    acumulado[nombreEmpleado].monto += Math.abs(diferencia);
+    acumulado[nombreEmpleado].cantidad += 1;
+  });
+
+  return Object.entries(acumulado)
+    .map(([empleado, { monto, cantidad }]) => ({
+      empleado,
+      montoDiferencia: monto,
+      cantidadIncongruencias: cantidad
+    }))
+    .sort((a, b) => b.montoDiferencia - a.montoDiferencia);
+  }
+
 // Calcula los rangos de fechas (actual vs anterior) según el tipo de comparación
 export function calcularPeriodoComparacion(fDesde: string, fHasta: string, tipo: TipoComparacion) {
   const parse = (v: string) => {
@@ -235,7 +269,9 @@ export function procesarMetricas(
   pedidosLista: any[] = [],
   cajaLista: any[] = [],
   mermasLista: any[] = [],
-  deudoresLista: any[] = []
+  deudoresLista: any[] = [],
+  averiasLista: any[] = [],
+  categoriasClienteLista: any[] = []
 ) {
   const parseFechaLocal = (fechaStr: string) => {
     if (!fechaStr) return new Date();
@@ -363,27 +399,52 @@ export function procesarMetricas(
   pedidosEnRango.forEach((p: any) => {
     const clienteObj = p.cliente;
     const catClienteObj = clienteObj?.categoriaCliente || clienteObj?.categoria || p.categoriaCliente;
-    let nombreCatCliente = catClienteObj?.nombreCategoria || catClienteObj?.nombre;
+    
+    // 1. Extraemos el nombre ya sea que venga como Objeto o como String directo
+    let nombreCatRaw = '';
+    if (typeof catClienteObj === 'string') {
+      nombreCatRaw = catClienteObj;
+    } else {
+      nombreCatRaw = catClienteObj?.nombreCategoria || catClienteObj?.nombre || '';
+    }
+
     let porcentajeDescuento = Number(catClienteObj?.descuento || catClienteObj?.porcentajeDescuento || 0);
 
-    if (!nombreCatCliente) {
-      const obs = p.observaciones || '';
-      const matchDescuento = obs.match(/\[Descuento aplicado:\s*([^\]]+)\]/i);
+    const obs = p.observaciones || '';
+    const matchDescuento = obs.match(/\[Descuento aplicado:\s*([^\]]+)\]/i);
+    const descTexto = matchDescuento && matchDescuento[1] ? matchDescuento[1] : '';
 
-      if (matchDescuento && matchDescuento[1]) {
-        const descTexto = matchDescuento[1].trim();
-        nombreCatCliente = `Estudiante (${descTexto})`;
-        const numMatch = descTexto.match(/(\d+(\.\d+)?)/);
-        if (numMatch && porcentajeDescuento === 0) {
-          porcentajeDescuento = Number(numMatch[1]);
-        }
-      } else {
-        nombreCatCliente = 'Sin Categoría / General';
+    // 2. Unificamos todos los textos posibles donde puede estar la categoría para hacer una búsqueda segura
+    const textoBusqueda = `${nombreCatRaw} ${descTexto} ${obs}`.toLowerCase();
+
+    // 3. Asignación estricta y dinámica
+    let nombreCatCliente = 'Sin Categoría / General';
+
+    // Primero verificamos si el objeto pedido ya trae un nombre de categoría válido
+    if (nombreCatRaw && !textoBusqueda.includes('sin categoría') && !textoBusqueda.includes('consumidor final')) {
+      nombreCatCliente = nombreCatRaw;
+    } else {
+      // Si no viene directo, buscamos dinámicamente en las categorías traídas de la base de datos
+      const categoriaEncontrada = (categoriasClienteLista || []).find((cat: any) => 
+        textoBusqueda.includes((cat.nombre || '').toLowerCase())
+      );
+
+      if (categoriaEncontrada) {
+        nombreCatCliente = categoriaEncontrada.nombre;
+      }
+    }
+
+    // Extraemos el porcentaje si no venía en el objeto pero sí en el texto
+    if (porcentajeDescuento === 0) {
+      const numMatch = descTexto.match(/(\d+(\.\d+)?)/);
+      if (numMatch) {
+        porcentajeDescuento = Number(numMatch[1]);
       }
     }
 
     const montoPedido = Number(p.monto_total || p.montoTotal || p.total || 0);
     let montoAhorrado = 0;
+
     if (porcentajeDescuento > 0) {
       const montoOriginal = montoPedido / (1 - porcentajeDescuento / 100);
       montoAhorrado = montoOriginal - montoPedido;
@@ -767,79 +828,78 @@ if (huboDevolucion) {
     }));
   }
 
-  const averiasEnRango = AVERIAS_MOCK.filter((item) => {
-    const f = new Date(item.fecha);
-    return f >= desde && f <= hasta;
+  const averiasEnRango = (averiasLista || []).filter((item) => {
+  const f = new Date(item.fechaReporte || item.fecha_reporte);
+  return f >= desde && f <= hasta;
   });
 
   let averiasPorPeriodo: any[] = [];
   if (esUnSoloDia) {
-    averiasPorPeriodo = averiasEnRango.map((item) => ({
-      ejeX: new Date(item.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }),
-      cantidad: item.cantidad,
-      maquina: item.maquina,
-      detalle: item.detalle
-    }));
+  averiasPorPeriodo = averiasEnRango.map((item, idx) => ({
+    ejeX: `${new Date(item.fechaReporte).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}#${idx}`,
+    cantidad: 1,
+    maquina: item.maquina?.nombre || 'Sin especificar',
+    detalle: item.descripcion || 'Sin detalle'
+  }));
   } else {
-    const averiasAgrupadas = agruparPorPeriodo(
-      averiasEnRango,
-      desde,
-      hasta,
-      esUnSoloDia,
-      esPorSemanas,
-      esPorMeses,
-      esPorAnios,
-      (item) => new Date(item.fecha),
-      (item) => item.cantidad
-    );
-
-    averiasPorPeriodo = averiasAgrupadas.map((item) => ({
-      ejeX: item.name,
-      cantidad: item.valor
-    }));
+  const averiasAgrupadas = agruparPorPeriodo(
+    averiasEnRango, desde, hasta, esUnSoloDia, esPorSemanas, esPorMeses, esPorAnios,
+    (item) => new Date(item.fechaReporte),
+    () => 1
+  );
+  averiasPorPeriodo = averiasAgrupadas.map((item) => ({ ejeX: item.name, cantidad: item.valor }));
   }
 
   // --- CLIENTES CON MÁS INGRESOS ---
   const mapaClientes: { [key: string]: { nombre: string; totalGastado: number; cantidadPedidos: number } } = {};
 
   const obtenerNombreCliente = (clienteObj: any, fallbackStr?: string): string => {
-    let clienteNombre = '';
+  let clienteNombre = '';
 
-    if (typeof clienteObj === 'string' && clienteObj.trim()) {
-      clienteNombre = clienteObj;
-    } else if (clienteObj && typeof clienteObj === 'object') {
-      if (clienteObj.razonSocial && clienteObj.razonSocial.trim()) {
-        clienteNombre = clienteObj.razonSocial;
-      } else if (clienteObj.persona) {
-        const { nombre = '', apellido = '' } = clienteObj.persona;
-        clienteNombre = `${nombre} ${apellido}`.trim();
-      } else if (clienteObj.nombre) {
-        const apellido = clienteObj.apellido || '';
-        clienteNombre = `${clienteObj.nombre} ${apellido}`.trim();
-      }
+  if (typeof clienteObj === 'string' && clienteObj.trim()) {
+    clienteNombre = clienteObj;
+  } else if (clienteObj && typeof clienteObj === 'object') {
+    const razonSocialLimpia = (clienteObj.razonSocial || '').trim().toLowerCase();
+    const razonSocialValida =
+      clienteObj.razonSocial &&
+      razonSocialLimpia !== '' &&
+      razonSocialLimpia !== 'ninguna' &&
+      razonSocialLimpia !== 'ninguno' &&
+      razonSocialLimpia !== 'n/a' &&
+      razonSocialLimpia !== 'na';
+
+    if (razonSocialValida) {
+      clienteNombre = clienteObj.razonSocial;
+    } else if (clienteObj.persona) {
+      const { nombre = '', apellido = '' } = clienteObj.persona;
+      clienteNombre = `${nombre} ${apellido}`.trim();
+    } else if (clienteObj.nombre) {
+      const apellido = clienteObj.apellido || '';
+      clienteNombre = `${clienteObj.nombre} ${apellido}`.trim();
     }
+  }
 
-    if (!clienteNombre && fallbackStr && typeof fallbackStr === 'string') {
-      clienteNombre = fallbackStr;
-    }
+  if (!clienteNombre && fallbackStr && typeof fallbackStr === 'string') {
+    clienteNombre = fallbackStr;
+  }
 
-    const nombreLimpio = clienteNombre.trim().toLowerCase();
+  const nombreLimpio = clienteNombre.trim().toLowerCase();
 
-    if (
-      !nombreLimpio ||
-      nombreLimpio === 'ninguna' ||
-      nombreLimpio === 'ninguno' ||
-      nombreLimpio === 'null' ||
-      nombreLimpio === 'undefined' ||
-      nombreLimpio.includes('venta rápida') ||
-      nombreLimpio.includes('venta rapida') ||
-      nombreLimpio === 'caja'
-    ) {
-      return 'Consumidor Final';
-    }
+  if (
+    !nombreLimpio ||
+    nombreLimpio === 'ninguna' ||
+    nombreLimpio === 'ninguno' ||
+    nombreLimpio === 'null' ||
+    nombreLimpio === 'undefined' ||
+    nombreLimpio.includes('venta rápida') ||
+    nombreLimpio.includes('venta rapida') ||
+    nombreLimpio === 'caja'
+  ) {
+    return 'Consumidor Final';
+  }
 
-    return clienteNombre;
-  };
+  return clienteNombre;
+};
 
   const idsPedidosProcesados = new Set<string | number>();
 
