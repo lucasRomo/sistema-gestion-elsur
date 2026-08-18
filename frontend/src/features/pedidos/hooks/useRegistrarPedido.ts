@@ -10,56 +10,81 @@ export const useRegistrarPedido = () => {
   const [clientes, setClientes] = useState<any[]>([]);
   const [empleados, setEmpleados] = useState<any[]>([]);
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
+  const [pedidosPendientes, setPedidosPendientes] = useState<Pedido[]>([]);
   const [cargando, setCargando] = useState<boolean>(false);
 
   useEffect(() => {
     const cargarDatosIniciales = async () => {
       try {
-        const [resProductos, resClientes, resEmpleados, resMaquinas, resProductoInsumo] = await Promise.all([
+        const [
+          resProductos, 
+          resClientes, 
+          resEmpleados, 
+          resMaquinas, 
+          resProductoInsumo,
+          resPedidos
+        ] = await Promise.all([
           fetch(`${API_BASE_URL}/productos`),
           fetch(`${API_BASE_URL}/clientes`),
           fetch(`${API_BASE_URL}/empleados`),
           fetch(`${API_BASE_URL}/maquinas`),
-          fetch(`${API_BASE_URL}/producto-insumo`)
+          fetch(`${API_BASE_URL}/producto-insumo`),
+          fetch(`${API_BASE_URL}/pedidos`)
         ]);
 
         const rawProductos = resProductos.ok ? await resProductos.json() : [];
         const rawRecetas = resProductoInsumo.ok ? await resProductoInsumo.json() : [];
+        const rawPedidos = resPedidos.ok ? await resPedidos.json() : [];
 
-        // Mapea y vincula la lista de ProductoInsumo a la propiedad productoInsumos de cada Producto
-        const productosConRecetas = rawProductos.map((p: any) => {
-          const recetaAsociada = rawRecetas.filter((pi: any) => 
-            (pi.id && pi.id.idProducto === p.idProducto) || 
-            (pi.producto && pi.producto.idProducto === p.idProducto)
+        // Filtrar únicamente los pedidos que estén vigentes o pendientes de descontar/completar
+        const pendientes = rawPedidos.filter((p: any) => 
+        p.estado && (
+        p.estado.toUpperCase().includes('PENDIENTE') || 
+        p.estado.toUpperCase().includes('PROCESO') ||
+        p.estado.toUpperCase().includes('EN ESPERA')
+        ));
+
+        setPedidosPendientes(pendientes);
+
+        // Mapea y vincula la lista de insumos/receta a cada producto
+        const productosConReceta = rawProductos.map((p: any) => {
+          const receta = rawRecetas.filter((r: any) => 
+            (r.idProducto ?? r.producto?.idProducto) === p.idProducto
           );
           return {
             ...p,
-            productoInsumos: recetaAsociada
+            receta: receta.length > 0 ? receta : (p.productoInsumos || [])
           };
         });
 
-        setProductos(productosConRecetas);
-        if (resClientes.ok) setClientes(await resClientes.json());
-        if (resEmpleados.ok) setEmpleados(await resEmpleados.json());
-        if (resMaquinas.ok) setMaquinas(await resMaquinas.json());
+        setProductos(productosConReceta);
+        setClientes(resClientes.ok ? await resClientes.json() : []);
+        setEmpleados(resEmpleados.ok ? await resEmpleados.json() : []);
+        setMaquinas(resMaquinas.ok ? await resMaquinas.json() : []);
+        setPedidosPendientes(pendientes);
       } catch (error) {
-        console.error("Error al conectar con la API de El Sur:", error);
+        console.error("Error al cargar datos iniciales:", error);
       }
     };
 
     cargarDatosIniciales();
   }, []);
 
-  // ➔ "enviarPedido" acepta el archivo opcional "fileComprobante"
   const enviarPedido = async (
-    payload: { pedido: Pedido; idEmpleado: number; idUsuario?: number | null },
+    payload: {
+      pedido: any;
+      idEmpleado: number;
+      idUsuario: number | null;
+      tipoPago: string;
+      idSucursal?: number;
+    }, 
     fileComprobante?: File | null
-  ) => {
+  ): Promise<boolean> => {
     setCargando(true);
     try {
-      let respuesta;
+      let respuesta: Response;
 
-      // 1. Si el usuario adjuntó un archivo de comprobante, usamos FormData
+      // 1. Si enviamos un archivo de comprobante, usamos FormData
       if (fileComprobante) {
         const formData = new FormData();
         
@@ -74,12 +99,9 @@ export const useRegistrarPedido = () => {
 
         respuesta = await fetch(`${API_BASE_URL}/pedidos`, {
           method: 'POST',
-          // NOTA: No seteamos 'Content-Type' manualmente al usar FormData.
-          // El navegador lo calculará automáticamente incluyendo la frontera (boundary) correcta.
           body: formData
         });
       } else {
-        // 2. Si no hay archivo, seguimos enviando JSON puro como siempre
         respuesta = await fetch(`${API_BASE_URL}/pedidos`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -101,5 +123,13 @@ export const useRegistrarPedido = () => {
     }
   };
 
-  return { productos, clientes, empleados, maquinas, enviarPedido, cargando };
+  return {
+    productos,
+    clientes,
+    empleados,
+    maquinas,
+    pedidosPendientes,
+    cargando,
+    enviarPedido
+  };
 };

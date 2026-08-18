@@ -15,11 +15,9 @@ public class DetallePedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_detalle;
 
-    @ManyToOne(fetch = FetchType.LAZY) 
-    @JoinColumn(name = "id_pedido", nullable = false)
-    // ❌ QUITAR @JsonIgnore (esto hacía que 'pedido' fuera siempre null)
-    // ✅ USAR @JsonIgnoreProperties para prevenir bucles de serialización
-    @JsonIgnoreProperties({"detalles", "asignaciones", "comprobantes", "historiales"})
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_pedido")
+    @JsonIgnoreProperties({"detalles", "historiales", "comprobantes", "movimientosCaja"})
     private Pedido pedido;
 
     @ManyToOne

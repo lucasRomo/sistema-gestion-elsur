@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -29,11 +30,12 @@ public class Pedido {
     @JsonProperty("cliente")
     private Cliente cliente;
 
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JsonIgnoreProperties("pedido")
+    @JsonProperty("detalles")
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    private List<DetallePedido> detalles;
+    private List<DetallePedido> detalles = new ArrayList<>();
 
     @Column(nullable = false, updatable = false)
     @ColumnDefault("CURRENT_TIMESTAMP")

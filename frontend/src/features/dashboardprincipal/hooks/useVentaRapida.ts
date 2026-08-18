@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Producto } from '../../productos/types/Producto';
-import type { CartItem } from '../../pedidos/types/Pedido';
+import type { CartItem, Pedido } from '../../pedidos/types/Pedido';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
 
@@ -11,6 +11,7 @@ export const useVentaRapida = () => {
   const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<CategoriaCliente[]>([]);
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
+  const [pedidosPendientes, setPedidosPendientes] = useState<Pedido[]>([]);
 
   // --- ESTADOS DE FORMULARIO Y CARRITO ---
   const [productoSeleccionado, setProductoSeleccionado] = useState<string>('');
@@ -22,11 +23,35 @@ export const useVentaRapida = () => {
   const [confirmarCancelacion, setConfirmarCancelacion] = useState(false);
   const [suceso, setSuceso] = useState({ show: false, titulo: '', mensaje: '', tipo: 'exito' });
   const [showModalMaquinas, setShowModalMaquinas] = useState(false);
-  const [showModalMetodoPago, setShowModalMetodoPago] = useState(false); // NUEVO
+  const [showModalMetodoPago, setShowModalMetodoPago] = useState(false);
+  const [showModalStockCritico, setShowModalStockCritico] = useState(false);
+  const [insumosCatalogo, setInsumosCatalogo] = useState<any[]>([]);
+
+
+
+  const fetchInsumos = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/insumos`);
+      if (response.ok) {
+        const data = await response.json();
+        setInsumosCatalogo(data);
+      }
+    } catch (error) {
+      console.error('Error al obtener insumos:', error);
+    }
+  };
+
   const [conflictosMaquinas, setConflictosMaquinas] = useState<{
     productoNombre: string;
     maquinaNombre: string;
     estado: string;
+  }[]>([]);
+
+  const [conflictosStockCritico, setConflictosStockCritico] = useState<{
+    nombre: string;
+    tipo: string;
+    quedaran: number;
+    tolerancia: number;
   }[]>([]);
 
   // --- RECUPERAR ÚLTIMO PEDIDO DE LOCALSTORAGE ---
@@ -34,7 +59,6 @@ export const useVentaRapida = () => {
     const guardado = localStorage.getItem('ultimo_pedido_venta_rapida');
     return guardado ? JSON.parse(guardado) : null;
   });
-
   const [verTicketPedido, setVerTicketPedido] = useState<{ pedido: any; tipo: 'cliente' | 'pago' } | null>(null);
 
   // --- PETICIONES A LA API (FETCHING) ---
@@ -79,10 +103,25 @@ export const useVentaRapida = () => {
     }
   };
 
+  const fetchPedidosPendientes = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/pedidos`);
+      if (response.ok) {
+        const data = await response.json();
+        const activos = data.filter((p: any) => p.estado !== 'ENTREGADO' && p.estado !== 'CANCELADO');
+        setPedidosPendientes(activos);
+      }
+    } catch (error) {
+      console.error('Error al obtener pedidos pendientes:', error);
+    }
+  };
+
   useEffect(() => {
     fetchProductos();
     fetchCategorias();
     fetchMaquinas();
+    fetchPedidosPendientes();
+    fetchInsumos();
   }, []);
 
   // --- ACCIONES DEL CARRITO ---
@@ -110,20 +149,17 @@ export const useVentaRapida = () => {
 
   // --- CÁLCULOS DE MONTO Y DESCUENTO ---
   const subtotalVenta = carrito.reduce((acc, item) => acc + item.subtotal, 0);
-
   const categoriaActual = categorias.find((c) => {
     const id = c.idCategoriaCliente ?? (c as any).idCategoria ?? (c as any).id_categoria ?? (c as any).id;
     return id?.toString() === categoriaSeleccionadaId;
   });
-
   const porcentajeDescuento = categoriaActual
     ? (categoriaActual.porcentajeDescuento ?? (categoriaActual as any).descuentoAutomatico ?? (categoriaActual as any).descuento_automatico ?? 0)
     : 0;
-
   const montoDescuento = (subtotalVenta * porcentajeDescuento) / 100;
   const totalFinal = subtotalVenta - montoDescuento;
 
-  // --- VALIDACIÓN DE MAQUINARIA FUERA DE SERVICIO ---
+  // --- VALIDACIÓN DE STOCK Y MAQUINARIA AL INTENTAR COMPLETAR LA VENTA ---
   const handleValidarYCompletarVenta = () => {
     if (carrito.length === 0) {
       setSuceso({
@@ -135,8 +171,160 @@ export const useVentaRapida = () => {
       return;
     }
 
-    const conflictos: { productoNombre: string; maquinaNombre: string; estado: string }[] = [];
+    const MARGEN_MERMA = 5;
 
+    // 1. MAPEAR CONSUMOS DEL CARRITO Y CRUZAR CON CATÁLOGO DE INSUMOS
+    const requerimientoMapa = new Map<string, {
+      nombre: string;
+      tipo: string;
+      cantReq: number;
+      stockActual: number;
+      stockMinimo: number;
+      unidad: string;
+    }>();
+
+    carrito.forEach((item) => {
+      const prod = item.producto as any;
+      if (!prod) return;
+
+      const insumos = prod.insumos || prod.productoInsumos || prod.receta || [];
+
+      // A) SI EL PRODUCTO TIENE RECETA / INSUMOS ASOCIADOS
+      if (Array.isArray(insumos) && insumos.length > 0) {
+        insumos.forEach((pi: any) => {
+          const insumoRaw = pi.insumo || pi;
+          const idInsumo = insumoRaw.idInsumo ?? insumoRaw.id_insumo ?? insumoRaw.id;
+          const key = `INS_${idInsumo}`;
+          
+          // Buscar el insumo fresco de /api/insumos
+          const insumoActualizado = insumosCatalogo.find((i) => 
+            String(i.idInsumo ?? i.id_insumo ?? i.id) === String(idInsumo)
+          ) || insumoRaw;
+
+          const proporcion = Number(pi.cantidadProporcion ?? pi.cantidad_proporcion ?? pi.cantidad ?? 1);
+          const cantTotalInsumo = proporcion * item.cantidad;
+
+          const stockReal = Number(
+            insumoActualizado.stockActual ?? 
+            insumoActualizado.stock_actual ?? 
+            insumoActualizado.stockSuelto ?? 
+            insumoActualizado.stock_suelto ?? 
+            insumoActualizado.stock ?? 0
+          );
+
+          const stockMin = Number(
+            insumoActualizado.stockMinimo ?? 
+            insumoActualizado.stock_minimo ?? 0
+          );
+
+          // Formatear nombre de unidad (manejando si viene como string o como objeto JSON)
+          const unidadNom = typeof insumoActualizado.unidadMedida === 'object' 
+            ? insumoActualizado.unidadMedida?.nombre 
+            : (insumoActualizado.unidadMedida || 'Unidad');
+
+          if (!requerimientoMapa.has(key)) {
+            requerimientoMapa.set(key, {
+              nombre: insumoActualizado.nombreInsumo || insumoActualizado.nombre_insumo || insumoActualizado.nombre || 'Insumo',
+              tipo: 'Insumo',
+              cantReq: cantTotalInsumo,
+              stockActual: stockReal,
+              stockMinimo: stockMin,
+              unidad: unidadNom || 'Unidad',
+            });
+          } else {
+            requerimientoMapa.get(key)!.cantReq += cantTotalInsumo;
+          }
+        });
+      } 
+      // B) SI EL PRODUCTO ES DE VENTA DIRECTA (O UN INSUMO VENDIDO DIRECTAMENTE COMO PRODUCTO)
+      else {
+        const idProd = prod.idProducto || prod.id_producto || prod.id;
+        
+        // Verificar si este producto directo existe también en la tabla de insumos por coincidencia de ID o nombre
+        const insumoCoincidente = insumosCatalogo.find((i) => 
+          String(i.idInsumo ?? i.id) === String(idProd) ||
+          (i.nombreInsumo && prod.nombreProducto && i.nombreInsumo.toLowerCase() === prod.nombreProducto.toLowerCase())
+        );
+
+        const key = insumoCoincidente ? `INS_${insumoCoincidente.idInsumo}` : `PROD_${idProd}`;
+        const cantProd = item.cantidad;
+
+        // Si encontramos el insumo en el catálogo, tomar su stockActual y stockMinimo reales de la tabla insumos
+        const stockReal = insumoCoincidente 
+          ? Number(insumoCoincidente.stockActual ?? insumoCoincidente.stockSuelto ?? 0)
+          : Number(prod.stockActual ?? prod.stock_actual ?? prod.stock ?? 0);
+
+        const stockMin = insumoCoincidente
+          ? Number(insumoCoincidente.stockMinimo ?? 0)
+          : Number(prod.stockMinimo ?? prod.stock_minimo ?? 0);
+
+        const unidadNom = insumoCoincidente
+          ? (typeof insumoCoincidente.unidadMedida === 'object' ? insumoCoincidente.unidadMedida?.nombre : insumoCoincidente.unidadMedida)
+          : 'Unidad';
+
+        if (!requerimientoMapa.has(key)) {
+          requerimientoMapa.set(key, {
+            nombre: prod.nombreProducto || prod.nombre || 'Producto Directo',
+            tipo: insumoCoincidente ? 'Insumo' : 'Producto Directo',
+            cantReq: cantProd,
+            stockActual: stockReal,
+            stockMinimo: stockMin,
+            unidad: unidadNom || 'Unidad',
+          });
+        } else {
+          requerimientoMapa.get(key)!.cantReq += cantProd;
+        }
+      }
+    });
+
+    // 2. VALIDACIÓN DE BLOQUEO (STOCK TOTALMENTE INSUFICIENTE PARA COMPLETAR)
+    for (const [, item] of requerimientoMapa) {
+      if (item.stockActual < item.cantReq) {
+        const faltante = item.cantReq - item.stockActual;
+        setSuceso({
+          show: true,
+          titulo: 'Stock Insuficiente',
+          mensaje: `No hay stock suficiente para "${item.nombre}". Faltan ${faltante} ${item.unidad}(s) para completar este pedido.`,
+          tipo: 'error',
+        });
+        return;
+      }
+    }
+
+    // 3. VALIDACIÓN DE ADVERTENCIA (STOCK RESTANTE EN NIVEL CRÍTICO / MÍNIMO)
+    const criticos: { nombre: string; tipo: string; quedaran: number; tolerancia: number }[] = [];
+
+    for (const [, item] of requerimientoMapa) {
+      const saldoRestante = item.stockActual - item.cantReq;
+      
+      // La tolerancia es el Stock Mínimo registrado en la BD + los 5 de margen
+      const toleranciaRef = item.stockMinimo + MARGEN_MERMA;
+
+      // Si el saldo resultante cae dentro del margen de tolerancia o lo supera hacia abajo
+      if (saldoRestante <= toleranciaRef) {
+        criticos.push({
+          nombre: item.nombre,
+          tipo: item.tipo,
+          quedaran: saldoRestante,
+          tolerancia: toleranciaRef,
+        });
+      }
+    }
+
+    if (criticos.length > 0) {
+      setConflictosStockCritico(criticos);
+      setShowModalStockCritico(true);
+      return;
+    }
+
+    // 4. CONTINUAR CON EVALUACIÓN DE MÁQUINAS Y PAGO
+    continuarFlujoPostStock();
+  };
+
+  const continuarFlujoPostStock = () => {
+    setShowModalStockCritico(false);
+
+    const conflictos: { productoNombre: string; maquinaNombre: string; estado: string }[] = [];
     carrito.forEach((item) => {
       const prod = item.producto as any;
       if (!prod) return;
@@ -175,7 +363,7 @@ export const useVentaRapida = () => {
       setConflictosMaquinas(conflictos);
       setShowModalMaquinas(true);
     } else {
-      setShowModalMetodoPago(true); // Se abre el modal para elegir pago
+      setShowModalMetodoPago(true);
     }
   };
 
@@ -188,7 +376,6 @@ export const useVentaRapida = () => {
     const tipoPagoElegido = datosPago?.tipoPago || 'EFECTIVO';
     const esCuentaCorriente = tipoPagoElegido === 'CUENTA_CORRIENTE';
     const idClienteAsignado = esCuentaCorriente && datosPago?.idCliente ? datosPago.idCliente : 1;
-
     const idUsuarioLogueado = (() => {
       const usuarioJson = localStorage.getItem('usuario_logueado');
       if (usuarioJson) {
@@ -228,11 +415,8 @@ export const useVentaRapida = () => {
 
     try {
       let resCrear: Response;
-
-      // 1. Envío según la presencia de comprobante adjunto
       if (datosPago?.comprobanteFile) {
         const formData = new FormData();
-        // NOTA: Debe llamarse 'payload' para que el @RequestPart("payload") de Spring Boot lo interprete
         formData.append('payload', JSON.stringify(payloadParaBackend));
         formData.append('comprobante', datosPago.comprobanteFile);
 
@@ -255,7 +439,6 @@ export const useVentaRapida = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 300));
 
-      // 2. Cambiar el estado a FINALIZADO
       const resEstado = await fetch(`${API_BASE}/pedidos/${idPedido}/cambiar-estado`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -271,8 +454,8 @@ export const useVentaRapida = () => {
         throw new Error(errorText || 'Error al actualizar estado del pedido.');
       }
 
-      // 3. Refrescar catálogo para actualizar el stock descontado
       await fetchProductos();
+      await fetchPedidosPendientes();
 
       const pedidoParaTicket = {
         ...pedidoGuardado,
@@ -280,7 +463,6 @@ export const useVentaRapida = () => {
         monto_total: totalFinal,
         estado: 'FINALIZADO'
       };
-
       setUltimoPedidoRealizado(pedidoParaTicket);
       localStorage.setItem('ultimo_pedido_venta_rapida', JSON.stringify(pedidoParaTicket));
 
@@ -316,7 +498,6 @@ export const useVentaRapida = () => {
   };
 
   return {
-    // Datos y estados de entradas
     productosDisponibles,
     categorias,
     productoSeleccionado,
@@ -327,26 +508,27 @@ export const useVentaRapida = () => {
     setCategoriaSeleccionadaId,
     carrito,
     
-    // Totales calculados
     subtotalVenta,
     montoDescuento,
     totalFinal,
 
-    // Modales y avisos
     confirmarCancelacion,
     setConfirmarCancelacion,
     suceso,
     setSuceso,
     showModalMaquinas,
     setShowModalMaquinas,
-    showModalMetodoPago,         // NUEVO
-    setShowModalMetodoPago,      // NUEVO
+    showModalMetodoPago,
+    setShowModalMetodoPago,
+    showModalStockCritico,
+    setShowModalStockCritico,
+    conflictosStockCritico,
+    continuarFlujoPostStock,
     conflictosMaquinas,
     ultimoPedidoRealizado,
     verTicketPedido,
     setVerTicketPedido,
 
-    // Handlers
     handleAgregar,
     handleEliminarItem,
     handleValidarYCompletarVenta,

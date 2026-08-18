@@ -13,9 +13,16 @@ interface Props {
   categoriaSeleccionadaId: string;
   setCategoriaSeleccionadaId: (id: string) => void;
   maquinas?: Maquina[];
+  pedidosPendientes?: any[];
   onSiguiente: () => void;
   onCancelar: () => void;
 }
+
+const MARGEN_SEGURIDAD_FALLBACK = 0;
+// Tolerancia de unidades restantes para productos de venta directa sin receta
+const TOLERANCIA_PRODUCTO_DIRECTO = 3;
+
+const MARGEN_MERMA_RESPALDO = 5;
 
 export const SelectorProductosForm: React.FC<Props> = ({ 
   productos, 
@@ -25,6 +32,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
   categoriaSeleccionadaId,
   setCategoriaSeleccionadaId,
   maquinas = [],
+  pedidosPendientes = [],
   onSiguiente, 
   onCancelar 
 }) => {
@@ -42,7 +50,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
   const [mostrarDropdown, setMostrarDropdown] = useState(false);
   const [cantidad, setCantidad] = useState('1');
 
-  // Modal para máquinas fuera de servicio
+  // Modales
   const [showModalMaquinas, setShowModalMaquinas] = useState(false);
   const [conflictosMaquinas, setConflictosMaquinas] = useState<{
     productoNombre: string;
@@ -50,7 +58,23 @@ export const SelectorProductosForm: React.FC<Props> = ({
     estado: string;
   }[]>([]);
 
-  // Filtrado reactivo de productos según lo que escriba el usuario
+  const [showModalStockMinimo, setShowModalStockMinimo] = useState(false);
+  const [insumosCriticos, setInsumosCriticos] = useState<{
+    nombre: string;
+    stockResultante: number;
+    stockMinimo: number;
+    unidad: string;
+    tipo: 'Insumo' | 'Producto Directo';
+  }[]>([]);
+
+  const [showModalStockError, setShowModalStockError] = useState(false);
+  const [insumoFaltante, setInsumoFaltante] = useState<{
+    nombre: string;
+    faltante: number;
+    unidad: string;
+    tipo: 'Insumo' | 'Producto Directo';
+  } | null>(null);
+
   const productosFiltrados = useMemo(() => {
     if (!busquedaProducto.trim()) return productos;
     return productos.filter(p => 
@@ -59,38 +83,202 @@ export const SelectorProductosForm: React.FC<Props> = ({
   }, [productos, busquedaProducto]);
 
   const handleAgregar = async () => {
-  if (!productoId || Number(cantidad) <= 0) return;
-  const prodSeleccionado = productos.find(p => p.idProducto === Number(productoId));
-  if (!prodSeleccionado) return;
-  let recetaInsumos: any[] = [];
-  try {
-    const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${prodSeleccionado.idProducto}`);
-    if (res.ok) {
-      recetaInsumos = await res.json();
+    if (!productoId || Number(cantidad) <= 0) return;
+    const prodSeleccionado = productos.find(p => p.idProducto === Number(productoId));
+    if (!prodSeleccionado) return;
+    let recetaInsumos: any[] = [];
+    try {
+      const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${prodSeleccionado.idProducto}`);
+      if (res.ok) {
+        recetaInsumos = await res.json();
+      }
+    } catch (error) {
+      console.error("Error al obtener la receta del producto:", error);
     }
-  } catch (error) {
-    console.error("Error al obtener la receta del producto:", error);
-  }
-  const nuevoItem: CartItem & { receta?: any[] } = {
-    producto: {
-      ...prodSeleccionado,
-      receta: recetaInsumos 
-    },
-    cantidad: Number(cantidad),
-    subtotal: prodSeleccionado.precioBase * Number(cantidad)
-  };
+    const nuevoItem: CartItem & { receta?: any[] } = {
+      producto: {
+        ...prodSeleccionado,
+        receta: recetaInsumos.length > 0 ? recetaInsumos : (prodSeleccionado as any).receta
+      },
+      cantidad: Number(cantidad),
+      subtotal: prodSeleccionado.precioBase * Number(cantidad)
+    };
 
-  setCarrito([...carrito, nuevoItem]);
-  setProductoId('');
-  setBusquedaProducto('');
-  setCantidad('1');
+    setCarrito([...carrito, nuevoItem]);
+    setProductoId('');
+    setBusquedaProducto('');
+    setCantidad('1');
   };
 
   const handleEliminar = (index: number) => {
     setCarrito(carrito.filter((_, i) => i !== index));
   };
 
+  // Agrupa y calcula el consumo de Insumos y Productos Directos
+  const elementosAfectados = React.useMemo(() => {
+    const mapaElementos = new Map<string, {
+      key: string;
+      id: string | number;
+      nombre: string;
+      unidad: string;
+      cantPedidoActual: number;
+      cantReservadaPendientes: number;
+      cantTotalRequerida: number;
+      stockActual: number;
+      stockMinimo: number;
+      tipo: 'Insumo' | 'Producto Directo';
+    }>();
+
+    const procesarItem = (prod: any, cantidadReq: number, esPedidoActual: boolean) => {
+      if (!prod) return;
+
+      const listaInsumos = Array.isArray(prod.receta) ? prod.receta : 
+                           Array.isArray(prod.productoInsumos) ? prod.productoInsumos : [];
+
+      // CASO A: TIENE RECETA -> Evalúa Insumos
+      if (listaInsumos.length > 0) {
+        listaInsumos.forEach((pi: any) => {
+          if (!pi) return;
+          const insumoObj = pi.insumo || pi;
+          const id = insumoObj?.idInsumo ?? pi?.idInsumo;
+          if (id === undefined || id === null) return;
+
+          const key = `INSUMO_${id}`;
+          const nombre = insumoObj?.nombreInsumo || 'Insumo sin nombre';
+          const uMedida = insumoObj?.unidadMedida;
+          const unidad = typeof uMedida === 'object' && uMedida !== null 
+            ? (uMedida.nombre || uMedida.simbolo || '') 
+            : String(uMedida || '');
+
+          const stockActual = Number(insumoObj?.stockActual ?? 0);
+          const stockMinimo = Number(insumoObj?.stockMinimo ?? insumoObj?.stock_minimo ?? MARGEN_SEGURIDAD_FALLBACK);
+          const cantUnitaria = Number(pi?.cantidadConsumo ?? 1);
+          const totalRequerido = cantUnitaria * cantidadReq;
+
+          if (mapaElementos.has(key)) {
+            const item = mapaElementos.get(key)!;
+            if (esPedidoActual) item.cantPedidoActual += totalRequerido;
+            else item.cantReservadaPendientes += totalRequerido;
+            item.cantTotalRequerida += totalRequerido;
+          } else {
+            mapaElementos.set(key, {
+              key,
+              id,
+              nombre,
+              unidad,
+              cantPedidoActual: esPedidoActual ? totalRequerido : 0,
+              cantReservadaPendientes: esPedidoActual ? 0 : totalRequerido,
+              cantTotalRequerida: totalRequerido,
+              stockActual,
+              stockMinimo,
+              tipo: 'Insumo'
+            });
+          }
+        });
+      } 
+      // CASO B: SIN RECETA -> Evalúa el producto directo aplicando la tolerancia de 3 unidades
+      else {
+        const id = prod.idProducto ?? prod.id;
+        if (id === undefined || id === null) return;
+
+        const key = `PROD_${id}`;
+        const nombre = prod.nombreProducto || prod.nombre || 'Producto sin nombre';
+        const stockActual = Number(prod.stockActual ?? prod.stock ?? 0);
+        
+        // Tolerancia de 3 unidades para resaltado o límite configurado si es mayor
+        const stockMinimoBase = Number(prod.stockMinimo ?? prod.stock_minimo ?? 0);
+        const stockMinimo = Math.max(stockMinimoBase, TOLERANCIA_PRODUCTO_DIRECTO);
+
+        if (mapaElementos.has(key)) {
+          const item = mapaElementos.get(key)!;
+          if (esPedidoActual) item.cantPedidoActual += cantidadReq;
+          else item.cantReservadaPendientes += cantidadReq;
+          item.cantTotalRequerida += cantidadReq;
+        } else {
+          mapaElementos.set(key, {
+            key,
+            id,
+            nombre,
+            unidad: 'uds',
+            cantPedidoActual: esPedidoActual ? cantidadReq : 0,
+            cantReservadaPendientes: esPedidoActual ? 0 : cantidadReq,
+            cantTotalRequerida: cantidadReq,
+            stockActual,
+            stockMinimo,
+            tipo: 'Producto Directo'
+          });
+        }
+      }
+    };
+
+    // 1. Procesar elementos del carrito
+    carrito.forEach((item) => {
+      procesarItem(item.producto, Number(item.cantidad) || 1, true);
+    });
+
+    // 2. Procesar pedidos pendientes
+    if (Array.isArray(pedidosPendientes)) {
+      pedidosPendientes.forEach((ped) => {
+        const detalles = ped.detalles || ped.detallesPedido || [];
+        detalles.forEach((det: any) => {
+          const idProd = det.producto?.idProducto ?? det.idProducto;
+          const prodCompleto = productos.find((p: any) => p.idProducto === idProd) || det.producto;
+          if (prodCompleto) {
+            procesarItem(prodCompleto, Number(det.cantidad || 1), false);
+          }
+        });
+      });
+    }
+
+    return Array.from(mapaElementos.values()).filter(item => item.cantPedidoActual > 0);
+  }, [carrito, pedidosPendientes, productos]);
+
   const handleContinuarSiguiente = () => {
+    const MARGEN_MERMA = 5;
+
+    const elementoDeficiente = elementosAfectados.find(
+      (el) => el.stockActual - el.cantTotalRequerida < 0
+    );
+
+    if (elementoDeficiente) {
+      const resultante = elementoDeficiente.stockActual - elementoDeficiente.cantTotalRequerida;
+      setInsumoFaltante({
+        nombre: elementoDeficiente.nombre,
+        faltante: Math.abs(resultante),
+        unidad: elementoDeficiente.unidad,
+        tipo: elementoDeficiente.tipo,
+      });
+      setShowModalStockError(true);
+      return;
+    }
+
+    const elementosBajos = elementosAfectados
+      .filter((el) => {
+        const saldoReal = el.stockActual - el.cantTotalRequerida;
+        const saldoConMerma = saldoReal - MARGEN_MERMA;
+        
+        // Cumple con lo necesario (saldoReal >= 0), pero al restar la merma o evaluar el mínimo queda en límite
+        return saldoReal >= 0 && (saldoConMerma <= 0 || saldoReal <= el.stockMinimo);
+      })
+      .map((el) => ({
+        nombre: el.nombre,
+        stockResultante: el.stockActual - el.cantTotalRequerida,
+        stockMinimo: el.stockMinimo,
+        unidad: el.unidad,
+        tipo: el.tipo,
+      }));
+
+    if (elementosBajos.length > 0) {
+      setInsumosCriticos(elementosBajos);
+      setShowModalStockMinimo(true);
+      return;
+    }
+
+    // 3. VALIDACIÓN MÁQUINAS
+    evaluarMaquinasYAvanzar();
+  };
+
+  const evaluarMaquinasYAvanzar = () => {
     const conflictos: { productoNombre: string; maquinaNombre: string; estado: string }[] = [];
 
     carrito.forEach(item => {
@@ -105,19 +293,14 @@ export const SelectorProductosForm: React.FC<Props> = ({
         maquinaObj = maquinas.find(m => String(m.idMaquina) === String(maquinaId));
       }
 
-      if (!maquinaObj) {
-        maquinaObj = maquinaAsociada;
-      }
-
+      if (!maquinaObj) maquinaObj = maquinaAsociada;
       if (!maquinaObj) return;
 
       const nombreMaquina = (maquinaObj.nombre || maquinaObj.nombreMaquina || '').trim();
       const estadoRaw = (maquinaObj.estado || '').trim().toUpperCase();
       const estadoNormalizado = estadoRaw.replace(/_/g, ' ');
 
-      if (!nombreMaquina || nombreMaquina.toLowerCase().includes('no aplica')) {
-        return;
-      }
+      if (!nombreMaquina || nombreMaquina.toLowerCase().includes('no aplica')) return;
 
       if (
         estadoNormalizado.includes('FUERA DE SERVICIO') || 
@@ -140,8 +323,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
     }
   };
 
-
-
   const subtotal = carrito.reduce((sum, item) => sum + item.subtotal, 0);
 
   const catActual = categorias.find(c => {
@@ -155,65 +336,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
   const montoDescuento = (subtotal * porcentajeDescuento) / 100;
   const totalFinal = subtotal - montoDescuento;
-
-  // Agrupa y calcula el consumo total de insumos según los productos del carrito con sanitización defensiva
-  const insumosAfectados = React.useMemo(() => {
-  const mapaInsumos = new Map<string | number, {
-    id: string | number;
-    nombre: string;
-    unidad: string;
-    cantidadRequerida: number;
-    stockActual: number;
-  }>();
-
-  carrito.forEach((item) => {
-    const prod = item.producto as any;
-    if (!prod) return;
-
-    // Si deseas que solo aplique impacto si stockVinculado está activo:
-    // if (prod.stockVinculado === false) return;
-
-    // Obtener la lista de la receta que guardamos previamente
-    const listaInsumos = Array.isArray(prod.receta) ? prod.receta : 
-                         Array.isArray(prod.productoInsumos) ? prod.productoInsumos : [];
-
-    listaInsumos.forEach((pi: any) => {
-      if (!pi) return;
-
-      // Estructura de la API: pi.insumo contiene el Insumo completo
-      const insumoObj = pi.insumo || pi;
-      const id = insumoObj?.idInsumo ?? pi?.idInsumo;
-
-      if (id === undefined || id === null) return;
-
-      const nombre = insumoObj?.nombreInsumo || 'Insumo sin nombre';
-
-      // Tratamiento de unidad de medida (si es string u objeto)
-      const uMedida = insumoObj?.unidadMedida;
-      const unidad = typeof uMedida === 'object' && uMedida !== null 
-        ? (uMedida.nombre || uMedida.simbolo || '') 
-        : String(uMedida || '');
-
-      const stockActual = Number(insumoObj?.stockActual ?? 0);
-      const cantUnitaria = Number(pi?.cantidadConsumo ?? 1);
-      const totalRequerido = cantUnitaria * (Number(item.cantidad) || 1);
-
-      if (mapaInsumos.has(id)) {
-        mapaInsumos.get(id)!.cantidadRequerida += totalRequerido;
-      } else {
-        mapaInsumos.set(id, {
-          id,
-          nombre,
-          unidad,
-          cantidadRequerida: totalRequerido,
-          stockActual
-        });
-      }
-    });
-  });
-
-  return Array.from(mapaInsumos.values());
-  }, [carrito]);
 
   return (
     <div className="w-100 font-monospace">
@@ -248,7 +370,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
               onBlur={() => setTimeout(() => setMostrarDropdown(false), 200)}
             />
 
-            {/* Menú desplegable flotante para resultados de búsqueda */}
             {mostrarDropdown && (
               <div 
                 className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
@@ -402,8 +523,8 @@ export const SelectorProductosForm: React.FC<Props> = ({
         {/* Botones de Navegación */}
         <div className="d-flex justify-content-between mt-3">
           <button className="btn btn-secondary px-4 fw-semibold" onClick={onCancelar}>
-  Volver
-</button>
+            Volver
+          </button>
           <button 
             className="btn btn-success px-5 fw-bold" 
             onClick={handleContinuarSiguiente} 
@@ -416,7 +537,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
       {/* Impacto Estimado en Stock */}
       <div 
-        className="card p-4 w-100 rounded mt-4 shadow-sm" 
+        className="card p-4 w-100 rounded mt-2 shadow-sm" 
         style={{ 
           maxWidth: '1570px', 
           backgroundColor: containerBg, 
@@ -424,42 +545,61 @@ export const SelectorProductosForm: React.FC<Props> = ({
           border: `1px solid ${borderTheme}` 
         }}
       >
-        <div className="d-flex align-items-center gap-2 mb-3">
-          <i className="bi bi-boxes text-info fs-5"></i>
-          <span className="small fw-bold">Impacto Estimado en el Stock de Insumos / Materia Prima:</span>
+        <div className="d-flex align-items-center gap-2 mb-2">
+          <i className="bi bi-boxes text-info fs-8"></i>
+          <span className="small fw-bold">Impacto Estimado en el Stock de Insumos y Productos:</span>
         </div>
 
         <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted" style={{ borderColor: borderTheme }}>
-          <div style={{ width: '35%' }}>Insumo Afectado:</div>
-          <div style={{ width: '20%' }}>Cant. Requerida:</div>
-          <div style={{ width: '20%' }}>Stock Actual:</div>
-          <div style={{ width: '25%' }}>Stock Resultante:</div>
+          <div style={{ width: '25%' }}>Insumo / Producto:</div>
+          <div style={{ width: '18%' }}>Consumo Pedido:</div>
+          <div style={{ width: '18%' }}>Reserva Pendientes:</div>
+          <div style={{ width: '18%' }}>Stock Actual:</div>
+          <div style={{ width: '21%' }}>Stock Resultante:</div>
         </div>
 
-        <div style={{ height: '68px', overflowY: 'auto', overflowX: 'hidden' }}>
-          {insumosAfectados.length === 0 ? (
+        <div style={{ height: '60px', overflowY: 'auto', overflowX: 'hidden' }}>
+          {elementosAfectados.length === 0 ? (
             <div className="text-center mt-3 small" style={{ color: mutedText }}>
               {carrito.length === 0 
-                ? "Agregue productos arriba para ver el impacto en el stock de insumos." 
-                : "Los productos seleccionados no tienen insumos o recetas asociadas."}
+                ? "Agregue productos arriba para ver el impacto en el stock." 
+                : "No se identificaron requerimientos de stock."}
             </div>
           ) : (
-            insumosAfectados.map((item) => {
-              const stockResultante = item.stockActual - item.cantidadRequerida;
+            elementosAfectados.map((item) => {
+              const stockResultante = item.stockActual - item.cantTotalRequerida;
               const esInsuficiente = stockResultante < 0;
+              const esMargenBajo = stockResultante >= 0 && stockResultante <= item.stockMinimo;
+
+              let badgeClass = 'bg-success text-white';
+              let badgeTexto = `${stockResultante} ${item.unidad}`;
+
+              if (esInsuficiente) {
+                badgeClass = 'bg-danger text-white';
+                badgeTexto = `${stockResultante} ${item.unidad} (Insuficiente)`;
+              } else if (esMargenBajo) {
+                badgeClass = 'bg-warning text-dark';
+                badgeTexto = `${stockResultante} ${item.unidad} (Stock Límite)`;
+              }
 
               return (
                 <div 
-                  key={String(item.id)} 
+                  key={item.key} 
                   className="d-flex align-items-center mb-2 border-bottom pb-1 small" 
                   style={{ borderColor: isDark ? '#2d2d30' : '#e2e8f0' }}
                 >
-                  <div style={{ width: '35%' }} className="fw-semibold text-truncate">{item.nombre}</div>
-                  <div style={{ width: '20%' }} className="fw-bold">{item.cantidadRequerida} {item.unidad}</div>
-                  <div style={{ width: '20%' }}>{item.stockActual} {item.unidad}</div>
-                  <div style={{ width: '25%' }}>
-                    <span className={`badge ${esInsuficiente ? 'bg-danger text-white' : 'bg-success text-white'}`}>
-                      {stockResultante} {item.unidad} {esInsuficiente ? '(Insuficiente)' : ''}
+                  <div style={{ width: '25%' }} className="fw-semibold text-truncate">
+                    {item.nombre}
+                    <span className="ms-1 text-muted" style={{ fontSize: '0.75rem' }}>
+                      ({item.tipo})
+                    </span>
+                  </div>
+                  <div style={{ width: '18%' }} className="fw-bold text-info">{item.cantPedidoActual} {item.unidad}</div>
+                  <div style={{ width: '18%' }} className="text-warning">{item.cantReservadaPendientes} {item.unidad}</div>
+                  <div style={{ width: '18%' }}>{item.stockActual} {item.unidad}</div>
+                  <div style={{ width: '21%' }}>
+                    <span className={`badge ${badgeClass}`}>
+                      {badgeTexto}
                     </span>
                   </div>
                 </div>
@@ -469,7 +609,98 @@ export const SelectorProductosForm: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* MODAL DE ADVERTENCIA POR MÁQUINAS FUERA DE SERVICIO */}
+      {/* MODAL 1: ERROR POR STOCK INSUFICIENTE */}
+      {showModalStockError && insumoFaltante && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div 
+              className="modal-content p-4 text-white" 
+              style={{ border: '2px solid #dc3545', backgroundColor: '#18181b', borderRadius: '12px' }}
+            >
+              <div className="text-center mb-3">
+                <i className="bi bi-x-circle-fill fs-1 text-danger"></i>
+                <h5 className="fw-bold mt-2 text-danger">Stock Insuficiente</h5>
+              </div>
+
+              <p className="small text-light text-center">
+                El {insumoFaltante.tipo.toLowerCase()} <b>"{insumoFaltante.nombre}"</b> no tiene suficiente stock considerando los pedidos pendientes y el actual.
+              </p>
+
+              <p className="small text-secondary text-center">
+                Faltan <b>{insumoFaltante.faltante} {insumoFaltante.unidad}</b> para cubrir la cantidad requerida.
+              </p>
+
+              <div className="d-flex justify-content-center mt-3">
+                <button 
+                  className="btn btn-sm btn-danger px-4 fw-bold" 
+                  onClick={() => setShowModalStockError(false)}
+                >
+                  Entendido / Volver
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: ADVERTENCIA POR TOLERANCIA / MARGEN DE STOCK MÍNIMO */}
+      {showModalStockMinimo && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div 
+              className="modal-content p-4 text-white" 
+              style={{ border: '2px solid #ffc107', backgroundColor: '#18181b', borderRadius: '12px' }}
+            >
+              <div className="text-center mb-3">
+                <i className="bi bi-exclamation-triangle-fill fs-1 text-warning"></i>
+                <h5 className="fw-bold mt-2 text-warning">Stock Restante Crítico</h5>
+              </div>
+
+              <p className="small text-light">
+                El stock disponible quedará dentro del límite de tolerancia para los siguientes ítems teniendo en cuenta las 5 unidades restante de respaldo por merma por unidad:
+              </p>
+
+              <div className="list-group mb-3" style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                {insumosCriticos.map((ins, idx) => (
+                  <div key={idx} className="list-group-item bg-dark text-white border-secondary d-flex justify-content-between align-items-center">
+                    <div>
+                      <span className="fw-bold d-block">{ins.nombre}</span>
+                      <small className="text-muted">{ins.tipo}</small>
+                    </div>
+                    <span className="badge bg-warning text-dark">
+                      Quedarán {ins.stockResultante} {ins.unidad} (Tolerancia: {ins.stockMinimo} {ins.unidad})
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="small text-secondary mb-4 text-center">
+                Se recomienda reponer stock. ¿Deseas continuar con el pedido de todas formas?
+              </p>
+
+              <div className="d-flex gap-2 justify-content-center">
+                <button 
+                  className="btn btn-sm btn-secondary px-3" 
+                  onClick={() => setShowModalStockMinimo(false)}
+                >
+                  Cancelar y revisar
+                </button>
+                <button 
+                  className="btn btn-sm btn-warning px-3 fw-bold text-dark" 
+                  onClick={() => {
+                    setShowModalStockMinimo(false);
+                    evaluarMaquinasYAvanzar();
+                  }}
+                >
+                  Continuar de todas formas
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: ADVERTENCIA POR MÁQUINAS FUERA DE SERVICIO */}
       {showModalMaquinas && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered">

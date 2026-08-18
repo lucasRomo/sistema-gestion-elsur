@@ -36,6 +36,10 @@ export const DashboardPrincipal: React.FC = () => {
     showModalMetodoPago,    
     setShowModalMetodoPago, 
     setShowModalMaquinas,
+    showModalStockCritico,
+    setShowModalStockCritico,
+    conflictosStockCritico,
+    continuarFlujoPostStock,
     conflictosMaquinas,
     ultimoPedidoRealizado,
     verTicketPedido,
@@ -118,11 +122,11 @@ export const DashboardPrincipal: React.FC = () => {
         </div>
 
         <ModalElegirMetodoPago
-         show={showModalMetodoPago}
-         onClose={() => setShowModalMetodoPago(false)}
-         total={totalFinal}
-         onConfirmarPago={(datosPago) => ejecutarCompletarVenta(datosPago)}
-         />
+          show={showModalMetodoPago}
+          onClose={() => setShowModalMetodoPago(false)}
+          total={totalFinal}
+          onConfirmarPago={(datosPago) => ejecutarCompletarVenta(datosPago)}
+        />
         
         <ResumenVenta 
           subtotal={subtotalVenta}
@@ -155,6 +159,70 @@ export const DashboardPrincipal: React.FC = () => {
           tipo="pago"
           onClose={() => setVerTicketPedido(null)}
         />
+      )}
+
+      {/* MODAL DE ADVERTENCIA DE STOCK RESTANTE CRÍTICO */}
+      {showModalStockCritico && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '480px' }}>
+            <div 
+              className="modal-content p-4 text-white" 
+              style={{ border: '2px solid #ffc107', backgroundColor: '#1a1a1c', borderRadius: '16px', fontFamily: 'monospace' }}
+            >
+              <div className="text-center mb-2">
+                <i className="bi bi-exclamation-triangle-fill fs-1" style={{ color: '#ffc107' }}></i>
+                <h4 className="fw-bold mt-2 mb-1" style={{ color: '#ffc107' }}>Stock Restante Crítico</h4>
+              </div>
+
+              <p className="text-center text-light small mb-3">
+                El stock disponible quedará dentro del límite de tolerancia para los siguientes ítems teniendo en cuenta las 5 unidades restante de respaldo por merma por unidad:
+              </p>
+
+              <div className="d-flex flex-column gap-2 mb-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                {conflictosStockCritico.map((item, idx) => (
+                  <div 
+                    key={idx} 
+                    className="p-3 rounded-3 d-flex justify-content-between align-items-center"
+                    style={{ backgroundColor: '#262629', border: '1px solid #3f3f46' }}
+                  >
+                    <div>
+                      <div className="fw-bold text-white small">{item.nombre}</div>
+                      <small style={{ color: '#a1a1aa', fontSize: '0.75rem' }}>{item.tipo}</small>
+                    </div>
+                    <span 
+                      className="badge text-dark fw-bold px-2 py-1"
+                      style={{ backgroundColor: '#ffc107', fontSize: '0.75rem' }}
+                    >
+                      Quedarán {item.quedaran} uds (Tolerancia: {item.tolerancia} uds)
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-center text-secondary small mb-4" style={{ fontSize: '0.8rem' }}>
+                Se recomienda reponer stock. ¿Deseas continuar con el pedido de todas formas?
+              </p>
+
+              <div className="d-flex gap-2 justify-content-center">
+                <button 
+                  type="button"
+                  className="btn btn-secondary btn-sm flex-fill py-2 font-monospace fw-bold" 
+                  onClick={() => setShowModalStockCritico(false)}
+                >
+                  Cancelar y revisar
+                </button>
+                <button 
+                  type="button"
+                  className="btn btn-sm flex-fill py-2 text-dark font-monospace fw-bold" 
+                  style={{ backgroundColor: '#ffc107', border: 'none' }}
+                  onClick={continuarFlujoPostStock}
+                >
+                  Continuar de todas formas
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* MODAL DE ADVERTENCIA DE MAQUINARIA */}

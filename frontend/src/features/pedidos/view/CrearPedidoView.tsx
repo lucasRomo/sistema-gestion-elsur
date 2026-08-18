@@ -11,7 +11,7 @@ import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPago
 export const CrearPedidoView: React.FC = () => {
   const navigate = useNavigate();
   
-  const { productos, clientes, empleados, maquinas, enviarPedido } = useRegistrarPedido();
+  const { productos, clientes, empleados, maquinas, pedidosPendientes, enviarPedido } = useRegistrarPedido();
   
   const [paso, setPaso] = useState<number>(1);
   const [carrito, setCarrito] = useState<CartItem[]>([]);
@@ -26,6 +26,7 @@ export const CrearPedidoView: React.FC = () => {
 
   const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string } | null>(null);
   const [fileTemporal, setFileTemporal] = useState<File | null>(null);
+  
 
   // Carga inicial de categorías modularizada
   useEffect(() => {
@@ -152,6 +153,7 @@ export const CrearPedidoView: React.FC = () => {
             categoriaSeleccionadaId={categoriaSeleccionadaId}
             setCategoriaSeleccionadaId={setCategoriaSeleccionadaId}
             maquinas={maquinas}
+            pedidosPendientes={pedidosPendientes}
             onSiguiente={() => setPaso(2)}
             onCancelar={() => navigate('/dashboard')}
           />

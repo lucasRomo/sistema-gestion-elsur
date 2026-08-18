@@ -345,31 +345,25 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional
     public void procesarDescuentoStock(Integer idPedido) {
-        Pedido pedido = pedidoRepository.findById(idPedido)
-            .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+    Pedido pedido = pedidoRepository.findById(idPedido)
+        .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
-        if (pedido.getDetalles().isEmpty()) {
-            List<DetallePedido> detalles = detallePedidoRepository.findByPedidoIdPedido(idPedido);
-            pedido.setDetalles(detalles);
-        }
+    if (pedido.getDetalles().isEmpty()) {
+        List<DetallePedido> detalles = detallePedidoRepository.findByPedidoIdPedido(idPedido);
+        pedido.setDetalles(detalles);
+    }
 
-        if (pedido.getDetalles().isEmpty()) {
-            throw new RuntimeException("El pedido no tiene detalles registrados");
-        }
+    if (pedido.getDetalles().isEmpty()) {
+        throw new RuntimeException("El pedido no tiene detalles registrados");
+    }
 
-        for (DetallePedido detalle : pedido.getDetalles()) {
-            Producto producto = detalle.getProducto();
-            
-            if (producto.getStock() != null) {
-                int nuevoStock = producto.getStock() - detalle.getCantidad();
-                if (nuevoStock < 0) {
-                    throw new RuntimeException("Stock insuficiente para el producto: " + producto.getNombreProducto());
-                }
-                producto.setStock(nuevoStock);
-                productoRepository.save(producto);
-            }
-
+    for (DetallePedido detalle : pedido.getDetalles()) {
+        Producto producto = detalle.getProducto();
+        
+        // SI EL PRODUCTO ES "AUTO" / VINCULADO A INSUMOS (Receta)
+        if (Boolean.TRUE.equals(producto.getStockVinculado())) {
             List<ProductoInsumo> receta = productoInsumoRepository.findByIdIdProducto(producto.getIdProducto());
+            
             for (ProductoInsumo pi : receta) {
                 Insumo insumo = pi.getInsumo();
                 BigDecimal consumoTotal = pi.getCantidadConsumo()
@@ -383,15 +377,27 @@ public class PedidoServiceImpl implements PedidoService {
                 insumo.setStockActual(insumo.getStockActual().subtract(consumoTotal));
                 insumoRepository.save(insumo);
             }
+        } 
+        // SI ES UN PRODUCTO INDEPENDIENTE (Controla su propio stock directo)
+        else {
+            if (producto.getStock() != null) {
+                int nuevoStock = producto.getStock() - detalle.getCantidad();
+                if (nuevoStock < 0) {
+                    throw new RuntimeException("Stock insuficiente para el producto: " + producto.getNombreProducto());
+                }
+                producto.setStock(nuevoStock);
+                productoRepository.save(producto);
+            }
         }
-        
-        if (pedido.getObservaciones() != null && pedido.getObservaciones().contains("Venta Rápida")) {
-            pedido.setEstado("VENTA_RAPIDA");
-        } else {
-            pedido.setEstado("ENTREGADO");
-        }
-        pedido.setFecha_finalizacion(LocalDateTime.now());
-        pedidoRepository.save(pedido);
+    }
+    
+    if (pedido.getObservaciones() != null && pedido.getObservaciones().contains("Venta Rápida")) {
+        pedido.setEstado("VENTA_RAPIDA");
+    } else {
+        pedido.setEstado("ENTREGADO");
+    }
+    pedido.setFecha_finalizacion(LocalDateTime.now());
+    pedidoRepository.save(pedido);
     }
 
     @Override
