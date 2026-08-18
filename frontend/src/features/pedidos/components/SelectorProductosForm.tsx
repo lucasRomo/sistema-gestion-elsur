@@ -257,12 +257,13 @@ export const SelectorProductosForm: React.FC<Props> = ({
         const saldoReal = el.stockActual - el.cantTotalRequerida;
         const saldoConMerma = saldoReal - MARGEN_MERMA;
         
-        // Cumple con lo necesario (saldoReal >= 0), pero al restar la merma o evaluar el mínimo queda en límite
-        return saldoReal >= 0 && (saldoConMerma <= 0 || saldoReal <= el.stockMinimo);
+        // Evaluamos si al sumar los pendientes, el consumo y el respaldo (merma), llega al límite crítico
+        return saldoReal >= 0 && saldoConMerma <= el.stockMinimo;
       })
       .map((el) => ({
         nombre: el.nombre,
-        stockResultante: el.stockActual - el.cantTotalRequerida,
+        // Aquí sumamos todo el consumo restando también la merma para obtener el resultante final
+        stockResultante: el.stockActual - el.cantTotalRequerida - MARGEN_MERMA,
         stockMinimo: el.stockMinimo,
         unidad: el.unidad,
         tipo: el.tipo,
@@ -567,16 +568,23 @@ export const SelectorProductosForm: React.FC<Props> = ({
             </div>
           ) : (
             elementosAfectados.map((item) => {
-              const stockResultante = item.stockActual - item.cantTotalRequerida;
-              const esInsuficiente = stockResultante < 0;
-              const esMargenBajo = stockResultante >= 0 && stockResultante <= item.stockMinimo;
+              // 1. Calculamos el saldo físico (Stock - Pedido - Pendientes)
+              const saldoFisico = item.stockActual - item.cantTotalRequerida;
+              
+              // 2. Calculamos el resultante final restando además los 5 de respaldo
+              const stockResultante = saldoFisico - MARGEN_MERMA_RESPALDO;
+              
+              const esInsuficiente = saldoFisico < 0; 
+              // Evaluamos margen bajo basándonos en el stock resultante final
+              const esMargenBajo = saldoFisico >= 0 && stockResultante <= item.stockMinimo;
 
               let badgeClass = 'bg-success text-white';
               let badgeTexto = `${stockResultante} ${item.unidad}`;
 
               if (esInsuficiente) {
                 badgeClass = 'bg-danger text-white';
-                badgeTexto = `${stockResultante} ${item.unidad} (Insuficiente)`;
+                // Si falta stock físicamente, mostramos el déficit real
+                badgeTexto = `${saldoFisico} ${item.unidad} (Insuficiente)`; 
               } else if (esMargenBajo) {
                 badgeClass = 'bg-warning text-dark';
                 badgeTexto = `${stockResultante} ${item.unidad} (Stock Límite)`;
@@ -594,7 +602,15 @@ export const SelectorProductosForm: React.FC<Props> = ({
                       ({item.tipo})
                     </span>
                   </div>
-                  <div style={{ width: '18%' }} className="fw-bold text-info">{item.cantPedidoActual} {item.unidad}</div>
+                  
+                  {/* Celda de Consumo Pedido modificada con el Respaldo */}
+                  <div style={{ width: '18%' }} className="fw-bold text-info">
+                    {item.cantPedidoActual} {item.unidad}
+                    <span className="d-block text-muted" style={{ fontSize: '0.70rem', fontWeight: 'normal' }}>
+                      (+{MARGEN_MERMA_RESPALDO} Respaldo)
+                    </span>
+                  </div>
+                  
                   <div style={{ width: '18%' }} className="text-warning">{item.cantReservadaPendientes} {item.unidad}</div>
                   <div style={{ width: '18%' }}>{item.stockActual} {item.unidad}</div>
                   <div style={{ width: '21%' }}>
@@ -657,7 +673,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
               </div>
 
               <p className="small text-light">
-                El stock disponible quedará dentro del límite de tolerancia para los siguientes ítems teniendo en cuenta las 5 unidades restante de respaldo por merma por unidad:
+                El stock disponible quedará dentro del límite de tolerancia para los siguientes ítems teniendo en cuenta las 5 unidades de respaldo:
               </p>
 
               <div className="list-group mb-3" style={{ maxHeight: '180px', overflowY: 'auto' }}>

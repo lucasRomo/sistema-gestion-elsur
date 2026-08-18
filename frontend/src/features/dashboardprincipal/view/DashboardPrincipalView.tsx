@@ -175,7 +175,7 @@ export const DashboardPrincipal: React.FC = () => {
               </div>
 
               <p className="text-center text-light small mb-3">
-                El stock disponible quedará dentro del límite de tolerancia para los siguientes ítems teniendo en cuenta las 5 unidades restante de respaldo por merma por unidad:
+                El stock disponible quedará dentro del límite de tolerancia para los siguientes ítems teniendo en cuenta las 5 unidades de respaldo:
               </p>
 
               <div className="d-flex flex-column gap-2 mb-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
@@ -193,7 +193,7 @@ export const DashboardPrincipal: React.FC = () => {
                       className="badge text-dark fw-bold px-2 py-1"
                       style={{ backgroundColor: '#ffc107', fontSize: '0.75rem' }}
                     >
-                      Quedarán {item.quedaran} uds (Tolerancia: {item.tolerancia} uds)
+                      Quedarán {item.quedaran} {item.unidad} (Tolerancia: {item.tolerancia} {item.unidad})
                     </span>
                   </div>
                 ))}
