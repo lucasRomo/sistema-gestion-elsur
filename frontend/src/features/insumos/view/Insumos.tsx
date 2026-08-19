@@ -14,6 +14,7 @@ import { actualizarInsumosMasivo } from '../services/insumoService';
 import { useTheme } from '../../../Context/ThemeContext';
 import type { Insumo } from '../types/Insumo';
 import { exportarInsumosExcel, exportarInsumosPDF } from '../utils/exportInsumosUtils';
+import { ModalStockCriticoList, type ItemStockCritico } from '../modals/ModalStockCriticoList';
 
 export const Insumos: React.FC = () => {
   const { theme } = useTheme();
@@ -34,6 +35,7 @@ export const Insumos: React.FC = () => {
   const [showConvertirModal, setShowConvertirModal] = useState(false);
   const [showMermasModal, setShowMermasModal] = useState(false);
   const [showRelacionesModal, setShowRelacionesModal] = useState(false);
+  const [showStockCriticoModal, setShowStockCriticoModal] = useState(false);
   
   const [insumoEditando, setInsumoEditando] = useState<Insumo | null>(null);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -45,6 +47,19 @@ export const Insumos: React.FC = () => {
     const cumpleEstado = filtroEstado === 'Sin Filtro' || i.estado === filtroEstado;
     return cumpleNombre && cumpleEstado;
   });
+
+  // Mapeo seguro utilizando casteo para evitar colisiones de tipos con las propiedades de Insumo
+  const itemsStockCritico: ItemStockCritico[] = insumos.map((i: any) => ({
+    id: i.idInsumo || i.id || i.nombreInsumo,
+    nombre: i.nombreInsumo || i.nombre || 'Insumo',
+    stockActual: i.stockActual ?? i.cantidad ?? i.stock ?? 0,
+    stockMinimoOTolerancia: i.stockMinimo ?? i.toleranciaInsumo ?? i.tolerancia ?? 5,
+    unidadMedida: i.unidadMedida
+  }));
+
+  const cantidadCriticos = itemsStockCritico.filter(
+    (item) => item.stockActual <= item.stockMinimoOTolerancia
+  ).length;
 
   const handleAplicarAumentoMasivo = async (data: {
     porcentaje: number;
@@ -85,13 +100,28 @@ export const Insumos: React.FC = () => {
         }}
       />
 
-      {/* Botonera Inferior: Volver + Exportar + Acciones de Insumos */}
+      {/* Botonera Inferior: Volver + Exportar + Stock Crítico + Acciones de Insumos */}
       <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-3 font-monospace">
         <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-4 py-2" style={{ color: '#ffffff' }}>
           Volver
         </button>
         
         <div className="d-flex gap-2 flex-wrap">
+          <button 
+            type="button"
+            className="btn btn-outline-warning fw-bold d-flex align-items-center gap-2 position-relative"
+            onClick={() => setShowStockCriticoModal(true)}
+            title="Ver insumos con stock al límite o crítico"
+          >
+            <i className="bi bi-exclamation-triangle-fill fs-5"></i>
+            Stock Crítico
+            {cantidadCriticos > 0 && (
+              <span className="badge bg-danger rounded-pill ms-1">
+                {cantidadCriticos}
+              </span>
+            )}
+          </button>
+
           <button 
             className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
             onClick={() => exportarInsumosExcel(insumosFiltrados)}
@@ -118,21 +148,22 @@ export const Insumos: React.FC = () => {
             style={{ backgroundColor: '#0bc9f8', color: '#ffffff' }}
             onClick={() => setShowRelacionesModal(true)}
           >
-            <i className="bi bi-diagram-3-fill"></i>
+            <i className="bi"></i>
             Ver Relaciones
           </button>
 
           <button 
-            className="btn btn-warning px-4 py-2 fw-bold text-dark"
+            className="btn btn-warning px-4 py-2 fw-bold"
+            style={{ color: '#ffffff' }}
             onClick={() => setShowMermasModal(true)}
           >
-            <i className="bi bi-exclamation-diamond-fill me-2"></i>
+            <i className="bi"></i>
             Mermas
           </button>
 
           <button 
-            className="btn px-4 py-2 fw-normal" 
-            style={{ backgroundColor: '#17a2b8', color: '#ffffff' }}
+            className="btn px-4 py-2 fw-bold" 
+            style={{ backgroundColor: '#c27a0d', color: '#ffffff' }}
             onClick={() => setShowAumentoModal(true)}
           >
             Modificar Varios Precios
@@ -147,6 +178,13 @@ export const Insumos: React.FC = () => {
           </button>
         </div>
       </div>
+
+      <ModalStockCriticoList
+        show={showStockCriticoModal}
+        titulo="Stock Crítico de Insumos"
+        items={itemsStockCritico}
+        onClose={() => setShowStockCriticoModal(false)}
+      />
 
       <RelacionesModal
         show={showRelacionesModal}

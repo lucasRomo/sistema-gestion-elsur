@@ -163,18 +163,23 @@ export const DashboardPrincipal: React.FC = () => {
 
       {/* MODAL DE ADVERTENCIA DE STOCK RESTANTE CRÍTICO */}
       {showModalStockCritico && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '480px' }}>
             <div 
-              className="modal-content p-4 text-white" 
-              style={{ border: '2px solid #ffc107', backgroundColor: '#1a1a1c', borderRadius: '16px', fontFamily: 'monospace' }}
+              className="modal-content p-4 shadow-lg" 
+              style={{ 
+                border: '2px solid #ffc107', 
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+                borderRadius: '16px',
+                color: isDark ? '#ffffff' : '#0f172a'
+              }}
             >
               <div className="text-center mb-2">
                 <i className="bi bi-exclamation-triangle-fill fs-1" style={{ color: '#ffc107' }}></i>
                 <h4 className="fw-bold mt-2 mb-1" style={{ color: '#ffc107' }}>Stock Restante Crítico</h4>
               </div>
 
-              <p className="text-center text-light small mb-3">
+              <p className="text-center small mb-3" style={{ color: isDark ? '#f4f4f5' : '#334155' }}>
                 El stock disponible quedará dentro del límite de tolerancia para los siguientes ítems teniendo en cuenta las 5 unidades de respaldo:
               </p>
 
@@ -183,11 +188,14 @@ export const DashboardPrincipal: React.FC = () => {
                   <div 
                     key={idx} 
                     className="p-3 rounded-3 d-flex justify-content-between align-items-center"
-                    style={{ backgroundColor: '#262629', border: '1px solid #3f3f46' }}
+                    style={{ 
+                      backgroundColor: isDark ? '#262629' : '#f8fafc', 
+                      border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}` 
+                    }}
                   >
                     <div>
-                      <div className="fw-bold text-white small">{item.nombre}</div>
-                      <small style={{ color: '#a1a1aa', fontSize: '0.75rem' }}>{item.tipo}</small>
+                      <div className="fw-bold small" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>{item.nombre}</div>
+                      <small style={{ color: isDark ? '#a1a1aa' : '#64748b', fontSize: '0.75rem' }}>{item.tipo}</small>
                     </div>
                     <span 
                       className="badge text-dark fw-bold px-2 py-1"
@@ -199,7 +207,7 @@ export const DashboardPrincipal: React.FC = () => {
                 ))}
               </div>
 
-              <p className="text-center text-secondary small mb-4" style={{ fontSize: '0.8rem' }}>
+              <p className="text-center small mb-4" style={{ color: isDark ? '#a1a1aa' : '#64748b', fontSize: '0.8rem' }}>
                 Se recomienda reponer stock. ¿Deseas continuar con el pedido de todas formas?
               </p>
 
@@ -213,8 +221,8 @@ export const DashboardPrincipal: React.FC = () => {
                 </button>
                 <button 
                   type="button"
-                  className="btn btn-sm flex-fill py-2 text-dark font-monospace fw-bold" 
-                  style={{ backgroundColor: '#ffc107', border: 'none' }}
+                  className="btn btn-sm flex-fill py-2 font-monospace fw-bold" 
+                  style={{ backgroundColor: '#ffc107', color: '#ffff', border: 'none' }}
                   onClick={continuarFlujoPostStock}
                 >
                   Continuar de todas formas
@@ -227,27 +235,40 @@ export const DashboardPrincipal: React.FC = () => {
 
       {/* MODAL DE ADVERTENCIA DE MAQUINARIA */}
       {showModalMaquinas && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered">
             <div 
-              className="modal-content p-4 text-white" 
-              style={{ border: '2px solid #ffc107', backgroundColor: '#1a1a1c', borderRadius: '12px', fontFamily: 'monospace' }}
+              className="modal-content p-4 shadow-lg" 
+              style={{ 
+                border: '2px solid #ffc107', 
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+                borderRadius: '16px',
+                color: isDark ? '#ffffff' : '#0f172a' 
+              }}
             >
               <div className="text-center mb-3">
                 <i className="bi bi-exclamation-triangle-fill fs-1 text-warning"></i>
                 <h5 className="fw-bold mt-2 text-warning">¡Atención! Maquinaria Fuera de Servicio</h5>
               </div>
               
-              <p className="small text-light">
+              <p className="small" style={{ color: isDark ? '#f4f4f5' : '#334155' }}>
                 Los siguientes productos seleccionados requieren maquinaria que actualmente no está operativa:
               </p>
 
               <div className="list-group mb-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                 {conflictosMaquinas.map((conf, idx) => (
-                  <div key={idx} className="list-group-item bg-dark text-white border-secondary d-flex justify-content-between align-items-center">
+                  <div 
+                    key={idx} 
+                    className="list-group-item d-flex justify-content-between align-items-center"
+                    style={{ 
+                      backgroundColor: isDark ? '#262629' : '#f8fafc', 
+                      color: isDark ? '#ffffff' : '#0f172a',
+                      borderColor: isDark ? '#3f3f46' : '#cbd5e1' 
+                    }}
+                  >
                     <div>
                       <div className="fw-bold">{conf.productoNombre}</div>
-                      <small className="text-secondary">Equipo: {conf.maquinaNombre}</small>
+                      <small style={{ color: isDark ? '#a1a1aa' : '#64748b' }}>Equipo: {conf.maquinaNombre}</small>
                     </div>
                     <span className="badge bg-danger">{conf.estado}</span>
                   </div>
@@ -263,8 +284,8 @@ export const DashboardPrincipal: React.FC = () => {
                   Cancelar / Volver
                 </button>
                 <button 
-                  className="btn btn-sm px-3 text-dark font-weight-bold" 
-                  style={{ backgroundColor: '#ffc107', border: '1px solid #ffc107', borderRadius: '6px', fontWeight: 'bold' }}
+                  className="btn btn-sm px-3 font-weight-bold" 
+                  style={{ backgroundColor: '#ffc107', color: '#ffff', border: '1px solid #ffc107', borderRadius: '6px', fontWeight: 'bold' }}
                   onClick={() => {
                     setShowModalMaquinas(false);
                     setShowModalMetodoPago(true);
@@ -280,12 +301,20 @@ export const DashboardPrincipal: React.FC = () => {
 
       {/* MODAL SUCESO */}
       {suceso.show && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
-            <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
+            <div 
+              className="modal-content p-4 text-center shadow-lg" 
+              style={{ 
+                border: '2px solid #8e45e0', 
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+                borderRadius: '16px',
+                color: isDark ? '#ffffff' : '#0f172a'
+              }}
+            >
               <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-x-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">{suceso.titulo}</h5>
-              <p className="small" style={{ color: '#a1a1aa' }}>{suceso.mensaje}</p>
+              <p className="small" style={{ color: isDark ? '#a1a1aa' : '#64748b' }}>{suceso.mensaje}</p>
               
               <div className="d-flex flex-column gap-2 mt-3">
                 {suceso.tipo === 'exito' && suceso.titulo === '¡Éxito!' && ultimoPedidoRealizado && (
@@ -323,12 +352,20 @@ export const DashboardPrincipal: React.FC = () => {
 
       {/* MODAL CONFIRMAR CANCELACIÓN */}
       {confirmarCancelacion && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
-            <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
+            <div 
+              className="modal-content p-4 text-center shadow-lg" 
+              style={{ 
+                border: '2px solid #8e45e0', 
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+                borderRadius: '16px',
+                color: isDark ? '#ffffff' : '#0f172a'
+              }}
+            >
               <i className="bi bi-exclamation-triangle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">¿Cancelar venta?</h5>
-              <p className="small" style={{ color: '#a1a1aa' }}>Esta acción vaciará el carrito. ¿Estás seguro?</p>
+              <p className="small" style={{ color: isDark ? '#a1a1aa' : '#64748b' }}>Esta acción vaciará el carrito. ¿Estás seguro?</p>
               <div className="d-flex gap-2 justify-content-center mt-3">
                 <button className="btn btn-secondary btn-sm px-3" onClick={() => setConfirmarCancelacion(false)}>Volver</button>
                 <button className="btn btn-danger btn-sm px-3" onClick={ejecutarCancelacion}>Sí, cancelar</button>

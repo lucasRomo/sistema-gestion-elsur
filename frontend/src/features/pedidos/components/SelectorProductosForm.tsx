@@ -185,7 +185,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
         const nombre = prod.nombreProducto || prod.nombre || 'Producto sin nombre';
         const stockActual = Number(prod.stockActual ?? prod.stock ?? 0);
         
-        // Tolerancia de 3 unidades para resaltado o límite configurado si es mayor
         const stockMinimoBase = Number(prod.stockMinimo ?? prod.stock_minimo ?? 0);
         const stockMinimo = Math.max(stockMinimoBase, TOLERANCIA_PRODUCTO_DIRECTO);
 
@@ -234,8 +233,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
   }, [carrito, pedidosPendientes, productos]);
 
   const handleContinuarSiguiente = () => {
-    const MARGEN_MERMA = 5;
-
     const elementoDeficiente = elementosAfectados.find(
       (el) => el.stockActual - el.cantTotalRequerida < 0
     );
@@ -255,15 +252,13 @@ export const SelectorProductosForm: React.FC<Props> = ({
     const elementosBajos = elementosAfectados
       .filter((el) => {
         const saldoReal = el.stockActual - el.cantTotalRequerida;
-        const saldoConMerma = saldoReal - MARGEN_MERMA;
+        const saldoConMerma = saldoReal - MARGEN_MERMA_RESPALDO;
         
-        // Evaluamos si al sumar los pendientes, el consumo y el respaldo (merma), llega al límite crítico
         return saldoReal >= 0 && saldoConMerma <= el.stockMinimo;
       })
       .map((el) => ({
         nombre: el.nombre,
-        // Aquí sumamos todo el consumo restando también la merma para obtener el resultante final
-        stockResultante: el.stockActual - el.cantTotalRequerida - MARGEN_MERMA,
+        stockResultante: el.stockActual - el.cantTotalRequerida - MARGEN_MERMA_RESPALDO,
         stockMinimo: el.stockMinimo,
         unidad: el.unidad,
         tipo: el.tipo,
@@ -275,7 +270,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
       return;
     }
 
-    // 3. VALIDACIÓN MÁQUINAS
     evaluarMaquinasYAvanzar();
   };
 
@@ -523,8 +517,8 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
         {/* Botones de Navegación */}
         <div className="d-flex justify-content-between mt-3">
-          <button className="btn btn-secondary px-4 fw-semibold" onClick={onCancelar}>
-            Volver
+          <button className="btn btn-danger px-4 fw-semibold" onClick={onCancelar}>
+            Cancelar
           </button>
           <button 
             className="btn btn-success px-5 fw-bold" 
@@ -546,15 +540,15 @@ export const SelectorProductosForm: React.FC<Props> = ({
           border: `1px solid ${borderTheme}` 
         }}
       >
-        <div className="d-flex align-items-center gap-2 mb-2">
+        <div className="d-flex align-items-center gap-2 mb-4">
           <i className="bi bi-boxes text-info fs-8"></i>
           <span className="small fw-bold">Impacto Estimado en el Stock de Insumos y Productos:</span>
         </div>
 
         <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted" style={{ borderColor: borderTheme }}>
           <div style={{ width: '25%' }}>Insumo / Producto:</div>
-          <div style={{ width: '18%' }}>Consumo Pedido:</div>
-          <div style={{ width: '18%' }}>Reserva Pendientes:</div>
+          <div style={{ width: '18%' }}>Unidad de Insumos/Productos:</div>
+          <div style={{ width: '18%' }}>Insumos/Productos Reservados:</div>
           <div style={{ width: '18%' }}>Stock Actual:</div>
           <div style={{ width: '21%' }}>Stock Resultante:</div>
         </div>
@@ -568,14 +562,10 @@ export const SelectorProductosForm: React.FC<Props> = ({
             </div>
           ) : (
             elementosAfectados.map((item) => {
-              // 1. Calculamos el saldo físico (Stock - Pedido - Pendientes)
               const saldoFisico = item.stockActual - item.cantTotalRequerida;
-              
-              // 2. Calculamos el resultante final restando además los 5 de respaldo
               const stockResultante = saldoFisico - MARGEN_MERMA_RESPALDO;
               
               const esInsuficiente = saldoFisico < 0; 
-              // Evaluamos margen bajo basándonos en el stock resultante final
               const esMargenBajo = saldoFisico >= 0 && stockResultante <= item.stockMinimo;
 
               let badgeClass = 'bg-success text-white';
@@ -583,7 +573,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
               if (esInsuficiente) {
                 badgeClass = 'bg-danger text-white';
-                // Si falta stock físicamente, mostramos el déficit real
                 badgeTexto = `${saldoFisico} ${item.unidad} (Insuficiente)`; 
               } else if (esMargenBajo) {
                 badgeClass = 'bg-warning text-dark';
@@ -603,15 +592,27 @@ export const SelectorProductosForm: React.FC<Props> = ({
                     </span>
                   </div>
                   
-                  {/* Celda de Consumo Pedido modificada con el Respaldo */}
-                  <div style={{ width: '18%' }} className="fw-bold text-info">
-                    {item.cantPedidoActual} {item.unidad}
-                    <span className="d-block text-muted" style={{ fontSize: '0.70rem', fontWeight: 'normal' }}>
-                      (+{MARGEN_MERMA_RESPALDO} Respaldo)
-                    </span>
-                  </div>
-                  
-                  <div style={{ width: '18%' }} className="text-warning">{item.cantReservadaPendientes} {item.unidad}</div>
+                  {/* Consumo Pedido: únicamente la cantidad limpia del carrito actual */}
+                  {/* Consumo Pedido */}
+<div style={{ width: '18%' }} className="fw-bold text-info">
+  {item.cantPedidoActual} {item.unidad}
+  {item.cantReservadaPendientes === 0 && (
+    <span className="d-block text-muted" style={{ fontSize: '0.70rem', fontWeight: 'normal' }}>
+      (+{MARGEN_MERMA_RESPALDO} Respaldo)
+    </span>
+  )}
+</div>
+
+{/* Reserva Pendientes */}
+<div style={{ width: '18%' }} className="text-warning">
+  {item.cantReservadaPendientes} {item.unidad}
+  {item.cantReservadaPendientes > 0 && (
+    <span className="d-block text-muted" style={{ fontSize: '0.70rem', fontWeight: 'normal' }}>
+      (+{MARGEN_MERMA_RESPALDO} Respaldo)
+    </span>
+  )}
+</div>
+
                   <div style={{ width: '18%' }}>{item.stockActual} {item.unidad}</div>
                   <div style={{ width: '21%' }}>
                     <span className={`badge ${badgeClass}`}>
@@ -702,7 +703,8 @@ export const SelectorProductosForm: React.FC<Props> = ({
                   Cancelar y revisar
                 </button>
                 <button 
-                  className="btn btn-sm btn-warning px-3 fw-bold text-dark" 
+                  className="btn btn-sm btn-warning px-3 fw-bold" 
+                  style={{ color: '#ffff' }}
                   onClick={() => {
                     setShowModalStockMinimo(false);
                     evaluarMaquinasYAvanzar();

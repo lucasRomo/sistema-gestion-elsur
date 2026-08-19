@@ -58,8 +58,8 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
                 />
               </div>
               <div className="d-flex justify-content-between gap-2">
-                <button className="btn btn-sm w-50 fw-bold text-white" style={{ backgroundColor: '#a52a2a' }} onClick={() => setMostrarModalNuevoRol(false)}>Cancelar</button>
-                <button className="btn btn-sm w-50 fw-bold text-white" style={{ backgroundColor: '#2b7a3e' }} onClick={handleCrearRol}>Crear</button>
+                <button className="btn btn-sm w-50 fw-bold" style={{ backgroundColor: '#a52a2a', color: '#ffffff', border: 'none' }} onClick={() => setMostrarModalNuevoRol(false)}>Cancelar</button>
+                <button className="btn btn-sm w-50 fw-bold" style={{ backgroundColor: '#2b7a3e', color: '#ffffff', border: 'none' }} onClick={handleCrearRol}>Crear</button>
               </div>
             </div>
           </div>

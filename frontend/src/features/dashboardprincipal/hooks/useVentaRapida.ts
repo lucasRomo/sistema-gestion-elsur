@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Producto } from '../../productos/types/Producto';
 import type { CartItem, Pedido } from '../../pedidos/types/Pedido';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
 
 const API_BASE = 'http://localhost:8080/api';
+const MARGEN_MERMA_RESPALDO = 5;
+const TOLERANCIA_PRODUCTO_DIRECTO = 3;
 
 export const useVentaRapida = () => {
   // --- ESTADOS DE DATOS / CATÁLOGOS ---
@@ -12,6 +14,7 @@ export const useVentaRapida = () => {
   const [categorias, setCategorias] = useState<CategoriaCliente[]>([]);
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
   const [pedidosPendientes, setPedidosPendientes] = useState<Pedido[]>([]);
+  const [insumosCatalogo, setInsumosCatalogo] = useState<any[]>([]);
 
   // --- ESTADOS DE FORMULARIO Y CARRITO ---
   const [productoSeleccionado, setProductoSeleccionado] = useState<string>('');
@@ -25,7 +28,6 @@ export const useVentaRapida = () => {
   const [showModalMaquinas, setShowModalMaquinas] = useState(false);
   const [showModalMetodoPago, setShowModalMetodoPago] = useState(false);
   const [showModalStockCritico, setShowModalStockCritico] = useState(false);
-  const [insumosCatalogo, setInsumosCatalogo] = useState<any[]>([]);
 
   const fetchInsumos = async () => {
     try {
@@ -72,7 +74,6 @@ export const useVentaRapida = () => {
         const rawProductos = await resProductos.json();
         const rawRecetas = resRecetas.ok ? await resRecetas.json() : [];
 
-        // Inyectamos la receta mapeada a cada producto
         const productosConReceta = rawProductos
           .filter((p: Producto) => p.estado === 'Activo')
           .map((p: any) => {
@@ -121,13 +122,11 @@ export const useVentaRapida = () => {
     }
   };
 
-  // ✅ FILTRO CORREGIDO: Ignora ventas finalizadas, entregadas, canceladas o presupuestos
   const fetchPedidosPendientes = async () => {
     try {
       const response = await fetch(`${API_BASE}/pedidos`);
       if (response.ok) {
         const data = await response.json();
-        
         const ESTADOS_INACTIVOS = ['FINALIZADO', 'ENTREGADO', 'CANCELADO', 'COMPLETADO', 'RECHAZADO'];
 
         const activos = data.filter((p: any) => {
@@ -150,6 +149,141 @@ export const useVentaRapida = () => {
     fetchPedidosPendientes();
     fetchInsumos();
   }, []);
+
+  // --- CÁLCULO DINÁMICO DE IMPACTO EN STOCK (elementosAfectados) ---
+  const elementosAfectados = useMemo(() => {
+    const mapaElementos = new Map<string, {
+      key: string;
+      id: string | number;
+      nombre: string;
+      unidad: string;
+      cantPedidoActual: number;
+      cantReservadaPendientes: number;
+      cantTotalRequerida: number;
+      stockActual: number;
+      stockMinimo: number;
+      tipo: 'Insumo' | 'Producto Directo';
+    }>();
+
+    const procesarItem = (prod: any, cantidadReq: number, esPedidoActual: boolean) => {
+      if (!prod) return;
+
+      const listaInsumos = Array.isArray(prod.receta) && prod.receta.length > 0 
+        ? prod.receta 
+        : (Array.isArray(prod.productoInsumos) ? prod.productoInsumos : (prod.insumos || []));
+
+      if (listaInsumos.length > 0) {
+        listaInsumos.forEach((pi: any) => {
+          if (!pi) return;
+          const insumoRaw = pi.insumo || pi;
+          const id = insumoRaw?.idInsumo ?? pi?.idInsumo ?? insumoRaw?.id;
+          if (id === undefined || id === null) return;
+
+          const key = `INSUMO_${id}`;
+          const insumoActualizado = insumosCatalogo.find((i: any) => 
+            String(i.idInsumo ?? i.id_insumo ?? i.id) === String(id)
+          ) || insumoRaw;
+
+          const nombre = insumoActualizado?.nombreInsumo || insumoActualizado?.nombre_insumo || insumoRaw?.nombreInsumo || 'Insumo';
+          const uMedida = insumoActualizado?.unidadMedida || insumoRaw?.unidadMedida;
+          const unidad = typeof uMedida === 'object' && uMedida !== null 
+            ? (uMedida.nombre || uMedida.simbolo || 'uds') 
+            : String(uMedida || 'uds');
+
+          const stockActual = Number(insumoActualizado?.stockActual ?? insumoActualizado?.stock_actual ?? insumoActualizado?.stockSuelto ?? 0);
+          const stockMinimo = Number(insumoActualizado?.stockMinimo ?? insumoActualizado?.stock_minimo ?? 0);
+          
+          const cantUnitaria = Number(pi.cantidadConsumo ?? pi.cantidadProporcion ?? pi.cantidad_proporcion ?? pi.cantidad ?? 1);
+          const totalRequerido = cantUnitaria * cantidadReq;
+
+          if (mapaElementos.has(key)) {
+            const item = mapaElementos.get(key)!;
+            if (esPedidoActual) item.cantPedidoActual += totalRequerido;
+            else item.cantReservadaPendientes += totalRequerido;
+            item.cantTotalRequerida += totalRequerido;
+          } else {
+            mapaElementos.set(key, {
+              key,
+              id,
+              nombre,
+              unidad,
+              cantPedidoActual: esPedidoActual ? totalRequerido : 0,
+              cantReservadaPendientes: esPedidoActual ? 0 : totalRequerido,
+              cantTotalRequerida: totalRequerido,
+              stockActual,
+              stockMinimo,
+              tipo: 'Insumo'
+            });
+          }
+        });
+      } else {
+        const idProd = prod.idProducto ?? prod.id_producto ?? prod.id;
+        if (idProd === undefined || idProd === null) return;
+
+        const insumoCoincidente = insumosCatalogo.find((i: any) => 
+          String(i.idInsumo ?? i.id) === String(idProd) ||
+          (i.nombreInsumo && prod.nombreProducto && i.nombreInsumo.toLowerCase() === prod.nombreProducto.toLowerCase())
+        );
+
+        const key = insumoCoincidente ? `INSUMO_${insumoCoincidente.idInsumo}` : `PROD_${idProd}`;
+        const nombre = prod.nombreProducto || prod.nombre || 'Producto Directo';
+
+        const stockActual = insumoCoincidente 
+          ? Number(insumoCoincidente.stockActual ?? insumoCoincidente.stockSuelto ?? 0)
+          : Number(prod.stockActual ?? prod.stock_actual ?? prod.stock ?? 0);
+
+        const stockMinimoBase = insumoCoincidente
+          ? Number(insumoCoincidente.stockMinimo ?? 0)
+          : Number(prod.stockMinimo ?? prod.stock_minimo ?? 0);
+
+        const stockMinimo = insumoCoincidente ? stockMinimoBase : Math.max(stockMinimoBase, TOLERANCIA_PRODUCTO_DIRECTO);
+
+        const uMedida = insumoCoincidente ? insumoCoincidente.unidadMedida : 'uds';
+        const unidad = typeof uMedida === 'object' && uMedida !== null 
+          ? (uMedida.nombre || uMedida.simbolo || 'uds') 
+          : String(uMedida || 'uds');
+
+        if (mapaElementos.has(key)) {
+          const item = mapaElementos.get(key)!;
+          if (esPedidoActual) item.cantPedidoActual += cantidadReq;
+          else item.cantReservadaPendientes += cantidadReq;
+          item.cantTotalRequerida += cantidadReq;
+        } else {
+          mapaElementos.set(key, {
+            key,
+            id: idProd,
+            nombre,
+            unidad,
+            cantPedidoActual: esPedidoActual ? cantidadReq : 0,
+            cantReservadaPendientes: esPedidoActual ? 0 : cantidadReq,
+            cantTotalRequerida: cantidadReq,
+            stockActual,
+            stockMinimo,
+            tipo: insumoCoincidente ? 'Insumo' : 'Producto Directo'
+          });
+        }
+      }
+    };
+
+    carrito.forEach((item) => {
+      procesarItem(item.producto, Number(item.cantidad) || 1, true);
+    });
+
+    if (Array.isArray(pedidosPendientes)) {
+      pedidosPendientes.forEach((ped) => {
+        const detalles = ped.detalles || (ped as any).pedidoDetalles || [];
+        detalles.forEach((det: any) => {
+          const idProd = det.producto?.idProducto ?? det.idProducto;
+          const prodCompleto = productosDisponibles.find((p: any) => p.idProducto === idProd) || det.producto;
+          if (prodCompleto) {
+            procesarItem(prodCompleto, Number(det.cantidad || 1), false);
+          }
+        });
+      });
+    }
+
+    return Array.from(mapaElementos.values()).filter(item => item.cantPedidoActual > 0);
+  }, [carrito, pedidosPendientes, productosDisponibles, insumosCatalogo]);
 
   // --- ACCIONES DEL CARRITO ---
   const handleAgregar = () => {
@@ -186,7 +320,7 @@ export const useVentaRapida = () => {
   const montoDescuento = (subtotalVenta * porcentajeDescuento) / 100;
   const totalFinal = subtotalVenta - montoDescuento;
 
-  // --- VALIDACIÓN DE STOCK Y MAQUINARIA AL INTENTAR COMPLETAR LA VENTA ---
+  // --- VALIDACIÓN DE STOCK Y MAQUINARIA ---
   const handleValidarYCompletarVenta = () => {
     if (carrito.length === 0) {
       setSuceso({
@@ -198,129 +332,11 @@ export const useVentaRapida = () => {
       return;
     }
 
-    const MARGEN_MERMA = 5;
-
-    const requerimientoMapa = new Map<string, {
-      nombre: string;
-      tipo: string;
-      cantReq: number;
-      stockActual: number;
-      stockMinimo: number;
-      unidad: string;
-    }>();
-
-    const procesarItemConsumo = (prod: any, cantidadItem: number) => {
-      if (!prod) return;
-
-      const insumos = (Array.isArray(prod.receta) && prod.receta.length > 0) 
-        ? prod.receta 
-        : (Array.isArray(prod.productoInsumos) ? prod.productoInsumos : (prod.insumos || []));
-
-      if (Array.isArray(insumos) && insumos.length > 0) {
-        insumos.forEach((pi: any) => {
-          if (!pi) return;
-          const insumoRaw = pi.insumo || pi;
-          const idInsumo = insumoRaw?.idInsumo ?? pi?.idInsumo ?? insumoRaw?.id;
-          if (idInsumo === undefined || idInsumo === null) return;
-
-          const key = `INS_${idInsumo}`;
-
-          const insumoActualizado = insumosCatalogo.find((i) => 
-            String(i.idInsumo ?? i.id_insumo ?? i.id) === String(idInsumo)
-          ) || insumoRaw;
-
-          const proporcion = Number(
-            pi.cantidadConsumo ?? 
-            pi.cantidadProporcion ?? 
-            pi.cantidad_proporcion ?? 
-            pi.cantidad ?? 1
-          );
-          const cantTotalInsumo = proporcion * cantidadItem;
-
-          const stockReal = Number(
-            insumoActualizado.stockActual ?? 
-            insumoActualizado.stock_actual ?? 
-            insumoActualizado.stockSuelto ?? 
-            insumoActualizado.stock ?? 0
-          );
-
-          const stockMin = Number(
-            insumoActualizado.stockMinimo ?? 
-            insumoActualizado.stock_minimo ?? 0
-          );
-
-          const unidadNom = typeof insumoActualizado.unidadMedida === 'object' 
-            ? insumoActualizado.unidadMedida?.nombre 
-            : (insumoActualizado.unidadMedida || 'Unidad');
-
-          if (!requerimientoMapa.has(key)) {
-            requerimientoMapa.set(key, {
-              nombre: insumoActualizado.nombreInsumo || insumoActualizado.nombre_insumo || insumoActualizado.nombre || 'Insumo',
-              tipo: 'Insumo',
-              cantReq: cantTotalInsumo,
-              stockActual: stockReal,
-              stockMinimo: stockMin,
-              unidad: unidadNom || 'Unidad',
-            });
-          } else {
-            requerimientoMapa.get(key)!.cantReq += cantTotalInsumo;
-          }
-        });
-      } else {
-        const idProd = prod.idProducto || prod.id_producto || prod.id;
-        const insumoCoincidente = insumosCatalogo.find((i) => 
-          String(i.idInsumo ?? i.id) === String(idProd) ||
-          (i.nombreInsumo && prod.nombreProducto && i.nombreInsumo.toLowerCase() === prod.nombreProducto.toLowerCase())
-        );
-
-        const key = insumoCoincidente ? `INS_${insumoCoincidente.idInsumo}` : `PROD_${idProd}`;
-
-        const stockReal = insumoCoincidente 
-          ? Number(insumoCoincidente.stockActual ?? insumoCoincidente.stockSuelto ?? 0)
-          : Number(prod.stockActual ?? prod.stock_actual ?? prod.stock ?? 0);
-
-        const stockMin = insumoCoincidente
-          ? Number(insumoCoincidente.stockMinimo ?? 0)
-          : Number(prod.stockMinimo ?? prod.stock_minimo ?? 0);
-
-        const unidadNom = insumoCoincidente
-          ? (typeof insumoCoincidente.unidadMedida === 'object' ? insumoCoincidente.unidadMedida?.nombre : insumoCoincidente.unidadMedida)
-          : 'Unidad';
-
-        if (!requerimientoMapa.has(key)) {
-          requerimientoMapa.set(key, {
-            nombre: prod.nombreProducto || prod.nombre || 'Producto Directo',
-            tipo: insumoCoincidente ? 'Insumo' : 'Producto Directo',
-            cantReq: cantidadItem,
-            stockActual: stockReal,
-            stockMinimo: stockMin,
-            unidad: unidadNom || 'Unidad',
-          });
-        } else {
-          requerimientoMapa.get(key)!.cantReq += cantidadItem;
-        }
-      }
-    };
-
-    // A. ACUMULAR REQUERIMIENTOS DE LOS PEDIDOS PENDIENTES ACTIVOS
-    pedidosPendientes.forEach((ped) => {
-      const detalles = ped.detalles || (ped as any).pedidoDetalles || [];
-      detalles.forEach((det: any) => {
-        const prod = det.producto || det;
-        const cant = Number(det.cantidad || 1);
-        procesarItemConsumo(prod, cant);
-      });
-    });
-
-    // B. ACUMULAR REQUERIMIENTOS DEL CARRITO ACTUAL
-    carrito.forEach((item) => {
-      procesarItemConsumo(item.producto, item.cantidad);
-    });
-
-    // 2. VALIDACIÓN DE BLOQUEO (STOCK TOTALMENTE INSUFICIENTE)
-    for (const [, item] of requerimientoMapa) {
-      if (item.stockActual < item.cantReq) {
-        const faltante = item.cantReq - item.stockActual;
+    // 1. Validar Stock Bloqueante (saldo físico < 0)
+    for (const item of elementosAfectados) {
+      const saldoFisico = item.stockActual - item.cantTotalRequerida;
+      if (saldoFisico < 0) {
+        const faltante = Math.abs(saldoFisico);
         setSuceso({
           show: true,
           titulo: 'Stock Insuficiente',
@@ -331,12 +347,12 @@ export const useVentaRapida = () => {
       }
     }
 
-    // 3. VALIDACIÓN DE ADVERTENCIA (STOCK CRÍTICO / MÍNIMO)
+    // 2. Validar Stock Crítico (Respaldo de 5 unidades)
     const criticos: { nombre: string; tipo: string; quedaran: number; tolerancia: number; unidad: string }[] = [];
 
-    for (const [, item] of requerimientoMapa) {
-      const saldoFisico = item.stockActual - item.cantReq;
-      const stockResultante = saldoFisico - MARGEN_MERMA;
+    for (const item of elementosAfectados) {
+      const saldoFisico = item.stockActual - item.cantTotalRequerida;
+      const stockResultante = saldoFisico - MARGEN_MERMA_RESPALDO;
 
       if (saldoFisico >= 0 && stockResultante <= item.stockMinimo) {
         criticos.push({
@@ -355,7 +371,6 @@ export const useVentaRapida = () => {
       return;
     }
 
-    // 4. MÁQUINAS Y PAGO
     continuarFlujoPostStock();
   };
 
@@ -544,6 +559,7 @@ export const useVentaRapida = () => {
     categoriaSeleccionadaId,
     setCategoriaSeleccionadaId,
     carrito,
+    elementosAfectados,
     
     subtotalVenta,
     montoDescuento,

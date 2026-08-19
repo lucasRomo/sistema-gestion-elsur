@@ -284,7 +284,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
               <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val / 1000 + 'k' : val}`} />
-              <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEgresoTooltip esMismoDia={esMismoDia} />} />
+              <RechartsTooltip cursor={false} content={<CustomEgresoTooltip esMismoDia={esMismoDia} />} />
               <Bar dataKey="monto" fill={esAnterior ? '#71717a' : '#e22e2e'} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -343,7 +343,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
               <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <RechartsTooltip cursor={{ fill: '#222122' }} contentStyle={{ backgroundColor: '#18181b', borderColor: '#8e45e0', borderRadius: '8px', color: '#fff' }} />
+              <RechartsTooltip cursor={false} contentStyle={{ backgroundColor: '#18181b', borderColor: '#8e45e0', borderRadius: '8px', color: '#fff' }} />
               <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#8e45e0'} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -358,7 +358,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
               <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val / 1000 + 'k' : val}`} />
-              <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomEmpleadoTooltip />} />
+              <RechartsTooltip cursor={false} content={<CustomEmpleadoTooltip />} />
               <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#0dcaf0'} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -403,7 +403,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
               <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}m`} />
-              <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomTiempoTooltip titulo="Máximo" />} />
+              <RechartsTooltip cursor={false} content={<CustomTiempoTooltip titulo="Máximo" />} />
               <Bar dataKey="valor" fill={esAnterior ? '#71717a' : '#ffc107'} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -418,7 +418,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
               <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}m`} />
-              <RechartsTooltip cursor={{ fill: '#222122' }} content={<CustomTiempoTooltip titulo="Promedio" />} />
+              <RechartsTooltip cursor={false} content={<CustomTiempoTooltip titulo="Promedio" />} />
               <Bar dataKey="valor" fill={esAnterior ? '#71717a' : '#b66b09'} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -501,26 +501,26 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <RechartsTooltip
-                cursor={{ fill: '#222122' }}
-                content={({ active, payload }: any) => {
-                  if (active && payload && payload.length) {
-                    const item = payload[0].payload;
-                    return (
-                      <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #20c997', color: '#fff' }}>
-                        <p className="fw-bold mb-1 text-success">{item.name}</p>
-                        <p className="small mb-1 text-white">Pedidos: <span className="fw-bold">{item.ventas}</span></p>
-                        <p className="small mb-0 text-white-50">Monto total Generado: <span className="fw-bold text-white">${Number(item.montoTotal || 0).toLocaleString('es-AR')}</span></p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#20c997'} radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartScrollWrapper>
-      );
+            cursor={false}
+            content={({ active, payload }: any) => {
+              if (active && payload && payload.length) {
+                const item = payload[0].payload;
+                return (
+                  <div className="p-2 rounded-3 shadow-lg" style={{ backgroundColor: '#222122', border: '1px solid #20c997', color: '#fff' }}>
+                    <p className="fw-bold mb-1 text-success">{item.name}</p>
+                    <p className="small mb-1 text-white">Pedidos: <span className="fw-bold">{item.ventas}</span></p>
+                    <p className="small mb-0 text-white-50">Monto total Generado: <span className="fw-bold text-white">${Number(item.montoTotal || 0).toLocaleString('es-AR')}</span></p>
+                  </div>
+                );
+              }
+              return null;
+            }}
+          />
+          <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#20c997'} radius={[6, 6, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartScrollWrapper>
+  );
 
     case 'mermas':
       return (
@@ -537,7 +537,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
                 tickFormatter={(value: string) => (value?.includes('#') ? value.split('#')[0] : value)}
               />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <RechartsTooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} content={<CustomMermaTooltip esMismoDia={esMismoDia} />} />
+              <RechartsTooltip cursor={false} content={<CustomMermaTooltip esMismoDia={esMismoDia} />} />
               <Bar dataKey="cantidad" fill={esAnterior ? '#71717a' : '#ffc107'} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -552,7 +552,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
               <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <RechartsTooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} content={<CustomAveriaTooltip esMismoDia={esMismoDia} />} />
+              <RechartsTooltip cursor={false} content={<CustomAveriaTooltip esMismoDia={esMismoDia} />} />
               <Bar dataKey="cantidad" fill={esAnterior ? '#71717a' : '#fd7e14'} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -567,7 +567,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
               <XAxis dataKey="empleado" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val}`} />
-              <RechartsTooltip cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }} content={<CustomArqueoTooltip />} />
+              <RechartsTooltip cursor={false} content={<CustomArqueoTooltip />} />
               <Bar dataKey="montoDiferencia" fill={esAnterior ? '#71717a' : '#f43f5e'} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

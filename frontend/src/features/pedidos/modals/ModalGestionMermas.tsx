@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { mermaService, type MermaEntity } from '../../../services/mermaService';
+import { useTheme } from '../../../Context/ThemeContext';
 
 interface ModalGestionMermasProps {
   pedido: any;
@@ -19,10 +20,27 @@ interface SelectionState {
 }
 
 export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, onClose, onExito }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // Paleta de colores adaptativa
+  const bgModal = isDark ? '#18181b' : '#ffffff';
+  const textColor = isDark ? '#ffffff' : '#0f172a';
+  const subTextColor = isDark ? '#a1a1aa' : '#64748b';
+  const cardBg = isDark ? '#09090b' : '#f8fafc';
+  const cardBorder = isDark ? '#27272a' : '#e2e8f0';
+  const inputBgClass = isDark ? 'bg-dark border-secondary' : 'bg-white border-secondary-subtle';
+  const inputInnerBgClass = isDark ? 'bg-black border-secondary' : 'bg-white border-secondary-subtle';
+  const tableHeaderBg = isDark ? '#27272a' : '#f1f5f9';
+
   const [tabActiva, setTabActiva] = useState<'registrar' | 'historial'>('registrar');
   const [historial, setHistorial] = useState<MermaEntity[]>([]);
   const [cargandoHistorial, setCargandoHistorial] = useState<boolean>(false);
   const [guardando, setGuardando] = useState<boolean>(false);
+
+  // Modal de Alerta / Advertencia
+  const [mostrarAlerta, setMostrarAlerta] = useState<boolean>(false);
+  const [mensajeAlerta, setMensajeAlerta] = useState<string>('');
 
   const [recetasMap, setRecetasMap] = useState<{ [idProducto: number]: any[] }>({});
   const [selections, setSelections] = useState<SelectionState>({});
@@ -103,7 +121,8 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
   const handleGuardarMerma = async () => {
     const keys = Object.keys(selections);
     if (keys.length === 0) {
-      alert('Por favor, selecciona al menos un producto o insumo afectado.');
+      setMensajeAlerta('Por favor, selecciona al menos un producto o insumo afectado.');
+      setMostrarAlerta(true);
       return;
     }
 
@@ -122,13 +141,13 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
     setGuardando(true);
     try {
       await mermaService.registrarMermas(mermasPayload);
-      alert('¡Merma registrada correctamente!');
       setSelections({});
       await cargarHistorialMermas();
       setTabActiva('historial');
       if (onExito) onExito();
     } catch (error: any) {
-      alert(error.message || 'Error al guardar la merma');
+      setMensajeAlerta(error.message || 'Error al guardar la merma');
+      setMostrarAlerta(true);
     } finally {
       setGuardando(false);
     }
@@ -137,33 +156,48 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-lg modal-dialog-centered">
-        <div className="modal-content custom-card" style={{ backgroundColor: '#18181b', border: '2px solid #eab308', borderRadius: '12px', color: '#fff' }}>
-          
-          <div className="modal-header border-bottom border-secondary pb-3">
-            <h5 className="modal-title fw-bold font-monospace text-warning">
-              <i className="bi bi-exclamation-diamond-fill me-2"></i>Mermas - Pedido #{idPedido}
+        <div 
+          className="modal-content font-monospace shadow-lg" 
+          style={{ 
+            backgroundColor: bgModal, 
+            border: '2px solid #eab308', 
+            borderRadius: '16px', 
+            color: textColor 
+          }}
+        >
+          {/* Header */}
+          <div className="modal-header border-bottom border-secondary-subtle pb-3">
+            <h5 className="modal-title fw-bold text-warning d-flex align-items-center">
+              <i className="bi bi-exclamation-diamond-fill me-2 fs-4"></i>
+              Mermas - Pedido #{idPedido}
             </h5>
-            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
+            <button 
+              type="button" 
+              className={`btn-close ${isDark ? 'btn-close-white' : ''}`} 
+              onClick={onClose}
+            ></button>
           </div>
 
+          {/* Navegación Pestañas */}
           <div className="px-3 pt-3">
-            <div className="btn-group w-100 font-monospace">
+            <div className="btn-group w-100">
               <button 
                 className={`btn btn-sm ${tabActiva === 'registrar' ? 'btn-warning fw-bold text-dark' : 'btn-outline-warning'}`}
                 onClick={() => setTabActiva('registrar')}
               >
-                <i className="bi bi-plus-circle me-1"></i>Registrar Merma
+                <i className="bi bi-plus-circle me-1"></i> Registrar Merma
               </button>
               <button 
                 className={`btn btn-sm ${tabActiva === 'historial' ? 'btn-warning fw-bold text-dark' : 'btn-outline-warning'}`}
                 onClick={() => setTabActiva('historial')}
               >
-                <i className="bi bi-journal-text me-1"></i>Historial ({historial.length})
+                <i className="bi bi-journal-text me-1"></i> Historial ({historial.length})
               </button>
             </div>
           </div>
 
-          <div className="modal-body font-monospace" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+          {/* Cuerpo del Modal */}
+          <div className="modal-body my-2" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             {tabActiva === 'registrar' ? (
               <div className="d-flex flex-column gap-3">
                 {pedido.detalles?.map((det: any, idx: number) => {
@@ -174,7 +208,14 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                   const recetaInsumos = recetasMap[idProd] || [];
 
                   return (
-                    <div key={keyProd} className="p-3 rounded border border-secondary" style={{ backgroundColor: '#09090b' }}>
+                    <div 
+                      key={keyProd} 
+                      className="p-3 rounded border" 
+                      style={{ 
+                        backgroundColor: cardBg, 
+                        borderColor: cardBorder 
+                      }}
+                    >
                       {/* Cabecera Producto */}
                       <div className="form-check d-flex align-items-center justify-content-between mb-2">
                         <div className="d-flex align-items-center gap-2">
@@ -186,23 +227,41 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                             checked={prodSelected}
                             onChange={() => toggleSelection(keyProd, { idProducto: idProd })}
                           />
-                          <label className="form-check-label fw-bold text-white fs-6 m-0 cursor-pointer" htmlFor={keyProd}>
+                          <label className="form-check-label fw-bold fs-6 m-0 cursor-pointer" style={{ color: textColor }} htmlFor={keyProd}>
                             <i className="bi bi-box-seam me-2 text-warning"></i>
                             {prod.nombreProducto || prod.nombre || 'Producto'}
                           </label>
                         </div>
-                        <span className="badge bg-secondary">Pedida: {det.cantidad} unid.</span>
+                        <span 
+                          className="px-2 py-1 rounded small fw-semibold"
+                          style={{
+                            fontSize: '0.75rem',
+                            backgroundColor: isDark ? '#27272a' : '#e2e8f0',
+                            color: isDark ? '#f4f4f5' : '#0f172a',
+                            border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
+                          }}
+                        >
+                          Pedida: {det.cantidad} unid.
+                        </span>
                       </div>
 
+                      {/* Desplegable formulario Producto Seleccionado */}
                       {prodSelected && (
-                        <div className="ms-4 mb-3 p-3 rounded bg-dark border border-warning">
+                        <div 
+                          className="ms-4 mb-3 p-3 rounded border"
+                          style={{ 
+                            backgroundColor: isDark ? '#18181b' : '#fefce8', 
+                            borderColor: '#eab308' 
+                          }}
+                        >
                           <div className="row g-2">
                             <div className="col-4">
                               <label className="form-label small text-warning m-0 fw-bold">Cantidad Rota / Falla:</label>
                               <input 
                                 type="number" 
                                 step="0.01" 
-                                className="form-control form-control-sm bg-black text-white border-secondary"
+                                className={`form-control form-control-sm ${inputInnerBgClass}`}
+                                style={{ color: textColor }}
                                 value={selections[keyProd]?.cantidad || 1}
                                 onChange={(e) => updateSelectionData(keyProd, 'cantidad', e.target.value)}
                               />
@@ -211,7 +270,8 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                               <label className="form-label small text-warning m-0 fw-bold">Motivo:</label>
                               <input 
                                 type="text" 
-                                className="form-control form-control-sm bg-black text-white border-secondary"
+                                className={`form-control form-control-sm ${inputInnerBgClass}`}
+                                style={{ color: textColor }}
                                 placeholder="Ej: Mal cortado / Impresión manchada"
                                 value={selections[keyProd]?.descripcion || ''}
                                 onChange={(e) => updateSelectionData(keyProd, 'descripcion', e.target.value)}
@@ -234,7 +294,14 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                             const insSelected = !!selections[keyIns]?.selected;
 
                             return (
-                              <div key={keyIns} className="mb-2 p-2 rounded bg-black bg-opacity-40 border border-secondary">
+                              <div 
+                                key={keyIns} 
+                                className="mb-2 p-2 rounded border"
+                                style={{ 
+                                  backgroundColor: isDark ? '#121214' : '#ffffff',
+                                  borderColor: cardBorder
+                                }}
+                              >
                                 <div className="form-check d-flex align-items-center gap-2">
                                   <input 
                                     className="form-check-input" 
@@ -243,8 +310,8 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                                     checked={insSelected}
                                     onChange={() => toggleSelection(keyIns, { idInsumo: idIns, idProducto: idProd })}
                                   />
-                                  <label className="form-check-label small text-light cursor-pointer m-0" htmlFor={keyIns}>
-                                    <i className="bi bi-layers me-1 text-info"></i>
+                                  <label className="form-check-label small cursor-pointer m-0 fw-semibold" style={{ color: textColor }} htmlFor={keyIns}>
+                                    <i className="bi bi-layers me-1" style={{ color: isDark ? '#38bdf8' : '#0284c7' }}></i>
                                     {ins.nombreInsumo || ins.nombre || 'Insumo'}
                                   </label>
                                 </div>
@@ -255,7 +322,8 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                                       <input 
                                         type="number" 
                                         step="0.01" 
-                                        className="form-control form-control-sm bg-dark text-white border-secondary"
+                                        className={`form-control form-control-sm ${inputInnerBgClass}`}
+                                        style={{ color: textColor }}
                                         placeholder="Cant."
                                         value={selections[keyIns]?.cantidad || 1}
                                         onChange={(e) => updateSelectionData(keyIns, 'cantidad', e.target.value)}
@@ -264,7 +332,8 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                                     <div className="col-8">
                                       <input 
                                         type="text" 
-                                        className="form-control form-control-sm bg-dark text-white border-secondary"
+                                        className={`form-control form-control-sm ${inputInnerBgClass}`}
+                                        style={{ color: textColor }}
                                         placeholder={`Motivo fallo insumo en ${prod.nombreProducto || 'producto'}`}
                                         value={selections[keyIns]?.descripcion || ''}
                                         onChange={(e) => updateSelectionData(keyIns, 'descripcion', e.target.value)}
@@ -282,6 +351,7 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                 })}
               </div>
             ) : (
+              /* TAB HISTORIAL */
               <div>
                 {cargandoHistorial ? (
                   <div className="text-center py-4 text-muted">Cargando mermas...</div>
@@ -289,13 +359,29 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                   <div className="text-center py-4 text-muted">No hay registros de mermas para este pedido.</div>
                 ) : (
                   <div className="table-responsive">
-                    <table className="table table-dark table-hover align-middle small border-secondary">
+                    <table 
+                      className="table align-middle m-0 small"
+                      style={{ 
+                        color: textColor,
+                        backgroundColor: 'transparent',
+                        '--bs-table-bg': 'transparent',
+                        '--bs-table-color': textColor,
+                        borderColor: cardBorder
+                      } as React.CSSProperties}
+                    >
                       <thead>
-                        <tr className="text-warning">
-                          <th>Fecha</th>
-                          <th>Origen / Ítem</th>
-                          <th className="text-center">Cant.</th>
-                          <th>Motivo</th>
+                        <tr 
+                          className="text-uppercase"
+                          style={{ 
+                            color: isDark ? '#eab308' : '#854d0e',
+                            backgroundColor: tableHeaderBg,
+                            borderBottom: `2px solid ${cardBorder}`
+                          }}
+                        >
+                          <th className="py-2">Fecha</th>
+                          <th className="py-2">Origen / Ítem</th>
+                          <th className="py-2 text-center">Cant.</th>
+                          <th className="py-2">Motivo</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -303,34 +389,64 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                           const esInsumo = Boolean(m.insumo);
 
                           return (
-                            <tr key={m.idMerma}>
-                              <td className="text-nowrap">{m.fechaMerma ? new Date(m.fechaMerma).toLocaleString('es-AR') : '-'}</td>
+                            <tr key={m.idMerma || Math.random()} style={{ borderColor: cardBorder }}>
+                              <td className="text-nowrap" style={{ color: textColor }}>
+                                {m.fechaMerma ? new Date(m.fechaMerma).toLocaleString('es-AR') : '-'}
+                              </td>
                               <td>
                                 <div className="d-flex flex-column gap-1">
                                   {esInsumo ? (
                                     <>
                                       <div className="d-flex align-items-center gap-2">
-                                        <span className="badge bg-warning text-dark font-monospace">INSUMO</span>
-                                        <span className="fw-bold text-white">{m.insumo?.nombreInsumo}</span>
+                                        <span 
+                                          className="px-2 py-0.5 rounded small fw-semibold"
+                                          style={{
+                                            fontSize: '0.7rem',
+                                            backgroundColor: isDark ? 'rgba(234, 179, 8, 0.2)' : '#fef3c7',
+                                            color: isDark ? '#fde047' : '#b45309',
+                                            border: `1px solid ${isDark ? '#ca8a04' : '#fcd34d'}`
+                                          }}
+                                        >
+                                          INSUMO
+                                        </span>
+                                        <span className="fw-bold" style={{ color: textColor }}>
+                                          {m.insumo?.nombreInsumo}
+                                        </span>
                                       </div>
                                       {m.producto?.nombreProducto && (
-                                        <div className="small text-muted ms-1 d-flex align-items-center gap-1">
+                                        <div className="small ms-1 d-flex align-items-center gap-1" style={{ color: subTextColor, fontSize: '0.8rem' }}>
                                           <i className="bi bi-arrow-return-right text-warning"></i>
                                           <span>De producto:</span>
-                                          <span className="text-warning fw-semibold">{m.producto.nombreProducto}</span>
+                                          <span className="fw-semibold" style={{ color: isDark ? '#fde047' : '#d97706' }}>
+                                            {m.producto.nombreProducto}
+                                          </span>
                                         </div>
                                       )}
                                     </>
                                   ) : (
                                     <div className="d-flex align-items-center gap-2">
-                                      <span className="badge bg-primary text-white font-monospace">PRODUCTO</span>
-                                      <span className="fw-bold text-info">{m.producto?.nombreProducto || 'Producto'}</span>
+                                      <span 
+                                        className="px-2 py-0.5 rounded small fw-semibold"
+                                        style={{
+                                          fontSize: '0.7rem',
+                                          backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe',
+                                          color: isDark ? '#60a5fa' : '#1d4ed8',
+                                          border: `1px solid ${isDark ? '#2563eb' : '#93c5fd'}`
+                                        }}
+                                      >
+                                        PRODUCTO
+                                      </span>
+                                      <span className="fw-bold" style={{ color: isDark ? '#38bdf8' : '#0284c7' }}>
+                                        {m.producto?.nombreProducto || 'Producto'}
+                                      </span>
                                     </div>
                                   )}
                                 </div>
                               </td>
                               <td className="text-center fw-bold text-danger fs-6">-{m.cantidad}</td>
-                              <td>{m.descripcion}</td>
+                              <td style={{ maxWidth: '250px', wordBreak: 'break-word', color: subTextColor }}>
+                                {m.descripcion}
+                              </td>
                             </tr>
                           );
                         })}
@@ -342,14 +458,15 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
             )}
           </div>
 
-          <div className="modal-footer border-top border-secondary pt-2">
-            <button type="button" className="btn btn-secondary px-4" onClick={onClose}>
+          {/* Footer */}
+          <div className="modal-footer border-top border-secondary-subtle pt-2">
+            <button type="button" className="btn btn-secondary px-4 fw-bold" onClick={onClose}>
               Cerrar
             </button>
             {tabActiva === 'registrar' && (
               <button 
                 type="button" 
-                className="btn btn-warning fw-bold text-dark px-4" 
+                className="btn btn-success fw-bold px-4" 
                 disabled={guardando}
                 onClick={handleGuardarMerma}
               >
@@ -360,6 +477,60 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
 
         </div>
       </div>
+
+      {/* Modal de Advertencia Personalizado */}
+      {mostrarAlerta && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)', zIndex: 2000 }}
+        >
+          <div
+            className="rounded-4 p-4 text-center shadow-lg mx-3 font-monospace"
+            style={{
+              maxWidth: '420px',
+              width: '100%',
+              backgroundColor: isDark ? '#18181b' : '#ffffff',
+              border: isDark ? '1px solid #a855f7' : '1px solid #cbd5e1',
+              color: textColor
+            }}
+          >
+            <div
+              className="d-flex align-items-center justify-content-center mx-auto mb-3"
+              style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                backgroundColor: '#a855f7',
+                color: isDark ? '#000000' : '#ffffff',
+                fontSize: '2rem'
+              }}
+            >
+              <i className="bi bi-exclamation-lg"></i>
+            </div>
+            <h3 className="fw-bold mb-2" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>
+              ¡Atención!
+            </h3>
+            <p
+              className="mb-4 small"
+              style={{
+                fontSize: '0.95rem',
+                lineHeight: '1.4',
+                color: isDark ? '#a1a1aa' : '#64748b'
+              }}
+            >
+              {mensajeAlerta}
+            </p>
+            <button
+              type="button"
+              className="btn btn-danger fw-bold px-4 py-2"
+              style={{ borderRadius: '8px', minWidth: '120px' }}
+              onClick={() => setMostrarAlerta(false)}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

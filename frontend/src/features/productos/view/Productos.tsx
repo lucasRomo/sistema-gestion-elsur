@@ -13,6 +13,7 @@ import { useProductos } from '../hooks/useProductos';
 import { actualizarPreciosMasivo, toggleStockVinculado, type ActualizarPreciosPayload } from '../services/productoService';
 import type { Producto } from '../types/Producto';
 import { exportarProductosExcel, exportarProductosPDF } from '../utils/exportProductosUtils';
+import { ModalStockCriticoList, type ItemStockCritico } from '../../insumos/modals/ModalStockCriticoList';
 
 // Componentes y contextos compartidos globales
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
@@ -31,6 +32,7 @@ export const Productos: React.FC = () => {
   const [showRecetaModal, setShowRecetaModal] = useState(false);
   const [showRecetasGlobalModal, setShowRecetasGlobalModal] = useState(false);
   const [showMermasModal, setShowMermasModal] = useState(false);
+  const [showStockCriticoModal, setShowStockCriticoModal] = useState(false);
   
   const [productoEditando, setProductoEditando] = useState<Producto | null>(null);
   const [productoSeleccionadoReceta, setProductoSeleccionadoReceta] = useState<Producto | null>(null);
@@ -50,6 +52,20 @@ export const Productos: React.FC = () => {
     return cumpleNombre && cumpleEstado;
   });
 
+  // Mapeo seguro de productos al formato genérico del modal
+  const itemsStockCritico: ItemStockCritico[] = productos.map((p: any) => ({
+    id: p.idProducto || p.id || p.nombreProducto,
+    nombre: p.nombreProducto || p.nombre || 'Producto',
+    stockActual: p.stockActual ?? p.stock ?? p.cantidad ?? 0,
+    stockMinimoOTolerancia: p.stockMinimo ?? p.tolerancia ?? p.stockMinimoTolerado ?? 5,
+    unidadMedida: p.unidadMedida || 'unid'
+  }));
+
+  // Conteo de items críticos o a 5 o menos unidades del límite
+  const cantidadCriticos = itemsStockCritico.filter(
+    (item) => item.stockActual <= item.stockMinimoOTolerancia + 5
+  ).length;
+
   const handleAplicarAumentoMasivo = async (data: ActualizarPreciosPayload) => {
     await actualizarPreciosMasivo(data);
     await cargar();
@@ -59,32 +75,30 @@ export const Productos: React.FC = () => {
   };
 
   const handleToggleVinculo = async (producto: Producto) => {
-  if (!producto.idProducto) return;
-  if (!producto.stockVinculado) {
-    try {
-      const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`);
-      if (res.ok) {
-        const recetaData = await res.json();
-        
-        if (!recetaData || recetaData.length === 0) {
-          setProductoSinReceta(producto);
-          setShowSinRecetaModal(true);
-          return; 
+    if (!producto.idProducto) return;
+    if (!producto.stockVinculado) {
+      try {
+        const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`);
+        if (res.ok) {
+          const recetaData = await res.json();
+          
+          if (!recetaData || recetaData.length === 0) {
+            setProductoSinReceta(producto);
+            setShowSinRecetaModal(true);
+            return; 
+          }
         }
+      } catch (err) {
+        console.error("Error al verificar la receta del producto:", err);
       }
-    } catch (err) {
-      console.error("Error al verificar la receta del producto:", err);
     }
-  }
-  try {
-    await toggleStockVinculado(producto.idProducto);
-    await cargar();
-  } catch (err) {
-    console.error("Error al cambiar estado de vínculo de stock:", err);
-  }
+    try {
+      await toggleStockVinculado(producto.idProducto);
+      await cargar();
+    } catch (err) {
+      console.error("Error al cambiar estado de vínculo de stock:", err);
+    }
   };
-
-
 
   return (
     <div className="container-fluid px-0">
@@ -116,50 +130,74 @@ export const Productos: React.FC = () => {
         onToggleStockVinculado={handleToggleVinculo}
       />
 
-      {/* Botonera Inferior: Volver + Exportaciones + Acciones de Productos */}
-      <div className={`d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
-        <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-4 py-2 fw-semibold" style={{ color: '#ffffff' }}>
+     {/* Botonera Inferior: Volver + Exportaciones + Stock Crítico + Acciones de Productos */}
+      <div className={`d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-2 ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
+        <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-3 py-2 fw-semibold" style={{ color: '#ffffff' }}>
           Volver
         </button>
 
-        <div className="d-flex flex-wrap gap-2">
+        <div className="d-flex flex-wrap gap-2 align-items-center">
+          {/* BOTÓN STOCK CRÍTICO */}
           <button 
-            className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
+            type="button"
+            className="btn btn-outline-warning fw-bold d-flex align-items-center gap-2 position-relative px-3 py-2"
+            onClick={() => setShowStockCriticoModal(true)}
+            title="Ver productos con stock al límite o crítico"
+          >
+            <i className="bi bi-exclamation-triangle-fill fs-6"></i>
+            Stock Crítico
+            {cantidadCriticos > 0 && (
+              <span className="badge bg-danger rounded-pill ms-1">
+                {cantidadCriticos}
+              </span>
+            )}
+          </button>
+
+          <button 
+            className="btn btn-outline-success fw-bold d-flex align-items-center gap-2 px-3 py-2"
             onClick={() => exportarProductosExcel(productosFiltrados)}
             disabled={productosFiltrados.length === 0}
             title="Exportar listado actual a Excel"
           >
-            <i className="bi bi-file-earmark-excel-fill fs-5"></i>
+            <i className="bi bi-file-earmark-excel-fill fs-6"></i>
             Exportar Excel
           </button>
 
           <button 
-            className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2"
+            className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2 px-3 py-2"
             onClick={() => exportarProductosPDF(productosFiltrados)}
             disabled={productosFiltrados.length === 0}
             title="Exportar listado actual a PDF"
           >
-            <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
+            <i className="bi bi-file-earmark-pdf-fill fs-6"></i>
             Exportar PDF
           </button>
 
-          <button className="btn px-4 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#eab308', color: '#000000' }} onClick={() => setShowMermasModal(true)}>
-            <i className="bi bi-box-seam-fill me-2"></i>Mermas de Productos
+          <button className="btn px-3 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#eab308', color: '#ffffff' }} onClick={() => setShowMermasModal(true)}>
+            Mermas de Productos
           </button>
 
-          <button className="btn px-4 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#17a2b8', color: '#ffffff' }} onClick={() => setShowAumentoModal(true)}>
+          <button className="btn px-3 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#17a2b8', color: '#ffffff' }} onClick={() => setShowAumentoModal(true)}>
             Modificar Varios Precios
           </button>
 
-          <button className="btn px-4 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#6f42c1', color: '#ffffff' }} onClick={() => setShowRecetasGlobalModal(true)}>
+          <button className="btn px-3 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#6f42c1', color: '#ffffff' }} onClick={() => setShowRecetasGlobalModal(true)}>
             Ver Productos con Receta
           </button>
 
-          <button className="btn px-4 py-2 fw-semibold shadow-sm" style={{ backgroundColor: '#156e45', color: '#ffffff' }} onClick={() => { setProductoEditando(null); setShowModal(true); }}>
+          <button className="btn px-3 py-2 fw-semibold shadow-sm" style={{ backgroundColor: '#156e45', color: '#ffffff' }} onClick={() => { setProductoEditando(null); setShowModal(true); }}>
             Registrar Nuevo Producto
           </button>
         </div>
       </div>
+
+      {/* MODAL STOCK CRÍTICO */}
+      <ModalStockCriticoList
+        show={showStockCriticoModal}
+        titulo="Stock Crítico de Productos"
+        items={itemsStockCritico}
+        onClose={() => setShowStockCriticoModal(false)}
+      />
 
       <ProductoRegistroModal 
         show={showModal}
@@ -210,54 +248,54 @@ export const Productos: React.FC = () => {
         />
       )}
 
-    {showSinRecetaModal && (
-    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
-    <div className="modal-dialog modal-dialog-centered">
-      <div 
-        className="modal-content p-4 text-center shadow-lg font-monospace" 
-        style={{ 
-          border: '2px solid #ef4444', 
-          backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
-          color: isDark ? '#ffffff' : '#0f172a', 
-          borderRadius: '12px' 
-        }}
-      >
-        <i className="bi bi-exclamation-triangle-fill fs-1 text-danger mb-2"></i>
-        <h5 className="fw-bold text-danger">No se puede vincular el stock</h5>
-        <p className="small my-3" style={{ color: mutedText }}>
-          El producto <strong className="text-warning">"{productoSinReceta?.nombreProducto}"</strong> no tiene asignada ninguna receta ni insumos registrados. Configura su receta antes de vincular el stock.
-        </p>
-        
-        <div className="d-flex justify-content-center gap-2 mt-2">
-          <button 
-            className="btn btn-secondary btn-sm px-4 fw-semibold" 
-            onClick={() => {
-              setShowSinRecetaModal(false);
-              setProductoSinReceta(null);
-            }}
-          >
-            Cerrar
-          </button>
-          
-          <button 
-            className="btn btn-warning btn-sm px-4 fw-bold" 
-            onClick={() => {
-              const prod = productoSinReceta;
-              setShowSinRecetaModal(false);
-              setProductoSinReceta(null);
-              if (prod) {
-                setProductoSeleccionadoReceta(prod);
-                setShowRecetaModal(true);
-              }
-            }}
-          >
-            Configurar Receta
-          </button>
+      {showSinRecetaModal && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div 
+              className="modal-content p-4 text-center shadow-lg font-monospace" 
+              style={{ 
+                border: '2px solid #ef4444', 
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+                color: isDark ? '#ffffff' : '#0f172a', 
+                borderRadius: '12px' 
+              }}
+            >
+              <i className="bi bi-exclamation-triangle-fill fs-1 text-danger mb-2"></i>
+              <h5 className="fw-bold text-danger">No se puede vincular el stock</h5>
+              <p className="small my-3" style={{ color: mutedText }}>
+                El producto <strong className="text-warning">"{productoSinReceta?.nombreProducto}"</strong> no tiene asignada ninguna receta ni insumos registrados. Configura su receta antes de vincular el stock.
+              </p>
+              
+              <div className="d-flex justify-content-center gap-2 mt-2">
+                <button 
+                  className="btn btn-secondary btn-sm px-4 fw-semibold" 
+                  onClick={() => {
+                    setShowSinRecetaModal(false);
+                    setProductoSinReceta(null);
+                  }}
+                >
+                  Cerrar
+                </button>
+                
+                <button 
+                  className="btn btn-warning btn-sm px-4 fw-bold" 
+                  onClick={() => {
+                    const prod = productoSinReceta;
+                    setShowSinRecetaModal(false);
+                    setProductoSinReceta(null);
+                    if (prod) {
+                      setProductoSeleccionadoReceta(prod);
+                      setShowRecetaModal(true);
+                    }
+                  }}
+                >
+                  Configurar Receta
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-    </div>
-    )}
+      )}
 
       <ModalMermasProductos
         show={showMermasModal}

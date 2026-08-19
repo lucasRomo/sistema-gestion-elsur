@@ -48,8 +48,8 @@ export const ModalAvisoCuentaCorriente: React.FC<Props> = ({
           <div className="d-flex flex-column gap-2">
             <button 
               type="button" 
-              className="btn py-2 text-white fw-bold"
-              style={{ backgroundColor: '#2563eb', border: 'none', borderRadius: '6px' }}
+              className="btn py-2 fw-bold"
+              style={{ backgroundColor: '#2563eb', color:'#ffffff', border: 'none', borderRadius: '6px' }}
               onClick={onRevisarCuenta}
             >
               <i className="bi bi-wallet2 me-2"></i> Revisar Cuenta Corriente
@@ -57,8 +57,8 @@ export const ModalAvisoCuentaCorriente: React.FC<Props> = ({
 
             <button 
               type="button" 
-              className="btn py-2 text-white fw-bold"
-              style={{ backgroundColor: '#15803d', border: 'none', borderRadius: '6px' }}
+              className="btn py-2 fw-bold"
+              style={{ backgroundColor: '#15803d', color:'#ffffff', border: 'none', borderRadius: '6px' }}
               onClick={onAbonarPedido}
             >
               <i className="bi bi-cash-coin me-2"></i> Abonar Pedido
@@ -66,8 +66,8 @@ export const ModalAvisoCuentaCorriente: React.FC<Props> = ({
 
             <button 
               type="button" 
-              className="btn py-2 text-white fw-bold"
-              style={{ backgroundColor: '#dc2626', border: 'none', borderRadius: '6px' }}
+              className="btn py-2 fw-bold"
+              style={{ backgroundColor: '#dc2626', color:'#ffffff', border: 'none', borderRadius: '6px' }}
               onClick={onClose}
             >
               Cerrar ventana

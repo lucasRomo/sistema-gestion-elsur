@@ -101,9 +101,11 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
                         <td>{p.contactoNombre || '-'}</td>
                         <td className="text-info">{p.emailContacto || '-'}</td>
                         <td>
-                          <span className={`badge px-2 py-1 fw-semibold ${p.estado === 'Activo' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}`}>
-                            {p.estado}
-                          </span>
+                          <span className="px-2 py-1 rounded small fw-semibold" style={{ fontSize: '0.75rem', backgroundColor: p.estado === 'Activo' 
+                           ? (isDark ? 'rgba(34, 197, 94, 0.15)' : '#dcfce7') : (isDark ? 'rgba(239, 68, 68, 0.15)' : '#fee2e2'),
+                           color: p.estado === 'Activo' ? (isDark ? '#4ade80' : '#15803d') : (isDark ? '#f87171' : '#b91c1c'),
+                           border: `1px solid ${ p.estado === 'Activo' ? (isDark ? '#22c55e' : '#86efac') : (isDark ? '#ef4444' : '#fca5a5')}`
+                          }}> {p.estado} </span>
                         </td>
                       </tr>
                     ))
