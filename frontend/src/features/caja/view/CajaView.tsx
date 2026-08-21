@@ -5,6 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import { SidebarLayout } from '../../../components/layouts/SidebarLayout';
 import { useTurno } from '../../../Context/TurnoContext';
 import { useTheme } from '../../../Context/ThemeContext';
+import { exportarCajaExcel, exportarCajaPDF } from '../utils/ExportCajaUtils';
 
 import { useCaja } from '../hooks/useCaja';
 import { ModalNuevoIngreso } from '../components/ModalNuevoIngreso';
@@ -402,7 +403,7 @@ export const CajaView: React.FC = () => {
         <div className="row g-4 align-items-stretch mb-4">
           {/* Ampliado a col-lg-9 para expandir horizontalmente la tabla */}
           <div className="col-lg-9 d-flex flex-column">
-            <h5 className="mb-3 fw-semibold">Registro de Movimientos Manuales</h5>
+            <h5 className="mb-3 fw-semibold">Registro de Movimientos de Caja</h5>
             
             <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: tableWrapBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle, height: '315px' }}>
               <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapBg, height: '100%', overflowY: 'auto' }}>
@@ -555,29 +556,63 @@ export const CajaView: React.FC = () => {
           </div>
 
           {/* Ajustado a col-lg-3 para balancear el layout */}
-          <div className="col-lg-3 d-flex flex-column justify-content-start align-items-center gap-3 pt-0">
-            <h5 className="mb-3 fw-semibold align-self-start" style={{ visibility: 'hidden' }}>Acciones</h5>
-            
-            <button className="btn btn-success py-3 d-flex justify-content-between align-items-center fw-semibold px-4 w-100" style={{ fontSize: '1.1rem', maxWidth: '380px', borderRadius: '10px' }} disabled={!cajaAbierta} onClick={() => setIsModalOpen(true)}>
-              <span>Crear Nuevo Movimiento</span>
-              <i className="bi bi-plus-lg fs-4 ms-2"></i>
-            </button>
-            
-            <button 
-              className="btn py-3 d-flex justify-content-between align-items-center fw-semibold px-4" 
-              style={{ backgroundColor: '#6f42c1', color: '#ffffff', fontSize: '1.15rem', width: '380px', borderRadius: '10px' }} 
-              disabled={!cajaAbierta}
-              onClick={() => setShowModalCompraInsumos(true)}
-            >
-              <span>Compra de Insumos</span>
-              <i className="bi bi-truck fs-4 ms-2"></i>
-            </button>
-            
-            <button className="btn btn-dark py-3 d-flex justify-content-between align-items-center fw-semibold border-secondary text-light opacity-75 px-4 w-100" style={{ backgroundColor: '#2d2d30', fontSize: '1.1rem', maxWidth: '380px', borderRadius: '10px' }} disabled={!cajaAbierta}>
-              <span>Descargar PDF Caja</span>
-              <i className="bi bi-download fs-4 ms-2"></i>
-            </button>
-          </div>
+<div className="col-lg-3 d-flex flex-column justify-content-start align-items-stretch gap-4 pt-0">
+  <h5 className="mb-3 fw-semibold align-self-start" style={{ visibility: 'hidden' }}>Acciones</h5>
+
+  <button
+    className="btn btn-success py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
+    style={{ fontSize: '0.95rem', borderRadius: '8px' }}
+    disabled={!cajaAbierta}
+    onClick={() => setIsModalOpen(true)}
+  >
+    <span>Crear Nuevo Movimiento</span>
+    <i className="bi bi-plus-lg fs-5 ms-2"></i>
+  </button>
+
+  <button
+    className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
+    style={{ backgroundColor: '#6f42c1', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
+    disabled={!cajaAbierta}
+    onClick={() => setShowModalCompraInsumos(true)}
+  >
+    <span>Compra de Insumos</span>
+    <i className="bi bi-truck fs-5 ms-2"></i>
+  </button>
+
+  <button
+    className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
+    style={{ backgroundColor: '#0c500c', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
+    disabled={!cajaAbierta || movimientos.length === 0}
+    onClick={() =>
+      exportarCajaExcel(movimientos, {
+        montoInicial: turnoActual?.montoInicial || 0,
+        saldoCaja,
+        ingresosTurno,
+        egresosTurno,
+      })
+    }
+  >
+    <span>Descargar Excel de Caja</span>
+    <i className="bi bi-file-earmark-excel-fill fs-5 ms-2"></i>
+  </button>
+
+  <button
+    className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
+    style={{ backgroundColor: '#c0392b', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
+    disabled={!cajaAbierta || movimientos.length === 0}
+    onClick={() =>
+      exportarCajaPDF(movimientos, {
+        montoInicial: turnoActual?.montoInicial || 0,
+        saldoCaja,
+        ingresosTurno,
+        egresosTurno,
+      })
+    }
+  >
+    <span>Descargar PDF Caja</span>
+    <i className="bi bi-file-earmark-pdf-fill fs-5 ms-2"></i>
+  </button>
+</div>
         </div>
 
         <div className="d-flex flex-wrap gap-3 justify-content-center w-100 mt-5 pt-2 px-2 m-0 pb-3">
