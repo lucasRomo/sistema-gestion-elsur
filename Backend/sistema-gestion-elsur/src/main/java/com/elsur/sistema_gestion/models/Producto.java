@@ -22,7 +22,7 @@ public class Producto {
 
     @ManyToOne
     @JoinColumn(name = "id_categoria")
-    private Categoria categoria;
+    private CategoriaProducto categoria;
 
     @ManyToOne
     @JoinColumn(name = "id_maquina_necesaria")

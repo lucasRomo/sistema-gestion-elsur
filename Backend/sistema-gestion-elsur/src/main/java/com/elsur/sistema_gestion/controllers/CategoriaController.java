@@ -1,6 +1,6 @@
 package com.elsur.sistema_gestion.controllers;
 
-import com.elsur.sistema_gestion.models.Categoria;
+import com.elsur.sistema_gestion.models.CategoriaProducto;
 import com.elsur.sistema_gestion.repositories.CategoriaRepository;
 import com.elsur.sistema_gestion.services.CategoriaService;
 
@@ -18,12 +18,12 @@ public class CategoriaController {
     private CategoriaService categoriaService; // Ahora inyectamos el Service
 
     @GetMapping
-    public List<Categoria> listar() {
+    public List<CategoriaProducto> listar() {
         return categoriaService.listarTodas();
     }
 
     @PostMapping
-    public Categoria registrar(@RequestBody Categoria categoria) {
+    public CategoriaProducto registrar(@RequestBody CategoriaProducto categoria) {
         return categoriaService.guardar(categoria);
     }
 

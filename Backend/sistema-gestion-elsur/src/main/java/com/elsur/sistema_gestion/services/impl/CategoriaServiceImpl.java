@@ -1,6 +1,6 @@
 package com.elsur.sistema_gestion.services.impl;
 
-import com.elsur.sistema_gestion.models.Categoria;
+import com.elsur.sistema_gestion.models.CategoriaProducto;
 import com.elsur.sistema_gestion.repositories.CategoriaRepository;
 import com.elsur.sistema_gestion.services.CategoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +16,13 @@ public class CategoriaServiceImpl implements CategoriaService {
     private CategoriaRepository categoriaRepository;
 
     @Override
-    public List<Categoria> listarTodas() {
+    public List<CategoriaProducto> listarTodas() {
         return categoriaRepository.findAll();
     }
 
     @Override
     @Transactional
-    public Categoria guardar(Categoria categoria) {
+    public CategoriaProducto guardar(CategoriaProducto categoria) {
         if (categoria.getIdCategoria() == null && categoriaRepository.existsByNombreIgnoreCase(categoria.getNombre())) {
             throw new RuntimeException("La categoría '" + categoria.getNombre() + "' ya existe.");
         }
@@ -30,7 +30,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    public Categoria buscarPorId(Integer id) {
+    public CategoriaProducto buscarPorId(Integer id) {
         return categoriaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada con id: " + id));
     }

@@ -146,29 +146,57 @@ export const exportarCajaExcel = async (
 };
 
 
-export const exportarCajaPDF = (movimientos: MovimientoCaja[], resumen?: ResumenTurnoCaja) => {
+export const exportarCajaPDF = (
+  movimientos: MovimientoCaja[],
+  resumen?: ResumenTurnoCaja,
+  fechaDesde?: string,
+  fechaHasta?: string
+) => {
   const doc = new jsPDF('landscape');
 
-  doc.setFontSize(16);
-  doc.text('Reporte de Movimientos de Caja', 14, 15);
-  doc.setFontSize(10);
-  doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}`, 14, 22);
-  doc.text(`Total de registros: ${movimientos.length}`, 14, 27);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 14;
 
-  let startY = 32;
+  // 1. Cabecera superior (Banner Oscuro)
+  doc.setFillColor(24, 24, 27);
+  doc.rect(0, 0, pageWidth, 28, 'F');
 
+  // Título principal
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('INFORME DE MOVIMIENTOS DE CAJA', margin, 12);
+
+  // Subtítulos y metadatos
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(161, 161, 170);
+
+  const rangoTexto = fechaDesde && fechaHasta 
+    ? `Rango de datos: ${fechaDesde} al ${fechaHasta}` 
+    : `Total de registros: ${movimientos.length}`;
+
+  doc.text(rangoTexto, margin, 20);
+  doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, pageWidth - margin - 35, 20);
+
+  let startY = 36;
+
+  // 2. Resumen monetario del turno
   if (resumen) {
-    doc.text(
-      `Monto Inicial: $${Number(resumen.montoInicial ?? 0).toFixed(2)}   |   ` +
-      `Ingresos: $${Number(resumen.ingresosTurno ?? 0).toFixed(2)}   |   ` +
-      `Egresos: $${Number(resumen.egresosTurno ?? 0).toFixed(2)}   |   ` +
-      `Saldo Actual: $${Number(resumen.saldoCaja ?? 0).toFixed(2)}`,
-      14,
-      32
-    );
-    startY = 38;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(40, 40, 40);
+
+    const txtInicial = `Monto Inicial: $${Number(resumen.montoInicial ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+    const txtIngresos = `Ingresos: $${Number(resumen.ingresosTurno ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+    const txtEgresos = `Egresos: $${Number(resumen.egresosTurno ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+    const txtSaldo = `Saldo Actual: $${Number(resumen.saldoCaja ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+
+    doc.text(`${txtInicial}   |   ${txtIngresos}   |   ${txtEgresos}   |   ${txtSaldo}`, margin, startY);
+    startY += 8;
   }
 
+  // 3. Construcción de la tabla
   const tableColumn = [
     'ID',
     'Fecha/Hora',

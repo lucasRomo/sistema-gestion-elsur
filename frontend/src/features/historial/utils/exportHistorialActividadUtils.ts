@@ -85,15 +85,39 @@ export const exportarHistorialActividadExcel = async (actividades: RegistroActiv
   window.URL.revokeObjectURL(url);
 };
 
-export const exportarHistorialActividadPDF = (actividades: RegistroActividad[]) => {
+export const exportarHistorialActividadPDF = (
+  actividades: RegistroActividad[],
+  fechaDesde?: string,
+  fechaHasta?: string
+) => {
   const doc = new jsPDF('landscape');
 
-  doc.setFontSize(16);
-  doc.text('Reporte de Historial de Actividad', 14, 15);
-  doc.setFontSize(10);
-  doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}`, 14, 22);
-  doc.text(`Total de registros: ${actividades.length}`, 14, 27);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 14;
 
+  // 1. Cabecera superior (Banner Oscuro)
+  doc.setFillColor(24, 24, 27); // Fondo negro/gris oscuro
+  doc.rect(0, 0, pageWidth, 28, 'F');
+
+  // Título principal
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('INFORME DE HISTORIAL DE ACTIVIDAD', margin, 12);
+
+  // Subtítulos y metadatos
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(161, 161, 170); // Texto secundario claro
+
+  const rangoTexto = fechaDesde && fechaHasta 
+    ? `Rango de datos: ${fechaDesde} al ${fechaHasta}` 
+    : `Total de registros: ${actividades.length}`;
+
+  doc.text(rangoTexto, margin, 20);
+  doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, pageWidth - margin - 35, 20);
+
+  // 2. Construcción de la tabla
   const tableColumn = [
     'Fecha y Hora',
     'Usuario Responsable',
@@ -120,7 +144,7 @@ export const exportarHistorialActividadPDF = (actividades: RegistroActividad[]) 
   autoTable(doc, {
     head: [tableColumn],
     body: tableRows,
-    startY: 32,
+    startY: 34, // Desplazado para no solapar la cabecera
     styles: { fontSize: 8 },
     headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [245, 245, 245] },

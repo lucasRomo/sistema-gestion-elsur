@@ -68,15 +68,39 @@ export const exportarProveedoresExcel = async (proveedores: Proveedor[]) => {
   window.URL.revokeObjectURL(url);
 };
 
-export const exportarProveedoresPDF = (proveedores: Proveedor[]) => {
+export const exportarProveedoresPDF = (
+  proveedores: Proveedor[],
+  fechaDesde?: string,
+  fechaHasta?: string
+) => {
   const doc = new jsPDF('landscape');
 
-  doc.setFontSize(16);
-  doc.text('Reporte de Gestión de Proveedores', 14, 15);
-  doc.setFontSize(10);
-  doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}`, 14, 22);
-  doc.text(`Total de registros: ${proveedores.length}`, 14, 27);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 14;
 
+  // 1. Cabecera superior (Banner Oscuro)
+  doc.setFillColor(24, 24, 27);
+  doc.rect(0, 0, pageWidth, 28, 'F');
+
+  // Título principal
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('INFORME DE GESTIÓN DE PROVEEDORES', margin, 12);
+
+  // Subtítulos y metadatos
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(161, 161, 170);
+
+  const rangoTexto = fechaDesde && fechaHasta 
+    ? `Rango de datos: ${fechaDesde} al ${fechaHasta}` 
+    : `Total de registros: ${proveedores.length}`;
+
+  doc.text(rangoTexto, margin, 20);
+  doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, pageWidth - margin - 35, 20);
+
+  // 2. Construcción de la tabla
   const tableColumn = [
     'ID',
     'Nombre Comercial',
@@ -98,7 +122,7 @@ export const exportarProveedoresPDF = (proveedores: Proveedor[]) => {
   autoTable(doc, {
     head: [tableColumn],
     body: tableRows,
-    startY: 32,
+    startY: 34,
     styles: { fontSize: 8 },
     headStyles: { fillColor: [15, 118, 110], textColor: [255, 255, 255], fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [245, 245, 245] },
