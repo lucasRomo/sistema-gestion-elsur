@@ -41,7 +41,7 @@ export const ControlCharts: React.FC<ControlProps> = ({
             </div>
 
             {metricas.mermasPorPeriodo && metricas.mermasPorPeriodo.length > 0 ? (
-              <div style={{ height: '320px', width: '100%' }}>
+              <div style={{ height: '320px', width: '100%' }} data-chart-id="mermas_chart">
                 <InformeChartRenderer informe="mermas" data={metricas} esMismoDia={esMismoDia} />
               </div>
             ) : (
@@ -68,7 +68,7 @@ export const ControlCharts: React.FC<ControlProps> = ({
             </div>
 
             {incongruenciasArqueo && incongruenciasArqueo.length > 0 ? (
-              <div style={{ height: '320px', width: '100%' }}>
+              <div style={{ height: '320px', width: '100%' }} data-chart-id="incongruencias_chart">
                 <InformeChartRenderer informe="incongruencias" data={{ ...metricas, incongruenciasArqueo }} />
               </div>
             ) : (
@@ -95,7 +95,7 @@ export const ControlCharts: React.FC<ControlProps> = ({
             </div>
 
             {metricas.averiasPorPeriodo && metricas.averiasPorPeriodo.length > 0 ? (
-              <div style={{ height: '320px', width: '100%' }}>
+              <div style={{ height: '320px', width: '100%' }} data-chart-id="averias_chart">
                 <InformeChartRenderer informe="averias" data={metricas} esMismoDia={esMismoDia} />
               </div>
             ) : (

@@ -35,7 +35,7 @@ export const ClientesCharts: React.FC<ClientesProps> = ({ metricas, topClientes 
             </div>
 
             {topClientes && topClientes.length > 0 ? (
-              <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+              <div className="my-auto" style={{ height: '340px', width: '100%' }} data-chart-id="clientes_chart">
                 <InformeChartRenderer informe="clientes" data={{ ...metricas, topClientes }} />
               </div>
             ) : (
@@ -61,7 +61,7 @@ export const ClientesCharts: React.FC<ClientesProps> = ({ metricas, topClientes 
             </div>
 
             {metricas.topDeudores && metricas.topDeudores.length > 0 ? (
-              <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+              <div className="my-auto" style={{ height: '340px', width: '100%' }} data-chart-id="deudores_chart">
                 <InformeChartRenderer informe="deudores" data={metricas} />
               </div>
             ) : (
@@ -89,7 +89,7 @@ export const ClientesCharts: React.FC<ClientesProps> = ({ metricas, topClientes 
               </button>
             </div>
 
-            <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+            <div className="my-auto" style={{ height: '340px', width: '100%' }} data-chart-id="categorias_cliente_chart">
               <InformeChartRenderer informe="categoriasCliente" data={metricas} />
             </div>
           </div>

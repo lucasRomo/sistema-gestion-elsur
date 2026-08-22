@@ -19,6 +19,7 @@ import { OperacionesCharts } from '../charts/OperacionesCharts';
 import { ClientesCharts } from '../charts/ClientesCharts';
 import { ControlCharts } from '../charts/ControlCharts';
 import { InformeChartRenderer } from '../charts/InformeChartRenderer';
+import { exportarInformePDF } from '../utils/exportarPdfUtils';
 
 // Tipos y Utilidades
 import type {
@@ -71,15 +72,6 @@ export const InformesView: React.FC = () => {
 
   const [comparacionData, setComparacionData] = useState<ComparacionDataState | null>(null);
 
-  const usuarioLogueado = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem('usuario_logueado') || 'null');
-    } catch {
-      return null;
-    }
-  }, []);
-  const esAdmin = usuarioLogueado?.rol?.nombreRol?.toUpperCase() === 'ADMIN';
-
   const [metricas, setMetricas] = useState<any>({
     ventasTotales: 0,
     ticketsGenerados: 0,
@@ -99,6 +91,19 @@ export const InformesView: React.FC = () => {
     ventasPorCategoriaCliente: [],
     topClientes: []
   });
+
+  const handleExportarPDF = () => {
+    exportarInformePDF('area-informe-exportar', fechaDesde, fechaHasta, seccionActiva, metricas);
+  };
+
+  const usuarioLogueado = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('usuario_logueado') || 'null');
+    } catch {
+      return null;
+    }
+  }, []);
+  const esAdmin = usuarioLogueado?.rol?.nombreRol?.toUpperCase() === 'ADMIN';
 
   const procesarMetricas = (
     fDesde: string,
@@ -140,10 +145,10 @@ export const InformesView: React.FC = () => {
           pedidoService.obtenerTodos(),
           cajaService.obtenerTodos(),
           getProductos(),
-          fetch('http://localhost:8080/api/mermas') ,
-          fetch('http://localhost:8080/api/cuentas-corrientes/resumen-deudores') ,
-          cajaService.obtenerTodosLosTurnos() ,
-          fetch('http://localhost:8080/api/incidencias') ,
+          fetch('http://localhost:8080/api/mermas'),
+          fetch('http://localhost:8080/api/cuentas-corrientes/resumen-deudores'),
+          cajaService.obtenerTodosLosTurnos(),
+          fetch('http://localhost:8080/api/incidencias'),
           fetch('http://localhost:8080/api/categorias-cliente')
         ]);
 
@@ -184,7 +189,7 @@ export const InformesView: React.FC = () => {
         pedidoService.obtenerTodos(),
         cajaService.obtenerTodos(),
         fetch('http://localhost:8080/api/mermas'),
-        fetch('http://localhost:8080/api/cuentas-corrientes/resumen-deudores') ,
+        fetch('http://localhost:8080/api/cuentas-corrientes/resumen-deudores'),
         cajaService.obtenerTodosLosTurnos(),
         fetch('http://localhost:8080/api/incidencias'),
         fetch('http://localhost:8080/api/categorias-cliente') 
@@ -262,29 +267,29 @@ export const InformesView: React.FC = () => {
   };
 
   const obtenerNombreInforme = (informe: InformeComparacion | null): string => {
-  if (!informe) return '';
-  const nombres: Record<InformeComparacion, string> = {
-    ingresos: 'Evolución de Ingresos a Caja',
-    mediosPago: 'Tipos / Medios de Pago',
-    egresos: 'Egresos y Salidas de Caja Detallados',
-    estados: 'Distribución por Estados',
-    productos: 'Productos Más Vendidos',
-    categorias: 'Categorías Más Vendidas',
-    recaudacionEmpleados: 'Recaudación de Empleado por Pago Completado',
-    pedidosEmpleados: 'Pedidos Completados por Empleado',
-    pedidosdevueltosempleado: 'Pedidos Devueltos / Cancelados por Empleado',
-    clientes: 'Clientes Más Activos',
-    deudores: 'Clientes con más Deuda',
-    categoriasCliente: 'Ventas por Categoría de Cliente',
-    categoriasIngresos: 'Movimientos por Categorías de Ingresos',
-    categoriasEgresos: 'Movimientos por Categorías de Egresos',
-    tiempoPromedioPedido: 'Promedio de Tiempo de Finalizacion de Pedido',
-    tiempoMaximoEmpleado: 'Tiempo Maximo de Tardanza de Finalización de Empleado',
-    mermas: 'Registro de Mermas',
-    averias: 'Registro de Averías',
-    incongruencias: 'Incongruencias de Arqueo'
-  };
-  return nombres[informe] || '';
+    if (!informe) return '';
+    const nombres: Record<InformeComparacion, string> = {
+      ingresos: 'Evolución de Ingresos a Caja',
+      mediosPago: 'Tipos / Medios de Pago',
+      egresos: 'Egresos y Salidas de Caja Detallados',
+      estados: 'Distribución por Estados',
+      productos: 'Productos Más Vendidos',
+      categorias: 'Categorías Más Vendidas',
+      recaudacionEmpleados: 'Recaudación de Empleado por Pago Completado',
+      pedidosEmpleados: 'Pedidos Completados por Empleado',
+      pedidosdevueltosempleado: 'Pedidos Devueltos / Cancelados por Empleado',
+      clientes: 'Clientes Más Activos',
+      deudores: 'Clientes con más Deuda',
+      categoriasCliente: 'Ventas por Categoría de Cliente',
+      categoriasIngresos: 'Movimientos por Categorías de Ingresos',
+      categoriasEgresos: 'Movimientos por Categorías de Egresos',
+      tiempoPromedioPedido: 'Promedio de Tiempo de Finalizacion de Pedido',
+      tiempoMaximoEmpleado: 'Tiempo Maximo de Tardanza de Finalización de Empleado',
+      mermas: 'Registro de Mermas',
+      averias: 'Registro de Averías',
+      incongruencias: 'Incongruencias de Arqueo'
+    };
+    return nombres[informe] || '';
   };
 
   const abrirModalComparacion = (informe: InformeComparacion) => {
@@ -316,18 +321,17 @@ export const InformesView: React.FC = () => {
     const metricasAnteriores = procesarMetricas(antDesdeStr, antHastaStr, pedidosRaw, movimientosCaja, false);
 
     setComparacionData({
-    actual: {
-      ...metricasActuales,
-      incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, fechaDesdeInput, fechaHastaInput)
-    },
-    anterior: {
-      ...metricasAnteriores,
-      incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, antDesdeStr, antHastaStr)
-    },
-    periodoActual: { desde: fechaDesdeInput, hasta: fechaHastaInput },
-    periodoAnterior: { desde: antDesdeStr, hasta: antHastaStr }
-  });
-
+      actual: {
+        ...metricasActuales,
+        incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, fechaDesdeInput, fechaHastaInput)
+      },
+      anterior: {
+        ...metricasAnteriores,
+        incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, antDesdeStr, antHastaStr)
+      },
+      periodoActual: { desde: fechaDesdeInput, hasta: fechaHastaInput },
+      periodoAnterior: { desde: antDesdeStr, hasta: antHastaStr }
+    });
 
     setModalComparacionAbierto(true);
   };
@@ -358,18 +362,18 @@ export const InformesView: React.FC = () => {
       false
     );
 
-     setComparacionData({
-    actual: {
-      ...metricasActuales,
-      incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, modalFechaDesdeInput, modalFechaHastaInput) // 👈 agregar
-    },
-    anterior: {
-      ...metricasAnteriores,
-      incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, modalFechaDesdeCompInput, modalFechaHastaCompInput) // 👈 agregar
-    },
-    periodoActual: { desde: modalFechaDesdeInput, hasta: modalFechaHastaInput },
-    periodoAnterior: { desde: modalFechaDesdeCompInput, hasta: modalFechaHastaCompInput }
-  });
+    setComparacionData({
+      actual: {
+        ...metricasActuales,
+        incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, modalFechaDesdeInput, modalFechaHastaInput)
+      },
+      anterior: {
+        ...metricasAnteriores,
+        incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, modalFechaDesdeCompInput, modalFechaHastaCompInput)
+      },
+      periodoActual: { desde: modalFechaDesdeInput, hasta: modalFechaHastaInput },
+      periodoAnterior: { desde: modalFechaDesdeCompInput, hasta: modalFechaHastaCompInput }
+    });
   };
 
   const seleccionarTipoComparacion = (tipo: TipoComparacion) => {
@@ -543,13 +547,12 @@ export const InformesView: React.FC = () => {
           color: #fff;
         }
 
-        /* --- NUEVO: ESTILOS DE SCROLLBAR PARA GRÁFICOS --- */
         .im-chart-scroll {
           scrollbar-width: thin;
           scrollbar-color: #52525b transparent;
         }
         .im-chart-scroll::-webkit-scrollbar {
-          height: 8px; /* Alto del scroll horizontal */
+          height: 8px;
         }
         .im-chart-scroll::-webkit-scrollbar-track {
           background: transparent;
@@ -562,7 +565,6 @@ export const InformesView: React.FC = () => {
           background-color: #a1a1aa;
         }
 
-        /* Scrollbar vertical para las leyendas de los gráficos de torta */
         .recharts-legend-wrapper::-webkit-scrollbar {
           width: 6px;
         }
@@ -587,74 +589,96 @@ export const InformesView: React.FC = () => {
         handleSeleccionarEsteMes={handleSeleccionarEsteMes}
       />
 
-      {/* BOTÓN VOLVER AL MENÚ */}
+      {/* BARRA SUPERIOR DE SECCIÓN ACTIVA: BOTÓN VOLVER Y EXPORTAR PDF */}
       {seccionActiva !== 'MENU' && (
-        <div className="mb-4 d-flex align-items-center justify-content-between">
-          <button
-            onClick={() => setSeccionActiva('MENU')}
-            className="btn btn-volver btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-2 rounded-3"
-          >
-            <i className="bi bi-arrow-left"></i> Volver al Menú Principal
-          </button>
+        <div className="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div className="d-flex align-items-center gap-2">
+            <button
+              onClick={() => setSeccionActiva('MENU')}
+              className="btn btn-volver btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-2 rounded-3"
+            >
+              <i className="bi bi-arrow-left"></i> Volver al Menú Principal
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-sm btn fw-semibold px-3 py-2 rounded-3 d-flex align-items-center gap-2"
+              onClick={handleExportarPDF}
+              style={{
+              backgroundColor: '#6f42c1',
+              borderColor: '#6f42c1',
+              color: '#ffffff',
+              fontSize: '0.85rem',
+              paddingTop: '0.35rem',
+              paddingBottom: '0.35rem'
+            }}
+           >
+              <i className="bi bi-file-earmark-pdf"></i> Exportar PDF
+            </button>
+          </div>
+
           <span className="text-body-secondary small">
             Período: <strong>{fechaDesde}</strong> al <strong>{fechaHasta}</strong>
           </span>
         </div>
       )}
 
-      {/* MENÚ PRINCIPAL Y KPIs */}
-      {seccionActiva === 'MENU' && (
-        <>
-          <KpiCardsGrid kpiCards={kpiCards} />
+      {/* CONTENEDOR DE CAPTURA PDF */}
+      <div id="area-informe-exportar" className="d-block w-100">
+        {/* MENÚ PRINCIPAL Y KPIs */}
+        {seccionActiva === 'MENU' && (
+          <>
+            <KpiCardsGrid kpiCards={kpiCards} />
 
-          <ModuloMenuCards
-            seccionesMenu={seccionesMenu}
-            setSeccionActiva={setSeccionActiva}
-            esAdmin={esAdmin}
-            setShowModalRegistrosArqueo={setShowModalRegistrosArqueo}
+            <ModuloMenuCards
+              seccionesMenu={seccionesMenu}
+              setSeccionActiva={setSeccionActiva}
+              esAdmin={esAdmin}
+              setShowModalRegistrosArqueo={setShowModalRegistrosArqueo}
+            />
+          </>
+        )}
+
+        {/* SECCIONES Y GRÁFICOS */}
+        {seccionActiva === 'finanzas' && (
+          <FinanzasCharts
+            metricas={metricas}
+            esMismoDia={esMismoDia}
+            abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
           />
-        </>
-      )}
+        )}
 
-      {/* SECCIONES Y GRÁFICOS */}
-      {seccionActiva === 'finanzas' && (
-        <FinanzasCharts
-          metricas={metricas}
-          esMismoDia={esMismoDia}
-          abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
-        />
-      )}
+        {seccionActiva === 'ventas' && (
+          <VentasCharts
+            metricas={metricas}
+            abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+          />
+        )}
 
-      {seccionActiva === 'ventas' && (
-        <VentasCharts
-          metricas={metricas}
-          abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
-        />
-      )}
+        {seccionActiva === 'operaciones' && (
+          <OperacionesCharts
+            metricas={metricas}
+            abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+          />
+        )}
 
-      {seccionActiva === 'operaciones' && (
-        <OperacionesCharts
-          metricas={metricas}
-          abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
-        />
-      )}
+        {seccionActiva === 'clientes' && (
+          <ClientesCharts
+            metricas={metricas}
+            topClientes={topClientes}
+            abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+          />
+        )}
 
-      {seccionActiva === 'clientes' && (
-        <ClientesCharts
-          metricas={metricas}
-          topClientes={topClientes}
-          abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
-        />
-      )}
-
-      {seccionActiva === 'control' && (
-  <ControlCharts
-    metricas={metricas}
-    incongruenciasArqueo={incongruenciasArqueo}
-    esMismoDia={esMismoDia}
-    abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
-  />
-)}
+        {seccionActiva === 'control' && (
+          <ControlCharts
+            metricas={metricas}
+            incongruenciasArqueo={incongruenciasArqueo}
+            esMismoDia={esMismoDia}
+            abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+          />
+        )}
+      </div>
 
       {/* MODALES */}
       {showModalRegistrosArqueo && (
@@ -696,4 +720,5 @@ export const InformesView: React.FC = () => {
     </div>
   );
 };
+
 export default InformesView;

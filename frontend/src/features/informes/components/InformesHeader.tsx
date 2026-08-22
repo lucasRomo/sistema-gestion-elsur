@@ -19,7 +19,7 @@ export const InformesHeader: React.FC<InformesHeaderProps> = ({
   handleSeleccionarHoy,
   handleSeleccionarEstaSemana,
   handleSeleccionarEsteMes,
-  handleAnalizar,
+  handleAnalizar
 }) => {
   return (
     <div className="d-flex flex-column flex-lg-row align-items-center justify-content-between gap-3 p-3 mb-4 rounded-3 im-surface-head">
@@ -56,7 +56,7 @@ export const InformesHeader: React.FC<InformesHeaderProps> = ({
         Métricas e Informes
       </h2>
 
-      {/* 3. DERECHA: Fechas independientes + Botón separado */}
+      {/* 3. DERECHA: Fechas independientes + Botón Analizar */}
       <div className="d-flex align-items-center gap-2">
         <div className="d-flex align-items-center px-3 py-2 rounded-3 im-surface">
           <input

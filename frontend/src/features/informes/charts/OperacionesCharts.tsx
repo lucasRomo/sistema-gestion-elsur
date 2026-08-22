@@ -32,7 +32,7 @@ export const OperacionesCharts: React.FC<OperacionesProps> = ({ metricas, abrirM
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-            <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+            <div className="my-auto" style={{ height: '340px', width: '100%' }} data-chart-id="recaudacion_empleados_chart">
               <InformeChartRenderer informe="recaudacionEmpleados" data={metricas} />
             </div>
           </div>
@@ -53,7 +53,7 @@ export const OperacionesCharts: React.FC<OperacionesProps> = ({ metricas, abrirM
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-            <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+            <div className="my-auto" style={{ height: '340px', width: '100%' }} data-chart-id="pedidos_empleados_chart">
               <InformeChartRenderer informe="pedidosEmpleados" data={metricas} />
             </div>
           </div>
@@ -77,7 +77,7 @@ export const OperacionesCharts: React.FC<OperacionesProps> = ({ metricas, abrirM
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-            <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+            <div className="my-auto" style={{ height: '340px', width: '100%' }} data-chart-id="tiempo_promedio_chart">
               <InformeChartRenderer informe="tiempoPromedioPedido" data={metricas} />
             </div>
           </div>
@@ -98,7 +98,7 @@ export const OperacionesCharts: React.FC<OperacionesProps> = ({ metricas, abrirM
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-            <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+            <div className="my-auto" style={{ height: '340px', width: '100%' }} data-chart-id="tiempo_maximo_chart">
               <InformeChartRenderer informe="tiempoMaximoEmpleado" data={metricas} />
             </div>
           </div>
@@ -121,7 +121,7 @@ export const OperacionesCharts: React.FC<OperacionesProps> = ({ metricas, abrirM
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-            <div style={{ width: '100%', height: 320 }}>
+            <div style={{ width: '100%', height: 320 }} data-chart-id="pedidos_devueltos_chart">
               <InformeChartRenderer informe="pedidosdevueltosempleado" data={metricas} />
             </div>
           </div>

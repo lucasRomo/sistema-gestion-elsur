@@ -2,13 +2,14 @@ import React from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip as RechartsTooltip, ResponsiveContainer,
-  BarChart, Bar, PieChart, Pie, Cell, Legend
+  BarChart, Bar, PieChart, Pie, Cell, Legend, LabelList
 } from 'recharts';
 
 import type { TipoGraficoInforme } from '../types/informeTypes';
 import { ChartScrollWrapper } from './ChartScrollWrapper';
+import { crearRendererEtiquetasSinColision, formatearDinero, formatearCantidad } from './etiquetasPieSinColision';
+import { useTheme } from '../../../Context/ThemeContext';
 
-// Paleta de colores reutilizable para gráficos de torta
 export const COLORES_TORTA = [
   '#8e45e0', '#20c997', '#ffc107', '#0dcaf0', '#fd7e14',
   '#e83e8c', '#6f42c1', '#198754', '#d63384', '#0d6efd'
@@ -21,7 +22,8 @@ export interface InformeChartRendererProps {
   esMismoDia?: boolean;
 }
 
-// --- TOOLTIPS PERSONALIZADOS ---
+const labelDinero = ({ name, value }: any) => `${name}: $${Number(value || 0).toLocaleString('es-AR')}`;
+const labelCantidad = ({ name, value }: any) => `${name}: ${value}`;
 
 const CustomAreaTooltip = ({ active, payload, label, esMismoDia }: any) => {
   if (active && payload && payload.length) {
@@ -228,6 +230,9 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 }) => {
   if (!data || !informe) return null;
 
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const colorBase = esAnterior ? '#71717a' : '#8e45e0';
 
   switch (informe) {
@@ -263,9 +268,16 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'mediosPago':
       return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={360}>
           <PieChart>
-            <Pie data={data.distribucionMediosPago} cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none">
+            <Pie 
+              data={data.distribucionMediosPago} 
+              cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none"
+              label={crearRendererEtiquetasSinColision(data.distribucionMediosPago, formatearDinero, isDark)}
+              labelLine={false}
+              fontSize={12}
+              fontWeight="bold"
+            >
               {data.distribucionMediosPago?.map((_: any, index: number) => (
                 <Cell key={`cell-pago-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
               ))}
@@ -280,12 +292,14 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
       return (
         <ChartScrollWrapper cantidadItems={data.detalleEgresos?.length || 0} anchoPorItem={70} height="100%">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data.detalleEgresos} margin={{ top: 10, right: 30, left: 20, bottom: 10 }} barSize={35}>
+            <BarChart data={data.detalleEgresos} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
               <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} dy={10} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val / 1000 + 'k' : val}`} />
               <RechartsTooltip cursor={false} content={<CustomEgresoTooltip esMismoDia={esMismoDia} />} />
-              <Bar dataKey="monto" fill={esAnterior ? '#71717a' : '#e22e2e'} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="monto" fill={esAnterior ? '#71717a' : '#e22e2e'} radius={[6, 6, 0, 0]}>
+                <LabelList dataKey="monto" position="top" fill="#a1a1aa" fontSize={14} fontWeight="bold" formatter={(val: any) => `$${Number(val || 0).toLocaleString('es-AR')}`} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartScrollWrapper>
@@ -293,9 +307,15 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'estados':
       return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={360}>
           <PieChart>
-            <Pie data={data.distribucionEstados} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none">
+            <Pie 
+              data={data.distribucionEstados} 
+              cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none"
+              label={crearRendererEtiquetasSinColision(data.distribucionEstados, formatearCantidad, isDark)}
+              labelLine={false}
+              fontWeight="bold"
+            >
               {data.distribucionEstados?.map((_: any, index: number) => (
                 <Cell key={`cell-estado-${index}`} fill={COLORES_TORTA[(index + 2) % COLORES_TORTA.length]} />
               ))}
@@ -308,9 +328,16 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'productos':
       return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={360}>
           <PieChart>
-            <Pie data={data.productosMasVendidos} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none">
+            <Pie 
+              data={data.productosMasVendidos} 
+              cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none"
+              label={crearRendererEtiquetasSinColision(data.productosMasVendidos, formatearCantidad, isDark)}
+              labelLine={false}
+              fontSize={12}
+              fontWeight="bold"
+            >
               {data.productosMasVendidos?.map((_: any, index: number) => (
                 <Cell key={`cell-prod-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
               ))}
@@ -344,7 +371,9 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <RechartsTooltip cursor={false} contentStyle={{ backgroundColor: '#18181b', borderColor: '#8e45e0', borderRadius: '8px', color: '#fff' }} />
-              <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#8e45e0'} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#8e45e0'} radius={[6, 6, 0, 0]}>
+                 <LabelList dataKey="ventas" position="top" fill="#a1a1aa" fontSize={14} fontWeight="bold" />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartScrollWrapper>
@@ -359,7 +388,9 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               <XAxis dataKey="name" stroke="#a1a1aa" tick={false} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val >= 1000 ? val / 1000 + 'k' : val}`} />
               <RechartsTooltip cursor={false} content={<CustomEmpleadoTooltip />} />
-              <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#0dcaf0'} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#0dcaf0'} radius={[6, 6, 0, 0]}>
+                 <LabelList dataKey="ventas" position="top" fill="#a1a1aa" fontSize={14} fontWeight="bold" formatter={(val: any) => `$${Number(val || 0).toLocaleString('es-AR')}`} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartScrollWrapper>
@@ -367,9 +398,16 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'pedidosEmpleados':
       return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={360}>
           <PieChart>
-            <Pie data={data.pedidosCompletadosPorEmpleado} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none">
+            <Pie 
+              data={data.pedidosCompletadosPorEmpleado} 
+              cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none"
+              label={crearRendererEtiquetasSinColision(data.pedidosCompletadosPorEmpleado, formatearCantidad, isDark)}
+              labelLine={false}
+              fontSize={12}
+              fontWeight="bold"
+            >
               {data.pedidosCompletadosPorEmpleado?.map((_: any, index: number) => (
                 <Cell key={`cell-emp-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
               ))}
@@ -382,9 +420,16 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'pedidosdevueltosempleado':
       return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={360}>
           <PieChart>
-            <Pie data={data.pedidosDevueltosPorEmpleado} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="value" stroke="none">
+            <Pie 
+              data={data.pedidosDevueltosPorEmpleado} 
+              cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none"
+              label={crearRendererEtiquetasSinColision(data.pedidosDevueltosPorEmpleado, formatearCantidad, isDark)}
+              labelLine={false}
+              fontSize={12}
+              fontWeight="bold"
+            >
               {data.pedidosDevueltosPorEmpleado?.map((entry: any, index: number) => (
                 <Cell key={`cell-dev-${index}`} fill={entry.color || COLORES_TORTA[index % COLORES_TORTA.length]} />
               ))}
@@ -404,7 +449,9 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}m`} />
               <RechartsTooltip cursor={false} content={<CustomTiempoTooltip titulo="Máximo" />} />
-              <Bar dataKey="valor" fill={esAnterior ? '#71717a' : '#ffc107'} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="valor" fill={esAnterior ? '#71717a' : '#ffc107'} radius={[6, 6, 0, 0]}>
+                 <LabelList dataKey="valor" position="top" fill="#a1a1aa" fontSize={14} fontWeight="bold" formatter={(val: any) => `${val}m`} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartScrollWrapper>
@@ -419,7 +466,9 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}m`} />
               <RechartsTooltip cursor={false} content={<CustomTiempoTooltip titulo="Promedio" />} />
-              <Bar dataKey="valor" fill={esAnterior ? '#71717a' : '#b66b09'} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="valor" fill={esAnterior ? '#71717a' : '#b66b09'} radius={[6, 6, 0, 0]}>
+                 <LabelList dataKey="valor" position="top" fill="#a1a1aa" fontSize={14} fontWeight="bold" formatter={(val: any) => `${val}m`} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartScrollWrapper>
@@ -427,9 +476,16 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'clientes':
       return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={360}>
           <PieChart>
-            <Pie data={data.topClientes} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="totalGastado" stroke="none">
+            <Pie 
+              data={data.topClientes} 
+              cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="totalGastado" stroke="none"
+              label={crearRendererEtiquetasSinColision(data.topClientes, formatearDinero, isDark)}
+              labelLine={false}
+              fontSize={12}
+              fontWeight="bold"
+            >
               {data.topClientes?.map((_: any, index: number) => (
                 <Cell key={`cell-cliente-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
               ))}
@@ -457,9 +513,16 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
       case 'deudores':
       return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={360}>
           <PieChart>
-            <Pie data={data.topDeudores} cx="50%" cy="45%" innerRadius={60} outerRadius={95} paddingAngle={5} dataKey="saldoDeudor" stroke="none">
+            <Pie 
+              data={data.topDeudores} 
+              cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="saldoDeudor" stroke="none"
+              label={crearRendererEtiquetasSinColision(data.topDeudores, formatearDinero, isDark)}
+              labelLine={false}
+              fontSize={12}
+              fontWeight="bold"
+            >
               {data.topDeudores?.map((_: any, index: number) => (
                 <Cell key={`cell-deudor-${index}`} fill={COLORES_TORTA[index % COLORES_TORTA.length]} />
               ))}
@@ -516,7 +579,9 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               return null;
             }}
           />
-          <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#20c997'} radius={[6, 6, 0, 0]} />
+          <Bar dataKey="ventas" fill={esAnterior ? '#71717a' : '#20c997'} radius={[6, 6, 0, 0]}>
+             <LabelList dataKey="ventas" position="top" fill="#a1a1aa" fontSize={14} fontWeight="bold" />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </ChartScrollWrapper>
@@ -526,7 +591,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
       return (
         <ChartScrollWrapper cantidadItems={data.mermasPorPeriodo?.length || 0} anchoPorItem={60} height="100%">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data.mermasPorPeriodo} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barSize={30}>
+            <BarChart data={data.mermasPorPeriodo} margin={{ top: 20, right: 20, left: 0, bottom: 10 }} barSize={30}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
               <XAxis
                 dataKey="ejeX"
@@ -538,7 +603,9 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
               />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <RechartsTooltip cursor={false} content={<CustomMermaTooltip esMismoDia={esMismoDia} />} />
-              <Bar dataKey="cantidad" fill={esAnterior ? '#71717a' : '#ffc107'} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="cantidad" fill={esAnterior ? '#71717a' : '#ffc107'} radius={[6, 6, 0, 0]}>
+                 <LabelList dataKey="cantidad" position="top" fill="#a1a1aa" fontSize={14} fontWeight="bold" />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartScrollWrapper>
@@ -548,12 +615,14 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
       return (
         <ChartScrollWrapper cantidadItems={data.averiasPorPeriodo?.length || 0} anchoPorItem={60} height="100%">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data.averiasPorPeriodo} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barSize={30}>
+            <BarChart data={data.averiasPorPeriodo} margin={{ top: 20, right: 20, left: 0, bottom: 10 }} barSize={30}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
               <XAxis dataKey="ejeX" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <RechartsTooltip cursor={false} content={<CustomAveriaTooltip esMismoDia={esMismoDia} />} />
-              <Bar dataKey="cantidad" fill={esAnterior ? '#71717a' : '#fd7e14'} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="cantidad" fill={esAnterior ? '#71717a' : '#fd7e14'} radius={[6, 6, 0, 0]}>
+                 <LabelList dataKey="cantidad" position="top" fill="#a1a1aa" fontSize={14} fontWeight="bold" />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartScrollWrapper>
@@ -563,12 +632,14 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
       return (
         <ChartScrollWrapper cantidadItems={data.incongruenciasArqueo?.length || 0} anchoPorItem={90} height="100%">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data.incongruenciasArqueo} margin={{ top: 10, right: 20, left: 0, bottom: 10 }} barSize={30}>
+            <BarChart data={data.incongruenciasArqueo} margin={{ top: 20, right: 20, left: 0, bottom: 10 }} barSize={30}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
               <XAxis dataKey="empleado" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
               <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val}`} />
               <RechartsTooltip cursor={false} content={<CustomArqueoTooltip />} />
-              <Bar dataKey="montoDiferencia" fill={esAnterior ? '#71717a' : '#f43f5e'} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="montoDiferencia" fill={esAnterior ? '#71717a' : '#f43f5e'} radius={[6, 6, 0, 0]}>
+                 <LabelList dataKey="montoDiferencia" position="top" fill="#a1a1aa" fontSize={14} fontWeight="bold" formatter={(val: any) => `$${Number(val || 0).toLocaleString('es-AR')}`} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartScrollWrapper>
@@ -576,17 +647,15 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'categoriasIngresos':
       return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={360}>
           <PieChart>
             <Pie
               data={data.distribucionCategoriasIngreso}
-              cx="50%"
-              cy="45%"
-              innerRadius={60}
-              outerRadius={95}
-              paddingAngle={5}
-              dataKey="value"
-              stroke="none"
+              cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none"
+              label={crearRendererEtiquetasSinColision(data.distribucionCategoriasIngreso, formatearDinero, isDark)}
+              labelLine={false}
+              fontSize={12}
+              fontWeight="bold"
             >
               {data.distribucionCategoriasIngreso?.map((entry: any, index: number) => (
                 <Cell key={`cell-cat-ing-${index}`} fill={entry.color || COLORES_TORTA[index % COLORES_TORTA.length]} />
@@ -614,17 +683,15 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'categoriasEgresos':
       return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={360}>
           <PieChart>
             <Pie
               data={data.distribucionCategoriasEgreso}
-              cx="50%"
-              cy="45%"
-              innerRadius={60}
-              outerRadius={95}
-              paddingAngle={5}
-              dataKey="value"
-              stroke="none"
+              cx="50%" cy="45%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none"
+              label={crearRendererEtiquetasSinColision(data.distribucionCategoriasEgreso, formatearDinero, isDark)}
+              labelLine={false}
+              fontSize={12}
+              fontWeight="bold"
             >
               {data.distribucionCategoriasEgreso?.map((entry: any, index: number) => (
                 <Cell key={`cell-cat-egr-${index}`} fill={entry.color || COLORES_TORTA[(index + 2) % COLORES_TORTA.length]} />

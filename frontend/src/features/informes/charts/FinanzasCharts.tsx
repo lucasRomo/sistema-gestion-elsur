@@ -33,7 +33,7 @@ export const FinanzasCharts: React.FC<FinanzasProps> = ({ metricas, esMismoDia =
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-            <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+            <div className="my-auto" style={{ height: '340px', width: '100%' }} data-chart-id="ingresos_chart">
               <InformeChartRenderer informe="ingresos" data={metricas} esMismoDia={esMismoDia} />
             </div>
           </div>
@@ -55,7 +55,7 @@ export const FinanzasCharts: React.FC<FinanzasProps> = ({ metricas, esMismoDia =
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-            <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+            <div className="my-auto" style={{ height: '340px', width: '100%' }} data-chart-id="medios_pago_chart">
               <InformeChartRenderer informe="mediosPago" data={metricas} esMismoDia={esMismoDia} />
             </div>
           </div>
@@ -78,7 +78,7 @@ export const FinanzasCharts: React.FC<FinanzasProps> = ({ metricas, esMismoDia =
               </button>
             </div>
             {metricas.detalleEgresos && metricas.detalleEgresos.length > 0 ? (
-              <div style={{ height: '280px', width: '100%' }}>
+              <div style={{ height: '280px', width: '100%' }} data-chart-id="egresos_chart">
                 <InformeChartRenderer informe="egresos" data={metricas} esMismoDia={esMismoDia} />
               </div>
             ) : (
@@ -103,7 +103,7 @@ export const FinanzasCharts: React.FC<FinanzasProps> = ({ metricas, esMismoDia =
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-            <div className="my-auto" style={{ height: '300px', width: '100%' }}>
+            <div className="my-auto" style={{ height: '300px', width: '100%' }} data-chart-id="categorias_ingresos_chart">
               <InformeChartRenderer informe="categoriasIngresos" data={metricas} esMismoDia={esMismoDia} />
             </div>
           </div>
@@ -125,7 +125,7 @@ export const FinanzasCharts: React.FC<FinanzasProps> = ({ metricas, esMismoDia =
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-            <div className="my-auto" style={{ height: '300px', width: '100%' }}>
+            <div className="my-auto" style={{ height: '300px', width: '100%' }} data-chart-id="categorias_egresos_chart">
               <InformeChartRenderer informe="categoriasEgresos" data={metricas} esMismoDia={esMismoDia} />
             </div>
           </div>

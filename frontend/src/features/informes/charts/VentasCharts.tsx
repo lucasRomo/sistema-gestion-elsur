@@ -31,7 +31,7 @@ export const VentasCharts: React.FC<VentasProps> = ({ metricas, abrirModalCompar
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-            <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+            <div className="my-auto" style={{ height: '340px', width: '100%' }} data-chart-id="estados_chart">
               <InformeChartRenderer informe="estados" data={metricas} />
             </div>
           </div>
@@ -52,7 +52,7 @@ export const VentasCharts: React.FC<VentasProps> = ({ metricas, abrirModalCompar
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-            <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+            <div className="my-auto" style={{ height: '340px', width: '100%' }} data-chart-id="productos_chart">
               <InformeChartRenderer informe="productos" data={metricas} />
             </div>
           </div>
@@ -73,7 +73,7 @@ export const VentasCharts: React.FC<VentasProps> = ({ metricas, abrirModalCompar
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-            <div className="my-auto" style={{ height: '340px', width: '100%' }}>
+            <div className="my-auto" style={{ height: '340px', width: '100%' }} data-chart-id="categorias_chart">
               <InformeChartRenderer informe="categorias" data={metricas} />
             </div>
           </div>
