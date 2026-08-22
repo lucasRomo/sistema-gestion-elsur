@@ -30,7 +30,7 @@ export const InformesHeader: React.FC<InformesHeaderProps> = ({
           className="btn btn-outline-secondary border-secondary text-light fw-medium px-3 im-btn-period"
           onClick={handleSeleccionarHoy}
         >
-          Ayer
+          Hoy
         </button>
         <button 
           type="button" 
