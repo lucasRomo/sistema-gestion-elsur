@@ -26,20 +26,27 @@ export const useMatrizPermisos = () => {
 
   const fetchInicial = useCallback(async () => {
     try {
-      const [rolesData, permisosData, usuariosData] = await Promise.all([
+      const [rolesData, permisosData, usuariosData, idsActivosAdmin] = await Promise.all([
         matrizPermisosService.obtenerRoles(),
         matrizPermisosService.obtenerPermisos(),
-        matrizPermisosService.obtenerUsuarios()
+        matrizPermisosService.obtenerUsuarios(),
+        matrizPermisosService.obtenerPermisosPorRol(1) 
       ]);
 
       setRoles(rolesData);
       setUsuarios(usuariosData);
 
-      const permisosBase = permisosData.map((p: any) => ({
-        idPermiso: p.idPermiso,
-        nombrePermiso: p.nombrePermiso,
-        activo: false
-      }));
+      // 2. Mapeamos la lista de módulos activando los de ADMIN desde la primera carga
+      const permisosBase = permisosData.map((p: any) => {
+        const esProtegido = ['Matriz de Permisos', 'Configuración', 'Gestión de Usuarios'].includes(p.nombrePermiso);
+        
+        return {
+          idPermiso: p.idPermiso,
+          nombrePermiso: p.nombrePermiso,
+          activo: esProtegido ? true : idsActivosAdmin.includes(p.idPermiso)
+        };
+      });
+
       setModulos(permisosBase);
     } catch (error) {
       console.error('Error trayendo datos iniciales', error);
