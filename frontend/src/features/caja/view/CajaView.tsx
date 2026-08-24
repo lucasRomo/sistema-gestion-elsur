@@ -48,11 +48,14 @@ export const CajaView: React.FC = () => {
   const [showModalArqueo, setShowModalArqueo] = useState(false);
   const [showModalCompraInsumos, setShowModalCompraInsumos] = useState(false);
 
-  // Estados para tickets y comprobante de transferencia
+  // Estado para alertas/validaciones personalizadas
+  const [avisoModal, setAvisoModal] = useState<string | null>(null);
+
+  // Estados para tickets y comprobante
   const [ticketSeleccionado, setTicketSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [imagenComprobanteModal, setImagenComprobanteModal] = useState<string | null>(null);
 
-  // Estados para Modal de Ajuste / Corrección de Cobro
+  // Estados para Ajuste / Corrección
   const [movimientoAjuste, setMovimientoAjuste] = useState<any | null>(null);
   const [montoAjuste, setMontoAjuste] = useState('');
   const [tipoAjuste, setTipoAjuste] = useState<'INGRESO' | 'EGRESO'>('EGRESO');
@@ -103,7 +106,7 @@ export const CajaView: React.FC = () => {
     e.preventDefault();
     const monto = Number(montoInicialInput);
     if (isNaN(monto) || monto < 0) {
-      alert("Por favor, ingrese un monto inicial válido.");
+      setAvisoModal("Por favor, ingrese un monto inicial válido.");
       return;
     }
 
@@ -112,7 +115,7 @@ export const CajaView: React.FC = () => {
       await abrirCaja(monto);
       setShowModalApertura(false);
     } catch (error: any) {
-      alert("Error al abrir caja: " + error.message);
+      setAvisoModal("Error al abrir caja: " + error.message);
     } finally {
       setGuardandoApertura(false);
     }
@@ -132,7 +135,7 @@ export const CajaView: React.FC = () => {
       await guardarMovimiento(data);
       setIsModalOpen(false);
     } catch (error: any) {
-      alert("No se pudo guardar el movimiento: " + error.message);
+      setAvisoModal("No se pudo guardar el movimiento: " + error.message);
     }
   };
 
@@ -167,7 +170,7 @@ export const CajaView: React.FC = () => {
         movimiento: movimientoInsumo
       });
     } catch (error: any) {
-      alert("Error al registrar la compra: " + error.message);
+      setAvisoModal("Error al registrar la compra: " + error.message);
     }
   };
 
@@ -177,12 +180,12 @@ export const CajaView: React.FC = () => {
 
     const montoNum = Number(montoAjuste);
     if (isNaN(montoNum) || montoNum <= 0) {
-      alert("Por favor ingrese un monto válido mayor a 0.");
+      setAvisoModal("Por favor ingrese un monto válido mayor a 0.");
       return;
     }
 
     if (!motivoAjuste.trim()) {
-      alert("Por favor ingrese la razón o motivo del ajuste.");
+      setAvisoModal("Por favor ingrese la razón o motivo del ajuste.");
       return;
     }
 
@@ -202,7 +205,7 @@ export const CajaView: React.FC = () => {
       setMetodoPagoAjuste('EFECTIVO');
       setImagenAjuste(null);
     } catch (error: any) {
-      alert("Error al procesar la corrección: " + error.message);
+      setAvisoModal("Error al procesar la corrección: " + error.message);
     } finally {
       setGuardandoAjuste(false);
     }
@@ -210,7 +213,7 @@ export const CajaView: React.FC = () => {
 
   const handleAbrirCierreModal = async () => {
     if (!turnoActual) {
-      alert("No hay un turno activo para cerrar.");
+      setAvisoModal("No hay un turno activo para cerrar.");
       return;
     }
     try {
@@ -227,7 +230,7 @@ export const CajaView: React.FC = () => {
       const ok = await cerrarCaja(montoRealEfectivo, observaciones);
       return ok;
     } catch (error: any) {
-      alert("Error al cerrar caja: " + error.message);
+      setAvisoModal("Error al cerrar caja: " + error.message);
       return false;
     } finally {
       setGuardandoCierre(false);
@@ -399,9 +402,7 @@ export const CajaView: React.FC = () => {
           </div>
         </div>
 
-        {/* Sección de Movimientos y Acciones Ajustada */}
         <div className="row g-4 align-items-stretch mb-4">
-          {/* Ampliado a col-lg-9 para expandir horizontalmente la tabla */}
           <div className="col-lg-9 d-flex flex-column">
             <h5 className="mb-3 fw-semibold">Registro de Movimientos de Caja</h5>
             
@@ -411,7 +412,6 @@ export const CajaView: React.FC = () => {
   '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.075)', color: isDark ? '#fff' : 'inherit' } as React.CSSProperties}>
    <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
      <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
-       {/* 1. Nueva columna ID a la izquierda de Fecha/Hora */}
        <th style={{ width: '60px' }}>ID</th>
        <th style={{ width: '140px' }}>Fecha/Hora</th>
        <th style={{ width: '90px' }}>Monto</th>
@@ -439,7 +439,6 @@ export const CajaView: React.FC = () => {
 
          return (
            <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
-             {/* 1. Celda con el ID del Movimiento de Caja */}
              <td className="fw-bold opacity-75">
                #{m.id_movimiento || m.idMovimiento || '-'}
              </td>
@@ -454,7 +453,6 @@ export const CajaView: React.FC = () => {
              </td>
              <td>{renderBadgeCategoria(m, isDark)}</td>
              
-             {/* 2. Descripción configurada para expandir verticalmente cuando es larga */}
              <td>
                <div 
                  className="text-start" 
@@ -555,64 +553,63 @@ export const CajaView: React.FC = () => {
             </div>
           </div>
 
-          {/* Ajustado a col-lg-3 para balancear el layout */}
-<div className="col-lg-3 d-flex flex-column justify-content-start align-items-stretch gap-4 pt-0">
-  <h5 className="mb-3 fw-semibold align-self-start" style={{ visibility: 'hidden' }}>Acciones</h5>
+          <div className="col-lg-3 d-flex flex-column justify-content-start align-items-stretch gap-4 pt-0">
+            <h5 className="mb-3 fw-semibold align-self-start" style={{ visibility: 'hidden' }}>Acciones</h5>
 
-  <button
-    className="btn btn-success py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
-    style={{ fontSize: '0.95rem', borderRadius: '8px' }}
-    disabled={!cajaAbierta}
-    onClick={() => setIsModalOpen(true)}
-  >
-    <span>Crear Nuevo Movimiento</span>
-    <i className="bi bi-plus-lg fs-5 ms-2"></i>
-  </button>
+            <button
+              className="btn btn-success py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
+              style={{ fontSize: '0.95rem', borderRadius: '8px' }}
+              disabled={!cajaAbierta}
+              onClick={() => setIsModalOpen(true)}
+            >
+              <span>Crear Nuevo Movimiento</span>
+              <i className="bi bi-plus-lg fs-5 ms-2"></i>
+            </button>
 
-  <button
-    className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
-    style={{ backgroundColor: '#6f42c1', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
-    disabled={!cajaAbierta}
-    onClick={() => setShowModalCompraInsumos(true)}
-  >
-    <span>Compra de Insumos</span>
-    <i className="bi bi-truck fs-5 ms-2"></i>
-  </button>
+            <button
+              className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
+              style={{ backgroundColor: '#6f42c1', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
+              disabled={!cajaAbierta}
+              onClick={() => setShowModalCompraInsumos(true)}
+            >
+              <span>Compra de Insumos</span>
+              <i className="bi bi-truck fs-5 ms-2"></i>
+            </button>
 
-  <button
-    className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
-    style={{ backgroundColor: '#0c500c', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
-    disabled={!cajaAbierta || movimientos.length === 0}
-    onClick={() =>
-      exportarCajaExcel(movimientos, {
-        montoInicial: turnoActual?.montoInicial || 0,
-        saldoCaja,
-        ingresosTurno,
-        egresosTurno,
-      })
-    }
-  >
-    <span>Descargar Excel de Caja</span>
-    <i className="bi bi-file-earmark-excel-fill fs-5 ms-2"></i>
-  </button>
+            <button
+              className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
+              style={{ backgroundColor: '#0c500c', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
+              disabled={!cajaAbierta || movimientos.length === 0}
+              onClick={() =>
+                exportarCajaExcel(movimientos, {
+                  montoInicial: turnoActual?.montoInicial || 0,
+                  saldoCaja,
+                  ingresosTurno,
+                  egresosTurno,
+                })
+              }
+            >
+              <span>Descargar Excel de Caja</span>
+              <i className="bi bi-file-earmark-excel-fill fs-5 ms-2"></i>
+            </button>
 
-  <button
-    className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
-    style={{ backgroundColor: '#c0392b', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
-    disabled={!cajaAbierta || movimientos.length === 0}
-    onClick={() =>
-      exportarCajaPDF(movimientos, {
-        montoInicial: turnoActual?.montoInicial || 0,
-        saldoCaja,
-        ingresosTurno,
-        egresosTurno,
-      })
-    }
-  >
-    <span>Descargar PDF Caja</span>
-    <i className="bi bi-file-earmark-pdf-fill fs-5 ms-2"></i>
-  </button>
-</div>
+            <button
+              className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
+              style={{ backgroundColor: '#c0392b', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
+              disabled={!cajaAbierta || movimientos.length === 0}
+              onClick={() =>
+                exportarCajaPDF(movimientos, {
+                  montoInicial: turnoActual?.montoInicial || 0,
+                  saldoCaja,
+                  ingresosTurno,
+                  egresosTurno,
+                })
+              }
+            >
+              <span>Descargar PDF Caja</span>
+              <i className="bi bi-file-earmark-pdf-fill fs-5 ms-2"></i>
+            </button>
+          </div>
         </div>
 
         <div className="d-flex flex-wrap gap-3 justify-content-center w-100 mt-5 pt-2 px-2 m-0 pb-3">
@@ -651,7 +648,9 @@ export const CajaView: React.FC = () => {
                       type="number" step="0.01" min="0" id="montoInicial"
                       className={`form-control form-control-lg font-monospace ${isDark ? 'bg-dark text-white' : 'bg-light text-dark'} border-secondary`}
                       style={{ fontSize: '1.6rem', textAlign: 'center', color: '#10b981' }}
-                      value={montoInicialInput} onChange={(e) => setMontoInicialInput(e.target.value)}
+                      value={montoInicialInput} 
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => setMontoInicialInput(e.target.value)}
                       required autoFocus
                     />
                   </div>
@@ -718,6 +717,7 @@ export const CajaView: React.FC = () => {
                         min="0.01"
                         className={`form-control font-monospace ${isDark ? 'bg-dark text-white' : 'bg-light text-dark'} border-secondary`}
                         value={montoAjuste}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => setMontoAjuste(e.target.value)}
                         required
                       />
@@ -799,6 +799,30 @@ export const CajaView: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE VALIDACIÓN/AVISO GENERAL PARA CAJA */}
+      {avisoModal && (
+        <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1100 }} role="dialog">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className={`modal-content ${textColor} font-monospace`} style={{ backgroundColor: isDark ? '#18181b' : '#ffffff', border: `1px solid ${cardBorder}`, borderRadius: '12px' }}>
+              <div className="modal-header border-bottom border-secondary">
+                <h5 className="modal-title fw-bold text-warning d-flex align-items-center gap-2">
+                  <i className="bi bi-exclamation-triangle-fill"></i> Validación
+                </h5>
+                <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setAvisoModal(null)}></button>
+              </div>
+              <div className="modal-body py-4">
+                <p className="m-0 fs-6">{avisoModal}</p>
+              </div>
+              <div className="modal-footer border-top border-secondary">
+                <button type="button" className="btn btn-primary px-4 fw-bold" onClick={() => setAvisoModal(null)}>
+                  Entendido
+                </button>
+              </div>
             </div>
           </div>
         </div>

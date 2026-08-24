@@ -5,10 +5,9 @@ export interface MovimientoCaja {
   idMovimiento?: number;
   monto: number;
   tipoMovimiento: 'INGRESO' | 'EGRESO';
-  descripcion: string;
-  fecha: string;
-  metodoPago?: string;
   categoria?: string;
+  descripcion: string;
+  metodoPago?: string;
   comprobanteImagen?: string;
   comprobante?: string;
   imagenComprobante?: string;
@@ -16,27 +15,18 @@ export interface MovimientoCaja {
   imagen_comprobante?: string;
   urlComprobante?: string;
   url_comprobante?: string;
-  usuario?: any;
-  pedido?: any;
+  fecha: string;
+  usuario?: UsuarioCaja | string;
+  pedido?: {
+    idPedido?: number;
+    id_pedido?: number;
+  } | null;
 }
 
 export interface TotalesCaja {
   totalIngresos: number;
   totalEgresos: number;
   saldoActual: number;
-}
-
-export interface Turno {
-  idTurno: number;
-  usuario?: any;
-  fechaApertura: string;
-  fechaCierre?: string | null;
-  montoInicial: number;
-  montoEsperadoSistema?: number;
-  montoRealContado?: number;
-  diferenciaArqueo?: number;
-  observaciones?: string;
-  estado: 'ABIERTO' | 'CERRADO';
 }
 
 export interface DatosArqueo {
@@ -57,6 +47,31 @@ export interface NuevoMovimientoDTO {
   idPedido?: string | null;
   metodoPago?: string;
   comprobanteImagen?: string | null;
+}
+
+export interface UsuarioCaja {
+  idUsuario?: number;
+  id_usuario?: number;
+  nombre?: string;
+  apellido?: string;
+  first_name?: string;
+  last_name?: string;
+  nombreUsuario?: string;
+  nombre_usuario?: string;
+  username?: string;
+}
+
+export interface Turno {
+  idTurno: number;
+  usuario?: any;
+  fechaApertura: string;
+  fechaCierre?: string | null;
+  montoInicial: number;
+  montoEsperadoSistema?: number;
+  montoRealContado?: number;
+  diferenciaArqueo?: number;
+  observaciones?: string;
+  estado: 'ABIERTO' | 'CERRADO';
 }
 
 const API_BASE_URL = 'http://localhost:8080/api';

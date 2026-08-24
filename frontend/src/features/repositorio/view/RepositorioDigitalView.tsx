@@ -8,6 +8,7 @@ import { ModalAgregarDocumento } from '../modals/ModalAgregarDocumento';
 import { ModalCrearInstitucion } from '../modals/ModalCrearInstitucion';
 import { ModalCrearArea } from '../modals/ModalCrearArea';
 import { ModalPrevisualizar } from '../modals/ModalPrevisualizar';
+import { SuccesModal } from '../../../components/layouts/SuccesModal';
 
 export const RepositorioDigitalView: React.FC = () => {
   const { theme } = useTheme();
@@ -49,7 +50,14 @@ export const RepositorioDigitalView: React.FC = () => {
     setNombreAreaNueva,
     idInstParaArea,
     setIdInstParaArea,
-    handleEliminar,
+    cerrarModalNuevaInst,
+    cerrarModalNuevaArea,
+    solicitarEliminar,
+    confirmarEliminar,
+    mostrarConfirmarEliminar,
+    setMostrarConfirmarEliminar,
+    mostrarExitoEliminar,
+    setMostrarExitoEliminar,
     handleGuardarNuevo,
     handleCrearInstitucionRapida,
     handleCrearAreaRapida,
@@ -93,7 +101,7 @@ export const RepositorioDigitalView: React.FC = () => {
               cargando={cargando}
               documentoSeleccionado={documentoSeleccionado}
               onSelectDocumento={setDocumentoSeleccionado}
-              onEliminar={handleEliminar}
+              onEliminar={solicitarEliminar}
               getIconoArchivo={getIconoArchivo}
               isDarkMode={isDarkMode}
               cardBg={cardBg}
@@ -128,7 +136,7 @@ export const RepositorioDigitalView: React.FC = () => {
 
       <ModalCrearInstitucion
         show={modalNuevaInst}
-        onClose={() => setModalNuevaInst(false)}
+        onClose={cerrarModalNuevaInst}
         onSubmit={handleCrearInstitucionRapida}
         nombre={nombreInstNueva}
         setNombre={setNombreInstNueva}
@@ -143,7 +151,7 @@ export const RepositorioDigitalView: React.FC = () => {
 
       <ModalCrearArea
         show={modalNuevaArea}
-        onClose={() => setModalNuevaArea(false)}
+        onClose={cerrarModalNuevaArea}
         onSubmit={handleCrearAreaRapida}
         instituciones={instituciones}
         idInst={idInstParaArea}
@@ -164,6 +172,40 @@ export const RepositorioDigitalView: React.FC = () => {
         textColor={textColor}
         cardBg={cardBg}
         isDarkMode={isDarkMode}
+      />
+
+      {/* MODAL CONFIRMACIÓN DE ELIMINAR */}
+      {mostrarConfirmarEliminar && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
+          <div className="modal-dialog modal-dialog-centered modal-sm">
+            <div className="modal-content shadow-lg font-monospace text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #e22e2e', borderRadius: '12px' }}>
+              <div className="modal-body text-center py-3">
+                <div className="d-flex justify-content-center mb-3">
+                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', border: '2px solid #e22e2e' }}>
+                    <i className="bi bi-trash-fill text-danger" style={{ fontSize: '1.8rem' }}></i>
+                  </div>
+                </div>
+                <h6 className="fw-bold my-2 text-white">¿Deseas eliminar este archivo del repositorio?</h6>
+                <div className="d-flex justify-content-center gap-2 mt-4">
+                  <button type="button" className="btn btn-sm btn-secondary px-3 fw-semibold" onClick={() => setMostrarConfirmarEliminar(false)}>
+                    Cancelar
+                  </button>
+                  <button type="button" className="btn btn-sm btn-danger text-white px-3 fw-bold" onClick={confirmarEliminar}>
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL ÉXITO DE ELIMINAR */}
+      <SuccesModal
+        show={mostrarExitoEliminar}
+        title="¡Archivo Eliminado!"
+        message="El documento ha sido borrado del repositorio digital con éxito."
+        onClose={() => setMostrarExitoEliminar(false)}
       />
     </div>
   );

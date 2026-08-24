@@ -1,11 +1,11 @@
-// src/features/configuracion/view/ConfiguracionView.tsx
 import React from 'react';
-import { useTheme } from '../../../Context/ThemeContext'; // Ajustar ruta según estructura
+import { useTheme } from '../../../Context/ThemeContext';
 import { useConfiguracion } from '../hooks/useConfiguracion';
 import { AparienciaSection } from '../components/AparienciaSection';
 import { AjustesPerfilCard } from '../components/AjustesPerfilCard';
 import { RespaldoCard } from '../components/RespaldoCard';
 import { ConfirmarRestauracionModal } from '../components/ConfirmarRestauracionModal';
+import { ConfirmarAccionModal } from '../components/ConfirmarAccionModal';
 
 export const ConfiguracionView: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -68,6 +68,18 @@ export const ConfiguracionView: React.FC = () => {
           mutedTextColor={mutedTextColor}
           onClose={() => config.setMostrarModalConfirmacion(false)}
           onConfirm={config.ejecutarRestauracion}
+        />
+      )}
+
+      {config.modalConfirmacionPerfil?.mostrar && (
+        <ConfirmarAccionModal 
+          titulo={config.modalConfirmacionPerfil.titulo}
+          mensaje={config.modalConfirmacionPerfil.mensaje}
+          cardBg={cardBg}
+          textColor={textColor}
+          mutedTextColor={mutedTextColor}
+          onClose={() => config.setModalConfirmacionPerfil(null)}
+          onConfirm={config.modalConfirmacionPerfil.onConfirm}
         />
       )}
     </div>

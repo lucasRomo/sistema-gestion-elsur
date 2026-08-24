@@ -35,6 +35,12 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
 
   if (!show) return null;
 
+  const handleCancelar = () => {
+    setMostrarConfirmar(false);
+    setMostrarExito(false);
+    onClose();
+  };
+
   const handlePreSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setMostrarConfirmar(true);
@@ -67,7 +73,7 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
               <h6 className="fw-bold mb-0 text-info">
                 <i className="bi bi-building-gear me-2"></i>Nueva Institución
               </h6>
-              <button className={`btn-close ${isDarkMode ? 'btn-close-white' : ''}`} onClick={onClose}></button>
+              <button className={`btn-close ${isDarkMode ? 'btn-close-white' : ''}`} onClick={handleCancelar}></button>
             </div>
 
             <form onSubmit={handlePreSubmit}>
@@ -98,7 +104,7 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
                 </select>
               </div>
               <div className="d-flex justify-content-end gap-2">
-                <button type="button" className="btn btn-sm btn-danger text-white" onClick={onClose}>
+                <button type="button" className="btn btn-sm btn-danger text-white" onClick={handleCancelar}>
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn-sm btn-info fw-bold text-white" disabled={guardando}>

@@ -38,6 +38,12 @@ export const ModalCrearArea: React.FC<Props> = ({
 
   if (!show) return null;
 
+  const handleCancelar = () => {
+    setMostrarConfirmar(false);
+    setMostrarExito(false);
+    onClose();
+  };
+
   const handlePreSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setMostrarConfirmar(true);
@@ -70,7 +76,7 @@ export const ModalCrearArea: React.FC<Props> = ({
               <h6 className="fw-bold mb-0 text-warning">
                 <i className="bi bi-gear-fill me-2"></i>Nueva Cátedra / Área
               </h6>
-              <button className={`btn-close ${isDarkMode ? 'btn-close-white' : ''}`} onClick={onClose}></button>
+              <button className={`btn-close ${isDarkMode ? 'btn-close-white' : ''}`} onClick={handleCancelar}></button>
             </div>
 
             <form onSubmit={handlePreSubmit}>
@@ -86,7 +92,7 @@ export const ModalCrearArea: React.FC<Props> = ({
                   <option value="">-- Seleccionar Institución --</option>
                   {instituciones.map((inst) => (
                     <option key={inst.idInstitucion} value={inst.idInstitucion}>
-                      {inst.nombreInstitucion}
+                      {inst.nombreInstitucion}{inst.tipoInstitucion ? ` (${inst.tipoInstitucion})` : ''}
                     </option>
                   ))}
                 </select>
@@ -106,7 +112,7 @@ export const ModalCrearArea: React.FC<Props> = ({
               </div>
 
               <div className="d-flex justify-content-end gap-2">
-                <button type="button" className="btn btn-sm btn-danger text-white" onClick={onClose}>
+                <button type="button" className="btn btn-sm btn-danger text-white" onClick={handleCancelar}>
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn-sm btn-warning fw-bold text-white" disabled={guardando}>

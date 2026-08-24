@@ -1,3 +1,11 @@
+export interface UsuarioCaja {
+  idUsuario?: number;
+  id_usuario?: number;
+  nombre?: string;
+  apellido?: string;
+  username?: string;
+}
+
 export interface MovimientoCaja {
   id_movimiento?: number;
   idMovimiento?: number;
@@ -10,10 +18,11 @@ export interface MovimientoCaja {
   comprobante?: string;
   imagenComprobante?: string;
   fecha: string;
-  usuario?: {
-    idUsuario?: number;
-    id_usuario?: number;
-  };
+  // Antes era solo { idUsuario?; id_usuario? }. El backend a veces devuelve
+  // el usuario como string (nombre de usuario ya resuelto) y a veces como
+  // objeto completo, así que unificamos acá con UsuarioCaja | string para
+  // que coincida con lo que services/cajaService.ts espera.
+  usuario?: UsuarioCaja | string;
   pedido?: {
     idPedido?: number;
   } | null;
@@ -44,10 +53,15 @@ export interface NuevoMovimientoDTO {
   metodoPago?: string;
 }
 
-export interface UsuarioCaja {
-  idUsuario?: number;
-  id_usuario?: number;
-  nombre?: string;
-  apellido?: string;
-  username?: string;
+export interface Turno {
+  idTurno: number;
+  usuario?: UsuarioCaja | string;
+  fechaApertura: string;
+  fechaCierre?: string | null;
+  montoInicial: number;
+  montoEsperadoSistema?: number;
+  montoRealContado?: number;
+  diferenciaArqueo?: number;
+  observaciones?: string;
+  estado: 'ABIERTO' | 'CERRADO';
 }

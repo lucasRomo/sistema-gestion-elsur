@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class PedidoServiceImpl implements PedidoService {
@@ -325,7 +326,12 @@ public class PedidoServiceImpl implements PedidoService {
             .orElseThrow(() -> new RuntimeException("Comprobante no encontrado"));
 
         String urlArchivo = comprobante.getUrlArchivoComprobante();
-        
+
+        // Buscamos ANTES de tocar nada el MovimientoCaja que quedó con la
+        // misma imagen guardada (Caja guarda una copia propia de la url,
+        // no una referencia viva al comprobante).
+        MovimientoCaja movimientoAsociado = buscarMovimientoAsociado(comprobante, urlArchivo);
+
         if (urlArchivo != null && !urlArchivo.isEmpty()) {
             try {
                 String nombreArchivo = urlArchivo.replace("/uploads/", "");
@@ -339,7 +345,39 @@ public class PedidoServiceImpl implements PedidoService {
         comprobante.setUrlArchivoComprobante(null);
         comprobantePagoRepository.saveAndFlush(comprobante); 
 
+        // Sincronizamos Caja: si no la actualizamos acá, el movimiento
+        // se queda apuntando a un archivo que ya borramos del disco
+        // (por eso "se bugea" en la vista de Caja).
+        if (movimientoAsociado != null) {
+            movimientoAsociado.setComprobanteImagen(null);
+            cajaRepository.save(movimientoAsociado);
+        }
+
         return comprobante.getPedido();
+    }
+
+    /**
+     * Caja (MovimientoCaja) guarda su propia copia de la url del comprobante
+     * en lugar de referenciar al ComprobantePago, así que no hay una forma
+     * directa de saber qué movimiento corresponde a qué comprobante.
+     * La correlacionamos por pedido + monto + método de pago + la url que
+     * tenía guardada, que es lo mismo que se usó al crear ambos registros
+     * juntos (ver agregarPagoConArchivo / procesarYGuardarPedido).
+     */
+    private MovimientoCaja buscarMovimientoAsociado(ComprobantePago comprobante, String urlEsperada) {
+        if (comprobante.getPedido() == null || comprobante.getPedido().getId_pedido() == null) {
+            return null;
+        }
+
+        List<MovimientoCaja> movimientos = cajaRepository.buscarPorPedido(comprobante.getPedido().getId_pedido());
+
+        return movimientos.stream()
+            .filter(m -> m.getMonto() != null && comprobante.getMontoPago() != null
+                && m.getMonto().compareTo(comprobante.getMontoPago()) == 0)
+            .filter(m -> Objects.equals(m.getMetodoPago(), comprobante.getTipoPago()))
+            .filter(m -> Objects.equals(m.getComprobanteImagen(), urlEsperada))
+            .findFirst()
+            .orElse(null);
     }
 
     @Override
@@ -587,13 +625,26 @@ public class PedidoServiceImpl implements PedidoService {
     public Pedido asociarArchivoAComprobanteExistente(Integer idComprobante, MultipartFile comprobante) {
         ComprobantePago comprobantePago = comprobantePagoRepository.findById(idComprobante)
             .orElseThrow(() -> new RuntimeException("Comprobante no encontrado"));
-            
+
         if (comprobante != null && !comprobante.isEmpty()) {
+            // Guardamos la url "vieja" para poder encontrar el MovimientoCaja
+            // asociado ANTES de pisarla con la nueva.
+            String urlAnterior = comprobantePago.getUrlArchivoComprobante();
+
             String urlArchivo = guardarArchivoFisico(comprobante);
             comprobantePago.setUrlArchivoComprobante(urlArchivo);
             comprobantePagoRepository.save(comprobantePago);
+
+            // Sincronizamos Caja con el nuevo archivo vinculado; si no,
+            // el movimiento en Caja se queda sin comprobante aunque en
+            // Gestión de Comprobantes ya aparezca vinculado.
+            MovimientoCaja movimientoAsociado = buscarMovimientoAsociado(comprobantePago, urlAnterior);
+            if (movimientoAsociado != null) {
+                movimientoAsociado.setComprobanteImagen(urlArchivo);
+                cajaRepository.save(movimientoAsociado);
+            }
         }
-        
+
         return comprobantePago.getPedido();
     }
 

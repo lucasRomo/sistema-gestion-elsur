@@ -14,11 +14,16 @@ export const useRepositorioDigital = () => {
 
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState<DocumentoDigital | null>(null);
 
-  // Estados de Modales
+  // Modales Principales
   const [modalAgregar, setModalAgregar] = useState<boolean>(false);
   const [modalPrevisualizar, setModalPrevisualizar] = useState<boolean>(false);
   const [modalNuevaInst, setModalNuevaInst] = useState<boolean>(false);
   const [modalNuevaArea, setModalNuevaArea] = useState<boolean>(false);
+
+  // Modales Personalizados de Eliminar
+  const [idAEliminar, setIdAEliminar] = useState<number | null>(null);
+  const [mostrarConfirmarEliminar, setMostrarConfirmarEliminar] = useState<boolean>(false);
+  const [mostrarExitoEliminar, setMostrarExitoEliminar] = useState<boolean>(false);
 
   const [guardando, setGuardando] = useState(false);
 
@@ -73,19 +78,29 @@ export const useRepositorioDigital = () => {
     });
   }, [documentos, busqueda, filtroMateria, filtroInstitucion]);
 
-  const handleEliminar = async (e: React.MouseEvent, id: number) => {
+  // Manejo de Eliminación Lógica con Modal Personalizado
+  const solicitarEliminar = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
-    if (!window.confirm('¿Está seguro de eliminar de forma lógica este documento?')) return;
+    setIdAEliminar(id);
+    setMostrarConfirmarEliminar(true);
+  };
 
+  const confirmarEliminar = async () => {
+    if (!idAEliminar) return;
     try {
-      await repositorioService.eliminarDocumento(id);
-      const listaNueva = documentos.filter((d) => d.idDocumento !== id);
+      await repositorioService.eliminarDocumento(idAEliminar);
+      const listaNueva = documentos.filter((d) => d.idDocumento !== idAEliminar);
       setDocumentos(listaNueva);
-      if (documentoSeleccionado?.idDocumento === id) {
+      if (documentoSeleccionado?.idDocumento === idAEliminar) {
         setDocumentoSeleccionado(listaNueva[0] || null);
       }
+      setMostrarConfirmarEliminar(false);
+      setMostrarExitoEliminar(true);
     } catch (err) {
-      alert('Error al eliminar el documento');
+      console.error(err);
+      setMostrarConfirmarEliminar(false);
+    } finally {
+      setIdAEliminar(null);
     }
   };
 
@@ -96,11 +111,25 @@ export const useRepositorioDigital = () => {
       setDocumentos([nuevoDoc, ...documentos]);
       setDocumentoSeleccionado(nuevoDoc);
     } catch (err) {
-      alert('Error al registrar el archivo en el repositorio.');
+      console.error('Error al registrar el archivo:', err);
       throw err;
     } finally {
       setGuardando(false);
-    }};
+    }
+  };
+
+  // Reseteo de Formularios al Cerrar/Cancelar
+  const cerrarModalNuevaInst = () => {
+    setNombreInstNueva('');
+    setTipoInstNueva('Universidad');
+    setModalNuevaInst(false);
+  };
+
+  const cerrarModalNuevaArea = () => {
+    setNombreAreaNueva('');
+    setIdInstParaArea('');
+    setModalNuevaArea(false);
+  };
 
   const handleCrearInstitucionRapida = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -108,28 +137,34 @@ export const useRepositorioDigital = () => {
 
     try {
       const nueva = await repositorioService.crearInstitucion(nombreInstNueva, tipoInstNueva);
-      setInstituciones([...instituciones, nueva]);
-      setNombreInstNueva('');
+      setInstituciones((prev) => [...prev, nueva]);
+      cerrarModalNuevaInst();
     } catch (err) {
-      alert('Error al crear la institución.');
+      console.error('Error al crear institución:', err);
       throw err;
     }
   };
 
   const handleCrearAreaRapida = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!nombreAreaNueva.trim() || !idInstParaArea) {
-      alert('Seleccione la institución y el nombre de la cátedra/materia.');
-      return;
-    }
+    if (!nombreAreaNueva.trim() || !idInstParaArea) return;
 
     try {
       const nuevaArea = await repositorioService.crearArea(nombreAreaNueva, parseInt(idInstParaArea));
-      setAreas([...areas, nuevaArea]);
-      setNombreAreaNueva('');
-      setIdInstParaArea('');
+      const instEncontrada = instituciones.find((i) => i.idInstitucion === parseInt(idInstParaArea));
+
+      // Asocia el objeto completo de Institución para prevenir paréntesis vacíos ()
+      const areaCompleta: AreaCurso = {
+        ...nuevaArea,
+        institucion: (nuevaArea.institucion && nuevaArea.institucion.nombreInstitucion)
+          ? nuevaArea.institucion
+          : (instEncontrada || nuevaArea.institucion)
+      };
+
+      setAreas((prev) => [...prev, areaCompleta]);
+      cerrarModalNuevaArea();
     } catch (err) {
-      alert('Error al crear la cátedra/materia.');
+      console.error('Error al crear área:', err);
       throw err;
     }
   };
@@ -164,7 +199,14 @@ export const useRepositorioDigital = () => {
     setNombreAreaNueva,
     idInstParaArea,
     setIdInstParaArea,
-    handleEliminar,
+    cerrarModalNuevaInst,
+    cerrarModalNuevaArea,
+    solicitarEliminar,
+    confirmarEliminar,
+    mostrarConfirmarEliminar,
+    setMostrarConfirmarEliminar,
+    mostrarExitoEliminar,
+    setMostrarExitoEliminar,
     handleGuardarNuevo,
     handleCrearInstitucionRapida,
     handleCrearAreaRapida,

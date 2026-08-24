@@ -1,7 +1,28 @@
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { MovimientoCaja } from '../types/caja';
+
+// Tipo local y permisivo para lo que este módulo necesita.
+// Lo definimos acá en vez de importar `MovimientoCaja` de otro archivo porque
+// hoy conviven dos definiciones distintas de `MovimientoCaja` en el proyecto
+// (services/cajaService.ts y types/caja.ts) con `usuario` tipado de forma
+// diferente en cada una. Este tipo es compatible con ambas, así que
+// exportarCajaPDF/exportarCajaExcel funcionan sin importar cuál te llegue.
+export interface MovimientoCajaExport {
+  id_movimiento?: number;
+  idMovimiento?: number;
+  monto: number;
+  tipoMovimiento: 'INGRESO' | 'EGRESO';
+  categoria?: string;
+  descripcion: string;
+  metodoPago?: string;
+  fecha: string;
+  usuario?: unknown;
+  pedido?: {
+    idPedido?: number;
+    id_pedido?: number;
+  } | null;
+}
 
 export interface ResumenTurnoCaja {
   montoInicial?: number;
@@ -11,7 +32,7 @@ export interface ResumenTurnoCaja {
   fechaApertura?: string;
 }
 
-const obtenerNombreUsuario = (m: MovimientoCaja): string => {
+const obtenerNombreUsuario = (m: MovimientoCajaExport): string => {
   const u = m.usuario as any;
 
   if (u && typeof u === 'object') {
@@ -22,6 +43,10 @@ const obtenerNombreUsuario = (m: MovimientoCaja): string => {
     if (u.username) return u.username;
     if (u.nombre_usuario) return u.nombre_usuario;
     if (u.idUsuario || u.id_usuario) return `Usuario #${u.idUsuario ?? u.id_usuario}`;
+  }
+
+  if (typeof u === 'string' && u.trim()) {
+    return u.trim();
   }
 
   try {
@@ -44,20 +69,20 @@ const obtenerNombreUsuario = (m: MovimientoCaja): string => {
   return '-';
 };
 
-const obtenerPedidoTexto = (m: MovimientoCaja): string => {
-  const idPedido = m.pedido?.idPedido;
+const obtenerPedidoTexto = (m: MovimientoCajaExport): string => {
+  const idPedido = m.pedido?.idPedido ?? m.pedido?.id_pedido;
   if (idPedido) return `#${idPedido}`;
   if (m.descripcion?.includes('Pedido #')) return `#${m.descripcion.split('#')[1]?.trim()}`;
   return '-';
 };
 
-const obtenerIdMovimiento = (m: MovimientoCaja): string => {
+const obtenerIdMovimiento = (m: MovimientoCajaExport): string => {
   return `${m.id_movimiento ?? m.idMovimiento ?? '-'}`;
 };
 
 
 export const exportarCajaExcel = async (
-  movimientos: MovimientoCaja[],
+  movimientos: MovimientoCajaExport[],
   resumen?: ResumenTurnoCaja
 ) => {
   const workbook = new ExcelJS.Workbook();
@@ -147,7 +172,7 @@ export const exportarCajaExcel = async (
 
 
 export const exportarCajaPDF = (
-  movimientos: MovimientoCaja[],
+  movimientos: MovimientoCajaExport[],
   resumen?: ResumenTurnoCaja,
   fechaDesde?: string,
   fechaHasta?: string

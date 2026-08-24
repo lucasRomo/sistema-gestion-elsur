@@ -1,4 +1,3 @@
-// src/features/configuracion/hooks/useConfiguracion.ts
 import { useState, useEffect } from 'react';
 import { configuracionService } from '../services/configuracionService';
 import type { RespaldoLog } from '../services/configuracionService';
@@ -23,6 +22,14 @@ export const useConfiguracion = () => {
   const [mensajeEmail, setMensajeEmail] = useState<{ texto: string; tipo: 'error' | 'exito' } | null>(null);
   const [cargandoEmail, setCargandoEmail] = useState(false);
 
+  // Estado Modal de Confirmación para cambios de Perfil
+  const [modalConfirmacionPerfil, setModalConfirmacionPerfil] = useState<{
+    mostrar: boolean;
+    titulo: string;
+    mensaje: string;
+    onConfirm: () => void;
+  } | null>(null);
+
   // Estados Respaldos
   const [historialRespaldos, setHistorialRespaldos] = useState<RespaldoLog[]>([]);
   const [cargandoRespaldo, setCargandoRespaldo] = useState(false);
@@ -44,17 +51,10 @@ export const useConfiguracion = () => {
     }
   };
 
-  const handleCambiarPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMensajePass(null);
-    if (!passwords.actual || !passwords.nueva || !passwords.confirmar) {
-      setMensajePass({ texto: 'Por favor completa todos los campos.', tipo: 'error' });
-      return;
-    }
-    if (passwords.nueva !== passwords.confirmar) {
-      setMensajePass({ texto: 'Las nuevas contraseñas no coinciden.', tipo: 'error' });
-      return;
-    }
+  // --- EJECUCIONES Y HANDLERS DE PERFIL ---
+
+  const ejecutarCambioPassword = async () => {
+    setModalConfirmacionPerfil(null);
     setCargandoPass(true);
     try {
       const response = await configuracionService.cambiarPassword(usuario?.idUsuario || 1, token, passwords);
@@ -72,13 +72,28 @@ export const useConfiguracion = () => {
     }
   };
 
-  const handleCambiarUsuario = async (e: React.FormEvent) => {
+  const handleCambiarPassword = (e: React.FormEvent) => {
     e.preventDefault();
-    setMensajeUsuario(null);
-    if (!datosUsuario.actual.trim() || !datosUsuario.nuevo.trim()) {
-      setMensajeUsuario({ texto: 'Completa ambos campos de usuario.', tipo: 'error' });
+    setMensajePass(null);
+    if (!passwords.actual || !passwords.nueva || !passwords.confirmar) {
+      setMensajePass({ texto: 'Por favor completa todos los campos.', tipo: 'error' });
       return;
     }
+    if (passwords.nueva !== passwords.confirmar) {
+      setMensajePass({ texto: 'Las nuevas contraseñas no coinciden.', tipo: 'error' });
+      return;
+    }
+
+    setModalConfirmacionPerfil({
+      mostrar: true,
+      titulo: 'Confirmar Cambio de Contraseña',
+      mensaje: '¿Estás seguro de que deseas actualizar tu contraseña?',
+      onConfirm: ejecutarCambioPassword
+    });
+  };
+
+  const ejecutarCambioUsuario = async () => {
+    setModalConfirmacionPerfil(null);
     setCargandoUsuario(true);
     try {
       const response = await configuracionService.cambiarUsuario(usuario?.idUsuario || 1, token, datosUsuario);
@@ -100,13 +115,24 @@ export const useConfiguracion = () => {
     }
   };
 
-  const handleCambiarEmail = async (e: React.FormEvent) => {
+  const handleCambiarUsuario = (e: React.FormEvent) => {
     e.preventDefault();
-    setMensajeEmail(null);
-    if (!datosEmail.actual.trim() || !datosEmail.nuevo.trim() || !datosEmail.nuevo.includes('@')) {
-      setMensajeEmail({ texto: 'Ingresa un correo electrónico válido.', tipo: 'error' });
+    setMensajeUsuario(null);
+    if (!datosUsuario.actual.trim() || !datosUsuario.nuevo.trim()) {
+      setMensajeUsuario({ texto: 'Completa ambos campos de usuario.', tipo: 'error' });
       return;
     }
+
+    setModalConfirmacionPerfil({
+      mostrar: true,
+      titulo: 'Confirmar Cambio de Usuario',
+      mensaje: `¿Estás seguro de que deseas cambiar tu nombre de usuario a "${datosUsuario.nuevo}"?`,
+      onConfirm: ejecutarCambioUsuario
+    });
+  };
+
+  const ejecutarCambioEmail = async () => {
+    setModalConfirmacionPerfil(null);
     setCargandoEmail(true);
     try {
       const response = await configuracionService.cambiarEmail(usuario?.idUsuario || 1, token, datosEmail);
@@ -126,6 +152,22 @@ export const useConfiguracion = () => {
     } finally {
       setCargandoEmail(false);
     }
+  };
+
+  const handleCambiarEmail = (e: React.FormEvent) => {
+    e.preventDefault();
+    setMensajeEmail(null);
+    if (!datosEmail.actual.trim() || !datosEmail.nuevo.trim() || !datosEmail.nuevo.includes('@')) {
+      setMensajeEmail({ texto: 'Ingresa un correo electrónico válido.', tipo: 'error' });
+      return;
+    }
+
+    setModalConfirmacionPerfil({
+      mostrar: true,
+      titulo: 'Confirmar Cambio de Email',
+      mensaje: `¿Estás seguro de que deseas cambiar tu correo electrónico a "${datosEmail.nuevo}"?`,
+      onConfirm: ejecutarCambioEmail
+    });
   };
 
   const handleGenerarRespaldo = async () => {
@@ -201,6 +243,7 @@ export const useConfiguracion = () => {
     passwords, setPasswords, mensajePass, cargandoPass, handleCambiarPassword,
     datosUsuario, setDatosUsuario, mensajeUsuario, cargandoUsuario, handleCambiarUsuario,
     datosEmail, setDatosEmail, mensajeEmail, cargandoEmail, handleCambiarEmail,
+    modalConfirmacionPerfil, setModalConfirmacionPerfil,
     historialRespaldos, cargandoRespaldo, mensajeRespaldo, archivoSeleccionado, setArchivoSeleccionado,
     cargandoRestaurar, mostrarModalConfirmacion, setMostrarModalConfirmacion,
     handleGenerarRespaldo, handleDescargarRespaldoHistorial, handleEliminarRespaldo, ejecutarRestauracion

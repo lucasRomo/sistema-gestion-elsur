@@ -37,7 +37,6 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
   const [cantidadPaginas, setCantidadPaginas] = useState('');
   const [archivo, setArchivo] = useState<File | null>(null);
 
-  // Estados para sub-modales
   const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
 
@@ -45,10 +44,7 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
 
   const handlePreSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!archivo || !idArea || !titulo || !autor) {
-      alert('Por favor complete los campos obligatorios y seleccione un archivo.');
-      return;
-    }
+    if (!archivo || !idArea || !titulo || !autor) return;
     setMostrarConfirmar(true);
   };
 
@@ -74,7 +70,6 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
 
   const handleCerrarTodo = () => {
     setMostrarExito(false);
-    // Limpiar campos
     setTitulo('');
     setAutor('');
     setDescripcion('');
@@ -97,7 +92,7 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
               <h5 className="modal-title fw-bold">Registrar Archivo en Repositorio</h5>
               <button
                 className={`btn-close ${isDarkMode ? 'btn-close-white' : ''}`}
-                onClick={onClose}
+                onClick={handleCerrarTodo}
               ></button>
             </div>
 
@@ -140,14 +135,14 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
                       <option value="">-- Seleccionar Cátedra --</option>
                       {areas.map((a) => (
                         <option key={a.idArea} value={a.idArea}>
-                          {a.nombreArea} ({a.institucion?.nombreInstitucion})
+                          {a.nombreArea}{a.institucion?.nombreInstitucion ? ` (${a.institucion.nombreInstitucion})` : ''}
                         </option>
                       ))}
                     </select>
                     <button
                       type="button"
                       className="btn btn-outline-secondary"
-                      title="Administrar / Agregar Cátedra"
+                      title="Agregar Cátedra"
                       onClick={onAbrirNuevaArea}
                     >
                       <i className="bi bi-gear-fill"></i>
@@ -155,7 +150,7 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
                     <button
                       type="button"
                       className="btn btn-outline-info"
-                      title="Administrar / Agregar Institución"
+                      title="Agregar Institución"
                       onClick={onAbrirNuevaInst}
                     >
                       <i className="bi bi-building-add"></i>
@@ -178,7 +173,7 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
 
                 <div className="col-md-12">
                   <label className="form-label small text-secondary fw-bold">
-                    Cant. Páginas (Opcional - Se detecta automáticamente si es PDF)
+                    Cant. Páginas (Opcional)
                   </label>
                   <input
                     type="number"
@@ -224,9 +219,8 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
               <div className="d-flex justify-content-end gap-2 mt-4">
                 <button
                   type="button"
-                  className="btn btn-danger btn-sm px-3 fw-bold"
-                  style={{ color: '#ffffff' }}
-                  onClick={onClose}
+                  className="btn btn-danger btn-sm px-3 fw-bold text-white"
+                  onClick={handleCerrarTodo}
                 >
                   Cancelar
                 </button>
@@ -243,7 +237,6 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* --- SUB-MODAL CONFIRMACIÓN --- */}
       {mostrarConfirmar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
@@ -269,7 +262,6 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
         </div>
       )}
 
-      {/* --- SUB-MODAL ÉXITO --- */}
       {mostrarExito && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1085 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
