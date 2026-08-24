@@ -108,20 +108,20 @@ export const PedidoPendienteService = {
    * Asigna un empleado al pedido.
    */
   asignarEmpleado: async (idPedido: number, idEmpleado: string, idUsuario: number): Promise<any> => {
-    const response = await fetch(`${API_URL}/${idPedido}/asignar-empleado`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        idEmpleado,
-        idUsuario
-      })
-    });
+  const response = await fetch(`${API_URL}/${idPedido}/asignar-empleado`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      idEmpleado,
+      idUsuario
+    })
+  });
 
-    if (!response.ok) {
-      throw new Error("No se pudo asignar el empleado al pedido.");
-    }
-
-    return await response.json();
+  if (!response.ok) {
+    throw new Error("No se pudo asignar el empleado al pedido.");
+  }
+  const text = await response.text();
+  return text ? JSON.parse(text) : { success: true };
   },
 
   /**

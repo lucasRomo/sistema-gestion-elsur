@@ -118,7 +118,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                                           backgroundColor: '#0284c7', 
                                           color: '#ffffff', 
                                           border: '1px solid #0284c7', 
-                                          fontSize: '0.60rem' 
+                                          fontSize: '0.51rem' 
                                         }}
                                       >
                                         Total
@@ -130,7 +130,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                                           backgroundColor: '#15803d', 
                                           color: '#f7f7f7', 
                                           border: '1px solid #15803d', 
-                                          fontSize: '0.60rem' 
+                                          fontSize: '0.51rem' 
                                         }}
                                       >
                                         Seña Inicial
@@ -142,7 +142,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                                           backgroundColor: 'rgba(235, 162, 6, 0.9)', 
                                           color: '#f5f2f1', 
                                           border: '1px solid rgba(235, 162, 6, 0.9)', 
-                                          fontSize: '0.60rem' 
+                                          fontSize: '0.51rem' 
                                         }}
                                       >
                                         Pago Parcial

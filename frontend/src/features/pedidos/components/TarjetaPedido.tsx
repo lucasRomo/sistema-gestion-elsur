@@ -68,64 +68,145 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
     ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
     : (ultimaAsignacion?.empleado?.nombre ?? 'Sin Asignar');
 
-  const formatearFechaString = (fechaIso: string | null | undefined, incluirHora = true) => {
+  // HELPER REUTILIZABLE: Resta 3 horas incondicionalmente a cualquier fecha
+  const aplicarDesfaseTresHoras = (fechaStr: string | null | undefined): Date | null => {
+    if (!fechaStr) return null;
+    const d = new Date(fechaStr);
+    if (isNaN(d.getTime())) return null;
+    // Restamos 3 horas exactas (3 * 60 * 60 * 1000 ms)
+    return new Date(d.getTime() - (3 * 60 * 60 * 1000));
+  };
+
+  const formatearFechaString = (fechaIso: string | null | undefined, incluirHora = true, restar3hs = false) => {
     if (!fechaIso) return '-';
-    const [fecha, horaCompleta] = fechaIso.split('T');
-    if (!fecha) return fechaIso;
+    
+    let dateObj: Date | null = null;
+    if (restar3hs) {
+      dateObj = aplicarDesfaseTresHoras(fechaIso);
+    } else {
+      const d = new Date(fechaIso);
+      if (!isNaN(d.getTime())) dateObj = d;
+    }
 
-    const [anio, mes, dia] = fecha.split('-');
-    if (!horaCompleta || !incluirHora) return `${dia}/${mes}/${anio}`;
+    if (!dateObj) return fechaIso;
 
-    const [hhStr, mm] = horaCompleta.split('.')[0].split(':');
-    let hh = parseInt(hhStr, 10);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const dia = pad(dateObj.getDate());
+    const mes = pad(dateObj.getMonth() + 1);
+    const anio = dateObj.getFullYear();
+
+    if (!incluirHora) return `${dia}/${mes}/${anio}`;
+
+    let hh = dateObj.getHours();
+    const mm = pad(dateObj.getMinutes());
     const ampm = hh >= 12 ? 'p. m.' : 'a. m.';
     hh = hh % 12 || 12;
-    const hhFormat = hh < 10 ? `0${hh}` : `${hh}`;
+    const hhFormat = pad(hh);
 
     return `${dia}/${mes}/${anio}, ${hhFormat}:${mm} ${ampm}`;
   };
 
-  const formatearHoraOCorta = (fechaIso: string | null | undefined) => {
+  // Formateador dinámico y seguro que soporta la resta de 3hs
+  const formatearHoraOCorta = (fechaIso: string | null | undefined, restar3hs = false) => {
     if (!fechaIso) return '';
-    try {
-      const [fecha, horaCompleta] = fechaIso.split('T');
-      if (!fecha) return fechaIso;
-      const [anio, mes, dia] = fecha.split('-');
-      if (!horaCompleta) return `${dia}/${mes}/${anio.slice(2)}`;
-      const [hh, mm] = horaCompleta.split(':');
-      return `${dia}/${mes}/${anio.slice(2)} - ${hh}:${mm}`;
-    } catch {
-      return fechaIso;
+    
+    let dateObj: Date | null = null;
+    if (restar3hs) {
+      dateObj = aplicarDesfaseTresHoras(fechaIso);
+    } else {
+      const d = new Date(fechaIso);
+      if (!isNaN(d.getTime())) dateObj = d;
     }
+
+    if (!dateObj) return fechaIso;
+
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const dia = pad(dateObj.getDate());
+    const mes = pad(dateObj.getMonth() + 1);
+    const anio = String(dateObj.getFullYear()).slice(-2);
+    const hh = pad(dateObj.getHours());
+    const mm = pad(dateObj.getMinutes());
+
+    return `${dia}/${mes}/${anio} - ${hh}:${mm}`;
   };
 
-  const fechaCreacionRaw = p.fecha_creacion || p.fechaCreacion || ultimaAsignacion?.fecha_asignacion;
-  const fechaCreacionFormateada = formatearFechaString(fechaCreacionRaw, true);
-  const fechaEntregaFormateada = formatearFechaString(p.fecha_entrega_estimada, true);
+  const historialCompleto = p.historiales || p.historialEstadoPedidos || [];
+  const primerHistorialFecha = historialCompleto.length > 0
+    ? (historialCompleto[0].fecha_cambio || historialCompleto[0].fechaCambio)
+    : null;
+
+  const fechaCreacionRaw =
+    p.fecha_creacion ||
+    p.fechaCreacion ||
+    primerHistorialFecha ||
+    ultimaAsignacion?.fecha_asignacion;
+
+  // Aplicamos resta de 3 horas a la etiqueta de Fecha Creación general
+  const fechaCreacionFormateada = formatearFechaString(fechaCreacionRaw, true, true);
+  const fechaEntregaFormateada = formatearFechaString(p.fecha_entrega_estimada, true, false);
+
+  const parseToTimestamp = (dateStr: any): number => {
+    if (!dateStr) return 0;
+    if (dateStr instanceof Date) return dateStr.getTime();
+
+    if (typeof dateStr === 'object' && dateStr.seconds) {
+      return dateStr.seconds * 1000;
+    }
+
+    let ts = new Date(dateStr).getTime();
+
+    if (isNaN(ts) && typeof dateStr === 'string') {
+      const partes = dateStr.split(/[/ :,-]/);
+      if (partes.length >= 3) {
+        const dia = parseInt(partes[0], 10);
+        const mes = parseInt(partes[1], 10) - 1;
+        const anio = parseInt(partes[2], 10);
+        const hora = partes[3] ? parseInt(partes[3], 10) : 0;
+        const min = partes[4] ? parseInt(partes[4], 10) : 0;
+        const sec = partes[5] ? parseInt(partes[5], 10) : 0;
+        ts = new Date(anio, mes, dia, hora, min, sec).getTime();
+      }
+    }
+
+    return isNaN(ts) ? 0 : ts;
+  };
 
   const obtenerTimelineInteracciones = (): TimelineItem[] => {
     const items: TimelineItem[] = [];
 
-    // 1. Creación del Pedido
-    if (fechaCreacionRaw) {
-  items.push({
-    id: 'ev-creacion',
-    fechaRaw: fechaCreacionRaw,
-    fechaFormateada: formatearHoraOCorta(fechaCreacionRaw),
-    tipo: 'CREACION',
-    titulo: 'Pedido Creado',
-    subtitulo: `Estado: ${p.estado || 'PENDIENTE'}`
-  });
-}
-
-    // 2. Historial de Cambios de Estado / Asignaciones / Ubicación
     const historiales = p.historiales || p.historialEstadoPedidos || [];
+    const primerHistorial = historiales.length > 0 ? historiales[0] : null;
+    const estadoInicial = primerHistorial?.estado_anterior || primerHistorial?.estadoAnterior || 'PENDIENTE';
+
+    // 1. OBTENER PRIMER PAGO (Si existe)
+    const pagos = p.comprobantes || [];
+    const primerPago = pagos.length > 0 ? pagos[0] : null;
+    const montoPrimerPago = primerPago ? Number(primerPago.montoPago ?? primerPago.monto_pago ?? 0).toFixed(2) : null;
+
+    // 2. NODO 1 ESTÁTICO: Creación + Pago Inicial Unificados (Con resta obligatoria de 3 horas)
+    if (fechaCreacionRaw) {
+      const subtituloEstatico = `Estado Inicial: ${estadoInicial}`;
+      const tipoMetodo = primerPago?.tipoPago ? `\n(${primerPago.tipoPago})` : '';
+
+      items.push({
+        id: 'ev-creacion-estatica',
+        fechaRaw: fechaCreacionRaw,
+        // Pasamos `true` en el segundo argumento para forzar -3 horas
+        fechaFormateada: formatearHoraOCorta(fechaCreacionRaw, true), 
+        tipo: 'CREACION',
+        titulo: 'Pedido Creado',
+        subtitulo: subtituloEstatico,
+        monto: primerPago ? `+$${montoPrimerPago}${tipoMetodo}` : undefined
+      });
+    }
+
+    // 3. HISTORIAL DE CAMBIOS DE ESTADO / ASIGNACIONES / UBICACIÓN
     historiales.forEach((h: any, idx: number) => {
-      const f = h.fecha_cambio;
+      const f = h.fecha_cambio || h.fechaCambio || h.fecha;
       if (!f) return;
 
-      const estadoAnt = h.estado_anterior || 'PENDIENTE';
-      const estadoNue = h.estado_nuevo || 'MODIFICADO';
+      const estadoAnt = h.estado_anterior || h.estadoAnterior || 'PENDIENTE';
+      const estadoNue = h.estado_nuevo || h.estadoNuevo || 'MODIFICADO';
       const esCambioEmpleado = estadoAnt.startsWith('ASIGNADO:') || estadoNue.startsWith('ASIGNADO:');
       const esCambioUbicacion = estadoAnt.startsWith('UBICACION:') || estadoNue.startsWith('UBICACION:');
 
@@ -149,30 +230,30 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
       items.push({
         id: `ev-hist-${idx}`,
         fechaRaw: f,
-        fechaFormateada: formatearHoraOCorta(f),
+        fechaFormateada: formatearHoraOCorta(f, false),
         tipo: tipoEvento,
         titulo,
-        subtitulo: h.observaciones || undefined
+        subtitulo: h.observaciones || h.observacion || undefined
       });
     });
 
-    // 3. Pagos Registrados
-    const pagos = p.comprobantes || [];
-    pagos.forEach((pago: any, idx: number) => {
-      const f = pago.fechaCarga;
+    // 4. PAGOS POSTERIORES
+    const pagosPosteriores = pagos.slice(1);
+    pagosPosteriores.forEach((pago: any, idx: number) => {
+      const f = pago.fechaCarga || pago.fecha_carga || pago.fecha;
       if (!f) return;
-      const montoVal = Number(pago.montoPago ?? 0).toFixed(2);
+      const montoVal = Number(pago.montoPago ?? pago.monto_pago ?? 0).toFixed(2);
       items.push({
-        id: `ev-pago-${idx}`,
+        id: `ev-pago-${idx + 1}`,
         fechaRaw: f,
-        fechaFormateada: formatearHoraOCorta(f),
+        fechaFormateada: formatearHoraOCorta(f, false),
         tipo: 'PAGO',
         titulo: pago.tipoPago ? `Pago (${pago.tipoPago})` : 'Ingreso de Monto',  
         monto: `+$${montoVal}`
       });
     });
 
-    // 4. Mermas Registradas en el Pedido
+    // 5. MERMAS
     const mermas = p.mermas || [];
     mermas.forEach((merma: any, idx: number) => {
       const f = merma.fechaMerma || merma.fecha_merma || merma.fecha;
@@ -186,26 +267,20 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
       items.push({
         id: `ev-merma-${idx}`,
         fechaRaw: f,
-        fechaFormateada: formatearHoraOCorta(f),
+        fechaFormateada: formatearHoraOCorta(f, false),
         tipo: 'MERMA',
         titulo: `Merma: ${nombreItem}`,
         subtitulo: `Cantidad: ${merma.cantidad}${merma.motivo ? ` - ${merma.motivo}` : ''}`
       });
     });
 
-    // 5. Ubicación Actual (si aplica)
-    if (p.ubicacion_estante && p.ubicacion_estante !== 'Taller') {
-      items.push({
-        id: 'ev-ubic-actual',
-        fechaRaw: fechaCreacionRaw,
-        fechaFormateada: formatearHoraOCorta(fechaCreacionRaw),
-        tipo: 'UBICACION',
-        titulo: 'Ubicación Actual',
-        subtitulo: `➔ ${p.ubicacion_estante}`
-      });
-    }
+    // 6. ORDENAR EVENTOS
+    const nodoCreacion = items.find(i => i.id === 'ev-creacion-estatica');
+    const demasEventos = items.filter(i => i.id !== 'ev-creacion-estatica');
 
-    return items.sort((a, b) => new Date(a.fechaRaw).getTime() - new Date(b.fechaRaw).getTime());
+    demasEventos.sort((a, b) => parseToTimestamp(a.fechaRaw) - parseToTimestamp(b.fechaRaw));
+
+    return nodoCreacion ? [nodoCreacion, ...demasEventos] : demasEventos;
   };
 
   const timelineEvents = obtenerTimelineInteracciones();
@@ -347,22 +422,25 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
               </div>
 
               <div className="position-relative overflow-x-auto py-3">
-                {timelineEvents.length > 1 && (
-                  <div 
-                    className="position-absolute" 
-                    style={{ 
-                      height: '2px', 
-                      top: '49px', 
-                      left: '80px', 
-                      right: '80px', 
-                      backgroundColor: '#8b5cf6',
-                      boxShadow: '0 0 8px #8b5cf6',
-                      zIndex: 0 
-                    }} 
-                  />
-                )}
+                <div 
+                  className="d-flex justify-content-between align-items-start position-relative" 
+                  style={{ minWidth: `${Math.max(650, timelineEvents.length * 150)}px` }}
+                >
+                  {timelineEvents.length > 1 && (
+                    <div 
+                      className="position-absolute" 
+                      style={{ 
+                        height: '2px', 
+                        top: '33px', 
+                        left: '80px', 
+                        right: '80px', 
+                        backgroundColor: '#8b5cf6',
+                        boxShadow: '0 0 8px #8b5cf6',
+                        zIndex: 0 
+                      }} 
+                    />
+                  )}
 
-                <div className="d-flex justify-content-between align-items-start position-relative" style={{ minWidth: `${Math.max(650, timelineEvents.length * 150)}px` }}>
                   {timelineEvents.map((item) => {
                     const esMerma = item.tipo === 'MERMA';
                     const esPago = item.tipo === 'PAGO';
@@ -406,14 +484,21 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
                           )}
 
                           {item.monto && (
-                            <div className="badge font-monospace mt-1" style={{
-                              fontSize: '0.75rem',
-                              backgroundColor: '#059669',
-                              color: '#ffffff',
-                              border: '1px solid #10b981',
-                              whiteSpace: 'nowrap'
-                            }}>
-                              {item.monto}
+                            <div className="mt-2">
+                              <span 
+                                className="badge font-monospace d-inline-block text-center" 
+                                style={{
+                                  fontSize: '0.72rem',
+                                  backgroundColor: '#059669',
+                                  color: '#ffffff',
+                                  border: '1px solid #10b981',
+                                  padding: '4px 8px',
+                                  whiteSpace: 'pre-line',
+                                  lineHeight: '1.2'
+                                }}
+                              >
+                                {item.monto}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -533,29 +618,29 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
               </div>
 
               <div className="col-12 col-md-4">
-  <label className="text-muted small font-monospace mb-1">Modificación de Ubicación Actual:</label>
-  {p.estado === 'PRESUPUESTO' ? (
-    <span className="badge bg-black text-warning border border-warning-subtle font-monospace d-block py-2">
-      Cotización
-    </span>
-  ) : (
-    <input
-      type="text"
-      className={`form-control form-control-sm ${selectBg} text-warning border-warning-subtle font-monospace`}
-      value={ubicacionInput}
-      onChange={(e) => setUbicacionInput(e.target.value)}
-      onBlur={confirmarUbicacion}
-      onKeyDown={(e) => { 
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          confirmarUbicacion();
-        } 
-      }}
-      maxLength={20}
-      placeholder="Ej: Taller, Mostrador, Depósito..."
-    />
-  )}
-</div>
+                <label className="text-muted small font-monospace mb-1">Modificación de Ubicación Actual:</label>
+                {p.estado === 'PRESUPUESTO' ? (
+                  <span className="badge bg-black text-warning border border-warning-subtle font-monospace d-block py-2">
+                    Cotización
+                  </span>
+                ) : (
+                  <input
+                    type="text"
+                    className={`form-control form-control-sm ${selectBg} text-warning border-warning-subtle font-monospace`}
+                    value={ubicacionInput}
+                    onChange={(e) => setUbicacionInput(e.target.value)}
+                    onBlur={confirmarUbicacion}
+                    onKeyDown={(e) => { 
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        confirmarUbicacion();
+                      } 
+                    }}
+                    maxLength={20}
+                    placeholder="Ej: Taller, Mostrador, Depósito..."
+                  />
+                )}
+              </div>
             </div>
 
           </div>
