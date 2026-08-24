@@ -95,30 +95,29 @@ export const useRepositorioDigital = () => {
       const nuevoDoc = await repositorioService.subirDocumento(formData);
       setDocumentos([nuevoDoc, ...documentos]);
       setDocumentoSeleccionado(nuevoDoc);
-      setModalAgregar(false);
     } catch (err) {
       alert('Error al registrar el archivo en el repositorio.');
+      throw err;
     } finally {
       setGuardando(false);
-    }
-  };
+    }};
 
-  const handleCrearInstitucionRapida = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCrearInstitucionRapida = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!nombreInstNueva.trim()) return;
 
     try {
       const nueva = await repositorioService.crearInstitucion(nombreInstNueva, tipoInstNueva);
       setInstituciones([...instituciones, nueva]);
-      setModalNuevaInst(false);
       setNombreInstNueva('');
     } catch (err) {
       alert('Error al crear la institución.');
+      throw err;
     }
   };
 
-  const handleCrearAreaRapida = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCrearAreaRapida = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!nombreAreaNueva.trim() || !idInstParaArea) {
       alert('Seleccione la institución y el nombre de la cátedra/materia.');
       return;
@@ -127,11 +126,11 @@ export const useRepositorioDigital = () => {
     try {
       const nuevaArea = await repositorioService.crearArea(nombreAreaNueva, parseInt(idInstParaArea));
       setAreas([...areas, nuevaArea]);
-      setModalNuevaArea(false);
       setNombreAreaNueva('');
       setIdInstParaArea('');
     } catch (err) {
       alert('Error al crear la cátedra/materia.');
+      throw err;
     }
   };
 

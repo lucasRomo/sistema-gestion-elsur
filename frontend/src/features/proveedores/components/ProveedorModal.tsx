@@ -9,6 +9,7 @@ interface ProveedorModalProps {
   formState: Proveedor | null;
   setFormState: React.Dispatch<React.SetStateAction<Proveedor | null>>;
   onSave: (e: React.FormEvent) => void;
+  proveedores: Proveedor[];
 }
 
 export const ProveedorModal: React.FC<ProveedorModalProps> = ({
@@ -17,7 +18,8 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   isEditing,
   formState,
   setFormState,
-  onSave
+  onSave,
+  proveedores
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -34,6 +36,8 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   const [showCategorias, setShowCategorias] = useState<boolean>(false);
   const [nuevaCategoria, setNuevaCategoria] = useState<string>('');
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [idCategoriaAEliminar, setIdCategoriaAEliminar] = useState<number | null>(null);
+  const [mostrarExitoEliminar, setMostrarExitoEliminar] = useState<boolean>(false);
 
   const cargarCategorias = async () => {
     try {
@@ -56,38 +60,63 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     }
   }, [show]);
 
-  const handleCrearCategoria = async () => {
-    if (!nuevaCategoria.trim()) return;
-    try {
-      const res = await fetch('http://localhost:8080/api/tipos-proveedor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ descripcion: nuevaCategoria.trim() })
-      });
-      if (res.ok) {
-        setNuevaCategoria('');
-        cargarCategorias();
-      }
-    } catch {
-      alert("Error al guardar la nueva categoría");
+  const handleCrearCategoria = async (e?: React.FormEvent) => {
+  if (e) e.preventDefault();
+  const nombreLimpio = nuevaCategoria.trim();
+  if (!nombreLimpio) return;
+  const inputElem = document.getElementById('inputNuevaCategoria') as HTMLInputElement;
+  const yaExiste = tiposProveedor.some(
+    (t) => t.descripcion.trim().toLowerCase() === nombreLimpio.toLowerCase()
+  );
+
+  if (yaExiste) {
+    if (inputElem) {
+      inputElem.setCustomValidity("Esta categoría ya existe");
+      inputElem.reportValidity();
     }
+    return;
+  }
+
+  try {
+    const res = await fetch('http://localhost:8080/api/tipos-proveedor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ descripcion: nombreLimpio })
+    });
+    if (res.ok) {
+      setNuevaCategoria('');
+      if (inputElem) inputElem.setCustomValidity('');
+      cargarCategorias();
+    }
+  } catch {
+    alert("Error al guardar la nueva categoría");
+  }
   };
 
-  const handleEliminarCategoria = async (id: number) => {
-    if (!confirm("¿Seguro que querés eliminar esta categoría? Se quitará de los proveedores asociados.")) return;
-    try {
-      const res = await fetch(`http://localhost:8080/api/tipos-proveedor/${id}`, {
-        method: 'DELETE'
-      });
-      if (res.ok) {
-        if (formState?.tipoProveedor?.idTipoProveedor === id) {
-          setFormState(prev => prev ? { ...prev, tipoProveedor: undefined } : null);
-        }
-        cargarCategorias();
+  const handleEliminarCategoria = (id: number) => {
+  setIdCategoriaAEliminar(id);
+  };
+
+  const ejecutarEliminacionCategoria = async () => {
+  if (!idCategoriaAEliminar) return;
+
+  try {
+    const res = await fetch(`http://localhost:8080/api/tipos-proveedor/${idCategoriaAEliminar}`, {
+      method: 'DELETE'
+    });
+
+    if (res.ok) {
+      if (formState?.tipoProveedor?.idTipoProveedor === idCategoriaAEliminar) {
+        setFormState(prev => prev ? { ...prev, tipoProveedor: undefined } : null);
       }
-    } catch {
-      alert("No se pudo eliminar la categoría (puede que esté en uso por otra entidad).");
+      cargarCategorias();
+      setIdCategoriaAEliminar(null);
+      setMostrarExitoEliminar(true); 
     }
+  } catch (error) {
+    alert("No se pudo eliminar la categoría (puede que esté en uso por otra entidad).");
+    setIdCategoriaAEliminar(null);
+  }
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -168,26 +197,46 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
 
                 <div className="row g-3 mb-3">
                   <div className="col-md-4">
-                    <label className="form-label small fw-semibold" style={{ color: labelColor }}>
-                      Email de Contacto
-                    </label>
-                    <input 
-                      type="email" 
-                      required 
-                      className="form-control"
-                      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                      value={formState.emailContacto || ''}
-                      onChange={(e) => setFormState({ ...formState, emailContacto: e.target.value })}
-                      onInvalid={(e: any) => {
-                        if (e.target.validity.valueMissing) {
-                          e.target.setCustomValidity("El Campo de Email No puede Estar Vacío");
-                        } else if (e.target.validity.typeMismatch) {
-                          e.target.setCustomValidity("Ingresa un formato de email válido (ej: nombre@dominio.com)");
-                        }
-                      }}
-                      onInput={(e: any) => e.target.setCustomValidity("")}
-                    />
-                  </div>
+  <label className="form-label small fw-semibold" style={{ color: labelColor }}>
+    Email de Contacto
+  </label>
+  <input 
+    type="email" 
+    required 
+    className="form-control"
+    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+    value={formState.emailContacto || ''}
+    onChange={(e) => setFormState({ ...formState, emailContacto: e.target.value })}
+    onInvalid={(e: any) => {
+      const emailLimpio = formState.emailContacto?.trim().toLowerCase();
+
+      // Verificar si el correo ya existe en otro proveedor
+      const existeEmail = proveedores?.some(
+        (p) => p.emailContacto?.trim().toLowerCase() === emailLimpio && p.idProveedor !== formState.idProveedor
+      );
+
+      if (e.target.validity.valueMissing) {
+        e.target.setCustomValidity("El Campo de Email No puede Estar Vacío");
+      } else if (e.target.validity.typeMismatch) {
+        e.target.setCustomValidity("Ingresa un formato de email válido (ej: nombre@dominio.com)");
+      } else if (existeEmail) {
+        e.target.setCustomValidity("Este correo electrónico ya está registrado en la base de datos");
+      }
+    }}
+    onInput={(e: any) => {
+      const emailLimpio = e.target.value.trim().toLowerCase();
+      const existeEmail = proveedores?.some(
+        (p) => p.emailContacto?.trim().toLowerCase() === emailLimpio && p.idProveedor !== formState.idProveedor
+      );
+
+      if (existeEmail) {
+        e.target.setCustomValidity("Este correo electrónico ya está registrado en la base de datos");
+      } else {
+        e.target.setCustomValidity("");
+      }
+    }}
+  />
+</div>
 
                   <div className="col-md-4">
                     <label className="form-label small fw-semibold" style={{ color: labelColor }}>
@@ -326,60 +375,68 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
                       </div>
 
                       <div className="col-md-3">
-                        <label className="form-label small fw-semibold" style={{ color: labelColor }}>Ciudad</label>
-                        <input 
-                          type="text" required pattern="[A-Za-zÁ-Úá-ú\s]+" className="form-control"
-                          style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                          value={formState.direccion?.ciudad || ''}
-                          onChange={(e) => setFormState({
-                            ...formState, direccion: { ...formState.direccion!, ciudad: e.target.value }
-                          })}
-                          onInvalid={(e: any) => {
-                            if (e.target.validity.valueMissing) {
-                              e.target.setCustomValidity("El Campo de Ciudad No puede Estar Vacío");
-                            } else if (e.target.validity.patternMismatch) {
-                              e.target.setCustomValidity("En el campo Ciudad solo debe contener letras");
-                            }
-                          }}
-                          onInput={(e: any) => e.target.setCustomValidity("")}
-                        />
-                      </div>
+  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Ciudad (Opcional)</label>
+  <input 
+    type="text" 
+    pattern="^$|[A-Za-zÁ-Úá-ú\s]+" 
+    className="form-control"
+    placeholder="Opcional"
+    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+    value={formState.direccion?.ciudad || ''}
+    onChange={(e) => setFormState({
+      ...formState, direccion: { ...formState.direccion!, ciudad: e.target.value }
+    })}
+    onInvalid={(e: any) => {
+      if (e.target.validity.patternMismatch) {
+        e.target.setCustomValidity("En el campo Ciudad solo se permiten letras");
+      }
+    }}
+    onInput={(e: any) => e.target.setCustomValidity("")}
+  />
+</div>
 
                       <div className="col-md-3">
-                        <label className="form-label small fw-semibold" style={{ color: labelColor }}>Provincia</label>
-                        <input 
-                          type="text" required pattern="[A-Za-zÁ-Úá-ú\s]+" className="form-control"
-                          style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                          value={formState.direccion?.provincia || ''}
-                          onChange={(e) => setFormState({
-                            ...formState, direccion: { ...formState.direccion!, provincia: e.target.value }
-                          })}
-                          onInvalid={(e: any) => {
-                            if (e.target.validity.valueMissing) {
-                              e.target.setCustomValidity("El Campo de Provincia No puede Estar Vacío");
-                            } else if (e.target.validity.patternMismatch) {
-                              e.target.setCustomValidity("En el campo Provincia solo debe contener letras");
-                            }
-                          }}
-                          onInput={(e: any) => e.target.setCustomValidity("")}
-                        />
-                      </div>
+  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Provincia (Opcional)</label>
+  <input 
+    type="text" 
+    pattern="^$|[A-Za-zÁ-Úá-ú\s]+" 
+    className="form-control"
+    placeholder="Opcional"
+    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+    value={formState.direccion?.provincia || ''}
+    onChange={(e) => setFormState({
+      ...formState, direccion: { ...formState.direccion!, provincia: e.target.value }
+    })}
+    onInvalid={(e: any) => {
+      if (e.target.validity.patternMismatch) {
+        e.target.setCustomValidity("En el campo Provincia solo se permiten letras");
+      }
+    }}
+    onInput={(e: any) => e.target.setCustomValidity("")}
+  />
+</div>
 
                       <div className="col-md-3">
-                        <label className="form-label small fw-semibold" style={{ color: labelColor }}>País (Opcional)</label>
-                        <input 
-                          type="text" pattern="^$|[A-Za-zÁ-Úá-ú\s]+" className="form-control" 
-                          style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                          value={formState.direccion?.pais || ''}
-                          onChange={(e) => setFormState({...formState, direccion: { ...formState.direccion!, pais: e.target.value }})}
-                          onInvalid={(e: any) => {
-                            if (e.target.validity.patternMismatch) { 
-                              e.target.setCustomValidity("En el campo País solo debe contener letras");
-                            }
-                          }}
-                          onInput={(e: any) => e.target.setCustomValidity("")}
-                        />
-                      </div>
+  <label className="form-label small fw-semibold" style={{ color: labelColor }}>País (Opcional)</label>
+  <input 
+    type="text" 
+    pattern="^$|[A-Za-zÁ-Úá-ú\s]+" 
+    className="form-control" 
+    placeholder="Opcional"
+    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+    value={formState.direccion?.pais || ''}
+    onChange={(e) => setFormState({
+      ...formState, 
+      direccion: { ...formState.direccion!, pais: e.target.value }
+    })}
+    onInvalid={(e: any) => {
+      if (e.target.validity.patternMismatch) { 
+        e.target.setCustomValidity("En el campo País solo se permiten letras");
+      }
+    }}
+    onInput={(e: any) => e.target.setCustomValidity("")}
+  />
+</div>
                     </div>
                   </>
                 )}
@@ -447,6 +504,90 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
         </div>
       )}
 
+      {idCategoriaAEliminar !== null && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+            <div 
+              className="modal-content p-4 text-center shadow" 
+              style={{ 
+                border: '2px solid #8e45e0', 
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+                color: textColor,
+                borderRadius: '12px' 
+              }}
+            >
+              <i className="bi bi-exclamation-triangle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
+              <h5 className="fw-bold">¿Confirmar Eliminación?</h5>
+              <p className="small" style={{ color: labelColor }}>
+                Se quitará esta categoría de forma permanente y de los proveedores asociados.
+              </p>
+              <div className="d-flex justify-content-center gap-2 mt-3">
+                <button 
+                  type="button"
+                  className="btn btn-sm px-3 text-white fw-bold" 
+                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }} 
+                  onClick={() => setIdCategoriaAEliminar(null)}
+                >
+                  Volver
+                </button>
+                <button 
+                  type="button"
+                  className="btn btn-sm px-3 text-white fw-bold" 
+                  style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} 
+                  onClick={ejecutarEliminacionCategoria}
+                >
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Éxito al Eliminar Categoría */}
+      {mostrarExitoEliminar && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+            <div 
+              className="modal-content p-4 text-center shadow" 
+              style={{ 
+                border: '2px solid #8e45e0', 
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+                color: textColor,
+                borderRadius: '12px' 
+              }}
+            >
+              <div 
+                className="d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+                style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  backgroundColor: '#8e45e0',
+                  color: '#ffffff'
+                }}
+              >
+                <i className="bi bi-check-lg fs-2"></i>
+              </div>
+              <h4 className="fw-bold mb-2">¡Éxito!</h4>
+              <p className="small mb-4" style={{ color: labelColor }}>
+                Categoría eliminada correctamente
+              </p>
+              <div className="d-flex justify-content-center">
+                <button 
+                  type="button"
+                  className="btn px-4 text-white fw-bold" 
+                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }} 
+                  onClick={() => setMostrarExitoEliminar(false)}
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showCategorias && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1060 }}>
           <div className="modal-dialog modal-md modal-dialog-centered">
@@ -466,48 +607,56 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
               </div>
 
               <div className="modal-body">
-                <label className="form-label small" style={{ color: labelColor }}>Nueva Categoría de Proveedor:</label>
-                <div className="input-group mb-3">
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                    placeholder="Ej: Insumos de Computación"
-                    value={nuevaCategoria}
-                    onChange={(e) => setNuevaCategoria(e.target.value)}
-                  />
-                  <button className="btn btn-success" type="button" onClick={handleCrearCategoria}>
-                    <i className="bi bi-plus-lg"></i> Agregar
-                  </button>
-                </div>
+  <label className="form-label small" style={{ color: labelColor }}>Nueva Categoría de Proveedor:</label>
+  <form onSubmit={handleCrearCategoria} className="input-group mb-3">
+    <input 
+      id="inputNuevaCategoria"
+      type="text" 
+      required
+      className="form-control" 
+      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+      placeholder="Ej: Insumos de Computación"
+      value={nuevaCategoria}
+      onChange={(e) => setNuevaCategoria(e.target.value)}
+      onInput={(e: any) => e.target.setCustomValidity("")}
+      onInvalid={(e: any) => {
+        if (e.target.validity.valueMissing) {
+          e.target.setCustomValidity("Ingresa el nombre de la categoría");
+        }
+      }}
+    />
+    <button className="btn btn-success" type="submit">
+      <i className="bi bi-plus-lg"></i> Agregar
+    </button>
+  </form>
 
-                <label className="form-label small d-block pb-1 mb-2" style={{ color: labelColor, borderBottom: `1px solid ${modalBorder}` }}>
-                  Categorías Existentes:
-                </label>
-                <div style={{ maxHeight: '200px', overflowY: 'auto' }} className="pe-1">
-                  {tiposProveedor.length === 0 ? (
-                    <div className="text-muted small py-2 text-center">No hay categorías registradas.</div>
-                  ) : (
-                    tiposProveedor.map((t) => (
-                      <div 
-                        key={t.idTipoProveedor} 
-                        className="d-flex justify-content-between align-items-center p-2 rounded mb-1"
-                        style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}` }}
-                      >
-                        <span className="small">{t.descripcion}</span>
-                        <button 
-                          type="button" 
-                          className="btn btn-sm p-0 text-danger fs-5 border-0 bg-transparent"
-                          title="Eliminar Categoría"
-                          onClick={() => handleEliminarCategoria(t.idTipoProveedor)}
-                        >
-                          <i className="bi bi-trash-fill"></i>
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+  <label className="form-label small d-block pb-1 mb-2" style={{ color: labelColor, borderBottom: `1px solid ${modalBorder}` }}>
+    Categorías Existentes:
+  </label>
+  <div style={{ maxHeight: '200px', overflowY: 'auto' }} className="pe-1">
+    {tiposProveedor.length === 0 ? (
+      <div className="text-muted small py-2 text-center">No hay categorías registradas.</div>
+    ) : (
+      tiposProveedor.map((t) => (
+        <div 
+          key={t.idTipoProveedor} 
+          className="d-flex justify-content-between align-items-center p-2 rounded mb-1"
+          style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}` }}
+        >
+          <span className="small">{t.descripcion}</span>
+          <button 
+            type="button" 
+            className="btn btn-sm p-0 text-danger fs-5 border-0 bg-transparent"
+            title="Eliminar Categoría"
+            onClick={() => handleEliminarCategoria(t.idTipoProveedor)}
+          >
+            <i className="bi bi-trash-fill"></i>
+          </button>
+        </div>
+      ))
+    )}
+  </div>
+</div>
 
               <div className="modal-footer py-2" style={{ borderTop: `1px solid ${modalBorder}` }}>
                 <button 

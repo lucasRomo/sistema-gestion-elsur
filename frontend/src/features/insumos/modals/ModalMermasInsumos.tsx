@@ -103,7 +103,8 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
     }));
   };
 
-  const handleGuardarMermas = async () => {
+  const handleGuardarMermas = async (e: React.FormEvent) => {
+    e.preventDefault();
     const ids = Object.keys(selections).map(Number);
     if (ids.length === 0) {
       setMensajeAlerta('Por favor, selecciona al menos un insumo para registrar la merma.');
@@ -188,7 +189,8 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-lg modal-dialog-centered">
-        <div 
+        <form 
+          onSubmit={handleGuardarMermas}
           className="modal-content font-monospace shadow-lg" 
           style={{ 
             backgroundColor: bgModal, 
@@ -214,12 +216,14 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
           <div className="px-3 pt-3">
             <div className="btn-group w-100">
               <button 
+                type="button"
                 className={`btn btn-sm ${tabActiva === 'registrar' ? 'btn-warning fw-bold text-dark' : 'btn-outline-warning'}`}
                 onClick={() => setTabActiva('registrar')}
               >
                 <i className="bi bi-plus-circle me-1"></i> Registrar Merma
               </button>
               <button 
+                type="button"
                 className={`btn btn-sm ${tabActiva === 'historial' ? 'btn-warning fw-bold text-dark' : 'btn-outline-warning'}`}
                 onClick={() => setTabActiva('historial')}
               >
@@ -304,6 +308,7 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
                                     style={{ color: textColor }}
                                     value={selections[idIns]?.cantidad ?? ''}
                                     onChange={(e) => updateSelection(idIns, 'cantidad', e.target.value)}
+                                    required
                                   />
                                   <span 
                                     className="input-group-text small fw-semibold"
@@ -324,8 +329,21 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
                                   className={`form-control form-control-sm ${inputInnerBgClass}`}
                                   style={{ color: textColor }}
                                   placeholder="Ej: Material roto, vencido, tirado..."
+                                  pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$"
                                   value={selections[idIns]?.descripcion || ''}
                                   onChange={(e) => updateSelection(idIns, 'descripcion', e.target.value)}
+                                  onInvalid={(e) => {
+                                    const input = e.target as HTMLInputElement;
+                                    if (input.validity.valueMissing) {
+                                      input.setCustomValidity('Completa este campo.');
+                                    } else if (input.validity.patternMismatch) {
+                                      input.setCustomValidity('No se permiten números en el motivo de la merma.');
+                                    }
+                                  }}
+                                  onInput={(e) => {
+                                    (e.target as HTMLInputElement).setCustomValidity('');
+                                  }}
+                                  required
                                 />
                               </div>
                             </div>
@@ -446,16 +464,15 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
             </button>
             {tabActiva === 'registrar' && (
               <button 
-                type="button" 
+                type="submit" 
                 className="btn btn-success fw-bold px-4" 
                 disabled={guardando}
-                onClick={handleGuardarMermas}
               >
                 {guardando ? 'Guardando...' : 'Registrar Mermas'}
               </button>
             )}
           </div>
-        </div>
+        </form>
       </div>
 
       {/* Modal de Advertencia Personalizado */}

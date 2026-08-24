@@ -52,32 +52,71 @@ export const ClienteView = () => {
 
   const handleRegistrarFinal = async (e: React.FormEvent) => {
     e.preventDefault();
+
     const payload = {
-      razonSocial: formData.razonSocial, 
-      saldoDeudor: 0, 
-      limiteCredito: Number(formData.limiteCredito),
-      estado: 'Activo', 
-      personaDeContacto: formData.personaDeContacto, 
-      condicionDePago: formData.condicionDePago,
+      razonSocial: formData.razonSocial || formData.nombre + " " + formData.apellido,
+      saldoDeudor: 0,
+      limiteCredito: Number(formData.limiteCredito) || 0,
+      estado: 'Activo',
+      personaDeContacto: formData.personaDeContacto || '',
+      condicionDePago: formData.condicionDePago || 'Contado',
       persona: {
-        nombre: formData.nombre, apellido: formData.apellido, numeroDocumento: formData.numeroDocumento,
-        telefono: formData.telefono, email: formData.email,
-        tipoDocumento: { idTipoDocumento: parseInt(formData.tipoDocumento) || 1 },
-        tipoPersona: { idTipoPersona: 1 }, 
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        numeroDocumento: formData.numeroDocumento,
+        telefono: formData.telefono,
+        email: formData.email,
+        tipoDocumento: { 
+          idTipoDocumento: parseInt(formData.tipoDocumento) || 1 
+        },
+        tipoPersona: { 
+          idTipoPersona: 1 
+        },
         direccion: {
-          calle: formData.calle, numero: formData.numero, piso: formData.piso || null,
-          departamento: formData.depto || null, codigoPostal: formData.codPostal,
-          ciudad: formData.ciudad, provincia: formData.provincia, pais: formData.pais
+          calle: formData.calle,
+          numero: formData.numero,
+          piso: formData.piso || '',
+          departamento: formData.depto || '',
+          codigoPostal: formData.codPostal,
+          // Evitar null enviando un string no nulo o valor por defecto
+          ciudad: formData.ciudad || 'Sin Especificar',
+          provincia: formData.provincia || 'Sin Especificar',
+          pais: formData.pais || 'Argentina'
         }
       }
     };
+
     try { 
       await registrarCliente(payload); 
       setMsgSuccess("El Cliente ha sido registrado con éxito");
       setShowSuccess(true); 
+
+      // Reiniciar formulario
+      setFormData({
+        nombre: '',
+        apellido: '',
+        tipoDocumento: '',
+        numeroDocumento: '',
+        email: '',
+        telefono: '',
+        calle: '',
+        numero: '',
+        piso: '',
+        depto: '',
+        codPostal: '',
+        ciudad: '',
+        provincia: '',
+        pais: '',
+        razonSocial: '',
+        personaDeContacto: '',
+        limiteCredito: '0'
+      });
+
       setPaso(0); 
     } 
-    catch (e: any) { alert("Error: " + e.message); }
+    catch (e: any) { 
+      alert("Error: " + e.message); 
+    }
   };
 
   const handleConfirmarEdicion = async (data: any) => {
@@ -107,6 +146,12 @@ export const ClienteView = () => {
       c.persona?.numeroDocumento?.includes(busqueda) || 
       c.razonSocial?.toLowerCase().includes(busqueda)
     );
+  });
+
+  const clientesOrdenados = [...clientesFiltrados].sort((a, b) => {
+    const idA = a.id_cliente || a.idCliente || 0;
+    const idB = b.id_cliente || b.idCliente || 0;
+    return idA - idB;
   });
 
   const obtenerColorSaldo = (saldoDeudor: number, limiteCredito: number) => {
@@ -182,24 +227,27 @@ export const ClienteView = () => {
               </tr>
             </thead>
             <tbody style={{ fontSize: '0.9rem' }}>
-              {clientesFiltrados && clientesFiltrados.length > 0 ? (
-                clientesFiltrados.map((c: any) => {
+              {clientesOrdenados && clientesOrdenados.length > 0 ? (
+                clientesOrdenados.map((c: any) => {
                   const tieneCtaCte = Number(c.limiteCredito || 0) > 0;
+                  const idClienteVal = c.id_cliente || c.idCliente;
 
                 return (
                   <tr 
-                    key={c.id_cliente || c.idCliente} 
+                    key={idClienteVal} 
                     style={{ borderBottom: `1px solid ${rowBorder}`, transition: 'background-color 0.15s ease' }}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    <td className="px-3 py-3 font-monospace small" style={{ color: tableText, whiteSpace: 'nowrap' }}>{c.id_cliente || c.idCliente}</td>
+                    {/* Celda ID arreglada con color celeste, centrado y prefijo # */}
+                    <td className="py-3 px-3 text-center text-info fw-bold">#{idClienteVal}</td>
+                    
                     <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.persona?.nombre}</td>
                     <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.apellido}</td>
-                    <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.numeroDocumento}</td>
+                    <td className="px-3 py-3 text-center" style={{ color: tableText }}>{c.persona?.numeroDocumento}</td>
                     <td className="px-3 py-3" style={{ color: tableText }}>{c.razonSocial}</td>
                     
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 text-center">
                       {tieneCtaCte ? (
                         <span className="badge rounded-pill bg-success bg-opacity-75 font-monospace px-3 py-2" style={{ color: '#ffffff' }}>
                           Habilitada (${Number(c.limiteCredito).toFixed(0)})
@@ -333,7 +381,7 @@ export const ClienteView = () => {
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content p-4 shadow-lg" style={{ backgroundColor: modalStepBg, color: tableText }}>
-              <PersonaForm formData={formData} setFormData={setFormData} onSiguiente={() => setPaso(2)} onVolver={() => setPaso(0)} />
+              <PersonaForm formData={formData} setFormData={setFormData} clientes={clientes} onSiguiente={() => setPaso(2)} onVolver={() => setPaso(0)} />
             </div>
           </div>
         </div>

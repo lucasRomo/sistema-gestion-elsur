@@ -22,6 +22,9 @@ export const ProveedorTabla: React.FC<ProveedorTablaProps> = ({ proveedores, onE
   const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
 
+  // Ordenamos la lista por idProveedor de forma ascendente
+  const proveedoresOrdenados = [...proveedores].sort((a, b) => (a.idProveedor ?? 0) - (b.idProveedor ?? 0));
+
   return (
     <div 
       className="d-flex flex-column flex-grow-1 overflow-hidden mb-2 shadow-sm rounded-3 border font-monospace" 
@@ -51,14 +54,14 @@ export const ProveedorTabla: React.FC<ProveedorTablaProps> = ({ proveedores, onE
             </tr>
           </thead>
           <tbody style={{ fontSize: '0.9rem' }}>
-            {proveedores.length === 0 ? (
+            {proveedoresOrdenados.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-5" style={{ color: '#ffffff' }}>
                   No se encontraron proveedores registrados en el sistema.
                 </td>
               </tr>
             ) : (
-              proveedores.map((prov) => (
+              proveedoresOrdenados.map((prov) => (
                 <tr 
                   key={prov.idProveedor} 
                   style={{ borderBottom: `1px solid ${rowBorder}` }}

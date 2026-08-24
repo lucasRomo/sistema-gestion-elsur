@@ -25,6 +25,9 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
   const rowBorder = isDark ? '#27272a' : '#f1f5f9';
   const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
 
+  // Ordenamos las máquinas por ID de forma ascendente
+  const maquinasOrdenadas = [...maquinas].sort((a, b) => (a.idMaquina ?? 0) - (b.idMaquina ?? 0));
+
   const renderBadgeEstado = (estado: string) => {
     switch (estado.toUpperCase()) {
       case 'OPERATIVA':
@@ -64,7 +67,7 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
           </tr>
         </thead>
         <tbody style={{ fontSize: '0.9rem' }}>
-          {maquinas.length === 0 ? (
+          {maquinasOrdenadas.length === 0 ? (
             <tr>
               <td colSpan={5} className="text-center py-5 border-0" style={{ color: '#ffffff' }}>
                 <i className="bi display-5 d-block mb-2 opacity-50"></i>
@@ -72,10 +75,10 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
               </td>
             </tr>
           ) : (
-            maquinas.map((maq, index) => (
+            maquinasOrdenadas.map((maq, index) => (
               <tr 
                 key={maq.idMaquina} 
-                style={{ borderBottom: index === maquinas.length - 1 ? 'none' : `1px solid ${rowBorder}`, opacity: maq.activo === false ? 0.6 : 1 }}
+                style={{ borderBottom: index === maquinasOrdenadas.length - 1 ? 'none' : `1px solid ${rowBorder}`, opacity: maq.activo === false ? 0.6 : 1 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
@@ -85,16 +88,16 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
                   {renderBadgeEstado(maq.estado)}
                 </td>
                 <td className="text-center align-middle">
-  {maq.activo ? (
-    <span className="badge bg-success text-white px-2 py-1">
-      <i className="bi bi-toggle-on me-1"></i> ACTIVO
-    </span>
-  ) : (
-    <span className="badge bg-danger text-white px-2 py-1">
-      <i className="bi bi-toggle-off me-1"></i> INACTIVO
-    </span>
-  )}
-</td>
+                  {maq.activo ? (
+                    <span className="badge bg-success text-white px-2 py-1">
+                      <i className="bi bi-toggle-on me-1"></i> ACTIVO
+                    </span>
+                  ) : (
+                    <span className="badge bg-danger text-white px-2 py-1">
+                      <i className="bi bi-toggle-off me-1"></i> INACTIVO
+                    </span>
+                  )}
+                </td>
                 <td className="py-3 px-3 text-center">
                   <div className="d-flex justify-content-center gap-2">
                     <button 

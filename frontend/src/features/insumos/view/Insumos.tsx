@@ -48,6 +48,12 @@ export const Insumos: React.FC = () => {
     return cumpleNombre && cumpleEstado;
   });
 
+  const insumosOrdenados = [...insumosFiltrados].sort((a, b) => {
+    const idA = a.idInsumo || (a as any).id || 0;
+    const idB = b.idInsumo || (b as any).id || 0;
+    return idA - idB;
+  });
+
   // Mapeo seguro utilizando casteo para evitar colisiones de tipos con las propiedades de Insumo
   const itemsStockCritico: ItemStockCritico[] = insumos.map((i: any) => ({
     id: i.idInsumo || i.id || i.nombreInsumo,
@@ -91,7 +97,7 @@ export const Insumos: React.FC = () => {
       />
 
       <InsumoTabla 
-        insumos={insumosFiltrados}
+        insumos={insumosOrdenados}
         onEditar={(insumo) => { setInsumoEditando(insumo); setShowModalForm(true); }}
         onVerProveedores={(insumo) => setInsumoProveedoresSeleccionado(insumo)}
         onConvertir={(insumo) => {

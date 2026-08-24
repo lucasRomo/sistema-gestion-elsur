@@ -200,6 +200,8 @@ export const HistorialPedidosPage: React.FC = () => {
     return cumpleBusquedaGeneral && cumpleEstado;
   });
 
+  const pedidosOrdenados = [...pedidosFiltrados].sort((a, b) => (a.id_pedido ?? 0) - (b.id_pedido ?? 0)); 
+
   return (
     <SidebarLayout activeItem="Historial de Pedidos">
       <div 
@@ -255,14 +257,14 @@ export const HistorialPedidosPage: React.FC = () => {
                       Cargando historial de pedidos...
                     </td>
                   </tr>
-                ) : pedidosFiltrados.length === 0 ? (
+                ) : pedidosOrdenados.length === 0 ? (
                   <tr>
                     <td colSpan={11} className="text-center py-4">
                       No se encontraron órdenes en el historial bajo estos filtros.
                     </td>
                   </tr>
                 ) : (
-                  pedidosFiltrados.map((pedido) => (
+                  pedidosOrdenados.map((pedido) => (
                     <FilaHistorial 
                       key={`historial-row-${pedido.id_pedido}`}
                       pedido={pedido}

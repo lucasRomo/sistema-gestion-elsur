@@ -34,13 +34,17 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   // Estados principales
   const [categorias, setCategorias] = useState<CategoriaCliente[]>([]);
   const [nombre, setNombre] = useState('');
-  const [descuento, setDescuento] = useState<number>(0);
+  const [descuento, setDescuento] = useState<number | string>(0);
 
   // Estados para el Modal de Edición
   const [mostrarModalEditar, setMostrarModalEditar] = useState(false);
   const [categoriaEditar, setCategoriaEditar] = useState<CategoriaCliente | null>(null);
   const [editNombre, setEditNombre] = useState('');
-  const [editDescuento, setEditDescuento] = useState<number>(0);
+  const [editDescuento, setEditDescuento] = useState<number | string>(0);
+
+  // Estados para el Modal de Confirmación de Eliminación
+  const [idEliminar, setIdEliminar] = useState<number | null>(null);
+  const [mostrarModalConfirmar, setMostrarModalConfirmar] = useState(false);
 
   // Estado para el Modal de Éxito
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
@@ -60,21 +64,21 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   }, []);
 
   const handleCrear = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await clienteService.crearCategoria({ 
-        nombre, 
-        descuentoAutomatico: descuento 
-      });
-      setNombre('');
-      setDescuento(0);
-      cargarCategorias();
-      setMensajeExito("Categoría creada con éxito");
-      setMostrarModalExito(true);
-    } catch (err) {
-      alert("Error guardando la categoría");
-    }
-  };
+  e.preventDefault();
+  
+  try {
+    await clienteService.crearCategoria({ 
+      nombre, 
+      descuentoAutomatico: descuento === '' ? 0 : Number(descuento)
+    });
+    setNombre('');
+    setDescuento(0);
+    cargarCategorias();
+    setMensajeExito("Categoría creada con éxito");
+    setMostrarModalExito(true);
+  } catch (err) {
+    console.error(err);
+  }};
 
   const abrirModalEditar = (cat: CategoriaCliente) => {
     setCategoriaEditar(cat);
@@ -84,33 +88,45 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   };
 
   const handleGuardarEdicion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!categoriaEditar?.idCategoria) return;
+  e.preventDefault();
+  if (!categoriaEditar?.idCategoria) return;
 
-    try {
-      await clienteService.actualizarCategoria(categoriaEditar.idCategoria, {
-        nombre: editNombre,
-        descuentoAutomatico: editDescuento
-      });
-      setMostrarModalEditar(false);
-      setCategoriaEditar(null);
-      cargarCategorias();
+  try {
+    await clienteService.actualizarCategoria(categoriaEditar.idCategoria, {
+      nombre: editNombre,
+      descuentoAutomatico: editDescuento === '' ? 0 : Number(editDescuento)
+    });
+    setMostrarModalEditar(false);
+    setCategoriaEditar(null);
+    cargarCategorias();
 
-      // Desplegar modal de éxito
-      setMensajeExito("Categoría actualizada con éxito");
-      setMostrarModalExito(true);
-    } catch (err) {
-      alert("Error al actualizar la categoría");
-    }
+    setMensajeExito("Categoría actualizada con éxito");
+    setMostrarModalExito(true);
+  } catch (err) {
+    console.error(err);
+  }};
+
+  // Solicitar confirmación personalizada
+  const solicitarEliminar = (id?: number) => {
+    if (!id) return;
+    setIdEliminar(id);
+    setMostrarModalConfirmar(true);
   };
 
-  const handleEliminar = async (id?: number) => {
-    if (!id || !confirm("¿Seguro de eliminar esta categoría?")) return;
+  // Confirmar y procesar eliminación
+  const confirmarEliminacion = async () => {
+    if (!idEliminar) return;
     try {
-      await clienteService.eliminarCategoria(id);
+      await clienteService.eliminarCategoria(idEliminar);
+      setMostrarModalConfirmar(false);
+      setIdEliminar(null);
       cargarCategorias();
+
+      setMensajeExito("Categoría eliminada con éxito");
+      setMostrarModalExito(true);
     } catch (err) {
-      alert("Error al eliminar la categoría");
+      console.error(err);
+      setMostrarModalConfirmar(false);
     }
   };
 
@@ -149,19 +165,25 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
                 </div>
 
                 <div className="col-md-4">
-                  <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
-                    Descuento (%)
-                  </label>
-                  <input 
-                    type="number" 
-                    step="0.01" 
-                    className={`form-control ${inputTextColor}`} 
-                    style={{ backgroundColor: inputBg, borderColor: inputBorder }} 
-                    value={descuento} 
-                    onChange={e => setDescuento(Number(e.target.value))} 
-                    required 
-                  />
-                </div>
+  <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
+    Descuento (%)
+  </label>
+  <input 
+  type="number" 
+  step="0.01" 
+  min="0.01" 
+  className={`form-control ${inputTextColor}`} 
+  style={{ backgroundColor: inputBg, borderColor: inputBorder }} 
+  value={descuento} 
+  onChange={e => {
+    const val = e.target.value;
+    setDescuento(val === '' ? '' : Number(val));
+  }}
+  onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('El porcentaje de descuento debe ser mayor a 0.')}
+  onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
+  required 
+/>
+</div>
 
                 <div className="col-md-2">
                   <button type="submit" className="btn btn-success w-100 fw-bold shadow-sm" style={{ color: '#ffffff' }}>
@@ -226,7 +248,7 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
                               className="btn btn-outline-danger btn-sm rounded-2 d-inline-flex align-items-center justify-content-center" 
                               style={{ width: '32px', height: '32px' }}
                               title="Eliminar categoría"
-                              onClick={() => handleEliminar(c.idCategoria)}
+                              onClick={() => solicitarEliminar(c.idCategoria)}
                             >
                               <i className="bi bi-trash"></i>
                             </button>
@@ -286,23 +308,29 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
                   </div>
 
                   <div className="mb-2">
-                    <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
-                      Descuento (%)
-                    </label>
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      className={`form-control ${inputTextColor}`} 
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder }} 
-                      value={editDescuento} 
-                      onChange={e => setEditDescuento(Number(e.target.value))} 
-                      required 
-                    />
-                  </div>
+  <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
+    Descuento (%)
+  </label>
+  <input 
+  type="number" 
+  step="0.01" 
+  min="0.01"
+  className={`form-control ${inputTextColor}`} 
+  style={{ backgroundColor: inputBg, borderColor: inputBorder }} 
+  value={editDescuento} 
+  onChange={e => {
+    const val = e.target.value;
+    setEditDescuento(val === '' ? '' : Number(val));
+  }} 
+  onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('El porcentaje de descuento debe ser mayor a 0.')}
+  onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
+  required 
+/>
+</div>
                 </div>
 
                 <div className={`modal-footer border-top ${borderDivider} p-2 d-flex justify-content-between`}>
-                  <button type="button" className="btn btn-sm btn-danger fw-semibold" onClick={() => setMostrarModalEditar(false)}>
+                  <button type="button" className="btn btn-sm btn-secondary fw-semibold" onClick={() => setMostrarModalEditar(false)}>
                     Cancelar
                   </button>
                   <button type="submit" className="btn btn-sm btn-success text-white fw-bold">
@@ -310,6 +338,43 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- SUB-MODAL DE CONFIRMACIÓN DE ELIMINACIÓN --- */}
+      {mostrarModalConfirmar && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1065 }}>
+          <div className="modal-dialog modal-dialog-centered modal-sm">
+            <div className="modal-content shadow-lg font-monospace text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #dc3545', borderRadius: '12px' }}>
+              <div className="modal-body text-center py-3">
+                <div className="d-flex justify-content-center mb-3">
+                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', backgroundColor: 'transparent', border: '2px solid #dc3545' }}>
+                    <i className="bi bi-exclamation-triangle text-danger" style={{ fontSize: '2rem' }}></i>
+                  </div>
+                </div>
+                <h6 className="fw-bold my-2 text-white">¿Seguro de eliminar esta categoría?</h6>
+                <p className="small text-white-50 mb-3">Esta acción no se puede deshacer.</p>
+                
+                <div className="d-flex justify-content-center gap-2">
+                  <button 
+                    className="btn btn-sm btn-secondary px-3 fw-semibold" 
+                    onClick={() => {
+                      setMostrarModalConfirmar(false);
+                      setIdEliminar(null);
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-danger px-3 fw-bold" 
+                    onClick={confirmarEliminacion}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

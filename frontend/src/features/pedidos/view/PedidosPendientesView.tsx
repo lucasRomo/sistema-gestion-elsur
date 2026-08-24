@@ -334,6 +334,8 @@ export const PedidosPendientesView: React.FC = () => {
     return true;
   });
 
+  const pedidosOrdenados = [...pedidosFiltrados].sort((a, b) => (a.id_pedido ?? 0) - (b.id_pedido ?? 0));
+
   return (
     <SidebarLayout activeItem="Pedidos Pendientes">
       <div className="container-fluid px-2 d-flex flex-column pt-3" style={{ height: 'calc(100vh - 45px)', overflow: 'hidden' }}>
@@ -357,14 +359,14 @@ export const PedidosPendientesView: React.FC = () => {
           />
         </div>
 
-        <div className="flex-grow-1 overflow-y-auto mb-2 pe-1" style={{ height: 'calc(100vh - 210px)' }}>
+       <div className="flex-grow-1 overflow-y-auto mb-2 pe-1" style={{ height: 'calc(100vh - 210px)' }}>
           {cargando ? (
             <div className="text-center py-5 font-monospace text-muted">Cargando Pedidos Pendientes...</div>
-          ) : pedidosFiltrados.length === 0 ? (
+          ) : pedidosOrdenados.length === 0 ? (
             <div className="text-center py-5 font-monospace text-muted">No se encontraron registros bajo este filtro.</div>
           ) : (
             <div className="d-flex flex-column gap-2">
-              {pedidosFiltrados.map((pedido) => (
+              {pedidosOrdenados.map((pedido) => (
                 <div key={`pedido-card-${pedido.id_pedido}`} className="w-100">
                   <TarjetaPedido 
                     pedido={pedido}

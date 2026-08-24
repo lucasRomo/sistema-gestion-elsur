@@ -31,7 +31,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
 
   // Estado local para saldo deudor para actualización inmediata en UI
   const [saldoDeudorLocal, setSaldoDeudorLocal] = useState<number>(Number(cliente.saldoDeudor || 0));
-  const [limite, setLimite] = useState<number>(cliente.limiteCredito || 0);
+  const [limite, setLimite] = useState<number | string>(cliente.limiteCredito ?? 0);
   const [movimientos, setMovimientos] = useState<any[]>([]);
   const [montoPago, setMontoPago] = useState<number>(0);
   const [descripcionPago, setDescripcionPago] = useState<string>('Pago parcial / total');
@@ -44,8 +44,8 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
 
   useEffect(() => {
     setSaldoDeudorLocal(Number(cliente.saldoDeudor || 0));
-    setLimite(Number(cliente.limiteCredito || 0));
-  }, [cliente]);
+    setLimite(cliente.limiteCredito ?? 0);
+  }, [cliente]);  
 
   const cargarMovimientos = async () => {
     try {
@@ -74,25 +74,25 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   };
 
   const handleActualizarLimite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await clienteService.actualizarLimiteCredito(idCliente, Number(limite));
-      setSuceso({
-        show: true,
-        titulo: "¡Éxito!",
-        mensaje: "Límite de crédito actualizado correctamente.",
-        tipo: "exito"
-      });
-      onActualizar();
-    } catch (e) {
-      setSuceso({
-        show: true,
-        titulo: "Error",
-        mensaje: "Error al actualizar el límite.",
-        tipo: "error"
-      });
-    }
-  };
+  e.preventDefault(); 
+  try {
+    const limiteNumerico = limite === '' ? 0 : Number(limite);
+    await clienteService.actualizarLimiteCredito(idCliente, limiteNumerico);
+    setSuceso({ 
+      show: true, 
+      titulo: "¡Éxito!", 
+      mensaje: "Límite de crédito actualizado correctamente.", 
+      tipo: "exito" 
+    }); 
+    onActualizar(); 
+  } catch (e) { 
+    setSuceso({ 
+      show: true, 
+      titulo: "Error", 
+      mensaje: "Error al actualizar el límite.", 
+      tipo: "error" 
+    }); 
+  }};
 
   const handleRegistrarPago = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,13 +243,16 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                     <div className="flex-grow-1">
                       <label className="form-label small fw-semibold" style={{ color: mutedText }}>Límite de Crédito Permitido ($)</label>
                       <input 
-                        type="number" 
-                        step="0.01" 
-                        className={`form-control ${textColor}`} 
-                        style={{ backgroundColor: inputBg, borderColor: inputBorder }}
-                        value={limite} 
-                        onChange={e => setLimite(Number(e.target.value))} 
-                      />
+  type="number" 
+  step="0.01" 
+  className={`form-control ${textColor}`} 
+  style={{ backgroundColor: inputBg, borderColor: inputBorder }} 
+  value={limite} 
+  onChange={e => {
+    const val = e.target.value;
+    setLimite(val === '' ? '' : Number(val));
+  }} 
+/>
                     </div>
                     <button type="submit" className="btn fw-bold" style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}>
                       Actualizar Límite

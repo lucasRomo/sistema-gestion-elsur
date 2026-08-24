@@ -16,7 +16,7 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
   onAbrirAuditoria,
   onSelectTicket,
   onAbrirDevolucion,
-  onAbrirMermas, // <-- 1. Agregado aquí
+  onAbrirMermas,
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -75,7 +75,9 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = filaBgHover}
       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = filaBg}
     >
-      <td className="fw-bold" style={{ color: '#0fdae9', padding: '12px' }}>#{p.id_pedido}</td>
+      {/* Celda ID arreglada: alineación centrada para consistencia con las demás tablas */}
+      <td className="fw-bold text-center text-info" style={{ padding: '12px' }}>#{p.id_pedido}</td>
+      
       <td style={{ padding: '15px 20px' }}>
         <span className="fw-semibold" style={{ color: clienteColor }}>{nombreCliente}</span>
       </td>
@@ -156,7 +158,7 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
             <i className="bi bi-printer" style={{ color: '#ffc107' }}></i>
           </button>
           
-          {/* BOTÓN MERMAS (Usando `p` en vez de `pedido`) */}
+          {/* BOTÓN MERMAS */}
           <button 
             className="btn btn-sm btn-outline-warning" 
             title="Ver / Registrar Mermas"

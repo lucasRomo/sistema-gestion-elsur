@@ -7,9 +7,10 @@ interface PersonaFormProps {
   onSiguiente: (e: React.FormEvent) => void;
   onVolver: () => void;
   titulo?: string;
+  clientes?: any[];
 }
 
-export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData, onSiguiente, onVolver, titulo = "Registrar Nuevo Cliente" }) => {
+export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData, onSiguiente, onVolver, titulo = "Registrar Nuevo Cliente", clientes = [] }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -22,7 +23,6 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
   const [errores, setErrores] = useState<any>({});
   const [tiposDocumento, setTiposDocumento] = useState<any[]>([]);
 
-  // Cargamos la lista al montar el componente de registro
   useEffect(() => {
     fetch('http://localhost:8080/api/tipos-documento')
       .then(res => {
@@ -31,7 +31,6 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
       })
       .then(data => setTiposDocumento(data))
       .catch(() => {
-        // Fallback dinámico con ambas claves por compatibilidad
         setTiposDocumento([
           { idTipoDocumento: 1, nombreTipo: 'DNI', nombre: 'DNI' },
           { idTipoDocumento: 2, nombreTipo: 'CUIT', nombre: 'CUIT' },
@@ -39,6 +38,27 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
           { idTipoDocumento: 4, nombreTipo: 'PASAPORTE', nombre: 'PASAPORTE' }
         ]);
       });
+  }, []);
+  useEffect(() => {
+    setFormData({
+      nombre: '',
+      apellido: '',
+      tipoDocumento: '',
+      numeroDocumento: '',
+      email: '',
+      telefono: '',
+      calle: '',
+      numero: '',
+      piso: '',
+      depto: '',
+      codPostal: '',
+      ciudad: '',
+      provincia: '',
+      pais: '',
+      razonSocial: '',
+      personaDeContacto: '',
+      limiteCredito: '0'
+    });
   }, []);
 
   const handleChange = (field: string, value: any) => {
@@ -61,30 +81,37 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      // 1. Validar Email contra el backend
-      const resEmail = await fetch(`http://localhost:8080/api/usuarios/exists?email=${formData.email}`);
-      const existeEmail = await resEmail.json();
-      
-      // 2. Validar Documento contra el backend
-      const resDni = await fetch(`http://localhost:8080/api/usuarios/exists?dni=${formData.numeroDocumento}`);
-      const existeDni = await resDni.json();
+  e.preventDefault();
+  
+  try {
+      const target = e.target as HTMLFormElement;
+      const emailInput = target.querySelector('input[type="email"]') as HTMLInputElement;
+      const dniInput = target.querySelector('input[placeholder="N° de Documento"]') as HTMLInputElement;
 
-      if (existeEmail || existeDni) {
-        setErrores({
-          email: existeEmail ? "Este email ya está registrado" : null,
-          numeroDocumento: existeDni ? "Este número de documento ya está registrado" : null
-        });
-        return; // Detiene el flujo si hay duplicados
+      const emailNuevo = formData.email?.trim().toLowerCase();
+      const dniNuevo = formData.numeroDocumento?.trim();
+
+      // Validar duplicados contra la lista de clientes existente
+      const existeEmail = clientes?.some((c: any) => c.persona?.email?.toLowerCase() === emailNuevo);
+      const existeDni = clientes?.some((c: any) => c.persona?.numeroDocumento === dniNuevo);
+
+      if (existeEmail && emailInput) {
+        emailInput.setCustomValidity("Este email ya está registrado para otro cliente");
+        emailInput.reportValidity();
+        return;
       }
 
-      // Si pasa los controles de duplicados, avanza al paso 2 (Datos Comerciales)
+      if (existeDni && dniInput) {
+        dniInput.setCustomValidity("Este número de documento ya está registrado");
+        dniInput.reportValidity();
+        return;
+      }
+
+      // Si no hay duplicados, procede al paso 2
       onSiguiente(e);
     } catch (error) {
       console.error("Error validando duplicados:", error);
-      alert("Error al conectar con el servidor para validar datos.");
+      alert("Error al validar los datos del cliente.");
     }
   };
 
@@ -181,18 +208,18 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
         </div>
 
         <div className="col-md-6 px-1">
-          <label className="form-label small fw-medium" style={{ color: labelColor }}>Email:</label>
-          <input 
-            type="email" 
-            className={`form-control ${errores.email ? 'is-invalid' : ''}`} 
-            style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
-            placeholder="Email@example.com" 
-            value={formData.email} 
-            onChange={e => handleChange('email', e.target.value)} 
-            required 
-          />
-          {errores.email && <div className="text-danger small mt-1"><i className="bi bi-exclamation-circle me-1"></i>{errores.email}</div>}
-        </div>
+  <label className="form-label small fw-medium" style={{ color: labelColor }}>Email:</label>
+  <input 
+    type="email" 
+    className="form-control" 
+    style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
+    placeholder="Email@example.com" 
+    value={formData.email || ""} 
+    onChange={e => handleChange('email', e.target.value)} 
+    onInput={(e: any) => e.target.setCustomValidity("")}
+    required 
+  />
+</div>
 
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: labelColor }}>Teléfono:</label>
@@ -293,70 +320,65 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
           />
         </div>
 
-        <div className="col-md-6 px-1">
-          <label className="form-label small fw-medium" style={{ color: labelColor }}>Ciudad:</label>
-          <input 
-            type="text" 
-            className="form-control" 
-            style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
-            placeholder="Ciudad (Opcional)" 
-            value={formData.ciudad} 
-            onChange={e => handleChange('ciudad', e.target.value)} 
-            required pattern="[A-Za-zÁ-Úá-ú\s]+" 
-            onInvalid={(e: any) => {
-              if (e.target.validity.valueMissing) {
-                e.target.setCustomValidity("El Campo de Ciudad No puede Estar Vacío");
-              } else if (e.target.validity.patternMismatch) {
-                e.target.setCustomValidity("El campo de Ciudad solo debe contener letras");
-              }
-            }}
-            onInput={(e: any) => e.target.setCustomValidity("")} 
-          />
-        </div>
+        {/* Ciudad */}
+<div className="col-md-6 px-1">
+  <label className="form-label small fw-medium" style={{ color: labelColor }}>Ciudad:</label>
+  <input 
+    type="text" 
+    className="form-control" 
+    style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
+    placeholder="Ciudad (Opcional)" 
+    value={formData.ciudad || ""} 
+    onChange={e => handleChange('ciudad', e.target.value)} 
+    pattern="^([A-Za-zÁ-Úá-ú\s]+)?$" 
+    onInvalid={(e: any) => {
+      if (e.target.validity.patternMismatch) {
+        e.target.setCustomValidity("El campo de Ciudad solo puede tener letras");
+      }
+    }}
+    onInput={(e: any) => e.target.setCustomValidity("")} 
+  />
+</div>
 
-        <div className="col-md-6 px-1">
-          <label className="form-label small fw-medium" style={{ color: labelColor }}>Provincia:</label>
-          <input 
-            type="text" 
-            className="form-control" 
-            style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
-            placeholder="Provincia (Opcional)" 
-            value={formData.provincia} 
-            onChange={e => handleChange('provincia', e.target.value)} 
-            required pattern="[A-Za-zÁ-Úá-ú\s]+" 
-            onInvalid={(e: any) => {
-              if (e.target.validity.valueMissing) {
-                e.target.setCustomValidity("El Campo de Província No puede Estar Vacío");
-              } 
-              else if (e.target.validity.patternMismatch) {
-                e.target.setCustomValidity("El Campo de Província solo debe contener letras");
-              }
-            }}
-            onInput={(e: any) => e.target.setCustomValidity("")}
-          />
-        </div>
+{/* Provincia */}
+<div className="col-md-6 px-1">
+  <label className="form-label small fw-medium" style={{ color: labelColor }}>Provincia:</label>
+  <input 
+    type="text" 
+    className="form-control" 
+    style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
+    placeholder="Provincia (Opcional)" 
+    value={formData.provincia || ""} 
+    onChange={e => handleChange('provincia', e.target.value)} 
+    pattern="^([A-Za-zÁ-Úá-ú\s]+)?$" 
+    onInvalid={(e: any) => {
+      if (e.target.validity.patternMismatch) {
+        e.target.setCustomValidity("El campo de Província solo puede tener letras");
+      }
+    }}
+    onInput={(e: any) => e.target.setCustomValidity("")}
+  />
+</div>
 
-        <div className="col-md-6 px-1">
-          <label className="form-label small fw-medium" style={{ color: labelColor }}>País:</label>
-          <input 
-            type="text" 
-            className="form-control" 
-            style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
-            placeholder="País (Opcional)" 
-            value={formData.pais} 
-            onChange={e => handleChange('pais', e.target.value)} 
-            required pattern="[A-Za-zÁ-Úá-ú\s]+" 
-            onInvalid={(e: any) => {
-              if (e.target.validity.valueMissing) {
-                e.target.setCustomValidity("El Campo de País No puede Estar Vacío");
-              } 
-              else if (e.target.validity.patternMismatch) {
-                e.target.setCustomValidity("El Campo de País solo debe contener letras");
-              }
-            }}
-            onInput={(e: any) => e.target.setCustomValidity("")}
-          />
-        </div>
+{/* País */}
+<div className="col-md-6 px-1">
+  <label className="form-label small fw-medium" style={{ color: labelColor }}>País:</label>
+  <input 
+    type="text" 
+    className="form-control" 
+    style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
+    placeholder="País (Opcional)" 
+    value={formData.pais || ""} 
+    onChange={e => handleChange('pais', e.target.value)} 
+    pattern="^([A-Za-zÁ-Úá-ú\s]+)?$" 
+    onInvalid={(e: any) => {
+      if (e.target.validity.patternMismatch) {
+        e.target.setCustomValidity("El campo de País solo puede tener letras");
+      }
+    }}
+    onInput={(e: any) => e.target.setCustomValidity("")}
+  />
+</div>
       </div>
 
       <div className="d-flex justify-content-between mt-4 border-top pt-3 mx-1" style={{ borderColor: inputBorder }}>

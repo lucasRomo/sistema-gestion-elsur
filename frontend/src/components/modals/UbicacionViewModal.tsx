@@ -39,7 +39,7 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
     codigoPostal: direccionOriginal.codigoPostal || '',
     ciudad: direccionOriginal.ciudad || '',
     provincia: direccionOriginal.provincia || '',
-    pais: direccionOriginal.pais || 'Argentina'
+    pais: direccionOriginal.pais || ''
   });
 
   const handleChange = (field: string, value: string) => {
@@ -52,23 +52,25 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
   };
 
   const handleGuardarDefinitivo = async () => {
-    // Reconstruimos el objeto del cliente completo respetando el formato del backend
-    const clienteActualizado = {
-      ...cliente,
-      persona: {
-        ...cliente.persona,
-        direccion: {
-          ...dirData,
-          piso: dirData.piso || null,
-          departamento: dirData.departamento || null
-        }
+  const clienteActualizado = {
+    ...cliente,
+    persona: {
+      ...cliente.persona,
+      direccion: {
+        ...dirData,
+        piso: dirData.piso || '',
+        departamento: dirData.departamento || '',
+        ciudad: dirData.ciudad || '',       
+        provincia: dirData.provincia || '', 
+        pais: dirData.pais || ''            
       }
-    };
-
-    await onConfirmar(clienteActualizado);
-    setMostrarConfirmacion(false);
-    setModoEdicion(false);
+    }
   };
+
+  await onConfirmar(clienteActualizado);
+  setMostrarConfirmacion(false);
+  setModoEdicion(false);
+};
 
   return (
     <>
@@ -146,6 +148,7 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   {modoEdicion ? (
                     <input 
                       type="text" 
+                      placeholder="Opcional"
                       className="form-control form-control-sm font-monospace" 
                       style={{ backgroundColor: boxBg, borderColor: boxBorder, color: boxTextColor }}
                       value={dirData.piso} 
@@ -164,6 +167,7 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   {modoEdicion ? (
                     <input 
                       type="text" 
+                      placeholder="Opcional"
                       className="form-control form-control-sm font-monospace" 
                       style={{ backgroundColor: boxBg, borderColor: boxBorder, color: boxTextColor }}
                       value={dirData.departamento} 
@@ -207,15 +211,14 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   {modoEdicion ? (
                     <input 
                       type="text" 
+                      placeholder="Opcional"
                       className="form-control form-control-sm font-monospace" 
                       style={{ backgroundColor: boxBg, borderColor: boxBorder, color: boxTextColor }}
                       value={dirData.ciudad} 
                       onChange={e => handleChange('ciudad', e.target.value)} 
-                      required 
-                      pattern="[A-Za-zÁ-Úá-ú\s]+"
+                      pattern="^$|[A-Za-zÁ-Úá-ú\s]+"
                       onInvalid={(e: any) => {
-                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo Ciudad No puede Estar Vacío");
-                        else e.target.setCustomValidity("El Campo Ciudad solo debe Contener Letras");
+                        if (e.target.validity.patternMismatch) e.target.setCustomValidity("En el campo Ciudad solo se permiten letras");
                       }}
                       onInput={(e: any) => e.target.setCustomValidity("")} 
                     />
@@ -232,15 +235,14 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   {modoEdicion ? (
                     <input 
                       type="text" 
+                      placeholder="Opcional"
                       className="form-control form-control-sm font-monospace" 
                       style={{ backgroundColor: boxBg, borderColor: boxBorder, color: boxTextColor }}
                       value={dirData.provincia} 
                       onChange={e => handleChange('provincia', e.target.value)} 
-                      required 
-                      pattern="[A-Za-zÁ-Úá-ú\s]+"
+                      pattern="^$|[A-Za-zÁ-Úá-ú\s]+"
                       onInvalid={(e: any) => {
-                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo Provincia No puede Estar Vacío");
-                        else e.target.setCustomValidity("El Campo Provincia solo debe Contener Letras");
+                        if (e.target.validity.patternMismatch) e.target.setCustomValidity("En el campo Provincia solo se permiten letras");
                       }}
                       onInput={(e: any) => e.target.setCustomValidity("")} 
                     />
@@ -257,15 +259,14 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   {modoEdicion ? (
                     <input 
                       type="text" 
+                      placeholder="Opcional"
                       className="form-control form-control-sm font-monospace" 
                       style={{ backgroundColor: boxBg, borderColor: boxBorder, color: boxTextColor }}
                       value={dirData.pais} 
                       onChange={e => handleChange('pais', e.target.value)} 
-                      required 
-                      pattern="[A-Za-zÁ-Úá-ú\s]+"
+                      pattern="^$|[A-Za-zÁ-Úá-ú\s]+"
                       onInvalid={(e: any) => {
-                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo País No puede Estar Vacío");
-                        else e.target.setCustomValidity("El Campo País solo debe Contener Letras");
+                        if (e.target.validity.patternMismatch) e.target.setCustomValidity("En el campo País solo se permiten letras");
                       }}
                       onInput={(e: any) => e.target.setCustomValidity("")} 
                     />
@@ -296,12 +297,12 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   </button>
                   {modoEdicion && (
                     <button 
-  type="submit" 
-  className="btn btn-info px-4 fw-semibold font-monospace" 
-  style={{ borderRadius: '8px', color: '#ffffff' }}
->
-  Confirmar
-</button>
+                      type="submit" 
+                      className="btn btn-info px-4 fw-semibold font-monospace" 
+                      style={{ borderRadius: '8px', color: '#ffffff' }}
+                    >
+                      Confirmar
+                    </button>
                   )}
                 </div>
               </div>

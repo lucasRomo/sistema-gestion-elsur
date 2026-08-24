@@ -124,6 +124,7 @@ export const Proveedores: React.FC = () => {
         isEditing={isEditing}
         formState={proveedorSeleccionado || {} as Proveedor} 
         setFormState={setProveedorSeleccionado}
+        proveedores={proveedores}
         onClose={() => setShowModal(false)}
         onSave={async () => {
           await guardar(proveedorSeleccionado!);

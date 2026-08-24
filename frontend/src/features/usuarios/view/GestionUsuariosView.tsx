@@ -46,6 +46,7 @@ export const GestionUsuariosView: React.FC = () => {
     const coincideEstado = filtroEstado === 'Sin Filtro' || estadoUsuario === filtroEstado;
     return coincideTexto && coincideEstado;
   });
+  const usuariosOrdenados = [...usuariosFiltrados].sort((a, b) => (a.idUsuario ?? 0) - (b.idUsuario ?? 0));
 
   return (
     <SidebarLayout activeItem="Gestión de Usuarios">
@@ -98,11 +99,11 @@ export const GestionUsuariosView: React.FC = () => {
                 </tr>
               </thead>
               <tbody style={{ fontSize: '0.9rem' }}>
-                {usuariosFiltrados && usuariosFiltrados.length > 0 ? (
-                  usuariosFiltrados.map((u, index) => (
+                {usuariosOrdenados && usuariosOrdenados.length > 0 ? (
+                  usuariosOrdenados.map((u, index) => (
                     <tr 
                       key={u.idUsuario} 
-                      style={{ borderBottom: index === usuariosFiltrados.length - 1 ? 'none' : `1px solid ${tableRowBorder}` }}
+                      style={{ borderBottom: index === usuariosOrdenados.length - 1 ? 'none' : `1px solid ${tableRowBorder}` }}
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverRowBg} 
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
@@ -165,8 +166,7 @@ export const GestionUsuariosView: React.FC = () => {
                 )}
               </tbody>
             </table>
-</div>
-
+          </div>
           {/* Botonera Inferior Estilizada */}
           <div className="d-flex justify-content-between align-items-center gap-3 mt-4 font-monospace">
             <button 

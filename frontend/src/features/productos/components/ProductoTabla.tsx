@@ -29,6 +29,9 @@ export const ProductoTabla: React.FC<Props> = ({
   const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
   const noMachineColor = isDark ? 'rgba(255, 255, 255, 0.5)' : '#64748b';
 
+  // Ordenamos la lista por idProducto de menor a mayor
+  const productosOrdenados = [...productos].sort((a, b) => (a.idProducto ?? 0) - (b.idProducto ?? 0));
+
   return (
     <div 
       className="d-flex flex-column flex-grow-1 overflow-hidden mb-2 shadow-sm rounded-3 border font-monospace" 
@@ -64,8 +67,8 @@ export const ProductoTabla: React.FC<Props> = ({
             </tr>
           </thead>
           <tbody style={{ fontSize: '0.9rem' }}>
-            {productos && productos.length > 0 ? (
-              productos.map((p) => (
+            {productosOrdenados && productosOrdenados.length > 0 ? (
+              productosOrdenados.map((p) => (
                 <tr 
                   key={p.idProducto}
                   style={{ borderBottom: `1px solid ${rowBorder}` }}
@@ -100,19 +103,21 @@ export const ProductoTabla: React.FC<Props> = ({
                   <td className="px-3 py-3 text-center">
                     <div className="d-flex justify-content-center gap-2">
                       {/* Botón Toggle Vínculo de Stock */}
-                     {onToggleStockVinculado && (
-                    <button 
-                     className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
-                       p.stockVinculado 
-                       ? 'btn-info text-dark fw-bold' 
-                       : 'btn-outline-secondary'
-                      }`} 
-                      style={{ width: '34px', height: '34px' }}
-                      onClick={() => onToggleStockVinculado(p)}
-                      title={p.stockVinculado ? "Stock vinculado a insumos (Activado)" : "Vincular stock a insumos (Desactivado)"}>
-                     <i className="bi bi-link-45deg fs-5"></i>
-                    </button>
-                    )}
+                      {onToggleStockVinculado && (
+                        <button 
+                          className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
+                            p.stockVinculado 
+                            ? 'btn-info text-dark fw-bold' 
+                            : 'btn-outline-secondary'
+                          }`} 
+                          style={{ width: '34px', height: '34px' }}
+                          onClick={() => onToggleStockVinculado(p)}
+                          title={p.stockVinculado ? "Stock vinculado a insumos (Activado)" : "Vincular stock a insumos (Desactivado)"}
+                        >
+                          <i className="bi bi-link-45deg fs-5"></i>
+                        </button>
+                      )}
+                      
                       {/* Botón Editar Producto */}
                       <button 
                         className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 

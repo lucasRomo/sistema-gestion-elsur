@@ -65,7 +65,12 @@ export const ProveedorUbicacionModal: React.FC<ProveedorUbicacionModalProps> = (
       ...proveedor,
       direccion: {
         ...proveedor.direccion,
-        ...direccion
+        ...direccion,
+        piso: direccion.piso || '',
+        departamento: direccion.departamento || '',
+        ciudad: direccion.ciudad || '',
+        provincia: direccion.provincia || '',
+        pais: direccion.pais || ''
       }
     };
     setDatosAEnviar(proveedorActualizado);
@@ -99,14 +104,14 @@ export const ProveedorUbicacionModal: React.FC<ProveedorUbicacionModalProps> = (
             <form onSubmit={handleSubmit}>
               <div className="row g-3">
                 {[
-                  { label: 'Calle', field: 'calle', col: 'col-md-8', pattern: "[A-Za-zÁ-Úá-ú\\s]+", msg: "Calle solo debe contener letras" },
-                  { label: 'Número', field: 'numero', col: 'col-md-4', pattern: "[0-9]+", msg: "Solo se permiten números" },
-                  { label: 'Piso', field: 'piso', col: 'col-md-3', pattern: null, msg: "" },
-                  { label: 'Depto', field: 'departamento', col: 'col-md-3', pattern: null, msg: "" },
-                  { label: 'Cód. Postal', field: 'codigoPostal', col: 'col-md-6', pattern: "[0-9]+", msg: "Solo se permiten números" },
-                  { label: 'Ciudad', field: 'ciudad', col: 'col-md-4', pattern: "[A-Za-zÁ-Úá-ú\\s]+", msg: "Solo letras" },
-                  { label: 'Provincia', field: 'provincia', col: 'col-md-4', pattern: "[A-Za-zÁ-Úá-ú\\s]+", msg: "Solo letras" },
-                  { label: 'País', field: 'pais', col: 'col-md-4', pattern: "[A-Za-zÁ-Úá-ú\\s]+", msg: "Solo letras" }
+                  { label: 'Calle', field: 'calle', col: 'col-md-8', pattern: "[A-Za-zÁ-Úá-ú\\s\\.]+", required: true, msg: "Calle solo debe contener letras" },
+                  { label: 'Número', field: 'numero', col: 'col-md-4', pattern: "[0-9]+", required: true, msg: "Solo se permiten números" },
+                  { label: 'Piso', field: 'piso', col: 'col-md-3', pattern: null, required: false, msg: "" },
+                  { label: 'Depto', field: 'departamento', col: 'col-md-3', pattern: null, required: false, msg: "" },
+                  { label: 'Cód. Postal', field: 'codigoPostal', col: 'col-md-6', pattern: "[0-9]+", required: true, msg: "Solo se permiten números" },
+                  { label: 'Ciudad', field: 'ciudad', col: 'col-md-4', pattern: "^$|[A-Za-zÁ-Úá-ú\\s]+", required: false, msg: "Solo letras" },
+                  { label: 'Provincia', field: 'provincia', col: 'col-md-4', pattern: "^$|[A-Za-zÁ-Úá-ú\\s]+", required: false, msg: "Solo letras" },
+                  { label: 'País', field: 'pais', col: 'col-md-4', pattern: "^$|[A-Za-zÁ-Úá-ú\\s]+", required: false, msg: "Solo letras" }
                 ].map((item) => (
                   <div key={item.field} className={item.col}>
                     <label className="form-label small fw-semibold m-0 mb-1" style={{ color: labelColor }}>
@@ -119,9 +124,15 @@ export const ProveedorUbicacionModal: React.FC<ProveedorUbicacionModalProps> = (
                         style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                         value={(direccion as any)[item.field]}
                         onChange={(e) => setDireccion({ ...direccion, [item.field]: e.target.value })}
-                        required={item.pattern !== null}
+                        required={item.required}
                         pattern={item.pattern || undefined}
-                        onInvalid={(e: any) => e.target.setCustomValidity(e.target.validity.valueMissing ? `El campo ${item.label} es obligatorio` : item.msg)}
+                        onInvalid={(e: any) => {
+                          if (e.target.validity.valueMissing) {
+                            e.target.setCustomValidity(`El campo ${item.label} es obligatorio`);
+                          } else if (e.target.validity.patternMismatch) {
+                            e.target.setCustomValidity(item.msg);
+                          }
+                        }}
                         onInput={(e: any) => e.target.setCustomValidity("")}
                       />
                     ) : (
