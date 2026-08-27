@@ -1,21 +1,29 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { useIsMobile } from "../../hook/useIsMobile";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   soloAdmin?: boolean;
   permisoRequerido?: string;
+  soloDesktop?: boolean;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
   soloAdmin = false, 
-  permisoRequerido 
+  permisoRequerido, 
+  soloDesktop = false
 }) => {
   const usuarioGuardado = localStorage.getItem('usuario_logueado') || localStorage.getItem('usuario');
+  const isMobile = useIsMobile();
 
   if (!usuarioGuardado) {
     return <Navigate to="/login" replace />;
+  }
+
+   if (soloDesktop && isMobile) {
+    return <Navigate to="/mobile-home" replace />;
   }
 
   let usuario: any;

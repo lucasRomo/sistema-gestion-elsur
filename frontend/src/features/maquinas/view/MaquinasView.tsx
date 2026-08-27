@@ -7,11 +7,13 @@ import { HistorialIncidenciasModal } from '../components/HistorialIncidenciasMod
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useMaquinas } from '../hook/useMaquinas';
+import { useIsMobile } from '../../../hook/useIsMobile';
 
 export const MaquinasView: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const isMobile = useIsMobile();
 
   // Variables de tema
   const textColor = isDark ? '#ffffff' : '#0f172a';
@@ -88,8 +90,14 @@ export const MaquinasView: React.FC = () => {
   return (
     <div className="container-fluid font-monospace" style={{ color: textColor }}>
       
-      {/* Encabezado */}
-<div className="d-flex justify-content-center align-items-center mb-4 pb-2 text-center">
+      <style>{`
+  @media (max-width: 768px) {
+    .maq-header {
+      margin-top: 1.25rem;
+    }
+  }
+`}</style>
+<div className="d-flex justify-content-center align-items-center mb-4 pb-2 text-center maq-header">
   <div className="w-100">
     <h3 className="fw-bold mb-1" style={{ color: titleColor }}>
       <i className="bi me-2 text-warning"></i>Gestión de Equipos y Máquinas
@@ -141,33 +149,54 @@ export const MaquinasView: React.FC = () => {
       </div>
 
       {/* Botones de acción inferior */}
-      <div className="d-flex justify-content-between align-items-center mt-3 mb-4">
-        <button
-          className="btn btn-secondary fw-bold px-3 shadow"
-          onClick={() => navigate('/dashboard')}
-        >
-          <i className="bi"></i>Volver
-        </button>
-          
-        <div className="d-flex gap-2">
-          <button
-            className="btn btn-danger fw-bold px-3 shadow"
-            onClick={() => setShowModalFalla(true)}
-          >
-            Reportar Falla
-          </button>
-          <button
-            className="btn btn-warning fw-bold px-3 shadow"
-            style={{ backgroundColor: "#ce9b0e", borderColor: "#ce9b0e", color: '#ffffff' }}
-            onClick={() => {
-              setMaquinaAEditar(null);
-              setShowModalCrud(true);
-            }}
-          >
-            <i className="bi me-2"></i>Nuevo Equipo
-          </button>
-        </div>
-      </div>
+<style>{`
+  @media (max-width: 768px) {
+    .maq-btn-volver {
+      display: none;
+    }
+    .maq-acciones-wrap {
+      justify-content: stretch !important;
+    }
+    .maq-acciones-derecha {
+      width: 100%;
+    }
+    .maq-acciones-derecha button {
+      flex: 1 1 0;
+      white-space: normal;
+      line-height: 1.15;
+      padding-top: 0.7rem !important;
+      padding-bottom: 0.7rem !important;
+      font-size: 0.85rem;
+    }
+  }
+`}</style>
+<div className="d-flex justify-content-between align-items-center mt-3 mb-4 maq-acciones-wrap">
+  <button
+    className="btn btn-secondary fw-bold px-3 shadow maq-btn-volver"
+    onClick={() => navigate('/dashboard')}
+  >
+    <i className="bi"></i>Volver
+  </button>
+
+  <div className="d-flex gap-2 maq-acciones-derecha">
+    <button
+      className="btn btn-danger fw-bold px-3 shadow"
+      onClick={() => setShowModalFalla(true)}
+    >
+      Reportar Falla
+    </button>
+    <button
+      className="btn btn-warning fw-bold px-3 shadow"
+      style={{ backgroundColor: "#ce9b0e", borderColor: "#ce9b0e", color: '#ffffff' }}
+      onClick={() => {
+        setMaquinaAEditar(null);
+        setShowModalCrud(true);
+      }}
+    >
+      <i className="bi me-2"></i>Nuevo Equipo
+    </button>
+  </div>
+</div>
 
       {/* Modales de Operación */}
       <MaquinaModal

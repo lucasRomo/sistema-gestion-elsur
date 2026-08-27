@@ -9,7 +9,7 @@ interface ModalComparacionProps {
   modalFechaHastaInput: string;
   modalFechaDesdeCompInput: string;
   modalFechaHastaCompInput: string;
-  comparacionData: ComparacionDataState | null; 
+  comparacionData: ComparacionDataState | null;
   setModalFechaDesdeInput: (fecha: string) => void;
   setModalFechaHastaInput: (fecha: string) => void;
   setModalFechaDesdeCompInput: (fecha: string) => void;
@@ -39,22 +39,49 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
   handleAnalizarComparacionModal,
   cerrarModalComparacion,
   obtenerNombreInforme,
-  esMismoDia, // <-- Recibir esMismoDia
+  esMismoDia,
   renderGraficoEspecifico,
 }) => {
   if (!modalComparacionAbierto || !informeComparacion) return null;
 
   return (
-    <div 
-      className="modal fade show d-block" 
-      tabIndex={-1} 
+    <div
+      className="modal fade show d-block"
+      tabIndex={-1}
       style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
     >
-      <div className="modal-dialog modal-xl modal-dialog-centered">
+      <style>{`
+        @media (max-width: 480px) {
+          .im-modal-comp-dialog {
+            margin: 0.5rem;
+            max-width: calc(100% - 1rem);
+          }
+          .im-modal-comp-body {
+            padding: 1rem !important;
+          }
+          .im-modal-comp-header {
+            padding: 1rem !important;
+          }
+          .im-date-row {
+            flex-wrap: wrap;
+          }
+          .im-date-row input[type="date"] {
+            min-width: 0;
+            flex: 1 1 100px;
+            font-size: 0.78rem;
+            padding: 0.3rem 0.4rem;
+          }
+          .im-comp-btn {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.6rem !important;
+          }
+        }
+      `}</style>
+      <div className="modal-dialog modal-xl modal-dialog-centered im-modal-comp-dialog">
         <div className="modal-content im-surface text-white border border-secondary shadow-lg rounded-4">
-          
+
           {/* Header */}
-          <div className="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3">
+          <div className="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3 im-modal-comp-header">
             <div>
               <h5 className="modal-title fw-bold font-monospace d-flex align-items-center gap-2">
                 <i className="bi bi-arrow-left-right text-info"></i>
@@ -64,42 +91,42 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
                 Seleccioná el modo de comparación para confrontar dos períodos de tiempo.
               </p>
             </div>
-            <button 
-              type="button" 
-              className="btn-close btn-close-white" 
+            <button
+              type="button"
+              className="btn-close btn-close-white"
               onClick={cerrarModalComparacion}
             ></button>
           </div>
 
           {/* Body */}
-          <div className="modal-body p-4">
-            
+          <div className="modal-body p-4 im-modal-comp-body">
+
             {/* Botones de Tipo de Comparación */}
             <div className="d-flex flex-wrap gap-2 mb-4 justify-content-center">
               <button
                 type="button"
-                className={`btn btn-sm px-3 py-2 fw-semibold ${tipoComparacion === 'dia' ? 'btn-info' : 'btn-outline-secondary text-light'}`}
+                className={`btn btn-sm px-3 py-2 fw-semibold im-comp-btn ${tipoComparacion === 'dia' ? 'btn-info' : 'btn-outline-secondary text-light'}`}
                 onClick={() => seleccionarTipoComparacion('dia')}
               >
                 Día Anterior
               </button>
               <button
                 type="button"
-                className={`btn btn-sm px-3 py-2 fw-semibold ${tipoComparacion === 'semana' ? 'btn-info' : 'btn-outline-secondary text-light'}`}
+                className={`btn btn-sm px-3 py-2 fw-semibold im-comp-btn ${tipoComparacion === 'semana' ? 'btn-info' : 'btn-outline-secondary text-light'}`}
                 onClick={() => seleccionarTipoComparacion('semana')}
               >
                 Semana Anterior
               </button>
               <button
                 type="button"
-                className={`btn btn-sm px-3 py-2 fw-semibold ${tipoComparacion === 'mes' ? 'btn-info' : 'btn-outline-secondary text-light'}`}
+                className={`btn btn-sm px-3 py-2 fw-semibold im-comp-btn ${tipoComparacion === 'mes' ? 'btn-info' : 'btn-outline-secondary text-light'}`}
                 onClick={() => seleccionarTipoComparacion('mes')}
               >
                 Mes Anterior
               </button>
               <button
                 type="button"
-                className={`btn btn-sm px-3 py-2 fw-semibold ${tipoComparacion === 'personalizado' ? 'btn-info' : 'btn-outline-secondary text-light'}`}
+                className={`btn btn-sm px-3 py-2 fw-semibold im-comp-btn ${tipoComparacion === 'personalizado' ? 'btn-info' : 'btn-outline-secondary text-light'}`}
                 onClick={() => seleccionarTipoComparacion('personalizado')}
               >
                 Personalizado
@@ -110,11 +137,11 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
             {tipoComparacion && (
               <div className="p-3 mb-4 rounded-3 border border-secondary border-opacity-25 im-surface-head">
                 <div className="row g-3 align-items-center">
-                  
+
                   {/* Período Actual */}
                   <div className="col-12 col-md-5">
                     <label className="form-label small text-info fw-bold mb-1">Período Actual</label>
-                    <div className="d-flex align-items-center gap-2">
+                    <div className="d-flex align-items-center gap-2 im-date-row">
                       <input
                         type="date"
                         className="form-control form-control-sm bg-dark text-white border-secondary"
@@ -139,7 +166,7 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
                   {/* Período Anterior */}
                   <div className="col-12 col-md-5">
                     <label className="form-label small text-secondary fw-bold mb-1">Período a Comparar</label>
-                    <div className="d-flex align-items-center gap-2">
+                    <div className="d-flex align-items-center gap-2 im-date-row">
                       <input
                         type="date"
                         className="form-control form-control-sm bg-dark text-white border-secondary"
@@ -160,7 +187,7 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
                 <div className="text-end mt-3">
                   <button
                     type="button"
-                    className="btn btn-sm btn-primary px-4 fw-bold"
+                    className="btn btn-sm btn-primary px-4 fw-bold im-comp-btn"
                     onClick={handleAnalizarComparacionModal}
                   >
                     Recalcular Comparativa
@@ -172,7 +199,7 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
             {/* Vista Gráfica Comparativa Lado a Lado */}
             {comparacionData && (
               <div className="row g-4">
-                
+
                 {/* Gráfico Actual */}
                 <div className="col-12 col-lg-6">
                   <div className="p-3 rounded-3 border border-info border-opacity-25 h-100">
@@ -180,8 +207,8 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
                       Período Actual ({comparacionData.periodoActual.desde} a {comparacionData.periodoActual.hasta})
                     </h6>
                     <div style={{ height: '320px', width: '100%' }}>
-  {renderGraficoEspecifico && renderGraficoEspecifico(informeComparacion, comparacionData.actual, false)}
-</div>
+                      {renderGraficoEspecifico && renderGraficoEspecifico(informeComparacion, comparacionData.actual, false)}
+                    </div>
                   </div>
                 </div>
 
@@ -192,8 +219,8 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
                       Período Anterior ({comparacionData.periodoAnterior.desde} a {comparacionData.periodoAnterior.hasta})
                     </h6>
                     <div style={{ height: '320px', width: '100%' }}>
-  {renderGraficoEspecifico && renderGraficoEspecifico(informeComparacion, comparacionData.anterior, true)}
-</div>
+                      {renderGraficoEspecifico && renderGraficoEspecifico(informeComparacion, comparacionData.anterior, true)}
+                    </div>
                   </div>
                 </div>
 

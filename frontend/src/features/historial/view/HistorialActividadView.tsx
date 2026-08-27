@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useHistorialActividad } from '../hooks/useHistorialActividad';
 import type { RegistroActividad } from '../types/RegistroActividad';
+import type { Pedido } from '../../pedidos/types/Pedido';
+
 import {
   exportarHistorialActividadExcel,
   exportarHistorialActividadPDF,

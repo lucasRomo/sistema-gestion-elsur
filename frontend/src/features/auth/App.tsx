@@ -22,6 +22,8 @@ import { TurnoProvider } from '../../Context/TurnoContext';
 import { HistorialActividadView } from '../../features/historial/view/HistorialActividadView';
 import { MaquinasView } from '../../features/maquinas/view/MaquinasView';
 import { ThemeProvider } from '../../Context/ThemeContext';
+import { MobileLayout } from '../../components/layouts/MobileLayout';
+import { useIsMobile } from "../../hook/useIsMobile";
 
 function App() {
   return (
@@ -31,15 +33,14 @@ function App() {
           <Routes>
             <Route path="/" element={<WelcomeView onIrARegistro={() => window.location.href='/registro'} onIrALogin={() => window.location.href='/login'} />} />
             <Route path="/registro" element={<RegisterView onVolver={() => window.location.href='/'} />} />
-            <Route path="/login" element={<LoginView onLoginExitoso={() => window.location.href='/dashboard'} onVolver={() => window.location.href='/'} />} />
-
-            {/* RUTAS OPERATIVAS CON SIDEBAR Y PROTECCIÓN DE PERMISOS */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute permisoRequerido="Panel Principal">
-                <SidebarLayout activeItem="Panel Principal">
-                  <DashboardPrincipal />
-                </SidebarLayout>
-              </ProtectedRoute>
+            <Route path="/login" element={
+              <LoginView 
+                onLoginExitoso={() => {
+                  const esMobile = window.innerWidth < 768;
+                  window.location.href = esMobile ? '/mobile-home' : '/dashboard';
+                }} 
+                onVolver={() => window.location.href='/'} 
+              />
             } />
 
             <Route path="/clientes" element={
@@ -134,7 +135,7 @@ function App() {
             } />
 
             <Route path="/informes" element={
-              <ProtectedRoute permisoRequerido="Informes">
+              <ProtectedRoute permisoRequerido="Informes" soloDesktop>
                 <SidebarLayout activeItem="Informes">
                   <InformesView />
                 </SidebarLayout>
@@ -154,6 +155,24 @@ function App() {
                 </SidebarLayout>
               </ProtectedRoute>
             } />
+
+
+
+            <Route path="/mobile-home" element={
+              <ProtectedRoute permisoRequerido="Panel Principal">
+                <MobileLayout />
+              </ProtectedRoute>
+            } />
+
+
+            <Route path="/dashboard" element={
+              <ProtectedRoute permisoRequerido="Panel Principal">
+                <SidebarLayout activeItem="Panel Principal">
+                  <DashboardPrincipal />
+                </SidebarLayout>
+              </ProtectedRoute>
+            } />
+
 
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
