@@ -1,7 +1,7 @@
-// src/services/incidenciaService.ts
 import type { Incidencia } from '../types/Incidencia';
+import { API_BASE_URL } from '../../../config/api';
 
-const API_URL = 'http://localhost:8080/api/incidencias';
+const API_URL = `${API_BASE_URL}/incidencias`;
 
 export interface PagoMantenimientoDTO {
   monto: number;
@@ -18,9 +18,6 @@ export interface RespuestaPago {
 }
 
 export const incidenciaService = {
-  /**
-   * Obtiene las incidencias por máquina
-   */
   getByMaquinaId: async (idMaquina: number): Promise<Incidencia[]> => {
     const res = await fetch(`${API_URL}/maquina/${idMaquina}`);
     if (!res.ok) {
@@ -29,9 +26,6 @@ export const incidenciaService = {
     return res.json();
   },
 
-  /**
-   * Pone una incidencia en mantenimiento
-   */
   ponerEnMantenimiento: async (
     idIncidencia: number, 
     notaMantenimiento: string, 
@@ -48,9 +42,6 @@ export const incidenciaService = {
     }
   },
 
-  /**
-   * Resuelve una incidencia
-   */
   resolver: async (
     idIncidencia: number, 
     resolucion: string, 
@@ -67,9 +58,6 @@ export const incidenciaService = {
     }
   },
 
-  /**
-   * Registra un pago de mantenimiento
-   */
   registrarPagoMantenimiento: async (
     idIncidencia: number, 
     payload: PagoMantenimientoDTO

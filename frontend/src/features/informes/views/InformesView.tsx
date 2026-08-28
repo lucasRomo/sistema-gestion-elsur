@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { pedidoService } from '../../pedidos/service/pedidoService';
 import { cajaService, type MovimientoCaja } from '../../caja/services/cajaService';
 import { getProductos } from '../../productos/services/productoService';
+import { API_BASE_URL } from '../../../config/api';
 
 // Modal Registros de Arqueo y Comparación
 import { ModalRegistrosArqueo } from '../components/ModalRegistrosArqueos';
@@ -142,15 +143,15 @@ export const InformesView: React.FC = () => {
       setCargando(true);
       try {
         const [dataPedidos, dataCaja, dataProductos, resMermas, resDeudores, dataTurnos, resAverias, resCategorias] = await Promise.all([
-          pedidoService.obtenerTodos(),
-          cajaService.obtenerTodos(),
-          getProductos(),
-          fetch('http://localhost:8080/api/mermas'),
-          fetch('http://localhost:8080/api/cuentas-corrientes/resumen-deudores'),
-          cajaService.obtenerTodosLosTurnos(),
-          fetch('http://localhost:8080/api/incidencias'),
-          fetch('http://localhost:8080/api/categorias-cliente')
-        ]);
+  pedidoService.obtenerTodos(),
+  cajaService.obtenerTodos(),
+  getProductos(),
+  fetch(`${API_BASE_URL}/mermas`),
+  fetch(`${API_BASE_URL}/cuentas-corrientes/resumen-deudores`),
+  cajaService.obtenerTodosLosTurnos(),
+  fetch(`${API_BASE_URL}/incidencias`),
+  fetch(`${API_BASE_URL}/categorias-cliente`)
+]);
 
         const pedidosValidos = dataPedidos || [];
         const cajaValida = dataCaja || [];
@@ -186,14 +187,14 @@ export const InformesView: React.FC = () => {
       setFechaHasta(fechaHastaInput);
 
       const [nuevosPedidos, nuevosMovimientos, resMermas, resDeudores, nuevosTurnos, resAverias, resCategorias] = await Promise.all([
-        pedidoService.obtenerTodos(),
-        cajaService.obtenerTodos(),
-        fetch('http://localhost:8080/api/mermas'),
-        fetch('http://localhost:8080/api/cuentas-corrientes/resumen-deudores'),
-        cajaService.obtenerTodosLosTurnos(),
-        fetch('http://localhost:8080/api/incidencias'),
-        fetch('http://localhost:8080/api/categorias-cliente') 
-      ]);
+  pedidoService.obtenerTodos(),
+  cajaService.obtenerTodos(),
+  fetch(`${API_BASE_URL}/mermas`),
+  fetch(`${API_BASE_URL}/cuentas-corrientes/resumen-deudores`),
+  cajaService.obtenerTodosLosTurnos(),
+  fetch(`${API_BASE_URL}/incidencias`),
+  fetch(`${API_BASE_URL}/categorias-cliente`)
+]);
 
       const pedidosValidos = nuevosPedidos || [];
       const cajaValida = nuevosMovimientos || [];

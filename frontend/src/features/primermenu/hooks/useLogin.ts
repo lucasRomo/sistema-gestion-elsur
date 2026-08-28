@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_BASE_URL } from '../../../config/api'; 
 
 interface UseLoginProps {
   onLoginExitoso: (usuario: any) => void;
@@ -24,7 +25,7 @@ export const useLogin = ({ onLoginExitoso }: UseLoginProps) => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8080/api/usuarios/login', {
+      const response = await fetch(`${API_BASE_URL}/usuarios/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials)

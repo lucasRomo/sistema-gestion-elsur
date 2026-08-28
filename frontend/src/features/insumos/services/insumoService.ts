@@ -1,6 +1,7 @@
 import type { Insumo } from '../types/Insumo';
+import { API_BASE_URL } from '../../../config/api';
 
-const API_URL = 'http://localhost:8080/api/insumos';
+const API_URL = `${API_BASE_URL}/insumos`;
 
 const obtenerIdUsuarioLogueado = (): number | null => {
   const usuarioGuardado = localStorage.getItem('usuario_logueado');

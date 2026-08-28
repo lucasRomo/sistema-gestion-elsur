@@ -1,6 +1,7 @@
 import type { Producto } from '../types/Producto';
+import { API_BASE_URL } from '../../../config/api';
 
-const API_URL = 'http://localhost:8080/api/productos';
+const API_URL = `${API_BASE_URL}/productos`;
 
 const obtenerIdUsuarioLogueado = (): number | null => {
   const usuarioGuardado = localStorage.getItem('usuario_logueado');

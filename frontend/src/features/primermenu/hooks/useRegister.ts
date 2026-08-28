@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Usuario } from '../../../types/Usuario';
+import { API_BASE_URL } from '../../../config/api'; // Ajustá la profundidad si tus carpetas difieren
 
 export const useRegister = () => {
   const [personaData, setPersonaData] = useState({
@@ -49,7 +50,7 @@ export const useRegister = () => {
     };
 
     try {
-      const responseUsuario = await fetch('http://localhost:8080/api/usuarios', {
+      const responseUsuario = await fetch(`${API_BASE_URL}/usuarios`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(nuevoUsuario)
@@ -72,7 +73,7 @@ export const useRegister = () => {
           persona: { idPersona: usuarioGuardado.persona?.idPersona }
         };
 
-        const responseEmpleado = await fetch('http://localhost:8080/api/empleados', {
+        const responseEmpleado = await fetch(`${API_BASE_URL}/empleados`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(nuevoEmpleado)
@@ -101,7 +102,7 @@ export const useRegister = () => {
       }
     } catch (error) {
       console.error(error);
-      alert('Error de red con el puerto 8080.');
+      alert('Error de red al conectar con el servidor.');
     }
   };
 

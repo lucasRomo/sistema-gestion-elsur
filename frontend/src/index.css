@@ -555,3 +555,43 @@ html[data-bs-theme="light"] .mobile-bottom-nav button.active {
     font-size: 1.35rem;
   }
 }
+
+/* ==========================================
+   9. AJUSTES RECHARTS MODO MOBILE (edited-image.png)
+   ========================================== */
+@media (max-width: 768px) {
+  /* 1. Ocultar las líneas y letras blancas de los gráficos de torta */
+  .im-pie-label-line,
+  .im-pie-label-text {
+    display: none !important;
+  }
+
+  /* 2. Acomodar los títulos de abajo (Leyenda) */
+  .recharts-legend-wrapper {
+    position: relative !important;
+    max-height: 120px !important; /* Aumenta el espacio para scrollear si hay muchos ítems */
+    width: 100% !important;
+    bottom: 0 !important;
+  }
+
+  .recharts-default-legend {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding-top: 10px !important;
+  }
+
+  .recharts-default-legend .recharts-legend-item {
+    margin-right: 0 !important; /* Elimina márgenes gigantes por defecto de Recharts */
+    font-size: 0.70rem !important; /* Achica la fuente para que entren más elementos */
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  /* 3. Achicar los textos del eje X en los gráficos de barras/áreas para evitar superposición */
+  .recharts-cartesian-axis-tick text {
+    font-size: 9px !important;
+  }
+}
+

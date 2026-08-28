@@ -37,7 +37,7 @@ function App() {
               <LoginView 
                 onLoginExitoso={() => {
                   const esMobile = window.innerWidth < 768;
-                  window.location.href = esMobile ? '/mobile-home' : '/dashboard';
+                  window.location.href = esMobile ? '/mobile-home' : '/informes';
                 }} 
                 onVolver={() => window.location.href='/'} 
               />
@@ -155,8 +155,6 @@ function App() {
                 </SidebarLayout>
               </ProtectedRoute>
             } />
-
-
 
             <Route path="/mobile-home" element={
               <ProtectedRoute permisoRequerido="Panel Principal">

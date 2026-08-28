@@ -251,16 +251,39 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
         <div className="modal-content" style={{ backgroundColor: modalBg, color: textColor, borderRadius: '12px', border: `1px solid ${modalBorder}` }}>
           
           {/* Header */}
-          <div className="modal-header d-flex justify-content-between align-items-center" style={{ borderBottom: `2px solid ${modalBorder}`, padding: '16px 24px' }}>
-            <div className="d-flex align-items-center gap-3">
-              <h5 className="modal-title font-monospace fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: textColor }}>
-                <i className="bi bi-clock-history text-info"></i>
-                Historial de Incidencias: <span className="text-warning">{maquina.nombre}</span>
-              </h5>
-              {renderBadgeEstado(maquina.estado)}
-            </div>
-            <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose}></button>
-          </div>
+<div 
+  className="modal-header d-flex justify-content-between align-items-start flex-wrap" 
+  style={{ borderBottom: `2px solid ${modalBorder}`, padding: '16px 24px', rowGap: '10px' }}
+>
+  <style>{`
+    @media (max-width: 480px) {
+      .hist-inc-title {
+        font-size: 0.95rem !important;
+      }
+      .hist-inc-left {
+        width: 100%;
+      }
+      .hist-card-header {
+        font-size: 0.9em;
+      }
+      .hist-card-header .badge {
+        font-size: 0.68rem;
+        padding: 0.35em 0.5em;
+      }
+      .hist-card-header button {
+        font-size: 0.7rem !important;
+      }
+    }
+  `}</style>
+  <div className="d-flex flex-wrap align-items-center gap-2 hist-inc-left" style={{ flex: '1 1 260px', minWidth: 0 }}>
+    <h5 className="modal-title font-monospace fw-bold mb-0 d-flex flex-wrap align-items-center gap-2 hist-inc-title" style={{ color: textColor }}>
+      <i className="bi bi-clock-history text-info"></i>
+      Historial de Incidencias: <span className="text-warning">{maquina.nombre}</span>
+    </h5>
+    {renderBadgeEstado(maquina.estado)}
+  </div>
+  <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose}></button>
+</div>
 
           {/* Body */}
           <div className="modal-body p-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
@@ -289,8 +312,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                       style={{ backgroundColor: cardBg, border: `1px solid ${modalBorder}` }}
                     >
                       {/* Cabecera Tarjeta */}
-                      <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style={{ borderColor: modalBorder }}>
-                        <div className="d-flex align-items-center gap-2">
+                      <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom hist-card-header" style={{ borderColor: modalBorder, rowGap: '8px' }}>
+                        <div className="d-flex flex-wrap align-items-center gap-2">
                           <span className="fw-bold font-monospace" style={{ color: textSubtle }}>Incidencia #{inc.idIncidencia}</span>
                           <span className={`badge ${
                             inc.prioridad === 'CRITICA' || inc.prioridad === 'ALTA' ? 'bg-danger' :
@@ -299,7 +322,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                             PRIORIDAD {inc.prioridad || 'MEDIA'}
                           </span>
                         </div>
-                        <div className="d-flex align-items-center gap-2">
+                        <div className="d-flex flex-wrap align-items-center gap-2">
                           
                           {esPagado ? (
                             <div className="d-flex align-items-center gap-1">

@@ -23,7 +23,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             
-            // SOLUCIÓN: Deshabilitar frameOptions para permitir iframe entre puertos distintos (5173 -> 8080)
+            // Deshabilitar frameOptions para permitir iframe entre puertos distintos
             .headers(headers -> headers
                 .frameOptions(frame -> frame.disable())
             )
@@ -50,7 +50,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173"));
+        // Se agregaron localhost y tu IP local exacta para que funcione con allowCredentials(true)
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3000", 
+            "http://localhost:5173", 
+            "http://192.168.1.178:5173"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

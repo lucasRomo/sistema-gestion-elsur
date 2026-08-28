@@ -222,6 +222,18 @@ const CustomDevueltosTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+const useIsNarrow = (breakpoint = 480) => {
+  const [isNarrow, setIsNarrow] = React.useState(
+    typeof window !== 'undefined' ? window.innerWidth < breakpoint : false
+  );
+  React.useEffect(() => {
+    const handler = () => setIsNarrow(window.innerWidth < breakpoint);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, [breakpoint]);
+  return isNarrow;
+};
+
 export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
   informe,
   data,
@@ -232,6 +244,11 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+
+  const isMobile = useIsNarrow(480);
+  const outerR = isMobile ? 65 : 100;
+  const innerR = isMobile ? 38 : 60;
+  const legendFontSize = isMobile ? '0.65rem' : '0.85rem';
 
   const colorBase = esAnterior ? '#71717a' : '#8e45e0';
 
@@ -268,7 +285,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'mediosPago':
       return (
-        <ResponsiveContainer width="100%" height={360}>
+        <ResponsiveContainer width="100%" height={isMobile ? 300 : 360}>
           <PieChart>
             <Pie 
               data={data.distribucionMediosPago} 
@@ -307,7 +324,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'estados':
       return (
-        <ResponsiveContainer width="100%" height={360}>
+        <ResponsiveContainer width="100%" height={isMobile ? 300 : 360}>
           <PieChart>
             <Pie 
               data={data.distribucionEstados} 
@@ -328,7 +345,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'productos':
       return (
-        <ResponsiveContainer width="100%" height={360}>
+        <ResponsiveContainer width="100%" height={isMobile ? 300 : 360}>
           <PieChart>
             <Pie 
               data={data.productosMasVendidos} 
@@ -398,7 +415,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'pedidosEmpleados':
       return (
-        <ResponsiveContainer width="100%" height={360}>
+        <ResponsiveContainer width="100%" height={isMobile ? 300 : 360}>
           <PieChart>
             <Pie 
               data={data.pedidosCompletadosPorEmpleado} 
@@ -420,7 +437,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'pedidosdevueltosempleado':
       return (
-        <ResponsiveContainer width="100%" height={360}>
+        <ResponsiveContainer width="100%" height={isMobile ? 300 : 360}>
           <PieChart>
             <Pie 
               data={data.pedidosDevueltosPorEmpleado} 
@@ -476,7 +493,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'clientes':
       return (
-        <ResponsiveContainer width="100%" height={360}>
+        <ResponsiveContainer width="100%" height={isMobile ? 300 : 360}>
           <PieChart>
             <Pie 
               data={data.topClientes} 
@@ -513,7 +530,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
       case 'deudores':
       return (
-        <ResponsiveContainer width="100%" height={360}>
+        <ResponsiveContainer width="100%" height={isMobile ? 300 : 360}>
           <PieChart>
             <Pie 
               data={data.topDeudores} 
@@ -647,7 +664,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'categoriasIngresos':
       return (
-        <ResponsiveContainer width="100%" height={360}>
+        <ResponsiveContainer width="100%" height={isMobile ? 300 : 360}>
           <PieChart>
             <Pie
               data={data.distribucionCategoriasIngreso}
@@ -683,7 +700,7 @@ export const InformeChartRenderer: React.FC<InformeChartRendererProps> = ({
 
     case 'categoriasEgresos':
       return (
-        <ResponsiveContainer width="100%" height={360}>
+        <ResponsiveContainer width="100%" height={isMobile ? 300 : 360}>
           <PieChart>
             <Pie
               data={data.distribucionCategoriasEgreso}

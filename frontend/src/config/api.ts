@@ -1,0 +1,1 @@
+export const API_BASE_URL = 'http://(Poner IP LOCAL):8080/api';

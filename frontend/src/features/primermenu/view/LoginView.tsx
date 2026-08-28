@@ -31,29 +31,30 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
   } = useLogin({ onLoginExitoso });
 
   return (
-    <div className="container-fluid min-vh-100 p-0 m-0 d-flex flex-column flex-md-row">
+    <div className="container-fluid min-vh-100 p-0 m-0 d-flex flex-column flex-md-row overflow-x-hidden">
       {/* IZQUIERDA: GESTAPRO */}
       <div 
-        className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center"
+        className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center p-4"
         style={{
+          minHeight: '28vh',
           backgroundColor: '#1a0b2e',
           backgroundImage: `url(${fondoImg})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          borderRight: '1px solid #4c1d95',
-          boxShadow: '4px 0 15px rgba(0, 0, 0, 0.15)',
+          borderBottom: '1px solid #4c1d95',
+          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.15)',
           zIndex: 10
         }}
       >
-        <img src={logoGesta} alt="GestaPro" style={{ maxWidth: '500px' }} />
+        <img src={logoGesta} alt="GestaPro" style={{ maxWidth: '280px', width: '100%', height: 'auto' }} />
       </div>
 
       {/* DERECHA: LOGIN */}
       <div 
-        className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center"
-        style={{ backgroundColor: bgDerecho, transition: 'background-color 0.3s ease' }}
+        className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center p-4 flex-grow-1"
+        style={{ backgroundColor: bgDerecho, transition: 'background-color 0.3s ease', minHeight: '72vh' }}
       >
-        <form onSubmit={handleLogin} style={{ width: '100%', maxWidth: '300px' }}>
+        <form onSubmit={handleLogin} style={{ width: '100%', maxWidth: '320px' }}>
           
           <div className="text-center mb-4">
             <img 
@@ -61,11 +62,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
               alt="El SUR" 
               className="mb-2" 
               style={{ 
-                maxWidth: '200px',
+                maxWidth: '160px',
+                height: 'auto',
                 filter: esOscuro ? 'none' : 'drop-shadow(0px 0px 1px #000000) drop-shadow(0px 0px 1px #000000)'
               }} 
             />
-            <h2 className="fs-3 fw-bold m-0" style={{ color: textColor }}>el SUR</h2>
+            <h2 className="fs-4 fw-bold m-0" style={{ color: textColor }}>el SUR</h2>
           </div>
 
           <div className="mb-3">
@@ -106,7 +108,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
 
           <button 
             type="submit" 
-            className="btn w-100 mb-2 fw-semibold" 
+            className="btn w-100 mb-2 fw-semibold py-2" 
             style={{ 
               backgroundColor: 'transparent',
               border: '1px solid #8e45e0',
@@ -127,7 +129,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
 
           <button 
             type="button" 
-            className="btn w-100 fw-semibold" 
+            className="btn w-100 fw-semibold py-2" 
             style={{ 
               backgroundColor: 'transparent',
               border: '1px solid #8e45e0',

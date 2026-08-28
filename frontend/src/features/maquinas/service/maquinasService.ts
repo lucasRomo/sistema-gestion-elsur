@@ -1,7 +1,8 @@
 import type { Maquina } from '../types/Maquina';
+import { API_BASE_URL } from '../../../config/api';
 
-const API_MAQUINAS = 'http://localhost:8080/api/maquinas';
-const API_INCIDENCIAS = 'http://localhost:8080/api/incidencias';
+const API_MAQUINAS = `${API_BASE_URL}/maquinas`;
+const API_INCIDENCIAS = `${API_BASE_URL}/incidencias`;
 
 export const getUsuarioActualId = (): number => {
   const usrStr = localStorage.getItem('usuario_logueado');
@@ -39,7 +40,6 @@ export const guardarMaquinaAPI = async (maquina: Maquina & { observacion?: strin
 
   if (!res.ok) throw new Error('No se pudo procesar la solicitud de la máquina.');
 
-  // Sincronización con incidencias según observación
   if (maquina.idMaquina && maquina.observacion) {
     try {
       const incRes = await fetch(`${API_INCIDENCIAS}/maquina/${maquina.idMaquina}`);
