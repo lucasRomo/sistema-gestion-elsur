@@ -4,7 +4,7 @@ import type { ModuloPermiso } from '../service/matrizPermisosService';
 const CATEGORIAS_SIDEBAR: { [categoria: string]: string[] } = {
   'GENERAL': ['Panel Principal'],
   'PRODUCCIÓN': ['Crear Pedido', 'Pedidos Pendientes', 'Historial de Pedidos', 'Caja', 'Repositorio Digital'],
-  'STOCK': ['Inventario', 'Insumos', 'Productos'],
+  'STOCK': ['Insumos', 'Productos', 'Compra de Insumos'],
   'ADMINISTRACIÓN / ENTIDADES': ['Clientes', 'Proveedores', 'Equipos / Máquinas'],
   'OPCIONES DE GERENTE': ['Informes', 'Matriz de Permisos', 'Gestión de Usuarios', 'Historial de Actividad'],
   'MI CUENTA': ['Configuración']

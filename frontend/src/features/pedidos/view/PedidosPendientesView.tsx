@@ -111,24 +111,29 @@ export const PedidosPendientesView: React.FC = () => {
   };
 
   const ejecutarCambioEstado = async (idPedido: number, nuevoEst: string, estadoAnt: string, observaciones: string) => {
-    const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
-    const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
+  const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
+  const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
 
-    try {
-      await actualizarEstado(idPedido, nuevoEst, estadoAnt, observaciones, idUsuarioActivo);
-    } catch (error: any) {
-      console.error("Error al cambiar estado:", error);
-      const mensajeOriginal = error.message || "";
-      const mensajeAmigable = mensajeOriginal.toLowerCase().includes("stock") || mensajeOriginal.toLowerCase().includes("insuficiente")
-        ? "No hay Suficiente Stock para Completar o Entregar el Pedido, Por Favor Modifique el stock en la Ventana Productos para Continuar"
-        : mensajeOriginal;
+  try {
+    await actualizarEstado(idPedido, nuevoEst, estadoAnt, observaciones, idUsuarioActivo);
+    await refrescar();
+    setModalNotif({ 
+      show: true, 
+      msg: `El estado del pedido #${idPedido} cambió a "${nuevoEst}" correctamente.` 
+    });
+  } catch (error: any) {
+    console.error("Error al cambiar estado:", error);
+    const mensajeOriginal = error.message || "";
+    const mensajeAmigable = mensajeOriginal.toLowerCase().includes("stock") || mensajeOriginal.toLowerCase().includes("insuficiente")
+      ? "No hay Suficiente Stock para Completar o Entregar el Pedido, Por Favor Modifique el stock en la Ventana Productos para Continuar"
+      : mensajeOriginal;
 
-      setSucesoError({ show: true, mensaje: mensajeAmigable });
-    } finally {
-      setPedidoEstadoSel(null);
-      setNuevoEstadoPendiente('');
-      setModalAdvertenciaDeuda(prev => ({ ...prev, show: false }));
-    }
+    setSucesoError({ show: true, mensaje: mensajeAmigable });
+  } finally {
+    setPedidoEstadoSel(null);
+    setNuevoEstadoPendiente('');
+    setModalAdvertenciaDeuda(prev => ({ ...prev, show: false }));
+  }
   };
 
   const confirmarCambioEstado = async (observaciones: string) => {

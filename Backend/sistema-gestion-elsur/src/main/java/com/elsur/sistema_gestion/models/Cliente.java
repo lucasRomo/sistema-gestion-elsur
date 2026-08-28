@@ -27,10 +27,6 @@ public class Cliente {
     @Column(name = "limite_credito", nullable = false, precision = 10, scale = 2)
     private BigDecimal limiteCredito;
 
-    @ManyToOne
-@JoinColumn(name = "id_categoria")
-private CategoriaProducto categoriaCliente;
-
     @Column(name = "estado", nullable = false, length = 20)
     private String estado;
 
@@ -44,5 +40,4 @@ private CategoriaProducto categoriaCliente;
     @JoinColumn(name = "id_persona")
     private Persona persona;
 
-    // ... otros campos y relaciones ...
 }

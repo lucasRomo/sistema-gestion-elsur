@@ -138,7 +138,7 @@ export const useRepositorioDigital = () => {
     try {
       const nueva = await repositorioService.crearInstitucion(nombreInstNueva, tipoInstNueva);
       setInstituciones((prev) => [...prev, nueva]);
-      cerrarModalNuevaInst();
+      // ❌ SE QUITÓ: cerrarModalNuevaInst();
     } catch (err) {
       console.error('Error al crear institución:', err);
       throw err;
@@ -153,7 +153,6 @@ export const useRepositorioDigital = () => {
       const nuevaArea = await repositorioService.crearArea(nombreAreaNueva, parseInt(idInstParaArea));
       const instEncontrada = instituciones.find((i) => i.idInstitucion === parseInt(idInstParaArea));
 
-      // Asocia el objeto completo de Institución para prevenir paréntesis vacíos ()
       const areaCompleta: AreaCurso = {
         ...nuevaArea,
         institucion: (nuevaArea.institucion && nuevaArea.institucion.nombreInstitucion)
@@ -162,7 +161,7 @@ export const useRepositorioDigital = () => {
       };
 
       setAreas((prev) => [...prev, areaCompleta]);
-      cerrarModalNuevaArea();
+      // ❌ SE QUITÓ: cerrarModalNuevaArea();
     } catch (err) {
       console.error('Error al crear área:', err);
       throw err;

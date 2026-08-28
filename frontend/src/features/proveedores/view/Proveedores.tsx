@@ -126,10 +126,11 @@ export const Proveedores: React.FC = () => {
         setFormState={setProveedorSeleccionado}
         proveedores={proveedores}
         onClose={() => setShowModal(false)}
-        onSave={async () => {
-          await guardar(proveedorSeleccionado!);
+        onSave={async (proveedorNormalizado) => {
+          const aGuardar = proveedorNormalizado || proveedorSeleccionado!;
+          await guardar(aGuardar);
           setShowModal(false);
-          setSuccessMessage("Proveedor guardado correctamente");
+          setSuccessMessage(isEditing ? "Proveedor modificado correctamente" : "Proveedor registrado correctamente");
           setShowSuccess(true);
         }}
       />

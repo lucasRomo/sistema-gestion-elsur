@@ -11,8 +11,6 @@ import { useCaja } from '../hooks/useCaja';
 import { ModalNuevoIngreso } from '../components/ModalNuevoIngreso';
 import { ModalConsultarArqueo } from '../components/ModalConsultarArqueo';
 import { ModalCerrarTurno } from '../components/ModalCerrarTurno';
-import { ModalCompraInsumos } from '../components/ModalCompraInsumos';
-import type { DatosCompraInsumo } from '../components/ModalCompraInsumos';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import type { NuevoMovimientoDTO } from '../services/cajaService';
 import { renderBadgeCategoria } from '../components/RenderBadgeCategoria';
@@ -34,7 +32,6 @@ export const CajaView: React.FC = () => {
     abrirCaja,
     consultarArqueo,
     guardarMovimiento,
-    comprarInsumo,
     ajustarMovimiento,
     cerrarCaja
   } = useCaja(setCajaAbierta);
@@ -46,7 +43,6 @@ export const CajaView: React.FC = () => {
   const [showModalCierre, setShowModalCierre] = useState(false);
   const [guardandoCierre, setGuardandoCierre] = useState(false);
   const [showModalArqueo, setShowModalArqueo] = useState(false);
-  const [showModalCompraInsumos, setShowModalCompraInsumos] = useState(false);
 
   // Estado para alertas/validaciones personalizadas
   const [avisoModal, setAvisoModal] = useState<string | null>(null);
@@ -136,41 +132,6 @@ export const CajaView: React.FC = () => {
       setIsModalOpen(false);
     } catch (error: any) {
       setAvisoModal("No se pudo guardar el movimiento: " + error.message);
-    }
-  };
-
-  const handleConfirmarCompraInsumo = async (datos: DatosCompraInsumo) => {
-    try {
-      const resultado = await comprarInsumo(datos);
-      setShowModalCompraInsumos(false);
-
-      const movimientoInsumo = {
-        id_movimiento: resultado?.idMovimiento || resultado?.id_movimiento,
-        monto: datos.montoTotal,
-        tipoMovimiento: 'EGRESO',
-        categoria: 'INSUMOS',
-        descripcion: datos.concepto,
-        fecha: new Date().toISOString(),
-        metodoPago: datos.metodoPago
-      };
-
-      const pedidoAdaptado = {
-        id_pedido: resultado?.idCompra || resultado?.id_compra || '-',
-        cliente: {
-          persona: null,
-          razon_social: 'Compra Insumos / Proveedor',
-          nombre: 'Compra Insumos / Proveedor'
-        },
-        monto_total: datos.montoTotal,
-        observaciones: datos.concepto
-      };
-
-      setTicketSeleccionado({
-        pedido: pedidoAdaptado,
-        movimiento: movimientoInsumo
-      });
-    } catch (error: any) {
-      setAvisoModal("Error al registrar la compra: " + error.message);
     }
   };
 
@@ -568,16 +529,6 @@ export const CajaView: React.FC = () => {
 
             <button
               className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
-              style={{ backgroundColor: '#6f42c1', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
-              disabled={!cajaAbierta}
-              onClick={() => setShowModalCompraInsumos(true)}
-            >
-              <span>Compra de Insumos</span>
-              <i className="bi bi-truck fs-5 ms-2"></i>
-            </button>
-
-            <button
-              className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
               style={{ backgroundColor: '#0c500c', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
               disabled={!cajaAbierta || movimientos.length === 0}
               onClick={() =>
@@ -850,12 +801,6 @@ export const CajaView: React.FC = () => {
         onConfirmarCierre={ejecutarCierreCaja}
         guardando={guardandoCierre}
         movimientos={movimientos}
-      />
-
-      <ModalCompraInsumos
-        isOpen={showModalCompraInsumos}
-        onClose={() => setShowModalCompraInsumos(false)}
-        onConfirmar={handleConfirmarCompraInsumo}
       />
 
       {ticketSeleccionado && (

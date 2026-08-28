@@ -427,7 +427,11 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
                                     {formatDescripcionMovimiento(m)}
                                   </div>
                                 </td>
-                                <td className="text-body-secondary">{m.usuario?.idUsuario || m.usuario?.id_usuario || '-'}</td>
+                                <td className="text-body-secondary">
+  {typeof m.usuario === 'object' && m.usuario !== null
+    ? (m.usuario.idUsuario || m.usuario.id_usuario || '-')
+    : (m.usuario || '-')}
+</td>
                               </tr>
                             ))
                           )}

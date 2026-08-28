@@ -14,21 +14,23 @@ public class CompraInsumoDTO {
     private String metodoPago;
     private String concepto;
     private Long idUsuario;
-    private Integer idProveedor;
-    private List<DetalleItemCompraDTO> items;
+    private Long idProveedor;
     private String comprobanteImagen;
+    private List<DetalleItemCompraDTO> items;
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class DetalleItemCompraDTO {
+        private String tipoItem; // "INSUMO" o "PRODUCTO"
         private Long idInsumo;
+        private Long idProducto;
         private Boolean esNuevoInsumo;
         private String nombreInsumo;
         private BigDecimal cantidadEmpaquetada;
         private BigDecimal precioUnitario;
         private BigDecimal factorConversion;
-        private Integer idUnidad;
-        private Integer idUnidadCompra;
+        private Long idUnidad;
+        private Long idUnidadCompra;
     }
 }

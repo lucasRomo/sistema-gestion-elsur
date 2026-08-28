@@ -22,6 +22,7 @@ import { TurnoProvider } from '../../Context/TurnoContext';
 import { HistorialActividadView } from '../../features/historial/view/HistorialActividadView';
 import { MaquinasView } from '../../features/maquinas/view/MaquinasView';
 import { ThemeProvider } from '../../Context/ThemeContext';
+import { CompraInsumosView } from '../compraInsumos/views/CompraInsumosView';
 
 function App() {
   return (
@@ -70,6 +71,14 @@ function App() {
               <ProtectedRoute permisoRequerido="Productos">
                 <SidebarLayout activeItem="Productos">
                   <Productos />
+                </SidebarLayout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/compra-insumos" element={
+              <ProtectedRoute permisoRequerido="Compra de Insumos">
+                <SidebarLayout activeItem="Compra de Insumos">
+                  <CompraInsumosView />
                 </SidebarLayout>
               </ProtectedRoute>
             } />

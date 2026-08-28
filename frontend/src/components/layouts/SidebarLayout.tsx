@@ -110,6 +110,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   const menuStock = [
     { name: 'Insumos', icon: 'bi-boxes', path: '/insumos' },
     { name: 'Productos', icon: 'bi-archive', path: '/productos' },
+    { name: 'Compra de Insumos', icon: 'bi-truck', path: '/compra-insumos' }
   ].filter(item => tienePermiso(item.name));
 
   const menuEntidades = [

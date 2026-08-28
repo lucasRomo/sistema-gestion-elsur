@@ -8,7 +8,7 @@ interface ProveedorModalProps {
   isEditing: boolean;
   formState: Proveedor | null;
   setFormState: React.Dispatch<React.SetStateAction<Proveedor | null>>;
-  onSave: (e: React.FormEvent) => void;
+  onSave: (proveedorNormalizado?: Proveedor) => void;
   proveedores: Proveedor[];
 }
 
@@ -119,17 +119,41 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   }
   };
 
+  const obtenerFormStateNormalizado = (): Proveedor | null => {
+    if (!formState) return null;
+
+    return {
+      ...formState,
+      direccion: formState.direccion
+        ? {
+            ...formState.direccion,
+            ciudad: formState.direccion.ciudad?.trim() || '-',
+            provincia: formState.direccion.provincia?.trim() || '-',
+            pais: formState.direccion.pais?.trim() || '-',
+            piso: formState.direccion.piso?.trim() || '-',
+            departamento: formState.direccion.departamento?.trim() || '-',
+          }
+        : undefined,
+    };
+  };
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const datosNormalizados = obtenerFormStateNormalizado();
+    if (!datosNormalizados) return;
+
     if (isEditing) {
       setMostrarConfirmacion(true);
     } else {
-      onSave(e);
+      onSave(datosNormalizados); 
     }
   };
 
-  const handleGuardarDefinitivo = (e: React.FormEvent) => {
-    onSave(e);
+  const handleGuardarDefinitivo = () => {
+    const datosNormalizados = obtenerFormStateNormalizado();
+    if (datosNormalizados) {
+      onSave(datosNormalizados);
+    }
     setMostrarConfirmacion(false);
   };
 
