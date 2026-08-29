@@ -40,6 +40,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
   const [productosSeleccionados, setProductosSeleccionados] = useState<number[]>([]);
   const [busquedaProducto, setBusquedaProducto] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [showCategoria, setShowCategoria] = useState(false);
 
   // Buscador dinámico para selección manual
   const productosFiltradosManual = useMemo(() => {
@@ -248,24 +249,56 @@ export const AumentoMasivoModal: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Filtro por Categoría */}
               {criterio === 'CATEGORIA' && (
-                <div className="mb-3">
-                  <label className="form-label text-info fw-semibold">Seleccionar Categoría:</label>
-                  <select
-                    className="form-select shadow-none"
-                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                    value={categoriaSeleccionada || ''}
-                    onChange={(e) => setCategoriaSeleccionada(Number(e.target.value))}
-                    required
-                  >
-                    <option value="">-- Seleccionar Categoría --</option>
-                    {categorias.map(([id, nombre]) => (
-                      <option key={id} value={id}>{nombre}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+  <div className="mb-3">
+    <label className="form-label text-info fw-semibold">Seleccionar Categoría:</label>
+    <div className="position-relative">
+      <input
+        type="text"
+        readOnly
+        autoComplete="off"
+        className="form-control shadow-none"
+        style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
+        value={
+          categoriaSeleccionada
+            ? categorias.find(([id]) => id === categoriaSeleccionada)?.[1] ?? ''
+            : '-- Seleccionar Categoría --'
+        }
+        onFocus={() => setShowCategoria(true)}
+        onClick={() => setShowCategoria(true)}
+        onBlur={() => setTimeout(() => setShowCategoria(false), 200)}
+      />
+      {showCategoria && (
+        <div
+          className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+          style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+        >
+          {categorias.map(([id, nombre]) => {
+            const isSelected = id === categoriaSeleccionada;
+            return (
+              <div
+                key={id}
+                className="p-2 border-bottom text-truncate"
+                style={{
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                }}
+                onMouseDown={() => {
+                  setCategoriaSeleccionada(id);
+                  setShowCategoria(false);
+                }}
+              >
+                <span className="fw-semibold">{nombre}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
               {/* Selección manual de Productos con Buscador */}
               {criterio === 'SELECCION' && (

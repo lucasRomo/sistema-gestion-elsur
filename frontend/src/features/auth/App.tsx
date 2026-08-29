@@ -33,11 +33,12 @@ function App() {
           <Routes>
             <Route path="/" element={<WelcomeView onIrARegistro={() => window.location.href='/registro'} onIrALogin={() => window.location.href='/login'} />} />
             <Route path="/registro" element={<RegisterView onVolver={() => window.location.href='/'} />} />
+            
             <Route path="/login" element={
               <LoginView 
                 onLoginExitoso={() => {
                   const esMobile = window.innerWidth < 768;
-                  window.location.href = esMobile ? '/mobile-home' : '/informes';
+                  window.location.href = esMobile ? '/informes' : '/dashboard';
                 }} 
                 onVolver={() => window.location.href='/'} 
               />
@@ -135,7 +136,7 @@ function App() {
             } />
 
             <Route path="/informes" element={
-              <ProtectedRoute permisoRequerido="Informes" soloDesktop>
+              <ProtectedRoute permisoRequerido="Informes">
                 <SidebarLayout activeItem="Informes">
                   <InformesView />
                 </SidebarLayout>
@@ -162,7 +163,6 @@ function App() {
               </ProtectedRoute>
             } />
 
-
             <Route path="/dashboard" element={
               <ProtectedRoute permisoRequerido="Panel Principal">
                 <SidebarLayout activeItem="Panel Principal">
@@ -170,7 +170,6 @@ function App() {
                 </SidebarLayout>
               </ProtectedRoute>
             } />
-
 
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

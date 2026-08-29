@@ -38,6 +38,8 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [idCategoriaAEliminar, setIdCategoriaAEliminar] = useState<number | null>(null);
   const [mostrarExitoEliminar, setMostrarExitoEliminar] = useState<boolean>(false);
+  const [showTipoProveedor, setShowTipoProveedor] = useState(false);
+  const [showEstado, setShowEstado] = useState(false);
 
   const cargarCategorias = async () => {
     try {
@@ -263,54 +265,110 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
 </div>
 
                   <div className="col-md-4">
-                    <label className="form-label small fw-semibold" style={{ color: labelColor }}>
-                      Tipo de Proveedor
-                    </label>
-                    <div className="input-group">
-                      <select 
-                        required
-                        className="form-select"
-                        style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                        value={formState.tipoProveedor?.idTipoProveedor || ""} 
-                        onChange={(e) => {
-                          const idSel = Number(e.target.value);
-                          const objetoSeleccionado = tiposProveedor.find(t => t.idTipoProveedor === idSel);
-                          setFormState({ ...formState, tipoProveedor: objetoSeleccionado });
-                        }}
-                      >
-                        <option value="">Seleccione Tipo</option>
-                        {tiposProveedor.map((t) => (
-                          <option key={t.idTipoProveedor} value={t.idTipoProveedor}>
-                            {t.descripcion}
-                          </option>
-                        ))}
-                      </select>
-                      <button 
-                        type="button" 
-                        className="btn btn-outline-info" 
-                        title="Gestionar Categorías"
-                        onClick={() => setShowCategorias(true)}
-                      >
-                        <i className="bi bi-gear-fill"></i>
-                      </button>
-                    </div>
-                  </div>
+  <label className="form-label small fw-semibold" style={{ color: labelColor }}>
+    Tipo de Proveedor
+  </label>
+  <div className="d-flex gap-2">
+    <div className="position-relative flex-grow-1">
+      <input
+        type="text"
+        readOnly
+        autoComplete="off"
+        className="form-control"
+        style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
+        value={formState.tipoProveedor?.descripcion || 'Seleccione Tipo'}
+        onFocus={() => setShowTipoProveedor(true)}
+        onClick={() => setShowTipoProveedor(true)}
+        onBlur={() => setTimeout(() => setShowTipoProveedor(false), 200)}
+      />
+      {showTipoProveedor && (
+        <div
+          className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+          style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+        >
+          {tiposProveedor.map((t) => {
+            const isSelected = t.idTipoProveedor === formState.tipoProveedor?.idTipoProveedor;
+            return (
+              <div
+                key={t.idTipoProveedor}
+                className="p-2 border-bottom text-truncate"
+                style={{
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                }}
+                onMouseDown={() => {
+                  setFormState({ ...formState, tipoProveedor: t });
+                  setShowTipoProveedor(false);
+                }}
+              >
+                <span className="fw-semibold">{t.descripcion}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+    <button
+      type="button"
+      className="btn btn-outline-info"
+      title="Gestionar Categorías"
+      onClick={() => setShowCategorias(true)}
+      style={{ flexShrink: 0 }}
+    >
+      <i className="bi bi-gear-fill"></i>
+    </button>
+  </div>
+</div>
 
                   <div className="col-md-4">
-                    <label className="form-label small fw-semibold" style={{ color: labelColor }}>
-                      Estado de Cuenta
-                    </label>
-                    <select 
-                      className="form-select"
-                      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                      value={formState.estado || 'Activo'}
-                      onChange={(e) => setFormState({ ...formState, estado: e.target.value })}
-                    >
-                      <option value="Activo">Activo</option>
-                      <option value="Desactivado">Desactivado</option>
-                    </select>
-                  </div>
-                </div>
+  <label className="form-label small fw-semibold" style={{ color: labelColor }}>
+    Estado de Cuenta
+  </label>
+  <div className="position-relative">
+    <input
+      type="text"
+      readOnly
+      autoComplete="off"
+      className="form-control"
+      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
+      value={formState.estado || 'Activo'}
+      onFocus={() => setShowEstado(true)}
+      onClick={() => setShowEstado(true)}
+      onBlur={() => setTimeout(() => setShowEstado(false), 200)}
+    />
+    {showEstado && (
+      <div
+        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+      >
+        {['Activo', 'Desactivado'].map((opcion) => {
+          const isSelected = opcion === (formState.estado || 'Activo');
+          return (
+            <div
+              key={opcion}
+              className="p-2 border-bottom text-truncate"
+              style={{
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+              }}
+              onMouseDown={() => {
+                setFormState({ ...formState, estado: opcion });
+                setShowEstado(false);
+              }}
+            >
+              <span className="fw-semibold">{opcion}</span>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</div>
+</div>
 
                 {!isEditing && (
                   <>

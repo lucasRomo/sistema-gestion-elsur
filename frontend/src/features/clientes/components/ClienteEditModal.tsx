@@ -9,6 +9,8 @@ interface ClienteEditModalProps {
 export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onCerrar, onConfirmar }) => {
   // Lista dinámica traída del backend
   const [tiposDocumento, setTiposDocumento] = useState<any[]>([]);
+  const [showTipoDoc, setShowTipoDoc] = useState(false);
+  const [showEstado, setShowEstado] = useState(false);
   
   const [editData, setEditData] = useState<any>({
     // 🟢 CLAVE PARA EL ERROR: Enviar id_cliente coincide con @JsonProperty("id_cliente") en Java
@@ -146,17 +148,56 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                   </div>
 
                   {/* Selector dinámico de tipo de documento */}
-                  <div className="col-md-4 px-1">
-                    <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Tipo de Doc.</label>
-                    <select 
-                     className="form-select bg-dark text-white border-secondary" 
-                     value={editData.persona?.idTipoDocumento || ""} 
-                     onChange={e => handlePersonaChange('idTipoDocumento', e.target.value)}>
-                    <option value="" style={{ backgroundColor: '#1a1a1c' }}>Seleccione Un Tipo</option>
-                    {tiposDocumento.map((t: any) => ( <option key={t.idTipoDocumento} value={t.idTipoDocumento} style={{ backgroundColor: '#1a1a1c' }}> 
-                    {t.nombreTipo || t.nombre} </option>))}
-                    </select>
-                  </div>
+<div className="col-md-4 px-1">
+  <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Tipo de Doc.</label>
+  <div className="position-relative">
+    <input
+      type="text"
+      readOnly
+      autoComplete="off"
+      className="form-control text-white"
+      style={{ backgroundColor: '#222226', borderColor: '#3f3f46', cursor: 'pointer' }}
+      value={
+        tiposDocumento.find((t: any) => t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento)
+          ?.nombreTipo ||
+        tiposDocumento.find((t: any) => t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento)
+          ?.nombre ||
+        'Seleccione Un Tipo'
+      }
+      onFocus={() => setShowTipoDoc(true)}
+      onClick={() => setShowTipoDoc(true)}
+      onBlur={() => setTimeout(() => setShowTipoDoc(false), 200)}
+    />
+    {showTipoDoc && (
+      <div
+        className="position-absolute w-100 shadow rounded mt-1 overflow-auto bg-dark text-white"
+        style={{ maxHeight: '180px', zIndex: 1060, border: '1px solid #3f3f46', top: '100%', left: 0 }}
+      >
+        {tiposDocumento.map((t: any) => {
+          const isSelected = t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento;
+          return (
+            <div
+              key={t.idTipoDocumento}
+              className="p-2 border-bottom text-truncate"
+              style={{
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                backgroundColor: isSelected ? '#0284c7' : '#27272a',
+                color: '#ffffff'
+              }}
+              onMouseDown={() => {
+                handleTipoDocChange(t.idTipoDocumento);
+                setShowTipoDoc(false);
+              }}
+            >
+              <span className="fw-semibold">{t.nombreTipo || t.nombre}</span>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</div>
 
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium font-monospace" style={{ color: '#a1a1aa' }}>N° Documento / CUIT</label>

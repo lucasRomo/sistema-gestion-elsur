@@ -37,6 +37,9 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
   const [busquedaInsumo, setBusquedaInsumo] = useState<string>('');
   const [cantidad, setCantidad] = useState<number | ''>('');
   const [loading, setLoading] = useState<boolean>(false);
+  
+  // Nuevo estado para controlar el menú desplegable personalizado
+  const [showDropdownInsumos, setShowDropdownInsumos] = useState<boolean>(false);
 
   useEffect(() => {
     if (show && producto) {
@@ -85,7 +88,6 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
   const handleAgregarInsumo = () => {
     if (!busquedaInsumo.trim() || !cantidad || Number(cantidad) <= 0) return;
 
-    // Buscar si lo que se tipeó coincide con algún insumo existente
     const insumoObj = insumosDisponibles.find(i => {
       const etiqueta = `${i.nombreInsumo} (${obtenerNombreUnidad(i.unidadMedida)})`;
       return i.nombreInsumo.toLowerCase() === busquedaInsumo.trim().toLowerCase() || etiqueta.toLowerCase() === busquedaInsumo.trim().toLowerCase();
@@ -180,28 +182,68 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
 
           <div className="modal-body">
             <div className="row g-2 mb-4 align-items-end p-3 rounded" style={{ backgroundColor: boxBg, border: `1px solid ${inputBorder}` }}>
+              
+              {/* Dropdown Custom: Buscar Insumo */}
               <div className="col-md-6">
                 <label className="form-label small fw-semibold" style={{ color: labelColor }}>Buscar Insumo</label>
-                
-                {/* Input autocancelable con datalist para auto-completado */}
-                <input 
-                  list="insumos-list"
-                  className="form-control shadow-none"
-                  style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                  placeholder="Escribe el nombre del insumo..."
-                  value={busquedaInsumo}
-                  onChange={(e) => setBusquedaInsumo(e.target.value)}
-                />
-                <datalist id="insumos-list">
-                  {insumosDisponibles.map(i => {
-                    const nombreUnidad = obtenerNombreUnidad(i.unidadMedida);
-                    return (
-                      <option key={i.idInsumo} value={i.nombreInsumo}>
-                        {i.nombreInsumo} ({nombreUnidad}) - Stock: {i.stockActual}
-                      </option>
-                    );
-                  })}
-                </datalist>
+                <div className="position-relative">
+                  <input 
+                    type="text"
+                    autoComplete="off"
+                    className="form-control shadow-none"
+                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                    placeholder="Escribe el nombre del insumo..."
+                    value={busquedaInsumo}
+                    onChange={(e) => setBusquedaInsumo(e.target.value)}
+                    onFocus={() => setShowDropdownInsumos(true)}
+                    onBlur={() => setTimeout(() => setShowDropdownInsumos(false), 200)}
+                  />
+                  {showDropdownInsumos && (
+                    <div 
+                      className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+                      style={{ maxHeight: '200px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+                    >
+                      {insumosDisponibles.filter(i => {
+                        const search = busquedaInsumo.toLowerCase();
+                        const nombreUnidad = obtenerNombreUnidad(i.unidadMedida);
+                        const etiqueta = `${i.nombreInsumo} (${nombreUnidad}) - Stock: ${i.stockActual}`;
+                        return i.nombreInsumo.toLowerCase().includes(search) || etiqueta.toLowerCase().includes(search);
+                      }).length === 0 ? (
+                        <div className="p-2 small text-muted text-center">Sin coincidencias</div>
+                      ) : (
+                        insumosDisponibles.filter(i => {
+                          const search = busquedaInsumo.toLowerCase();
+                          const nombreUnidad = obtenerNombreUnidad(i.unidadMedida);
+                          const etiqueta = `${i.nombreInsumo} (${nombreUnidad}) - Stock: ${i.stockActual}`;
+                          return i.nombreInsumo.toLowerCase().includes(search) || etiqueta.toLowerCase().includes(search);
+                        }).map(i => {
+                          const nombreUnidad = obtenerNombreUnidad(i.unidadMedida);
+                          const isSelected = i.nombreInsumo === busquedaInsumo;
+                          return (
+                            <div
+                              key={i.idInsumo}
+                              className="p-2 border-bottom"
+                              style={{ 
+                                cursor: 'pointer',
+                                backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                                color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                              }}
+                              onMouseDown={() => {
+                                setBusquedaInsumo(i.nombreInsumo);
+                                setShowDropdownInsumos(false);
+                              }}
+                            >
+                              <div className="fw-semibold" style={{ fontSize: '0.875rem' }}>{i.nombreInsumo}</div>
+                              <div style={{ fontSize: '0.75rem', opacity: isSelected ? 0.9 : 0.6 }}>
+                                {i.nombreInsumo} ({nombreUnidad}) - Stock: {i.stockActual}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="col-md-4">

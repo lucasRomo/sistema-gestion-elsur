@@ -16,6 +16,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   const modalBg = isDark ? '#1b1b1b' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const textColor = isDark ? 'text-white' : 'text-dark';
+  const textColorHex = isDark ? '#ffffff' : '#000000';
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
   const borderDivider = isDark ? 'border-secondary' : 'border-light-subtle';
   const cardBg = isDark ? '#1b1b1b' : '#f8fafc';
@@ -41,6 +42,16 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
   const [ticketData, setTicketData] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [imagenModalUrl, setImagenModalUrl] = useState<string | null>(null);
+
+  // Estados para el dropdown personalizado
+  const [showDropdownMetodoPago, setShowDropdownMetodoPago] = useState<boolean>(false);
+  
+  const opcionesPago = [
+    { value: 'EFECTIVO', label: 'Efectivo' },
+    { value: 'TRANSFERENCIA', label: 'Transferencia' },
+    { value: 'DEBITO', label: 'Débito' },
+    { value: 'CREDITO', label: 'Crédito' }
+  ];
 
   useEffect(() => {
     setSaldoDeudorLocal(Number(cliente.saldoDeudor || 0));
@@ -74,25 +85,26 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   };
 
   const handleActualizarLimite = async (e: React.FormEvent) => {
-  e.preventDefault(); 
-  try {
-    const limiteNumerico = limite === '' ? 0 : Number(limite);
-    await clienteService.actualizarLimiteCredito(idCliente, limiteNumerico);
-    setSuceso({ 
-      show: true, 
-      titulo: "¡Éxito!", 
-      mensaje: "Límite de crédito actualizado correctamente.", 
-      tipo: "exito" 
-    }); 
-    onActualizar(); 
-  } catch (e) { 
-    setSuceso({ 
-      show: true, 
-      titulo: "Error", 
-      mensaje: "Error al actualizar el límite.", 
-      tipo: "error" 
-    }); 
-  }};
+    e.preventDefault(); 
+    try {
+      const limiteNumerico = limite === '' ? 0 : Number(limite);
+      await clienteService.actualizarLimiteCredito(idCliente, limiteNumerico);
+      setSuceso({ 
+        show: true, 
+        titulo: "¡Éxito!", 
+        mensaje: "Límite de crédito actualizado correctamente.", 
+        tipo: "exito" 
+      }); 
+      onActualizar(); 
+    } catch (e) { 
+      setSuceso({ 
+        show: true, 
+        titulo: "Error", 
+        mensaje: "Error al actualizar el límite.", 
+        tipo: "error" 
+      }); 
+    }
+  };
 
   const handleRegistrarPago = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,7 +140,6 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
       const idMovGenerado = resPago?.idMovimiento || resPago?.id_movimiento || Date.now();
       const fechaMov = resPago?.fecha || new Date().toISOString();
 
-      // Actualizar saldo deudor local al instante
       setSaldoDeudorLocal(prev => prev - montoPago);
 
       setMontoPago(0);
@@ -243,16 +254,16 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                     <div className="flex-grow-1">
                       <label className="form-label small fw-semibold" style={{ color: mutedText }}>Límite de Crédito Permitido ($)</label>
                       <input 
-  type="number" 
-  step="0.01" 
-  className={`form-control ${textColor}`} 
-  style={{ backgroundColor: inputBg, borderColor: inputBorder }} 
-  value={limite} 
-  onChange={e => {
-    const val = e.target.value;
-    setLimite(val === '' ? '' : Number(val));
-  }} 
-/>
+                        type="number" 
+                        step="0.01" 
+                        className={`form-control ${textColor}`} 
+                        style={{ backgroundColor: inputBg, borderColor: inputBorder }} 
+                        value={limite} 
+                        onChange={e => {
+                          const val = e.target.value;
+                          setLimite(val === '' ? '' : Number(val));
+                        }} 
+                      />
                     </div>
                     <button type="submit" className="btn fw-bold" style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}>
                       Actualizar Límite
@@ -278,19 +289,70 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                     />
                   </div>
 
+                  {/* Selector de Medio de Pago Personalizado */}
                   <div className="col-md-3">
                     <label className="form-label small fw-semibold" style={{ color: mutedText }}>Medio de Pago</label>
-                    <select
-                      className={`form-select ${textColor}`}
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder }}
-                      value={metodoPago}
-                      onChange={e => setMetodoPago(e.target.value)}
-                    >
-                      <option value="EFECTIVO">Efectivo</option>
-                      <option value="TRANSFERENCIA">Transferencia</option>
-                      <option value="DEBITO">Débito</option>
-                      <option value="CREDITO">Crédito</option>
-                    </select>
+                    <div className="position-relative" tabIndex={0} onBlur={() => setTimeout(() => setShowDropdownMetodoPago(false), 200)}>
+                      <div
+                        className={`form-control d-flex justify-content-between align-items-center ${textColor}`}
+                        style={{ 
+                          backgroundColor: inputBg, 
+                          borderColor: showDropdownMetodoPago ? '#0284c7' : inputBorder, 
+                          cursor: 'pointer',
+                          boxShadow: showDropdownMetodoPago ? '0 0 0 1px #0284c7' : 'none',
+                          userSelect: 'none'
+                        }}
+                        onClick={() => setShowDropdownMetodoPago(!showDropdownMetodoPago)}
+                      >
+                        <span>{opcionesPago.find(o => o.value === metodoPago)?.label || 'Efectivo'}</span>
+                        <i className="bi bi-chevron-down" style={{ fontSize: '0.75rem', color: mutedText }}></i>
+                      </div>
+
+                      {showDropdownMetodoPago && (
+                        <div 
+                          className="position-absolute w-100 rounded mt-1 shadow-lg overflow-hidden"
+                          style={{ 
+                            zIndex: 1060, 
+                            backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
+                            border: `1px solid ${inputBorder}`,
+                            top: '100%', 
+                            left: 0 
+                          }}
+                        >
+                          {opcionesPago.map(opcion => {
+                            const isSelected = metodoPago === opcion.value;
+                            return (
+                              <div
+                                key={opcion.value}
+                                className="px-3 py-2"
+                                style={{ 
+                                  cursor: 'pointer',
+                                  backgroundColor: isSelected ? '#93c5fd' : 'transparent',
+                                  color: isSelected ? '#000000' : textColorHex,
+                                  transition: 'background-color 0.1s'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!isSelected) {
+                                    e.currentTarget.style.backgroundColor = isDark ? '#27272a' : '#f1f5f9';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!isSelected) {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                  }
+                                }}
+                                onMouseDown={() => {
+                                  setMetodoPago(opcion.value);
+                                  setShowDropdownMetodoPago(false);
+                                }}
+                              >
+                                {opcion.label}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="col-md-6">
@@ -426,8 +488,8 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
             </div>
             <div className={`modal-footer border-top ${borderDivider}`}>
               <button className="btn btn-secondary px-4 fw-semibold" style={{ color: '#ffffff' }} onClick={onCerrar}>
-  Volver
-</button>
+                Volver
+              </button>
             </div>
           </div>
         </div>

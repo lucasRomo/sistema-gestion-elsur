@@ -110,7 +110,7 @@ export const SelectorProducto: React.FC<Props> = ({
       <div className="col-md-3">
         <button 
           className="btn w-100 fw-bold" 
-          style={{ backgroundColor: '#5a8ab8', color: 'white' }}
+          style={{ backgroundColor: '#5a8ab8', borderColor: '#5a8ab8',  color: 'white' }}
           onClick={onAgregar}
           disabled={!productoId}
         >

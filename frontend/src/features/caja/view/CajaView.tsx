@@ -659,7 +659,7 @@ export const CajaView: React.FC = () => {
                   </p>
                 </div>
                 <div className="modal-footer border-top border-secondary">
-                  <button type="button" className="btn btn-secondary px-4" onClick={() => setShowModalApertura(false)} disabled={guardandoApertura}>
+                  <button type="button" className="btn btn-danger px-4" onClick={() => setShowModalApertura(false)} disabled={guardandoApertura}>
                     Cancelar
                   </button>
                   <button type="submit" className="btn btn-success px-4" disabled={guardandoApertura}>

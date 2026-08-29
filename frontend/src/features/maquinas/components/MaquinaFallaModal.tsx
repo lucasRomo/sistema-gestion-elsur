@@ -25,6 +25,8 @@ export const MaquinaFallaModal: React.FC<Props> = ({ show, maquinas, onClose, on
   const [descripcion, setDescripcion] = useState('');
   const [prioridad, setPrioridad] = useState('MEDIA');
   const [cargando, setCargando] = useState(false);
+  const [showEquipo, setShowEquipo] = useState(false);
+  const [showPrioridad, setShowPrioridad] = useState(false);
 
   if (!show) return null;
 
@@ -70,37 +72,110 @@ export const MaquinaFallaModal: React.FC<Props> = ({ show, maquinas, onClose, on
               </p>
 
               <div className="mb-3">
-                <label className="form-label fw-bold" style={{ color: textColor }}>Seleccionar Equipo:</label>
-                <select
-                  className="form-select"
-                  style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                  value={selectedId}
-                  onChange={(e) => setSelectedId(Number(e.target.value))}
-                  required
-                >
-                  <option value="">-- Seleccionar Equipo --</option>
-                  {maquinasOperativas.map(m => (
-                    <option key={m.idMaquina} value={m.idMaquina}>
-                      {m.nombre} ({m.estado})
-                    </option>
-                  ))}
-                </select>
+  <label className="form-label fw-bold" style={{ color: textColor }}>Seleccionar Equipo:</label>
+  <div className="position-relative">
+    <input
+      type="text"
+      readOnly
+      autoComplete="off"
+      className="form-control"
+      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
+      value={
+        selectedId
+          ? (() => {
+              const m = maquinasOperativas.find(m => m.idMaquina === selectedId);
+              return m ? `${m.nombre} (${m.estado})` : '';
+            })()
+          : '-- Seleccionar Equipo --'
+      }
+      onFocus={() => setShowEquipo(true)}
+      onClick={() => setShowEquipo(true)}
+      onBlur={() => setTimeout(() => setShowEquipo(false), 200)}
+    />
+    {showEquipo && (
+      <div
+        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+      >
+        {maquinasOperativas.length === 0 ? (
+          <div className="p-2 small text-muted text-center">No hay equipos operativos disponibles</div>
+        ) : (
+          maquinasOperativas.map((m) => {
+            const isSelected = m.idMaquina === selectedId;
+            return (
+              <div
+                key={m.idMaquina}
+                className="p-2 border-bottom text-truncate"
+                style={{
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                }}
+                onMouseDown={() => {
+                  setSelectedId(m.idMaquina!);
+                  setShowEquipo(false);
+                }}
+              >
+                <span className="fw-semibold">{m.nombre} ({m.estado})</span>
               </div>
+            );
+          })
+        )}
+      </div>
+    )}
+  </div>
+</div>
 
               <div className="mb-3">
-                <label className="form-label fw-bold" style={{ color: textColor }}>Nivel de Urgencia:</label>
-                <select
-                  className="form-select"
-                  style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                  value={prioridad}
-                  onChange={(e) => setPrioridad(e.target.value)}
-                >
-                  <option value="BAJA">BAJA</option>
-                  <option value="MEDIA">MEDIA</option>
-                  <option value="ALTA">ALTA</option>
-                  <option value="CRITICA">CRÍTICA</option>
-                </select>
-              </div>
+  <label className="form-label fw-bold" style={{ color: textColor }}>Nivel de Urgencia:</label>
+  <div className="position-relative">
+    <input
+      type="text"
+      readOnly
+      autoComplete="off"
+      className="form-control"
+      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
+      value={prioridad === 'CRITICA' ? 'CRÍTICA' : prioridad}
+      onFocus={() => setShowPrioridad(true)}
+      onClick={() => setShowPrioridad(true)}
+      onBlur={() => setTimeout(() => setShowPrioridad(false), 200)}
+    />
+    {showPrioridad && (
+      <div
+        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+      >
+        {[
+          { valor: 'BAJA', label: 'BAJA' },
+          { valor: 'MEDIA', label: 'MEDIA' },
+          { valor: 'ALTA', label: 'ALTA' },
+          { valor: 'CRITICA', label: 'CRÍTICA' }
+        ].map((opcion) => {
+          const isSelected = opcion.valor === prioridad;
+          return (
+            <div
+              key={opcion.valor}
+              className="p-2 border-bottom text-truncate"
+              style={{
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+              }}
+              onMouseDown={() => {
+                setPrioridad(opcion.valor);
+                setShowPrioridad(false);
+              }}
+            >
+              <span className="fw-semibold">{opcion.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</div>
 
               <div className="mb-3">
                 <label className="form-label fw-bold" style={{ color: textColor }}>Descripción del Problema / Falla:</label>

@@ -25,7 +25,7 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
   const labelColor = isDark ? '#a1a1aa' : '#475569';
   const inputBg = isDark ? '#1d1d1d' : '#ffffff';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const listBoxBg = isDark ? '#27272a' : '#f8fafc';
+  const listBoxBg = isDark ? '#1d1d1d' : '#f8fafc';
   const mutedText = isDark ? '#a1a1aa' : '#64748b';
 
   const [nuevoNombre, setNuevoNombre] = useState('');

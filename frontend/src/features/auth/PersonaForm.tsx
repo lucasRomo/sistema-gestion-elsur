@@ -19,6 +19,7 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
   const inputBg = isDark ? '#222226' : '#ffffff';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const inputTextColor = isDark ? '#ffffff' : '#0f172a';
+  const [showTipoDoc, setShowTipoDoc] = useState(false);
 
   const [errores, setErrores] = useState<any>({});
   const [tiposDocumento, setTiposDocumento] = useState<any[]>([]);
@@ -107,7 +108,11 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
         return;
       }
 
-      // Si no hay duplicados, procede al paso 2
+      if (!formData.tipoDocumento) {
+      alert("Por favor seleccione un Tipo de Documento");
+      return;
+      }
+
       onSiguiente(e);
     } catch (error) {
       console.error("Error validando duplicados:", error);
@@ -161,24 +166,56 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
           />
         </div>
 
-        {/* Selector Dinámico Vinculado al idTipoDocumento */}
         <div className="col-md-6 px-1">
-          <label className="form-label small fw-medium" style={{ color: labelColor }}>Tipo de Documento:</label>
-          <select 
-            className="form-select" 
-            style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
-            value={formData.tipoDocumento || ""} 
-            onChange={e => handleChange('tipoDocumento', e.target.value)} 
-            required
-          >
-            <option value="" style={{ backgroundColor: inputBg, color: inputTextColor }}>Seleccione Un Tipo</option>
-            {tiposDocumento.map((t: any) => (
-              <option key={t.idTipoDocumento} value={t.idTipoDocumento} style={{ backgroundColor: inputBg, color: inputTextColor }}>
-                {t.nombreTipo || t.nombre}
-              </option>
-            ))}
-          </select>
-        </div>
+  <label className="form-label small fw-medium" style={{ color: labelColor }}>Tipo de Documento:</label>
+  <div className="position-relative">
+    <input
+      type="text"
+      readOnly
+      autoComplete="off"
+      className="form-control"
+      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor, cursor: 'pointer' }}
+      value={
+        tiposDocumento.find((t: any) => t.idTipoDocumento.toString() === formData.tipoDocumento?.toString())
+          ?.nombreTipo ||
+        tiposDocumento.find((t: any) => t.idTipoDocumento.toString() === formData.tipoDocumento?.toString())
+          ?.nombre ||
+        'Seleccione Un Tipo'
+      }
+      onFocus={() => setShowTipoDoc(true)}
+      onClick={() => setShowTipoDoc(true)}
+      onBlur={() => setTimeout(() => setShowTipoDoc(false), 200)}
+    />
+    {showTipoDoc && (
+      <div
+        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+      >
+        {tiposDocumento.map((t: any) => {
+          const isSelected = t.idTipoDocumento.toString() === formData.tipoDocumento?.toString();
+          return (
+            <div
+              key={t.idTipoDocumento}
+              className="p-2 border-bottom text-truncate"
+              style={{
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+              }}
+              onMouseDown={() => {
+                handleChange('tipoDocumento', t.idTipoDocumento);
+                setShowTipoDoc(false);
+              }}
+            >
+              <span className="fw-semibold">{t.nombreTipo || t.nombre}</span>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</div>
         
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: labelColor }}>N° de Documento / CUIT:</label>

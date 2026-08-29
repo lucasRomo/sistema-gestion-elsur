@@ -10,6 +10,7 @@ interface UsuarioEditModalProps {
 export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onCerrar, onConfirmar }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const [showEstado, setShowEstado] = useState(false);
 
   // Variables adaptativas según el tema
   const modalBg = isDark ? '#1a1a1c' : '#ffffff';
@@ -204,7 +205,7 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
                     />
                   </div>
 
-                  <div className="col-md-3 px-1">
+                 <div className="col-md-12 px-1">
                     <label className="form-label small fw-medium" style={{ color: labelColor }}>Estado</label>
                     <select 
                       className="form-select" 

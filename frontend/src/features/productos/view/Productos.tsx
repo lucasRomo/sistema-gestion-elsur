@@ -160,7 +160,6 @@ export const Productos: React.FC = () => {
             title="Exportar listado actual a Excel"
           >
             <i className="bi bi-file-earmark-excel-fill fs-6"></i>
-            Exportar Excel
           </button>
 
           <button 
@@ -170,7 +169,6 @@ export const Productos: React.FC = () => {
             title="Exportar listado actual a PDF"
           >
             <i className="bi bi-file-earmark-pdf-fill fs-6"></i>
-            Exportar PDF
           </button>
 
           <button className="btn px-3 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#eab308', color: '#ffffff' }} onClick={() => setShowMermasModal(true)}>

@@ -35,6 +35,12 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   const [showGestionUnidadesModal, setShowGestionUnidadesModal] = useState(false);
   const [showRelacionesModal, setShowRelacionesModal] = useState(false);
 
+  // Estados para los dropdowns custom
+  const [showUnidadSuelto, setShowUnidadSuelto] = useState(false);
+  const [showUnidadCompra, setShowUnidadCompra] = useState(false);
+  const [showProveedor, setShowProveedor] = useState(false);
+  const [showEstado, setShowEstado] = useState(false);
+
   // Estado del formulario
   const [formData, setFormData] = useState({
     idInsumo: '',
@@ -133,7 +139,6 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
     setErrorUnidad('');
     
-    // Mapeo dinámico por nombre o generación de nuevo objeto si no existía el ID
     const unidadEncontrada = unidadesMedida.find(
       u => u.nombre?.toLowerCase() === formData.nombreUnidad.trim().toLowerCase()
     );
@@ -169,6 +174,19 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
     onGuardar(insumoAGuardar);
   };
+
+  // Filtrado de opciones para los dropdowns
+  const unidadesSueltasFiltradas = unidadesMedida.filter(u => 
+    u.nombre?.toLowerCase().includes(formData.nombreUnidad.toLowerCase())
+  );
+  
+  const unidadesCompraFiltradas = unidadesMedida.filter(u => 
+    u.nombre?.toLowerCase().includes(formData.nombreUnidadCompra.toLowerCase())
+  );
+
+  const proveedoresFiltrados = proveedores.filter(p => 
+    p.nombreComercial?.toLowerCase().includes(formData.nombreProveedor.toLowerCase())
+  );
 
   if (!show) return null;
 
@@ -271,41 +289,108 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   </div>
 
                   <div className="row">
-                    <div className="col-md-4 mb-2">
-                      <label className="form-label small fw-semibold" style={{ color: labelColor }}>Unidad Suelta (Consumo)</label>
-                      <input 
-                        list="unidades-sueltas-list"
-                        className="form-control shadow-none" 
-                        style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                        placeholder="Ej. Hoja / ml / Unidad"
-                        name="nombreUnidad" 
-                        value={formData.nombreUnidad} 
-                        onChange={handleChange}
-                      />
-                      <datalist id="unidades-sueltas-list">
-                        {unidadesMedida.map(u => (
-                          <option key={u.idUnidad} value={u.nombre || ''} />
-                        ))}
-                      </datalist>
-                    </div>
 
-                    <div className="col-md-4 mb-2">
-                      <label className="form-label small fw-semibold" style={{ color: labelColor }}>Unidad Empaque (Compra)</label>
-                      <input 
-                        list="unidades-compra-list"
-                        className="form-control shadow-none" 
-                        style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                        placeholder="Ej. Resma / Caja / Botella"
-                        name="nombreUnidadCompra" 
-                        value={formData.nombreUnidadCompra} 
-                        onChange={handleChange}
-                      />
-                      <datalist id="unidades-compra-list">
-                        {unidadesMedida.map(u => (
-                          <option key={u.idUnidad} value={u.nombre} />
-                        ))}
-                      </datalist>
-                    </div>
+                    {/* Unidad Suelta con Dropdown Custom */}
+<div className="col-md-4 mb-2">
+  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Unidad Suelta (Consumo)</label>
+  <div className="position-relative">
+    <input 
+      type="text"
+      autoComplete="off"
+      className="form-control shadow-none" 
+      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+      placeholder="Ej. Hoja / ml / Unidad"
+      name="nombreUnidad" 
+      value={formData.nombreUnidad} 
+      onChange={handleChange}
+      onFocus={() => setShowUnidadSuelto(true)}
+      onBlur={() => setTimeout(() => setShowUnidadSuelto(false), 200)}
+    />
+    {showUnidadSuelto && (
+      <div 
+        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+      >
+        {unidadesSueltasFiltradas.length === 0 ? (
+          <div className="p-2 small text-muted text-center">Sin coincidencias</div>
+        ) : (
+          unidadesSueltasFiltradas.map((u) => {
+            const isSelected = u.nombre === formData.nombreUnidad;
+            return (
+              <div
+                key={u.idUnidad}
+                className="p-2 border-bottom text-truncate"
+                style={{ 
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                }}
+                onMouseDown={() => {
+                  setFormData({ ...formData, nombreUnidad: u.nombre || '' });
+                  setShowUnidadSuelto(false);
+                }}
+              >
+                <span className="fw-semibold">{u.nombre}</span>
+              </div>
+            );
+          })
+        )}
+      </div>
+    )}
+  </div>
+</div>
+
+                    {/* Unidad Empaque con Dropdown Custom */}
+<div className="col-md-4 mb-2">
+  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Unidad Empaque (Compra)</label>
+  <div className="position-relative">
+    <input 
+      type="text"
+      autoComplete="off"
+      className="form-control shadow-none" 
+      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+      placeholder="Ej. Resma / Caja / Botella"
+      name="nombreUnidadCompra" 
+      value={formData.nombreUnidadCompra} 
+      onChange={handleChange}
+      onFocus={() => setShowUnidadCompra(true)}
+      onBlur={() => setTimeout(() => setShowUnidadCompra(false), 200)}
+    />
+    {showUnidadCompra && (
+      <div 
+        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+      >
+        {unidadesCompraFiltradas.length === 0 ? (
+          <div className="p-2 small text-muted text-center">Sin coincidencias</div>
+        ) : (
+          unidadesCompraFiltradas.map((u) => {
+            const isSelected = u.nombre === formData.nombreUnidadCompra;
+            return (
+              <div
+                key={u.idUnidad}
+                className="p-2 border-bottom text-truncate"
+                style={{ 
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                }}
+                onMouseDown={() => {
+                  setFormData({ ...formData, nombreUnidadCompra: u.nombre || '' });
+                  setShowUnidadCompra(false);
+                }}
+              >
+                <span className="fw-semibold">{u.nombre}</span>
+              </div>
+            );
+          })
+        )}
+      </div>
+    )}
+  </div>
+</div>
 
                     <div className="col-md-4 mb-2">
                       <label className="form-label small fw-semibold" style={{ color: labelColor }}>Factor Conversión</label>
@@ -370,37 +455,102 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
                 {/* PROVEEDOR Y ESTADO */}
                 <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label small fw-semibold" style={{ color: labelColor }}>Proveedor Principal</label>
-                    <input 
-                      list="proveedores-list"
-                      className="form-control shadow-none" 
-                      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                      placeholder="Escriba para buscar o ingresar un proveedor..."
-                      name="nombreProveedor" 
-                      value={formData.nombreProveedor} 
-                      onChange={handleChange}
-                    />
-                    <datalist id="proveedores-list">
-                      {proveedores.map(p => (
-                        <option key={p.idProveedor} value={p.nombreComercial} />
-                      ))}
-                    </datalist>
-                  </div>
+                  {/* Proveedor con Dropdown Custom */}
+                  {/* Proveedor con Dropdown Custom */}
+<div className="col-md-6 mb-3">
+  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Proveedor Principal</label>
+  <div className="position-relative">
+    <input 
+      type="text"
+      autoComplete="off"
+      className="form-control shadow-none" 
+      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+      placeholder="Escriba para buscar o ingresar un proveedor..."
+      name="nombreProveedor" 
+      value={formData.nombreProveedor} 
+      onChange={handleChange}
+      onFocus={() => setShowProveedor(true)}
+      onBlur={() => setTimeout(() => setShowProveedor(false), 200)}
+    />
+    {showProveedor && (
+      <div 
+        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+      >
+        {proveedoresFiltrados.length === 0 ? (
+          <div className="p-2 small text-muted text-center">Sin coincidencias</div>
+        ) : (
+          proveedoresFiltrados.map((p) => {
+            const isSelected = p.nombreComercial === formData.nombreProveedor;
+            return (
+              <div
+                key={p.idProveedor}
+                className="p-2 border-bottom text-truncate"
+                style={{ 
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                }}
+                onMouseDown={() => {
+                  setFormData({ ...formData, nombreProveedor: p.nombreComercial });
+                  setShowProveedor(false);
+                }}
+              >
+                <span className="fw-semibold">{p.nombreComercial}</span>
+              </div>
+            );
+          })
+        )}
+      </div>
+    )}
+  </div>
+</div>
 
                   <div className="col-md-6 mb-3">
-                    <label className="form-label small fw-semibold" style={{ color: labelColor }}>Estado</label>
-                    <select 
-                      className="form-select shadow-none" 
-                      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                      name="estado" 
-                      value={formData.estado} 
-                      onChange={handleChange}
-                    >
-                      <option value="Activo">Activo</option>
-                      <option value="Desactivado">Desactivado</option>
-                    </select>
-                  </div>
+  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Estado</label>
+  <div className="position-relative">
+    <input
+      type="text"
+      readOnly
+      autoComplete="off"
+      className="form-control shadow-none"
+      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
+      value={formData.estado}
+      onFocus={() => setShowEstado(true)}
+      onClick={() => setShowEstado(true)}
+      onBlur={() => setTimeout(() => setShowEstado(false), 200)}
+    />
+    {showEstado && (
+      <div
+        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+      >
+        {['Activo', 'Desactivado'].map((opcion) => {
+          const isSelected = opcion === formData.estado;
+          return (
+            <div
+              key={opcion}
+              className="p-2 border-bottom text-truncate"
+              style={{
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+              }}
+              onMouseDown={() => {
+                setFormData({ ...formData, estado: opcion });
+                setShowEstado(false);
+              }}
+            >
+              <span className="fw-semibold">{opcion}</span>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</div>
                 </div>
 
               </div>
@@ -442,4 +592,4 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
       />
     </>
   );
-};
+};  

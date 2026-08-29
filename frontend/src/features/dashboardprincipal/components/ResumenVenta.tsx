@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import { useTheme } from '../../../Context/ThemeContext';
 
@@ -32,6 +32,8 @@ export const ResumenVenta: React.FC<Props> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
+  const [showCategoria, setShowCategoria] = useState(false);
+
   const catActual = categorias.find(c => {
     const id = c.idCategoriaCliente ?? (c as any).idCategoria ?? (c as any).id_categoria ?? (c as any).id;
     return id?.toString() === categoriaSeleccionadaId;
@@ -55,24 +57,70 @@ export const ResumenVenta: React.FC<Props> = ({
             </span>
           )}
         </label>
-        <select 
-          className={`form-select font-monospace ${isDark ? 'bg-dark text-white border-info' : 'bg-white text-dark border-info-subtle'}`}
-          value={categoriaSeleccionadaId}
-          onChange={(e) => onSeleccionarCategoria(e.target.value)}
-        >
-          <option value="">Sin Categoría (Consumidor Final - 0% Desc.)</option>
-          {categorias.map((cat: any) => {
-            const id = cat.idCategoriaCliente ?? cat.idCategoria ?? cat.id_categoria ?? cat.id;
-            const nombre = cat.nombre ?? cat.nombreCategoria ?? cat.nombre_categoria ?? 'Categoría';
-            const porcentajeDesc = cat.porcentajeDescuento ?? cat.descuentoAutomatico ?? cat.descuento_automatico ?? cat.descuento ?? 0;
+        <div className="position-relative">
+          <input
+            type="text"
+            readOnly
+            autoComplete="off"
+            className={`form-control font-monospace ${isDark ? 'bg-dark text-white border-info' : 'bg-white text-dark border-info-subtle'}`}
+            style={{ cursor: 'pointer' }}
+            value={
+              catActual
+                ? `${(catActual as any).nombre ?? (catActual as any).nombreCategoria ?? (catActual as any).nombre_categoria ?? 'Categoría'} — (${porcentaje}% Descuento)`
+                : 'Sin Categoría (Consumidor Final - 0% Desc.)'
+            }
+            onFocus={() => setShowCategoria(true)}
+            onClick={() => setShowCategoria(true)}
+            onBlur={() => setTimeout(() => setShowCategoria(false), 200)}
+          />
+          {showCategoria && (
+            <div
+              className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+              style={{ maxHeight: '220px', zIndex: 1060, border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`, top: '100%', left: 0 }}
+            >
+              <div
+                className="p-2 border-bottom text-truncate"
+                style={{
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  backgroundColor: categoriaSeleccionadaId === '' ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                  color: categoriaSeleccionadaId === '' ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                }}
+                onMouseDown={() => {
+                  onSeleccionarCategoria('');
+                  setShowCategoria(false);
+                }}
+              >
+                <span className="fw-semibold">Sin Categoría (Consumidor Final - 0% Desc.)</span>
+              </div>
+              {categorias.map((cat: any) => {
+                const id = cat.idCategoriaCliente ?? cat.idCategoria ?? cat.id_categoria ?? cat.id;
+                const nombre = cat.nombre ?? cat.nombreCategoria ?? cat.nombre_categoria ?? 'Categoría';
+                const porcentajeDesc = cat.porcentajeDescuento ?? cat.descuentoAutomatico ?? cat.descuento_automatico ?? cat.descuento ?? 0;
+                const isSelected = id?.toString() === categoriaSeleccionadaId;
 
-            return (
-              <option key={id} value={id}>
-                {nombre} — ({porcentajeDesc}% Descuento)
-              </option>
-            );
-          })}
-        </select>
+                return (
+                  <div
+                    key={id}
+                    className="p-2 border-bottom text-truncate"
+                    style={{
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                      color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                    }}
+                    onMouseDown={() => {
+                      onSeleccionarCategoria(id?.toString());
+                      setShowCategoria(false);
+                    }}
+                  >
+                    <span className="fw-semibold">{nombre} — ({porcentajeDesc}% Descuento)</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* --- DESGLOSE VISUAL DE PRECIOS --- */}

@@ -30,6 +30,12 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const [showCategorias, setShowCategorias] = useState<boolean>(false);
   const [nuevaCategoria, setNuevaCategoria] = useState<string>('');
   
+  // Estados para los menús desplegables custom
+  const [textoMaquina, setTextoMaquina] = useState<string>('No aplica');
+  const [showDropdownEstado, setShowDropdownEstado] = useState<boolean>(false);
+  const [showDropdownMaquina, setShowDropdownMaquina] = useState<boolean>(false);
+  const [showDropdownCategorias, setShowDropdownCategorias] = useState<boolean>(false);
+  
   const [formData, setFormData] = useState({
     nombreProducto: '',
     precioBase: '',
@@ -86,11 +92,21 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     }
   }, [show, producto]);
 
+  useEffect(() => {
+    if (formData.idMaquinaNecesaria === '') {
+      setTextoMaquina('No aplica');
+    } else if (maquinas.length > 0) {
+      const m = maquinas.find((maq: any) => maq.idMaquina.toString() === formData.idMaquinaNecesaria);
+      if (m) {
+        setTextoMaquina(`${m.nombre || m.nombre} (${m.estado})`);
+      }
+    }
+  }, [formData.idMaquinaNecesaria, maquinas]);
+
   const handleCrearCategoria = async () => {
     const nombreLimpio = nuevaCategoria.trim();
     if (!nombreLimpio) return;
 
-    // Validación preventiva en React
     const yaExiste = categorias.some(
       c => c.nombre.toLowerCase() === nombreLimpio.toLowerCase()
     );
@@ -176,6 +192,8 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
             
             <form onSubmit={handleSubmit}>
               <div className="modal-body p-4">
+                
+                {/* Nombre */}
                 <div className="mb-3">
                   <label className="form-label small fw-semibold" style={{ color: mutedText }}>Nombre del Producto</label>
                   <input 
@@ -192,6 +210,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                   />
                 </div>
                 
+                {/* Precio y Stock */}
                 <div className="row mb-3">
                   <div className="col-6">
                     <label className="form-label small fw-semibold" style={{ color: mutedText }}>Precio Base</label>
@@ -219,60 +238,184 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                   </div>
                 </div>
 
+                {/* Estado y Máquina */}
                 <div className="row mb-3">
+                  {/* Dropdown Custom: Estado del Producto */}
                   <div className="col-6">
                     <label className="form-label small fw-semibold" style={{ color: mutedText }}>Estado del Producto</label>
-                    <select 
-                      className={`form-select ${textColor}`}
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder }}
-                      value={formData.estado} 
-                      onChange={e => setFormData({...formData, estado: e.target.value})}
-                    >
-                      <option value="Activo">Activo</option>
-                      <option value="Desactivado">Desactivado</option>
-                    </select>
+                    <div className="position-relative">
+                      <input 
+                        type="text"
+                        readOnly
+                        className={`form-control shadow-none ${textColor}`}
+                        style={{ backgroundColor: inputBg, borderColor: inputBorder, cursor: 'pointer' }}
+                        value={formData.estado} 
+                        onClick={() => setShowDropdownEstado(true)}
+                        onBlur={() => setTimeout(() => setShowDropdownEstado(false), 200)}
+                      />
+                      {showDropdownEstado && (
+                        <div 
+                          className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+                          style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+                        >
+                          {['Activo', 'Desactivado'].map((est) => (
+                            <div
+                              key={est}
+                              className="p-2 border-bottom text-truncate"
+                              style={{ 
+                                cursor: 'pointer',
+                                fontSize: '0.875rem',
+                                backgroundColor: est === formData.estado ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                                color: est === formData.estado ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                              }}
+                              onMouseDown={() => {
+                                setFormData({...formData, estado: est});
+                                setShowDropdownEstado(false);
+                              }}
+                            >
+                              <span className="fw-semibold">{est}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
+                  {/* Dropdown Custom: Máquina Necesaria */}
                   <div className="col-6">
                     <label className="form-label small fw-semibold" style={{ color: mutedText }}>Máquina Necesaria</label>
-                    <select 
-                      className={`form-select ${textColor}`}
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder }}
-                      value={formData.idMaquinaNecesaria} 
-                      onChange={e => setFormData({...formData, idMaquinaNecesaria: e.target.value})}
-                    >
-                      <option value="">No aplica</option>
-                      {maquinas.map((m: any) => (
-                        <option key={m.idMaquina} value={m.idMaquina}>
-                          {m.nombre || m.nombreMaquina} ({m.estado})
-                        </option>
-                      ))}
-                    </select>
+                    <div className="position-relative">
+                      <input 
+                        type="text"
+                        autoComplete="off"
+                        className={`form-control shadow-none ${textColor}`}
+                        style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+                        placeholder="Buscar máquina..."
+                        value={textoMaquina} 
+                        onChange={(e) => {
+                          setTextoMaquina(e.target.value);
+                          setFormData({...formData, idMaquinaNecesaria: ''}); 
+                        }}
+                        onFocus={() => setShowDropdownMaquina(true)}
+                        onBlur={() => setTimeout(() => setShowDropdownMaquina(false), 200)}
+                      />
+                      {showDropdownMaquina && (
+                        <div 
+                          className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+                          style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+                        >
+                          {/* Opción por defecto */}
+                          <div
+                            className="p-2 border-bottom text-truncate"
+                            style={{ 
+                              cursor: 'pointer',
+                              fontSize: '0.875rem',
+                              backgroundColor: formData.idMaquinaNecesaria === '' ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                              color: formData.idMaquinaNecesaria === '' ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                            }}
+                            onMouseDown={() => {
+                              setFormData({...formData, idMaquinaNecesaria: ''});
+                              setTextoMaquina('No aplica');
+                              setShowDropdownMaquina(false);
+                            }}
+                          >
+                            <span className="fw-semibold">No aplica</span>
+                          </div>
+                          
+                          {/* Lista de máquinas filtradas */}
+                          {maquinas
+                            .filter((m: any) => {
+                              if (textoMaquina === 'No aplica' && formData.idMaquinaNecesaria === '') return true; 
+                              const nombreStr = `${m.nombre || m.nombreMaquina} (${m.estado})`;
+                              return nombreStr.toLowerCase().includes(textoMaquina.toLowerCase());
+                            })
+                            .map((m: any) => {
+                              const isSelected = m.idMaquina.toString() === formData.idMaquinaNecesaria;
+                              const displayNombre = `${m.nombre || m.nombreMaquina} (${m.estado})`;
+                              return (
+                                <div
+                                  key={m.idMaquina}
+                                  className="p-2 border-bottom text-truncate"
+                                  style={{ 
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem',
+                                    backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                                    color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                                  }}
+                                  onMouseDown={() => {
+                                    setFormData({...formData, idMaquinaNecesaria: m.idMaquina.toString()});
+                                    setTextoMaquina(displayNombre); 
+                                    setShowDropdownMaquina(false);
+                                  }}
+                                >
+                                  <span className="fw-semibold">{displayNombre}</span>
+                                </div>
+                              );
+                            })
+                          }
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
+                {/* Dropdown Custom: Categoría */}
                 <div className="mb-3">
                   <label className="form-label small fw-semibold" style={{ color: mutedText }}>Categoría</label>
-                  <div className="input-group">
+                  <div className="input-group position-relative">
                     <input 
-                      list="categorias-list"
-                      className={`form-control ${textColor}`} 
+                      type="text"
+                      autoComplete="off"
+                      className={`form-control shadow-none ${textColor}`} 
                       style={{ backgroundColor: inputBg, borderColor: inputBorder }}
                       placeholder="Escribe para buscar o ingresar categoría..."
                       value={formData.nombreCategoria} 
-                      onChange={e => setFormData({...formData, nombreCategoria: e.target.value})} 
+                      onChange={e => setFormData({...formData, nombreCategoria: e.target.value})}
+                      onFocus={() => setShowDropdownCategorias(true)}
+                      onBlur={() => setTimeout(() => setShowDropdownCategorias(false), 200)}
                       required
                     />
-                    <datalist id="categorias-list">
-                      {categorias.map(c => (
-                        <option key={c.idCategoria} value={c.nombre} />
-                      ))}
-                    </datalist>
                     <button type="button" className="btn btn-outline-info" onClick={() => setShowCategorias(true)}>
                       <i className="bi bi-gear-fill"></i>
                     </button>
+                    
+                    {showDropdownCategorias && (
+                      <div 
+                        className={`position-absolute shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+                        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0, right: 0 }}
+                      >
+                        {categorias.filter(c => c.nombre.toLowerCase().includes(formData.nombreCategoria.toLowerCase())).length === 0 ? (
+                          <div className="p-2 small text-muted text-center">Sin coincidencias</div>
+                        ) : (
+                          categorias
+                            .filter(c => c.nombre.toLowerCase().includes(formData.nombreCategoria.toLowerCase()))
+                            .map((c) => {
+                              const isSelected = c.nombre === formData.nombreCategoria;
+                              return (
+                                <div
+                                  key={c.idCategoria}
+                                  className="p-2 border-bottom text-truncate"
+                                  style={{ 
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem',
+                                    backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                                    color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                                  }}
+                                  onMouseDown={() => {
+                                    setFormData({ ...formData, nombreCategoria: c.nombre });
+                                    setShowDropdownCategorias(false);
+                                  }}
+                                >
+                                  <span className="fw-semibold">{c.nombre}</span>
+                                </div>
+                              );
+                            })
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
+
               </div>
               
               <div className={`modal-footer border-top ${borderDivider} py-2`}>

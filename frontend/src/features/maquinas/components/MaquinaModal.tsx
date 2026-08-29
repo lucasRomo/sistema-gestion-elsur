@@ -28,6 +28,8 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
   const [errorValidacion, setErrorValidacion] = useState('');
   const [cargando, setCargando] = useState(false);
   const [confirmarSinMantenimiento, setConfirmarSinMantenimiento] = useState(false);
+  const [showEstadoOperativo, setShowEstadoOperativo] = useState(false);
+  const [showHabilitacion, setShowHabilitacion] = useState(false);
 
   useEffect(() => {
     if (maquinaEditar) {
@@ -136,45 +138,99 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label" style={{ color: textColor }}>Estado Operativo:</label>
-                  <select
-                    className="form-select"
-                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                    value={estado}
-                    onChange={(e) => {
-                      setEstado(e.target.value);
-                      setErrorValidacion('');
-                    }}
-                  >
-                    <option value="OPERATIVA">OPERATIVA</option>
-                    <option value="FUERA DE SERVICIO">FUERA DE SERVICIO</option>
-                    <option value="FALLA">FALLA</option>
-                    <option value="MANTENIMIENTO">MANTENIMIENTO</option>
-                  </select>
-                </div>
+  <label className="form-label" style={{ color: textColor }}>Estado Operativo:</label>
+  <div className="position-relative">
+    <input
+      type="text"
+      readOnly
+      autoComplete="off"
+      className="form-control"
+      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
+      value={estado}
+      onFocus={() => setShowEstadoOperativo(true)}
+      onClick={() => setShowEstadoOperativo(true)}
+      onBlur={() => setTimeout(() => setShowEstadoOperativo(false), 200)}
+    />
+    {showEstadoOperativo && (
+      <div
+        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+      >
+        {['OPERATIVA', 'FUERA DE SERVICIO', 'FALLA', 'MANTENIMIENTO'].map((opcion) => {
+          const isSelected = opcion === estado;
+          return (
+            <div
+              key={opcion}
+              className="p-2 border-bottom text-truncate"
+              style={{
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+              }}
+              onMouseDown={() => {
+                setEstado(opcion);
+                setErrorValidacion('');
+                setShowEstadoOperativo(false);
+              }}
+            >
+              <span className="fw-semibold">{opcion}</span>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</div>
 
                 <div className="mb-3">
   <label className="form-label" style={{ color: textColor }}>Habilitación / Disponibilidad:</label>
-  <select
-    className="form-select"
-    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-    value={activo ? 'true' : 'false'}
-    onChange={(e) => {
-      const esActivo = e.target.value === 'true';
-      setActivo(esActivo);
-      
-      if (esActivo) {
-        setEstado('OPERATIVA');
-      } else {
-        setEstado('FUERA DE SERVICIO');
-      }
-      
-      if (errorValidacion) setErrorValidacion('');
-    }}
-  >
-    <option value="true">ACTIVO (Habilitada en el sistema)</option>
-    <option value="false">DESACTIVADO (Dada de baja / Inhabilitada)</option>
-  </select>
+  <div className="position-relative">
+    <input
+      type="text"
+      readOnly
+      autoComplete="off"
+      className="form-control"
+      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
+      value={activo ? 'ACTIVO (Habilitada en el sistema)' : 'DESACTIVADO (Dada de baja / Inhabilitada)'}
+      onFocus={() => setShowHabilitacion(true)}
+      onClick={() => setShowHabilitacion(true)}
+      onBlur={() => setTimeout(() => setShowHabilitacion(false), 200)}
+    />
+    {showHabilitacion && (
+      <div
+        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+      >
+        {[
+          { valor: true, label: 'ACTIVO (Habilitada en el sistema)' },
+          { valor: false, label: 'DESACTIVADO (Dada de baja / Inhabilitada)' }
+        ].map((opcion) => {
+          const isSelected = opcion.valor === activo;
+          return (
+            <div
+              key={String(opcion.valor)}
+              className="p-2 border-bottom text-truncate"
+              style={{
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+              }}
+              onMouseDown={() => {
+                setActivo(opcion.valor);
+                setEstado(opcion.valor ? 'OPERATIVA' : 'FUERA DE SERVICIO');
+                setErrorValidacion('');
+                setShowHabilitacion(false);
+              }}
+            >
+              <span className="fw-semibold">{opcion.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
 </div>
 
                 {haCambiadoEstado && (

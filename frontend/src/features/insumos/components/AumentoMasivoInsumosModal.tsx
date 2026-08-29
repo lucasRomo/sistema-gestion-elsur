@@ -40,6 +40,8 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
   const [insumosSeleccionados, setInsumosSeleccionados] = useState<number[]>([]);
   const [busquedaInsumo, setBusquedaInsumo] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [showProveedor, setShowProveedor] = useState(false);
+  const [textoProveedor, setTextoProveedor] = useState('');
 
   // Buscador filtrado para selección manual
   const insumosFiltradosManual = useMemo(() => {
@@ -252,18 +254,57 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
               {criterio === 'PROVEEDOR' && (
                 <div className="mb-3">
                   <label className="form-label text-success fw-semibold">Seleccionar Proveedor:</label>
-                  <select
-                    className="form-select shadow-none"
-                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                    value={proveedorSeleccionado || ''}
-                    onChange={(e) => setProveedorSeleccionado(Number(e.target.value))}
-                    required
-                  >
-                    <option value="">-- Seleccionar Proveedor --</option>
-                    {proveedores.map(([id, nombre]) => (
-                      <option key={id} value={id}>{nombre}</option>
-                    ))}
-                  </select>
+                  <div className="position-relative">
+                    <input
+                      type="text"
+                      autoComplete="off"
+                      className="form-control shadow-none"
+                      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                      placeholder="Escriba para buscar un proveedor..."
+                      value={textoProveedor}
+                      onChange={(e) => {
+                        setTextoProveedor(e.target.value);
+                        setProveedorSeleccionado(null); // Resetea la selección si el usuario edita el texto
+                      }}
+                      onFocus={() => setShowProveedor(true)}
+                      onBlur={() => setTimeout(() => setShowProveedor(false), 200)}
+                    />
+                    {showProveedor && (
+                      <div 
+                        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+                        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+                      >
+                        {proveedores.filter(([id, nombre]) => nombre.toLowerCase().includes(textoProveedor.toLowerCase())).length === 0 ? (
+                          <div className="p-2 small text-muted text-center">Sin coincidencias</div>
+                        ) : (
+                          proveedores
+                            .filter(([id, nombre]) => nombre.toLowerCase().includes(textoProveedor.toLowerCase()))
+                            .map(([id, nombre]) => {
+                              const isSelected = id === proveedorSeleccionado;
+                              return (
+                                <div
+                                  key={id}
+                                  className="p-2 border-bottom text-truncate"
+                                  style={{ 
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem',
+                                    backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                                    color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                                  }}
+                                  onMouseDown={() => {
+                                    setProveedorSeleccionado(id);
+                                    setTextoProveedor(nombre);
+                                    setShowProveedor(false);
+                                  }}
+                                >
+                                  <span className="fw-semibold">{nombre}</span>
+                                </div>
+                              );
+                            })
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

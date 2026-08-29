@@ -225,7 +225,6 @@ export const HistorialActividadView: React.FC = () => {
             title="Exportar historial actual a Excel"
           >
             <i className="bi bi-file-earmark-excel-fill fs-5"></i>
-            Exportar Excel
           </button>
 
           <button 
@@ -235,7 +234,6 @@ export const HistorialActividadView: React.FC = () => {
             title="Exportar historial actual a PDF"
           >
             <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
-            Exportar PDF
           </button>
         </div>
       </div>

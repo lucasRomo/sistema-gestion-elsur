@@ -57,6 +57,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
   // Advertencia saldo insuficiente
   const [showModalSaldoInsuficiente, setShowModalSaldoInsuficiente] = useState(false);
   const [mensajeErrorSaldo, setMensajeErrorSaldo] = useState('');
+  const [showMetodoPago, setShowMetodoPago] = useState(false);
 
   useEffect(() => {
     setMaquina(maquinaProp);
@@ -605,20 +606,62 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                   />
                 </div>
 
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Medio de Pago:</label>
-                  <select
-                    className="form-select"
-                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                    value={metodoPago}
-                    onChange={(e) => setMetodoPago(e.target.value)}
-                  >
-                    <option value="EFECTIVO">Efectivo (Impacta saldo físico)</option>
-                    <option value="TRANSFERENCIA">Transferencia / Banco</option>
-                    <option value="DEBITO">Débito</option>
-                    <option value="CREDITO">Crédito</option>
-                  </select>
-                </div>
+               <div className="mb-3">
+  <label className="form-label fw-bold">Medio de Pago:</label>
+  <div className="position-relative">
+    <input
+      type="text"
+      readOnly
+      autoComplete="off"
+      className="form-control"
+      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
+      value={
+        {
+          EFECTIVO: 'Efectivo (Impacta saldo físico)',
+          TRANSFERENCIA: 'Transferencia / Banco',
+          DEBITO: 'Débito',
+          CREDITO: 'Crédito'
+        }[metodoPago] || metodoPago
+      }
+      onFocus={() => setShowMetodoPago(true)}
+      onClick={() => setShowMetodoPago(true)}
+      onBlur={() => setTimeout(() => setShowMetodoPago(false), 200)}
+    />
+    {showMetodoPago && (
+      <div
+        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+      >
+        {[
+          { valor: 'EFECTIVO', label: 'Efectivo (Impacta saldo físico)' },
+          { valor: 'TRANSFERENCIA', label: 'Transferencia / Banco' },
+          { valor: 'DEBITO', label: 'Débito' },
+          { valor: 'CREDITO', label: 'Crédito' }
+        ].map((opcion) => {
+          const isSelected = opcion.valor === metodoPago;
+          return (
+            <div
+              key={opcion.valor}
+              className="p-2 border-bottom text-truncate"
+              style={{
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+              }}
+              onMouseDown={() => {
+                setMetodoPago(opcion.valor);
+                setShowMetodoPago(false);
+              }}
+            >
+              <span className="fw-semibold">{opcion.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</div>
 
                 <div className="mb-3">
                   <label className="form-label fw-bold">Concepto / Detalle:</label>
