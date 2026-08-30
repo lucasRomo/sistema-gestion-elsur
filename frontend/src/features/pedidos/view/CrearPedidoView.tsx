@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { SelectorProductosForm } from '../components/SelectorProductosForm';
 import { DetallesPedidoForm } from '../components/DetallesPedidoForm';
 import { useRegistrarPedido } from '../hooks/useRegistrarPedido';
@@ -10,6 +10,7 @@ import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPago
 
 export const CrearPedidoView: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const { productos, clientes, empleados, maquinas, pedidosPendientes, enviarPedido } = useRegistrarPedido();
   
@@ -27,6 +28,34 @@ export const CrearPedidoView: React.FC = () => {
   const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string } | null>(null);
   const [fileTemporal, setFileTemporal] = useState<File | null>(null);
   
+  useEffect(() => {
+    const state = location.state as { productoAutoAgregar?: any };
+    if (state?.productoAutoAgregar && productos.length > 0) {
+      const prodNav = state.productoAutoAgregar;
+      const idProd = prodNav.idProducto || prodNav.id;
+      const productoCoincidente = productos.find(
+        (p: any) => (p.idProducto || p.id) === idProd
+      ) || prodNav;
+
+      const precio = productoCoincidente.precioBase ?? productoCoincidente.precio ?? 0;
+
+      setCarrito((prev) => {
+        const existe = prev.some((item) => (item.producto.idProducto || (item.producto as any).id) === idProd);
+        if (existe) return prev;
+
+        return [
+          ...prev,
+          {
+            producto: productoCoincidente,
+            cantidad: 1,
+            precioUnitario: precio,
+            subtotal: precio,
+          },
+        ];
+      });
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, productos]);
 
   // Carga inicial de categorías modularizada
   useEffect(() => {

@@ -60,12 +60,24 @@ export const incidenciaService = {
 
   registrarPagoMantenimiento: async (
     idIncidencia: number, 
-    payload: PagoMantenimientoDTO
+    payload: PagoMantenimientoDTO,
+    comprobanteFile?: File | null
   ): Promise<{ ok: boolean; data: RespuestaPago }> => {
+    
+    const formData = new FormData();
+    formData.append("monto", payload.monto.toString());
+    formData.append("metodoPago", payload.metodoPago);
+    formData.append("descripcion", payload.descripcion);
+    formData.append("idUsuario", payload.idUsuario.toString());
+    formData.append("forzarSaldoInsuficiente", String(payload.forzarSaldoInsuficiente ?? false));
+
+    if (comprobanteFile) {
+      formData.append("comprobante", comprobanteFile);
+    }
+
     const res = await fetch(`${API_URL}/${idIncidencia}/pago-mantenimiento`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: formData
     });
 
     const data: RespuestaPago = await res.json();

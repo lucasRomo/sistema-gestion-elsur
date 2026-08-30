@@ -596,6 +596,9 @@ html[data-bs-theme="light"] .mobile-bottom-nav button.active {
 }
 
 html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
   overflow-x: hidden;
-  scrollbar-gutter: stable;
 }

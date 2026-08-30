@@ -5,8 +5,10 @@ import com.elsur.sistema_gestion.models.MovimientoCaja;
 import com.elsur.sistema_gestion.services.IncidenciaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -61,30 +63,35 @@ public class IncidenciaController {
         return ResponseEntity.ok(res);
     }
 
-    @PostMapping("/{idIncidencia}/pago-mantenimiento")
+    @PostMapping(value = "/{idIncidencia}/pago-mantenimiento", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> registrarPagoMantenimiento(
             @PathVariable Integer idIncidencia,
-            @RequestBody Map<String, Object> payload) {
+            @RequestParam("monto") BigDecimal monto,
+            @RequestParam(value = "metodoPago", defaultValue = "EFECTIVO") String metodoPago,
+            @RequestParam(value = "descripcion", defaultValue = "") String descripcion,
+            @RequestParam("idUsuario") Integer idUsuario,
+            @RequestParam(value = "forzarSaldoInsuficiente", defaultValue = "false") boolean forzar,
+            @RequestParam(value = "comprobante", required = false) MultipartFile comprobante) {
         try {
-            BigDecimal monto = new BigDecimal(payload.get("monto").toString());
-            String metodoPago = payload.get("metodoPago") != null ? payload.get("metodoPago").toString() : "EFECTIVO";
-            String descripcion = payload.get("descripcion") != null ? payload.get("descripcion").toString() : "";
-            Integer idUsuario = Integer.parseInt(payload.get("idUsuario").toString());
-            boolean forzar = payload.get("forzarSaldoInsuficiente") != null && Boolean.parseBoolean(payload.get("forzarSaldoInsuficiente").toString());
-
-            MovimientoCaja mov = incidenciaService.registrarPagoMantenimiento(idIncidencia, monto, metodoPago, descripcion, idUsuario, forzar);
+            MovimientoCaja mov = incidenciaService.registrarPagoMantenimiento(
+                    idIncidencia, monto, metodoPago, descripcion, idUsuario, forzar, comprobante
+            );
+            
             return ResponseEntity.ok(mov);
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("code", "CAJA_CERRADA", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("code", "CAJA_CERRADA", "message", e.getMessage()));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("code", "SALDO_INSUFICIENTE", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("code", "SALDO_INSUFFICIENT", "message", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("code", "ERROR", "message", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("code", "ERROR", "message", e.getMessage()));
         }
     }
 
     @GetMapping
     public ResponseEntity<List<Incidencia>> listarTodas() {
-    return ResponseEntity.ok(incidenciaService.listarTodas());
+        return ResponseEntity.ok(incidenciaService.listarTodas());
     }
 }

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // Importaciones internas del módulo productos
 import { ProductoTabla } from '../components/ProductoTabla';
@@ -38,6 +38,8 @@ export const Productos: React.FC = () => {
   const [productoSeleccionadoReceta, setProductoSeleccionadoReceta] = useState<Producto | null>(null);
   
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
@@ -46,13 +48,26 @@ export const Productos: React.FC = () => {
   const [showSinRecetaModal, setShowSinRecetaModal] = useState(false);
   const [productoSinReceta, setProductoSinReceta] = useState<Producto | null>(null);
 
+  useEffect(() => {
+    const state = location.state as { productoEditar?: Producto };
+    if (state?.productoEditar && productos.length > 0) {
+      const targetId = state.productoEditar.idProducto;
+      const prodEncontrado = productos.find(
+        (p) => p.idProducto === targetId
+      ) || state.productoEditar;
+
+      setProductoEditando(prodEncontrado);
+      setShowModal(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, productos]);
+
   const productosFiltrados = productos.filter((p: Producto) => {
     const cumpleNombre = p.nombreProducto?.toLowerCase().includes(filtroNombre.toLowerCase());
     const cumpleEstado = filtroEstado === 'Sin Filtro' || p.estado === filtroEstado;
     return cumpleNombre && cumpleEstado;
   });
 
-  // Mapeo seguro de productos al formato genérico del modal
   const itemsStockCritico: ItemStockCritico[] = productos.map((p: any) => ({
     id: p.idProducto || p.id || p.nombreProducto,
     nombre: p.nombreProducto || p.nombre || 'Producto',
@@ -61,7 +76,6 @@ export const Productos: React.FC = () => {
     unidadMedida: p.unidadMedida || 'unid'
   }));
 
-  // Conteo de items críticos o a 5 o menos unidades del límite
   const cantidadCriticos = itemsStockCritico.filter(
     (item) => item.stockActual <= item.stockMinimoOTolerancia + 5
   ).length;
@@ -130,14 +144,12 @@ export const Productos: React.FC = () => {
         onToggleStockVinculado={handleToggleVinculo}
       />
 
-     {/* Botonera Inferior: Volver + Exportaciones + Stock Crítico + Acciones de Productos */}
       <div className={`d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-2 ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
         <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-3 py-2 fw-semibold" style={{ color: '#ffffff' }}>
           Volver
         </button>
 
         <div className="d-flex flex-wrap gap-2 align-items-center">
-          {/* BOTÓN STOCK CRÍTICO */}
           <button 
             type="button"
             className="btn btn-outline-warning fw-bold d-flex align-items-center gap-2 position-relative px-3 py-2"
@@ -189,7 +201,6 @@ export const Productos: React.FC = () => {
         </div>
       </div>
 
-      {/* MODAL STOCK CRÍTICO */}
       <ModalStockCriticoList
         show={showStockCriticoModal}
         titulo="Stock Crítico de Productos"

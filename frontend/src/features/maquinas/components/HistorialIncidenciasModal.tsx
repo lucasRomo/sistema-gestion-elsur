@@ -58,6 +58,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
   const [showModalSaldoInsuficiente, setShowModalSaldoInsuficiente] = useState(false);
   const [mensajeErrorSaldo, setMensajeErrorSaldo] = useState('');
   const [showMetodoPago, setShowMetodoPago] = useState(false);
+  const [comprobanteFile, setComprobanteFile] = useState<File | null>(null);
 
   useEffect(() => {
     setMaquina(maquinaProp);
@@ -154,76 +155,76 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
   };
 
   const ejecutarPagoMantenimiento = async (forzar: boolean = false) => {
-    if (!incidenciaAPagar?.idIncidencia) return;
-    
-    if (!montoPago || Number(montoPago) <= 0) {
-      setErrorPago("Ingrese un monto válido mayor a 0.");
-      return;
-    }
+  if (!incidenciaAPagar?.idIncidencia) return;
+  
+  if (!montoPago || Number(montoPago) <= 0) {
+    setErrorPago("Ingrese un monto válido mayor a 0.");
+    return;
+  }
 
-    setErrorPago(null);
-    setProcesandoPago(true);
+  setErrorPago(null);
+  setProcesandoPago(true);
 
-    try {
-      const { ok, data } = await incidenciaService.registrarPagoMantenimiento(
-        incidenciaAPagar.idIncidencia,
-        {
-          monto: Number(montoPago),
-          metodoPago,
-          descripcion: conceptoPago.trim() || `Pago reparación ${maquina.nombre}`,
-          idUsuario: getUsuarioActualId(),
-          forzarSaldoInsuficiente: forzar
-        }
-      );
+  try {
+    const { ok, data } = await incidenciaService.registrarPagoMantenimiento(
+      incidenciaAPagar.idIncidencia,
+      {
+        monto: Number(montoPago),
+        metodoPago,
+        descripcion: conceptoPago.trim() || `Pago reparación ${maquina.nombre}`,
+        idUsuario: getUsuarioActualId(),
+        forzarSaldoInsuficiente: forzar
+      },
+      comprobanteFile 
+    );
 
-      if (ok) {
-        const idMov = data?.idMovimiento || data?.id_movimiento || data?.id || '-';
-        const conceptoFinal = conceptoPago.trim() || `Pago servicio técnico ${maquina.nombre} - Incidencia #${incidenciaAPagar.idIncidencia}`;
+    if (ok) {
+      const idMov = data?.idMovimiento || data?.id_movimiento || data?.id || '-';
+      const conceptoFinal = conceptoPago.trim() || `Pago servicio técnico ${maquina.nombre} - Incidencia #${incidenciaAPagar.idIncidencia}`;
 
-        // Desplegar ticket de pago de egreso listo para imprimir
-        setTicketSeleccionado({
-          pedido: {
-            id_pedido: '-',
-            cliente: {
-              persona: null,
-              razon_social: 'Servicio Técnico / Mantenimiento',
-              nombre: 'Servicio Técnico / Mantenimiento'
-            },
-            monto_total: Number(montoPago),
-            observaciones: conceptoFinal
+      setTicketSeleccionado({
+        pedido: {
+          id_pedido: '-',
+          cliente: {
+            persona: null,
+            razon_social: 'Servicio Técnico / Mantenimiento',
+            nombre: 'Servicio Técnico / Mantenimiento'
           },
-          movimiento: {
-            id_movimiento: idMov,
-            monto: Number(montoPago),
-            tipoMovimiento: 'EGRESO',
-            categoria: 'EGRESO_MANTENIMIENTO',
-            descripcion: conceptoFinal,
-            fecha: new Date().toISOString(),
-            metodoPago
-          }
-        });
-
-        setIncidenciaAPagar(null);
-        setShowModalSaldoInsuficiente(false);
-        setMontoPago('');
-        setConceptoPago('');
-        cargarHistorial();
-      } else {
-        if (data.code === 'CAJA_CERRADA') {
-          setErrorPago("Error: La caja se encuentra CERRADA. Inicie el turno de caja antes de realizar pagos.");
-        } else if (data.code === 'SALDO_INSUFFICIENT') {
-          setMensajeErrorSaldo(data.message || 'El saldo en caja es menor al monto ingresado.');
-          setShowModalSaldoInsuficiente(true);
-        } else {
-          setErrorPago(data.message || "Error al procesar el pago.");
+          monto_total: Number(montoPago),
+          observaciones: conceptoFinal
+        },
+        movimiento: {
+          id_movimiento: idMov,
+          monto: Number(montoPago),
+          tipoMovimiento: 'EGRESO',
+          categoria: 'EGRESO_MANTENIMIENTO',
+          descripcion: conceptoFinal,
+          fecha: new Date().toISOString(),
+          metodoPago
         }
+      });
+
+      setIncidenciaAPagar(null);
+      setComprobanteFile(null);
+      setShowModalSaldoInsuficiente(false);
+      setMontoPago('');
+      setConceptoPago('');
+      cargarHistorial();
+    } else {
+      if (data.code === 'CAJA_CERRADA') {
+        setErrorPago("Error: La caja se encuentra CERRADA. Inicie el turno de caja antes de realizar pagos.");
+      } else if (data.code === 'SALDO_INSUFFICIENT') {
+        setMensajeErrorSaldo(data.message || 'El saldo en caja es menor al monto ingresado.');
+        setShowModalSaldoInsuficiente(true);
+      } else {
+        setErrorPago(data.message || "Error al procesar el pago.");
       }
-    } catch (err) {
-      setErrorPago("Error de conexión al registrar pago con el servidor.");
-    } finally {
-      setProcesandoPago(false);
     }
-  };
+  } catch (err) {
+    setErrorPago("Error de conexión al registrar pago con el servidor.");
+  } finally {
+    setProcesandoPago(false);
+  }};
 
   const limpiarFormulario = () => {
     setIdAccionActiva(null);
@@ -587,6 +588,41 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                     <span>{errorPago}</span>
                   </div>
                 )}
+
+                {/* VINCULAR COMPROBANTE (SOLO PARA TRANSFERENCIA) */}
+{metodoPago === 'TRANSFERENCIA' && (
+  <div className="mb-3">
+    <label className="form-label fw-bold small mb-1" style={{ color: textColor }}>
+      Comprobante de Respaldo:
+    </label>
+    <div className="position-relative">
+      <input
+        type="file"
+        id="comprobanteIncidenciaInput"
+        className="d-none"
+        accept="image/*,application/pdf"
+        onChange={(e) => setComprobanteFile(e.target.files?.[0] || null)}
+      />
+      <label
+        htmlFor="comprobanteIncidenciaInput"
+        className="btn w-100 d-flex justify-content-center align-items-center gap-2 font-monospace"
+        style={{
+          backgroundColor: cardBg,
+          border: '1px solid #0891b2',
+          color: '#06b6d4',
+          borderRadius: '8px',
+          padding: '10px',
+          cursor: 'pointer'
+        }}
+      >
+        <i className="bi bi-cloud-arrow-up fs-5"></i>
+        <span className="text-truncate">
+          {comprobanteFile ? comprobanteFile.name : 'Vincular Comprobante (Opcional)'}
+        </span>
+      </label>
+    </div>
+  </div>
+)}
 
                 <div className="mb-3">
                   <label className="form-label fw-bold">Monto pagado ($):</label>

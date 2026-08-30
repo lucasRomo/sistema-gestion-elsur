@@ -9,6 +9,7 @@ import { ModalCrearInstitucion } from '../modals/ModalCrearInstitucion';
 import { ModalCrearArea } from '../modals/ModalCrearArea';
 import { ModalPrevisualizar } from '../modals/ModalPrevisualizar';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
+import { RecetaModal } from '../../productos/components/RecetaModal';
 
 export const RepositorioDigitalView: React.FC = () => {
   const { theme } = useTheme();
@@ -61,6 +62,10 @@ export const RepositorioDigitalView: React.FC = () => {
     handleGuardarNuevo,
     handleCrearInstitucionRapida,
     handleCrearAreaRapida,
+    showRecetaModal,
+    productoParaReceta,
+    handleAbrirReceta,
+    handleCerrarReceta,
   } = useRepositorioDigital();
 
   const getIconoArchivo = (tipo: string) => {
@@ -102,6 +107,7 @@ export const RepositorioDigitalView: React.FC = () => {
               documentoSeleccionado={documentoSeleccionado}
               onSelectDocumento={setDocumentoSeleccionado}
               onEliminar={solicitarEliminar}
+              onAbrirReceta={handleAbrirReceta}
               getIconoArchivo={getIconoArchivo}
               isDarkMode={isDarkMode}
               cardBg={cardBg}
@@ -173,6 +179,14 @@ export const RepositorioDigitalView: React.FC = () => {
         cardBg={cardBg}
         isDarkMode={isDarkMode}
       />
+
+      {showRecetaModal && productoParaReceta && (
+        <RecetaModal
+          show={showRecetaModal}
+          producto={productoParaReceta}
+          onClose={handleCerrarReceta}
+        />
+      )}
 
       {/* MODAL CONFIRMACIÓN DE ELIMINAR */}
       {mostrarConfirmarEliminar && (

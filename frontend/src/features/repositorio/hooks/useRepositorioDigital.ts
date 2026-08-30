@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { repositorioService } from '../services/repositorioService';
 import type { DocumentoDigital, AreaCurso, Institucion } from '../types/Repositorio';
+import type { Producto } from '../../productos/types/Producto';
 
 export const useRepositorioDigital = () => {
   const [documentos, setDocumentos] = useState<DocumentoDigital[]>([]);
@@ -19,6 +20,10 @@ export const useRepositorioDigital = () => {
   const [modalPrevisualizar, setModalPrevisualizar] = useState<boolean>(false);
   const [modalNuevaInst, setModalNuevaInst] = useState<boolean>(false);
   const [modalNuevaArea, setModalNuevaArea] = useState<boolean>(false);
+
+  // 2. Estado para el Modal de Receta
+  const [showRecetaModal, setShowRecetaModal] = useState<boolean>(false);
+  const [productoParaReceta, setProductoParaReceta] = useState<Producto | null>(null);
 
   // Modales Personalizados de Eliminar
   const [idAEliminar, setIdAEliminar] = useState<number | null>(null);
@@ -77,6 +82,20 @@ export const useRepositorioDigital = () => {
       return coincideBusqueda && coincideMateria && coincideInst;
     });
   }, [documentos, busqueda, filtroMateria, filtroInstitucion]);
+
+  const handleAbrirReceta = (e: React.MouseEvent, doc: DocumentoDigital) => {
+    e.stopPropagation();
+    if (doc.producto) {
+      // Casteamos el productoAsociado como Producto para el modal
+      setProductoParaReceta(doc.producto as unknown as Producto);
+      setShowRecetaModal(true);
+    }
+  };
+
+  const handleCerrarReceta = () => {
+    setShowRecetaModal(false);
+    setProductoParaReceta(null);
+  };
 
   // Manejo de Eliminación Lógica con Modal Personalizado
   const solicitarEliminar = (e: React.MouseEvent, id: number) => {
@@ -209,5 +228,9 @@ export const useRepositorioDigital = () => {
     handleGuardarNuevo,
     handleCrearInstitucionRapida,
     handleCrearAreaRapida,
+    showRecetaModal,
+    productoParaReceta,
+    handleAbrirReceta,
+    handleCerrarReceta,
   };
 };

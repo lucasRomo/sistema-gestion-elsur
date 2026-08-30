@@ -7,11 +7,13 @@ import com.elsur.sistema_gestion.services.MovimientoCajaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Base64;
 
 @Service
 public class IncidenciaServiceImpl implements IncidenciaService {
@@ -112,13 +114,21 @@ public class IncidenciaServiceImpl implements IncidenciaService {
 
     @Override
     @Transactional
-    public MovimientoCaja registrarPagoMantenimiento(Integer idIncidencia, BigDecimal monto, String metodoPago, String descripcion, Integer idUsuario, boolean forzarSaldoInsuficiente) {
+    public MovimientoCaja registrarPagoMantenimiento(
+            Integer idIncidencia, 
+            BigDecimal monto, 
+            String metodoPago, 
+            String descripcion, 
+            Integer idUsuario, 
+            boolean forzarSaldoInsuficiente, 
+            MultipartFile comprobante) {
+
         Incidencia incidencia = incidenciaRepository.findById(idIncidencia)
                 .orElseThrow(() -> new RuntimeException("Incidencia no encontrada"));
 
         // 1. Validar turno abierto en caja
         Turno turnoActivo = turnoRepository.findTopByEstadoOrderByFechaAperturaDesc(EstadoTurno.ABIERTO)
-        .orElseThrow(() -> new IllegalStateException("CAJA_CERRADA: La caja debe estar abierta para poder registrar pagos de mantenimiento."));
+                .orElseThrow(() -> new IllegalStateException("CAJA_CERRADA: La caja debe estar abierta para poder registrar pagos de mantenimiento."));
         
         // 2. Validar saldo disponible en caso de pago con EFECTIVO
         if ("EFECTIVO".equalsIgnoreCase(metodoPago) && !forzarSaldoInsuficiente) {
@@ -126,7 +136,7 @@ public class IncidenciaServiceImpl implements IncidenciaService {
             Double saldoActual = totales.getOrDefault("saldoActual", 0.0);
 
             if (monto.doubleValue() > saldoActual) {
-                throw new IllegalArgumentException("SALDO_INSUFICIENTE: Saldo actual en caja ($" + saldoActual + ") es menor al monto solicitado ($" + monto + ").");
+                throw new IllegalArgumentException("SALDO_INSUFFICIENT: Saldo actual en caja ($" + saldoActual + ") es menor al monto solicitado ($" + monto + ").");
             }
         }
 
@@ -150,6 +160,22 @@ public class IncidenciaServiceImpl implements IncidenciaService {
         movimiento.setUsuario(usuario);
         movimiento.setTurno(turnoActivo);
         movimiento.setIncidencia(incidencia);
+
+        // Convertir el archivo a Base64 con el prefijo Data URL
+        if (comprobante != null && !comprobante.isEmpty()) {
+            try {
+                String contentType = comprobante.getContentType() != null 
+                        ? comprobante.getContentType() 
+                        : "image/jpeg";
+                
+                String base64Content = Base64.getEncoder().encodeToString(comprobante.getBytes());
+                String dataUrl = "data:" + contentType + ";base64," + base64Content;
+                
+                movimiento.setComprobanteImagen(dataUrl);
+            } catch (Exception e) {
+                throw new RuntimeException("Error al procesar el archivo de comprobante", e);
+            }
+        }
 
         return movimientoCajaRepository.save(movimiento);
     }

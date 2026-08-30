@@ -26,6 +26,15 @@ import { MobileLayout } from '../../components/layouts/MobileLayout';
 import { useIsMobile } from "../../hook/useIsMobile";
 
 function App() {
+  const isMobile = useIsMobile();
+
+  const renderLayout = (children: React.ReactNode, activeItem: string) => {
+  if (isMobile) {
+    return <MobileLayout />; 
+  }
+  return <SidebarLayout activeItem={activeItem}>{children}</SidebarLayout>;
+};
+
   return (
     <ThemeProvider>
       <TurnoProvider>
@@ -37,8 +46,7 @@ function App() {
             <Route path="/login" element={
               <LoginView 
                 onLoginExitoso={() => {
-                  const esMobile = window.innerWidth < 768;
-                  window.location.href = esMobile ? '/informes' : '/dashboard';
+                  window.location.href = isMobile ? '/informes' : '/dashboard';
                 }} 
                 onVolver={() => window.location.href='/'} 
               />
@@ -46,41 +54,31 @@ function App() {
 
             <Route path="/clientes" element={
               <ProtectedRoute permisoRequerido="Clientes">
-                <SidebarLayout activeItem="Clientes">
-                  <ClienteView />
-                </SidebarLayout>
+                {renderLayout(<ClienteView />, "Clientes")}
               </ProtectedRoute>
             } />
 
             <Route path="/proveedores" element={
               <ProtectedRoute permisoRequerido="Proveedores">
-                <SidebarLayout activeItem="Proveedores">
-                  <Proveedores />
-                </SidebarLayout>
+                {renderLayout(<Proveedores />, "Proveedores")}
               </ProtectedRoute>
             } />
 
             <Route path="/insumos" element={
               <ProtectedRoute permisoRequerido="Insumos">
-                <SidebarLayout activeItem="Insumos">
-                  <Insumos />
-                </SidebarLayout>
+                {renderLayout(<Insumos />, "Insumos")}
               </ProtectedRoute>
             } />
 
             <Route path="/productos" element={
               <ProtectedRoute permisoRequerido="Productos">
-                <SidebarLayout activeItem="Productos">
-                  <Productos />
-                </SidebarLayout>
+                {renderLayout(<Productos />, "Productos")}
               </ProtectedRoute>
             } />
 
             <Route path="/crear-pedido" element={
               <ProtectedRoute permisoRequerido="Crear Pedido">
-                <SidebarLayout activeItem="Crear Pedido">
-                  <CrearPedidoView />
-                </SidebarLayout>
+                {renderLayout(<CrearPedidoView />, "Crear Pedido")}
               </ProtectedRoute>
             } />
 
@@ -92,68 +90,56 @@ function App() {
 
             <Route path="/historial-pedidos" element={
               <ProtectedRoute permisoRequerido="Historial de Pedidos">
-                <HistorialPedidosPage />
+             <HistorialPedidosPage />
               </ProtectedRoute>
             } />
 
             <Route path="/caja" element={
               <ProtectedRoute permisoRequerido="Caja">
-                <CajaView />
+              <CajaView />
               </ProtectedRoute>
             } />
 
             <Route path="/repositorio" element={
               <ProtectedRoute permisoRequerido="Repositorio Digital">
-                <SidebarLayout activeItem="Repositorio Digital">
-                  <RepositorioDigitalView />
-                </SidebarLayout>
+                {renderLayout(<RepositorioDigitalView />, "Repositorio Digital")}
               </ProtectedRoute>
             } />
 
             <Route path="/configuracion" element={
               <ProtectedRoute permisoRequerido="Configuración">
-                <SidebarLayout activeItem="Configuración">
-                  <ConfiguracionView />
-                </SidebarLayout>
+                {renderLayout(<ConfiguracionView />, "Configuración")}
               </ProtectedRoute>
             } />
 
             {/* RUTAS EXCLUSIVAS Y GERENCIA */}
             <Route path="/matriz-permisos" element={
               <ProtectedRoute permisoRequerido="Matriz de Permisos">
-                <SidebarLayout activeItem="Matriz de Permisos">
-                  <MatrizPermisosView />
-                </SidebarLayout>
+                {renderLayout(<MatrizPermisosView />, "Matriz de Permisos")}
               </ProtectedRoute>
             } />
 
             <Route path="/historial" element={
               <ProtectedRoute permisoRequerido="Historial de Actividad">
-                <SidebarLayout activeItem="Historial de Actividad">
-                  <HistorialActividadView /> 
-                </SidebarLayout>
+                {renderLayout(<HistorialActividadView />, "Historial de Actividad")}
               </ProtectedRoute>
             } />
 
             <Route path="/informes" element={
               <ProtectedRoute permisoRequerido="Informes">
-                <SidebarLayout activeItem="Informes">
-                  <InformesView />
-                </SidebarLayout>
+                {renderLayout(<InformesView />, "Informes")}
               </ProtectedRoute>
             } />
 
             <Route path="/gestion-usuarios" element={
               <ProtectedRoute permisoRequerido="Gestión de Usuarios">
-                <GestionUsuariosView />
+               <GestionUsuariosView />
               </ProtectedRoute>
             } />
 
             <Route path="/maquinas" element={
               <ProtectedRoute permisoRequerido="Equipos / Máquinas">
-                <SidebarLayout activeItem="Equipos / Máquinas">
-                  <MaquinasView />
-                </SidebarLayout>
+                {renderLayout(<MaquinasView />, "Equipos / Máquinas")}
               </ProtectedRoute>
             } />
 
@@ -165,9 +151,7 @@ function App() {
 
             <Route path="/dashboard" element={
               <ProtectedRoute permisoRequerido="Panel Principal">
-                <SidebarLayout activeItem="Panel Principal">
-                  <DashboardPrincipal />
-                </SidebarLayout>
+                {renderLayout(<DashboardPrincipal />, "Panel Principal")}
               </ProtectedRoute>
             } />
 

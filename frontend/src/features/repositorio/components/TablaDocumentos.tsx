@@ -7,6 +7,7 @@ interface Props {
   documentoSeleccionado: DocumentoDigital | null;
   onSelectDocumento: (doc: DocumentoDigital) => void;
   onEliminar: (e: React.MouseEvent, id: number) => void;
+  onAbrirReceta: (e: React.MouseEvent, doc: DocumentoDigital) => void;
   getIconoArchivo: (tipo: string) => React.ReactNode;
   isDarkMode: boolean;
   cardBg: string;
@@ -19,6 +20,7 @@ export const TablaDocumentos: React.FC<Props> = ({
   documentoSeleccionado,
   onSelectDocumento,
   onEliminar,
+  onAbrirReceta,
   getIconoArchivo,
   isDarkMode,
   cardBg,
@@ -72,6 +74,16 @@ export const TablaDocumentos: React.FC<Props> = ({
                   <td className="py-3 px-3 text-truncate" style={{ maxWidth: '120px' }}>{doc.area?.nombreArea || 'S/N'}</td>
                   <td className="py-3 px-3 text-truncate" style={{ maxWidth: '120px' }}>{doc.area?.institucion?.nombreInstitucion || 'S/N'}</td>
                   <td className="py-3 px-3 text-center">
+                    {/* Botón para abrir Receta/Insumos (si tiene producto asociado) */}
+                    {doc.producto && (
+                      <button
+                        className="btn btn-sm text-warning border-0 p-0 me-2"
+                        title="Configurar Receta / Insumos"
+                        onClick={(e) => onAbrirReceta(e, doc)}
+                      >
+                        <i className="bi bi-box-seam fs-5"></i>
+                      </button>
+                    )}
                     <button
                       className="btn btn-sm text-danger border-0 p-0 ms-1"
                       title="Eliminar de forma lógica"

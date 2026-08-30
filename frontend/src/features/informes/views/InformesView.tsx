@@ -602,20 +602,20 @@ export const InformesView: React.FC = () => {
             </button>
 
             <button
-              type="button"
-              className="btn btn-sm btn fw-semibold px-3 py-2 rounded-3 d-flex align-items-center gap-2"
-              onClick={handleExportarPDF}
-              style={{
-              backgroundColor: '#6f42c1',
-              borderColor: '#6f42c1',
-              color: '#ffffff',
-              fontSize: '0.85rem',
-              paddingTop: '0.35rem',
-              paddingBottom: '0.35rem'
-            }}
-           >
-              <i className="bi bi-file-earmark-pdf"></i> Exportar PDF
-            </button>
+  type="button"
+  className="btn btn-sm btn fw-semibold px-3 py-2 rounded-3 d-none d-md-flex align-items-center gap-2"
+  onClick={handleExportarPDF}
+  style={{
+    backgroundColor: '#6f42c1',
+    borderColor: '#6f42c1',
+    color: '#ffffff',
+    fontSize: '0.85rem',
+    paddingTop: '0.35rem',
+    paddingBottom: '0.35rem'
+  }}
+>
+  <i className="bi bi-file-earmark-pdf"></i> Exportar PDF
+</button>
           </div>
 
           <span className="text-body-secondary small">
