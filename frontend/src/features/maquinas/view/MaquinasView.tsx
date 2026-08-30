@@ -90,39 +90,33 @@ export const MaquinasView: React.FC = () => {
   return (
     <div className="container-fluid font-monospace" style={{ color: textColor }}>
       
-      <style>{`
-  @media (max-width: 768px) {
-    .maq-header {
-      margin-top: 1.25rem;
-    }
-  }
-`}</style>
-<div className="d-flex justify-content-center align-items-center mb-4 pb-2 text-center maq-header">
-  <div className="w-100">
-    <h3 className="fw-bold mb-1" style={{ color: titleColor }}>
-      <i className="bi me-2 text-warning"></i>Gestión de Equipos y Máquinas
-    </h3>
-  </div>
-</div>
+      {/* Encabezado */}
+      <div className={`d-flex justify-content-center align-items-center mb-4 pb-2 text-center ${isMobile ? 'mt-3' : ''}`}>
+        <div className="w-100">
+          <h3 className="fw-bold mb-1" style={{ color: titleColor }}>
+            <i className="bi me-2 text-warning"></i>Gestión de Equipos y Máquinas
+          </h3>
+        </div>
+      </div>
 
       {/* Buscador */}
-<div className="row mb-3">
-  <div className="col-12">
-    <div className="input-group">
-      <span className="input-group-text" style={{ backgroundColor: inputBg, borderColor: inputBorder, color: textSubtle }}>
-        <i className="bi bi-search"></i>
-      </span>
-      <input
-        type="text"
-        className="form-control"
-        style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-        placeholder="Buscar por equipo o estado..."
-        value={filtro}
-        onChange={(e) => setFiltro(e.target.value)}
-      />
-    </div>
-  </div>
-</div>
+      <div className="row mb-3">
+        <div className="col-12">
+          <div className="input-group">
+            <span className="input-group-text" style={{ backgroundColor: inputBg, borderColor: inputBorder, color: textSubtle }}>
+              <i className="bi bi-search"></i>
+            </span>
+            <input
+              type="text"
+              className="form-control"
+              style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+              placeholder="Buscar por equipo o estado..."
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
 
       {/* Tabla de Equipos */}
       <div>
@@ -149,54 +143,37 @@ export const MaquinasView: React.FC = () => {
       </div>
 
       {/* Botones de acción inferior */}
-<style>{`
-  @media (max-width: 768px) {
-    .maq-btn-volver {
-      display: none;
-    }
-    .maq-acciones-wrap {
-      justify-content: stretch !important;
-    }
-    .maq-acciones-derecha {
-      width: 100%;
-    }
-    .maq-acciones-derecha button {
-      flex: 1 1 0;
-      white-space: normal;
-      line-height: 1.15;
-      padding-top: 0.7rem !important;
-      padding-bottom: 0.7rem !important;
-      font-size: 0.85rem;
-    }
-  }
-`}</style>
-<div className="d-flex justify-content-between align-items-center mt-3 mb-4 maq-acciones-wrap">
-  <button
-    className="btn btn-secondary fw-bold px-3 shadow maq-btn-volver"
-    onClick={() => navigate('/dashboard')}
-  >
-    <i className="bi"></i>Volver
-  </button>
+      <div className={`d-flex align-items-center mt-3 mb-4 ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
+        
+        {/* El botón volver solo se renderiza si NO estamos en Mobile */}
+        {!isMobile && (
+          <button
+            className="btn btn-secondary fw-bold px-3 shadow"
+            onClick={() => navigate('/dashboard')}
+          >
+            Volver
+          </button>
+        )}
 
-  <div className="d-flex gap-2 maq-acciones-derecha">
-    <button
-      className="btn btn-danger fw-bold px-3 shadow"
-      onClick={() => setShowModalFalla(true)}
-    >
-      Reportar Falla
-    </button>
-    <button
-      className="btn btn-warning fw-bold px-3 shadow"
-      style={{ backgroundColor: "#ce9b0e", borderColor: "#ce9b0e", color: '#ffffff' }}
-      onClick={() => {
-        setMaquinaAEditar(null);
-        setShowModalCrud(true);
-      }}
-    >
-      <i className="bi me-2"></i>Nuevo Equipo
-    </button>
-  </div>
-</div>
+        <div className={`d-flex gap-2 ${isMobile ? 'w-100' : ''}`}>
+          <button
+            className={`btn btn-danger fw-bold px-3 shadow ${isMobile ? 'flex-fill py-2 text-nowrap' : ''}`}
+            onClick={() => setShowModalFalla(true)}
+          >
+            Reportar Falla
+          </button>
+          <button
+            className={`btn btn-warning fw-bold px-3 shadow ${isMobile ? 'flex-fill py-2 text-nowrap' : ''}`}
+            style={{ backgroundColor: "#ce9b0e", borderColor: "#ce9b0e", color: '#ffffff' }}
+            onClick={() => {
+              setMaquinaAEditar(null);
+              setShowModalCrud(true);
+            }}
+          >
+            Nuevo Equipo
+          </button>
+        </div>
+      </div>
 
       {/* Modales de Operación */}
       <MaquinaModal
@@ -214,19 +191,19 @@ export const MaquinasView: React.FC = () => {
       />
 
       <HistorialIncidenciasModal
-  show={showModalHistorial}
-  maquina={maquinaHistorial}
-  onClose={() => setShowModalHistorial(false)}
-  onIncidenciaResuelta={cargarMaquinas}
-  onPagoExitoso={(msj) => {
-    setSuccessState({
-      show: true,
-      title: '¡Pago Registrado!',
-      message: msj,
-      icon: 'bi-cash-coin'
-    });
-  }}
-/>
+        show={showModalHistorial}
+        maquina={maquinaHistorial}
+        onClose={() => setShowModalHistorial(false)}
+        onIncidenciaResuelta={cargarMaquinas}
+        onPagoExitoso={(msj) => {
+          setSuccessState({
+            show: true,
+            title: '¡Pago Registrado!',
+            message: msj,
+            icon: 'bi-cash-coin'
+          });
+        }}
+      />
 
       {/* Modal Reusable de Notificación de Éxito */}
       <SuccesModal

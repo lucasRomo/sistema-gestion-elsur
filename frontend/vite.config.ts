@@ -4,4 +4,8 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    host: true, // Expone el servidor frontend a 0.0.0.0 (red local)
+    port: 5173
+  }
 })

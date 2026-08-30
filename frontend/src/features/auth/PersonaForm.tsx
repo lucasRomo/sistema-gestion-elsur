@@ -122,9 +122,9 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
 
   return (
     <form onSubmit={handleSubmit} className="p-1">
-      <h3 className="text-center mb-4 fw-bold text-info">
-        <i className="bi bi-person-plus-fill me-2"></i>{titulo}
-      </h3>
+      <h3 className="text-center mb-4 fw-bold" style={{ color: isDark ? '#ffffff' : '#0dcaf0' }}>
+  <i className="bi bi-person-plus-fill me-2"></i>{titulo}
+</h3>
       
       <div className="row g-3 mx-0">
         <div className="col-md-6 px-1">

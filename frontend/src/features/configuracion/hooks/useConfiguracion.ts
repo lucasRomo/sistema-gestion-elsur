@@ -39,8 +39,16 @@ export const useConfiguracion = () => {
   const [mostrarModalConfirmacion, setMostrarModalConfirmacion] = useState(false);
 
   useEffect(() => {
+  const rolNombre = typeof usuario?.rol === 'string' 
+    ? usuario.rol 
+    : usuario?.rol?.nombreRol || usuario?.rol?.nombre || '';
+
+  const esAdmin = rolNombre.toString().toUpperCase() === 'ADMIN';
+
+  if (token && esAdmin) {
     cargarHistorialRespaldos();
-  }, []);
+  }
+}, []);
 
   const cargarHistorialRespaldos = async () => {
     try {

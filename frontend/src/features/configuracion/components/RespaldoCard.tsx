@@ -22,6 +22,7 @@ export const RespaldoCard: React.FC<Props> = ({
   inputBgClass
 }) => {
   const {
+    usuario,
     historialRespaldos,
     cargandoRespaldo,
     mensajeRespaldo,
@@ -33,6 +34,13 @@ export const RespaldoCard: React.FC<Props> = ({
     handleEliminarRespaldo
   } = config;
 
+  // Detección del rol ADMIN
+  const rolNombre = typeof usuario?.rol === 'string' 
+    ? usuario.rol 
+    : usuario?.rol?.nombreRol || usuario?.rol?.nombre || '';
+
+  const esAdmin = rolNombre.toString().toUpperCase() === 'ADMIN';
+
   const handleRestaurarClick = (e: React.FormEvent) => {
     e.preventDefault();
     if (!archivoSeleccionado) return;
@@ -41,7 +49,28 @@ export const RespaldoCard: React.FC<Props> = ({
 
   return (
     <div className="col-12 col-lg-7">
-      <div className="p-4 rounded-4 shadow h-100" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+      <div className="p-4 rounded-4 shadow h-100 position-relative overflow-hidden" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
+        
+        {/* Capa de Bloqueo Exclusiva para la Tarjeta de Respaldos */}
+        {!esAdmin && (
+          <div 
+            className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center text-center p-4"
+            style={{
+              zIndex: 20,
+              backgroundColor: esOscuro ? 'rgba(24, 24, 27, 0.94)' : 'rgba(255, 255, 255, 0.94)',
+              backdropFilter: 'blur(3px)'
+            }}
+          >
+            <i className="bi bi-lock-fill text-warning display-4 mb-2"></i>
+            <h5 className="fw-bold mb-2" style={{ color: esOscuro ? '#ffffff' : '#18181b' }}>
+              Función Bloqueada
+            </h5>
+            <p className={`${mutedTextColor} small mb-0 px-3`} style={{ maxWidth: '380px' }}>
+              Solo los usuarios con perfil <strong>ADMIN</strong> tienen acceso a la generación y restauración de respaldos.
+            </p>
+          </div>
+        )}
+
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
             <h5 className="fw-bold mb-1 text-info">

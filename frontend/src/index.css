@@ -602,3 +602,23 @@ html, body {
   padding: 0;
   overflow-x: hidden;
 }
+
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  .mobile-layout {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .mobile-content {
+    overflow-y: auto;
+    padding-bottom: 70px;
+  }
+
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+  }
+}
