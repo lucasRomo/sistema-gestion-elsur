@@ -262,8 +262,9 @@ export const CompraInsumosView: React.FC = () => {
             <div className="d-flex align-items-center gap-2">
               <button
                 type="button"
-                className="btn btn-sm btn-info text-white fw-bold d-flex align-items-center gap-1 shadow-sm"
+                className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1 shadow-sm"
                 onClick={() => setModalIaAbierto(true)}
+                style={{ backgroundColor: '#7109e7', border: 'none' }}
               >
                 <i className="bi bi-magic"></i> Cargar con IA
               </button>
@@ -271,14 +272,24 @@ export const CompraInsumosView: React.FC = () => {
               <div className="btn-group">
                 <button
                   type="button"
-                  className={`btn btn-sm ${tipoItem === 'INSUMO' ? 'btn-primary' : 'btn-outline-primary'}`}
+                  className="btn btn-sm fw-semibold"
+                  style={{
+                    backgroundColor: tipoItem === 'INSUMO' ? '#0f4685' : '#2b3035',
+                    color: tipoItem === 'INSUMO' ? '#ffffff' : '#a0a0a0',
+                    border: '#500dec'
+                  }}
                   onClick={() => { setTipoItem('INSUMO'); resetFormItem(); }}
                 >
                   Insumo
                 </button>
                 <button
                   type="button"
-                  className={`btn btn-sm ${tipoItem === 'PRODUCTO' ? 'btn-primary' : 'btn-outline-primary'}`}
+                  className="btn btn-sm fw-semibold"
+                  style={{
+                    backgroundColor: tipoItem === 'PRODUCTO' ? '#2225d8' : '#2b3035',
+                    color: tipoItem === 'PRODUCTO' ? '#ffffff' : '#a0a0a0',
+                    border: 'none'
+                  }}
                   onClick={() => { setTipoItem('PRODUCTO'); resetFormItem(); }}
                 >
                   Producto (Sin Receta)
@@ -294,14 +305,24 @@ export const CompraInsumosView: React.FC = () => {
                 <div className="btn-group">
                   <button
                     type="button"
-                    className={`btn btn-sm ${!esNuevoInsumo ? 'btn-info text-white' : 'btn-outline-secondary'}`}
+                    className="btn btn-sm fw-semibold"
+                    style={{
+                      backgroundColor: !esNuevoInsumo ? '#d17b0a' : '#2b3035',
+                      color: !esNuevoInsumo ? '#fcfcfc' : '#a0a0a0',
+                      border: 'none'
+                    }}
                     onClick={() => setEsNuevoInsumo(false)}
                   >
                     Insumo Existente
                   </button>
                   <button
                     type="button"
-                    className={`btn btn-sm ${esNuevoInsumo ? 'btn-success text-white' : 'btn-outline-secondary'}`}
+                    className="btn btn-sm fw-semibold"
+                    style={{
+                      backgroundColor: esNuevoInsumo ? '#3aaa06' : '#2b3035',
+                      color: esNuevoInsumo ? '#ffffff' : '#a0a0a0',
+                      border: 'none'
+                    }}
                     onClick={() => setEsNuevoInsumo(true)}
                   >
                     + Nuevo Insumo
@@ -570,7 +591,7 @@ export const CompraInsumosView: React.FC = () => {
           <button
             type="submit"
             className="btn px-4 py-2 text-white fw-bold"
-            style={{ backgroundColor: '#6f42c1' }}
+            style={{ backgroundColor: '#258618' }}
             disabled={loading || !cajaAbierta}
           >
             {loading ? 'Procesando...' : 'Confirmar Compra'}

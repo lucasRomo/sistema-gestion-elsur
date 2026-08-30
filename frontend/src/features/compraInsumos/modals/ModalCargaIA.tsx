@@ -81,7 +81,14 @@ export const ModalCargaIA: React.FC<ModalCargaIAProps> = ({
       }
 
       const { items: itemsCorregidos, avisos } = validarYCorregirItems(data.items || []);
-      setItemsDetectados(itemsCorregidos);
+
+      // Mantiene máximo 3 decimales en el precio unitario traído de la IA
+      const itemsConPrecioRedondeado = itemsCorregidos.map((item: any) => ({
+        ...item,
+        precioUnitario: item.precioUnitario ? Number(Number(item.precioUnitario).toFixed(3)) : 0
+      }));
+
+      setItemsDetectados(itemsConPrecioRedondeado);
 
       if (avisos.length > 0) {
         setAvisoMsg(
@@ -100,7 +107,6 @@ export const ModalCargaIA: React.FC<ModalCargaIAProps> = ({
   };
 
   const handleConfirmar = () => {
-    // Filtrar solo los ítems que realmente matchearon con la BD para no enviar registros inválidos
     const itemsValidos = itemsDetectados.filter(i => i.encontradoEnBd);
 
     if (itemsValidos.length === 0) {
@@ -210,18 +216,23 @@ export const ModalCargaIA: React.FC<ModalCargaIAProps> = ({
                     </thead>
                     <tbody>
                       {itemsDetectados.map((item, idx) => (
-                        <tr key={idx} className={!item.encontradoEnBd ? 'table-danger' : ''}>
-                          <td>
+                        <tr 
+                          key={idx} 
+                          style={{ 
+                            backgroundColor: !item.encontradoEnBd ? 'rgba(220, 53, 69, 0.22)' : 'transparent' 
+                          }}
+                        >
+                          <td style={{ backgroundColor: 'inherit' }}>
                             <span className={`badge ${item.tipoItem === 'PRODUCTO' ? 'bg-warning text-dark' : 'bg-primary'}`}>
                               {item.tipoItem}
                             </span>
                           </td>
-                          <td>
+                          <td style={{ backgroundColor: 'inherit' }}>
                             <span className={`badge ${item.encontradoEnBd ? 'bg-success' : 'bg-danger'}`}>
                               {item.encontradoEnBd ? 'Existe en BD' : 'No encontrado'}
                             </span>
                           </td>
-                          <td>
+                          <td style={{ backgroundColor: 'inherit' }}>
                             <div>
                               <input
                                 type="text"
@@ -242,7 +253,7 @@ export const ModalCargaIA: React.FC<ModalCargaIAProps> = ({
                               )}
                             </div>
                           </td>
-                          <td>
+                          <td style={{ backgroundColor: 'inherit' }}>
                             <input
                               type="number"
                               min="1"
@@ -258,26 +269,31 @@ export const ModalCargaIA: React.FC<ModalCargaIAProps> = ({
                               }}
                             />
                           </td>
-                          <td>
+                          <td style={{ backgroundColor: 'inherit' }}>
                             <input
                               type="number"
-                              step="0.01"
+                              step="0.001"
                               min="0"
                               className="form-control form-control-sm font-monospace"
                               style={{ backgroundColor: isDark ? '#1a1a1c' : '#fff', color: textColor, borderColor: cardBorder }}
-                              value={item.precioUnitario}
+                              value={
+                                item.precioUnitario !== null && item.precioUnitario !== undefined
+                                  ? Number(item.precioUnitario).toFixed(3)
+                                  : ''
+                              }
                               onChange={(e) => {
                                 const copy = [...itemsDetectados];
-                                copy[idx].precioUnitario = Number(e.target.value);
+                                const val = parseFloat(e.target.value);
+                                copy[idx].precioUnitario = isNaN(val) ? 0 : Number(val.toFixed(3));
                                 copy[idx].precioTotalDetectado = null;
                                 setItemsDetectados(copy);
                               }}
                             />
                           </td>
-                          <td className="text-end fw-bold">
+                          <td className="text-end fw-bold" style={{ backgroundColor: 'inherit' }}>
                             ${calcularSubtotal(item).toFixed(2)}
                           </td>
-                          <td className="text-center">
+                          <td className="text-center" style={{ backgroundColor: 'inherit' }}>
                             <button
                               type="button"
                               className="btn btn-outline-danger btn-sm py-0 px-2"
@@ -296,7 +312,7 @@ export const ModalCargaIA: React.FC<ModalCargaIAProps> = ({
           </div>
 
           <div className="modal-footer border-top border-secondary">
-            <button type="button" className="btn btn-secondary px-4" onClick={onClose}>
+            <button type="button" className="btn btn-danger px-4" onClick={onClose}>
               Cancelar
             </button>
             {itemsDetectados.length > 0 && (
