@@ -73,7 +73,7 @@ function App() {
 
             <Route path="/productos" element={
               <ProtectedRoute permisoRequerido="Productos">
-                <Productos />
+                {renderLayout(<Productos />, "Productos")}
               </ProtectedRoute>
             } />
 
