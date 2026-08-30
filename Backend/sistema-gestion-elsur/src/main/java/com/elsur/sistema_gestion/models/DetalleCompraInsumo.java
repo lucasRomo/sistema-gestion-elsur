@@ -23,8 +23,12 @@ public class DetalleCompraInsumo {
     private CompraProveedor compra;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_insumo", nullable = false)
+    @JoinColumn(name = "id_insumo", nullable = true)
     private Insumo insumo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_producto", nullable = true)
+    private Producto producto;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal cantidadCompradaUnidadProveedor;

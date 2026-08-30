@@ -74,7 +74,6 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         // 5. PERMISOS Y MÓDULOS DEL SISTEMA
-        // Actualiza registros existentes de "Inventario" a "Equipos / Máquinas"
         jdbcTemplate.execute("UPDATE permiso SET nombre_permiso = 'Equipos / Máquinas' WHERE nombre_permiso = 'Inventario'");
 
         Long totalPermisos = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM permiso", Long.class);
@@ -95,8 +94,14 @@ public class DataInitializer implements CommandLineRunner {
             jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (14, 'Gestión de Usuarios')");
             jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (15, 'Historial de Actividad')");
             jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (16, 'Configuración')");
-            jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('permiso', 'id_permiso'), 16)");
+            jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) VALUES (17, 'Compra de Insumos')");
+            jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('permiso', 'id_permiso'), 17)");
             System.out.println("[DataInitializer] -> Permisos / Módulos insertados.");
+        } else {
+            // Asegura que se inserte 'Compra de Insumos' si el sistema ya tenía permisos previos
+            jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) " +
+                    "SELECT 17, 'Compra de Insumos' WHERE NOT EXISTS (SELECT 1 FROM permiso WHERE nombre_permiso = 'Compra de Insumos')");
+            jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('permiso', 'id_permiso'), (SELECT MAX(id_permiso) FROM permiso))");
         }
 
         // 6. ASIGNACIÓN INICIAL DE PERMISOS A ROLES (ROL_PERMISO)
@@ -104,11 +109,15 @@ public class DataInitializer implements CommandLineRunner {
         if (totalRolPermiso == null || totalRolPermiso == 0) {
             jdbcTemplate.execute("INSERT INTO rol_permiso (id_rol, id_permiso) SELECT 1, id_permiso FROM permiso ON CONFLICT DO NOTHING");
 
-            int[] permisosOperario = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16};
+            int[] permisosOperario = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 16, 17};
             for (int idPermiso : permisosOperario) {
                 jdbcTemplate.execute("INSERT INTO rol_permiso (id_rol, id_permiso) VALUES (2, " + idPermiso + ") ON CONFLICT DO NOTHING");
             }
             System.out.println("[DataInitializer] -> Relaciones Rol-Permiso inicializadas.");
+        } else {
+            // Asigna el permiso 17 a los roles existentes ADMIN y OPERARIO
+            jdbcTemplate.execute("INSERT INTO rol_permiso (id_rol, id_permiso) SELECT 1, 17 ON CONFLICT DO NOTHING");
+            jdbcTemplate.execute("INSERT INTO rol_permiso (id_rol, id_permiso) SELECT 2, 17 ON CONFLICT DO NOTHING");
         }
 
         System.out.println("[DataInitializer] Sincronización completada con éxito.");

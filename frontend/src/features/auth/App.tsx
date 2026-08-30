@@ -24,6 +24,7 @@ import { MaquinasView } from '../../features/maquinas/view/MaquinasView';
 import { ThemeProvider } from '../../Context/ThemeContext';
 import { MobileLayout } from '../../components/layouts/MobileLayout';
 import { useIsMobile } from "../../hook/useIsMobile";
+import { CompraInsumosView } from '../compraInsumos/views/CompraInsumosView';
 
 function App() {
   const isMobile = useIsMobile();
@@ -72,7 +73,23 @@ function App() {
 
             <Route path="/productos" element={
               <ProtectedRoute permisoRequerido="Productos">
-                {renderLayout(<Productos />, "Productos")}
+                <Productos />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/compra-insumos" element={
+              <ProtectedRoute permisoRequerido="Compra de Insumos">
+                <SidebarLayout activeItem="Compra de Insumos">
+                  <CompraInsumosView />
+                </SidebarLayout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/compra-insumos" element={
+              <ProtectedRoute permisoRequerido="Compra de Insumos">
+                <SidebarLayout activeItem="Compra de Insumos">
+                  <CompraInsumosView />
+                </SidebarLayout>
               </ProtectedRoute>
             } />
 
