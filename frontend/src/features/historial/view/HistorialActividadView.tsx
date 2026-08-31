@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useHistorialActividad } from '../hooks/useHistorialActividad';
 import type { RegistroActividad } from '../types/RegistroActividad';
-import type { Pedido } from '../../pedidos/types/Pedido';
 
 import {
   exportarHistorialActividadExcel,
@@ -18,9 +17,7 @@ export const HistorialActividadView: React.FC = () => {
   const mainCardBg = isDark ? '#1d1d1d' : '#ffffff';
   const cardBorder = isDark ? '#27272a' : '#cbd5e1';
   const titleColor = isDark ? '#ffffff' : '#0f172a';
-  const labelColor = isDark ? '#a1a1aa' : '#475569';
-  const inputBg = isDark ? '#1d1d1d' : '#ffffff';
-  const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const labelColor = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
   const inputText = isDark ? '#ffffff' : '#0f172a';
   
   const thBg = isDark ? '#1d1d1d' : '#f8fafc';
@@ -64,81 +61,83 @@ export const HistorialActividadView: React.FC = () => {
   });
 
   const formatearFecha = (fechaRaw?: string | null) => {
-  if (!fechaRaw) return '-';
-  const isoString = fechaRaw.endsWith('Z') || fechaRaw.includes('+') 
-    ? fechaRaw 
-    : `${fechaRaw}Z`;
+    if (!fechaRaw) return '-';
+    const isoString = fechaRaw.endsWith('Z') || fechaRaw.includes('+') 
+      ? fechaRaw 
+      : `${fechaRaw}Z`;
 
-  const fechaObj = new Date(isoString);
-  if (isNaN(fechaObj.getTime())) return '-';
+    const fechaObj = new Date(isoString);
+    if (isNaN(fechaObj.getTime())) return '-';
 
-  return fechaObj.toLocaleString('es-AR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-  });
+    return fechaObj.toLocaleString('es-AR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
   };
 
   return (
-    <div className="container-fluid p-3 font-sans" style={{ minHeight: '100vh' }}>
+    <div className="container-fluid px-0 h-100 d-flex flex-column font-sans">
       
       {/* Título Superior */}
       <div className="d-flex justify-content-center align-items-center mb-4">
-        <h2 className="fw-bold fs-2 m-0 text-center" style={{ color: titleColor }}>
+        <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
           Historial de Actividad
         </h2>
       </div>
 
-      {/* Filtros Superiores */}
-      <div className="row g-3 mb-4">
-        <div className="col-md-7">
-          <label className="form-label small fw-semibold mb-1" style={{ color: labelColor }}>
-            Filtro por Tabla Modificada:
+      {/* Contenedor de Filtros */}
+      <div 
+        className="row g-3 align-items-center mb-4 p-3 rounded-3 shadow-sm font-monospace" 
+        style={{ 
+          backgroundColor: isDark ? '#1b1b1b' : '#ffffff', 
+          border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`,
+          transition: 'all 0.2s ease-in-out'
+        }}
+      >
+        <div className="col-md-6">
+          <label className="form-label small fw-semibold" style={{ color: labelColor }}>
+            Filtrar por Tabla Modificada:
           </label>
-          <div className="position-relative">
-            <input
-              type="text"
-              className="form-control shadow-none"
-              style={{ 
-                backgroundColor: inputBg, 
-                borderColor: inputBorder, 
-                color: inputText 
-              }}
-              placeholder="Buscar tabla (ej. clientes, productos)..."
-              value={busquedaTabla}
-              onChange={(e) => setBusquedaTabla(e.target.value)}
-            />
-            <i className="bi bi-search position-absolute end-0 top-50 translate-middle-y me-3" style={{ color: mutedText }}></i>
-          </div>
+          <input
+            type="text"
+            className={`form-control ${isDark ? 'text-white' : 'text-dark'} py-2 font-monospace shadow-none`}
+            style={{ 
+              backgroundColor: isDark ? '#1b1b1b' : '#ffffff', 
+              borderColor: isDark ? '#3f3f46' : '#cbd5e1' 
+            }}
+            placeholder="Buscar tabla (ej. clientes, productos)..."
+            value={busquedaTabla}
+            onChange={(e) => setBusquedaTabla(e.target.value)}
+          />
         </div>
 
-          <div className="col-md-5">
-            <label className="form-label small fw-semibold mb-1" style={{ color: labelColor }}>
-              Empleado / Usuario:
-            </label>
-            <select
-              className="form-select shadow-none"
-              style={{ 
-                backgroundColor: inputBg, 
-                borderColor: inputBorder, 
-                color: inputText 
-              }}
-              value={filtroEmpleado}
-              onChange={(e) => setFiltroEmpleado(e.target.value)}
-            >
-              <option value="Sin Filtro">Todos los usuarios</option>
-              {empleadosUnicos.map((emp) => (
-                <option key={emp} value={emp}>
-                  {emp}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="col-md-6">
+          <label className="form-label small fw-semibold" style={{ color: labelColor }}>
+            Filtrar por Empleado / Usuario:
+          </label>
+          <select
+            className={`form-select ${isDark ? 'text-white' : 'text-dark'} py-2 font-monospace shadow-none`}
+            style={{ 
+              backgroundColor: isDark ? '#1b1b1b' : '#ffffff', 
+              borderColor: isDark ? '#3f3f46' : '#cbd5e1' 
+            }}
+            value={filtroEmpleado}
+            onChange={(e) => setFiltroEmpleado(e.target.value)}
+          >
+            <option value="Sin Filtro">Sin Filtro</option>
+            {empleadosUnicos.map((emp) => (
+              <option key={emp} value={emp}>
+                {emp}
+              </option>
+            ))}
+          </select>
         </div>
+      </div>
 
       {/* Tabla con Scroll Interno y Tamaño Fijo */}
       <div 
@@ -146,7 +145,7 @@ export const HistorialActividadView: React.FC = () => {
         style={{ 
           backgroundColor: mainCardBg, 
           borderColor: cardBorder,
-          height: '65vh',
+          height: '65.3vh',
           overflowY: 'auto',
           display: 'block'
         }}
@@ -181,8 +180,8 @@ export const HistorialActividadView: React.FC = () => {
                   style={{ borderBottom: index === actividadesFiltradas.length - 1 ? 'none' : `1px solid ${rowBorder}` }}
                 >
                   <td className="font-monospace py-3 px-3" style={{ fontSize: '0.85rem', color: mutedText }}>
-  {formatearFecha(act.fecha)}
-</td>
+                    {formatearFecha(act.fecha)}
+                  </td>
                   <td className="fw-semibold py-3 px-3" style={{ color: userTextColor }}>
                     <i className="bi bi-person me-2" style={{ color: mutedText }}></i>
                     {obtenerNombreUsuario(act)}
@@ -207,10 +206,10 @@ export const HistorialActividadView: React.FC = () => {
         </table>
       </div>
 
-      {/* Barra Inferior: Botón Volver y Exportaciones */}
-      <div className="d-flex justify-content-between align-items-center mt-3 mb-4">
+      {/* Barra Inferior Estandarizada: Botón Volver y Exportaciones */}
+      <div className="d-flex align-items-stretch justify-content-between mt-3 mb-4 font-monospace">
         <button
-          className="btn btn-secondary fw-bold px-4 py-2 shadow-sm font-monospace"
+          className="btn btn-secondary px-4 py-2 fw-semibold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center"
           style={{ color: '#ffffff' }}
           onClick={() => navigate('/dashboard')}
         >
@@ -219,7 +218,7 @@ export const HistorialActividadView: React.FC = () => {
 
         <div className="d-flex gap-2">
           <button 
-            className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
+            className="btn btn-outline-success fw-bold d-inline-flex align-items-center justify-content-center px-3 py-2 shadow-sm"
             onClick={() => exportarHistorialActividadExcel(actividadesFiltradas)}
             disabled={actividadesFiltradas.length === 0 || cargando}
             title="Exportar historial actual a Excel"
@@ -228,7 +227,7 @@ export const HistorialActividadView: React.FC = () => {
           </button>
 
           <button 
-            className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2"
+            className="btn btn-outline-danger fw-bold d-inline-flex align-items-center justify-content-center px-3 py-2 shadow-sm"
             onClick={() => exportarHistorialActividadPDF(actividadesFiltradas)}
             disabled={actividadesFiltradas.length === 0 || cargando}
             title="Exportar historial actual a PDF"

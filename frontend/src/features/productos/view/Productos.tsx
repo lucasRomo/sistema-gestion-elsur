@@ -18,11 +18,16 @@ import { ModalStockCriticoList, type ItemStockCritico } from '../../insumos/moda
 // Componentes y contextos compartidos globales
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
+import { useIsMobile } from '../../../hook/useIsMobile';
 
 export const Productos: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const isMobile = useIsMobile();
   const titleColor = isDark ? '#ffffff' : '#0f172a';
+  const textColor = isDark ? '#ffffff' : '#0f172a';
+  const mainCardBg = isDark ? '#1d1d1d' : '#ffffff';
+  const cardBorder = isDark ? '#27272a' : '#cbd5e1';
   const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
 
   const { productos, guardar, cargar } = useProductos();
@@ -115,15 +120,16 @@ export const Productos: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid px-0">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div className="w-100 text-center position-relative">
-          <h1 className="fw-bold tracking-wider font-monospace m-0" style={{ fontSize: '2.25rem', color: titleColor }}>
-            Gestión de Productos
-          </h1>
-        </div>
+    <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
+      
+      {/* Encabezado Superior */}
+      <div className="d-flex justify-content-center align-items-center mb-4">
+        <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
+          Gestión de Productos
+        </h2>
       </div>
       
+      {/* Componente Filtros */}
       <ProductosFiltros 
         filtroNombre={filtroNombre} 
         setFiltroNombre={setFiltroNombre}
@@ -131,76 +137,113 @@ export const Productos: React.FC = () => {
         setFiltroEstado={setFiltroEstado}
       />
 
-      <ProductoTabla 
-        productos={productosFiltrados} 
-        onEditar={(p) => {
-          setProductoEditando(p);
-          setShowModal(true);
-        }} 
-        onConfigurarReceta={(p) => {
-          setProductoSeleccionadoReceta(p);
-          setShowRecetaModal(true);
+      {/* Contenedor Único de Tabla con Scroll Interno (65.3vh) */}
+      <div 
+        className="rounded-3 border mb-3 font-monospace" 
+        style={{ 
+          backgroundColor: mainCardBg, 
+          borderColor: cardBorder,
+          height: '65.3vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          display: 'block'
         }}
-        onToggleStockVinculado={handleToggleVinculo}
-      />
+      >
+        <ProductoTabla 
+          productos={productosFiltrados} 
+          onEditar={(p) => {
+            setProductoEditando(p);
+            setShowModal(true);
+          }} 
+          onConfigurarReceta={(p) => {
+            setProductoSeleccionadoReceta(p);
+            setShowRecetaModal(true);
+          }}
+          onToggleStockVinculado={handleToggleVinculo}
+        />
+      </div>
 
-      <div className={`d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-2 ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
-        <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-3 py-2 fw-semibold" style={{ color: '#ffffff' }}>
-          Volver
-        </button>
+      {/* Botonera Inferior Completa */}
+      <div className={`d-flex align-items-stretch mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
+        {!isMobile && (
+          <button 
+            onClick={() => navigate('/dashboard')} 
+            className="btn btn-secondary px-4 py-2 fw-semibold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center" 
+            style={{ color: '#ffffff' }}
+          >
+            Volver
+          </button>
+        )}
 
-        <div className="d-flex flex-wrap gap-2 align-items-center">
+        <div className={`d-flex flex-wrap gap-2 ${isMobile ? 'w-100' : ''}`}>
           <button 
             type="button"
-            className="btn btn-outline-warning fw-bold d-flex align-items-center gap-2 position-relative px-3 py-2"
+            className={`btn btn-outline-warning fw-bold d-inline-flex align-items-center justify-content-center px-3 py-2 shadow-sm position-relative ${isMobile ? 'flex-fill text-nowrap' : ''}`}
             onClick={() => setShowStockCriticoModal(true)}
             title="Ver productos con stock al límite o crítico"
           >
-            <i className="bi bi-exclamation-triangle-fill fs-6"></i>
+            <i className="bi bi-exclamation-triangle-fill fs-6 me-2"></i>
             Stock Crítico
             {cantidadCriticos > 0 && (
-              <span className="badge bg-danger rounded-pill ms-1">
+              <span className="badge bg-danger rounded-pill ms-2">
                 {cantidadCriticos}
               </span>
             )}
           </button>
 
           <button 
-            className="btn btn-outline-success fw-bold d-flex align-items-center gap-2 px-3 py-2"
+            className="btn btn-outline-success fw-bold d-inline-flex align-items-center justify-content-center px-3 py-2 shadow-sm"
             onClick={() => exportarProductosExcel(productosFiltrados)}
             disabled={productosFiltrados.length === 0}
             title="Exportar listado actual a Excel"
           >
-            <i className="bi bi-file-earmark-excel-fill fs-6"></i>
+            <i className="bi bi-file-earmark-excel-fill fs-5"></i>
           </button>
 
           <button 
-            className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2 px-3 py-2"
+            className="btn btn-outline-danger fw-bold d-inline-flex align-items-center justify-content-center px-3 py-2 shadow-sm"
             onClick={() => exportarProductosPDF(productosFiltrados)}
             disabled={productosFiltrados.length === 0}
             title="Exportar listado actual a PDF"
           >
-            <i className="bi bi-file-earmark-pdf-fill fs-6"></i>
+            <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
           </button>
 
-          <button className="btn px-3 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#eab308', color: '#ffffff' }} onClick={() => setShowMermasModal(true)}>
-            Mermas de Productos
+          <button 
+            className={`btn px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`} 
+            style={{ backgroundColor: '#eab308', borderColor: '#eab308', color: '#ffffff' }} 
+            onClick={() => setShowMermasModal(true)}
+          >
+            Mermas
           </button>
 
-          <button className="btn px-3 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#17a2b8', color: '#ffffff' }} onClick={() => setShowAumentoModal(true)}>
+          <button 
+            className={`btn px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`} 
+            style={{ backgroundColor: '#17a2b8', borderColor: '#17a2b8', color: '#ffffff' }} 
+            onClick={() => setShowAumentoModal(true)}
+          >
             Modificar Varios Precios
           </button>
 
-          <button className="btn px-3 py-2 fw-medium shadow-sm" style={{ backgroundColor: '#6f42c1', color: '#ffffff' }} onClick={() => setShowRecetasGlobalModal(true)}>
+          <button 
+            className={`btn px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`} 
+            style={{ backgroundColor: '#6f42c1', borderColor: '#6f42c1', color: '#ffffff' }} 
+            onClick={() => setShowRecetasGlobalModal(true)}
+          >
             Ver Productos con Receta
           </button>
 
-          <button className="btn px-3 py-2 fw-semibold shadow-sm" style={{ backgroundColor: '#156e45', color: '#ffffff' }} onClick={() => { setProductoEditando(null); setShowModal(true); }}>
+          <button 
+            className={`btn btn-success px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`} 
+            style={{ color: '#ffffff' }} 
+            onClick={() => { setProductoEditando(null); setShowModal(true); }}
+          >
             Registrar Nuevo Producto
           </button>
         </div>
       </div>
 
+      {/* Modales Complementarios */}
       <ModalStockCriticoList
         show={showStockCriticoModal}
         titulo="Stock Crítico de Productos"

@@ -104,7 +104,7 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
     <>
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content" style={{ backgroundColor: modalBg, color: textColor, borderRadius: '12px', border: `1px solid ${modalBorder}` }}>
+          <div className="modal-content" style={{ backgroundColor: modalBg, color: textColor, borderRadius: '12px', border: '1.5px solid #ffc107' }}>
             
             <div className="modal-header" style={{ borderBottom: `1px solid ${modalBorder}` }}>
               <h5 className="modal-title font-monospace fw-bold text-warning">

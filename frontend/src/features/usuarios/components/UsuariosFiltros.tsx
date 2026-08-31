@@ -17,17 +17,16 @@ export const UsuariosFiltros: React.FC<UsuariosFiltrosProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Contenedor adaptativo alineado al diseño de ClientesFiltros
-  const containerBg = isDark ? '#1d1d1d' : '#ffffff';
-  const containerBorder = isDark ? '#2d2d30' : '#e2e8f0';
+  const containerBg = isDark ? '#1b1b1b' : '#ffffff';
+  const containerBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
-  const inputBg = isDark ? '#1d1d1d' : '#ffffff';
-  const inputTextColor = isDark ? '#ffffff' : '#0f172a';
+  const inputBg = isDark ? '#1b1b1b' : '#ffffff';
+  const inputTextColor = isDark ? 'text-white' : 'text-dark';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
 
   return (
     <div 
-      className="row g-3 align-items-center mb-4 p-3 rounded shadow-sm" 
+      className="row g-3 align-items-center mb-4 p-3 rounded-3 shadow-sm font-monospace" 
       style={{ 
         backgroundColor: containerBg, 
         border: `1px solid ${containerBorder}`,
@@ -35,16 +34,15 @@ export const UsuariosFiltros: React.FC<UsuariosFiltrosProps> = ({
       }}
     >
       <div className="col-md-6">
-        <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
+        <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Filtrar por Usuario / Nombre / Apellido:
         </label>
         <input 
           type="text"
-          className="form-control py-2 font-monospace"
+          className={`form-control ${inputTextColor} py-2 font-monospace shadow-none`}
           style={{ 
             backgroundColor: inputBg, 
-            borderColor: inputBorder,
-            color: inputTextColor 
+            borderColor: inputBorder
           }}
           placeholder="Buscar..." 
           value={filtroTexto}
@@ -52,23 +50,22 @@ export const UsuariosFiltros: React.FC<UsuariosFiltrosProps> = ({
         />
       </div>
       <div className="col-md-6">
-        <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
+        <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Filtrar por Estado:
         </label>
         <select 
-          className="form-select py-2 font-monospace" 
+          className={`form-select ${inputTextColor} py-2 font-monospace shadow-none`}
           style={{ 
             backgroundColor: inputBg, 
-            borderColor: inputBorder,
-            color: inputTextColor
+            borderColor: inputBorder
           }}
           value={filtroEstado} 
           onChange={(e) => setFiltroEstado(e.target.value)}
         >
-          <option value="Sin Filtro" style={{ backgroundColor: inputBg, color: inputTextColor }}>Sin Filtro</option>
-          <option value="Activo" style={{ backgroundColor: inputBg, color: inputTextColor }}>Activo</option>
-          <option value="Desactivado" style={{ backgroundColor: inputBg, color: inputTextColor }}>Desactivado</option>
-          <option value="Pendiente" style={{ backgroundColor: inputBg, color: inputTextColor }}>Pendiente</option>
+          <option value="Sin Filtro">Sin Filtro</option>
+          <option value="Activo">Activo</option>
+          <option value="Desactivado">Desactivado</option>
+          <option value="Pendiente">Pendiente</option>
         </select>
       </div>
     </div>

@@ -135,7 +135,14 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
       {/* Modal Principal */}
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1050 }}>
         <div className="modal-dialog modal-lg modal-dialog-centered">
-          <div className="modal-content shadow-lg font-monospace" style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}`, color: titleColor }}>
+          <div 
+  className="modal-content shadow-lg font-monospace" 
+  style={{ 
+    backgroundColor: modalBg, 
+    border: '1.5px solid #0dcaf0', 
+    color: titleColor 
+  }}
+>
             
             <div className={`modal-header border-bottom ${borderDivider}`}>
               <h5 className="modal-title font-monospace fw-bold" style={{ color: titleColor }}>

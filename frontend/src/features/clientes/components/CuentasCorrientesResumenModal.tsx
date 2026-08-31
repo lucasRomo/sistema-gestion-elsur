@@ -58,7 +58,14 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
       <div className="modal-dialog modal-xl modal-dialog-centered">
-        <div className="modal-content shadow-lg font-monospace" style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}`, color: titleColor }}>
+        <div 
+  className="modal-content shadow-lg font-monospace" 
+  style={{ 
+    backgroundColor: modalBg, 
+    border: '2px solid #5ba704', 
+    color: titleColor 
+  }}
+>
           <div className={`modal-header border-bottom ${borderDivider}`}>
             <h5 className="modal-title font-monospace fw-bold" style={{ color: titleColor }}>
               <i className="bi bi-wallet2 text-success me-2"></i>

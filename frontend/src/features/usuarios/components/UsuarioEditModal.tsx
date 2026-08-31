@@ -72,7 +72,15 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
     <>
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
         <div className="modal-dialog modal-lg modal-dialog-centered" style={{ maxWidth: '800px' }}>
-          <div className="modal-content shadow-lg" style={{ border: `1px solid ${modalBorder}`, backgroundColor: modalBg, color: textColor, borderRadius: '14px' }}>
+          <div 
+  className="modal-content shadow-lg" 
+  style={{ 
+    backgroundColor: modalBg, 
+    color: textColor, 
+    borderRadius: '14px',
+    border: '1.5px solid #0dcaf0'
+  }}
+>
             
             <div className="d-flex justify-content-between align-items-center px-4 pt-4 pb-2">
               <h4 className="m-0 fw-bold text-info d-flex align-items-center">

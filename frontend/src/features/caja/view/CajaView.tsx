@@ -47,6 +47,9 @@ export const CajaView: React.FC = () => {
   // Estado para alertas/validaciones personalizadas
   const [avisoModal, setAvisoModal] = useState<string | null>(null);
 
+  // Estado para el modal de éxito personalizado en apertura u otras operaciones generales
+  const [exitoModal, setExitoModal] = useState<{ titulo: string; descripcion: string } | null>(null);
+
   // Estados para tickets y comprobante
   const [ticketSeleccionado, setTicketSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [imagenComprobanteModal, setImagenComprobanteModal] = useState<string | null>(null);
@@ -110,6 +113,10 @@ export const CajaView: React.FC = () => {
     try {
       await abrirCaja(monto);
       setShowModalApertura(false);
+      setExitoModal({
+        titulo: "Turno abierto con éxito.",
+        descripcion: "Caja Abierta Registrada Correctamente"
+      });
     } catch (error: any) {
       setAvisoModal("Error al abrir caja: " + error.message);
     } finally {
@@ -185,6 +192,7 @@ export const CajaView: React.FC = () => {
     setShowModalCierre(true);
   };
 
+  // Se remueve la asignación a setExitoModal para delegar el modal de confirmación a ModalCerrarTurno
   const ejecutarCierreCaja = async (montoRealEfectivo: number, observaciones?: string) => {
     setGuardandoCierre(true);
     try {
@@ -529,7 +537,7 @@ export const CajaView: React.FC = () => {
 
             <button
               className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
-              style={{ backgroundColor: '#0c500c', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
+              style={{ backgroundColor: '#0c500c', color: '#ffffff', fontSize: '0.95rem', border: '#0c500c' }}
               disabled={!cajaAbierta || movimientos.length === 0}
               onClick={() =>
                 exportarCajaExcel(movimientos, {
@@ -546,7 +554,7 @@ export const CajaView: React.FC = () => {
 
             <button
               className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
-              style={{ backgroundColor: '#c0392b', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
+              style={{ backgroundColor: '#c0392b', color: '#ffffff', fontSize: '0.95rem', border: '#c0392b' }}
               disabled={!cajaAbierta || movimientos.length === 0}
               onClick={() =>
                 exportarCajaPDF(movimientos, {
@@ -584,7 +592,7 @@ export const CajaView: React.FC = () => {
       {showModalApertura && (
         <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
-            <div className={`modal-content ${textColor} font-monospace`} style={{ backgroundColor: isDark ? '#18181b' : '#ffffff', border: `1px solid ${cardBorder}`, borderRadius: '12px' }}>
+            <div className={`modal-content ${textColor} font-monospace`} style={{ backgroundColor: isDark ? '#18181b' : '#ffffff', border: '2px solid #10b981', borderRadius: '12px' }}>
               <div className="modal-header border-bottom border-secondary">
                 <h5 className="modal-title fw-bold">Apertura de Caja</h5>
                 <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setShowModalApertura(false)}></button>
@@ -606,7 +614,7 @@ export const CajaView: React.FC = () => {
                     />
                   </div>
                   <p className="small text-center m-0 opacity-75">
-                    Este monto se guardará como saldo inicial en la base de datos PostgreSQL.
+                    Este monto se guardará como saldo inicial en el registro de arqueo.
                   </p>
                 </div>
                 <div className="modal-footer border-top border-secondary">
@@ -772,6 +780,46 @@ export const CajaView: React.FC = () => {
               <div className="modal-footer border-top border-secondary">
                 <button type="button" className="btn btn-primary px-4 fw-bold" onClick={() => setAvisoModal(null)}>
                   Entendido
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE ÉXITO ESTILO MINIMALISTA PARA OTRAS ACCIONES DE CAJA (COMO APERTURA) */}
+      {exitoModal && (
+        <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1100 }} role="dialog">
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>
+            <div 
+              className="modal-content text-white font-monospace text-center p-4" 
+              style={{ 
+                backgroundColor: '#18181b', 
+                border: '1.5px solid #a855f7', 
+                borderRadius: '16px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
+              }}
+            >
+              <div className="modal-body p-0">
+                <div className="mb-3 d-flex justify-content-center">
+                  <i className="bi bi-check-lg" style={{ fontSize: '3.5rem', color: '#a855f7', lineHeight: 1 }}></i>
+                </div>
+
+                <h4 className="fw-bold mb-2 text-white" style={{ fontSize: '1.4rem' }}>
+                  {exitoModal.titulo}
+                </h4>
+
+                <p className="text-secondary small mb-4 opacity-75" style={{ fontSize: '0.9rem', lineHeight: '1.4' }}>
+                  {exitoModal.descripcion}
+                </p>
+
+                <button 
+                  type="button" 
+                  className="btn btn-danger fw-bold px-4 py-2 border-0" 
+                  style={{ backgroundColor: '#ef4444', borderRadius: '8px', minWidth: '100px' }}
+                  onClick={() => setExitoModal(null)}
+                >
+                  Cerrar
                 </button>
               </div>
             </div>

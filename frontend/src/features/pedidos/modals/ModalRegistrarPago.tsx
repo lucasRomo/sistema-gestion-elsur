@@ -110,10 +110,18 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
       <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content shadow-lg" style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}`, borderRadius: '12px', padding: '10px' }}>
+        <div 
+  className="modal-content shadow-lg" 
+  style={{ 
+    backgroundColor: modalBg, 
+    border: '1.5px solid #10b981', 
+    borderRadius: '12px', 
+    padding: '10px' 
+  }}
+>
           
           <div className="modal-header border-0 pb-0">
-            <h5 className="modal-title" style={{ color: '#8e45e0', fontWeight: 'bold' }}>
+            <h5 className="modal-title" style={{ color: '#10b981', fontWeight: 'bold' }}>
               <i className="bi bi-currency-dollar me-2"></i>Registrar Pago - Pedido #{pedido.id_pedido}
             </h5>
             <button type="button" className="btn-close" onClick={onClose}></button>

@@ -40,7 +40,7 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
   return (
     <div className="modal d-block position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1040 }}>
       <div className="modal-dialog w-100 p-3" style={{ maxWidth: '440px' }}>
-        <div className="modal-content p-4 rounded-4 border-secondary position-relative" style={{ backgroundColor: '#1e1e22', border: '1px solid #3f3f46' }}>
+        <div className="modal-content p-4 rounded-4 position-relative" style={{ backgroundColor: '#1e1e22', border: '1.5px solid #a855f7' }}>
           
 
           <div className="position-absolute top-50 start-50 translate-middle opacity-5 text-center pointer-events-none" style={{ zIndex: 0 }}>

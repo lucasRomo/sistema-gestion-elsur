@@ -51,7 +51,7 @@ export const GestionUsuariosView: React.FC = () => {
   return (
     <SidebarLayout activeItem="Gestión de Usuarios">
       {vistaActual === 'gestion' ? (
-        <div className="container-fluid px-0 h-100 d-flex flex-column">
+        <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace">
           
           {/* Título de la Sección */}
           <div className="d-flex justify-content-center align-items-center mb-4 position-relative">
@@ -70,12 +70,12 @@ export const GestionUsuariosView: React.FC = () => {
             setFiltroEstado={setFiltroEstado}
           />
 
-<div 
-            className="table-responsive rounded-3 border mb-2 font-monospace" 
+          <div 
+            className="table-responsive rounded-3 border mb-3 font-monospace" 
             style={{ 
               backgroundColor: tableContainerBg, 
               borderColor: tableContainerBorder,
-              height: '65vh',
+              height: '64.8vh',
               overflowY: 'auto',
               display: 'block'
             }}
@@ -167,22 +167,33 @@ export const GestionUsuariosView: React.FC = () => {
               </tbody>
             </table>
           </div>
-          {/* Botonera Inferior Estilizada */}
-          <div className="d-flex justify-content-between align-items-center gap-3 mt-4 font-monospace">
+
+          {/* Botonera Inferior con Botón Volver Agrandado Expresamente */}
+          <div className="d-flex align-items-center justify-content-between mt-3 mb-4 font-monospace">
             <button 
               onClick={() => navigate('/dashboard')} 
-              className="btn btn-secondary px-4 py-2 fw-semibold"
-              style={{ color: '#ffffff' }}
+              className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center"
+              style={{ 
+                color: '#ffffff',
+                padding: '11px 24px',
+                fontSize: '1 rem',
+                minWidth: '90px'
+              }}
             >
-              <i className="bi"></i>Volver
+              Volver
             </button>
 
             <button 
               onClick={() => setVistaActual('registro')} 
-              className="btn btn-success px-4 py-2 fw-semibold shadow-sm"
-              style={{ color: '#ffffff' }}
+              className="btn btn-success fw-bold shadow-sm d-inline-flex align-items-center justify-content-center"
+              style={{ 
+                color: '#ffffff',
+                padding: '11px 24px',
+                fontSize: '1 rem',
+                minWidth: '90px'
+              }}
             >
-              <i className="bi me-2"></i>Crear Nuevo Usuario
+              Crear Nuevo Usuario
             </button>
           </div>
         </div>

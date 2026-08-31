@@ -111,29 +111,29 @@ export const PedidosPendientesView: React.FC = () => {
   };
 
   const ejecutarCambioEstado = async (idPedido: number, nuevoEst: string, estadoAnt: string, observaciones: string) => {
-  const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
-  const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
+    const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
+    const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
 
-  try {
-    await actualizarEstado(idPedido, nuevoEst, estadoAnt, observaciones, idUsuarioActivo);
-    await refrescar();
-    setModalNotif({ 
-      show: true, 
-      msg: `El estado del pedido #${idPedido} cambió a "${nuevoEst}" correctamente.` 
-    });
-  } catch (error: any) {
-    console.error("Error al cambiar estado:", error);
-    const mensajeOriginal = error.message || "";
-    const mensajeAmigable = mensajeOriginal.toLowerCase().includes("stock") || mensajeOriginal.toLowerCase().includes("insuficiente")
-      ? "No hay Suficiente Stock para Completar o Entregar el Pedido, Por Favor Modifique el stock en la Ventana Productos para Continuar"
-      : mensajeOriginal;
+    try {
+      await actualizarEstado(idPedido, nuevoEst, estadoAnt, observaciones, idUsuarioActivo);
+      await refrescar();
+      setModalNotif({ 
+        show: true, 
+        msg: `El estado del pedido #${idPedido} cambió a "${nuevoEst}" correctamente.` 
+      });
+    } catch (error: any) {
+      console.error("Error al cambiar estado:", error);
+      const mensajeOriginal = error.message || "";
+      const mensajeAmigable = mensajeOriginal.toLowerCase().includes("stock") || mensajeOriginal.toLowerCase().includes("insuficiente")
+        ? "No hay Suficiente Stock para Completar o Entregar el Pedido, Por Favor Modifique el stock en la Ventana Productos para Continuar"
+        : mensajeOriginal;
 
-    setSucesoError({ show: true, mensaje: mensajeAmigable });
-  } finally {
-    setPedidoEstadoSel(null);
-    setNuevoEstadoPendiente('');
-    setModalAdvertenciaDeuda(prev => ({ ...prev, show: false }));
-  }
+      setSucesoError({ show: true, mensaje: mensajeAmigable });
+    } finally {
+      setPedidoEstadoSel(null);
+      setNuevoEstadoPendiente('');
+      setModalAdvertenciaDeuda(prev => ({ ...prev, show: false }));
+    }
   };
 
   const confirmarCambioEstado = async (observaciones: string) => {
@@ -352,7 +352,7 @@ export const PedidosPendientesView: React.FC = () => {
         </div>
 
         <div className="mt-3 mb-3">
-          <FiltrosPedidos 
+          <FiltrosPedidos
             filtroCliente={filtroCliente}
             setFiltroCliente={setFiltroCliente}
             filtroEstado={filtroEstado}
@@ -360,11 +360,10 @@ export const PedidosPendientesView: React.FC = () => {
             filtroEmpleado={filtroEmpleado}
             setFiltroEmpleado={setFiltroEmpleado}
             empleados={empleados}
-            isDarkMode={isDarkMode}
           />
         </div>
 
-       <div className="flex-grow-1 overflow-y-auto mb-2 pe-1" style={{ height: 'calc(100vh - 210px)' }}>
+        <div className="flex-grow-1 overflow-y-auto mb-2 pe-1" style={{ height: 'calc(100vh - 210px)' }}>
           {cargando ? (
             <div className="text-center py-5 font-monospace text-muted">Cargando Pedidos Pendientes...</div>
           ) : pedidosOrdenados.length === 0 ? (
@@ -392,8 +391,20 @@ export const PedidosPendientesView: React.FC = () => {
           )}
         </div>
 
+        {/* Botonera Inferior Estandarizada */}
         <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-2 border-secondary pb-1 mt-auto">
-          <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-4 py-2">Volver</button>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center"
+            style={{ 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
+          >
+            Volver
+          </button>
         </div>
       </div>
 

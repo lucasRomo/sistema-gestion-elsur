@@ -17,29 +17,32 @@ export const InsumosFiltros: React.FC<InsumosFiltrosProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const cardBg = isDark ? '#1d1d1d' : '#ffffff';
-  const cardBorder = isDark ? '#2d2d30' : '#e2e8f0';
-  const textColor = isDark ? '#ffffff' : '#0f172a';
+  const containerBg = isDark ? '#1b1b1b' : '#ffffff';
+  const containerBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
-  const inputBg = isDark ? '#27272a' : '#ffffff';
+  const inputBg = isDark ? '#1b1b1b' : '#ffffff';
+  const inputTextColor = isDark ? 'text-white' : 'text-dark';
+  const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
 
   return (
     <div 
       className="row g-3 align-items-center mb-4 p-3 rounded-3 shadow-sm font-monospace" 
-      style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}
+      style={{ 
+        backgroundColor: containerBg, 
+        border: `1px solid ${containerBorder}`,
+        transition: 'all 0.2s ease-in-out'
+      }}
     >
       <div className="col-md-6">
-        <label className="form-label small fw-bold mb-1" style={{ color: mutedText }}>
+        <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Filtrar por Nombre:
         </label>
         <input 
           type="text" 
-          className="form-control py-2 shadow-none"
+          className={`form-control ${inputTextColor} py-2 shadow-none`}
           style={{ 
             backgroundColor: inputBg, 
-            color: textColor, 
-            borderColor: cardBorder,
-            borderRadius: '6px'
+            borderColor: inputBorder 
           }}
           placeholder="Escribí el nombre del insumo..." 
           value={filtroNombre}
@@ -48,16 +51,14 @@ export const InsumosFiltros: React.FC<InsumosFiltrosProps> = ({
       </div>
       
       <div className="col-md-6">
-        <label className="form-label small fw-bold mb-1" style={{ color: mutedText }}>
+        <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Filtrar por Estado:
         </label>
         <select 
-          className="form-select py-2 shadow-none"
+          className={`form-select ${inputTextColor} py-2 shadow-none`}
           style={{ 
             backgroundColor: inputBg, 
-            color: textColor, 
-            borderColor: cardBorder,
-            borderRadius: '6px'
+            borderColor: inputBorder 
           }}
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value)}

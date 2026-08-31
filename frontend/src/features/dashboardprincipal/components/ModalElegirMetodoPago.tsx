@@ -46,18 +46,18 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
     <div className="modal show d-block font-monospace" tabIndex={-1} style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)', zIndex: 1060 }}>
       <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '440px'}}>
         <div 
-          className="modal-content shadow-lg" 
-          style={{ 
-            backgroundColor: bgModal, 
-            border: isDark ? '1px solid #2d323e' : '1px solid #cbd5e1', 
-            borderRadius: '16px',
-            color: textColor 
-          }}
-        >
+  className="modal-content shadow-lg" 
+  style={{ 
+    backgroundColor: bgModal, 
+    border: '1.5px solid #10b981', 
+    borderRadius: '16px',
+    color: textColor 
+  }}
+>
           
           {/* HEADER */}
           <div className="modal-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-            <h5 className="modal-title fw-bold d-flex align-items-center gap-2 fs-5" style={{ color: '#a855f7' }}>
+            <h5 className="modal-title fw-bold d-flex align-items-center gap-2 fs-5" style={{ color: '#10b981' }}>
               <i className="bi bi-currency-dollar fs-4"></i> Método de Pago
             </h5>
             <button 

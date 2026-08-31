@@ -57,7 +57,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
   // Estilos y colores fijos/dinámicos sin depender de .badge ni .text-white
   const bgModal = isDark ? '#18181b' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#0f172a';
-  const cardBg = isDark ? '#09090b' : '#f8fafc';
+  const cardBg = isDark ? '#18181b' : '#f8fafc';
   const cardBorder = isDark ? '#27272a' : '#e2e8f0';
   const recipeBg = isDark ? 'rgba(0, 0, 0, 0.4)' : '#f1f5f9';
   const recipeBorder = isDark ? 'rgba(255, 255, 255, 0.15)' : '#cbd5e1';

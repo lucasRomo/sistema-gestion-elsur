@@ -209,7 +209,13 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
     <>
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
         <div className="modal-dialog modal-xl modal-dialog-centered">
-          <div className={`modal-content ${textColor} shadow-lg font-monospace`} style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}` }}>
+          <div 
+  className={`modal-content ${textColor} shadow-lg font-monospace`} 
+  style={{ 
+    backgroundColor: modalBg, 
+    border: '2px solid #5ba704' 
+  }}
+>
             <div className={`modal-header border-bottom ${borderDivider}`}>
               <h5 className="modal-title font-monospace fw-bold">
                Cuenta Corriente: <span style={{ color: isDark ? '#0bc9f8' : '#0284c7' }}>{cliente.persona?.nombre} {cliente.persona?.apellido}</span>

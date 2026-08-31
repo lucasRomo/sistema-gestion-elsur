@@ -430,7 +430,7 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
         <button 
           type="submit" 
           className="btn btn-success px-5 fw-semibold" 
-          style={{ backgroundColor: '#16a34a', border: 'none', borderRadius: '8px', color: '#ffffff' }}
+          style={{ backgroundColor: '#3b7a44', border: 'none', borderRadius: '8px', color: '#ffffff' }}
         >
           Siguiente
         </button>

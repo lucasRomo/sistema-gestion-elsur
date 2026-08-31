@@ -77,14 +77,19 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
         <div className="modal-dialog modal-md modal-dialog-centered">
           <div 
-            className="modal-content p-4 font-monospace shadow-lg" 
-            style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}`, borderRadius: '14px', color: titleColor }}
-          >
+  className="modal-content p-4 font-monospace shadow-lg" 
+  style={{ 
+    backgroundColor: modalBg, 
+    border: '1.5px solid #f1ca18',
+    borderRadius: '14px', 
+    color: titleColor 
+  }}
+>
             
             {/* Encabezado */}
             <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style={{ borderColor: borderDivider }}>
-              <h4 className="m-0 fw-bold d-flex align-items-center" style={{ color: titleColor }}>
-                <i className={`bi ${modoEdicion ? 'bi-geo-alt-fill text-info' : 'bi-house-door'} me-2`}></i>
+              <h4 className="m-0 fw-bold d-flex align-items-center" style={{ color: '#f1ca18' }}>
+                <i className={`bi bi-house-door ${modoEdicion ? 'text-warning' : ''} me-2`}></i>
                 {modoEdicion ? 'Modificar Ubicación' : 'Ubicación del Cliente'}
               </h4>
               <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onCerrar}></button>
@@ -282,7 +287,7 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
               <div className="d-flex justify-content-between gap-2 mt-4 pt-3 border-top" style={{ borderColor: borderDivider }}>
                 <div>
                   {!modoEdicion ? (
-                    <button type="button" className="btn btn-outline-info px-3 font-monospace" style={{ borderRadius: '8px' }} onClick={() => setModoEdicion(true)}>
+                    <button type="button" className="btn btn-outline-warning px-3 font-monospace" style={{ borderRadius: '8px' }} onClick={() => setModoEdicion(true)}>
                       <i className="bi bi-pencil-square me-1"></i>Habilitar Edición
                     </button>
                   ) : (
@@ -298,7 +303,7 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   {modoEdicion && (
                     <button 
                       type="submit" 
-                      className="btn btn-info px-4 fw-semibold font-monospace" 
+                      className="btn btn-warning px-4 fw-semibold font-monospace" 
                       style={{ borderRadius: '8px', color: '#ffffff' }}
                     >
                       Confirmar

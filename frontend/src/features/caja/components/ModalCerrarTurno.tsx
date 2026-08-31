@@ -49,7 +49,7 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
   const hayDiferencia = Math.abs(diferenciaEfectivo) > 0.01;
 
   const modalBg = isDark ? '#18181b' : '#ffffff';
-  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const modalBorder = '#f59e0b'; 
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const cardBg = isDark ? '#27272a' : '#f8fafc';
   const cardBorder = isDark ? '#3f3f46' : '#e2e8f0';
@@ -58,14 +58,18 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
   const inputTextColor = isDark ? '#ffffff' : '#0f172a';
 
   const ejecutarCierre = async () => {
-  try {
-    const montoRealTotal = valorContado + (datosArqueo?.totalTransferencias || 0);
-    await onConfirmarCierre(montoRealTotal, observacion);
-    setDiferenciaFinal(diferenciaEfectivo);
-    setShowExitoModal(true);
-  } catch (error) {
-    console.error("Error al cerrar el turno:", error);
-  }
+    try {
+      const montoRealTotal = valorContado + (datosArqueo?.totalTransferencias || 0);
+      const resultado = await onConfirmarCierre(montoRealTotal, observacion);
+      
+      // Si el servicio responde true o se completa correctamente, se activa el modal de éxito local
+      if (resultado !== false) {
+        setDiferenciaFinal(diferenciaEfectivo);
+        setShowExitoModal(true);
+      }
+    } catch (error) {
+      console.error("Error al cerrar el turno:", error);
+    }
   };
 
   const handleValidarYSiguiente = (e: React.FormEvent) => {
@@ -79,7 +83,7 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
 
   const handleCerrarExito = () => {
     setShowExitoModal(false);
-    onClose();
+    onClose(); // Cierra el flujo completo y desmonta el modal
   };
 
   if (showExitoModal) {
@@ -101,7 +105,15 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
   return (
     <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content shadow-lg p-4" style={{ backgroundColor: modalBg, borderColor: modalBorder, borderRadius: '14px', border: `1px solid ${modalBorder}` }}>
+        <div 
+          className="modal-content shadow-lg p-4" 
+          style={{ 
+            backgroundColor: modalBg, 
+            border: `2px solid ${modalBorder}`, 
+            borderRadius: '14px',
+            boxShadow: isDark ? '0 0 20px rgba(245, 158, 11, 0.15)' : '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+          }}
+        >
           
           <div className="modal-header border-0 justify-content-between pb-2">
             <h3 className="fw-bold m-0" style={{ color: textColor }}>
@@ -271,14 +283,14 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
             {pasoJustificacion ? (
               <>
                 <button 
-  type="button" 
-  className="btn px-4 fw-bold border-0 shadow-sm" 
-  style={{ backgroundColor: '#ce1515', color: '#ffffff' }} 
-  onClick={() => setPasoJustificacion(false)} 
-  disabled={guardando}
->
-  Volver a corregir monto
-</button>
+                  type="button" 
+                  className="btn px-4 fw-bold border-0 shadow-sm" 
+                  style={{ backgroundColor: '#ce1515', color: '#ffffff' }} 
+                  onClick={() => setPasoJustificacion(false)} 
+                  disabled={guardando}
+                >
+                  Volver a corregir monto
+                </button>
                 <button
                   type="button"
                   className="btn px-4 fw-bold border-0 shadow-sm"
@@ -292,14 +304,14 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
             ) : (
               <>
                 <button 
-  type="button" 
-  className="btn px-4 fw-bold border-0 shadow-sm" 
-  style={{ backgroundColor: '#ce1515', color: '#ffffff' }} 
-  onClick={onClose} 
-  disabled={guardando}
->
-  Cancelar
-</button>
+                  type="button" 
+                  className="btn px-4 fw-bold border-0 shadow-sm" 
+                  style={{ backgroundColor: '#ce1515', color: '#ffffff' }} 
+                  onClick={onClose} 
+                  disabled={guardando}
+                >
+                  Cancelar
+                </button>
                 <button 
                   type="submit" 
                   form="form-cierre" 

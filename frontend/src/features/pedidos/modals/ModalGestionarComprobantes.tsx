@@ -57,12 +57,12 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
           className="modal-content custom-card" 
           style={{ 
             backgroundColor: 'var(--bs-body-bg, #1a1a1c)', 
-            border: '2px solid #8e45e0', 
+            border: '2px solid #16b5d1', 
             borderRadius: '12px' 
           }}
         >
           <div className="modal-header border-0 pb-0">
-            <h5 className="modal-title fw-bold" style={{ color: '#a855f7', fontFamily: 'monospace' }}>
+            <h5 className="modal-title fw-bold" style={{ color: '#16b5d1', fontFamily: 'monospace' }}>
               Gestionar Comprobantes - Pedido #{pedido?.id_pedido ?? pedido?.idPedido ?? pedido?.id}
             </h5>
             <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>

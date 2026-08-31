@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// Layout global
 import { SidebarLayout } from '../../../components/layouts/SidebarLayout';
+
+// Hooks y Servicios
 import { useHistorialPedidos } from '../hooks/useHistorialPedidos';
 import { historialPedidoService } from '../service/historialPedidoService';
 import { useTheme } from '../../../Context/ThemeContext';
+import { useIsMobile } from '../../../hook/useIsMobile';
 
 // Componentes Modularizados
 import { FiltrosHistorial } from '../components/FiltrosHistorial';
@@ -20,15 +25,14 @@ import { ModalDevolucionPedido } from '../modals/ModalDevolucionPedido';
 export const HistorialPedidosPage: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const isMobile = useIsMobile();
 
-  const tableWrapperBg = isDark ? '#1d1d1d' : '#f8fafc';
-  const tableBg = isDark ? '#1d1d1d' : '#ffffff';
-  const tableText = isDark ? '#e4e4e7' : '#18181b';
-  const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
-  const theadBorder = isDark ? '#27272a' : '#e2e8f0';
-  const theadText = isDark ? '#fefeff' : '#334155';
+  const titleColor = isDark ? '#ffffff' : '#0f172a';
+  const textColor = isDark ? '#ffffff' : '#0f172a';
+  const mainCardBg = isDark ? '#1d1d1d' : '#ffffff';
+  const cardBorder = isDark ? '#27272a' : '#cbd5e1';
   const grayText = isDark ? '#a1a1aa' : '#64748b';
-  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
+  const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
   
   const { pedidos, cargando, recargarHistorial } = useHistorialPedidos();
   const navigate = useNavigate();
@@ -204,89 +208,114 @@ export const HistorialPedidosPage: React.FC = () => {
 
   return (
     <SidebarLayout activeItem="Historial de Pedidos">
-      <div 
-        className="container-fluid px-2 d-flex flex-column pt-3" 
-        style={{ height: 'calc(100vh - 45px)', overflow: 'hidden' }}
-      >
-        <div className="d-flex justify-content-center align-items-center mb-2 position-relative d-print-none">
-          <h1 className="fw-bold tracking-tight text-white m-0 text-center" style={{ fontSize: '1.85rem' }}>Historial de Pedidos</h1>
-          <span className="badge bg-dark border border-secondary text-secondary font-monospace position-absolute end-0">Registros Históricos</span>
+      <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
+        
+        {/* Encabezado Superior */}
+        <div className="d-flex justify-content-center align-items-center mb-4 position-relative d-print-none">
+          <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
+            Historial de Pedidos
+          </h2>
+          {!isMobile && (
+            <span className="badge bg-dark border border-secondary text-secondary font-monospace position-absolute end-0">
+              Registros Históricos
+            </span>
+          )}
         </div>
 
-        <div className="mt-3 mb-3">
-          <FiltrosHistorial 
-            filtroTexto={filtroTexto}
-            setFiltroTexto={setFiltroTexto}
-            filtroEstadoHistorial={filtroEstadoHistorial}
-            setFiltroEstadoHistorial={setFiltroEstadoHistorial}
-          />
-        </div>
+        {/* Componente Filtros */}
+        <FiltrosHistorial 
+          filtroTexto={filtroTexto}
+          setFiltroTexto={setFiltroTexto}
+          filtroEstadoHistorial={filtroEstadoHistorial}
+          setFiltroEstadoHistorial={setFiltroEstadoHistorial}
+        />
 
+        {/* Contenedor Único de Tabla con Scroll Interno (65.3vh) */}
         <div 
-          className="d-flex flex-column flex-grow-1 overflow-hidden mb-2 shadow-sm rounded-3 border" 
+          className="rounded-3 border mb-3 font-monospace" 
           style={{ 
-            backgroundColor: tableWrapperBg, 
-            borderColor: isDark ? '#27272a' : '#e2e8f0',
-            height: 'calc(100vh - 165px)' 
+            backgroundColor: mainCardBg, 
+            borderColor: cardBorder,
+            height: '65.3vh',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            display: 'block'
           }}
         >
-          <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapperBg, height: '100%', overflowY: 'auto' }}>
-            <table 
-              className={`table-hover m-0 align-middle ${isDark ? 'table-dark' : ''}`}
-              style={{ width: '100%', borderCollapse: 'collapse', color: tableText, backgroundColor: tableBg }}
-            >
-              <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
-                <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontFamily: 'monospace', fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                  <th style={{ padding: '12px 12px 12px 24px' }}>ID</th>
-                  <th style={{ padding: '12px 12px 12px 19px' }}>Cliente</th>
-                  <th style={{ padding: '12px 12px' }}>Contacto</th>
-                  <th style={{ padding: '12px 12px' }}>Operador de Cierre</th> 
-                  <th style={{ padding: '12px 24px 12px 12px' }}>Fecha Creación</th>
-                  <th style={{ padding: '12px 24px 12px 12px' }}>Fecha de Entrega Estimada</th>
-                  <th style={{ padding: '12px 24px 12px 12px' }}>Fecha de Entrega Final</th>  
-                  <th className="text-center" style={{ padding: '12px 12px' }}>Estado Final</th>
-                  <th style={{ padding: '12px 12px' }}>Monto Total</th>
-                  <th style={{ padding: '12px 12px' }}>Monto Cobrado</th>
-                  <th className="text-center" style={{ padding: '12px 8px' }}>Acciones</th>
+          <table 
+            className="table-hover m-0 align-middle w-100"
+            style={{ 
+              borderCollapse: 'collapse', 
+              color: textColor, 
+              backgroundColor: mainCardBg 
+            }}
+          >
+            <thead style={{ position: 'sticky', top: 0, backgroundColor: mainCardBg, zIndex: 1 }}>
+              <tr style={{ backgroundColor: mainCardBg, borderBottom: `2px solid ${cardBorder}`, color: isDark ? '#f8f8f8' : '#334155', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                <th className="py-3 px-3 text-center" style={{ width: '6%' }}>ID</th>
+                <th className="py-3 px-3 text-start" style={{ width: '16%' }}>Cliente</th>
+                <th className="py-3 px-3 text-center" style={{ width: '8%' }}>Contacto</th>
+                <th className="py-3 px-3 text-start" style={{ width: '14%' }}>Operador Cierre</th> 
+                <th className="py-3 px-3 text-center" style={{ width: '10%' }}>Fecha Creación</th>
+                <th className="py-3 px-3 text-center" style={{ width: '10%' }}>Entrega Estimada</th>
+                <th className="py-3 px-3 text-center" style={{ width: '10%' }}>Entrega Final</th>  
+                <th className="py-3 px-3 text-center" style={{ width: '8%' }}>Estado Final</th>
+                <th className="py-3 px-3 text-center" style={{ width: '8%' }}>Total</th>
+                <th className="py-3 px-3 text-center" style={{ width: '8%' }}>Cobrado</th>
+                <th className="py-3 px-3 text-center" style={{ width: '10%' }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody style={{ fontSize: '0.9rem' }}>
+              {cargando ? (
+                <tr>
+                  <td colSpan={11} className="text-center py-5 border-0" style={{ color: textColor }}>
+                    <i className="bi bi-arrow-repeat spin display-6 d-block mb-2"></i>
+                    Cargando historial de pedidos...
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {cargando ? (
-                  <tr>
-                    <td colSpan={11} className="text-center py-4 font-monospace">
-                      Cargando historial de pedidos...
-                    </td>
-                  </tr>
-                ) : pedidosOrdenados.length === 0 ? (
-                  <tr>
-                    <td colSpan={11} className="text-center py-4">
-                      No se encontraron órdenes en el historial bajo estos filtros.
-                    </td>
-                  </tr>
-                ) : (
-                  pedidosOrdenados.map((pedido) => (
-                    <FilaHistorial 
-                      key={`historial-row-${pedido.id_pedido}`}
-                      pedido={pedido}
-                      onAbrirAuditoria={handleAbrirAuditoria}
-                      onSelectTicket={setVerTicketPedido}
-                      onSubirArchivo={handleSubirArchivoFisico}
-                      onEliminarComprobante={handleEliminarComprobanteFisico}
-                      onAbrirDevolucion={(p) => setPedidoDevolucion(p)}
-                      onAbrirMermas={handleAbrirMermas}
-                    />
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+              ) : pedidosOrdenados.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="text-center py-5 border-0" style={{ color: textColor }}>
+                    <i className="bi bi-inbox display-5 d-block mb-2 opacity-50"></i>
+                    No se encontraron órdenes en el historial bajo estos filtros.
+                  </td>
+                </tr>
+              ) : (
+                pedidosOrdenados.map((pedido) => (
+                  <FilaHistorial 
+                    key={`historial-row-${pedido.id_pedido}`}
+                    pedido={pedido}
+                    onAbrirAuditoria={handleAbrirAuditoria}
+                    onSelectTicket={setVerTicketPedido}
+                    onSubirArchivo={handleSubirArchivoFisico}
+                    onEliminarComprobante={handleEliminarComprobanteFisico}
+                    onAbrirDevolucion={(p) => setPedidoDevolucion(p)}
+                    onAbrirMermas={handleAbrirMermas}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
 
-        <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-1 pb-1 mt-auto">
-          <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-4 py-2">Volver</button>
+        {/* Botonera Inferior */}
+        <div className={`d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
+          <button 
+            onClick={() => navigate('/dashboard')} 
+            className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center" 
+            style={{ 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
+          >
+            Volver
+          </button>
         </div>
       </div>
 
+      {/* Modales Complementarios */}
       {pedidoMermas && (
         <ModalHistorialMermas
           pedido={pedidoMermas}
@@ -337,17 +366,22 @@ export const HistorialPedidosPage: React.FC = () => {
       )}
 
       {suceso.show && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
             <div 
-              className="modal-content p-4 text-white text-center" 
-              style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px', fontFamily: 'monospace' }}
+              className="modal-content p-4 text-center shadow-lg" 
+              style={{ 
+                border: `2px solid ${isDark ? '#8e45e0' : '#a855f7'}`, 
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+                color: isDark ? '#ffffff' : '#0f172a',
+                borderRadius: '12px' 
+              }}
             >
               <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-exclamation-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">{suceso.titulo}</h5>
-              <p className="small" style={{ color: grayText }}>{suceso.mensaje}</p>
+              <p className="small m-0" style={{ color: grayText }}>{suceso.mensaje}</p>
               <button 
-                className={`btn ${suceso.tipo === 'exito' ? 'btn-success' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold`}
+                className={`btn ${suceso.tipo === 'exito' ? 'btn-success' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold text-white`}
                 style={{ borderRadius: '6px' }}
                 onClick={() => {
                   setSuceso({ ...suceso, show: false });

@@ -21,20 +21,19 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const filaBg = isDark ? '#1d1d1d' : '#ffffff';
-  const filaBgHover = isDark ? '#18181b' : '#f1f5f9';
-  const filaBorder = isDark ? '#27272a' : '#e2e8f0';
+  const rowBorder = isDark ? '#27272a' : '#f1f5f9';
+  const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
+  const tableText = isDark ? '#e4e4e7' : '#18181b';
   const clienteColor = isDark ? '#ffffff' : '#0f172a';
-  const fechaColor = isDark ? '#a9a9aa' : '#64748b';
+  const fechaColor = isDark ? '#a1a1aa' : '#64748b';
   const empleadoColor = isDark ? '#d4d4d8' : '#334155';
-  const montoTotalColor = isDark ? '#f8fafc' : '#0f172a';
 
-  // Lógica del nombre del cliente
+  // Nombre del cliente
   const nombreCliente = p.cliente?.persona 
     ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
     : (p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
 
-  // Lógica del operador
+  // Operador de cierre
   const ultimaAsignacion = p.asignaciones && p.asignaciones.length > 0 
     ? p.asignaciones[p.asignaciones.length - 1] 
     : null;
@@ -43,7 +42,7 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
     ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
     : 'Sistema';
 
-  // Función Helper para dar formato uniforme a las fechas
+  // Formateador de fechas
   const formatearFechaString = (fechaIso: string | null | undefined) => {
     if (!fechaIso) return '-';
     const [fecha, horaCompleta] = fechaIso.split('T');
@@ -61,7 +60,6 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
     return `${dia}/${mes}/${anio}, ${hhFormat}:${mm} ${ampm}`;
   };
 
-  // Cálculo de las 3 Fechas
   const fechaAsignacionRaw = p.fecha_creacion || ultimaAsignacion?.fecha_asignacion;
   const fechaAsignacionFormateada = formatearFechaString(fechaAsignacionRaw);
   const fechaEntregaEstimadaFormateada = formatearFechaString(p.fecha_entrega_estimada);
@@ -71,113 +69,125 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
 
   return (
     <tr 
-      style={{ borderBottom: `1px solid ${filaBorder}`, backgroundColor: filaBg, transition: 'background 0.2s' }} 
-      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = filaBgHover}
-      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = filaBg}
+      style={{ borderBottom: `1px solid ${rowBorder}` }} 
+      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg}
+      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
     >
-      {/* Celda ID arreglada: alineación centrada para consistencia con las demás tablas */}
-      <td className="fw-bold text-center text-info" style={{ padding: '12px' }}>#{p.id_pedido}</td>
+      {/* ID */}
+      <td className="py-3 px-3 text-center text-info fw-bold">
+        #{p.id_pedido}
+      </td>
       
-      <td style={{ padding: '15px 20px' }}>
+      {/* Cliente */}
+      <td className="py-3 px-3 text-start">
         <span className="fw-semibold" style={{ color: clienteColor }}>{nombreCliente}</span>
       </td>
-      <td style={{ padding: '12px 16px' }}>
-        <div className="d-flex gap-1">
+
+      {/* Contacto */}
+      <td className="py-3 px-3 text-center">
+        <div className="d-flex justify-content-center gap-1">
           {p.cliente?.persona?.telefono && (
-            <a href={`https://wa.me/${p.cliente.persona.telefono}`} target="_blank" rel="noreferrer" className="btn btn-sm text-success p-1">
+            <a href={`https://wa.me/${p.cliente.persona.telefono}`} target="_blank" rel="noreferrer" className="btn btn-sm text-success p-1" title="Enviar WhatsApp">
               <i className="bi bi-whatsapp"></i>
             </a>
           )}
           {p.cliente?.persona?.email && (
-            <a href={`mailto:${p.cliente.persona.email}`} className="btn btn-sm text-danger p-1">
+            <a href={`mailto:${p.cliente.persona.email}`} className="btn btn-sm text-danger p-1" title="Enviar Email">
               <i className="bi bi-envelope"></i>
             </a>
           )}
+          {!p.cliente?.persona?.telefono && !p.cliente?.persona?.email && (
+            <span className="text-muted small">-</span>
+          )}
         </div>
       </td>
-      <td style={{ padding: '12px' }}>
+
+      {/* Operador de Cierre */}
+      <td className="py-3 px-3 text-start">
         <span style={{ color: empleadoColor }}>
           <i className="bi bi-person-check text-secondary me-1"></i>
           {nombreEmpleado}
         </span>
       </td>
 
-      {/* FECHA ASIGNACIÓN */}
-      <td className="font-monospace" style={{ color: fechaColor, fontSize: '0.82rem', padding: '12px 24px 12px 12px' }}>
+      {/* Fecha Creación */}
+      <td className="py-3 px-3 text-center font-monospace" style={{ color: fechaColor, fontSize: '0.82rem' }}>
         {fechaAsignacionFormateada}
       </td>
 
-      {/* ENTREGA ESTIMADA */}
-      <td className="font-monospace text-warning fw-semibold" style={{ fontSize: '0.82rem', padding: '12px 24px 12px 12px' }}>
+      {/* Entrega Estimada */}
+      <td className="py-3 px-3 text-center font-monospace text-warning fw-semibold" style={{ fontSize: '0.82rem' }}>
         {fechaEntregaEstimadaFormateada}
       </td>
 
-      {/* FECHA DE ENTREGA (FINAL) */}
-      <td className="font-monospace text-info fw-semibold" style={{ fontSize: '0.82rem', padding: '12px 24px 12px 12px' }}>
+      {/* Entrega Final */}
+      <td className="py-3 px-3 text-center font-monospace text-info fw-semibold" style={{ fontSize: '0.82rem' }}>
         {fechaEntregaFinalFormateada}
       </td>
 
-      <td className="text-center" style={{ padding: '12px' }}>
-        <span className={`badge font-monospace ${p.text_color} ${p.estado === 'CANCELADO' ? 'bg-danger text-white' : p.estado === 'DEVUELTO' ? 'bg-warning text-dark' : p.estado === 'ENTREGADO' ? 'bg-success text-white' : 'bg-secondary text-white'}`}>
+      {/* Estado Final */}
+      <td className="py-3 px-3 text-center">
+        <span className={`badge rounded-pill px-3 py-2 ${
+          p.estado === 'CANCELADO' 
+            ? 'bg-danger bg-opacity-75' 
+            : p.estado === 'DEVUELTO' 
+            ? 'bg-warning bg-opacity-75 text-dark' 
+            : p.estado === 'ENTREGADO' 
+            ? 'bg-success bg-opacity-75' 
+            : 'bg-secondary bg-opacity-75'
+        }`} style={{ color: p.estado === 'DEVUELTO' ? '#000000' : '#ffffff' }}>
           {p.estado}
         </span>
       </td>
 
-      {/* MONTO TOTAL */}
-      <td className="fw-bold" style={{ color: montoTotalColor, padding: '12px' }}>
+      {/* Monto Total */}
+      <td className="py-3 px-3 text-center fw-bold" style={{ color: tableText }}>
         ${Number(p.monto_total).toFixed(2)}
       </td>
 
-      {/* MONTO COBRADO */}
-      <td className="text-success fw-bold" style={{ padding: '12px' }}>
+      {/* Monto Cobrado */}
+      <td className="py-3 px-3 text-center text-success fw-bold">
         ${Number(p.monto_pago_adelantado).toFixed(2)}
       </td>
       
-      {/* ACCIONES */}
-      <td style={{ padding: '12px 8px' }}>
+      {/* Acciones */}
+      <td className="py-3 px-3 text-center">
         <div className="d-flex justify-content-center gap-2 align-items-center">
           <button 
-            className="rounded d-flex align-items-center justify-content-center" 
-            style={{ width: '32px', height: '32px', border: '0.8px solid #1a8140', backgroundColor: 'transparent', transition: '0.2s' }}
+            className="btn btn-outline-success btn-sm d-flex align-items-center justify-content-center rounded-2" 
+            style={{ width: '32px', height: '32px' }}
             onClick={() => onAbrirAuditoria(p.id_pedido)}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1a8140'; e.currentTarget.querySelector('i')!.style.color = '#000'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.querySelector('i')!.style.color = '#1a8140'; }}
             title="Ver Auditoría de Pagos"
           >
-            <i className="bi bi-currency-dollar" style={{ color: '#1a8140' }}></i>
+            <i className="bi bi-currency-dollar fs-6"></i>
           </button>
 
           <button 
-            className="rounded d-flex align-items-center justify-content-center" 
-            style={{ width: '32px', height: '32px', border: '0.8px solid #ffc107', backgroundColor: 'transparent', transition: '0.2s' }}
+            className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2" 
+            style={{ width: '32px', height: '32px' }}
             onClick={() => onSelectTicket(p)}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#ffc107'; e.currentTarget.querySelector('i')!.style.color = '#000'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.querySelector('i')!.style.color = '#ffc107'; }}
             title="Imprimir Ticket"
           >
-            <i className="bi bi-printer" style={{ color: '#ffc107' }}></i>
+            <i className="bi bi-printer fs-6"></i>
           </button>
           
-          {/* BOTÓN MERMAS */}
           <button 
-            className="btn btn-sm btn-outline-warning" 
-            title="Ver / Registrar Mermas"
+            className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2" 
+            style={{ width: '32px', height: '32px' }}
             onClick={() => onAbrirMermas(p)} 
+            title="Ver / Registrar Mermas"
           >
-            <i className="bi bi-exclamation-diamond-fill"></i>
+            <i className="bi bi-exclamation-diamond-fill fs-6"></i>
           </button>
 
-          {/* BOTÓN DEVOLUCIÓN */}
           <button 
-            className="rounded d-flex align-items-center justify-content-center" 
-            style={{ width: '32px', height: '32px', border: '0.8px solid #fd7e14', backgroundColor: 'transparent', transition: '0.2s' }}
-            onClick={() => onAbrirDevolucion(p)}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fd7e14'; e.currentTarget.querySelector('i')!.style.color = '#000'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.querySelector('i')!.style.color = '#fd7e14'; }}
-            title="Devolución de Pedido"
-          >
-            <i className="bi bi-arrow-return-left" style={{ color: '#fd7e14' }}></i>
-          </button>
+  className="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center rounded-2" 
+  style={{ width: '32px', height: '32px' }}
+  onClick={() => onAbrirDevolucion(p)}
+  title="Devolución de Pedido"
+>
+  <i className="bi bi-arrow-return-left fs-6"></i>
+</button>
         </div>
       </td>
     </tr>

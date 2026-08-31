@@ -77,16 +77,27 @@ export const RepositorioDigitalView: React.FC = () => {
   };
 
   return (
-    <div className={`container-fluid p-3 font-monospace ${textColor}`} style={{ backgroundColor: pageBg, minHeight: '100vh' }}>
-      <div className="d-flex justify-content-between align-items-center mb-3">
+    <div 
+      className={`container-fluid p-3 font-monospace ${textColor} d-flex flex-column`} 
+      style={{ backgroundColor: pageBg, height: '100vh', overflow: 'hidden' }}
+    >
+      <div className="d-flex justify-content-between align-items-center mb-2">
         <h2 className="fw-bold mb-0">Repositorio Digital</h2>
         <i className="bi bi-question-circle text-info fs-4" style={{ cursor: 'pointer' }}></i>
       </div>
 
-      <div className="row g-3">
+      <div className="row g-3 flex-grow-1 overflow-hidden" style={{ minHeight: 0 }}>
         {/* PANEL IZQUIERDO */}
-        <div className="col-lg-7">
-          <div className="card p-3 rounded-3" style={{ backgroundColor: cardBg, borderColor: cardBorder, color: 'inherit' }}>
+        <div className="col-lg-7" style={{ alignSelf: 'flex-start' }}>
+  <div
+    className="card p-3 rounded-3 d-flex flex-column overflow-hidden"
+    style={{
+      backgroundColor: cardBg,
+      borderColor: cardBorder,
+      color: 'inherit',
+      maxHeight: 'calc(100vh - 140px)',
+    }}
+  >
             <FiltrosRepositorio
               busqueda={busqueda}
               setBusqueda={setBusqueda}
@@ -101,23 +112,25 @@ export const RepositorioDigitalView: React.FC = () => {
               inputBg={inputBg}
               cardBorder={cardBorder}
             />
-            <TablaDocumentos
-              documentos={documentosFiltrados}
-              cargando={cargando}
-              documentoSeleccionado={documentoSeleccionado}
-              onSelectDocumento={setDocumentoSeleccionado}
-              onEliminar={solicitarEliminar}
-              onAbrirReceta={handleAbrirReceta}
-              getIconoArchivo={getIconoArchivo}
-              isDarkMode={isDarkMode}
-              cardBg={cardBg}
-              cardBorder={cardBorder}
-            />
+            <div className="flex-grow-1 overflow-auto">
+              <TablaDocumentos
+                documentos={documentosFiltrados}
+                cargando={cargando}
+                documentoSeleccionado={documentoSeleccionado}
+                onSelectDocumento={setDocumentoSeleccionado}
+                onEliminar={solicitarEliminar}
+                onAbrirReceta={handleAbrirReceta}
+                getIconoArchivo={getIconoArchivo}
+                isDarkMode={isDarkMode}
+                cardBg={cardBg}
+                cardBorder={cardBorder}
+              />
+            </div>
           </div>
         </div>
 
         {/* PANEL DERECHO */}
-        <div className="col-lg-5">
+        <div className="col-lg-5" style={{ alignSelf: 'flex-start' }}>
           <DetalleDocumento
             documento={documentoSeleccionado}
             getIconoArchivo={getIconoArchivo}

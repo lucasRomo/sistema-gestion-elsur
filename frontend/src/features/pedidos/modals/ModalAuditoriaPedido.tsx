@@ -29,10 +29,17 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '1100px', width: '95%' }}>
-        <div className="modal-content" style={{ backgroundColor: '#1a1a1c', border: '1px solid #3f3f46', borderRadius: '12px' }}>
+        <div 
+  className="modal-content" 
+  style={{ 
+    backgroundColor: '#1a1a1c', 
+    border: '2px solid #248b05', 
+    borderRadius: '12px' 
+  }}
+>
           
           <div className="modal-header border-0 pb-0">
-            <h5 className="modal-title fw-bold" style={{ color: '#00f2fe' }}>
+            <h5 className="modal-title fw-bold" style={{ color: '#248b05' }}>
               <i className="bi bi-shield-check me-2"></i>Auditoría Integral de Pedido #{pedido.id_pedido}
             </h5>
             <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
@@ -43,7 +50,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
               
               {/* HISTORIAL DE COBROS */}
               <div className="col-md-5">
-                <h6 className="text-uppercase small mb-2 fw-semibold" style={{ color: '#25d164', letterSpacing: '1px' }}>
+                <h6 className="text-uppercase small mb-2 fw-semibold" style={{ color: '#248b05', letterSpacing: '1px' }}>
                   <i className="bi bi-cash-stack me-2"></i>Historial de Cobros
                 </h6>
 

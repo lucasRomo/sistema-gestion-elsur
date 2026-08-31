@@ -37,9 +37,13 @@ export const ModalDevolucionPedido: React.FC<Props> = ({
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '500px' }}>
         <div 
-          className="modal-content text-white font-monospace p-4 shadow-lg" 
-          style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '16px' }}
-        >
+  className="modal-content text-white font-monospace p-4 shadow-lg" 
+  style={{ 
+    backgroundColor: '#18181b', 
+    border: '1.5px solid #ef4444', 
+    borderRadius: '16px' 
+  }}
+>
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="fw-bold mb-0 text-warning">
               <i className="bi bi-arrow-return-left me-2"></i>Devolución de Pedido #{pedido.id_pedido}

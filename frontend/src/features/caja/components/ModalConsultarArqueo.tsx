@@ -35,7 +35,8 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
   if (!isOpen) return null;
 
   const modalBg = isDark ? '#18181b' : '#ffffff';
-  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  // Borde celeste aplicado para resaltar el modal
+  const modalBorder = '#38bdf8'; 
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const cardBg = isDark ? '#27272a' : '#f8fafc';
   const cardBorder = isDark ? '#3f3f46' : '#e2e8f0';
@@ -50,8 +51,15 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
     <>
       <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1050 }}>
         <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div className="modal-content shadow-lg p-4" style={{ backgroundColor: modalBg, borderColor: modalBorder, borderRadius: '14px', border: `1px solid ${modalBorder}` }}>
-            
+          <div 
+            className="modal-content shadow-lg p-4" 
+            style={{ 
+              backgroundColor: modalBg, 
+              border: `2px solid ${modalBorder}`, 
+              borderRadius: '14px',
+              boxShadow: isDark ? '0 0 20px rgba(56, 189, 248, 0.15)' : '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
+            }}
+          >
             <div className="modal-header border-0 justify-content-between pb-2">
               <h3 className="fw-bold m-0" style={{ color: textColor }}>Arqueo Automático de Turno</h3>
               <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose}></button>
@@ -197,18 +205,19 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
               </div>
             </div>
 
-          <div className="modal-footer border-0 justify-content-end pt-2">
-            <button className="btn btn-secondary px-4 fw-bold" onClick={onClose}>
-              Cerrar
-            </button>
+            <div className="modal-footer border-0 justify-content-end pt-2">
+              <button className="btn btn-secondary px-4 fw-bold" onClick={onClose}>
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    {imagenModalUrl && (
+
+      {imagenModalUrl && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
           <div className="modal-dialog modal-lg modal-dialog-centered">
-            <div className={`modal-content p-3 ${textColor}`} style={{ backgroundColor: modalBg }}>
+            <div className={`modal-content p-3 ${textColor}`} style={{ backgroundColor: modalBg, border: `2px solid ${modalBorder}` }}>
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <h6 className="fw-bold m-0"><i className="bi bi-image me-2"></i>Comprobante de Transferencia</h6>
                 <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setImagenModalUrl(null)}></button>

@@ -160,14 +160,14 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1050 }}>
       <div className="modal-dialog modal-lg modal-dialog-centered">
         <div 
-          className="modal-content shadow-lg" 
-          style={{ 
-            backgroundColor: modalBg, 
-            color: textColor, 
-            border: `1px solid ${modalBorder}`, 
-            borderRadius: '12px' 
-          }}
-        >
+  className="modal-content shadow-lg" 
+  style={{ 
+    backgroundColor: modalBg, 
+    color: textColor, 
+    border: '1.5px solid #f5df1a', 
+    borderRadius: '12px' 
+  }}
+>
           
           <div className="modal-header border-bottom" style={{ borderColor: headerBorder }}>
             <h5 className="modal-title fw-bold text-warning">

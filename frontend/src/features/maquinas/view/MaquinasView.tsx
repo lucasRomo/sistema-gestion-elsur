@@ -15,12 +15,16 @@ export const MaquinasView: React.FC = () => {
   const isDark = theme === 'dark';
   const isMobile = useIsMobile();
 
-  // Variables de tema
+  // Variables de tema adaptativas unificadas
+  const mainCardBg = isDark ? '#1d1d1d' : '#ffffff';
+  const filterBg = isDark ? '#1b1b1b' : '#ffffff';
+  const filterBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const cardBorder = isDark ? '#27272a' : '#cbd5e1';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const textSubtle = isDark ? '#a1a1aa' : '#64748b';
-  const inputBg = isDark ? '#1b1b1b' : '#ffffff';
-  const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const inputTextColor = isDark ? 'text-white' : 'text-dark';
   const titleColor = isDark ? '#ffffff' : '#0f172a';
+  const labelColor = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
 
   const {
     maquinas,
@@ -88,67 +92,85 @@ export const MaquinasView: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid font-monospace" style={{ color: textColor }}>
+    <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
       
-      {/* Encabezado */}
-      <div className={`d-flex justify-content-center align-items-center mb-4 pb-2 text-center ${isMobile ? 'mt-3' : ''}`}>
-        <div className="w-100">
-          <h3 className="fw-bold mb-1" style={{ color: titleColor }}>
-            <i className="bi me-2 text-warning"></i>Gestión de Equipos y Máquinas
-          </h3>
-        </div>
+      {/* Encabezado Superior */}
+      <div className="d-flex justify-content-center align-items-center mb-4">
+        <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
+          Gestión de Equipos y Máquinas
+        </h2>
       </div>
 
-      {/* Buscador */}
-      <div className="row mb-3">
+      {/* Contenedor de Filtros */}
+      <div 
+        className="row g-3 align-items-center mb-4 p-3 rounded-3 shadow-sm font-monospace" 
+        style={{ 
+          backgroundColor: filterBg, 
+          border: `1px solid ${filterBorder}`,
+          transition: 'all 0.2s ease-in-out'
+        }}
+      >
         <div className="col-12">
-          <div className="input-group">
-            <span className="input-group-text" style={{ backgroundColor: inputBg, borderColor: inputBorder, color: textSubtle }}>
-              <i className="bi bi-search"></i>
-            </span>
-            <input
-              type="text"
-              className="form-control"
-              style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-              placeholder="Buscar por equipo o estado..."
-              value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
-            />
+          <label className="form-label small fw-semibold" style={{ color: labelColor }}>
+            Filtrar por Equipo o Estado:
+          </label>
+          <input
+            type="text"
+            className={`form-control ${inputTextColor} py-2 font-monospace shadow-none`}
+            style={{ 
+              backgroundColor: filterBg, 
+              borderColor: filterBorder 
+            }}
+            placeholder="Buscar por equipo o estado..."
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Contenedor de Tabla */}
+      <div 
+        className="table-responsive rounded-3 border mb-3 font-monospace" 
+        style={{ 
+          backgroundColor: mainCardBg, 
+          borderColor: cardBorder,
+          height: '65.3vh',
+          overflowY: 'auto',
+          display: 'block'
+        }}
+      >
+        {cargando ? (
+          <div className="text-center py-5" style={{ color: textSubtle }}>
+            <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+            Cargando equipos...
           </div>
-        </div>
+        ) : (
+          <MaquinaTabla
+            maquinas={maquinasFiltradas}
+            onEditar={(m) => {
+              setMaquinaAEditar(m);
+              setShowModalCrud(true);
+            }}
+            onVerIncidencias={(m) => {
+              setMaquinaHistorial(m);
+              setShowModalHistorial(true);
+            }}
+          />
+        )}
       </div>
 
-      {/* Tabla de Equipos */}
-      <div>
-        <div className="card-body p-0">
-          {cargando ? (
-            <div className="text-center py-5" style={{ color: textSubtle }}>
-              <div className="spinner-border spinner-border-sm me-2" role="status"></div>
-              Cargando equipos...
-            </div>
-          ) : (
-            <MaquinaTabla
-              maquinas={maquinasFiltradas}
-              onEditar={(m) => {
-                setMaquinaAEditar(m);
-                setShowModalCrud(true);
-              }}
-              onVerIncidencias={(m) => {
-                setMaquinaHistorial(m);
-                setShowModalHistorial(true);
-              }}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Botones de acción inferior */}
-      <div className={`d-flex align-items-center mt-3 mb-4 ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
+      {/* Barra Inferior: Mismo padding, font-size y estructura exacta que Usuarios */}
+      <div className={`d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
         
-        {/* El botón volver solo se renderiza si NO estamos en Mobile */}
         {!isMobile && (
           <button
-            className="btn btn-secondary fw-bold px-3 shadow"
+            className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center"
+            style={{ 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
             onClick={() => navigate('/dashboard')}
           >
             Volver
@@ -157,14 +179,27 @@ export const MaquinasView: React.FC = () => {
 
         <div className={`d-flex gap-2 ${isMobile ? 'w-100' : ''}`}>
           <button
-            className={`btn btn-danger fw-bold px-3 shadow ${isMobile ? 'flex-fill py-2 text-nowrap' : ''}`}
+            className={`btn btn-danger fw-bold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
+            style={{ 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
             onClick={() => setShowModalFalla(true)}
           >
             Reportar Falla
           </button>
           <button
-            className={`btn btn-warning fw-bold px-3 shadow ${isMobile ? 'flex-fill py-2 text-nowrap' : ''}`}
-            style={{ backgroundColor: "#ce9b0e", borderColor: "#ce9b0e", color: '#ffffff' }}
+            className={`btn btn-warning fw-bold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
+            style={{ 
+              backgroundColor: "#ffc107", 
+              borderColor: "#ffc107", 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
             onClick={() => {
               setMaquinaAEditar(null);
               setShowModalCrud(true);

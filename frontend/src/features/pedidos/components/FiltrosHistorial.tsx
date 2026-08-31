@@ -17,30 +17,30 @@ export const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const containerBg = isDark ? '#1d1d1d' : '#f8fafc';
-  const containerBorder = isDark ? '#2d2d30' : '#cbd5e1';
-  const labelColor = isDark ? '#a1a1aa' : '#475569';
-  const inputBg = isDark ? '#1d1d1d' : '#ffffff';
+  const containerBg = isDark ? '#1b1b1b' : '#ffffff';
+  const containerBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
+  const inputBg = isDark ? '#1b1b1b' : '#ffffff';
+  const inputTextColor = isDark ? 'text-white' : 'text-dark';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const inputText = isDark ? '#ffffff' : '#0f172a';
 
   return (
     <div 
-      className="row g-3 mb-4 p-3 rounded d-print-none shadow-sm" 
-      style={{ backgroundColor: containerBg, border: `1px solid ${containerBorder}` }}
+      className="row g-3 align-items-center mb-4 p-3 rounded-3 shadow-sm font-monospace d-print-none" 
+      style={{ 
+        backgroundColor: containerBg, 
+        border: `1px solid ${containerBorder}`,
+        transition: 'all 0.2s ease-in-out'
+      }}
     >
       <div className="col-md-7">
-        <label className="form-label small fw-bold mb-1" style={{ color: labelColor }}>
+        <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Filtro por Cliente, Empleado o Fecha:
         </label>
         <input 
           type="text" 
-          className="form-control shadow-none" 
-          style={{ 
-            backgroundColor: inputBg, 
-            color: inputText, 
-            borderColor: inputBorder 
-          }}
+          className={`form-control ${inputTextColor} py-2 font-monospace shadow-none`}
+          style={{ backgroundColor: inputBg, borderColor: inputBorder }}
           placeholder="Escribí cliente, empleado o fecha (ej: 'Juan', 'Martina' o '14/07/2026')..." 
           value={filtroTexto}
           onChange={(e) => setFiltroTexto(e.target.value)}
@@ -48,16 +48,12 @@ export const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
       </div>
 
       <div className="col-md-5">
-        <label className="form-label small fw-bold mb-1" style={{ color: labelColor }}>
+        <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Estado:
         </label>
         <select 
-          className="form-select shadow-none"
-          style={{ 
-            backgroundColor: inputBg, 
-            color: inputText, 
-            borderColor: inputBorder 
-          }}
+          className={`form-select ${inputTextColor} py-2 font-monospace shadow-none`}
+          style={{ backgroundColor: inputBg, borderColor: inputBorder }}
           value={filtroEstadoHistorial}
           onChange={(e) => setFiltroEstadoHistorial(e.target.value)}
         >

@@ -20,7 +20,7 @@ export const ProveedorUbicacionModal: React.FC<ProveedorUbicacionModalProps> = (
 
   const modalBg = isDark ? '#1e1e24' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const titleColor = isDark ? '#00d7ff' : '#0284c7';
+  const titleColor = isDark ? '#f0e111' : '#f0e111';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#a1a1aa' : '#475569';
   const inputBg = isDark ? '#121214' : '#ffffff';
@@ -82,16 +82,16 @@ export const ProveedorUbicacionModal: React.FC<ProveedorUbicacionModalProps> = (
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1055 }}>
         <div className="modal-dialog modal-md modal-dialog-centered">
           <div 
-            className="modal-content font-monospace p-4 shadow" 
-            style={{ 
-              backgroundColor: modalBg, 
-              border: `1px solid ${modalBorder}`, 
-              color: textColor 
-            }}
-          >
+  className="modal-content font-monospace p-4 shadow" 
+  style={{ 
+    backgroundColor: modalBg, 
+    border: '1.5px solid #e4c30c', 
+    color: textColor 
+  }}
+>
             <div className="d-flex justify-content-between align-items-center mb-3 pb-2" style={{ borderBottom: `1px solid ${modalBorder}` }}>
-              <h4 className="m-0 fw-bold" style={{ color: titleColor }}>
-                <i className={`bi ${isEditable ? 'bi-geo-alt-fill me-2' : 'bi-house-door me-2'}`}></i>
+              <h4 className="m-0 fw-bold" style={{ color: '#e4c30c' }}>
+                <i className={`bi ${isEditable ? 'bi-geo-alt-fill me-2' : 'bi-geo-alt-fill me-2'}`}></i>
                 {isEditable ? 'Modificar Ubicación' : 'Ubicación del Proveedor'}
               </h4>
               <button 
@@ -150,7 +150,7 @@ export const ProveedorUbicacionModal: React.FC<ProveedorUbicacionModalProps> = (
               <div className="d-flex justify-content-between gap-2 mt-4 pt-3" style={{ borderTop: `1px solid ${modalBorder}` }}>
                 <div>
                   {!isEditable ? (
-                    <button type="button" className="btn btn-outline-info btn-sm px-3" onClick={() => setIsEditable(true)}>
+                    <button type="button" className="btn btn-outline-warning btn-sm px-3" onClick={() => setIsEditable(true)}>
                       <i className="bi bi-pencil-square me-1"></i>Habilitar Edición
                     </button>
                   ) : (
@@ -167,7 +167,7 @@ export const ProveedorUbicacionModal: React.FC<ProveedorUbicacionModalProps> = (
                       className="btn btn-info btn-sm px-4 fw-semibold"
                       style={{ 
                         color: isDark ? '#ffffff' : '#ffffff', 
-                        backgroundColor: isDark ? '#0dcaf0' : '#0284c7', 
+                        backgroundColor: isDark ? '#dfbf0b' : '#dfbf0b', 
                         borderColor: 'transparent' 
                       }}
                     >

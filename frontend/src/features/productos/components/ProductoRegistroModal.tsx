@@ -14,8 +14,12 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
+  // Configuración de colores según la acción (Editar -> Celeste, Registrar -> Verde)
+  const isEditing = Boolean(producto);
+  const accentColor = isEditing ? '#0dcaf0' : '#198754';
+  const buttonBgColor = isEditing ? '#0dcaf0' : '#198754';
+
   const modalBg = isDark ? '#1e1e24' : '#ffffff';
-  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const subModalBg = isDark ? '#18181b' : '#ffffff';
   const subModalBorder = isDark ? '#ffc107' : '#f59e0b';
   const textColor = isDark ? 'text-white' : 'text-dark';
@@ -182,10 +186,16 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     <>
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
         <div className="modal-dialog modal-dialog-centered">
-          <div className={`modal-content ${textColor} font-monospace shadow-lg`} style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}` }}>
+          <div 
+            className={`modal-content ${textColor} font-monospace shadow-lg`} 
+            style={{ 
+              backgroundColor: modalBg, 
+              border: `1.5px solid ${accentColor}` 
+            }}
+          >
             <div className={`modal-header border-bottom ${borderDivider}`}>
-              <h5 className="modal-title fw-bold" style={{ color: isDark ? '#0bc9f8' : '#0284c7' }}>
-                <i className="bi bi-box-seam me-2"></i> {producto ? 'Modificar Producto' : 'Registrar Producto'}
+              <h5 className="modal-title fw-bold" style={{ color: accentColor }}>
+                <i className="bi bi-box-seam me-2"></i> {isEditing ? 'Modificar Producto' : 'Registrar Producto'}
               </h5>
               <button className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose}></button>
             </div>
@@ -375,7 +385,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                       onBlur={() => setTimeout(() => setShowDropdownCategorias(false), 200)}
                       required
                     />
-                    <button type="button" className="btn btn-outline-info" onClick={() => setShowCategorias(true)}>
+                    <button type="button" className="btn btn-outline-warning" onClick={() => setShowCategorias(true)}>
                       <i className="bi bi-gear-fill"></i>
                     </button>
                     
@@ -420,7 +430,13 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
               
               <div className={`modal-footer border-top ${borderDivider} py-2`}>
                 <button type="button" className="btn btn-sm btn-danger px-4" onClick={onClose}>Cancelar</button>
-                <button type="submit" className="btn btn-sm btn-info px-4" style={{ backgroundColor: '#278114', borderColor: "#278114", color: 'white' }} >Guardar</button>
+                <button 
+                  type="submit" 
+                  className="btn btn-sm px-4 text-white font-weight-bold" 
+                  style={{ backgroundColor: buttonBgColor, borderColor: buttonBgColor }}
+                >
+                  Guardar
+                </button>
               </div>
             </form>
           </div>

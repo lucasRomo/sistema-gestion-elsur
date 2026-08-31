@@ -39,7 +39,7 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
       style={{ background: backgroundGradient, minHeight: '100vh' }}>
       
       <div className="w-100 p-4 rounded-3 position-relative shadow-lg" 
-           style={{ maxWidth: '750px', backgroundColor: containerBg, border: `1px solid ${containerBorder}` }}>
+     style={{ maxWidth: '750px', backgroundColor: containerBg, border: '1.5px solid #a855f7' }}>
         
         <div className="position-relative" style={{ zIndex: 1 }}>
           <PersonaForm 

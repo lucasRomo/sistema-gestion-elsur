@@ -16,9 +16,13 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
+  // Configuración de colores según la acción (Editar -> Celeste, Registrar -> Verde)
+  const isEditing = Boolean(insumoEditando);
+  const accentColor = isEditing ? '#0dcaf0' : '#198754';
+  const buttonBgColor = isEditing ? '#0dcaf0' : '#198754';
+
   // Paleta dinámica según el tema
   const modalBg = isDark ? '#18181b' : '#ffffff';
-  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const headerBorder = isDark ? '#27272a' : '#e2e8f0';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#a1a1aa' : '#475569';
@@ -199,15 +203,15 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
             style={{ 
               backgroundColor: modalBg, 
               color: textColor, 
-              border: `1.5px solid ${modalBorder}`, 
+              border: `1.5px solid ${accentColor}`, 
               borderRadius: '12px' 
             }}
           >
             
             <div className="modal-header border-bottom" style={{ borderColor: headerBorder }}>
-              <h5 className="modal-title fw-bold" style={{ color: '#0bc9f8' }}>
+              <h5 className="modal-title fw-bold" style={{ color: accentColor }}>
                 <i className="bi bi-box-seam me-2"></i> 
-                {insumoEditando ? 'Editar Insumo' : 'Registrar Nuevo Insumo'}
+                {isEditing ? 'Editar Insumo' : 'Registrar Nuevo Insumo'}
               </h5>
               <button 
                 type="button" 
@@ -291,106 +295,106 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   <div className="row">
 
                     {/* Unidad Suelta con Dropdown Custom */}
-<div className="col-md-4 mb-2">
-  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Unidad Suelta (Consumo)</label>
-  <div className="position-relative">
-    <input 
-      type="text"
-      autoComplete="off"
-      className="form-control shadow-none" 
-      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-      placeholder="Ej. Hoja / ml / Unidad"
-      name="nombreUnidad" 
-      value={formData.nombreUnidad} 
-      onChange={handleChange}
-      onFocus={() => setShowUnidadSuelto(true)}
-      onBlur={() => setTimeout(() => setShowUnidadSuelto(false), 200)}
-    />
-    {showUnidadSuelto && (
-      <div 
-        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
-        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
-      >
-        {unidadesSueltasFiltradas.length === 0 ? (
-          <div className="p-2 small text-muted text-center">Sin coincidencias</div>
-        ) : (
-          unidadesSueltasFiltradas.map((u) => {
-            const isSelected = u.nombre === formData.nombreUnidad;
-            return (
-              <div
-                key={u.idUnidad}
-                className="p-2 border-bottom text-truncate"
-                style={{ 
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
-                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
-                }}
-                onMouseDown={() => {
-                  setFormData({ ...formData, nombreUnidad: u.nombre || '' });
-                  setShowUnidadSuelto(false);
-                }}
-              >
-                <span className="fw-semibold">{u.nombre}</span>
-              </div>
-            );
-          })
-        )}
-      </div>
-    )}
-  </div>
-</div>
+                    <div className="col-md-4 mb-2">
+                      <label className="form-label small fw-semibold" style={{ color: labelColor }}>Unidad Suelta (Consumo)</label>
+                      <div className="position-relative">
+                        <input 
+                          type="text"
+                          autoComplete="off"
+                          className="form-control shadow-none" 
+                          style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                          placeholder="Ej. Hoja / ml / Unidad"
+                          name="nombreUnidad" 
+                          value={formData.nombreUnidad} 
+                          onChange={handleChange}
+                          onFocus={() => setShowUnidadSuelto(true)}
+                          onBlur={() => setTimeout(() => setShowUnidadSuelto(false), 200)}
+                        />
+                        {showUnidadSuelto && (
+                          <div 
+                            className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+                            style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+                          >
+                            {unidadesSueltasFiltradas.length === 0 ? (
+                              <div className="p-2 small text-muted text-center">Sin coincidencias</div>
+                            ) : (
+                              unidadesSueltasFiltradas.map((u) => {
+                                const isSelected = u.nombre === formData.nombreUnidad;
+                                return (
+                                  <div
+                                    key={u.idUnidad}
+                                    className="p-2 border-bottom text-truncate"
+                                    style={{ 
+                                      cursor: 'pointer',
+                                      fontSize: '0.875rem',
+                                      backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                                      color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                                    }}
+                                    onMouseDown={() => {
+                                      setFormData({ ...formData, nombreUnidad: u.nombre || '' });
+                                      setShowUnidadSuelto(false);
+                                    }}
+                                  >
+                                    <span className="fw-semibold">{u.nombre}</span>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
                     {/* Unidad Empaque con Dropdown Custom */}
-<div className="col-md-4 mb-2">
-  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Unidad Empaque (Compra)</label>
-  <div className="position-relative">
-    <input 
-      type="text"
-      autoComplete="off"
-      className="form-control shadow-none" 
-      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-      placeholder="Ej. Resma / Caja / Botella"
-      name="nombreUnidadCompra" 
-      value={formData.nombreUnidadCompra} 
-      onChange={handleChange}
-      onFocus={() => setShowUnidadCompra(true)}
-      onBlur={() => setTimeout(() => setShowUnidadCompra(false), 200)}
-    />
-    {showUnidadCompra && (
-      <div 
-        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
-        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
-      >
-        {unidadesCompraFiltradas.length === 0 ? (
-          <div className="p-2 small text-muted text-center">Sin coincidencias</div>
-        ) : (
-          unidadesCompraFiltradas.map((u) => {
-            const isSelected = u.nombre === formData.nombreUnidadCompra;
-            return (
-              <div
-                key={u.idUnidad}
-                className="p-2 border-bottom text-truncate"
-                style={{ 
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
-                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
-                }}
-                onMouseDown={() => {
-                  setFormData({ ...formData, nombreUnidadCompra: u.nombre || '' });
-                  setShowUnidadCompra(false);
-                }}
-              >
-                <span className="fw-semibold">{u.nombre}</span>
-              </div>
-            );
-          })
-        )}
-      </div>
-    )}
-  </div>
-</div>
+                    <div className="col-md-4 mb-2">
+                      <label className="form-label small fw-semibold" style={{ color: labelColor }}>Unidad Empaque (Compra)</label>
+                      <div className="position-relative">
+                        <input 
+                          type="text"
+                          autoComplete="off"
+                          className="form-control shadow-none" 
+                          style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                          placeholder="Ej. Resma / Caja / Botella"
+                          name="nombreUnidadCompra" 
+                          value={formData.nombreUnidadCompra} 
+                          onChange={handleChange}
+                          onFocus={() => setShowUnidadCompra(true)}
+                          onBlur={() => setTimeout(() => setShowUnidadCompra(false), 200)}
+                        />
+                        {showUnidadCompra && (
+                          <div 
+                            className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+                            style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+                          >
+                            {unidadesCompraFiltradas.length === 0 ? (
+                              <div className="p-2 small text-muted text-center">Sin coincidencias</div>
+                            ) : (
+                              unidadesCompraFiltradas.map((u) => {
+                                const isSelected = u.nombre === formData.nombreUnidadCompra;
+                                return (
+                                  <div
+                                    key={u.idUnidad}
+                                    className="p-2 border-bottom text-truncate"
+                                    style={{ 
+                                      cursor: 'pointer',
+                                      fontSize: '0.875rem',
+                                      backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                                      color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                                    }}
+                                    onMouseDown={() => {
+                                      setFormData({ ...formData, nombreUnidadCompra: u.nombre || '' });
+                                      setShowUnidadCompra(false);
+                                    }}
+                                  >
+                                    <span className="fw-semibold">{u.nombre}</span>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
                     <div className="col-md-4 mb-2">
                       <label className="form-label small fw-semibold" style={{ color: labelColor }}>Factor Conversión</label>
@@ -456,101 +460,100 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                 {/* PROVEEDOR Y ESTADO */}
                 <div className="row">
                   {/* Proveedor con Dropdown Custom */}
-                  {/* Proveedor con Dropdown Custom */}
-<div className="col-md-6 mb-3">
-  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Proveedor Principal</label>
-  <div className="position-relative">
-    <input 
-      type="text"
-      autoComplete="off"
-      className="form-control shadow-none" 
-      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-      placeholder="Escriba para buscar o ingresar un proveedor..."
-      name="nombreProveedor" 
-      value={formData.nombreProveedor} 
-      onChange={handleChange}
-      onFocus={() => setShowProveedor(true)}
-      onBlur={() => setTimeout(() => setShowProveedor(false), 200)}
-    />
-    {showProveedor && (
-      <div 
-        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
-        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
-      >
-        {proveedoresFiltrados.length === 0 ? (
-          <div className="p-2 small text-muted text-center">Sin coincidencias</div>
-        ) : (
-          proveedoresFiltrados.map((p) => {
-            const isSelected = p.nombreComercial === formData.nombreProveedor;
-            return (
-              <div
-                key={p.idProveedor}
-                className="p-2 border-bottom text-truncate"
-                style={{ 
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
-                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
-                }}
-                onMouseDown={() => {
-                  setFormData({ ...formData, nombreProveedor: p.nombreComercial });
-                  setShowProveedor(false);
-                }}
-              >
-                <span className="fw-semibold">{p.nombreComercial}</span>
-              </div>
-            );
-          })
-        )}
-      </div>
-    )}
-  </div>
-</div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label small fw-semibold" style={{ color: labelColor }}>Proveedor Principal</label>
+                    <div className="position-relative">
+                      <input 
+                        type="text"
+                        autoComplete="off"
+                        className="form-control shadow-none" 
+                        style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                        placeholder="Escriba para buscar o ingresar un proveedor..."
+                        name="nombreProveedor" 
+                        value={formData.nombreProveedor} 
+                        onChange={handleChange}
+                        onFocus={() => setShowProveedor(true)}
+                        onBlur={() => setTimeout(() => setShowProveedor(false), 200)}
+                      />
+                      {showProveedor && (
+                        <div 
+                          className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+                          style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+                        >
+                          {proveedoresFiltrados.length === 0 ? (
+                            <div className="p-2 small text-muted text-center">Sin coincidencias</div>
+                          ) : (
+                            proveedoresFiltrados.map((p) => {
+                              const isSelected = p.nombreComercial === formData.nombreProveedor;
+                              return (
+                                <div
+                                  key={p.idProveedor}
+                                  className="p-2 border-bottom text-truncate"
+                                  style={{ 
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem',
+                                    backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                                    color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                                  }}
+                                  onMouseDown={() => {
+                                    setFormData({ ...formData, nombreProveedor: p.nombreComercial });
+                                    setShowProveedor(false);
+                                  }}
+                                >
+                                  <span className="fw-semibold">{p.nombreComercial}</span>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
                   <div className="col-md-6 mb-3">
-  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Estado</label>
-  <div className="position-relative">
-    <input
-      type="text"
-      readOnly
-      autoComplete="off"
-      className="form-control shadow-none"
-      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
-      value={formData.estado}
-      onFocus={() => setShowEstado(true)}
-      onClick={() => setShowEstado(true)}
-      onBlur={() => setTimeout(() => setShowEstado(false), 200)}
-    />
-    {showEstado && (
-      <div
-        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
-        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
-      >
-        {['Activo', 'Desactivado'].map((opcion) => {
-          const isSelected = opcion === formData.estado;
-          return (
-            <div
-              key={opcion}
-              className="p-2 border-bottom text-truncate"
-              style={{
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
-                color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
-              }}
-              onMouseDown={() => {
-                setFormData({ ...formData, estado: opcion });
-                setShowEstado(false);
-              }}
-            >
-              <span className="fw-semibold">{opcion}</span>
-            </div>
-          );
-        })}
-      </div>
-    )}
-  </div>
-</div>
+                    <label className="form-label small fw-semibold" style={{ color: labelColor }}>Estado</label>
+                    <div className="position-relative">
+                      <input
+                        type="text"
+                        readOnly
+                        autoComplete="off"
+                        className="form-control shadow-none"
+                        style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
+                        value={formData.estado}
+                        onFocus={() => setShowEstado(true)}
+                        onClick={() => setShowEstado(true)}
+                        onBlur={() => setTimeout(() => setShowEstado(false), 200)}
+                      />
+                      {showEstado && (
+                        <div
+                          className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+                          style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+                        >
+                          {['Activo', 'Desactivado'].map((opcion) => {
+                            const isSelected = opcion === formData.estado;
+                            return (
+                              <div
+                                key={opcion}
+                                className="p-2 border-bottom text-truncate"
+                                style={{
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem',
+                                  backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                                }}
+                                onMouseDown={() => {
+                                  setFormData({ ...formData, estado: opcion });
+                                  setShowEstado(false);
+                                }}
+                              >
+                                <span className="fw-semibold">{opcion}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
               </div>
@@ -566,10 +569,10 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                 </button>
                 <button 
                   type="submit" 
-                  className="btn btn-success px-4 fw-bold" 
-                  style={{ color: '#ffffff' }}
+                  className="btn px-4 fw-bold" 
+                  style={{ backgroundColor: buttonBgColor, borderColor: buttonBgColor, color: '#ffffff' }}
                 >
-                  {insumoEditando ? 'Actualizar' : 'Guardar'}
+                  {isEditing ? 'Actualizar' : 'Guardar'}
                 </button>
               </div>
             </form>
@@ -592,4 +595,4 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
       />
     </>
   );
-};  
+};

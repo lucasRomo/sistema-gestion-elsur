@@ -49,14 +49,14 @@ export const ModalHistorialMermas: React.FC<ModalHistorialMermasProps> = ({ pedi
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div 
-          className="modal-content font-monospace p-4 shadow-lg" 
-          style={{ 
-            backgroundColor: bgModal, 
-            border: `1px solid ${borderColor}`, 
-            borderRadius: '16px',
-            color: textColor
-          }}
-        >
+  className="modal-content font-monospace p-4 shadow-lg" 
+  style={{ 
+    backgroundColor: bgModal, 
+    border: '2px solid #e9c31d',
+    borderRadius: '16px',
+    color: textColor
+  }}
+>
           {/* Cabecera */}
           <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style={{ borderColor }}>
             <h5 className="fw-bold mb-0 text-warning d-flex align-items-center">

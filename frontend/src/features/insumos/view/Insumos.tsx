@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// Importaciones internas del módulo insumos
 import { InsumoTabla } from '../components/InsumoTabla';
 import { InsumoProveedoresModal } from '../components/InsumoProveedoresModal';
 import { InsumoModal } from '../components/InsumoModal';
@@ -7,20 +9,27 @@ import { ConvertirInsumoModal } from '../components/ConvertirInsumoModal';
 import { ModalMermasInsumos } from '../modals/ModalMermasInsumos';
 import { RelacionesModal } from '../components/RelacionesModal';
 import { useInsumos } from '../hooks/useInsumos';
-import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { InsumosFiltros } from '../components/InsumosFiltros';
 import { AumentoMasivoInsumosModal } from '../components/AumentoMasivoInsumosModal';
 import { actualizarInsumosMasivo } from '../services/insumoService';
-import { useTheme } from '../../../Context/ThemeContext';
 import type { Insumo } from '../types/Insumo';
 import { exportarInsumosExcel, exportarInsumosPDF } from '../utils/exportInsumosUtils';
 import { ModalStockCriticoList, type ItemStockCritico } from '../modals/ModalStockCriticoList';
 
+// Componentes y contextos compartidos globales
+import { SuccesModal } from '../../../components/layouts/SuccesModal';
+import { useTheme } from '../../../Context/ThemeContext';
+import { useIsMobile } from '../../../hook/useIsMobile';
+
 export const Insumos: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const isMobile = useIsMobile();
   const titleColor = isDark ? '#ffffff' : '#0f172a';
-  const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
+  const textColor = isDark ? '#ffffff' : '#0f172a';
+  const mainCardBg = isDark ? '#1d1d1d' : '#ffffff';
+  const cardBorder = isDark ? '#27272a' : '#cbd5e1';
+  const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
 
   const navigate = useNavigate();
   const { insumos, guardar, cargar } = useInsumos();
@@ -48,13 +57,6 @@ export const Insumos: React.FC = () => {
     return cumpleNombre && cumpleEstado;
   });
 
-  const insumosOrdenados = [...insumosFiltrados].sort((a, b) => {
-    const idA = a.idInsumo || (a as any).id || 0;
-    const idB = b.idInsumo || (b as any).id || 0;
-    return idA - idB;
-  });
-
-  // Mapeo seguro utilizando casteo para evitar colisiones de tipos con las propiedades de Insumo
   const itemsStockCritico: ItemStockCritico[] = insumos.map((i: any) => ({
     id: i.idInsumo || i.id || i.nombreInsumo,
     nombre: i.nombreInsumo || i.nombre || 'Insumo',
@@ -80,15 +82,16 @@ export const Insumos: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid px-0">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div className="w-100 text-center position-relative">
-          <h1 className="fw-bold tracking-wider font-monospace m-0" style={{ fontSize: '2.5rem', color: titleColor }}>
-            Stock de Insumos
-          </h1>
-        </div>
+    <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
+      
+      {/* Encabezado Superior */}
+      <div className="d-flex justify-content-center align-items-center mb-4">
+        <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
+          Stock de Insumos
+        </h2>
       </div>
 
+      {/* Componente Filtros */}
       <InsumosFiltros 
         filtroNombre={filtroNombre}
         setFiltroNombre={setFiltroNombre}
@@ -96,40 +99,64 @@ export const Insumos: React.FC = () => {
         setFiltroEstado={setFiltroEstado}
       />
 
-      <InsumoTabla 
-        insumos={insumosOrdenados}
-        onEditar={(insumo) => { setInsumoEditando(insumo); setShowModalForm(true); }}
-        onVerProveedores={(insumo) => setInsumoProveedoresSeleccionado(insumo)}
-        onConvertir={(insumo) => {
-          setInsumoConvertirSeleccionado(insumo);
-          setShowConvertirModal(true);
+      {/* Contenedor Único de Tabla con Scroll Interno (65.3vh) */}
+      <div 
+        className="rounded-3 border mb-3 font-monospace" 
+        style={{ 
+          backgroundColor: mainCardBg, 
+          borderColor: cardBorder,
+          height: '65.3vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          display: 'block'
         }}
-      />
+      >
+        <InsumoTabla 
+          insumos={insumosFiltrados}
+          onEditar={(insumo) => { setInsumoEditando(insumo); setShowModalForm(true); }}
+          onVerProveedores={(insumo) => setInsumoProveedoresSeleccionado(insumo)}
+          onConvertir={(insumo) => {
+            setInsumoConvertirSeleccionado(insumo);
+            setShowConvertirModal(true);
+          }}
+        />
+      </div>
 
-      {/* Botonera Inferior: Volver + Exportar + Stock Crítico + Acciones de Insumos */}
-      <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-3 font-monospace">
-        <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-4 py-2" style={{ color: '#ffffff' }}>
-          Volver
-        </button>
+      {/* Botonera Inferior Completa */}
+      <div className={`d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
+        {!isMobile && (
+          <button 
+            onClick={() => navigate('/dashboard')} 
+            className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center" 
+            style={{ 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
+          >
+            Volver
+          </button>
+        )}
         
-        <div className="d-flex gap-2 flex-wrap">
+        <div className={`d-flex flex-wrap gap-2 ${isMobile ? 'w-100' : ''}`}>
           <button 
             type="button"
-            className="btn btn-outline-warning fw-bold d-flex align-items-center gap-2 position-relative"
+            className={`btn btn-outline-warning fw-bold d-flex align-items-center justify-content-center px-3 py-2 shadow-sm position-relative ${isMobile ? 'flex-fill text-nowrap' : ''}`}
             onClick={() => setShowStockCriticoModal(true)}
             title="Ver insumos con stock al límite o crítico"
           >
-            <i className="bi bi-exclamation-triangle-fill fs-5"></i>
+            <i className="bi bi-exclamation-triangle-fill fs-6 me-2"></i>
             Stock Crítico
             {cantidadCriticos > 0 && (
-              <span className="badge bg-danger rounded-pill ms-1">
+              <span className="badge bg-danger rounded-pill ms-2">
                 {cantidadCriticos}
               </span>
             )}
           </button>
 
           <button 
-            className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
+            className="btn btn-outline-success fw-bold d-flex align-items-center justify-content-center px-3 py-2 shadow-sm"
             onClick={() => exportarInsumosExcel(insumosFiltrados)}
             disabled={insumosFiltrados.length === 0}
             title="Exportar listado actual a Excel"
@@ -138,7 +165,7 @@ export const Insumos: React.FC = () => {
           </button>
 
           <button 
-            className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2"
+            className="btn btn-outline-danger fw-bold d-flex align-items-center justify-content-center px-3 py-2 shadow-sm"
             onClick={() => exportarInsumosPDF(insumosFiltrados)}
             disabled={insumosFiltrados.length === 0}
             title="Exportar listado actual a PDF"
@@ -148,34 +175,58 @@ export const Insumos: React.FC = () => {
 
           <button 
             type="button"
-            className="btn px-4 py-2 fw-bold d-flex align-items-center gap-2"
-            style={{ backgroundColor: '#0bc9f8', color: '#ffffff' }}
+            className={`btn fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
+            style={{ 
+              backgroundColor: '#0bc9f8', 
+              borderColor: '#0bc9f8', 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
             onClick={() => setShowRelacionesModal(true)}
           >
-            <i className="bi"></i>
             Ver Relaciones
           </button>
 
           <button 
-            className="btn btn-warning px-4 py-2 fw-bold"
-            style={{ color: '#ffffff' }}
+            className={`btn fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
+            style={{ 
+              backgroundColor: '#eab308', 
+              borderColor: '#eab308', 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
             onClick={() => setShowMermasModal(true)}
           >
-            <i className="bi"></i>
             Mermas
           </button>
 
           <button 
-            className="btn px-4 py-2 fw-bold" 
-            style={{ backgroundColor: '#c27a0d', color: '#ffffff' }}
+            className={`btn fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`} 
+            style={{ 
+              backgroundColor: '#c27a0d', 
+              borderColor: '#c27a0d', 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
             onClick={() => setShowAumentoModal(true)}
           >
             Modificar Varios Precios
           </button>
           
           <button 
-            className="btn btn-success px-4 py-2 fw-bold" 
-            style={{ color: '#ffffff' }}
+            className={`btn btn-success fw-bold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`} 
+            style={{ 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
             onClick={() => { setInsumoEditando(null); setShowModalForm(true); }}
           >
             Registrar Nuevo Insumo
@@ -183,6 +234,7 @@ export const Insumos: React.FC = () => {
         </div>
       </div>
 
+      {/* Modales Complementarios */}
       <ModalStockCriticoList
         show={showStockCriticoModal}
         titulo="Stock Crítico de Insumos"
@@ -256,20 +308,17 @@ export const Insumos: React.FC = () => {
       />
 
       {mostrarConfirmacion && (
-        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
-            <div className="modal-content p-4 text-white text-center shadow-lg" style={{ border: '2px solid #8e45e0', backgroundColor: isDark ? '#1a1a1c' : '#ffffff', color: titleColor, borderRadius: '12px' }}>
+            <div className="modal-content p-4 text-center shadow-lg" style={{ border: `2px solid ${isDark ? '#8e45e0' : '#a855f7'}`, backgroundColor: isDark ? '#1a1a1c' : '#ffffff', color: isDark ? '#ffffff' : '#0f172a', borderRadius: '12px' }}>
               <i className="bi bi-shield-lock-fill fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
-              <h5 className="fw-bold" style={{ color: titleColor }}>¿Confirmar Modificaciones?</h5>
-              <p className="small" style={{ color: mutedText }}>Se sobreescribirán los datos del insumo.</p>
+              <h5 className="fw-bold">¿Confirmar Modificaciones?</h5>
+              <p className="small m-0" style={{ color: mutedText }}>Se sobreescribirán los datos del insumo.</p>
               
-              <div className="d-flex justify-content-center gap-2 mt-3">
-                <button className="btn btn-danger btn-sm px-3" style={{ borderRadius: '6px', color: '#ffffff' }} onClick={() => setMostrarConfirmacion(false)}>
-                  Volver
-                </button>
+              <div className="d-flex justify-content-center gap-2 mt-4">
+                <button className="btn btn-danger btn-sm px-3 fw-semibold" onClick={() => setMostrarConfirmacion(false)}>Volver</button>
                 <button 
-                  className="btn btn-sm px-3 fw-bold text-white" 
-                  style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e', color: '#ffffff' }} 
+                  className="btn btn-success btn-sm px-3 fw-semibold text-white" 
                   onClick={async () => {
                     if (insumoEditando) {
                       await guardar(insumoEditando);
