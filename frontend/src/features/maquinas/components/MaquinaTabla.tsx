@@ -72,7 +72,7 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
-              <td className="py-3 px-3 text-center text-info fw-bold">#{maq.idMaquina}</td>
+              <td className="py-3 px-3 text-center text-info-custom fw-bold">#{maq.idMaquina}</td>
               <td className="py-3 px-3 fw-semibold text-start" style={{ color: tableText }}>{maq.nombre}</td>
               <td className="py-3 px-3 text-center">
                 {renderBadgeEstado(maq.estado)}

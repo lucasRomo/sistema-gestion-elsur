@@ -252,7 +252,7 @@ export const useConfiguracion = () => {
     datosUsuario, setDatosUsuario, mensajeUsuario, cargandoUsuario, handleCambiarUsuario,
     datosEmail, setDatosEmail, mensajeEmail, cargandoEmail, handleCambiarEmail,
     modalConfirmacionPerfil, setModalConfirmacionPerfil,
-    historialRespaldos, cargandoRespaldo, mensajeRespaldo, archivoSeleccionado, setArchivoSeleccionado,
+    historialRespaldos, cargarHistorialRespaldos, cargandoRespaldo, mensajeRespaldo, archivoSeleccionado, setArchivoSeleccionado,
     cargandoRestaurar, mostrarModalConfirmacion, setMostrarModalConfirmacion,
     handleGenerarRespaldo, handleDescargarRespaldoHistorial, handleEliminarRespaldo, ejecutarRestauracion
   };

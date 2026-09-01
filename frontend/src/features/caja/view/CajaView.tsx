@@ -75,7 +75,7 @@ export const CajaView: React.FC = () => {
   const shadowStyle = isDark ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
   const graphInnerBg = isDark ? '#222122' : '#f1f5f9';
   const tableWrapBg = isDark ? '#1d1d1d' : '#ffffff';
-  const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
+  const theadBg = isDark ? '#1d1d1d' : '#ffffff';
 
   const chartGrid = isDark ? '#2d2d30' : '#e2e8f0';
   const chartTick = isDark ? '#aaa' : '#64748b';
@@ -294,7 +294,7 @@ export const CajaView: React.FC = () => {
               </h1>
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span>Inicio de Caja:</span>
-                <span className="fw-bold text-info fs-6">
+                <span className="fw-bold text-info fs-6 text-info-custom">
                   ${cajaAbierta ? (turnoActual?.montoInicial || 0).toLocaleString('es-AR') : '0'}
                 </span>
               </div>
@@ -345,7 +345,7 @@ export const CajaView: React.FC = () => {
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
-                        <XAxis dataKey="hora" tick={{ fill: chartTick, fontSize: 11 }} axisLine={{ stroke: chartGrid }} tickLine={false} />
+                        <XAxis dataKey="hora" tick={{ fill: chartTick, fontSize: 11, dy: 15 }} axisLine={{ stroke: chartGrid }} tickLine={false} />
                         <YAxis domain={['auto', 'auto']} tick={{ fill: chartTick, fontSize: 11 }} axisLine={false} tickLine={false} />
                         <RechartsTooltip content={<CustomCajaAreaTooltip />} />
                         <Area
@@ -477,41 +477,31 @@ export const CajaView: React.FC = () => {
                  ? `#${m.pedido?.idPedido || m.pedido?.id_pedido}` 
                  : (m.descripcion?.includes('Pedido #') ? `#${m.descripcion.split('#')[1]?.trim()}` : '-')}
              </td>
-             <td>
-               <div className="d-flex justify-content-center gap-1">
-                 {imagenAdjunta && (
-                   <button
-                     className="btn btn-sm btn-outline-info border-0 p-1"
-                     title="Ver Comprobante de Transferencia"
-                     onClick={() => setImagenComprobanteModal(imagenAdjunta)}
-                   >
-                     <i className="bi bi-eye fs-5"></i>
-                   </button>
-                 )}
-                 <button
-                   className="btn btn-sm btn-outline-info border-0 p-1"
-                   title="Ver Ticket de Comprobante"
-                   onClick={() => handleVerTicket(m)}
-                 >
-                   <i className="bi bi-receipt fs-5"></i>
-                 </button>
-                 <button
-                   className="btn btn-sm btn-outline-warning border-0 p-1"
-                   title="Corregir / Ajustar Cobro"
-                   disabled={!cajaAbierta || m.categoria === 'AJUSTE'}
-                   onClick={() => {
-                     setMovimientoAjuste(m);
-                     setMontoAjuste(String(m.monto));
-                     setTipoAjuste(m.tipoMovimiento === 'INGRESO' ? 'EGRESO' : 'INGRESO');
-                     setMetodoPagoAjuste(m.metodoPago || 'EFECTIVO');
-                     setImagenAjuste(null);
-                     setMotivoAjuste('');
-                   }}
-                 >
-                   <i className="bi bi-arrow-counterclockwise fs-5"></i>
-                 </button>
-               </div>
-             </td>
+             <td style={{ backgroundColor: 'transparent' }}>
+  <div className="d-flex justify-content-center gap-1">
+    {/* Botón Imagen / Comprobante de Transferencia (si existe adjunto) */}
+    {imagenAdjunta && (
+      <button
+        type="button"
+        className="btn btn-sm btn-outline-info border-0 p-1"
+        title="Ver Comprobante de Transferencia"
+        onClick={() => setImagenComprobanteModal(imagenAdjunta)}
+      >
+        <i className="bi bi-eye fs-5"></i>
+      </button>
+    )}
+
+    {/* Botón Ticket de Comprobante / Pago */}
+    <button
+      type="button"
+      className="btn btn-sm btn-outline-info border-0 p-1"
+      title="Ver Ticket de Comprobante"
+      onClick={() => handleVerTicket(m)}
+    >
+      <i className="bi bi-receipt fs-5"></i>
+    </button>
+  </div>
+</td>
            </tr>
          );
        })
@@ -523,7 +513,7 @@ export const CajaView: React.FC = () => {
           </div>
 
           <div className="col-lg-3 d-flex flex-column justify-content-start align-items-stretch gap-4 pt-0">
-            <h5 className="mb-3 fw-semibold align-self-start" style={{ visibility: 'hidden' }}>Acciones</h5>
+            <h5 className="mb-5 fw-semibold align-self-start" style={{ visibility: 'hidden' }}>Acciones</h5>
 
             <button
               className="btn btn-success py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
@@ -578,7 +568,7 @@ export const CajaView: React.FC = () => {
             <span>Iniciar Caja del Día</span>
           </button>
           
-          <button className="btn d-flex align-items-center justify-content-center fw-semibold text-center" style={{ backgroundColor: '#10cbd8', color: '#ffffff', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }} disabled={!cajaAbierta} onClick={handleConsultarArqueo}>
+          <button className="btn d-flex align-items-center justify-content-center fw-semibold text-center" style={{ backgroundColor: '#149bdf', color: '#ffffff', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }} disabled={!cajaAbierta} onClick={handleConsultarArqueo}>
             <span>Consultar Arqueo</span>
           </button>
           

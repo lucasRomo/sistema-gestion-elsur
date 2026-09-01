@@ -382,7 +382,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
                         style={{ 
                           cursor: 'pointer',
                           backgroundColor: esSeleccionado 
-                            ? '#0284c7' 
+                            ? '#27ace6' 
                             : (isDark ? '#27272a' : '#f8fafc')
                         }}
                         onMouseDown={() => {
@@ -415,7 +415,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
           <div className="col-md-3">
             <button 
               className="btn w-100 fw-bold" 
-              style={{ backgroundColor: '#0284c7', color: '#ffffff' }} 
+              style={{ backgroundColor: '#27ace6', color: '#ffffff' }} 
               onClick={handleAgregar}
               disabled={!productoId}
             >
@@ -456,7 +456,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
                   </div>
                   <div style={{ width: '20%' }}>{item.cantidad}</div>
                   <div style={{ width: '20%' }}>${item.producto.precioBase}</div>
-                  <div style={{ width: '20%' }} className="fw-bold text-info">${item.subtotal.toFixed(2)}</div>
+                  <span className="fw-bold fs-6 font-monospace" style={{ color: '#27ace6' }}>${totalFinal.toFixed(2)}</span>
                 </div>
               ))
             )}
@@ -466,7 +466,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
         {/* Categoría de Cliente */}
         <div className="mb-4">
           <label className="form-label small fw-bold d-flex align-items-center justify-content-between">
-            <span><i className="bi bi-tags-fill me-1 text-info"></i> Categoría de Cliente / Descuento:</span>
+            <span><i className="bi bi-tags-fill me-1 text" style={{ color: "#27ace6" }}></i> Categoría de Cliente / Descuento:</span>
             {porcentajeDescuento > 0 && (
               <span className="badge bg-success font-monospace fs-6">
                 ¡{porcentajeDescuento}% OFF APLICADO!
@@ -511,7 +511,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
           <div className="d-flex justify-content-between align-items-center">
             <span className="fw-bold fs-5">Total a Cobrar:</span>
-            <span className="fw-bold fs-3 text-info font-monospace">${totalFinal.toFixed(2)}</span>
+            <span className="fw-bold fs-3 font-monospace" style={{ color: '#27ace6' }}>${totalFinal.toFixed(2)}</span>
           </div>
         </div>
 
@@ -592,9 +592,8 @@ export const SelectorProductosForm: React.FC<Props> = ({
                     </span>
                   </div>
                   
-                  {/* Consumo Pedido: únicamente la cantidad limpia del carrito actual */}
                   {/* Consumo Pedido */}
-<div style={{ width: '18%' }} className="fw-bold text-info">
+<div style={{ width: '18%', color: '#27ace6' }} className="fw-bold">
   {item.cantPedidoActual} {item.unidad}
   {item.cantReservadaPendientes === 0 && (
     <span className="d-block text-muted" style={{ fontSize: '0.70rem', fontWeight: 'normal' }}>

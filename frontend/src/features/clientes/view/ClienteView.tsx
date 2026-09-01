@@ -230,7 +230,7 @@ export const ClienteView = () => {
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    <td className="py-3 px-3 text-center text-info fw-bold">#{idClienteVal}</td>
+                    <td className="py-3 px-3 text-center text-info-custom fw-bold">#{idClienteVal}</td>
                     
                     <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.persona?.nombre}</td>
                     <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.apellido}</td>

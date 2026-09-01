@@ -176,11 +176,12 @@ export const Productos: React.FC = () => {
         )}
 
         <div className={`d-flex flex-wrap gap-2 ${isMobile ? 'w-100' : ''}`}>
-          <button 
+                  <button 
             type="button"
-            className={`btn btn-outline-warning fw-bold d-inline-flex align-items-center justify-content-center px-3 py-2 shadow-sm position-relative ${isMobile ? 'flex-fill text-nowrap' : ''}`}
+            className={`btn btn-outline-warning fw-bold d-flex align-items-center justify-content-center px-3 py-2 shadow-sm position-relative ${isMobile ? 'flex-fill text-nowrap' : ''}`}
+            style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
             onClick={() => setShowStockCriticoModal(true)}
-            title="Ver productos con stock al límite o crítico"
+            title="Ver insumos con stock al límite o crítico"
           >
             <i className="bi bi-exclamation-triangle-fill fs-6 me-2"></i>
             Stock Crítico
@@ -219,7 +220,7 @@ export const Productos: React.FC = () => {
 
           <button 
             className={`btn px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`} 
-            style={{ backgroundColor: '#17a2b8', borderColor: '#17a2b8', color: '#ffffff' }} 
+            style={{ backgroundColor: '#149bdf', borderColor: '#149bdf', color: '#ffffff' }} 
             onClick={() => setShowAumentoModal(true)}
           >
             Modificar Varios Precios
@@ -330,19 +331,20 @@ export const Productos: React.FC = () => {
                 </button>
                 
                 <button 
-                  className="btn btn-warning btn-sm px-4 fw-bold" 
-                  onClick={() => {
-                    const prod = productoSinReceta;
-                    setShowSinRecetaModal(false);
-                    setProductoSinReceta(null);
-                    if (prod) {
-                      setProductoSeleccionadoReceta(prod);
-                      setShowRecetaModal(true);
-                    }
-                  }}
-                >
-                  Configurar Receta
-                </button>
+  className="btn btn-warning btn-sm px-4 fw-bold" 
+  style={{ color: '#ffffff' }}
+  onClick={() => {
+    const prod = productoSinReceta;
+    setShowSinRecetaModal(false);
+    setProductoSinReceta(null);
+    if (prod) {
+      setProductoSeleccionadoReceta(prod);
+      setShowRecetaModal(true);
+    }
+  }}
+>
+  Configurar Receta
+</button>
               </div>
             </div>
           </div>

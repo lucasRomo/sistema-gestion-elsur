@@ -107,7 +107,7 @@ export const GestionUsuariosView: React.FC = () => {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = hoverRowBg} 
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      <td className="py-3 px-3 text-center text-info fw-bold">#{u.idUsuario}</td>
+                      <td className="py-3 px-3 text-center text-info-custom fw-bold">#{u.idUsuario}</td>
                       <td className="py-3 px-3 fw-bold" style={{ color: tableText }}>{u.nombreUsuario}</td>
                       <td className="py-3 px-3" style={{ color: tableText }}>{u.password}</td>
                       <td className="py-3 px-3" style={{ color: tableText }}>{u.persona?.nombre || '-'}</td>

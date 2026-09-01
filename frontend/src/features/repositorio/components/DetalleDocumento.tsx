@@ -166,7 +166,7 @@ export const DetalleDocumento: React.FC<Props> = ({
             <p className="mb-1"><strong className="text-secondary">Autor:</strong> {documento.autor}</p>
             <p className="mb-1">
               <strong className="text-secondary">Cantidad de Páginas:</strong>{' '}
-              <span className="badge bg-info text-dark">{documento.cantidadPaginas} pág.</span>
+              <span className="badge bg-info text-dark ">{documento.cantidadPaginas} pág.</span>
             </p>
             <p className="mb-1"><strong className="text-secondary">Tamaño de Archivo:</strong> {formatearTamano(documento.tamanoBytes)}</p>
             <p className="mb-1">
@@ -185,7 +185,7 @@ export const DetalleDocumento: React.FC<Props> = ({
             <button
               type="button"
               className="btn btn-primary btn-sm flex-fill fw-bold text-white"
-              style={{ backgroundColor: '#5a8ab8', border: 'none' }}
+              style={{ backgroundColor: '#149bdf', border: 'none' }}
               onClick={onPrevisualizar}
             >
               Ver (Pantalla Completa)
@@ -202,9 +202,9 @@ export const DetalleDocumento: React.FC<Props> = ({
           {documento.producto && (
             <button
               type="button"
-              className="btn btn-sm w-100 fw-bold text-white"
+              className="btn btn-sm w-100 fw-bold"
               onClick={handleVerDetallesProducto}
-              style={{ backgroundColor: '#e4ca36', border: 'none' }}
+              style={{ backgroundColor: '#d3ba2f', border: 'none', color: '#fdfdfa' }}
             >
               Ver Detalles Producto
             </button>

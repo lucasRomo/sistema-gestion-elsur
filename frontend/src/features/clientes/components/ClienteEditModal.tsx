@@ -300,7 +300,7 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                 <button type="button" className="btn btn-danger px-4 fw-semibold" style={{ borderRadius: '8px', color: '#ffffff' }} onClick={onCerrar}>
                   Cancelar
                 </button>
-                <button type="submit" className="btn btn-info px-4 fw-semibold" style={{ borderRadius: '8px', color: '#ffffff' }}>Aceptar</button>
+                <button type="submit" className="btn btn-info px-4 fw-semibold" style={{ borderRadius: 'none', borderColor: '#149bdf', backgroundColor: '#149bdf' , color: '#ffffff' }}>Aceptar</button>
               </div>
             </form>
           </div>

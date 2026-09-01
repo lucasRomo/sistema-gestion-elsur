@@ -16,7 +16,7 @@ export const ModalHistorialMermas: React.FC<ModalHistorialMermasProps> = ({ pedi
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const subTextColor = isDark ? '#a1a1aa' : '#64748b';
   const borderColor = isDark ? '#3f3f46' : '#e2e8f0';
-  const tableHeaderBg = isDark ? '#1b1b1b' : '#f1f5f9';
+  const tableHeaderBg = isDark ? '#18181b' : '#ffffff';
 
   const [mermas, setMermas] = useState<MermaEntity[]>([]);
   const [cargando, setCargando] = useState<boolean>(true);

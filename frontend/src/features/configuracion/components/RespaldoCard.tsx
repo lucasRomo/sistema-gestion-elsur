@@ -1,5 +1,6 @@
 // src/features/configuracion/components/RespaldoCard.tsx
 import React from 'react';
+import { useEffect } from 'react';
 import { useConfiguracion } from '../hooks/useConfiguracion';
 
 interface Props {
@@ -24,6 +25,7 @@ export const RespaldoCard: React.FC<Props> = ({
   const {
     usuario,
     historialRespaldos,
+    cargarHistorialRespaldos,
     cargandoRespaldo,
     mensajeRespaldo,
     archivoSeleccionado, setArchivoSeleccionado,
@@ -46,6 +48,10 @@ export const RespaldoCard: React.FC<Props> = ({
     if (!archivoSeleccionado) return;
     setMostrarModalConfirmacion(true);
   };
+  
+  useEffect(() => {
+    cargarHistorialRespaldos();
+  }, []);
 
   return (
     <div className="col-12 col-lg-7">
@@ -73,7 +79,7 @@ export const RespaldoCard: React.FC<Props> = ({
 
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <h5 className="fw-bold mb-1 text-info">
+            <h5 className="fw-bold mb-1 text-info-custom">
               <i className="bi bi-hdd-network me-2"></i>Respaldo Local Contingente
             </h5>
             <p className={`${mutedTextColor} small mb-0`}>Generación y carga de datos para contingencias operativas</p>
@@ -110,7 +116,8 @@ export const RespaldoCard: React.FC<Props> = ({
             <button 
               type="submit" 
               disabled={cargandoRestaurar || !archivoSeleccionado}
-              className="btn btn-warning btn-sm fw-bold text-dark text-nowrap px-3"
+              className="btn btn-warning btn-sm fw-bold text-nowrap px-3"
+              style= {{ color: "#ffffff"}}
             >
               <i className="bi bi-arrow-counterclockwise me-1"></i>
               {cargandoRestaurar ? 'Cargando...' : 'Restaurar Datos'}

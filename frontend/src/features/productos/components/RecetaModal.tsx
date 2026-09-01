@@ -24,10 +24,10 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
   const headerBorder = isDark ? '#27272a' : '#e2e8f0';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#a1a1aa' : '#475569';
-  const boxBg = isDark ? '#1b1b1b' : '#f8fafc';
-  const inputBg = isDark ? '#1d1d1d' : '#ffffff';
+  const boxBg = isDark ? '#1a1a1c' : '#f8fafc';
+  const inputBg = isDark ? '#1a1a1c' : '#ffffff';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const thBg = isDark ? '#1a1a1c' : '#f1f5f9';
+  const thBg = isDark ? '#1a1a1c' : '#ffffff';
   const thText = isDark ? '#a1a1aa' : '#475569';
   const rowBorder = isDark ? '#27272a' : '#e2e8f0';
   const mutedText = isDark ? '#a1a1aa' : '#64748b';
@@ -294,7 +294,7 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
                       <tr key={item.idInsumo} className="border-bottom" style={{ borderColor: rowBorder }}>
                         <td className="fw-semibold py-2 px-3">{item.nombreInsumo}</td>
                         <td className="py-2 px-3" style={{ color: mutedText }}>{item.unidadMedida}</td>
-                        <td className="text-info fw-bold py-2 px-3">{item.cantidadConsumo}</td>
+                        <td className="text-info-custom fw-bold py-2 px-3">{item.cantidadConsumo}</td>
                         <td className="text-center py-2 px-3">
                           <button 
                             className="btn btn-outline-danger btn-sm"
@@ -313,7 +313,7 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
 
           <div className="modal-footer border-top" style={{ borderColor: headerBorder }}>
             <button 
-              className="btn btn-danger px-4" 
+              className="btn btn-danger px-4 fw-bold" 
               onClick={onClose}
               style={{ color: '#ffffff' }}
             >

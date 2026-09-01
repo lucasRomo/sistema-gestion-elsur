@@ -107,7 +107,9 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
                 <button type="button" className="btn btn-sm btn-danger text-white" onClick={handleCancelar}>
                   Cancelar
                 </button>
-                <button type="submit" className="btn btn-sm btn-info fw-bold text-white" disabled={guardando}>
+                <button type="submit" 
+  className="btn btn-sm btn-info fw-bold" 
+  style={{ color: '#ffffff' }} disabled={guardando}>
                   {guardando ? 'Guardando...' : 'Guardar Institución'}
                 </button>
               </div>

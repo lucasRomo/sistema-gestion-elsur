@@ -201,40 +201,43 @@ export const CrearPedidoView: React.FC = () => {
       </div>
 
       {/* Modal de Confirmación */}
-      {confirmarGuardado && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
-          <div className="modal-dialog modal-sm modal-dialog-centered">
-            <div 
-              className="modal-content p-4 text-white text-center custom-modal-card" 
-              style={{ border: '2px solid #8e45e0', borderRadius: '12px', fontFamily: 'monospace' }}
-            >
-              <i className="bi bi-question-circle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
-              <h5 className="fw-bold">¿Confirmar registro?</h5>
-              <p className="small text-muted">
-                {fileTemporal 
-                  ? `¿Está listo para finalizar el Pedido con el comprobante "${fileTemporal.name}" adjunto?` 
-                  : '¿Está listo para finalizar el Pedido?'}
-              </p>
-              <div className="d-flex gap-2 justify-content-center mt-3">
-                <button 
-                  className="btn btn-sm px-3 text-white" 
-                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', border: '1px solid #e22e2e' }} 
-                  onClick={() => setConfirmarGuardado(false)}
-                >
-                  Volver
-                </button>
-                <button 
-                  className="btn btn-sm px-3 text-white" 
-                  style={{ borderRadius: '6px', backgroundColor: '#288f47', border: '1px solid #2e9225' }} 
-                  onClick={ejecutarGuardadoFinal}
-                >
-                  Finalizar
-                </button>
-              </div>
-            </div>
-          </div>
+{confirmarGuardado && (
+  <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+    <div className="modal-dialog modal-sm modal-dialog-centered">
+      <div 
+        className="modal-content p-4 text-white text-center custom-modal-card" 
+        style={{ border: '2px solid #8e45e0', borderRadius: '12px', fontFamily: 'monospace' }}
+      >
+        <i className="bi bi-question-circle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
+        <h5 className="fw-bold">¿Confirmar registro?</h5>
+        <p className="small text-muted">
+          {fileTemporal 
+            ? `¿Está listo para finalizar el Pedido con el comprobante "${fileTemporal.name}" adjunto?` 
+            : '¿Está listo para finalizar el Pedido?'}
+        </p>
+        <div className="d-flex gap-2 justify-content-center mt-3">
+          {/* BOTÓN VOLVER (Texto Blanco) */}
+          <button 
+            className="btn btn-sm px-3 fw-bold" 
+            style={{ borderRadius: '6px', backgroundColor: '#e22e2e', border: '1px solid #e22e2e', color: '#ffffff' }} 
+            onClick={() => setConfirmarGuardado(false)}
+          >
+            Volver
+          </button>
+
+          {/* BOTÓN FINALIZAR (Texto Blanco) */}
+          <button 
+            className="btn btn-sm px-3 fw-bold" 
+            style={{ borderRadius: '6px', backgroundColor: '#288f47', border: '1px solid #2e9225', color: '#ffffff' }} 
+            onClick={ejecutarGuardadoFinal}
+          >
+            Finalizar
+          </button>
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Modal de Ticket de Movimiento de Caja */}
       {ticketGenerado && (

@@ -18,13 +18,13 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const cardBg = isDark ? '#121214' : '#f8fafc';
+  const cardBg = isDark ? '#121214' : '#f3f3f3';
   const cardBorder = isDark ? '#3f3f46' : '#e2e8f0';
   const tableBg = isDark ? '#1a1a1c' : '#ffffff';
   const rowBorder = isDark ? '#27272a' : '#e2e8f0';
-  const theadBorder = isDark ? '#3f3f46' : '#e2e8f0';
+  const theadBorder = isDark ? '#3f3f46' : '#d3dae4';
   const grayText = isDark ? '#a1a1aa' : '#64748b';
-  const mutedBoxText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
+  const mutedBoxText = isDark ? 'rgba(255,255,255,0.5)' : '#2c3c52';
 
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
@@ -195,8 +195,8 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                                         title="Ver comprobante" 
                                         style={{ 
                                           backgroundColor: 'transparent', 
-                                          border: '1px solid #0dcaf0', 
-                                          color: '#0dcaf0', 
+                                          border: '1px solid #0cb7da', 
+                                          color: '#0cadce', 
                                           padding: '2px 8px', 
                                           borderRadius: '4px', 
                                           fontSize: '0.9rem', 
@@ -245,7 +245,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
 
                 <div className="mt-3 p-3 rounded" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
                   <div className="d-flex justify-content-between mb-1 text-white"><span>Monto Total:</span> <span className="fw-bold">${Number(pedido.monto_total || 0).toFixed(2)}</span></div>
-                  <div className="d-flex justify-content-between mb-1 text-white"><span>Total Abonado:</span> <span className="text-info fw-bold">${Number(pedido.monto_pago_adelantado || 0).toFixed(2)}</span></div>
+                  <div className="d-flex justify-content-between mb-1 text-white"><span>Total Abonado:</span> <span className="text-info-custom fw-bold">${Number(pedido.monto_pago_adelantado || 0).toFixed(2)}</span></div>
                   <div className="d-flex justify-content-between pt-2 border-top border-secondary text-white">
                     <span>Restante / Saldo:</span> <span className="text-success fw-bold">${Number((pedido.monto_total || 0) - (pedido.monto_pago_adelantado || 0)).toFixed(2)}</span>
                   </div>
@@ -278,7 +278,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                         textoNuevoMostrar = 'DEVUELTO (PENDIENTE)';
                       }
 
-                      let colorTema = '#ffc107';
+                      let colorTema = '#ecc43f';
                       let iconoEvento = 'bi-arrow-repeat';
                       let etiqueta = 'Flujo:';
 
@@ -295,7 +295,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                         iconoEvento = 'bi-arrow-return-left';
                         etiqueta = 'Flujo:';
                       } else if (esEntregado) {
-                        colorTema = '#00d2ff'; 
+                        colorTema = '#149ce0'; 
                         iconoEvento = 'bi-check-all';
                         etiqueta = 'Flujo:';
                       }

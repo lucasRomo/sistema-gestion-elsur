@@ -232,7 +232,7 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
               <div className="d-flex justify-content-end gap-2 mt-3 pt-3 border-top" style={{ borderColor: inputBorder }}>
                 <button 
                   type="button" 
-                  className="btn btn-danger px-4" 
+                  className="btn btn-danger px-4 fw-semibold" 
                   style={{ borderRadius: '8px', color: '#ffffff' }} 
                   onClick={onCerrar}
                 >
@@ -241,7 +241,7 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
                 <button 
   type="submit" 
   className="btn btn-info px-4 fw-semibold" 
-  style={{ borderRadius: '8px', color: '#ffffff' }}
+  style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: "#149bdf", borderColor: "#149bdf", }}
 >
   Guardar Cambios
 </button>

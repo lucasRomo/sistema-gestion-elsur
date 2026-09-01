@@ -68,7 +68,7 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 {/* ID */}
-                <td className="py-3 px-3 text-center text-info fw-bold">
+                <td className="py-3 px-3 text-center text-info-custom fw-bold">
                   #{i.idInsumo}
                 </td>
                 
@@ -78,7 +78,7 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
                 </td>
 
                 {/* Precio */}
-                <td className="py-3 px-3 text-center fw-semibold text-info">
+                <td className="py-3 px-3 text-center fw-semibold text-info-custom">
                   ${i.precio != null ? Number(i.precio).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                 </td>
 

@@ -95,14 +95,6 @@ html[data-bs-theme="light"] .form-control::placeholder {
   color: #a1a1aa !important;
 }
 
-html[data-bs-theme="light"] .form-control:focus, 
-html[data-bs-theme="light"] .form-select:focus {
-  border-color: #8e45e0 !important;
-  box-shadow: 0 0 0 0.25rem rgba(142, 69, 224, 0.2) !important;
-  background-color: #ffffff !important;
-  color: #18181b !important;
-}
-
 html[data-bs-theme="light"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   filter: none;
 }
@@ -464,7 +456,7 @@ html[data-bs-theme="light"] .card {
 }
 
 .text-info-custom {
-  color: #0284c7 !important; /* Azul/Celeste oscuro con alto contraste para modo claro */
+  color: #149bdf !important; /* Azul/Celeste oscuro con alto contraste para modo claro */
   transition: color 0.2s ease;
 }
 

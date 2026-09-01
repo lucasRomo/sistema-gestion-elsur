@@ -58,13 +58,17 @@ export const VistaTicketModal: React.FC<Props> = ({
 
           <div className="d-flex g-2 mb-3 p-1 bg-light rounded d-print-none">
             <button 
+              type="button"
               className={`btn btn-sm w-50 fw-bold transition-all ${tipoTicket === 'cliente' ? 'btn-dark' : 'text-secondary'}`}
+              style={{ color: tipoTicket === 'cliente' ? '#ffffff' : undefined }}
               onClick={() => setTipoTicket('cliente')}
             >
               <i className="bi bi-person-fill me-1"></i> Ticket Cliente
             </button>
             <button 
-              className={`btn btn-sm w-50 fw-bold transition-all ${tipoTicket === 'comanda' ? 'btn-warning text-dark' : 'text-secondary'}`}
+              type="button"
+              className={`btn btn-sm w-50 fw-bold transition-all ${tipoTicket === 'comanda' ? 'btn-warning' : 'text-secondary'}`}
+              style={{ color: tipoTicket === 'comanda' ? '#ffffff' : undefined }}
               onClick={() => setTipoTicket('comanda')}
             >
               <i className="bi bi-journal-text me-1"></i> Comanda Taller
@@ -177,12 +181,17 @@ export const VistaTicketModal: React.FC<Props> = ({
           </div>
 
           <div className="d-flex justify-content-between mt-4 border-top pt-2 d-print-none">
-            <button className="btn btn-secondary px-3" onClick={onClose}>
+            <button type="button" className="btn btn-secondary px-3 fw-bold" style={{ color: '#ffffff' }} onClick={onClose}>
               Cerrar
             </button>
             <button 
-              className="btn px-4 fw-bold text-white" 
-              style={{ backgroundColor: tipoTicket === 'comanda' ? '#d97706' : '#3d824b', border: 'none' }} 
+              type="button"
+              className="btn px-4 fw-bold" 
+              style={{ 
+                backgroundColor: tipoTicket === 'comanda' ? '#d97706' : '#3d824b', 
+                color: '#ffffff', 
+                border: 'none' 
+              }} 
               onClick={handleImprimir}
             >
               <i className="bi bi-printer-fill me-2"></i> Imprimir {tipoTicket === 'comanda' ? 'Comanda' : 'Ticket'}

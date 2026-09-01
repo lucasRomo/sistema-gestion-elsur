@@ -18,8 +18,8 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
   // Configuración de colores según la acción (Editar -> Celeste, Registrar -> Verde)
   const isEditing = Boolean(insumoEditando);
-  const accentColor = isEditing ? '#0dcaf0' : '#198754';
-  const buttonBgColor = isEditing ? '#0dcaf0' : '#198754';
+  const accentColor = isEditing ? '#149bdf' : '#198754';
+  const buttonBgColor = isEditing ? '#149bdf' : '#198754';
 
   // Paleta dinámica según el tema
   const modalBg = isDark ? '#18181b' : '#ffffff';
@@ -267,12 +267,12 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                 {/* SECCIÓN UNIDADES DE MEDIDA Y FACTOR CONVERSIÓN */}
                 <div className="p-3 mb-3 rounded" style={{ backgroundColor: boxBg, border: `1px solid ${boxBorder}` }}>
                   <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 className="fw-bold text-info m-0">Configuración de Unidades y Empaque</h6>
+                    <h6 className="fw-bold text-info-custom m-0">Configuración de Unidades y Empaque</h6>
                     <div className="d-flex gap-2">
                       <button 
                         type="button" 
                         className="btn btn-sm d-flex align-items-center gap-1 py-1 fw-bold"
-                        style={{ backgroundColor: '#09a4ca', color: '#ffffff' }}
+                        style={{ backgroundColor: '#149bdf', color: '#ffffff' }}
                         onClick={() => setShowRelacionesModal(true)}
                         title="Ver tabla de relaciones"
                       >

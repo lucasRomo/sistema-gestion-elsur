@@ -346,7 +346,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
         {/* FILA SUPERIOR COMPACTA */}
         <div className="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom border-secondary border-opacity-25">
           <div className="d-flex align-items-center gap-2">
-            <span className="fw-bold text-info font-monospace fs-5">#{p.id_pedido}</span>
+            <span className="fw-bold text-info font-monospace fs-5 .text-info-custom">#{p.id_pedido}</span>
             {p.cliente?.persona?.telefono && (
               <a href={`https://wa.me/${p.cliente.persona.telefono}`} target="_blank" rel="noreferrer" className="text-success me-1">
                 <i className="bi bi-whatsapp fs-5"></i>
@@ -392,12 +392,13 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
             </div>
 
             <button 
-              className="btn btn-sm btn-outline-info d-flex align-items-center gap-1 font-monospace"
-              onClick={() => setExpandido(!expandido)}
-            >
-              <span>{expandido ? "Menos" : "Más"}</span>
-              <i className={`bi bi-chevron-${expandido ? 'up' : 'down'}`}></i>
-            </button>
+  className="btn btn-sm btn-outline-info d-flex align-items-center gap-1 font-monospace .text-info-custom"
+  style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff'  } as React.CSSProperties}
+  onClick={() => setExpandido(!expandido)}
+>
+  <span>{expandido ? "Menos" : "Más"}</span>
+  <i className={`bi bi-chevron-${expandido ? 'up' : 'down'}`}></i>
+</button>
           </div>
         </div>
 
@@ -535,39 +536,43 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
               </div>
 
               <div className="d-flex gap-2">
-                <button 
-                  className="btn btn-sm btn-outline-info d-flex align-items-center gap-1"
-                  onClick={() => onSelectComprobantes(p)}
-                >
-                  <i className="bi bi-file-earmark-text"></i>
-                  <span>Comprobantes</span>
-                </button>
+  <button 
+    className="btn btn-sm btn-outline-info d-flex align-items-center gap-1 .text-info-custom"
+    style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
+    onClick={() => onSelectComprobantes(p)}
+  >
+    <i className="bi bi-file-earmark-text"></i>
+    <span>Comprobantes</span>
+  </button>
 
-                <button 
-                  className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
-                  onClick={() => onGestionarMermas && onGestionarMermas(p)}
-                >
-                  <i className="bi bi-trash3"></i>
-                  <span>Mermas</span>
-                </button>
+  <button 
+    className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
+    style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
+    onClick={() => onGestionarMermas && onGestionarMermas(p)}
+  >
+    <i className="bi bi-trash3"></i>
+    <span>Mermas</span>
+  </button>
 
-                <button 
-                  className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
-                  disabled={esDevolucionReabierta}
-                  onClick={() => !esDevolucionReabierta && onSelectPago(p)}
-                >
-                  <i className="bi bi-currency-dollar"></i>
-                  <span>Cobrar / Pago</span>
-                </button>
+  <button 
+    className="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
+    style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
+    disabled={esDevolucionReabierta}
+    onClick={() => !esDevolucionReabierta && onSelectPago(p)}
+  >
+    <i className="bi bi-currency-dollar"></i>
+    <span>Cobrar / Pago</span>
+  </button>
 
-                <button 
-                  className="btn btn-sm btn-outline-warning d-flex align-items-center gap-1"
-                  onClick={() => onSelectTicket(p)}
-                >
-                  <i className="bi bi-printer"></i>
-                  <span>Ticket</span>
-                </button>
-              </div>
+  <button 
+    className="btn btn-sm btn-outline-warning d-flex align-items-center gap-1"
+    style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
+    onClick={() => onSelectTicket(p)}
+  >
+    <i className="bi bi-printer"></i>
+    <span>Ticket</span>
+  </button>
+</div>
             </div>
 
             {/* FORMULARIOS / CONTROLES DE EDICIÓN */}

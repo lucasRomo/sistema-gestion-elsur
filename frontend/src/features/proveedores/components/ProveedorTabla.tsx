@@ -55,7 +55,7 @@ export const ProveedorTabla: React.FC<ProveedorTablaProps> = ({ proveedores, onE
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
-              <td className="py-3 px-3 fw-bold text-center text-info">
+              <td className="py-3 px-3 fw-bold text-center text-info-custom">
                 #{prov.idProveedor}
               </td>
               <td className="py-3 px-3 fw-bold text-start">

@@ -22,7 +22,7 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Paleta de colores adaptativa
+  // Paleta de colores adaptativa estándar
   const bgModal = isDark ? '#18181b' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const subTextColor = isDark ? '#a1a1aa' : '#64748b';
@@ -38,7 +38,7 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
   const [cargandoHistorial, setCargandoHistorial] = useState<boolean>(false);
   const [guardando, setGuardando] = useState<boolean>(false);
 
-  // Modal de Alerta / Advertencia
+  // Modal de Advertencia
   const [mostrarAlerta, setMostrarAlerta] = useState<boolean>(false);
   const [mensajeAlerta, setMensajeAlerta] = useState<string>('');
 
@@ -139,7 +139,6 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
     }
   };
 
-  // Helper para resolver el nombre del proveedor desde la merma o la lista de insumos
   const obtenerNombreProveedor = (merma: MermaEntity): string => {
     if (merma.insumo) {
       const provDirecto = (merma.insumo as any)?.proveedor;
@@ -154,7 +153,6 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
     return '';
   };
 
-  // Opciones únicas de Productos e Insumos
   const opcionesProductos = Array.from(
     new Set(
       historial
@@ -163,7 +161,6 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
     )
   );
 
-  // Opciones únicas de Proveedores
   const opcionesProveedores = Array.from(
     new Set(
       historial
@@ -172,7 +169,6 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
     )
   );
 
-  // Filtrado dinámico del historial (Nombre, Producto/Insumo y Proveedor)
   const historialFiltrado = historial.filter(m => {
     const nombreItem = (m.insumo?.nombreInsumo || m.producto?.nombreProducto || '').toLowerCase();
     const cumpleNombre = nombreItem.includes(filtroHistorialNombre.toLowerCase());
@@ -188,7 +184,7 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
 
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
-      <div className="modal-dialog modal-lg modal-dialog-centered">
+      <div className="modal-dialog modal-xl modal-dialog-centered">
         <form 
           onSubmit={handleGuardarMermas}
           className="modal-content font-monospace shadow-lg" 
@@ -203,7 +199,7 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
           <div className="modal-header border-bottom border-secondary-subtle pb-3">
             <h5 className="modal-title fw-bold text-warning d-flex align-items-center">
               <i className="bi bi-exclamation-diamond-fill me-2 fs-4"></i>
-              Gestión de Mermas
+              Gestión de Mermas de Insumos
             </h5>
             <button 
               type="button" 
@@ -233,7 +229,7 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
           </div>
 
           {/* Cuerpo del Modal */}
-          <div className="modal-body my-2" style={{ maxHeight: '55vh', overflowY: 'auto' }}>
+          <div className="modal-body my-2" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             {tabActiva === 'registrar' ? (
               <div>
                 <div className="position-relative mb-3">
@@ -417,35 +413,63 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
                       } as React.CSSProperties}
                     >
                       <thead>
-                        <tr 
-                          className="text-uppercase"
-                          style={{ 
-                            color: isDark ? '#eab308' : '#854d0e',
-                            backgroundColor: isDark ? '#27272a' : '#f1f5f9',
-                            borderBottom: `2px solid ${cardBorder}`
-                          }}
-                        >
-                          <th className="py-2">Fecha</th>
-                          <th className="py-2">Ítem</th>
-                          <th className="py-2">Proveedor</th>
-                          <th className="py-2 text-center">Cantidad</th>
-                          <th className="py-2">Motivo</th>
-                        </tr>
-                      </thead>
+  <tr 
+    className="text-uppercase"
+    style={{ 
+      color: isDark ? '#eab308' : '#854d0e',
+      backgroundColor: bgModal, 
+      borderBottom: `2px solid ${cardBorder}`
+    }}
+  >
+    <th className="py-2" style={{ backgroundColor: bgModal }}>Fecha</th>
+    <th className="py-2" style={{ backgroundColor: bgModal }}>Origen / Ítem</th>
+    <th className="py-2" style={{ backgroundColor: bgModal }}>Proveedor</th>
+    <th className="py-2 text-center" style={{ backgroundColor: bgModal }}>Cant.</th>
+    <th className="py-2" style={{ backgroundColor: bgModal }}>Motivo / Descripción</th>
+  </tr>
+</thead>
                       <tbody>
                         {historialFiltrado.map((m) => {
+                          const esInsumo = !!m.insumo;
                           const provNombre = obtenerNombreProveedor(m);
+                          const nombreItem = m.insumo?.nombreInsumo || m.producto?.nombreProducto || 'Desconocido';
+
                           return (
                             <tr key={m.idMerma || Math.random()} style={{ borderColor: cardBorder }}>
                               <td className="text-nowrap">{m.fechaMerma ? new Date(m.fechaMerma).toLocaleString('es-AR') : '-'}</td>
-                              <td className="fw-bold" style={{ color: isDark ? '#38bdf8' : '#0284c7' }}>
-                                {m.insumo?.nombreInsumo || m.producto?.nombreProducto || 'Merma'}
+                              <td>
+                                <div className="d-flex align-items-center gap-2">
+                                  <span 
+  className="px-2 py-1 rounded text-uppercase fw-semibold"
+  style={{
+    fontSize: '0.65rem',
+    lineHeight: 1,
+    display: 'inline-block',
+    backgroundColor: esInsumo 
+      ? (isDark ? 'rgba(56, 189, 248, 0.15)' : '#e0f2fe')
+      : (isDark ? 'rgba(74, 222, 128, 0.15)' : '#dcfce7'),
+    color: esInsumo 
+      ? (isDark ? '#38bdf8' : '#0369a1')
+      : (isDark ? '#4ade80' : '#15803d'),
+    border: `1px solid ${
+      esInsumo 
+        ? (isDark ? '#0284c7' : '#bae6fd')
+        : (isDark ? '#16a34a' : '#86efac')
+    }`
+  }}
+>
+  {esInsumo ? 'Insumo' : 'Producto'}
+</span>
+                                  <span className="fw-bold" style={{ color: textColor }}>
+                                    {nombreItem}
+                                  </span>
+                                </div>
                               </td>
                               <td className="fw-semibold" style={{ color: subTextColor }}>
                                 {provNombre || '-'}
                               </td>
-                              <td className="text-center fw-bold text-danger">-{m.cantidad}</td>
-                              <td style={{ maxWidth: '200px', wordBreak: 'break-word' }}>{m.descripcion}</td>
+                              <td className="text-center fw-bold text-danger text-nowrap">-{m.cantidad}</td>
+                              <td style={{ maxWidth: '240px', wordBreak: 'break-word' }}>{m.descripcion}</td>
                             </tr>
                           );
                         })}

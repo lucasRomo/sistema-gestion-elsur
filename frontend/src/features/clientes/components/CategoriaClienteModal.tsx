@@ -146,7 +146,7 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
             
             <div className={`modal-header border-bottom ${borderDivider}`}>
               <h5 className="modal-title font-monospace fw-bold" style={{ color: titleColor }}>
-                <i className="bi bi-tag-fill text-info me-2"></i> Categorías de Clientes y Descuentos
+                <i className="bi bi-tag-fill text-info-custom me-2"></i> Categorías de Clientes y Descuentos
               </h5>
               <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onCerrar}></button>
             </div>
@@ -237,9 +237,12 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
                         <td className="px-3 py-3 font-monospace small" style={{ color: tableText, whiteSpace: 'nowrap' }}>{c.idCategoria}</td>
                         <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.nombre}</td>
                         <td className="px-3 py-3">
-                          <span className="badge rounded-pill bg-info bg-opacity-75 font-monospace px-3 py-2 text-white" style={{ color: '#ffffff' }}>
-                            {c.descuentoAutomatico}% OFF
-                          </span>
+                          <span 
+  className="badge rounded-pill font-monospace px-3 py-2 text-white" 
+  style={{ backgroundColor: '#149bdf', color: '#ffffff' }}
+>
+  {c.descuentoAutomatico}% OFF
+</span>
                         </td>
                         <td className="px-3 py-3 text-center">
                           <div className="d-flex justify-content-center gap-2">

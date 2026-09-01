@@ -51,7 +51,7 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
   const modalBg = isDark ? '#18181b' : '#ffffff';
   const modalBorder = '#f59e0b'; 
   const textColor = isDark ? '#ffffff' : '#0f172a';
-  const cardBg = isDark ? '#27272a' : '#f8fafc';
+  const cardBg = isDark ? '#18181b' : '#f8fafc';
   const cardBorder = isDark ? '#3f3f46' : '#e2e8f0';
   const textMuted = isDark ? '#a1a1aa' : '#475569';
   const inputBg = isDark ? '#27272a' : '#ffffff';
@@ -62,7 +62,6 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
       const montoRealTotal = valorContado + (datosArqueo?.totalTransferencias || 0);
       const resultado = await onConfirmarCierre(montoRealTotal, observacion);
       
-      // Si el servicio responde true o se completa correctamente, se activa el modal de éxito local
       if (resultado !== false) {
         setDiferenciaFinal(diferenciaEfectivo);
         setShowExitoModal(true);
@@ -83,7 +82,7 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
 
   const handleCerrarExito = () => {
     setShowExitoModal(false);
-    onClose(); // Cierra el flujo completo y desmonta el modal
+    onClose();
   };
 
   if (showExitoModal) {
@@ -114,7 +113,6 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
             boxShadow: isDark ? '0 0 20px rgba(245, 158, 11, 0.15)' : '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
           }}
         >
-          
           <div className="modal-header border-0 justify-content-between pb-2">
             <h3 className="fw-bold m-0" style={{ color: textColor }}>
               {pasoJustificacion ? '⚠️ Justificación de Diferencia' : 'Cerrar Turno y Arqueo'}
@@ -147,47 +145,65 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
 
                   <div className="col-md-6">
                     <div className="p-3 rounded-3" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-                      <span className="fw-bold text-info fs-6 d-block mb-1">💳 Transferencias Digitales</span>
+                      <span className="fw-bold text-info fs-6 d-block mb-1 text-info-custom">💳 Transferencias Digitales</span>
                       <div className="d-flex justify-content-between small mt-3" style={{ color: textMuted }}>
                         <span>Total Digital Acumulado:</span>
-                        <span className="fw-bold text-info fs-5">${(datosArqueo?.totalTransferencias || 0).toLocaleString('es-AR')}</span>
+                        <span className="fw-bold text-info fs-5 text-info-custom">${(datosArqueo?.totalTransferencias || 0).toLocaleString('es-AR')}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mb-4">
+                {/* Sección del detalle de movimientos con mayor separación (mb-5) */}
+                <div className="mb-5">
                   <h6 className="fw-bold mb-2" style={{ color: textColor }}>Detalle de Movimientos del Turno</h6>
                   <div className="table-responsive rounded-3" style={{ maxHeight: '150px', overflowY: 'auto', border: `1px solid ${cardBorder}` }}>
-                    <table className={`table table-sm table-hover m-0 text-center align-middle ${isDark ? 'table-dark' : ''}`}>
-                      <thead style={{ position: 'sticky', top: 0, backgroundColor: cardBg, zIndex: 1 }}>
-                        <tr className="text-muted small">
-                          <th>Hora</th>
-                          <th>Monto</th>
-                          <th>Método</th>
-                          <th>Tipo</th>
-                          <th className="text-start">Descripción</th>
+                    <table 
+                      className="table table-sm table-hover m-0 text-center align-middle"
+                      style={{
+                        backgroundColor: 'transparent',
+                        '--bs-table-bg': 'transparent',
+                        '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                        color: textColor,
+                        borderColor: cardBorder
+                      } as React.CSSProperties}
+                    >
+                      <thead style={{ position: 'sticky', top: 0, backgroundColor: modalBg, zIndex: 1 }}>
+                        <tr className="text-muted small" style={{ backgroundColor: modalBg }}>
+                          <th style={{ backgroundColor: modalBg, color: textMuted }}>Hora</th>
+                          <th style={{ backgroundColor: modalBg, color: textMuted }}>Monto</th>
+                          <th style={{ backgroundColor: modalBg, color: textMuted }}>Método</th>
+                          <th style={{ backgroundColor: modalBg, color: textMuted }}>Tipo</th>
+                          <th className="text-start" style={{ backgroundColor: modalBg, color: textMuted }}>Descripción</th>
                         </tr>
                       </thead>
                       <tbody className="small">
                         {movimientos.length === 0 ? (
-                          <tr><td colSpan={5} className="py-3 text-muted">No hay movimientos registrados en este turno</td></tr>
+                          <tr>
+                            <td colSpan={5} className="py-3 text-muted" style={{ backgroundColor: 'transparent' }}>
+                              No hay movimientos registrados en este turno
+                            </td>
+                          </tr>
                         ) : (
-                          movimientos.map((m) => (
-                            <tr key={m.id_movimiento || m.idMovimiento}>
-                              <td>{new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}</td>
-                              <td className="fw-bold">${Number(m.monto).toFixed(2)}</td>
-                              <td>
+                          movimientos.map((m: any) => (
+                            <tr key={m.id_movimiento || m.idMovimiento} style={{ borderColor: cardBorder }}>
+                              <td style={{ backgroundColor: 'transparent', color: textColor }}>
+                                {new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                              </td>
+                              <td className="fw-bold" style={{ backgroundColor: 'transparent', color: textColor }}>
+                                ${Number(m.monto).toFixed(2)}
+                              </td>
+                              <td style={{ backgroundColor: 'transparent' }}>
                                 <span className="badge bg-secondary">
                                   {m.metodoPago || 'Efectivo'}
                                 </span>
                               </td>
-                              <td>
+                              <td style={{ backgroundColor: 'transparent' }}>
                                 <span 
                                   className="d-inline-block px-2 py-1 rounded fw-semibold"
                                   style={{
                                     backgroundColor: m.tipoMovimiento === 'INGRESO' ? '#1c9b4a' : '#ef4444',
-                                    color: '#f8f8f8',
+                                    color: '#ffffff',
                                     border: `1px solid ${m.tipoMovimiento === 'INGRESO' ? '#1c9b4a' : '#ef4444'}`,
                                     fontSize: '0.60rem'
                                   }}
@@ -195,7 +211,7 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
                                   {m.tipoMovimiento === 'INGRESO' ? 'Ganancia' : 'Egreso'}
                                 </span>
                               </td>
-                              <td className="text-start text-truncate" style={{ maxWidth: '200px' }}>
+                              <td className="text-start text-truncate" style={{ maxWidth: '200px', backgroundColor: 'transparent', color: textColor }}>
                                 {m.descripcion || '-'}
                               </td>
                             </tr>
@@ -206,8 +222,9 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
                   </div>
                 </div>
 
+                {/* Bloque de ingreso de efectivo con margen superior (mt-4) */}
                 <form id="form-cierre" onSubmit={handleValidarYSiguiente}>
-                  <div className="p-3 rounded-3 mb-3" style={{ backgroundColor: isDark ? '#222122' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
+                  <div className="p-3 rounded-3 mb-3 mt-4" style={{ backgroundColor: isDark ? '#18181b' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
                     <label htmlFor="efectivoReal" className="form-label small text-uppercase fw-bold text-warning d-block text-center">
                       Ingresá el efectivo contado en la caja física ($):
                     </label>
@@ -218,7 +235,7 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
                       id="efectivoReal"
                       className="form-control form-control-lg font-monospace text-center fs-2 fw-bold"
                       style={{
-                        backgroundColor: inputBg,
+                        backgroundColor: '#18181b',
                         color: inputTextColor,
                         borderColor: '#f59e0b',
                         borderRadius: '8px'

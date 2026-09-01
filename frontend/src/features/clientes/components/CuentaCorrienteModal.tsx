@@ -375,7 +375,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
 
                   {metodoPago === 'TRANSFERENCIA' && (
                     <div className="col-12 mt-2">
-                      <label className="form-label small fw-semibold text-info">
+                      <label className="form-label small fw-semibold text-info-custom">
                         <i className="bi bi-paperclip me-1"></i> Adjuntar Comprobante de Transferencia (Imagen)
                       </label>
                       <input 
@@ -389,9 +389,27 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                       {comprobanteImagen && (
                         <div className="mt-2 d-flex align-items-center gap-2">
                           <small className="text-success fw-bold"><i className="bi bi-check-circle me-1"></i>Imagen cargada</small>
-                          <button type="button" className="btn btn-sm btn-outline-info" onClick={() => setImagenModalUrl(comprobanteImagen)}>
-                            Ver vista previa
-                          </button>
+                          <button
+  type="button"
+  className="btn btn-sm fw-semibold"
+  style={{
+    color: '#149bdf',
+    borderColor: '#149bdf',
+    backgroundColor: 'transparent',
+    transition: 'all 0.2s ease-in-out'
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = '#149bdf';
+    e.currentTarget.style.color = '#fff';
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = 'transparent';
+    e.currentTarget.style.color = '#149bdf';
+  }}
+  onClick={() => setImagenModalUrl(comprobanteImagen)}
+>
+  Ver vista previa
+</button>
                         </div>
                       )}
                     </div>
@@ -538,8 +556,8 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
               
               <div className="d-flex flex-column gap-2 mt-3">
                 <button 
-                  style={{ backgroundColor: '#af3a32', border: 'none' }} 
-                  className="btn btn-secondary btn-sm px-4 fw-bold text-white" 
+                  style={{ backgroundColor: '#af3a32', border: 'none', color: "#ffffff" }} 
+                  className="btn btn-secondary btn-sm px-4 fw-bold" 
                   onClick={() => setSuceso({ ...suceso, show: false })}
                 >
                   Cerrar

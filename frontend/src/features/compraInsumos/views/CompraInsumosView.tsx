@@ -258,77 +258,77 @@ export const CompraInsumosView: React.FC = () => {
       <form onSubmit={handleSubmit}>
         <div className="p-4 rounded-3 mb-4" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="fw-bold text-info m-0"><i className="bi bi-cart-plus me-2"></i>Agregar Ítems a la Compra</h5>
+            <h5 className="fw-bold text-info-custom m-0"><i className="bi bi-cart-plus me-2"></i>Agregar Ítems a la Compra</h5>
             <div className="d-flex align-items-center gap-2">
-              <button
-                type="button"
-                className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1 shadow-sm"
-                onClick={() => setModalIaAbierto(true)}
-                style={{ backgroundColor: '#7109e7', border: 'none' }}
-              >
-                <i className="bi bi-magic"></i> Cargar con IA
-              </button>
+  <button
+    type="button"
+    className="btn btn-sm fw-bold d-flex align-items-center gap-1 shadow-sm"
+    onClick={() => setModalIaAbierto(true)}
+    style={{ backgroundColor: '#7109e7', border: 'none', color: "#ffffff" }}
+  >
+    <i className="bi bi-magic"></i> Cargar con IA
+  </button>
 
-              <div className="btn-group">
-                <button
-                  type="button"
-                  className="btn btn-sm fw-semibold"
-                  style={{
-                    backgroundColor: tipoItem === 'INSUMO' ? '#0f4685' : '#2b3035',
-                    color: tipoItem === 'INSUMO' ? '#ffffff' : '#a0a0a0',
-                    border: '#500dec'
-                  }}
-                  onClick={() => { setTipoItem('INSUMO'); resetFormItem(); }}
-                >
-                  Insumo
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-sm fw-semibold"
-                  style={{
-                    backgroundColor: tipoItem === 'PRODUCTO' ? '#2225d8' : '#2b3035',
-                    color: tipoItem === 'PRODUCTO' ? '#ffffff' : '#a0a0a0',
-                    border: 'none'
-                  }}
-                  onClick={() => { setTipoItem('PRODUCTO'); resetFormItem(); }}
-                >
-                  Producto (Sin Receta)
-                </button>
-              </div>
-            </div>
+  <div className="btn-group">
+    <button
+      type="button"
+      className="btn btn-sm fw-semibold"
+      style={{
+        backgroundColor: tipoItem === 'INSUMO' ? '#0f4685' : (isDark ? '#2b3035' : '#e2e8f0'),
+        color: tipoItem === 'INSUMO' ? '#ffffff' : (isDark ? '#a0a0a0' : '#475569'),
+        border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
+      }}
+      onClick={() => { setTipoItem('INSUMO'); resetFormItem(); }}
+    >
+      Insumo
+    </button>
+    <button
+      type="button"
+      className="btn btn-sm fw-semibold"
+      style={{
+        backgroundColor: tipoItem === 'PRODUCTO' ? '#2225d8' : (isDark ? '#2b3035' : '#e2e8f0'),
+        color: tipoItem === 'PRODUCTO' ? '#ffffff' : (isDark ? '#a0a0a0' : '#475569'),
+        border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
+      }}
+      onClick={() => { setTipoItem('PRODUCTO'); resetFormItem(); }}
+    >
+      Producto (Sin Receta)
+    </button>
+  </div>
+</div>
           </div>
 
           {tipoItem === 'INSUMO' ? (
             <>
               <div className="d-flex justify-content-between align-items-center mb-3">
-                <span className="fw-semibold small">Origen del Insumo:</span>
-                <div className="btn-group">
-                  <button
-                    type="button"
-                    className="btn btn-sm fw-semibold"
-                    style={{
-                      backgroundColor: !esNuevoInsumo ? '#d17b0a' : '#2b3035',
-                      color: !esNuevoInsumo ? '#fcfcfc' : '#a0a0a0',
-                      border: 'none'
-                    }}
-                    onClick={() => setEsNuevoInsumo(false)}
-                  >
-                    Insumo Existente
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-sm fw-semibold"
-                    style={{
-                      backgroundColor: esNuevoInsumo ? '#3aaa06' : '#2b3035',
-                      color: esNuevoInsumo ? '#ffffff' : '#a0a0a0',
-                      border: 'none'
-                    }}
-                    onClick={() => setEsNuevoInsumo(true)}
-                  >
-                    + Nuevo Insumo
-                  </button>
-                </div>
-              </div>
+  <span className="fw-semibold small">Origen del Insumo:</span>
+  <div className="btn-group">
+    <button
+      type="button"
+      className="btn btn-sm fw-semibold"
+      style={{
+        backgroundColor: !esNuevoInsumo ? '#d17b0a' : (isDark ? '#2b3035' : '#e2e8f0'),
+        color: !esNuevoInsumo ? '#ffffff' : (isDark ? '#a0a0a0' : '#475569'),
+        border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
+      }}
+      onClick={() => setEsNuevoInsumo(false)}
+    >
+      Insumo Existente
+    </button>
+    <button
+      type="button"
+      className="btn btn-sm fw-semibold"
+      style={{
+        backgroundColor: esNuevoInsumo ? '#258618' : (isDark ? '#2b3035' : '#e2e8f0'),
+        color: esNuevoInsumo ? '#ffffff' : (isDark ? '#a0a0a0' : '#475569'),
+        border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
+      }}
+      onClick={() => setEsNuevoInsumo(true)}
+    >
+      + Nuevo Insumo
+    </button>
+  </div>
+</div>
 
               {!esNuevoInsumo ? (
                 <div className="mb-3">
@@ -528,8 +528,8 @@ export const CompraInsumosView: React.FC = () => {
                 type="number"
                 step="0.01"
                 min="0.01"
-                className="form-control font-monospace fw-bold text-danger"
-                style={{ backgroundColor: inputBg, borderColor: inputBorder, fontSize: '1.2rem' }}
+                className="form-control font-monospace fw-bold text-danger "
+                style={{ backgroundColor: inputBg, borderColor: inputBorder, fontSize: '1rem', color: "#149bdf" }}
                 value={montoTotalGlobal}
                 onFocus={(e) => e.target.select()}
                 onChange={(e) => {
@@ -585,13 +585,13 @@ export const CompraInsumosView: React.FC = () => {
         </div>
 
         <div className="d-flex justify-content-end gap-3">
-          <button type="button" className="btn btn-secondary px-4 py-2" onClick={() => navigate('/caja')}>
+          <button type="button" className="btn btn-secondary px-4 py-2 fw-bold" onClick={() => navigate('/caja')}>
             Volver a Caja
           </button>
           <button
             type="submit"
-            className="btn px-4 py-2 text-white fw-bold"
-            style={{ backgroundColor: '#258618' }}
+            className="btn px-4 py-2 fw-bold"
+            style={{ backgroundColor: '#258618', color: "#ffffff" }}
             disabled={loading || !cajaAbierta}
           >
             {loading ? 'Procesando...' : 'Confirmar Compra'}

@@ -31,7 +31,7 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
   const cardBorder = isDark ? '#27272a' : '#e2e8f0';
   const inputBgClass = isDark ? 'bg-dark border-secondary' : 'bg-white border-secondary-subtle';
   const inputInnerBgClass = isDark ? 'bg-black border-secondary' : 'bg-white border-secondary-subtle';
-  const tableHeaderBg = isDark ? '#27272a' : '#f1f5f9';
+  const tableHeaderBg = isDark ? '#18181b' : '#ffffff';
 
   const [tabActiva, setTabActiva] = useState<'registrar' | 'historial'>('registrar');
   const [historial, setHistorial] = useState<MermaEntity[]>([]);

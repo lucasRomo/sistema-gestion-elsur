@@ -12,27 +12,49 @@ interface AvisoValidacionModalProps {
 export const AvisoValidacionModal: React.FC<AvisoValidacionModalProps> = ({
   mensaje,
   onClose,
-  isDark,
   cardBg,
-  cardBorder,
   textColor
 }) => {
   return (
-    <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1100 }} role="dialog">
-      <div className="modal-dialog modal-dialog-centered">
-        <div className={`modal-content ${textColor} font-monospace`} style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, borderRadius: '12px' }}>
-          <div className="modal-header border-bottom border-secondary">
-            <h5 className="modal-title fw-bold text-warning d-flex align-items-center gap-2">
-              <i className="bi bi-exclamation-triangle-fill"></i> Validación
-            </h5>
-            <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose}></button>
-          </div>
-          <div className="modal-body py-4">
-            <p className="m-0 fs-6">{mensaje}</p>
-          </div>
-          <div className="modal-footer border-top border-secondary">
-            <button type="button" className="btn btn-primary px-4 fw-bold" onClick={onClose}>
-              Entendido
+    <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)', zIndex: 1100 }} role="dialog">
+      <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '400px' }}>
+        <div 
+          className={`modal-content ${textColor} font-monospace p-4 text-center`} 
+          style={{ 
+            backgroundColor: cardBg, 
+            border: '2px solid #ffc107', /* <--- Borde amarillo del modal */
+            borderRadius: '20px' 
+          }}
+        >
+          <div className="d-flex flex-column align-items-center gap-3">
+            {/* Ícono circular de advertencia */}
+            <div 
+              className="d-flex align-items-center justify-content-center rounded-circle"
+              style={{
+                width: '60px',
+                height: '60px',
+                border: '2px solid #ffc107',
+                color: '#ffc107',
+                fontSize: '1.8rem'
+              }}
+            >
+              <i className="bi bi-exclamation-lg"></i>
+            </div>
+
+            {/* Título y Mensaje */}
+            <h4 className="fw-bold m-0 mt-2">Algo ha ido Mal</h4>
+            <p className="m-0 text-muted fs-6" style={{ lineHeight: '1.5' }}>
+              {mensaje}
+            </p>
+
+            {/* Botón de cierre */}
+            <button 
+              type="button" 
+              className="btn btn-secondary w-100 fw-bold mt-3 py-2" 
+              style={{ borderRadius: '10px' }}
+              onClick={onClose}
+            >
+              Cerrar
             </button>
           </div>
         </div>

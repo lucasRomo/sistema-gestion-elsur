@@ -398,7 +398,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
               className="btn btn-success px-4 fw-bold" 
               style={{ backgroundColor: '#288f47', border: 'none' }}
             >
-              {estado === 'PRESUPUESTO' ? 'Guardar Presupuesto' : 'Confirmar Pedido'} <i className="bi bi-check-lg ms-1"></i>
+              {estado === 'PRESUPUESTO' ? 'Guardar Presupuesto' : 'Confirmar Pedido'} <i className="bi ms-1"></i>
             </button>
           </div>
         </form>

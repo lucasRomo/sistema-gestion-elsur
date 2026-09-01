@@ -103,7 +103,7 @@ export const ConvertirInsumoModal: React.FC<ConvertirInsumoModalProps> = ({ show
                   <span>Equivalencia: 1 <strong>{unidadBulto}</strong> = <strong>{factor} {unidadSuelta}</strong></span>
                 </div>
                 <div className="mt-2 d-flex justify-content-between small">
-                  <span className="text-info fw-semibold">Stock Empaquetado: <strong>{stockBultos} {unidadBulto}</strong></span>
+                  <span className="text-info-custom fw-semibold">Stock Empaquetado: <strong>{stockBultos} {unidadBulto}</strong></span>
                   <span className="text-success fw-semibold">Stock Suelto: <strong>{insumo.stockActual} {unidadSuelta}</strong></span>
                 </div>
               </div>

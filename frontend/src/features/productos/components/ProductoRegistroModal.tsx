@@ -16,8 +16,8 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
 
   // Configuración de colores según la acción (Editar -> Celeste, Registrar -> Verde)
   const isEditing = Boolean(producto);
-  const accentColor = isEditing ? '#0dcaf0' : '#198754';
-  const buttonBgColor = isEditing ? '#0dcaf0' : '#198754';
+  const accentColor = isEditing ? '#149bdf' : '#198754';
+  const buttonBgColor = isEditing ? '#149bdf' : '#198754';
 
   const modalBg = isDark ? '#1e1e24' : '#ffffff';
   const subModalBg = isDark ? '#18181b' : '#ffffff';
@@ -429,11 +429,11 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
               </div>
               
               <div className={`modal-footer border-top ${borderDivider} py-2`}>
-                <button type="button" className="btn btn-sm btn-danger px-4" onClick={onClose}>Cancelar</button>
+                <button type="button" className="btn btn-sm btn-danger px-4 fw-bold " onClick={onClose}>Cancelar</button>
                 <button 
                   type="submit" 
-                  className="btn btn-sm px-4 text-white font-weight-bold" 
-                  style={{ backgroundColor: buttonBgColor, borderColor: buttonBgColor }}
+                  className="btn btn-sm px-4 fw-bold" 
+                  style={{ backgroundColor: buttonBgColor, borderColor: buttonBgColor, color: '#ffffff' }}
                 >
                   Guardar
                 </button>

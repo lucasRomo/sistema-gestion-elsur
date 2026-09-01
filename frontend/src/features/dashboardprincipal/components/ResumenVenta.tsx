@@ -157,8 +157,8 @@ export const ResumenVenta: React.FC<Props> = ({
       <div className="d-flex justify-content-between align-items-center gap-2 w-100 flex-wrap">
         <button 
           type="button"
-          className="btn btn-danger font-monospace py-2 text-center" 
-          style={{ backgroundColor: '#a63333', border: 'none', flex: '1 1 120px' }}
+          className="btn font-monospace fw-bold py-2 text-center" 
+          style={{ backgroundColor: '#a63333', color: '#ffffff', border: 'none', flex: '1 1 120px' }}
           onClick={onCancelar}
         >
           Cancelar
@@ -166,32 +166,32 @@ export const ResumenVenta: React.FC<Props> = ({
 
         {/* BOTÓN TICKET CLIENTE */}
         <button 
-  type="button" 
-  className="btn fw-bold py-2 text-dark font-monospace d-flex align-items-center justify-content-center gap-1"
-  style={{ backgroundColor: '#eab308', opacity: ultimoPedido ? 1 : 0.4, flex: '1 1 140px' }}
-  disabled={!ultimoPedido}
-  onClick={onImprimirTicketCliente}
->
-  <i className="bi bi-printer-fill fs-6"></i>
-  <span className="text-truncate">{ultimoPedido ? `T. Cliente #${idPedidoActual}` : 'T. Cliente'}</span>
-</button>
+          type="button" 
+          className="btn fw-bold py-2 font-monospace d-flex align-items-center justify-content-center gap-1"
+          style={{ backgroundColor: '#d8ac29', color: '#ffffff', opacity: ultimoPedido ? 1 : 0.4, flex: '1 1 140px' }}
+          disabled={!ultimoPedido}
+          onClick={onImprimirTicketCliente}
+        >
+          <i className="bi bi-printer-fill fs-6"></i>
+          <span className="text-truncate">{ultimoPedido ? `T. Cliente #${idPedidoActual}` : 'T. Cliente'}</span>
+        </button>
 
         {/* BOTÓN TICKET PAGO */}
         <button 
-  type="button" 
-  className="btn fw-bold py-2 text-dark font-monospace d-flex align-items-center justify-content-center gap-1"
-  style={{ backgroundColor: '#38bdf8', opacity: ultimoPedido ? 1 : 0.4, flex: '1 1 140px' }}
-  disabled={!ultimoPedido}
-  onClick={onImprimirTicketPago}
->
-  <i className="bi bi-receipt fs-6"></i>
-  <span className="text-truncate">{ultimoPedido ? `T. Pago #${idPedidoActual}` : 'T. Pago'}</span>
-</button>
+          type="button" 
+          className="btn fw-bold py-2 font-monospace d-flex align-items-center justify-content-center gap-1"
+          style={{ backgroundColor: '#27ace6', color: '#ffffff', opacity: ultimoPedido ? 1 : 0.4, flex: '1 1 140px' }}
+          disabled={!ultimoPedido}
+          onClick={onImprimirTicketPago}
+        >
+          <i className="bi bi-receipt fs-6"></i>
+          <span className="text-truncate">{ultimoPedido ? `T. Pago #${idPedidoActual}` : 'T. Pago'}</span>
+        </button>
 
         <button 
           type="button"
-          className="btn btn-success font-monospace fw-bold py-2 text-center" 
-          style={{ backgroundColor: '#3d824b', border: 'none', flex: '1 1 150px' }}
+          className="btn font-monospace fw-bold py-2 text-center" 
+          style={{ backgroundColor: '#3d824b', color: '#ffffff', border: 'none', flex: '1 1 150px' }}
           onClick={onCompletar}
         >
           Elegir Metodo de Pago

@@ -234,10 +234,10 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
             </div>
 
             <div className="modal-footer border-0 pt-0">
-              <button type="button" className="btn btn-danger px-4" onClick={onClose}>Cancelar</button>
+              <button type="button" className="btn btn-danger px-4 fw-bold" onClick={onClose}>Cancelar</button>
               <button 
                 type="button" 
-                className="btn btn-success px-4" 
+                className="btn fw-bold btn-success px-4" 
                 style={{ backgroundColor: '#16a34a', border: 'none' }}
                 onClick={() => setShowConfirm(true)}
               >

@@ -70,14 +70,15 @@ export const ModalDevolucionPedido: React.FC<Props> = ({
           </div>
 
           <div className="d-flex flex-column gap-2 mt-4">
-            <button 
-              type="button" 
-              disabled={cargando}
-              className="btn btn-warning fw-bold py-2 shadow"
-              onClick={() => handleConfirmar('REINICIAR')}
-            >
-              <i className="bi bi-arrow-clockwise me-2"></i>Volver a Hacer
-            </button>
+  <button 
+    type="button" 
+    disabled={cargando}
+    className="btn btn-warning fw-bold py-2 shadow"
+    style={{ color: '#ffffff' }}
+    onClick={() => handleConfirmar('REINICIAR')}
+  >
+    <i className="bi bi-arrow-clockwise me-2"></i>Volver a Hacer  
+  </button>
             <button 
               type="button" 
               disabled={cargando}

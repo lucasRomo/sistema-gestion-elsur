@@ -61,10 +61,10 @@ export const ProductoTabla: React.FC<Props> = ({
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
-              <td className="px-3 py-3 text-center text-info fw-bold">#{p.idProducto}</td>
+              <td className="px-3 py-3 text-center text-info-custom fw-bold">#{p.idProducto}</td>
               <td className="px-3 py-3 fw-bold text-start" style={{ color: tableText }}>{p.nombreProducto}</td>
               <td className="px-3 py-3 text-center" style={{ color: tableText }}>{p.categoria?.nombre || '-'}</td>
-              <td className="px-3 py-3 text-center fw-semibold text-info">${Number(p.precioBase).toFixed(2)}</td>
+              <td className="px-3 py-3 text-center fw-semibold text-info-custom">${Number(p.precioBase).toFixed(2)}</td>
               <td className="px-3 py-3 text-center">
                 <span className={p.stock > 0 ? "text-success fw-bold me-2" : "text-danger fw-bold me-2"}>
                   {p.stock}

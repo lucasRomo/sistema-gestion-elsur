@@ -304,11 +304,11 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
                                   key={t.idTipoProveedor}
                                   className="p-2 border-bottom text-truncate"
                                   style={{
-                                    cursor: 'pointer',
-                                    fontSize: '0.875rem',
-                                    backgroundColor: isSelected ? titleColorModal : (isDark ? '#27272a' : '#f8fafc'),
-                                    color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
-                                  }}
+  cursor: 'pointer',
+  fontSize: '0.875rem',
+  backgroundColor: isSelected ? '#149bdf' : (isDark ? '#27272a' : '#f8fafc'),
+  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+}}
                                   onMouseDown={() => {
                                     setFormState({ ...formState, tipoProveedor: t });
                                     setShowTipoProveedor(false);
@@ -361,11 +361,11 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
                                 key={opcion}
                                 className="p-2 border-bottom text-truncate"
                                 style={{
-                                  cursor: 'pointer',
-                                  fontSize: '0.875rem',
-                                  backgroundColor: isSelected ? titleColorModal : (isDark ? '#27272a' : '#f8fafc'),
-                                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
-                                }}
+  cursor: 'pointer',
+  fontSize: '0.875rem',
+  backgroundColor: isSelected ? '#149bdf' : (isDark ? '#27272a' : '#f8fafc'),
+  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+}}
                                 onMouseDown={() => {
                                   setFormState({ ...formState, estado: opcion });
                                   setShowEstado(false);

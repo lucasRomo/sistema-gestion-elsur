@@ -141,19 +141,20 @@ export const Insumos: React.FC = () => {
         
         <div className={`d-flex flex-wrap gap-2 ${isMobile ? 'w-100' : ''}`}>
           <button 
-            type="button"
-            className={`btn btn-outline-warning fw-bold d-flex align-items-center justify-content-center px-3 py-2 shadow-sm position-relative ${isMobile ? 'flex-fill text-nowrap' : ''}`}
-            onClick={() => setShowStockCriticoModal(true)}
-            title="Ver insumos con stock al límite o crítico"
-          >
-            <i className="bi bi-exclamation-triangle-fill fs-6 me-2"></i>
-            Stock Crítico
-            {cantidadCriticos > 0 && (
-              <span className="badge bg-danger rounded-pill ms-2">
-                {cantidadCriticos}
-              </span>
-            )}
-          </button>
+    type="button"
+    className={`btn btn-outline-warning fw-bold d-flex align-items-center justify-content-center px-3 py-2 shadow-sm position-relative ${isMobile ? 'flex-fill text-nowrap' : ''}`}
+    style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
+    onClick={() => setShowStockCriticoModal(true)}
+    title="Ver insumos con stock al límite o crítico"
+  >
+    <i className="bi bi-exclamation-triangle-fill fs-6 me-2"></i>
+    Stock Crítico
+    {cantidadCriticos > 0 && (
+      <span className="badge bg-danger rounded-pill ms-2">
+        {cantidadCriticos}
+      </span>
+    )}
+  </button>
 
           <button 
             className="btn btn-outline-success fw-bold d-flex align-items-center justify-content-center px-3 py-2 shadow-sm"
@@ -177,8 +178,8 @@ export const Insumos: React.FC = () => {
             type="button"
             className={`btn fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
             style={{ 
-              backgroundColor: '#0bc9f8', 
-              borderColor: '#0bc9f8', 
+              backgroundColor: '#149bdf', 
+              borderColor: '#149bdf', 
               color: '#ffffff',
               padding: '11px 24px',
               fontSize: '1rem',
