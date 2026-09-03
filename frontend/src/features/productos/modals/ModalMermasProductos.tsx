@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { Producto } from '../types/Producto';
 import { mermaService, type MermaEntity } from '../../../services/mermaService';
 import { useTheme } from '../../../Context/ThemeContext';
+import { getHistorialMermas, getRecetaPorProducto } from '../services/productoService';
 
 interface ModalMermasProductosProps {
   show: boolean;
@@ -54,7 +55,6 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Paleta adaptativa estandarizada
   const bgModal = isDark ? '#18181b' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const subTextColor = isDark ? '#a1a1aa' : '#64748b';
@@ -77,13 +77,11 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
   const [cargandoHistorial, setCargandoHistorial] = useState<boolean>(false);
   const [guardando, setGuardando] = useState<boolean>(false);
 
-  // Modal de advertencia
   const [mostrarAlerta, setMostrarAlerta] = useState<boolean>(false);
   const [mensajeAlerta, setMensajeAlerta] = useState<string>('');
 
   const [recetasMap, setRecetasMap] = useState<Record<number, InsumoReceta[]>>({});
 
-  // Filtros del Historial
   const [filtroHistorialNombre, setFiltroHistorialNombre] = useState<string>('');
   const [filtroHistorialCategoria, setFiltroHistorialCategoria] = useState<string>('TODOS');
   const [filtroHistorialMaquina, setFiltroHistorialMaquina] = useState<string>('TODOS');
@@ -91,11 +89,8 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
   const cargarHistorial = useCallback(async () => {
     setCargandoHistorial(true);
     try {
-      const res = await fetch('http://localhost:8080/api/mermas');
-      if (res.ok) {
-        const data = await res.json();
-        setHistorial(data);
-      }
+      const data = await getHistorialMermas();
+      setHistorial(data);
     } catch (err) {
       console.error('Error al cargar historial de mermas:', err);
     } finally {
@@ -115,13 +110,8 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
         const resultados = await Promise.all(
           productosConId.map(async (prod) => {
             try {
-              const res = await fetch(
-                `http://localhost:8080/api/producto-insumo/producto/${prod.idProducto}`
-              );
-              if (res.ok) {
-                const data = await res.json();
-                return { idProducto: prod.idProducto!, data };
-              }
+              const data = await getRecetaPorProducto(prod.idProducto!);
+              return { idProducto: prod.idProducto!, data };
             } catch (e) {
               console.error(`Error al cargar insumos del producto ${prod.idProducto}`, e);
             }
@@ -258,7 +248,6 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
             color: textColor
           }}
         >
-          {/* Header */}
           <div className="modal-header border-bottom border-secondary-subtle pb-3">
             <h5 className="modal-title fw-bold text-warning d-flex align-items-center">
               <i className="bi bi-box-seam-fill me-2 fs-4"></i>
@@ -271,7 +260,6 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
             ></button>
           </div>
 
-          {/* Pestañas */}
           <div className="px-3 pt-3">
             <div className="btn-group w-100">
               <button
@@ -293,7 +281,6 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
             </div>
           </div>
 
-          {/* Body */}
           <div className="modal-body my-2" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             {tabActiva === 'registrar' ? (
               <div>
@@ -505,7 +492,6 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
               </div>
             ) : (
               <div>
-                {/* Filtros */}
                 <div className="row g-2 mb-3">
                   <div className="col-md-4">
                     <div className="position-relative">
@@ -597,21 +583,21 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                 <div className="d-flex flex-column gap-1">
                                   <div className="d-flex align-items-center gap-2">
                                     <span 
-  className="text-uppercase fw-bold rounded-pill px-2 py-1 d-inline-flex align-items-center justify-content-center"
-  style={{
-    fontSize: '0.65rem',
-    lineHeight: '1',
-    backgroundColor: esInsumo 
-      ? (isDark ? '#0284c7' : '#e0f2fe')
-      : (isDark ? '#16a34a' : '#dcfce7'),
-    color: esInsumo 
-      ? (isDark ? '#ffffff' : '#0369a1')
-      : (isDark ? '#ffffff' : '#15803d'),
-    border: `1px solid ${esInsumo ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? '#4ade80' : '#16a34a')}`
-  }}
->
-  {esInsumo ? 'Insumo' : 'Producto'}
-</span>
+                                      className="text-uppercase fw-bold rounded-pill px-2 py-1 d-inline-flex align-items-center justify-content-center"
+                                      style={{
+                                        fontSize: '0.65rem',
+                                        lineHeight: '1',
+                                        backgroundColor: esInsumo 
+                                          ? (isDark ? '#0284c7' : '#e0f2fe')
+                                          : (isDark ? '#16a34a' : '#dcfce7'),
+                                        color: esInsumo 
+                                          ? (isDark ? '#ffffff' : '#0369a1')
+                                          : (isDark ? '#ffffff' : '#15803d'),
+                                        border: `1px solid ${esInsumo ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? '#4ade80' : '#16a34a')}`
+                                      }}
+                                    >
+                                      {esInsumo ? 'Insumo' : 'Producto'}
+                                    </span>
                                     <span className="fw-bold" style={{ color: textColor }}>
                                       {m.insumo?.nombreInsumo || m.producto?.nombreProducto || 'Merma'}
                                     </span>
@@ -678,7 +664,6 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
             )}
           </div>
 
-          {/* Footer */}
           <div className="modal-footer border-top border-secondary-subtle pt-2">
             <button
               type="button"
@@ -701,7 +686,6 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
         </div>
       </div>
 
-      {/* Modal / Cartel de Advertencia Personalizado */}
       {mostrarAlerta && (
         <div
           className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"

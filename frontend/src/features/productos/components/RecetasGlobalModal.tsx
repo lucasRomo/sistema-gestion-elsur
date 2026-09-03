@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
+import { getTodasLasRecetas } from '../services/productoService';
 
 interface Props {
   show: boolean;
@@ -28,16 +29,13 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
   const [idsConReceta, setIdsConReceta] = useState<Set<number>>(new Set());
   const [cargando, setCargando] = useState(false);
 
-  // Al abrir el modal, consultamos la tabla Producto_Insumo en el backend
   useEffect(() => {
     if (show) {
       setCargando(true);
-      fetch('http://localhost:8080/api/producto-insumo')
-        .then(res => res.json())
+      getTodasLasRecetas()
         .then((data: any[]) => {
           const ids = new Set<number>();
           data.forEach(item => {
-            // Mapea los ID de producto presentes en la tabla asociativa
             const idProd = item.id?.idProducto || item.producto?.idProducto;
             if (idProd) ids.add(idProd);
           });
@@ -50,7 +48,6 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
 
   if (!show) return null;
 
-  // Filtrar los productos cuyo idProducto esté registrado en la tabla asociativa
   const productosFiltrados = productos.filter(p => {
     const tieneReceta = p.idProducto ? idsConReceta.has(p.idProducto) : false;
     const coincideBusqueda = p.nombreProducto?.toLowerCase().includes(busqueda.toLowerCase());

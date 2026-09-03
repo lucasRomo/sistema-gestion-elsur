@@ -2,12 +2,6 @@ import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-// Tipo local y permisivo para lo que este módulo necesita.
-// Lo definimos acá en vez de importar `MovimientoCaja` de otro archivo porque
-// hoy conviven dos definiciones distintas de `MovimientoCaja` en el proyecto
-// (services/cajaService.ts y types/caja.ts) con `usuario` tipado de forma
-// diferente en cada una. Este tipo es compatible con ambas, así que
-// exportarCajaPDF/exportarCajaExcel funcionan sin importar cuál te llegue.
 export interface MovimientoCajaExport {
   id_movimiento?: number;
   idMovimiento?: number;

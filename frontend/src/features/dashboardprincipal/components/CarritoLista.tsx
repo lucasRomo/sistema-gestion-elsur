@@ -1,5 +1,5 @@
 import React from 'react';
-import type { CartItem } from '../../pedidos/types/Pedido';
+import type { CartItem } from '../../pedidos/general/types/Pedido';
 import { useTheme } from '../../../Context/ThemeContext';
 
 interface Props {

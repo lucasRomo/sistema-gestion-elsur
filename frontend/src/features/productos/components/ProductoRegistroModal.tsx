@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import type { Producto, Categoria } from '../types/Producto';
 import type { Maquina } from '../../maquinas/types/Maquina';
 import { useTheme } from '../../../Context/ThemeContext';
+import { 
+  getCategorias, 
+  crearCategoria, 
+  eliminarCategoria, 
+  getMaquinas 
+} from '../services/productoService';
 
 interface Props {
   show: boolean;
@@ -14,7 +20,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Configuración de colores según la acción (Editar -> Celeste, Registrar -> Verde)
   const isEditing = Boolean(producto);
   const accentColor = isEditing ? '#149bdf' : '#198754';
   const buttonBgColor = isEditing ? '#149bdf' : '#198754';
@@ -34,7 +39,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const [showCategorias, setShowCategorias] = useState<boolean>(false);
   const [nuevaCategoria, setNuevaCategoria] = useState<string>('');
   
-  // Estados para los menús desplegables custom
   const [textoMaquina, setTextoMaquina] = useState<string>('No aplica');
   const [showDropdownEstado, setShowDropdownEstado] = useState<boolean>(false);
   const [showDropdownMaquina, setShowDropdownMaquina] = useState<boolean>(false);
@@ -49,30 +53,24 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     estado: 'Activo'
   });
 
-  const cargarCategorias = async () => {
+  const cargarCategoriasData = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/categorias');
-      if (res.ok) {
-        const data = await res.json();
-        setCategorias(data);
-      }
+      const data = await getCategorias();
+      setCategorias(data);
     } catch (err) { console.error("Error cargando categorías:", err); }
   };
 
-  const cargarMaquinas = async () => {
+  const cargarMaquinasData = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/maquinas');
-      if (res.ok) {
-        const data = await res.json();
-        setMaquinas(data);
-      }
+      const data = await getMaquinas();
+      setMaquinas(data);
     } catch (err) { console.error("Error cargando máquinas:", err); }
   };
 
   useEffect(() => {
     if (show) {
-      cargarCategorias();
-      cargarMaquinas();
+      cargarCategoriasData();
+      cargarMaquinasData();
 
       if (producto) {
         setFormData({
@@ -121,39 +119,25 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     }
 
     try {
-      const res = await fetch('http://localhost:8080/api/categorias', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: nombreLimpio })
-      });
-
-      if (res.ok) {
-        setNuevaCategoria('');
-        cargarCategorias();
-      } else {
-        alert("No se pudo crear la categoría.");
-      }
+      await crearCategoria(nombreLimpio);
+      setNuevaCategoria('');
+      cargarCategoriasData();
     } catch (error) { 
-      alert("Error al conectar con el servidor."); 
+      alert("Error al crear categoría o conectar con el servidor."); 
     }
   };
 
   const handleEliminarCategoria = async (id: number) => {
     if (!confirm("¿Seguro que querés eliminar esta categoría?")) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/categorias/${id}`, {
-        method: 'DELETE'
-      });
-      if (res.ok) {
-        const catEliminada = categorias.find(c => c.idCategoria === id);
-        if (catEliminada && formData.nombreCategoria === catEliminada.nombre) {
-          setFormData(prev => ({ ...prev, nombreCategoria: '' }));
-        }
-        cargarCategorias();
-      } else {
-        alert("No se pudo eliminar, es posible que tenga productos asociados.");
+      await eliminarCategoria(id);
+      const catEliminada = categorias.find(c => c.idCategoria === id);
+      if (catEliminada && formData.nombreCategoria === catEliminada.nombre) {
+        setFormData(prev => ({ ...prev, nombreCategoria: '' }));
       }
+      cargarCategoriasData();
     } catch (error) {
+      alert("No se pudo eliminar, es posible que tenga productos asociados.");
       console.error("Error al eliminar categoría:", error);
     }
   };
@@ -203,7 +187,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
             <form onSubmit={handleSubmit}>
               <div className="modal-body p-4">
                 
-                {/* Nombre */}
                 <div className="mb-3">
                   <label className="form-label small fw-semibold" style={{ color: mutedText }}>Nombre del Producto</label>
                   <input 
@@ -220,7 +203,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                   />
                 </div>
                 
-                {/* Precio y Stock */}
                 <div className="row mb-3">
                   <div className="col-6">
                     <label className="form-label small fw-semibold" style={{ color: mutedText }}>Precio Base</label>
@@ -248,9 +230,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                   </div>
                 </div>
 
-                {/* Estado y Máquina */}
                 <div className="row mb-3">
-                  {/* Dropdown Custom: Estado del Producto */}
                   <div className="col-6">
                     <label className="form-label small fw-semibold" style={{ color: mutedText }}>Estado del Producto</label>
                     <div className="position-relative">
@@ -291,7 +271,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                     </div>
                   </div>
 
-                  {/* Dropdown Custom: Máquina Necesaria */}
                   <div className="col-6">
                     <label className="form-label small fw-semibold" style={{ color: mutedText }}>Máquina Necesaria</label>
                     <div className="position-relative">
@@ -314,7 +293,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                           className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
                           style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
                         >
-                          {/* Opción por defecto */}
                           <div
                             className="p-2 border-bottom text-truncate"
                             style={{ 
@@ -332,7 +310,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                             <span className="fw-semibold">No aplica</span>
                           </div>
                           
-                          {/* Lista de máquinas filtradas */}
                           {maquinas
                             .filter((m: any) => {
                               if (textoMaquina === 'No aplica' && formData.idMaquinaNecesaria === '') return true; 
@@ -369,7 +346,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                   </div>
                 </div>
 
-                {/* Dropdown Custom: Categoría */}
                 <div className="mb-3">
                   <label className="form-label small fw-semibold" style={{ color: mutedText }}>Categoría</label>
                   <div className="input-group position-relative">

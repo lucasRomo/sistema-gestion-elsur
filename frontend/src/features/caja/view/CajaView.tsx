@@ -12,7 +12,7 @@ import { ModalNuevoIngreso } from '../components/ModalNuevoIngreso';
 import { ModalConsultarArqueo } from '../components/ModalConsultarArqueo';
 import { ModalCerrarTurno } from '../components/ModalCerrarTurno';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
-import type { NuevoMovimientoDTO } from '../services/cajaService';
+import { cajaService, type NuevoMovimientoDTO } from '../services/cajaService';
 import { renderBadgeCategoria } from '../components/RenderBadgeCategoria';
 
 export const CajaView: React.FC = () => {
@@ -62,12 +62,6 @@ export const CajaView: React.FC = () => {
   const [imagenAjuste, setImagenAjuste] = useState<string | null>(null);
   const [motivoAjuste, setMotivoAjuste] = useState('');
   const [guardandoAjuste, setGuardandoAjuste] = useState(false);
-
-  const obtenerUrlComprobante = (url?: string | null): string => {
-    if (!url) return '';
-    if (url.startsWith('http') || url.startsWith('data:')) return url;
-    return `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`;
-  };
 
   const textColor = isDark ? 'text-white' : 'text-dark';
   const cardBg = isDark ? '#1e1e1f' : '#ffffff';
@@ -192,7 +186,6 @@ export const CajaView: React.FC = () => {
     setShowModalCierre(true);
   };
 
-  // Se remueve la asignación a setExitoModal para delegar el modal de confirmación a ModalCerrarTurno
   const ejecutarCierreCaja = async (montoRealEfectivo: number, observaciones?: string) => {
     setGuardandoCierre(true);
     try {
@@ -211,15 +204,10 @@ export const CajaView: React.FC = () => {
 
     if (idPedidoRaw && !isNaN(Number(idPedidoRaw))) {
       const idPedido = Number(idPedidoRaw);
-      try {
-        const response = await fetch(`http://localhost:8080/api/pedidos/${idPedido}`);
-        if (response.ok) {
-          const pedidoCompleto = await response.json();
-          setTicketSeleccionado({ pedido: pedidoCompleto, movimiento: m });
-          return;
-        }
-      } catch (error) {
-        console.error("Error consultando datos completos del pedido:", error);
+      const pedidoCompleto = await cajaService.obtenerPedidoPorId(idPedido);
+      if (pedidoCompleto) {
+        setTicketSeleccionado({ pedido: pedidoCompleto, movimiento: m });
+        return;
       }
     }
 
@@ -860,7 +848,7 @@ export const CajaView: React.FC = () => {
               </div>
               <div className="text-center p-2">
                 <img 
-                  src={obtenerUrlComprobante(imagenComprobanteModal)} 
+                  src={cajaService.obtenerUrlComprobante(imagenComprobanteModal)} 
                   alt="Comprobante Transferencia" 
                   className="img-fluid rounded shadow" 
                   style={{ maxHeight: '70vh', objectFit: 'contain' }} 

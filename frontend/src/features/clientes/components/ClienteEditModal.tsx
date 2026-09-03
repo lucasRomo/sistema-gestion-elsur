@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { clienteService, type TipoDocumento } from '../services/clienteService';
 
 interface ClienteEditModalProps {
   cliente: any;
@@ -7,13 +8,11 @@ interface ClienteEditModalProps {
 }
 
 export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onCerrar, onConfirmar }) => {
-  // Lista dinámica traída del backend
-  const [tiposDocumento, setTiposDocumento] = useState<any[]>([]);
+  // Lista dinámica traída desde el servicio
+  const [tiposDocumento, setTiposDocumento] = useState<TipoDocumento[]>([]);
   const [showTipoDoc, setShowTipoDoc] = useState(false);
-  const [showEstado, setShowEstado] = useState(false);
   
   const [editData, setEditData] = useState<any>({
-    // 🟢 CLAVE PARA EL ERROR: Enviar id_cliente coincide con @JsonProperty("id_cliente") en Java
     id_cliente: cliente.id_cliente || cliente.idCliente,
     idCliente: cliente.idCliente || cliente.id_cliente,
     razonSocial: cliente.razonSocial || '',
@@ -39,22 +38,9 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
 
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
-  // Cargamos los tipos de documentos disponibles al montar el modal
   useEffect(() => {
-    fetch('http://localhost:8080/api/tipos-documento')
-      .then(res => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
-      .then(data => setTiposDocumento(data))
-      .catch(() => {
-       setTiposDocumento([
-       { idTipoDocumento: 1, nombreTipo: 'DNI', nombre: 'DNI' },
-       { idTipoDocumento: 2, nombreTipo: 'CUIT', nombre: 'CUIT' },
-       { idTipoDocumento: 3, nombreTipo: 'CUIL', nombre: 'CUIL' },
-       { idTipoDocumento: 4, nombreTipo: 'PASAPORTE', nombre: 'PASAPORTE' }
-        ]);
-      });
+    clienteService.getTiposDocumento()
+      .then(data => setTiposDocumento(data));
   }, []);
 
   const handlePersonaChange = (field: string, value: string) => {
@@ -165,9 +151,9 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                         className="form-control text-white"
                         style={{ backgroundColor: '#222226', borderColor: '#3f3f46', cursor: 'pointer' }}
                         value={
-                          tiposDocumento.find((t: any) => t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento)
+                          tiposDocumento.find((t: TipoDocumento) => t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento)
                             ?.nombreTipo ||
-                          tiposDocumento.find((t: any) => t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento)
+                          tiposDocumento.find((t: TipoDocumento) => t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento)
                             ?.nombre ||
                           'Seleccione Un Tipo'
                         }
@@ -180,7 +166,7 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                           className="position-absolute w-100 shadow rounded mt-1 overflow-auto bg-dark text-white"
                           style={{ maxHeight: '180px', zIndex: 1060, border: '1px solid #3f3f46', top: '100%', left: 0 }}
                         >
-                          {tiposDocumento.map((t: any) => {
+                          {tiposDocumento.map((t: TipoDocumento) => {
                             const isSelected = t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento;
                             return (
                               <div

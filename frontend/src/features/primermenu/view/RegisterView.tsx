@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
-import { PersonaForm } from '../../auth/PersonaForm';
+import { PersonaForm } from '../../auth/persona/view/PersonaForm';
 import { EmpleadoModal } from '../../usuarios/components/EmpleadoModal';
-import { ExitoModal } from '../../auth/ExitoModal';
+import { ExitoModal } from '../../../components/modals/ExitoModal';
 import { useRegister } from '../hooks/useRegister';
 
 interface RegisterViewProps {

@@ -1,23 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
-
-interface PedidoBackend {
-  id_pedido: number;
-  cliente?: {
-    persona?: {
-      nombre?: string;
-      apellido?: string;
-    };
-    razonSocial?: string;
-    razon_social?: string;
-    nombre?: string;
-  };
-  fecha_entrega_estimada: string;
-  estado: string;
-  observaciones?: string; 
-  observacion?: string;
-  estante?: string;
-}
+import { ventaRapidaService, type PedidoNotificacion } from '../services/ventaRapidaService';
 
 export const NotificacionesCard: React.FC = () => {
   const { theme } = useTheme();
@@ -29,99 +12,21 @@ export const NotificacionesCard: React.FC = () => {
   const [ingresosTurno, setIngresosTurno] = useState<number>(0);
   const [egresosTurno, setEgresosTurno] = useState<number>(0);
 
-  const [pedidosUrgentes, setPedidosUrgentes] = useState<
-    { id: number; cliente: string; estadoTiempo: 'vencido' | 'urgente'; minDiferencia: number }[]
-  >([]);
+  const [pedidosUrgentes, setPedidosUrgentes] = useState<PedidoNotificacion[]>([]);
   const [cargando, setCargando] = useState<boolean>(true);
 
   const fetchNotificaciones = async () => {
     try {
-      const resCaja = await fetch('http://localhost:8080/api/turnos/estado-caja');
-      if (resCaja.ok) {
-        const textRes = await resCaja.text();
-        if (textRes) {
-          const dataCaja = JSON.parse(textRes);
-          setCajaAbierta(true);
-          setDatosTurno(dataCaja);
+      // 1. Obtener datos de caja
+      const estadoCaja = await ventaRapidaService.getEstadoCajaNotificacion();
+      setCajaAbierta(estadoCaja.cajaAbierta);
+      setDatosTurno(estadoCaja.datosTurno);
+      setIngresosTurno(estadoCaja.ingresosTurno);
+      setEgresosTurno(estadoCaja.egresosTurno);
 
-          const resTotales = await fetch('http://localhost:8080/api/movimientos-caja/totales');
-          if (resTotales.ok) {
-            const dataTotales = await resTotales.json();
-            setIngresosTurno(dataTotales.totalIngresos || 0);
-            setEgresosTurno(dataTotales.totalEgresos || 0);
-          }
-        } else {
-          setCajaAbierta(false);
-          setDatosTurno(null);
-          setIngresosTurno(0);
-          setEgresosTurno(0);
-        }
-      }
-
-      const resPedidos = await fetch('http://localhost:8080/api/pedidos');
-      if (resPedidos.ok) {
-        const dataPedidos: PedidoBackend[] = await resPedidos.json();
-        const ahora = new Date().getTime();
-
-        const urgentesOExcedidos: {
-          id: number;
-          cliente: string;
-          estadoTiempo: 'vencido' | 'urgente';
-          minDiferencia: number;
-        }[] = [];
-
-        dataPedidos.forEach((p) => {
-          const obs = (p.observaciones || p.observacion || '').toLowerCase();
-          const esVentaRapida = obs.includes('venta rápida') || p.estante === 'Venta Rápida';
-          if (esVentaRapida) return;
-
-          const estadoUpper = (p.estado || '').toUpperCase().trim();
-          if (
-            !estadoUpper ||
-            estadoUpper === 'PRESUPUESTO' ||
-            estadoUpper === 'ENTREGADO' ||
-            estadoUpper === 'CANCELADO' ||
-            estadoUpper === 'FINALIZADO' ||
-            estadoUpper === 'COMPLETADO'
-          ) {
-            return;
-          }
-
-          if (!p.fecha_entrega_estimada) return;
-
-          const fechaEntrega = new Date(p.fecha_entrega_estimada).getTime();
-          const diffMs = fechaEntrega - ahora;
-          const diffMin = Math.floor(diffMs / (1000 * 60));
-
-          const nombreCliente = p.cliente?.persona
-            ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido || ''}`.trim()
-            : (p.cliente?.razonSocial || p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
-
-          if (diffMin <= 0) {
-            urgentesOExcedidos.push({
-              id: p.id_pedido,
-              cliente: nombreCliente,
-              estadoTiempo: 'vencido',
-              minDiferencia: Math.abs(diffMin),
-            });
-          } else if (diffMin <= 60) {
-            urgentesOExcedidos.push({
-              id: p.id_pedido,
-              cliente: nombreCliente,
-              estadoTiempo: 'urgente',
-              minDiferencia: diffMin,
-            });
-          }
-        });
-
-        urgentesOExcedidos.sort((a, b) => {
-          if (a.estadoTiempo === 'vencido' && b.estadoTiempo !== 'vencido') return -1;
-          if (a.estadoTiempo !== 'vencido' && b.estadoTiempo === 'vencido') return 1;
-          return a.minDiferencia - b.minDiferencia;
-        });
-
-        setPedidosUrgentes(urgentesOExcedidos);
-      }
+      // 2. Obtener pedidos urgentes
+      const urgentes = await ventaRapidaService.getPedidosUrgentesNotificacion();
+      setPedidosUrgentes(urgentes);
     } catch (error) {
       console.error('Error al cargar notificaciones:', error);
     } finally {
@@ -313,7 +218,7 @@ export const NotificacionesCard: React.FC = () => {
                     border: isDark ? '1px dashed #ef444455' : '1px dashed #fca5a5' 
                   }}
                 >
-                  Abra la caja del dia o Espere a mañana para continuar
+                  Abra la caja del día o Espere a mañana para continuar
                 </div>
               )}
             </div>

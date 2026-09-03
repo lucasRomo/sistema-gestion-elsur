@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { pedidoService } from '../../pedidos/service/pedidoService'; 
+import { pedidoService } from '../../pedidos/general/service/pedidoService'; 
 import { getInsumosBajoStock } from '../../insumos/services/insumoService';
 import { cajaService } from '../../caja/services/cajaService';
 import { incidenciaService } from '../../maquinas/service/incidenciaService';

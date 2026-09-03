@@ -1,4 +1,3 @@
-import type { DatosCompraInsumo } from '../components/ModalCompraInsumos';
 import { API_BASE_URL } from '../../../config/api';
 
 export interface MovimientoCaja {
@@ -76,6 +75,26 @@ export interface Turno {
 }
 
 export const cajaService = {
+  // --- MÉTODOS DE COMPROBANTES Y URLS ---
+  obtenerUrlComprobante: (url?: string | null): string => {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
+    return `${API_BASE_URL.replace('/api', '')}${url.startsWith('/') ? '' : '/'}${url}`;
+  },
+
+  // --- MÉTODOS DE PEDIDOS ---
+  obtenerPedidoPorId: async (idPedido: number): Promise<any | null> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/pedidos/${idPedido}`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (error) {
+      console.error('Error en cajaService.obtenerPedidoPorId:', error);
+      return null;
+    }
+  },
+
+  // --- MÉTODOS DE CAJA Y MOVIMIENTOS ---
   obtenerTodos: async (): Promise<MovimientoCaja[]> => {
     try {
       const response = await fetch(`${API_BASE_URL}/movimientos-caja`);
@@ -227,32 +246,4 @@ export const cajaService = {
 
 export const cajaServiceExtended = {
   ...cajaService,
-
-  registrarCompraInsumo: async (datos: DatosCompraInsumo): Promise<any> => {
-    const usuarioGuardado = localStorage.getItem('usuario_logueado');
-    const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
-    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario || 1;
-
-    const payload = {
-      ...datos,
-      idUsuario
-    };
-
-    const response = await fetch(`${API_BASE_URL}/compras-insumos`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(errText || 'Error al registrar la compra de insumos');
-    }
-
-    try {
-      return await response.json();
-    } catch {
-      return null;
-    }
-  }
 };

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { UnidadMedida } from '../types/Insumo';
 import { useTheme } from '../../../Context/ThemeContext';
+import { crearUnidadMedida, eliminarUnidadMedida } from '../services/insumoService';
 
 interface GestionUnidadesModalProps {
   show: boolean;
@@ -33,15 +34,12 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Estados para Modal de Confirmación de Eliminación
   const [idEliminar, setIdEliminar] = useState<number | null>(null);
   const [mostrarModalConfirmar, setMostrarModalConfirmar] = useState(false);
 
-  // Estados para Modal de Éxito
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
 
-  // Filtrado dinámico de la lista de unidades existentes
   const unidadesFiltradas = useMemo(() => {
     if (!busqueda.trim()) return unidades;
     return unidades.filter(u => 
@@ -56,7 +54,6 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
     const nombreLimpio = nuevoNombre.trim();
     if (!nombreLimpio) return;
 
-    // Validar duplicados localmente
     const existeDuplicado = unidades.some(
       u => u.nombre?.trim().toLowerCase() === nombreLimpio.toLowerCase()
     );
@@ -69,16 +66,7 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
     try {
       setCargando(true);
       setError(null);
-      const res = await fetch('http://localhost:8080/api/unidades-medida', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: nombreLimpio })
-      });
-
-      if (!res.ok) {
-        const errorMsg = await res.text();
-        throw new Error(errorMsg || 'Error al guardar la unidad de medida');
-      }
+      await crearUnidadMedida(nombreLimpio);
 
       setNuevoNombre('');
       onActualizar();
@@ -91,25 +79,19 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
     }
   };
 
-  // Solicitar confirmación con el modal personalizado
   const solicitarEliminar = (idUnidad?: number) => {
     if (!idUnidad) return;
     setIdEliminar(idUnidad);
     setMostrarModalConfirmar(true);
   };
 
-  // Confirmar y procesar eliminación
   const confirmarEliminacion = async () => {
     if (!idEliminar) return;
 
     try {
       setCargando(true);
       setError(null);
-      const res = await fetch(`http://localhost:8080/api/unidades-medida/${idEliminar}`, {
-        method: 'DELETE'
-      });
-
-      if (!res.ok) throw new Error('No se pudo eliminar la unidad. Es posible que esté asignada a un insumo.');
+      await eliminarUnidadMedida(idEliminar);
 
       setMostrarModalConfirmar(false);
       setIdEliminar(null);
@@ -166,7 +148,6 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
                 </div>
               )}
 
-              {/* Formulario de creación */}
               <form onSubmit={handleAgregar} className="mb-4">
                 <label className="form-label small fw-semibold" style={{ color: labelColor }}>Agregar Nueva Unidad</label>
                 <div className="input-group">
@@ -206,7 +187,6 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
                 </div>
               </form>
 
-              {/* Buscador y Lista de unidades */}
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <label className="form-label small mb-0 fw-semibold" style={{ color: labelColor }}>
                   Unidades Existentes ({unidadesFiltradas.length})
@@ -269,7 +249,6 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
         </div>
       </div>
 
-      {/* --- SUB-MODAL DE CONFIRMACIÓN DE ELIMINACIÓN --- */}
       {mostrarModalConfirmar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1065 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
@@ -309,7 +288,6 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
         </div>
       )}
 
-      {/* --- SUB-MODAL DE ÉXITO --- */}
       {mostrarModalExito && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">

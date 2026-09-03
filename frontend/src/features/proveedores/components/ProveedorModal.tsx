@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import type { Proveedor } from '../types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
+import { 
+  getTiposProveedor, 
+  crearTipoProveedor, 
+  eliminarTipoProveedor 
+} from '../services/proveedorService';
 
 interface ProveedorModalProps {
   show: boolean;
@@ -51,9 +56,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
 
   const cargarCategorias = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/tipos-proveedor');
-      if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await getTiposProveedor();
       setTiposProveedor(data);
     } catch {
       setTiposProveedor([
@@ -88,16 +91,10 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     }
 
     try {
-      const res = await fetch('http://localhost:8080/api/tipos-proveedor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ descripcion: nombreLimpio })
-      });
-      if (res.ok) {
-        setNuevaCategoria('');
-        if (inputElem) inputElem.setCustomValidity('');
-        cargarCategorias();
-      }
+      await crearTipoProveedor(nombreLimpio);
+      setNuevaCategoria('');
+      if (inputElem) inputElem.setCustomValidity('');
+      cargarCategorias();
     } catch {
       alert("Error al guardar la nueva categoría");
     }
@@ -111,18 +108,13 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     if (!idCategoriaAEliminar) return;
 
     try {
-      const res = await fetch(`http://localhost:8080/api/tipos-proveedor/${idCategoriaAEliminar}`, {
-        method: 'DELETE'
-      });
-
-      if (res.ok) {
-        if (formState?.tipoProveedor?.idTipoProveedor === idCategoriaAEliminar) {
-          setFormState(prev => prev ? { ...prev, tipoProveedor: undefined } : null);
-        }
-        cargarCategorias();
-        setIdCategoriaAEliminar(null);
-        setMostrarExitoEliminar(true); 
+      await eliminarTipoProveedor(idCategoriaAEliminar);
+      if (formState?.tipoProveedor?.idTipoProveedor === idCategoriaAEliminar) {
+        setFormState(prev => prev ? { ...prev, tipoProveedor: undefined } : null);
       }
+      cargarCategorias();
+      setIdCategoriaAEliminar(null);
+      setMostrarExitoEliminar(true); 
     } catch (error) {
       alert("No se pudo eliminar la categoría (puede que esté en uso por otra entidad).");
       setIdCategoriaAEliminar(null);
@@ -304,11 +296,11 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
                                   key={t.idTipoProveedor}
                                   className="p-2 border-bottom text-truncate"
                                   style={{
-  cursor: 'pointer',
-  fontSize: '0.875rem',
-  backgroundColor: isSelected ? '#149bdf' : (isDark ? '#27272a' : '#f8fafc'),
-  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
-}}
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem',
+                                    backgroundColor: isSelected ? '#149bdf' : (isDark ? '#27272a' : '#f8fafc'),
+                                    color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                                  }}
                                   onMouseDown={() => {
                                     setFormState({ ...formState, tipoProveedor: t });
                                     setShowTipoProveedor(false);
@@ -361,11 +353,11 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
                                 key={opcion}
                                 className="p-2 border-bottom text-truncate"
                                 style={{
-  cursor: 'pointer',
-  fontSize: '0.875rem',
-  backgroundColor: isSelected ? '#149bdf' : (isDark ? '#27272a' : '#f8fafc'),
-  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
-}}
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem',
+                                  backgroundColor: isSelected ? '#149bdf' : (isDark ? '#27272a' : '#f8fafc'),
+                                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                                }}
                                 onMouseDown={() => {
                                   setFormState({ ...formState, estado: opcion });
                                   setShowEstado(false);

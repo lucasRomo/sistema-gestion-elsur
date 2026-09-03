@@ -18,10 +18,6 @@ export interface MovimientoCaja {
   comprobante?: string;
   imagenComprobante?: string;
   fecha: string;
-  // Antes era solo { idUsuario?; id_usuario? }. El backend a veces devuelve
-  // el usuario como string (nombre de usuario ya resuelto) y a veces como
-  // objeto completo, así que unificamos acá con UsuarioCaja | string para
-  // que coincida con lo que services/cajaService.ts espera.
   usuario?: UsuarioCaja | string;
   pedido?: {
     idPedido?: number;

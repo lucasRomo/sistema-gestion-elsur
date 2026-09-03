@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { pedidoService } from '../../pedidos/service/pedidoService';
+import { pedidoService } from '../../pedidos/general/service/pedidoService';
 import { cajaService, type MovimientoCaja } from '../../caja/services/cajaService';
 import { getProductos } from '../../productos/services/productoService';
 import { API_BASE_URL } from '../../../config/api';

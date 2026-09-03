@@ -1,9 +1,40 @@
-// services/ventaRapidaService.ts
 import type { Producto } from '../../productos/types/Producto';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
 
 const API_BASE = 'http://localhost:8080/api';
+
+export interface EstadoCajaNotificacion {
+  cajaAbierta: boolean;
+  datosTurno: any | null;
+  ingresosTurno: number;
+  egresosTurno: number;
+}
+
+export interface PedidoNotificacion {
+  id: number;
+  cliente: string;
+  estadoTiempo: 'vencido' | 'urgente';
+  minDiferencia: number;
+}
+
+interface PedidoBackend {
+  id_pedido: number;
+  cliente?: {
+    persona?: {
+      nombre?: string;
+      apellido?: string;
+    };
+    razonSocial?: string;
+    razon_social?: string;
+    nombre?: string;
+  };
+  fecha_entrega_estimada: string;
+  estado: string;
+  observaciones?: string;
+  observacion?: string;
+  estante?: string;
+}
 
 export const ventaRapidaService = {
   async getProductosActivos(): Promise<Producto[]> {
@@ -94,5 +125,102 @@ export const ventaRapidaService = {
     if (!resEstado.ok) throw new Error(await resEstado.text() || "Error al actualizar estado.");
 
     return pedidoGuardado;
+  },
+
+  // --- MÉTODOS DE NOTIFICACIONES ---
+
+  async getEstadoCajaNotificacion(): Promise<EstadoCajaNotificacion> {
+    const resCaja = await fetch(`${API_BASE}/turnos/estado-caja`);
+    if (!resCaja.ok) {
+      return { cajaAbierta: false, datosTurno: null, ingresosTurno: 0, egresosTurno: 0 };
+    }
+
+    const textRes = await resCaja.text();
+    if (!textRes) {
+      return { cajaAbierta: false, datosTurno: null, ingresosTurno: 0, egresosTurno: 0 };
+    }
+
+    const dataCaja = JSON.parse(textRes);
+    let ingresosTurno = 0;
+    let egresosTurno = 0;
+
+    try {
+      const resTotales = await fetch(`${API_BASE}/movimientos-caja/totales`);
+      if (resTotales.ok) {
+        const dataTotales = await resTotales.json();
+        ingresosTurno = dataTotales.totalIngresos || 0;
+        egresosTurno = dataTotales.totalEgresos || 0;
+      }
+    } catch (error) {
+      console.error("Error al obtener totales de caja:", error);
+    }
+
+    return {
+      cajaAbierta: true,
+      datosTurno: dataCaja,
+      ingresosTurno,
+      egresosTurno
+    };
+  },
+
+  async getPedidosUrgentesNotificacion(): Promise<PedidoNotificacion[]> {
+    const resPedidos = await fetch(`${API_BASE}/pedidos`);
+    if (!resPedidos.ok) throw new Error("Error al consultar pedidos");
+
+    const dataPedidos: PedidoBackend[] = await resPedidos.json();
+    const ahora = new Date().getTime();
+    const urgentesOExcedidos: PedidoNotificacion[] = [];
+
+    dataPedidos.forEach((p) => {
+      const obs = (p.observaciones || p.observacion || '').toLowerCase();
+      const esVentaRapida = obs.includes('venta rápida') || p.estante === 'Venta Rápida';
+      if (esVentaRapida) return;
+
+      const estadoUpper = (p.estado || '').toUpperCase().trim();
+      if (
+        !estadoUpper ||
+        estadoUpper === 'PRESUPUESTO' ||
+        estadoUpper === 'ENTREGADO' ||
+        estadoUpper === 'CANCELADO' ||
+        estadoUpper === 'FINALIZADO' ||
+        estadoUpper === 'COMPLETADO'
+      ) {
+        return;
+      }
+
+      if (!p.fecha_entrega_estimada) return;
+
+      const fechaEntrega = new Date(p.fecha_entrega_estimada).getTime();
+      const diffMs = fechaEntrega - ahora;
+      const diffMin = Math.floor(diffMs / (1000 * 60));
+
+      const nombreCliente = p.cliente?.persona
+        ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido || ''}`.trim()
+        : (p.cliente?.razonSocial || p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
+
+      if (diffMin <= 0) {
+        urgentesOExcedidos.push({
+          id: p.id_pedido,
+          cliente: nombreCliente,
+          estadoTiempo: 'vencido',
+          minDiferencia: Math.abs(diffMin),
+        });
+      } else if (diffMin <= 60) {
+        urgentesOExcedidos.push({
+          id: p.id_pedido,
+          cliente: nombreCliente,
+          estadoTiempo: 'urgente',
+          minDiferencia: diffMin,
+        });
+      }
+    });
+
+    urgentesOExcedidos.sort((a, b) => {
+      if (a.estadoTiempo === 'vencido' && b.estadoTiempo !== 'vencido') return -1;
+      if (a.estadoTiempo !== 'vencido' && b.estadoTiempo === 'vencido') return 1;
+      return a.minDiferencia - b.minDiferencia;
+    });
+
+    return urgentesOExcedidos;
   }
 };

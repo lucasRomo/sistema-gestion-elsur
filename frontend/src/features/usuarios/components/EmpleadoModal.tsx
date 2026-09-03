@@ -1,6 +1,5 @@
-// src/components/EmpleadoModal.tsx
 import React from 'react';
-import logoGesta from '../../../assets/logo-gestaprog.png'; // Ajusta la ruta a tu carpeta de assets
+import { validarExisteUsuario } from '../services/usuarioService';
 
 interface EmpleadoModalProps {
   formData: any;
@@ -16,23 +15,15 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
 
   const handleValidarUsuario = async (e: React.FocusEvent<HTMLInputElement>) => {
     const input = e.target;
-    const valor = input.value.trim();
+    const valor = input.value;
 
-    if (valor.length > 0) {
-      try {
-        const response = await fetch(`http://localhost:8080/api/usuarios/exists?nombreUsuario=${encodeURIComponent(valor)}`);
-        if (response.ok) {
-          const existe = await response.json();
-          if (existe) {
-            // Asignamos el mensaje personalizado y mostramos el globito flotante
-            input.setCustomValidity("Usuario ya Registrado, Intente con uno Nuevo");
-            input.reportValidity();
-          } else {
-            input.setCustomValidity("");
-          }
-        }
-      } catch (error) {
-        console.error("Error al validar nombre de usuario:", error);
+    if (valor.trim().length > 0) {
+      const existe = await validarExisteUsuario(valor);
+      if (existe) {
+        input.setCustomValidity("Usuario ya Registrado, Intente con uno Nuevo");
+        input.reportValidity();
+      } else {
+        input.setCustomValidity("");
       }
     }
   };
@@ -42,10 +33,8 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
       <div className="modal-dialog w-100 p-3" style={{ maxWidth: '440px' }}>
         <div className="modal-content p-4 rounded-4 position-relative" style={{ backgroundColor: '#1e1e22', border: '1.5px solid #a855f7' }}>
           
-
           <div className="position-absolute top-50 start-50 translate-middle opacity-5 text-center pointer-events-none" style={{ zIndex: 0 }}>
           </div>
-
 
           <div className="position-relative" style={{ zIndex: 1 }}>
             <form onSubmit={onRegistrar}>
@@ -74,30 +63,44 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
                 </div>
 
                 <div className="col-12">
-                  <label className="form-label text-light small" >Fecha de Contratación:</label>
+                  <label className="form-label text-light small">Fecha de Contratación:</label>
                   <input type="date" className="form-control bg-dark text-white border-secondary" style={{ colorScheme: 'dark' }} value={formData.fechaContratacion} onChange={e => handleChange('fechaContratacion', e.target.value)} required />
                 </div>
 
-
                 <div className="col-12">
                   <label className="form-label text-light small">Cargo:</label>
-                  <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Ingrese el Cargo" value={formData.cargo} onChange={e => handleChange('cargo', e.target.value)} required pattern="[A-Za-zÁ-Úá-ú\s]+" 
-                  onInvalid={(e: any) => {
-                  if (e.target.validity.valueMissing) e.target.setCustomValidity("Completa este campo");
-                  else e.target.setCustomValidity("El Campo Cargo solo debe contener letras");
-                  }}
-                  onInput={(e: any) => e.target.setCustomValidity("")}/>
+                  <input 
+                    type="text" 
+                    className="form-control bg-dark text-white border-secondary" 
+                    placeholder="Ingrese el Cargo" 
+                    value={formData.cargo} 
+                    onChange={e => handleChange('cargo', e.target.value)} 
+                    required 
+                    pattern="[A-Za-zÁ-Úá-ú\s]+" 
+                    onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) e.target.setCustomValidity("Completa este campo");
+                      else e.target.setCustomValidity("El Campo Cargo solo debe contener letras");
+                    }}
+                    onInput={(e: any) => e.target.setCustomValidity("")}
+                  />
                 </div>
-
 
                 <div className="col-12 mb-4">
-                 <label className="form-label text-light small">Salario:</label>
-                 <input type="text" className="form-control bg-dark text-white border-secondary" placeholder="Ingrese el Salario" value={formData.salario} onChange={(e) => { const value = e.target.value;
-                 if (value === "" || /^\d*\.?\d*$/.test(value)) {
-                 handleChange('salario', value);}}}
-                 required/>
+                  <label className="form-label text-light small">Salario:</label>
+                  <input 
+                    type="text" 
+                    className="form-control bg-dark text-white border-secondary" 
+                    placeholder="Ingrese el Salario" 
+                    value={formData.salario} 
+                    onChange={(e) => { 
+                      const value = e.target.value;
+                      if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                        handleChange('salario', value);
+                      }
+                    }}
+                    required
+                  />
                 </div>
-                
               </div>
 
               <div className="d-flex flex-column gap-2 mt-2">

@@ -10,7 +10,12 @@ import { RecetaModal } from '../components/RecetaModal';
 import { RecetasGlobalModal } from '../components/RecetasGlobalModal';
 import { ModalMermasProductos } from '../modals/ModalMermasProductos';
 import { useProductos } from '../hooks/useProductos';
-import { actualizarPreciosMasivo, toggleStockVinculado, type ActualizarPreciosPayload } from '../services/productoService';
+import { 
+  actualizarPreciosMasivo, 
+  toggleStockVinculado, 
+  getRecetaPorProducto, 
+  type ActualizarPreciosPayload 
+} from '../services/productoService';
 import type { Producto } from '../types/Producto';
 import { exportarProductosExcel, exportarProductosPDF } from '../utils/exportProductosUtils';
 import { ModalStockCriticoList, type ItemStockCritico } from '../../insumos/modals/ModalStockCriticoList';
@@ -97,15 +102,11 @@ export const Productos: React.FC = () => {
     if (!producto.idProducto) return;
     if (!producto.stockVinculado) {
       try {
-        const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`);
-        if (res.ok) {
-          const recetaData = await res.json();
-          
-          if (!recetaData || recetaData.length === 0) {
-            setProductoSinReceta(producto);
-            setShowSinRecetaModal(true);
-            return; 
-          }
+        const recetaData = await getRecetaPorProducto(producto.idProducto);
+        if (!recetaData || recetaData.length === 0) {
+          setProductoSinReceta(producto);
+          setShowSinRecetaModal(true);
+          return; 
         }
       } catch (err) {
         console.error("Error al verificar la receta del producto:", err);
@@ -176,7 +177,7 @@ export const Productos: React.FC = () => {
         )}
 
         <div className={`d-flex flex-wrap gap-2 ${isMobile ? 'w-100' : ''}`}>
-                  <button 
+          <button 
             type="button"
             className={`btn btn-outline-warning fw-bold d-flex align-items-center justify-content-center px-3 py-2 shadow-sm position-relative ${isMobile ? 'flex-fill text-nowrap' : ''}`}
             style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
@@ -331,20 +332,20 @@ export const Productos: React.FC = () => {
                 </button>
                 
                 <button 
-  className="btn btn-warning btn-sm px-4 fw-bold" 
-  style={{ color: '#ffffff' }}
-  onClick={() => {
-    const prod = productoSinReceta;
-    setShowSinRecetaModal(false);
-    setProductoSinReceta(null);
-    if (prod) {
-      setProductoSeleccionadoReceta(prod);
-      setShowRecetaModal(true);
-    }
-  }}
->
-  Configurar Receta
-</button>
+                  className="btn btn-warning btn-sm px-4 fw-bold" 
+                  style={{ color: '#ffffff' }}
+                  onClick={() => {
+                    const prod = productoSinReceta;
+                    setShowSinRecetaModal(false);
+                    setProductoSinReceta(null);
+                    if (prod) {
+                      setProductoSeleccionadoReceta(prod);
+                      setShowRecetaModal(true);
+                    }
+                  }}
+                >
+                  Configurar Receta
+                </button>
               </div>
             </div>
           </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Insumo } from '../types/Insumo';
 import type { Proveedor } from '../../proveedores/types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
+import { getProveedores } from '../services/insumoService';
 
 interface InsumoProveedoresModalProps {
   show: boolean;
@@ -17,7 +18,6 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
   const isDark = theme === 'dark';
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
 
-
   const modalBg = isDark ? '#18181b' : '#ffffff';
   const modalBorder = isDark ? '#a855f7' : '#a855f7';
   const tableHeaderBg = isDark ? '#18181b' : '#ffffff';
@@ -26,10 +26,8 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
   useEffect(() => {
     if (show && insumo?.proveedor?.tipoProveedor) {
       setCargando(true);
-      fetch('http://localhost:8080/api/proveedores')
-        .then(res => res.json())
+      getProveedores()
         .then((data: Proveedor[]) => {
-          // Filtramos primero por categoría
           const compat = data.filter(
             p => p.tipoProveedor?.idTipoProveedor === insumo.proveedor?.tipoProveedor?.idTipoProveedor
           );
@@ -43,7 +41,6 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
     }
   }, [show, insumo]);
 
-  // ◄ NUEVO: Lógica de filtrado local
   const proveedoresFiltrados = proveedores.filter(p => 
     filtroEstado === 'Todos' ? true : p.estado === filtroEstado
   );
@@ -69,40 +66,39 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
                 <span className="badge bg-dark border border-secondary text-info">{insumo.proveedor?.tipoProveedor?.descripcion || 'Sin categoría'}</span>
               </div>
               
-              {/* ◄ NUEVO: Selector de filtro */}
               <div className="d-flex align-items-center gap-2">
                 <span className="small" style={{ color: mutedText }}>Filtrar Estado:</span>
-               <select 
-  className={`form-select form-select-sm ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'} border-secondary`}
-  style={{ width: '130px' }}
-  value={filtroEstado}
-  onChange={(e) => setFiltroEstado(e.target.value)}
->
-  <option value="Todos">Todos</option>
-  <option value="Activo">Activo</option>
-  <option value="Desactivado">Desactivado</option>
-</select>
+                <select 
+                  className={`form-select form-select-sm ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'} border-secondary`}
+                  style={{ width: '130px' }}
+                  value={filtroEstado}
+                  onChange={(e) => setFiltroEstado(e.target.value)}
+                >
+                  <option value="Todos">Todos</option>
+                  <option value="Activo">Activo</option>
+                  <option value="Desactivado">Desactivado</option>
+                </select>
               </div>
             </div>
 
             <div className="table-responsive rounded border border-secondary" style={{ maxHeight: '300px', overflowY: 'auto' }}>
               <table className={`table table-hover m-0 align-middle text-center ${isDark ? 'table-dark' : ''}`} style={{ fontSize: '0.85rem' }}>
                 <thead 
-  className="sticky-top" 
-  style={{ 
-    backgroundColor: tableHeaderBg, 
-    color: tableHeaderTextColor, 
-    zIndex: 1 
-  }}
->
-  <tr>
-    <th>ID</th>
-    <th>Nombre Comercial</th>
-    <th>Contacto</th>
-    <th>Email</th>
-    <th>Estado</th>
-  </tr>
-</thead>
+                  className="sticky-top" 
+                  style={{ 
+                    backgroundColor: tableHeaderBg, 
+                    color: tableHeaderTextColor, 
+                    zIndex: 1 
+                  }}
+                >
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre Comercial</th>
+                    <th>Contacto</th>
+                    <th>Email</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {cargando ? (
                     <tr><td colSpan={5} className="text-center py-3" style={{ color: mutedText }}>Buscando...</td></tr>

@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
 import { cajaService, cajaServiceExtended } from '../services/cajaService';
-import type { DatosCompraInsumo } from '../components/ModalCompraInsumos';
 import type { MovimientoCaja, DatosArqueo, NuevoMovimientoDTO, Turno } from '../services/cajaService';
 
 export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
@@ -96,17 +95,6 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     if (turnoActual) await fetchMovimientos(turnoActual.idTurno);
   };
 
-  const comprarInsumo = async (datos: DatosCompraInsumo) => {
-    const resultado = await cajaServiceExtended.registrarCompraInsumo(datos);
-
-    setSaldoCaja((prev) => prev - datos.montoTotal);
-    setEgresosTurno((prev) => prev + datos.montoTotal);
-
-    if (turnoActual) await fetchMovimientos(turnoActual.idTurno);
-
-    return resultado;
-  };
-
   const ajustarMovimiento = async (
     movimientoOriginal: MovimientoCaja,
     montoAjuste: number,
@@ -181,7 +169,6 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     abrirCaja,
     consultarArqueo,
     guardarMovimiento,
-    comprarInsumo,
     ajustarMovimiento,
     cerrarCaja
   };

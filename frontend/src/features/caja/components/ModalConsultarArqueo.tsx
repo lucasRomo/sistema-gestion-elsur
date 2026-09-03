@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
+import { cajaService } from '../services/cajaService';
 import type { DatosArqueo, MovimientoCaja } from '../types/caja';
 
 interface ModalConsultarArqueoProps {
@@ -9,16 +10,6 @@ interface ModalConsultarArqueoProps {
   montoInicial?: number;
   movimientos: MovimientoCaja[];
 }
-
-const BASE_URL = 'http://localhost:8080';
-
-// El backend guarda rutas relativas (ej. "/uploads/archivo.png").
-// Si ya viene una URL absoluta (http... o base64) la dejamos igual.
-const resolverUrlComprobante = (url: string | null | undefined): string | null => {
-  if (!url) return null;
-  if (url.startsWith('http') || url.startsWith('data:')) return url;
-  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
-};
 
 export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({ 
   isOpen, 
@@ -35,7 +26,6 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
   if (!isOpen) return null;
 
   const modalBg = isDark ? '#18181b' : '#ffffff';
-  // Borde celeste aplicado para resaltar el modal
   const modalBorder = '#38bdf8'; 
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const cardBg = isDark ? '#18181b' : '#f8fafc';
@@ -124,100 +114,99 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
               </div>
 
               <div className="table-responsive rounded-3" style={{ maxHeight: '150px', overflowY: 'auto', border: `1px solid ${cardBorder}` }}>
-  <table 
-    className="table table-sm table-hover m-0 text-center align-middle"
-    style={{
-      backgroundColor: 'transparent',
-      '--bs-table-bg': 'transparent',
-      '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-      color: textColor,
-      borderColor: cardBorder
-    } as React.CSSProperties}
-  >
-    <thead style={{ position: 'sticky', top: 0, backgroundColor: modalBg, zIndex: 1 }}>
-      <tr className="text-muted small" style={{ backgroundColor: modalBg }}>
-        <th style={{ backgroundColor: modalBg, color: textMuted }}>Hora</th>
-        <th style={{ backgroundColor: modalBg, color: textMuted }}>Monto</th>
-        <th style={{ backgroundColor: modalBg, color: textMuted }}>Método</th>
-        <th style={{ backgroundColor: modalBg, color: textMuted }}>Tipo</th>
-        <th className="text-start" style={{ backgroundColor: modalBg, color: textMuted }}>Descripción</th>
-        <th style={{ backgroundColor: modalBg, color: textMuted }}>Comprobante</th>
-      </tr>
-    </thead>
-    <tbody className="small">
-      {movimientos.length === 0 ? (
-        <tr>
-          <td colSpan={6} className="py-3 text-muted" style={{ backgroundColor: 'transparent' }}>
-            No hay movimientos registrados en este turno
-          </td>
-        </tr>
-      ) : (
-        movimientos.map((m: any) => {
-          const imagenAdjunta = resolverUrlComprobante(
-            m.comprobanteImagen || m.comprobante || m.imagenComprobante
-          );
-          return (
-            <tr key={m.id_movimiento || m.idMovimiento} style={{ borderColor: cardBorder }}>
-              <td style={{ backgroundColor: 'transparent', color: textColor }}>
-                {new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-              </td>
-              <td className="fw-bold" style={{ backgroundColor: 'transparent', color: textColor }}>
-                ${Number(m.monto).toFixed(2)}
-              </td>
-              <td style={{ backgroundColor: 'transparent' }}>
-                <span className="badge bg-secondary">
-                  {m.metodoPago || 'Efectivo'}
-                </span>
-              </td>
-              <td style={{ backgroundColor: 'transparent' }}>
-                <span 
-                  className="d-inline-block px-2 py-1 rounded fw-semibold"
+                <table 
+                  className="table table-sm table-hover m-0 text-center align-middle"
                   style={{
-                    backgroundColor: m.tipoMovimiento === 'INGRESO' 
-                      ? '#1c9b4a' 
-                      : '#ef4444',
-                    color: '#ffffff',
-                    border: `1px solid ${m.tipoMovimiento === 'INGRESO' ? '#1c9b4a' : '#ef4444'}`,
-                    fontSize: '0.60rem'
-                  }}
+                    backgroundColor: 'transparent',
+                    '--bs-table-bg': 'transparent',
+                    '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                    color: textColor,
+                    borderColor: cardBorder
+                  } as React.CSSProperties}
                 >
-                  {m.tipoMovimiento === 'INGRESO' ? 'Ganancia' : 'Egreso'}
-                </span>
-              </td>
-              <td className="text-start text-truncate" style={{ maxWidth: '180px', backgroundColor: 'transparent', color: textColor }}>
-                {m.descripcion || '-'}
-              </td>
-              <td style={{ backgroundColor: 'transparent' }}>
-                {imagenAdjunta ? (
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-info p-0 px-2 text-info-custom"
-                    title="Ver Comprobante Adjunto"
-                    onClick={() => setImagenModalUrl(imagenAdjunta)}
-                  >
-                    <i className="bi bi-file-image"></i>
-                  </button>
-                ) : (
-                  <span className="text-muted opacity-50">-</span>
-                )}
-              </td>
-            </tr>
-          );
-        })
-      )}
-    </tbody>
-  </table>
-</div>
+                  <thead style={{ position: 'sticky', top: 0, backgroundColor: modalBg, zIndex: 1 }}>
+                    <tr className="text-muted small" style={{ backgroundColor: modalBg }}>
+                      <th style={{ backgroundColor: modalBg, color: textMuted }}>Hora</th>
+                      <th style={{ backgroundColor: modalBg, color: textMuted }}>Monto</th>
+                      <th style={{ backgroundColor: modalBg, color: textMuted }}>Método</th>
+                      <th style={{ backgroundColor: modalBg, color: textMuted }}>Tipo</th>
+                      <th className="text-start" style={{ backgroundColor: modalBg, color: textMuted }}>Descripción</th>
+                      <th style={{ backgroundColor: modalBg, color: textMuted }}>Comprobante</th>
+                    </tr>
+                  </thead>
+                  <tbody className="small">
+                    {movimientos.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-3 text-muted" style={{ backgroundColor: 'transparent' }}>
+                          No hay movimientos registrados en este turno
+                        </td>
+                      </tr>
+                    ) : (
+                      movimientos.map((m: any) => {
+                        const rawUrl = m.comprobanteImagen || m.comprobante || m.imagenComprobante;
+                        const imagenAdjunta = rawUrl ? cajaService.obtenerUrlComprobante(rawUrl) : null;
+                        
+                        return (
+                          <tr key={m.id_movimiento || m.idMovimiento} style={{ borderColor: cardBorder }}>
+                            <td style={{ backgroundColor: 'transparent', color: textColor }}>
+                              {new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td className="fw-bold" style={{ backgroundColor: 'transparent', color: textColor }}>
+                              ${Number(m.monto).toFixed(2)}
+                            </td>
+                            <td style={{ backgroundColor: 'transparent' }}>
+                              <span className="badge bg-secondary">
+                                {m.metodoPago || 'Efectivo'}
+                              </span>
+                            </td>
+                            <td style={{ backgroundColor: 'transparent' }}>
+                              <span 
+                                className="d-inline-block px-2 py-1 rounded fw-semibold"
+                                style={{
+                                  backgroundColor: m.tipoMovimiento === 'INGRESO' 
+                                    ? '#1c9b4a' 
+                                    : '#ef4444',
+                                  color: '#ffffff',
+                                  border: `1px solid ${m.tipoMovimiento === 'INGRESO' ? '#1c9b4a' : '#ef4444'}`,
+                                  fontSize: '0.60rem'
+                                }}
+                              >
+                                {m.tipoMovimiento === 'INGRESO' ? 'Ganancia' : 'Egreso'}
+                              </span>
+                            </td>
+                            <td className="text-start text-truncate" style={{ maxWidth: '180px', backgroundColor: 'transparent', color: textColor }}>
+                              {m.descripcion || '-'}
+                            </td>
+                            <td style={{ backgroundColor: 'transparent' }}>
+                              {imagenAdjunta ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-info p-0 px-2 text-info-custom"
+                                  title="Ver Comprobante Adjunto"
+                                  onClick={() => setImagenModalUrl(imagenAdjunta)}
+                                >
+                                  <i className="bi bi-file-image"></i>
+                                </button>
+                              ) : (
+                                <span className="text-muted opacity-50">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-              {/* Agregás 'mt-4' o 'mt-5' al className */}
-<div className="p-3 rounded-3 text-center mt-4" style={{ backgroundColor: consolidatedBg, border: `1px solid ${cardBorder}` }}>
-  <span className="text-uppercase small fw-bold d-block mb-1" style={{ color: textMuted }}>
-    Saldo Total Estimado Hoy
-  </span>
-  <h2 className="fw-bold m-0" style={{ color: consolidatedText }}>
-    ${saldoTotalConsolidado.toLocaleString('es-AR')}
-  </h2>
-</div>
+              <div className="p-3 rounded-3 text-center mt-4" style={{ backgroundColor: consolidatedBg, border: `1px solid ${cardBorder}` }}>
+                <span className="text-uppercase small fw-bold d-block mb-1" style={{ color: textMuted }}>
+                  Saldo Total Estimado Hoy
+                </span>
+                <h2 className="fw-bold m-0" style={{ color: consolidatedText }}>
+                  ${saldoTotalConsolidado.toLocaleString('es-AR')}
+                </h2>
+              </div>
             </div>
 
             <div className="modal-footer border-0 justify-content-end pt-2">

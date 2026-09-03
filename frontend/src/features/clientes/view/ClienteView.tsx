@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PersonaForm } from '../../auth/PersonaForm';
+import { PersonaForm } from '../../auth/persona/view/PersonaForm';
 import { ClienteExtraForm } from '../components/ClienteExtraForm';
 import { ClienteEditModal } from '../components/ClienteEditModal';
 import { CategoriaClienteModal } from '../components/CategoriaClienteModal';

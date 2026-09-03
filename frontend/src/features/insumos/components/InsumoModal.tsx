@@ -4,6 +4,7 @@ import type { Proveedor } from '../../proveedores/types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
 import { GestionUnidadesModal } from './GestionUnidadesModal';
 import { RelacionesModal } from './RelacionesModal';
+import { getProveedores, getUnidadesMedida } from '../services/insumoService';
 
 interface InsumoModalProps {
   show: boolean;
@@ -16,12 +17,10 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Configuración de colores según la acción (Editar -> Celeste, Registrar -> Verde)
   const isEditing = Boolean(insumoEditando);
   const accentColor = isEditing ? '#149bdf' : '#198754';
   const buttonBgColor = isEditing ? '#149bdf' : '#198754';
 
-  // Paleta dinámica según el tema
   const modalBg = isDark ? '#18181b' : '#ffffff';
   const headerBorder = isDark ? '#27272a' : '#e2e8f0';
   const textColor = isDark ? '#ffffff' : '#0f172a';
@@ -35,17 +34,14 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   const [unidadesMedida, setUnidadesMedida] = useState<UnidadMedida[]>([]);
   const [errorUnidad, setErrorUnidad] = useState('');
 
-  // Modales secundarios
   const [showGestionUnidadesModal, setShowGestionUnidadesModal] = useState(false);
   const [showRelacionesModal, setShowRelacionesModal] = useState(false);
 
-  // Estados para los dropdowns custom
   const [showUnidadSuelto, setShowUnidadSuelto] = useState(false);
   const [showUnidadCompra, setShowUnidadCompra] = useState(false);
   const [showProveedor, setShowProveedor] = useState(false);
   const [showEstado, setShowEstado] = useState(false);
 
-  // Estado del formulario
   const [formData, setFormData] = useState({
     idInsumo: '',
     nombreInsumo: '',
@@ -61,11 +57,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   });
 
   const cargarUnidadesMedida = () => {
-    fetch('http://localhost:8080/api/unidades-medida')
-      .then(res => {
-        if (!res.ok) throw new Error('Error al consultar unidades');
-        return res.json();
-      })
+    getUnidadesMedida()
       .then(data => {
         if (Array.isArray(data)) {
           setUnidadesMedida(data);
@@ -79,11 +71,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
   useEffect(() => {
     if (show) {
-      fetch('http://localhost:8080/api/proveedores')
-        .then(res => {
-          if (!res.ok) throw new Error('Error al obtener proveedores');
-          return res.json();
-        })
+      getProveedores()
         .then(data => {
           if (Array.isArray(data)) setProveedores(data);
         })
@@ -179,7 +167,6 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
     onGuardar(insumoAGuardar);
   };
 
-  // Filtrado de opciones para los dropdowns
   const unidadesSueltasFiltradas = unidadesMedida.filter(u => 
     u.nombre?.toLowerCase().includes(formData.nombreUnidad.toLowerCase())
   );
@@ -230,7 +217,6 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   </div>
                 )}
                 
-                {/* Nombre y Precio */}
                 <div className="row">
                   <div className="col-md-8 mb-3">
                     <label className="form-label small fw-semibold" style={{ color: labelColor }}>Nombre del Insumo</label>
@@ -264,7 +250,6 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   </div>
                 </div>
 
-                {/* SECCIÓN UNIDADES DE MEDIDA Y FACTOR CONVERSIÓN */}
                 <div className="p-3 mb-3 rounded" style={{ backgroundColor: boxBg, border: `1px solid ${boxBorder}` }}>
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     <h6 className="fw-bold text-info-custom m-0">Configuración de Unidades y Empaque</h6>
@@ -293,8 +278,6 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   </div>
 
                   <div className="row">
-
-                    {/* Unidad Suelta con Dropdown Custom */}
                     <div className="col-md-4 mb-2">
                       <label className="form-label small fw-semibold" style={{ color: labelColor }}>Unidad Suelta (Consumo)</label>
                       <div className="position-relative">
@@ -345,7 +328,6 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                       </div>
                     </div>
 
-                    {/* Unidad Empaque con Dropdown Custom */}
                     <div className="col-md-4 mb-2">
                       <label className="form-label small fw-semibold" style={{ color: labelColor }}>Unidad Empaque (Compra)</label>
                       <div className="position-relative">
@@ -413,7 +395,6 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   </div>
                 </div>
 
-                {/* STOCKS */}
                 <div className="row">
                   <div className="col-md-4 mb-3">
                     <label className="form-label small fw-semibold" style={{ color: labelColor }}>Stock Empaquetado (Bultos)</label>
@@ -457,9 +438,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   </div>
                 </div>
 
-                {/* PROVEEDOR Y ESTADO */}
                 <div className="row">
-                  {/* Proveedor con Dropdown Custom */}
                   <div className="col-md-6 mb-3">
                     <label className="form-label small fw-semibold" style={{ color: labelColor }}>Proveedor Principal</label>
                     <div className="position-relative">
@@ -581,7 +560,6 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
         </div>
       </div>
 
-      {/* Submodales integrados */}
       <GestionUnidadesModal
         show={showGestionUnidadesModal}
         unidades={unidadesMedida}
