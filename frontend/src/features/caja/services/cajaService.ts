@@ -1,4 +1,3 @@
-import type { DatosCompraInsumo } from '../components/ModalCompraInsumos';
 import { API_BASE_URL } from '../../../config/api';
 
 export interface MovimientoCaja {
@@ -228,31 +227,5 @@ export const cajaService = {
 export const cajaServiceExtended = {
   ...cajaService,
 
-  registrarCompraInsumo: async (datos: DatosCompraInsumo): Promise<any> => {
-    const usuarioGuardado = localStorage.getItem('usuario_logueado');
-    const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
-    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario || 1;
-
-    const payload = {
-      ...datos,
-      idUsuario
-    };
-
-    const response = await fetch(`${API_BASE_URL}/compras-insumos`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(errText || 'Error al registrar la compra de insumos');
-    }
-
-    try {
-      return await response.json();
-    } catch {
-      return null;
-    }
-  }
+  
 };
