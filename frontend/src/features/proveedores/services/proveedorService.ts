@@ -1,10 +1,11 @@
 import type { Proveedor } from '../types/Proveedor';
+import { apiFetch } from '../../../config/api';
 
 const API_URL = 'http://localhost:8080/api/proveedores';
 const API_TIPOS_URL = 'http://localhost:8080/api/tipos-proveedor';
 
 export const getProveedores = async (): Promise<Proveedor[]> => {
-  const res = await fetch(API_URL);
+  const res = await apiFetch(API_URL);
   if (!res.ok) throw new Error("Error al obtener proveedores");
   return res.json();
 };
@@ -22,7 +23,7 @@ export const guardarProveedor = async (proveedor: Proveedor) => {
     ? `${baseUrl}?idUsuario=${idUsuarioActual}` 
     : baseUrl;
 
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     method: method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(proveedor)

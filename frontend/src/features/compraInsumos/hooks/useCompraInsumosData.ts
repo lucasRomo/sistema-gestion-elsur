@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getInsumos } from '../../insumos/services/insumoService';
 import type { Proveedor } from '../../proveedores/types/Proveedor';
+import { apiFetch } from '../../../config/api';
 
 export const useCompraInsumosData = () => {
   const [insumos, setInsumos] = useState<any[]>([]);
@@ -20,7 +21,7 @@ export const useCompraInsumosData = () => {
 
   const cargarProductos = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/productos');
+      const response = await apiFetch('http://localhost:8080/api/productos');
       if (response.ok) {
         const data = await response.json();
         const productosActivos = data.filter((p: any) => p.estado === 'Activo');
@@ -29,7 +30,7 @@ export const useCompraInsumosData = () => {
         const productosSinReceta = await Promise.all(
           productosActivos.map(async (p: any) => {
             try {
-              const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${p.idProducto}`);
+              const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${p.idProducto}`);
               if (res.ok) {
                 const receta = await res.json();
                 return (!receta || receta.length === 0) ? p : null;
@@ -50,7 +51,7 @@ export const useCompraInsumosData = () => {
 
   const cargarProveedores = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/proveedores');
+      const response = await apiFetch('http://localhost:8080/api/proveedores');
       if (response.ok) setProveedores(await response.json());
     } catch (error) {
       console.error('Error al cargar proveedores:', error);
@@ -59,7 +60,7 @@ export const useCompraInsumosData = () => {
 
   const cargarUnidades = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/unidades-medida');
+      const response = await apiFetch('http://localhost:8080/api/unidades-medida');
       if (response.ok) setUnidadesMedida(await response.json());
     } catch (error) {
       console.error('Error al cargar unidades de medida:', error);

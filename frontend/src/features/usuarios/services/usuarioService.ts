@@ -1,10 +1,10 @@
 // src/services/usuarioService.ts
-import { API_BASE_URL } from '../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 
 const API_URL = `${API_BASE_URL}/usuarios`;
 
 export const getUsuarios = async () => {
-  const res = await fetch(API_URL);
+  const res = await apiFetch(API_URL);
   if (!res.ok) throw new Error("Error al obtener usuarios");
   return res.json();
 };
@@ -40,7 +40,7 @@ export const guardarUsuario = async (usuario: any) => {
     ? `${baseUrl}?idUsuario=${idUsuarioActual}` 
     : baseUrl;
 
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     method: method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(usuario)

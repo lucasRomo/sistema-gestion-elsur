@@ -1,3 +1,4 @@
+import { apiFetch } from '../../../../config/api';
 const API_URL = 'http://localhost:8080/api/pedidos';
 
 export const PedidoPendienteService = {
@@ -5,7 +6,7 @@ export const PedidoPendienteService = {
    * Obtiene la lista completa de pedidos.
    */
   obtenerTodos: async (): Promise<any[]> => {
-    const response = await fetch(API_URL);
+    const response = await apiFetch(API_URL);
     if (!response.ok) {
       throw new Error("Error al obtener la lista de pedidos.");
     }
@@ -38,7 +39,7 @@ export const PedidoPendienteService = {
     observaciones: string,
     idUsuario: number
   ): Promise<any> => {
-    const response = await fetch(`${API_URL}/${idPedido}/cambiar-estado`, {
+    const response = await apiFetch(`${API_URL}/${idPedido}/cambiar-estado`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -74,7 +75,7 @@ export const PedidoPendienteService = {
       formData.append("comprobante", archivo);
     }
 
-    const response = await fetch(`${API_URL}/${idPedido}/pagos`, {
+    const response = await apiFetch(`${API_URL}/${idPedido}/pagos`, {
       method: 'POST',
       body: formData,
     });
@@ -94,7 +95,7 @@ export const PedidoPendienteService = {
     const formData = new FormData();
     formData.append("comprobante", archivo);
 
-    const response = await fetch(`${API_URL}/comprobantes/${idComprobante}/archivo`, {
+    const response = await apiFetch(`${API_URL}/comprobantes/${idComprobante}/archivo`, {
       method: 'POST',
       body: formData
     });
@@ -118,7 +119,7 @@ export const PedidoPendienteService = {
    * Elimina la vinculación del comprobante digital.
    */
   eliminarComprobanteDigital: async (idComprobante: number): Promise<any> => {
-    const response = await fetch(`${API_URL}/comprobantes/${idComprobante}/archivo`, {
+    const response = await apiFetch(`${API_URL}/comprobantes/${idComprobante}/archivo`, {
       method: 'DELETE'
     });
 
@@ -133,7 +134,7 @@ export const PedidoPendienteService = {
    * Asigna un empleado al pedido.
    */
   asignarEmpleado: async (idPedido: number, idEmpleado: string, idUsuario: number): Promise<any> => {
-    const response = await fetch(`${API_URL}/${idPedido}/asignar-empleado`, {
+    const response = await apiFetch(`${API_URL}/${idPedido}/asignar-empleado`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -153,7 +154,7 @@ export const PedidoPendienteService = {
    * Actualiza el estante u ubicación del pedido.
    */
   actualizarUbicacion: async (idPedido: number, nuevaUbicacion: string): Promise<any> => {
-    const response = await fetch(`${API_URL}/${idPedido}/ubicacion`, {
+    const response = await apiFetch(`${API_URL}/${idPedido}/ubicacion`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -179,7 +180,7 @@ export const PedidoPendienteService = {
     const formData = new FormData();
     formData.append('archivo', archivo);
 
-    const response = await fetch(`${API_URL}/${idPedido}/comprobante-fisico`, {
+    const response = await apiFetch(`${API_URL}/${idPedido}/comprobante-fisico`, {
       method: 'POST',
       body: formData
     });
@@ -191,7 +192,7 @@ export const PedidoPendienteService = {
    * Elimina el comprobante físico del servidor.
    */
   eliminarComprobanteFisico: async (idPedido: number): Promise<boolean> => {
-    const response = await fetch(`${API_URL}/${idPedido}/comprobante-fisico`, {
+    const response = await apiFetch(`${API_URL}/${idPedido}/comprobante-fisico`, {
       method: 'DELETE'
     });
 
@@ -202,7 +203,7 @@ export const PedidoPendienteService = {
    * Actualiza el límite de crédito configurado para un cliente.
    */
   actualizarLimiteCredito: async (idCliente: number, nuevoLimite: number): Promise<any> => {
-    const response = await fetch(`http://localhost:8080/api/clientes/${idCliente}/limite-credito`, {
+    const response = await apiFetch(`http://localhost:8080/api/clientes/${idCliente}/limite-credito`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ limiteCredito: nuevoLimite })

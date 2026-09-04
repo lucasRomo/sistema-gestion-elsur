@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Proveedor } from '../types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
-import { 
-  getTiposProveedor, 
-  crearTipoProveedor, 
-  eliminarTipoProveedor 
-} from '../services/proveedorService';
+import { apiFetch } from '../../../config/api';
 
 interface ProveedorModalProps {
   show: boolean;
@@ -54,11 +50,15 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   const [showTipoProveedor, setShowTipoProveedor] = useState(false);
   const [showEstado, setShowEstado] = useState(false);
 
+  // Carga de categorías utilizando apiFetch
   const cargarCategorias = async () => {
     try {
-      const data = await getTiposProveedor();
+      const res = await apiFetch('http://localhost:8080/api/tipos-proveedor');
+      if (!res.ok) throw new Error('Error al obtener los tipos de proveedor');
+      const data = await res.json();
       setTiposProveedor(data);
-    } catch {
+    } catch (error) {
+      console.error(error);
       setTiposProveedor([
         { idTipoProveedor: 1, descripcion: 'Insumos Gráficos' },
         { idTipoProveedor: 2, descripcion: 'Papelería' },
@@ -73,6 +73,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     }
   }, [show]);
 
+  // Creación de categoría utilizando apiFetch
   const handleCrearCategoria = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const nombreLimpio = nuevaCategoria.trim();
@@ -91,11 +92,19 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     }
 
     try {
-      await crearTipoProveedor(nombreLimpio);
+      const res = await apiFetch('http://localhost:8080/api/tipos-proveedor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ descripcion: nombreLimpio })
+      });
+
+      if (!res.ok) throw new Error('Error al crear la categoría');
+
       setNuevaCategoria('');
       if (inputElem) inputElem.setCustomValidity('');
-      cargarCategorias();
-    } catch {
+      await cargarCategorias();
+    } catch (error) {
+      console.error(error);
       alert("Error al guardar la nueva categoría");
     }
   };
@@ -104,18 +113,25 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     setIdCategoriaAEliminar(id);
   };
 
+  // Eliminación de categoría utilizando apiFetch
   const ejecutarEliminacionCategoria = async () => {
     if (!idCategoriaAEliminar) return;
 
     try {
-      await eliminarTipoProveedor(idCategoriaAEliminar);
+      const res = await apiFetch(`http://localhost:8080/api/tipos-proveedor/${idCategoriaAEliminar}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) throw new Error('Error al eliminar la categoría');
+
       if (formState?.tipoProveedor?.idTipoProveedor === idCategoriaAEliminar) {
         setFormState(prev => prev ? { ...prev, tipoProveedor: undefined } : null);
       }
-      cargarCategorias();
+      await cargarCategorias();
       setIdCategoriaAEliminar(null);
       setMostrarExitoEliminar(true); 
     } catch (error) {
+      console.error(error);
       alert("No se pudo eliminar la categoría (puede que esté en uso por otra entidad).");
       setIdCategoriaAEliminar(null);
     }
@@ -629,7 +645,6 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
         </div>
       )}
 
-      {/* Modal de Éxito al Eliminar Categoría */}
       {mostrarExitoEliminar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">

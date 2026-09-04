@@ -1,6 +1,6 @@
 import type { Producto, Categoria } from '../types/Producto';
 import type { Maquina } from '../../maquinas/types/Maquina';
-import { API_BASE_URL } from '../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 
 const API_URL = `${API_BASE_URL}/productos`;
 const API_CATEGORIAS_URL = `${API_BASE_URL}/categorias`;
@@ -22,7 +22,7 @@ const obtenerIdUsuarioLogueado = (): number | null => {
 
 // --- Productos ---
 export const getProductos = async (): Promise<Producto[]> => {
-  const res = await fetch(API_URL);
+  const res = await apiFetch(API_URL);
   if (!res.ok) throw new Error("Error al obtener productos");
   return res.json();
 };
@@ -38,7 +38,7 @@ export const guardarProducto = async (producto: Partial<Producto>) => {
     ? `${baseUrl}?idUsuario=${idUsuarioActual}` 
     : baseUrl;
 
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     method: method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(producto)
@@ -67,7 +67,7 @@ export const actualizarPreciosMasivo = async (payload: ActualizarPreciosPayload)
     url += `?idUsuario=${idUsuarioActual}`;
   }
 
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -81,7 +81,7 @@ export const actualizarPreciosMasivo = async (payload: ActualizarPreciosPayload)
 };
 
 export const toggleStockVinculado = async (idProducto: number) => {
-  const res = await fetch(`${API_URL}/${idProducto}/toggle-stock-vinculado`, {
+  const res = await apiFetch(`${API_URL}/${idProducto}/toggle-stock-vinculado`, {
     method: 'PATCH'
   });
   if (!res.ok) throw new Error("Error al cambiar vinculación de stock");

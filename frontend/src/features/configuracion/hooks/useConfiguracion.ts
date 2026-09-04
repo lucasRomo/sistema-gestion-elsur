@@ -7,7 +7,7 @@ export const useConfiguracion = () => {
   
   const usuarioGuardado = localStorage.getItem('usuario_logueado');
   const usuario = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
-  const token = localStorage.getItem('token') || '';
+  const token = localStorage.getItem('token_sesion') || '';
 
   // Estados Perfil
   const [passwords, setPasswords] = useState({ actual: '', nueva: '', confirmar: '' });

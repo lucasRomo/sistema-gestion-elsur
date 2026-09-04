@@ -4,7 +4,7 @@ import type { Proveedor } from '../../proveedores/types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
 import { GestionUnidadesModal } from './GestionUnidadesModal';
 import { RelacionesModal } from './RelacionesModal';
-import { getProveedores, getUnidadesMedida, getInsumos } from '../services/insumoService';
+import { apiFetch } from '../../../config/api';
 
 interface InsumoModalProps {
   show: boolean;
@@ -58,17 +58,17 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
     nombreProveedor: ''
   });
 
-  const cargarUnidadesMedida = () => {
-    getUnidadesMedida()
-      .then(data => {
-        if (Array.isArray(data)) {
-          setUnidadesMedida(data);
-        }
-      })
-      .catch(err => {
-        console.error("No se pudieron cargar las unidades desde el servidor:", err);
-        setUnidadesMedida([]);
-      });
+  const cargarUnidadesMedida = async () => {
+    try {
+      const res = await apiFetch('http://localhost:8080/api/unidades-medida');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setUnidadesMedida(data);
+      }
+    } catch (err) {
+      console.error("No se pudieron cargar las unidades desde el servidor:", err);
+      setUnidadesMedida([]);
+    }
   };
 
   const validarNombreDuplicado = () => {
@@ -77,13 +77,13 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
     const idActual = insumoEditando?.idInsumo;
     const duplicado = insumosExistentes.some(
-    i => i.nombreInsumo?.trim().toLowerCase() === nombreLimpio && i.idInsumo !== idActual
+      i => i.nombreInsumo?.trim().toLowerCase() === nombreLimpio && i.idInsumo !== idActual
     );
 
     if (duplicado) {
-    nombreInsumoRef.current.setCustomValidity('Ya existe un insumo registrado con ese nombre.');
-    nombreInsumoRef.current.reportValidity();
-    return false;
+      nombreInsumoRef.current.setCustomValidity('Ya existe un insumo registrado con ese nombre.');
+      nombreInsumoRef.current.reportValidity();
+      return false;
     }
 
     nombreInsumoRef.current.setCustomValidity('');
@@ -91,17 +91,31 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   };
 
   useEffect(() => {
-  if (show) {
-    getProveedores()
-      .then(data => { if (Array.isArray(data)) setProveedores(data); })
-      .catch(err => console.error("Error cargando proveedores:", err));
+    if (show) {
+      const cargarDatosIníciales = async () => {
+        try {
+          const [resProv, resIns] = await Promise.all([
+            apiFetch('http://localhost:8080/api/proveedores'),
+            apiFetch('http://localhost:8080/api/insumos')
+          ]);
 
-    getInsumos()
-      .then(data => { if (Array.isArray(data)) setInsumosExistentes(data); })
-      .catch(err => console.error("Error cargando insumos existentes:", err));
+          if (resProv.ok) {
+            const dataProv = await resProv.json();
+            if (Array.isArray(dataProv)) setProveedores(dataProv);
+          }
 
-    cargarUnidadesMedida();
-  }
+          if (resIns.ok) {
+            const dataIns = await resIns.json();
+            if (Array.isArray(dataIns)) setInsumosExistentes(dataIns);
+          }
+        } catch (error) {
+          console.error("Error al cargar los datos iniciales del modal:", error);
+        }
+      };
+
+      cargarDatosIníciales();
+      cargarUnidadesMedida();
+    }
   }, [show]);
 
   useEffect(() => {
@@ -246,41 +260,41 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   <div className="col-md-8 mb-3">
                     <label className="form-label small fw-semibold" style={{ color: labelColor }}>Nombre del Insumo</label>
                     <input 
-  ref={nombreInsumoRef}
-  type="text" 
-  className="form-control shadow-none" 
-  style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-  name="nombreInsumo" 
-  value={formData.nombreInsumo} 
-  onChange={handleChange} 
-  onBlur={validarNombreDuplicado}
-  required 
-  onInvalid={(e: any) => {
-    if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre de Insumo No puede Estar Vacío");
-  }}
-  onInput={(e: any) => e.target.setCustomValidity("")}
+                      ref={nombreInsumoRef}
+                      type="text" 
+                      className="form-control shadow-none" 
+                      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                      name="nombreInsumo" 
+                      value={formData.nombreInsumo} 
+                      onChange={handleChange} 
+                      onBlur={validarNombreDuplicado}
+                      required 
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre de Insumo No puede Estar Vacío");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
 
                   <div className="col-md-4 mb-3">
-  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Precio ($)</label>
-  <input 
-    type="number" 
-    step="0.01" 
-    min="0.01"
-    className="form-control shadow-none" 
-    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-    name="precio" 
-    value={formData.precio} 
-    onChange={handleChange} 
-    required 
-    onInvalid={(e: any) => {
-      if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Precio No puede Estar Vacío");
-      else if (e.target.validity.rangeUnderflow) e.target.setCustomValidity("No se puede crear un insumo con un precio negativo o igual a 0");
-    }}
-    onInput={(e: any) => e.target.setCustomValidity("")}
-  />
-</div>
+                    <label className="form-label small fw-semibold" style={{ color: labelColor }}>Precio ($)</label>
+                    <input 
+                      type="number" 
+                      step="0.01" 
+                      min="0.01"
+                      className="form-control shadow-none" 
+                      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                      name="precio" 
+                      value={formData.precio} 
+                      onChange={handleChange} 
+                      required 
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Precio No puede Estar Vacío");
+                        else if (e.target.validity.rangeUnderflow) e.target.setCustomValidity("No se puede crear un insumo con un precio negativo o igual a 0");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
+                    />
+                  </div>
                 </div>
 
                 <div className="p-3 mb-3 rounded" style={{ backgroundColor: boxBg, border: `1px solid ${boxBorder}` }}>

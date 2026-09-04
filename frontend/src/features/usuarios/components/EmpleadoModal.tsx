@@ -1,5 +1,6 @@
 import React from 'react';
 import { validarExisteUsuario } from '../services/usuarioService';
+import { apiFetch } from '../../../config/api';
 
 interface EmpleadoModalProps {
   formData: any;
@@ -17,16 +18,33 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
     const input = e.target;
     const valor = input.value;
 
-    if (valor.trim().length > 0) {
-      const existe = await validarExisteUsuario(valor);
-      if (existe) {
-        input.setCustomValidity("Usuario ya Registrado, Intente con uno Nuevo");
-        input.reportValidity();
-      } else {
-        input.setCustomValidity("");
-      }
+    if (valor.length > 0) {
+      try {
+        const response = await apiFetch(`http://localhost:8080/api/usuarios/exists?nombreUsuario=${encodeURIComponent(valor)}`);
+        if (response.ok) {
+          const existe = await response.json();
+          if (existe) {
+            // Asignamos el mensaje personalizado y mostramos el globito flotante
+            input.setCustomValidity("Usuario ya Registrado, Intente con uno Nuevo");
+            input.reportValidity();
+          } else {
+            input.setCustomValidity("");
+          }
+        }
+      } catch (error) {
+        console.error("Error al validar nombre de usuario:", error);
+        if (valor.trim().length > 0) {
+          const existe = await validarExisteUsuario(valor);
+          if (existe) {
+            input.setCustomValidity("Usuario ya Registrado, Intente con uno Nuevo");
+            input.reportValidity();
+          } else {
+            input.setCustomValidity("");
+          }
+        }
+      } // <- Cierre del catch que faltaba
     }
-  };
+  }; // <- Cierre de handleValidarUsuario que faltaba
 
   return (
     <div className="modal d-block position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1040 }}>

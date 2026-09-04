@@ -3,6 +3,7 @@ import type { Producto } from '../../productos/types/Producto';
 import type { CartItem, Pedido } from '../../pedidos/general/types/Pedido';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
+import { apiFetch } from '../../../config/api';
 
 const API_BASE = 'http://localhost:8080/api';
 const MARGEN_MERMA_RESPALDO = 5;
@@ -31,7 +32,7 @@ export const useVentaRapida = () => {
 
   const fetchInsumos = async () => {
     try {
-      const response = await fetch(`${API_BASE}/insumos`);
+      const response = await apiFetch(`${API_BASE}/insumos`);
       if (response.ok) {
         const data = await response.json();
         setInsumosCatalogo(data);
@@ -66,8 +67,8 @@ export const useVentaRapida = () => {
   const fetchProductos = async () => {
     try {
       const [resProductos, resRecetas] = await Promise.all([
-        fetch(`${API_BASE}/productos`),
-        fetch(`${API_BASE}/producto-insumo`)
+        apiFetch(`${API_BASE}/productos`),
+        apiFetch(`${API_BASE}/producto-insumo`)
       ]);
 
       if (resProductos.ok) {
@@ -95,7 +96,7 @@ export const useVentaRapida = () => {
 
   const fetchCategorias = async () => {
     try {
-      const response = await fetch(`${API_BASE}/categorias-cliente`);
+      const response = await apiFetch(`${API_BASE}/categorias-cliente`);
       if (response.ok) {
         const data = await response.json();
         const categoriasNormalizadas = data.map((cat: any) => ({
@@ -112,7 +113,7 @@ export const useVentaRapida = () => {
 
   const fetchMaquinas = async () => {
     try {
-      const response = await fetch(`${API_BASE}/maquinas`);
+      const response = await apiFetch(`${API_BASE}/maquinas`);
       if (response.ok) {
         const data = await response.json();
         setMaquinas(data);
@@ -124,7 +125,7 @@ export const useVentaRapida = () => {
 
   const fetchPedidosPendientes = async () => {
     try {
-      const response = await fetch(`${API_BASE}/pedidos`);
+      const response = await apiFetch(`${API_BASE}/pedidos`);
       if (response.ok) {
         const data = await response.json();
         const ESTADOS_INACTIVOS = ['FINALIZADO', 'ENTREGADO', 'CANCELADO', 'COMPLETADO', 'RECHAZADO'];
@@ -472,12 +473,12 @@ export const useVentaRapida = () => {
         formData.append('payload', JSON.stringify(payloadParaBackend));
         formData.append('comprobante', datosPago.comprobanteFile);
 
-        resCrear = await fetch(`${API_BASE}/pedidos`, {
+        resCrear = await apiFetch(`${API_BASE}/pedidos`, {
           method: 'POST',
           body: formData
         });
       } else {
-        resCrear = await fetch(`${API_BASE}/pedidos`, {
+        resCrear = await apiFetch(`${API_BASE}/pedidos`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payloadParaBackend)
@@ -491,7 +492,7 @@ export const useVentaRapida = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 300));
 
-      const resEstado = await fetch(`${API_BASE}/pedidos/${idPedido}/cambiar-estado`, {
+      const resEstado = await apiFetch(`${API_BASE}/pedidos/${idPedido}/cambiar-estado`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

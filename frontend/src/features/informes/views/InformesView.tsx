@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 // Modal Registros de Arqueo y Comparación
 import { ModalRegistrosArqueo } from '../components/ModalRegistrosArqueos';
@@ -34,6 +34,7 @@ export const InformesView: React.FC = () => {
   const [seccionActiva, setSeccionActiva] = useState<SeccionInforme>('MENU');
   const [showModalRegistrosArqueo, setShowModalRegistrosArqueo] = useState(false);
 
+  // Hook centralizado que maneja la carga con apiFetch
   const datos = useInformesData();
   const { metricas, topClientes, incongruenciasArqueo, procesarMetricas } = useMetricasInforme();
 
@@ -83,6 +84,7 @@ export const InformesView: React.FC = () => {
   }, []);
   const esAdmin = usuarioLogueado?.rol?.nombreRol?.toUpperCase() === 'ADMIN';
 
+  // Carga inicial: delegada a datos.cargarDatos que utiliza apiFetch internamente
   useEffect(() => {
     datos.cargarDatos(true, 'Error al cargar los informes iniciales').then((resultado) => {
       if (!resultado) return;
@@ -102,7 +104,6 @@ export const InformesView: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Equivalente a `handleAnalizar`: confirma el rango elegido y recalcula con datos frescos
   const handleAnalizar = async () => {
     confirmarRangoActual();
     const resultado = await datos.cargarDatos(false, 'Error al recalcular informes');
@@ -207,14 +208,10 @@ export const InformesView: React.FC = () => {
           border-radius: 10px;
         }
 
-        /* Apaga el foco nativo del navegador en TODO lo que Recharts pueda
-           enfocar (formas, texto de ejes, etiquetas de valores, etc.) */
         .recharts-wrapper *:focus {
           outline: none !important;
         }
 
-        /* Resplandor violeta en las formas clickeables: porciones de torta,
-           barras, el trazo/relleno del área y su punto activo */
         .recharts-sector:focus,
         .recharts-rectangle:focus,
         .recharts-bar-rectangle:focus,

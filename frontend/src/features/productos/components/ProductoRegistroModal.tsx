@@ -2,13 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { Producto, Categoria } from '../types/Producto';
 import type { Maquina } from '../../maquinas/types/Maquina';
 import { useTheme } from '../../../Context/ThemeContext';
-import { 
-  getCategorias, 
-  crearCategoria, 
-  eliminarCategoria, 
-  getMaquinas,
-  getProductos
-} from '../services/productoService';
+import { apiFetch } from '../../../config/api';
 
 interface Props {
   show: boolean;
@@ -64,26 +58,45 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
 
   const cargarCategoriasData = async () => {
     try {
-      const data = await getCategorias();
-      setCategorias(data);
-    } catch (err) { console.error("Error cargando categorías:", err); }
+      const res = await apiFetch('http://localhost:8080/api/categorias');
+      if (res.ok) {
+        const data = await res.json();
+        setCategorias(data);
+      }
+    } catch (err) { 
+      console.error("Error cargando categorías:", err); 
+    }
   };
 
   const cargarMaquinasData = async () => {
     try {
-      const data = await getMaquinas();
-      setMaquinas(data);
-    } catch (err) { console.error("Error cargando máquinas:", err); }
+      const res = await apiFetch('http://localhost:8080/api/maquinas');
+      if (res.ok) {
+        const data = await res.json();
+        setMaquinas(data);
+      }
+    } catch (err) { 
+      console.error("Error cargando máquinas:", err); 
+    }
+  };
+
+  const cargarProductosExistentes = async () => {
+    try {
+      const res = await apiFetch('http://localhost:8080/api/productos');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setProductosExistentes(data);
+      }
+    } catch (err) {
+      console.error("Error cargando productos existentes:", err);
+    }
   };
 
   useEffect(() => {
     if (show) {
       cargarCategoriasData();
       cargarMaquinasData();
-
-      getProductos()
-        .then((data: any) => { if (Array.isArray(data)) setProductosExistentes(data); })
-        .catch((err: any) => console.error("Error cargando productos existentes:", err));
+      cargarProductosExistentes();
 
       if (producto) {
         setFormData({
@@ -113,7 +126,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     } else if (maquinas.length > 0) {
       const m = maquinas.find((maq: any) => maq.idMaquina.toString() === formData.idMaquinaNecesaria);
       if (m) {
-        setTextoMaquina(`${m.nombre || m.nombre} (${m.estado})`);
+        setTextoMaquina(`${m.nombre || (m as any).nombreMaquina} (${m.estado})`);
       }
     }
   }, [formData.idMaquinaNecesaria, maquinas]);
@@ -151,9 +164,18 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     }
 
     try {
-      await crearCategoria(nombreLimpio);
-      setNuevaCategoria('');
-      cargarCategoriasData();
+      const res = await apiFetch('http://localhost:8080/api/categorias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: nombreLimpio })
+      });
+
+      if (res.ok) {
+        setNuevaCategoria('');
+        cargarCategoriasData();
+      } else {
+        alert("No se pudo crear la categoría.");
+      }
     } catch (error) { 
       alert("Error al crear categoría o conectar con el servidor."); 
     }
@@ -162,12 +184,18 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const handleEliminarCategoria = async (id: number) => {
     if (!confirm("¿Seguro que querés eliminar esta categoría?")) return;
     try {
-      await eliminarCategoria(id);
-      const catEliminada = categorias.find(c => c.idCategoria === id);
-      if (catEliminada && formData.nombreCategoria === catEliminada.nombre) {
-        setFormData(prev => ({ ...prev, nombreCategoria: '' }));
+      const res = await apiFetch(`http://localhost:8080/api/categorias/${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        const catEliminada = categorias.find(c => c.idCategoria === id);
+        if (catEliminada && formData.nombreCategoria === catEliminada.nombre) {
+          setFormData(prev => ({ ...prev, nombreCategoria: '' }));
+        }
+        cargarCategoriasData();
+      } else {
+        alert("No se pudo eliminar, es posible que tenga productos asociados.");
       }
-      cargarCategoriasData();
     } catch (error) {
       alert("No se pudo eliminar, es posible que tenga productos asociados.");
       console.error("Error al eliminar categoría:", error);

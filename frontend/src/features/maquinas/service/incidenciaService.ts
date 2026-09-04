@@ -1,5 +1,5 @@
 import type { Incidencia } from '../types/Incidencia';
-import { API_BASE_URL } from '../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 
 const API_URL = `${API_BASE_URL}/incidencias`;
 
@@ -19,7 +19,7 @@ export interface RespuestaPago {
 
 export const incidenciaService = {
   getByMaquinaId: async (idMaquina: number): Promise<Incidencia[]> => {
-    const res = await fetch(`${API_URL}/maquina/${idMaquina}`);
+    const res = await apiFetch(`${API_URL}/maquina/${idMaquina}`);
     if (!res.ok) {
       throw new Error(`Error al obtener incidencias: ${res.statusText}`);
     }
@@ -31,7 +31,7 @@ export const incidenciaService = {
     notaMantenimiento: string, 
     idEmpleadoMantenimiento: number
   ): Promise<void> => {
-    const res = await fetch(`${API_URL}/${idIncidencia}/mantenimiento`, {
+    const res = await apiFetch(`${API_URL}/${idIncidencia}/mantenimiento`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ notaMantenimiento, idEmpleadoMantenimiento })
@@ -47,7 +47,7 @@ export const incidenciaService = {
     resolucion: string, 
     idEmpleadoResuelve: number
   ): Promise<void> => {
-    const res = await fetch(`${API_URL}/${idIncidencia}/resolver`, {
+    const res = await apiFetch(`${API_URL}/${idIncidencia}/resolver`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ resolucion, idEmpleadoResuelve })
@@ -75,7 +75,7 @@ export const incidenciaService = {
       formData.append("comprobante", comprobanteFile);
     }
 
-    const res = await fetch(`${API_URL}/${idIncidencia}/pago-mantenimiento`, {
+    const res = await apiFetch(`${API_URL}/${idIncidencia}/pago-mantenimiento`, {
       method: 'POST',
       body: formData
     });

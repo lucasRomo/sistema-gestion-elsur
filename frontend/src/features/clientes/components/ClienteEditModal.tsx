@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../../../config/api';
 import { clienteService, type TipoDocumento } from '../services/clienteService';
 
 interface ClienteEditModalProps {
@@ -39,8 +40,20 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
   useEffect(() => {
-    clienteService.getTiposDocumento()
-      .then(data => setTiposDocumento(data));
+    apiFetch('http://localhost:8080/api/tipos-documento')
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(data => setTiposDocumento(data))
+      .catch(() => {
+       setTiposDocumento([
+       { idTipoDocumento: 1, nombreTipo: 'DNI', nombre: 'DNI' },
+       { idTipoDocumento: 2, nombreTipo: 'CUIT', nombre: 'CUIT' },
+       { idTipoDocumento: 3, nombreTipo: 'CUIL', nombre: 'CUIL' },
+       { idTipoDocumento: 4, nombreTipo: 'PASAPORTE', nombre: 'PASAPORTE' }
+        ]);
+      });
   }, []);
 
   const handlePersonaChange = (field: string, value: string) => {

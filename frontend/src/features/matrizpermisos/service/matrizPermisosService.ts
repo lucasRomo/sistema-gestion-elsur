@@ -1,3 +1,4 @@
+import { apiFetch } from '../../../config/api';
 const BASE_URL = 'http://localhost:8080/api';
 
 export interface ModuloPermiso {
@@ -23,32 +24,32 @@ export interface Usuario {
 
 export const matrizPermisosService = {
   obtenerRoles: async () => {
-    const res = await fetch(`${BASE_URL}/permisos/roles`);
+    const res = await apiFetch(`${BASE_URL}/permisos/roles`);
     if (!res.ok) throw new Error('Error al obtener roles');
     const rolesData = await res.json();
     return rolesData.filter((r: any) => !r.nombreRol.startsWith('PERFIL_'));
   },
 
   obtenerPermisos: async () => {
-    const res = await fetch(`${BASE_URL}/permisos`);
+    const res = await apiFetch(`${BASE_URL}/permisos`);
     if (!res.ok) throw new Error('Error al obtener la lista de permisos');
     return await res.json();
   },
 
   obtenerUsuarios: async (): Promise<Usuario[]> => {
-    const res = await fetch(`${BASE_URL}/usuarios`);
+    const res = await apiFetch(`${BASE_URL}/usuarios`);
     if (!res.ok) throw new Error('Error al obtener la lista de usuarios');
     return await res.json();
   },
 
   obtenerPermisosPorRol: async (idRol: number): Promise<number[]> => {
-    const res = await fetch(`${BASE_URL}/permisos/rol/${idRol}`);
+    const res = await apiFetch(`${BASE_URL}/permisos/rol/${idRol}`);
     if (!res.ok) throw new Error('Error al obtener permisos del rol');
     return await res.json();
   },
 
   crearRol: async (nombreRol: string) => {
-    const res = await fetch(`${BASE_URL}/permisos/roles`, {
+    const res = await apiFetch(`${BASE_URL}/permisos/roles`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombreRol: nombreRol.toUpperCase() })
@@ -58,7 +59,7 @@ export const matrizPermisosService = {
   },
 
   eliminarRol: async (idRol: number) => {
-    const res = await fetch(`${BASE_URL}/permisos/roles/${idRol}`, {
+    const res = await apiFetch(`${BASE_URL}/permisos/roles/${idRol}`, {
       method: 'DELETE'
     });
     if (!res.ok) {
@@ -69,7 +70,7 @@ export const matrizPermisosService = {
   },
 
   actualizarUsuarioRol: async (idUsuario: number, payloadUsuario: any) => {
-    const res = await fetch(`${BASE_URL}/usuarios/${idUsuario}`, {
+    const res = await apiFetch(`${BASE_URL}/usuarios/${idUsuario}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payloadUsuario)
@@ -79,7 +80,7 @@ export const matrizPermisosService = {
   },
 
   actualizarPermisosRol: async (idRol: number, permisosIds: number[]) => {
-    const res = await fetch(`${BASE_URL}/permisos/rol/${idRol}/actualizar`, {
+    const res = await apiFetch(`${BASE_URL}/permisos/rol/${idRol}/actualizar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(permisosIds)

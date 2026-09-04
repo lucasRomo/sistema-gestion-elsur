@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoSur from '../../assets/logo-elsur.png';
 import { useTheme } from '../../Context/ThemeContext';
+import { AsistenteWidget } from '../../features/asistente/components/AsistenteWidget';
 
 interface SidebarLayoutProps {
   activeItem: string;
@@ -204,6 +205,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
   return (
     <div className="d-flex vh-100" style={{ backgroundColor: mainBg, color: textColor, overflow: 'hidden' }}>
+      <AsistenteWidget modulo={activeItem} />
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;

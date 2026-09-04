@@ -23,6 +23,7 @@ import { ModalStockCriticoList, type ItemStockCritico } from '../../insumos/moda
 // Componentes y contextos compartidos globales
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 import { useIsMobile } from '../../../hook/useIsMobile';
 
 export const Productos: React.FC = () => {
@@ -102,11 +103,14 @@ export const Productos: React.FC = () => {
     if (!producto.idProducto) return;
     if (!producto.stockVinculado) {
       try {
-        const recetaData = await getRecetaPorProducto(producto.idProducto);
-        if (!recetaData || recetaData.length === 0) {
-          setProductoSinReceta(producto);
-          setShowSinRecetaModal(true);
-          return; 
+        const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`);
+        if (res.ok) {
+          const recetaData = await getRecetaPorProducto(producto.idProducto);
+          if (!recetaData || recetaData.length === 0) {
+            setProductoSinReceta(producto);
+            setShowSinRecetaModal(true);
+            return; 
+          }
         }
       } catch (err) {
         console.error("Error al verificar la receta del producto:", err);

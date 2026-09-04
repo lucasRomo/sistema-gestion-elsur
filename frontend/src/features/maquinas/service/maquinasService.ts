@@ -1,5 +1,5 @@
 import type { Maquina } from '../types/Maquina';
-import { API_BASE_URL } from '../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 
 const API_MAQUINAS = `${API_BASE_URL}/maquinas`;
 const API_INCIDENCIAS = `${API_BASE_URL}/incidencias`;
@@ -18,7 +18,7 @@ export const getUsuarioActualId = (): number => {
 };
 
 export const fetchMaquinas = async (): Promise<Maquina[]> => {
-  const res = await fetch(API_MAQUINAS);
+  const res = await apiFetch(API_MAQUINAS);
   if (!res.ok) throw new Error('Error al cargar máquinas');
   return res.json();
 };
@@ -27,7 +27,7 @@ export const guardarMaquinaAPI = async (maquina: Maquina & { observacion?: strin
   const url = maquina.idMaquina ? `${API_MAQUINAS}/${maquina.idMaquina}` : API_MAQUINAS;
   const method = maquina.idMaquina ? 'PUT' : 'POST';
 
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -42,13 +42,13 @@ export const guardarMaquinaAPI = async (maquina: Maquina & { observacion?: strin
 
   if (maquina.idMaquina && maquina.observacion) {
     try {
-      const incRes = await fetch(`${API_INCIDENCIAS}/maquina/${maquina.idMaquina}`);
+      const incRes = await apiFetch(`${API_INCIDENCIAS}/maquina/${maquina.idMaquina}`);
       if (incRes.ok) {
         const incidencias: any[] = await incRes.json();
         const pendiente = incidencias.find((i: any) => i.estadoIncidencia === 'PENDIENTE');
 
         if (maquina.estado === 'OPERATIVA' && pendiente) {
-          await fetch(`${API_INCIDENCIAS}/${pendiente.idIncidencia}/resolver`, {
+          await apiFetch(`${API_INCIDENCIAS}/${pendiente.idIncidencia}/resolver`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -57,7 +57,7 @@ export const guardarMaquinaAPI = async (maquina: Maquina & { observacion?: strin
             })
           });
         } else if (maquina.estado === 'MANTENIMIENTO' && !pendiente) {
-          await fetch(`${API_INCIDENCIAS}/reportar`, {
+          await apiFetch(`${API_INCIDENCIAS}/reportar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -68,7 +68,7 @@ export const guardarMaquinaAPI = async (maquina: Maquina & { observacion?: strin
             })
           });
         } else if (['FUERA DE SERVICIO', 'FALLA'].includes(maquina.estado) && !pendiente) {
-          await fetch(`${API_INCIDENCIAS}/reportar`, {
+          await apiFetch(`${API_INCIDENCIAS}/reportar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -87,7 +87,7 @@ export const guardarMaquinaAPI = async (maquina: Maquina & { observacion?: strin
 };
 
 export const reportarFallaAPI = async (idMaquina: number, descripcion: string, prioridad: string): Promise<void> => {
-  const res = await fetch(`${API_INCIDENCIAS}/reportar`, {
+  const res = await apiFetch(`${API_INCIDENCIAS}/reportar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ 
@@ -102,6 +102,6 @@ export const reportarFallaAPI = async (idMaquina: number, descripcion: string, p
 };
 
 export const eliminarMaquinaAPI = async (id: number): Promise<void> => {
-  const res = await fetch(`${API_MAQUINAS}/${id}`, { method: 'DELETE' });
+  const res = await apiFetch(`${API_MAQUINAS}/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('Error al eliminar la máquina.');
 };

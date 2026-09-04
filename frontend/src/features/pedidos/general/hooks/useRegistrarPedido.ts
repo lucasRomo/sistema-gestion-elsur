@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Producto } from '../../../productos/types/Producto';
 import type { Pedido } from '../../general/types/Pedido';
 import type { Maquina } from '../../../maquinas/types/Maquina';
+import { apiFetch } from '../../../../config/api';
 
 const API_BASE_URL = 'http://localhost:8080/api'; 
 
@@ -24,12 +25,12 @@ export const useRegistrarPedido = () => {
           resProductoInsumo,
           resPedidos
         ] = await Promise.all([
-          fetch(`${API_BASE_URL}/productos`),
-          fetch(`${API_BASE_URL}/clientes`),
-          fetch(`${API_BASE_URL}/empleados`),
-          fetch(`${API_BASE_URL}/maquinas`),
-          fetch(`${API_BASE_URL}/producto-insumo`),
-          fetch(`${API_BASE_URL}/pedidos`)
+          apiFetch(`${API_BASE_URL}/productos`),
+          apiFetch(`${API_BASE_URL}/clientes`),
+          apiFetch(`${API_BASE_URL}/empleados`),
+          apiFetch(`${API_BASE_URL}/maquinas`),
+          apiFetch(`${API_BASE_URL}/producto-insumo`),
+          apiFetch(`${API_BASE_URL}/pedidos`)
         ]);
 
         const rawProductos = resProductos.ok ? await resProductos.json() : [];
@@ -97,12 +98,12 @@ export const useRegistrarPedido = () => {
         // Adjuntamos el archivo físico del comprobante
         formData.append('comprobante', fileComprobante);
 
-        respuesta = await fetch(`${API_BASE_URL}/pedidos`, {
+        respuesta = await apiFetch(`${API_BASE_URL}/pedidos`, {
           method: 'POST',
           body: formData
         });
       } else {
-        respuesta = await fetch(`${API_BASE_URL}/pedidos`, {
+        respuesta = await apiFetch(`${API_BASE_URL}/pedidos`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)

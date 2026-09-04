@@ -4,6 +4,7 @@ import type { CartItem } from '../../general/types/Pedido';
 import type { CategoriaCliente } from '../../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../../maquinas/types/Maquina';
 import { useTheme } from '../../../../Context/ThemeContext';
+import { apiFetch } from '../../../../config/api';
 import { crearPedidoService } from '../service/crearPedidoService';
 
 interface Props {
@@ -86,7 +87,16 @@ export const SelectorProductosForm: React.FC<Props> = ({
     const prodSeleccionado = productos.find(p => p.idProducto === Number(productoId));
     if (!prodSeleccionado) return;
 
-    const recetaInsumos = await crearPedidoService.obtenerRecetaProducto(prodSeleccionado.idProducto!);
+    // Se declara 'recetaInsumos' una sola vez utilizando apiFetch
+    let recetaInsumos: any[] = [];
+    try {
+      const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${prodSeleccionado.idProducto}`);
+      if (res.ok) {
+        recetaInsumos = await res.json();
+      }
+    } catch (error) {
+      console.error("Error al obtener la receta del producto:", error);
+    }
 
     const nuevoItem: CartItem & { receta?: any[] } = {
       producto: {

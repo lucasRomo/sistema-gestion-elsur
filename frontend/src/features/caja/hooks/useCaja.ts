@@ -95,6 +95,8 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     if (turnoActual) await fetchMovimientos(turnoActual.idTurno);
   };
 
+  
+
   const ajustarMovimiento = async (
     movimientoOriginal: MovimientoCaja,
     montoAjuste: number,

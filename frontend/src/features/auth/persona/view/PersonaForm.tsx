@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../../Context/ThemeContext';
 import { personaService, type TipoDocumento } from '../service/personaService';
+import { apiFetch } from '../../../../config/api';
 
 interface PersonaFormProps {
   formData: any;
@@ -34,6 +35,20 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({
 
   // Cargar lista de tipos de documento a través del servicio
   useEffect(() => {
+    apiFetch('http://localhost:8080/api/tipos-documento')
+      .then(res => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then(data => setTiposDocumento(data))
+      .catch(() => {
+        setTiposDocumento([
+          { idTipoDocumento: 1, nombreTipo: 'DNI', nombre: 'DNI' },
+          { idTipoDocumento: 2, nombreTipo: 'CUIT', nombre: 'CUIT' },
+          { idTipoDocumento: 3, nombreTipo: 'CUIL', nombre: 'CUIL' },
+          { idTipoDocumento: 4, nombreTipo: 'PASAPORTE', nombre: 'PASAPORTE' }
+        ]);
+      });
     let isMounted = true;
     personaService.obtenerTiposDocumento().then(data => {
       if (isMounted) setTiposDocumento(data);

@@ -1,6 +1,6 @@
 import type { Insumo, UnidadMedida } from '../types/Insumo';
 import type { Proveedor } from '../../proveedores/types/Proveedor';
-import { API_BASE_URL } from '../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 
 const API_URL = `${API_BASE_URL}/insumos`;
 
@@ -18,7 +18,7 @@ const obtenerIdUsuarioLogueado = (): number | null => {
 // --- INSUMOS ---
 
 export const getInsumos = async (): Promise<Insumo[]> => {
-  const res = await fetch(API_URL);
+  const res = await apiFetch(API_URL);
   if (!res.ok) throw new Error("Error al obtener insumos");
   return res.json();
 };
@@ -34,7 +34,7 @@ export const guardarInsumo = async (insumo: any): Promise<Insumo> => {
     ? `${baseUrl}?idUsuario=${idUsuarioActual}` 
     : baseUrl;
 
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     method: method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(insumo)
@@ -54,7 +54,7 @@ export const convertirInsumo = async (idInsumo: number, cantidadBultos: number):
     url += `?idUsuario=${idUsuarioActual}`;
   }
 
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ cantidadBultos })
@@ -69,7 +69,7 @@ export const convertirInsumo = async (idInsumo: number, cantidadBultos: number):
 
 export const getInsumosBajoStock = async (): Promise<Insumo[]> => {
   try {
-    const res = await fetch(`${API_URL}/bajo-stock`);
+    const res = await apiFetch(`${API_URL}/bajo-stock`);
     if (res.ok) {
       return await res.json();
     }
@@ -94,7 +94,7 @@ export const actualizarInsumosMasivo = async (payload: ActualizarInsumosPayload)
     url += `?idUsuario=${idUsuarioActual}`;
   }
 
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)

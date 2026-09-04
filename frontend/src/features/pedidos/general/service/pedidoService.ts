@@ -1,12 +1,12 @@
 import type { Pedido } from '../../general/types/Pedido';
-import { API_BASE_URL } from '../../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../../config/api';
 
 export const pedidoService = {
   /**
    * Obtiene un pedido completo por su ID con relaciones frescas de auditoría
    */
   obtenerPorId: async (idPedido: number): Promise<any | null> => {
-    const response = await fetch(`${API_BASE_URL}/pedidos/${idPedido}`);
+    const response = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}`);
     if (response.ok) {
       return await response.json();
     }
@@ -14,7 +14,7 @@ export const pedidoService = {
   },
 
   asignarEmpleado: async (idPedido: number, idEmpleado: string) => {
-    const response = await fetch(`${API_BASE_URL}/pedidos/${idPedido}/asignar-empleado`, {
+    const response = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}/asignar-empleado`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ idEmpleado })
@@ -33,7 +33,7 @@ export const pedidoService = {
     const formData = new FormData();
     formData.append('comprobante', file);
 
-    const response = await fetch(`${API_BASE_URL}/pedidos/${idPedido}/comprobante`, {
+    const response = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}/comprobante`, {
       method: 'POST',
       body: formData,
     });
@@ -44,20 +44,20 @@ export const pedidoService = {
    * Elimina el comprobante tanto del disco como del registro en la BD
    */
   eliminarComprobanteFisico: async (idPedido: number): Promise<boolean> => {
-    const response = await fetch(`${API_BASE_URL}/pedidos/${idPedido}/comprobante`, {
+    const response = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}/comprobante`, {
       method: 'DELETE',
     });
     return response.ok;
   },
 
   obtenerTodos: async (): Promise<Pedido[]> => {
-    const response = await fetch(`${API_BASE_URL}/pedidos`);
+    const response = await apiFetch(`${API_BASE_URL}/pedidos`);
     if (!response.ok) throw new Error('Error al obtener la lista de pedidos');
     return await response.json();
   },
 
   actualizarUbicacion: async (idPedido: number, nuevaUbicacion: string) => {
-    const response = await fetch(`${API_BASE_URL}/pedidos/${idPedido}/ubicacion`, {
+    const response = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}/ubicacion`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ubicacionEstante: nuevaUbicacion })
@@ -73,7 +73,7 @@ export const pedidoService = {
 
   cambiarEstado: async (idPedido: number, nuevoEstado: string, observaciones: string = '', idUsuario: number = 1) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/pedidos/${idPedido}/cambiar-estado`, {
+      const response = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}/cambiar-estado`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export const pedidoService = {
   },
 
   actualizarLimiteCredito: async (idCliente: number, limiteCredito: number) => {
-    const response = await fetch(`${API_BASE_URL}/cuentas-corrientes/cliente/${idCliente}/limite`, {
+    const response = await apiFetch(`${API_BASE_URL}/cuentas-corrientes/cliente/${idCliente}/limite`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ limiteCredito })

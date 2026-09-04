@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 import { getTodasLasRecetas } from '../services/productoService';
 
 interface Props {
@@ -32,6 +33,8 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
   useEffect(() => {
     if (show) {
       setCargando(true);
+      apiFetch('http://localhost:8080/api/producto-insumo')
+        .then(res => res.json())
       getTodasLasRecetas()
         .then((data: any[]) => {
           const ids = new Set<number>();

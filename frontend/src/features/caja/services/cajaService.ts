@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 
 export interface MovimientoCaja {
   id_movimiento?: number;
@@ -97,7 +97,7 @@ export const cajaService = {
   // --- MÉTODOS DE CAJA Y MOVIMIENTOS ---
   obtenerTodos: async (): Promise<MovimientoCaja[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/movimientos-caja`);
+      const response = await apiFetch(`${API_BASE_URL}/movimientos-caja`);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       return await response.json();
     } catch (error) {
@@ -108,7 +108,7 @@ export const cajaService = {
 
   obtenerMovimientosDia: async (): Promise<MovimientoCaja[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/movimientos-caja/dia`);
+      const response = await apiFetch(`${API_BASE_URL}/movimientos-caja/dia`);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       return await response.json();
     } catch (error) {
@@ -119,7 +119,7 @@ export const cajaService = {
 
   obtenerTotales: async (): Promise<TotalesCaja | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/movimientos-caja/totales`);
+      const response = await apiFetch(`${API_BASE_URL}/movimientos-caja/totales`);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       return await response.json();
     } catch (error) {
@@ -130,7 +130,7 @@ export const cajaService = {
 
   obtenerTotalesPorTurno: async (idTurno: number): Promise<TotalesCaja | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/movimientos-caja/totales/turno/${idTurno}`);
+      const response = await apiFetch(`${API_BASE_URL}/movimientos-caja/totales/turno/${idTurno}`);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       return await response.json();
     } catch (error) {
@@ -141,7 +141,7 @@ export const cajaService = {
 
   obtenerTodosLosTurnos: async (): Promise<Turno[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/turnos`);
+      const response = await apiFetch(`${API_BASE_URL}/turnos`);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       return await response.json();
     } catch (error) {
@@ -152,7 +152,7 @@ export const cajaService = {
 
   obtenerMovimientosPorTurno: async (idTurno: number): Promise<MovimientoCaja[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/movimientos-caja/turno/${idTurno}`);
+      const response = await apiFetch(`${API_BASE_URL}/movimientos-caja/turno/${idTurno}`);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       return await response.json();
     } catch (error) {
@@ -163,7 +163,7 @@ export const cajaService = {
 
   obtenerEstadoCaja: async (): Promise<Turno | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/turnos/estado-caja`);
+      const response = await apiFetch(`${API_BASE_URL}/turnos/estado-caja`);
       if (!response.ok) return null;
       const text = await response.text();
       return text ? JSON.parse(text) : null;
@@ -174,7 +174,7 @@ export const cajaService = {
   },
 
   abrirTurno: async (montoInicial: number): Promise<Turno> => {
-    const response = await fetch(`${API_BASE_URL}/turnos/abrir`, {
+    const response = await apiFetch(`${API_BASE_URL}/turnos/abrir`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -191,13 +191,13 @@ export const cajaService = {
   },
 
   obtenerDesgloseArqueo: async (): Promise<DatosArqueo> => {
-    const response = await fetch(`${API_BASE_URL}/movimientos-caja/desglose-arqueo`);
+    const response = await apiFetch(`${API_BASE_URL}/movimientos-caja/desglose-arqueo`);
     if (!response.ok) throw new Error('Error al obtener desglose de arqueo');
     return response.json();
   },
 
   obtenerDesgloseArqueoPorTurno: async (idTurno: number): Promise<DatosArqueo> => {
-    const response = await fetch(`${API_BASE_URL}/movimientos-caja/desglose-arqueo/turno/${idTurno}`);
+    const response = await apiFetch(`${API_BASE_URL}/movimientos-caja/desglose-arqueo/turno/${idTurno}`);
     if (!response.ok) throw new Error('Error al obtener desglose de arqueo del turno');
     return response.json();
   },
@@ -219,7 +219,7 @@ export const cajaService = {
       usuario: movimiento.usuario || { idUsuario }
     };
 
-    const response = await fetch(`${API_BASE_URL}/movimientos-caja`, {
+    const response = await apiFetch(`${API_BASE_URL}/movimientos-caja`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -235,7 +235,7 @@ export const cajaService = {
     const url = `${API_BASE_URL}/turnos/${idTurno}/cerrar?montoReal=${montoReal}${
       observaciones ? `&observaciones=${encodeURIComponent(observaciones)}` : ''
     }${idUsuario ? `&idUsuario=${idUsuario}` : ''}`;
-    const response = await fetch(url, { method: 'POST' });
+    const response = await apiFetch(url, { method: 'POST' });
     if (!response.ok) {
       const err = await response.text();
       throw new Error(err || 'Error al cerrar caja');
@@ -246,4 +246,6 @@ export const cajaService = {
 
 export const cajaServiceExtended = {
   ...cajaService,
+
+  
 };

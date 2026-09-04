@@ -1,3 +1,4 @@
+import { apiFetch } from '../../../config/api';
 const BASE_URL = 'http://localhost:8080/api';
 
 export interface TipoDocumento {
@@ -8,7 +9,7 @@ export interface TipoDocumento {
 
 export const clienteService = {
   getClientes: async () => {
-    const res = await fetch(`${BASE_URL}/clientes`);
+    const res = await apiFetch(`${BASE_URL}/clientes`);
     if (!res.ok) throw new Error("Error al obtener clientes");
     return res.json();
   },
@@ -22,7 +23,7 @@ export const clienteService = {
       ? `${BASE_URL}/clientes?idUsuario=${idUsuarioActual}` 
       : `${BASE_URL}/clientes`;
 
-    const res = await fetch(url, {
+    const res = await apiFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cliente)
@@ -48,13 +49,13 @@ export const clienteService = {
   },
 
   getCategorias: async () => {
-    const res = await fetch(`${BASE_URL}/categorias-cliente`);
+    const res = await apiFetch(`${BASE_URL}/categorias-cliente`);
     if (!res.ok) throw new Error("Error al obtener categorías");
     return res.json();
   },
 
   crearCategoria: async (categoria: { nombre: string; descuentoAutomatico: number }) => {
-    const res = await fetch(`${BASE_URL}/categorias-cliente`, {
+    const res = await apiFetch(`${BASE_URL}/categorias-cliente`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(categoria)
@@ -64,7 +65,7 @@ export const clienteService = {
   },
 
   actualizarCategoria: async (id: number, categoria: { nombre: string; descuentoAutomatico: number }) => {
-    const res = await fetch(`${BASE_URL}/categorias-cliente/${id}`, {
+    const res = await apiFetch(`${BASE_URL}/categorias-cliente/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(categoria)
@@ -74,19 +75,19 @@ export const clienteService = {
   },
 
   eliminarCategoria: async (id: number) => {
-    const res = await fetch(`${BASE_URL}/categorias-cliente/${id}`, { method: 'DELETE' });
+    const res = await apiFetch(`${BASE_URL}/categorias-cliente/${id}`, { method: 'DELETE' });
     if (!res.ok) throw new Error("Error al eliminar categoría");
     return res;
   },
 
   getMovimientos: async (idCliente: number) => {
-    const res = await fetch(`${BASE_URL}/cuentas-corrientes/cliente/${idCliente}/movimientos`);
+    const res = await apiFetch(`${BASE_URL}/cuentas-corrientes/cliente/${idCliente}/movimientos`);
     if (!res.ok) throw new Error("Error al obtener movimientos");
     return res.json();
   },
 
   actualizarLimiteCredito: async (idCliente: number, limiteCredito: number) => {
-    const res = await fetch(`${BASE_URL}/cuentas-corrientes/cliente/${idCliente}/limite`, {
+    const res = await apiFetch(`${BASE_URL}/cuentas-corrientes/cliente/${idCliente}/limite`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ limiteCredito })
@@ -106,7 +107,7 @@ export const clienteService = {
     const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
     const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario;
 
-    const res = await fetch(`${BASE_URL}/cuentas-corrientes/cliente/${idCliente}/registrar-pago`, {
+    const res = await apiFetch(`${BASE_URL}/cuentas-corrientes/cliente/${idCliente}/registrar-pago`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 

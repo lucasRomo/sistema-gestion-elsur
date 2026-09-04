@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SuccesModal } from '../../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../../Context/ThemeContext';
+import { apiFetch } from '../../../../config/api';
 import { PedidoPendienteService } from '../service/pedidoPendienteService';
 
 interface ModalRegistrarPagoProps {
@@ -42,6 +43,23 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
 
   useEffect(() => {
     const verificarCaja = async () => {
+      try {
+        const res = await apiFetch('http://localhost:8080/api/turnos/estado-caja');
+        if (res.ok) {
+          const text = await res.text(); 
+          if (!text || text.trim() === "") {
+            setCajaAbierta(false);
+          } else {
+            const turno = JSON.parse(text);
+            setCajaAbierta(turno !== null);
+          }
+        } else {
+          setCajaAbierta(false);
+        }
+      } catch (error) {
+        console.error("Error al comprobar el estado de la caja:", error);
+        setCajaAbierta(false);
+      }
       const estaAbierta = await PedidoPendienteService.verificarEstadoCaja();
       setCajaAbierta(estaAbierta);
     };

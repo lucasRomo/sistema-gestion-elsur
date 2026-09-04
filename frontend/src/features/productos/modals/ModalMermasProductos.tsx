@@ -3,6 +3,7 @@ import type { Producto } from '../types/Producto';
 import { mermaService, type MermaEntity } from '../../../services/mermaService';
 import { useTheme } from '../../../Context/ThemeContext';
 import { getHistorialMermas, getRecetaPorProducto } from '../services/productoService';
+import { apiFetch } from '../../../config/api';
 
 interface ModalMermasProductosProps {
   show: boolean;
@@ -89,6 +90,11 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
   const cargarHistorial = useCallback(async () => {
     setCargandoHistorial(true);
     try {
+      const res = await apiFetch('http://localhost:8080/api/mermas');
+      if (res.ok) {
+        const data = await res.json();
+        setHistorial(data);
+      }
       const data = await getHistorialMermas();
       setHistorial(data);
     } catch (err) {
@@ -110,6 +116,13 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
         const resultados = await Promise.all(
           productosConId.map(async (prod) => {
             try {
+              const res = await apiFetch(
+                `http://localhost:8080/api/producto-insumo/producto/${prod.idProducto}`
+              );
+              if (res.ok) {
+                const data = await res.json();
+                return { idProducto: prod.idProducto!, data };
+              }
               const data = await getRecetaPorProducto(prod.idProducto!);
               return { idProducto: prod.idProducto!, data };
             } catch (e) {

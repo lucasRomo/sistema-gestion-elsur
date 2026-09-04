@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { UnidadMedida } from '../types/Insumo';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 import { crearUnidadMedida, eliminarUnidadMedida } from '../services/insumoService';
 
 interface GestionUnidadesModalProps {
@@ -66,6 +67,16 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
     try {
       setCargando(true);
       setError(null);
+      const res = await apiFetch('http://localhost:8080/api/unidades-medida', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: nombreLimpio })
+      });
+
+      if (!res.ok) {
+        const errorMsg = await res.text();
+        throw new Error(errorMsg || 'Error al guardar la unidad de medida');
+      }
       await crearUnidadMedida(nombreLimpio);
 
       setNuevoNombre('');
@@ -91,6 +102,11 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
     try {
       setCargando(true);
       setError(null);
+      const res = await apiFetch(`http://localhost:8080/api/unidades-medida/${idEliminar}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) throw new Error('No se pudo eliminar la unidad. Es posible que esté asignada a un insumo.');
       await eliminarUnidadMedida(idEliminar);
 
       setMostrarModalConfirmar(false);
