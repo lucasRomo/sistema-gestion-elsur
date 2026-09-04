@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { mermaService, type MermaEntity } from '../../../services/mermaService';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 interface ModalGestionMermasProps {
   pedido: any;
@@ -71,7 +72,7 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
 
         if (idProd && !mapa[idProd]) {
           try {
-            const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${idProd}`);
+            const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${idProd}`);
             if (res.ok) {
               const data = await res.json();
               mapa[idProd] = data;

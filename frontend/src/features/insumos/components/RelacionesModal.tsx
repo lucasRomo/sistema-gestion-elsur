@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import type { Insumo } from '../types/Insumo';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 interface RelacionesModalProps {
   show: boolean;
@@ -24,7 +25,7 @@ export const RelacionesModal: React.FC<RelacionesModalProps> = ({ show, onClose 
   useEffect(() => {
     if (show) {
       setCargando(true);
-      fetch('http://localhost:8080/api/insumos')
+      apiFetch('http://localhost:8080/api/insumos')
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {

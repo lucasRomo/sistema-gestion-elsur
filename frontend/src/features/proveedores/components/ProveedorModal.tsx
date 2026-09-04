@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Proveedor } from '../types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 interface ProveedorModalProps {
   show: boolean;
@@ -43,7 +44,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
 
   const cargarCategorias = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/tipos-proveedor');
+      const res = await apiFetch('http://localhost:8080/api/tipos-proveedor');
       if (!res.ok) throw new Error();
       const data = await res.json();
       setTiposProveedor(data);
@@ -80,7 +81,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   }
 
   try {
-    const res = await fetch('http://localhost:8080/api/tipos-proveedor', {
+    const res = await apiFetch('http://localhost:8080/api/tipos-proveedor', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ descripcion: nombreLimpio })
@@ -103,7 +104,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   if (!idCategoriaAEliminar) return;
 
   try {
-    const res = await fetch(`http://localhost:8080/api/tipos-proveedor/${idCategoriaAEliminar}`, {
+    const res = await apiFetch(`http://localhost:8080/api/tipos-proveedor/${idCategoriaAEliminar}`, {
       method: 'DELETE'
     });
 

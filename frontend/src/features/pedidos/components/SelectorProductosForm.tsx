@@ -4,6 +4,7 @@ import type { CartItem } from '../types/Pedido';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 interface Props {
   productos: Producto[];
@@ -88,7 +89,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
     if (!prodSeleccionado) return;
     let recetaInsumos: any[] = [];
     try {
-      const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${prodSeleccionado.idProducto}`);
+      const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${prodSeleccionado.idProducto}`);
       if (res.ok) {
         recetaInsumos = await res.json();
       }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Pedido, CartItem } from '../types/Pedido';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
+import { apiFetch } from '../../../config/api';
 
 interface Props {
   clientes: any[];
@@ -47,7 +48,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
   useEffect(() => {
     const fetchPedidosPendientes = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/pedidos');
+        const response = await apiFetch('http://localhost:8080/api/pedidos');
         if (response.ok) {
           const data = await response.json();
           const conteo: Record<number, number> = {};

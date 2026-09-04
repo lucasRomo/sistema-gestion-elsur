@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Insumo } from '../types/Insumo';
 import { mermaService, type MermaEntity } from '../../../services/mermaService';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 interface ModalMermasInsumosProps {
   show: boolean;
@@ -50,7 +51,7 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
   const cargarHistorial = async () => {
     setCargandoHistorial(true);
     try {
-      const res = await fetch('http://localhost:8080/api/mermas');
+      const res = await apiFetch('http://localhost:8080/api/mermas');
       if (res.ok) {
         const data = await res.json();
         setHistorial(data);

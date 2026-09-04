@@ -18,6 +18,7 @@ import { ModalStockCriticoList, type ItemStockCritico } from '../../insumos/moda
 // Componentes y contextos compartidos globales
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 export const Productos: React.FC = () => {
   const { theme } = useTheme();
@@ -92,7 +93,7 @@ export const Productos: React.FC = () => {
     if (!producto.idProducto) return;
     if (!producto.stockVinculado) {
       try {
-        const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`);
+        const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`);
         if (res.ok) {
           const recetaData = await res.json();
           

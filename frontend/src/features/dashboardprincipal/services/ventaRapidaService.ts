@@ -2,19 +2,20 @@
 import type { Producto } from '../../productos/types/Producto';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
+import { apiFetch } from '../../../config/api';
 
 const API_BASE = 'http://localhost:8080/api';
 
 export const ventaRapidaService = {
   async getProductosActivos(): Promise<Producto[]> {
-    const res = await fetch(`${API_BASE}/productos`);
+    const res = await apiFetch(`${API_BASE}/productos`);
     if (!res.ok) throw new Error('Error al obtener productos');
     const data: Producto[] = await res.json();
     return data.filter((p) => p.estado === 'Activo');
   },
 
   async getCategorias(): Promise<CategoriaCliente[]> {
-    const res = await fetch(`${API_BASE}/categorias-cliente`);
+    const res = await apiFetch(`${API_BASE}/categorias-cliente`);
     if (!res.ok) throw new Error('Error al obtener categorías');
     const data = await res.json();
     return data.map((cat: any) => ({
@@ -25,7 +26,7 @@ export const ventaRapidaService = {
   },
 
   async getMaquinas(): Promise<Maquina[]> {
-    const res = await fetch(`${API_BASE}/maquinas`);
+    const res = await apiFetch(`${API_BASE}/maquinas`);
     if (!res.ok) throw new Error('Error al obtener máquinas');
     return res.json();
   },
@@ -56,7 +57,7 @@ export const ventaRapidaService = {
       tipoPago: 'EFECTIVO'
     };
 
-    const resCrear = await fetch(`${API_BASE}/pedidos`, {
+    const resCrear = await apiFetch(`${API_BASE}/pedidos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payloadPedido)
@@ -75,14 +76,14 @@ export const ventaRapidaService = {
       idUsuario: payload.idUsuario
     }));
 
-    const resPago = await fetch(`${API_BASE}/pedidos/${idPedido}/pagos`, {
+    const resPago = await apiFetch(`${API_BASE}/pedidos/${idPedido}/pagos`, {
       method: 'POST',
       body: formDataPago
     });
     if (!resPago.ok) throw new Error(await resPago.text() || "Error al registrar cobro en caja.");
 
     // 3. Cambiar estado a FINALIZADO
-    const resEstado = await fetch(`${API_BASE}/pedidos/${idPedido}/cambiar-estado`, {
+    const resEstado = await apiFetch(`${API_BASE}/pedidos/${idPedido}/cambiar-estado`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

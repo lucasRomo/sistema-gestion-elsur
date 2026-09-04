@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiFetch } from '../../../config/api';
 
 export const usePedidosPendientes = () => {
   const [pedidos, setPedidos] = useState<any[]>([]);
@@ -6,7 +7,7 @@ export const usePedidosPendientes = () => {
 
   const cargarPedidos = async () => {
     try {
-      const resp = await fetch('http://localhost:8080/api/pedidos');
+      const resp = await apiFetch('http://localhost:8080/api/pedidos');
       if (resp.ok) {
         const data = await resp.json();
         
@@ -39,7 +40,7 @@ export const usePedidosPendientes = () => {
     formData.append('archivo', file);
     formData.append('esSeña', esSeña.toString());
 
-    await fetch(`http://localhost:8080/api/comprobantes/${idPedido}/comprobante`, {
+    await apiFetch(`http://localhost:8080/api/comprobantes/${idPedido}/comprobante`, {
       method: 'POST',
       body: formData
     });
@@ -49,7 +50,7 @@ export const usePedidosPendientes = () => {
 
   const actualizarEstado = async (idPedido: number, nuevoEstado: string, estadoAnterior: string, observaciones: string, idUsuario: number) => {
     try {
-      const resp = await fetch(`http://localhost:8080/api/pedidos/${idPedido}/cambiar-estado`, {
+      const resp = await apiFetch(`http://localhost:8080/api/pedidos/${idPedido}/cambiar-estado`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nuevoEstado, observaciones, idUsuario })
@@ -84,7 +85,7 @@ export const usePedidosPendientes = () => {
     try {
       const url = `http://localhost:8080/api/pedidos/${idPedido}/pagos`;
       
-      const resp = await fetch(url, {
+      const resp = await apiFetch(url, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json' 

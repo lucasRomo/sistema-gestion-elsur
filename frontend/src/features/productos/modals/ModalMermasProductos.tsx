@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { Producto } from '../types/Producto';
 import { mermaService, type MermaEntity } from '../../../services/mermaService';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 interface ModalMermasProductosProps {
   show: boolean;
@@ -90,7 +91,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
   const cargarHistorial = useCallback(async () => {
     setCargandoHistorial(true);
     try {
-      const res = await fetch('http://localhost:8080/api/mermas');
+      const res = await apiFetch('http://localhost:8080/api/mermas');
       if (res.ok) {
         const data = await res.json();
         setHistorial(data);
@@ -114,7 +115,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
         const resultados = await Promise.all(
           productosConId.map(async (prod) => {
             try {
-              const res = await fetch(
+              const res = await apiFetch(
                 `http://localhost:8080/api/producto-insumo/producto/${prod.idProducto}`
               );
               if (res.ok) {

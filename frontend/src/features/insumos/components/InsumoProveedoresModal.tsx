@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Insumo } from '../types/Insumo';
 import type { Proveedor } from '../../proveedores/types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 interface InsumoProveedoresModalProps {
   show: boolean;
@@ -20,7 +21,7 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
   useEffect(() => {
     if (show && insumo?.proveedor?.tipoProveedor) {
       setCargando(true);
-      fetch('http://localhost:8080/api/proveedores')
+      apiFetch('http://localhost:8080/api/proveedores')
         .then(res => res.json())
         .then((data: Proveedor[]) => {
           // Filtramos primero por categoría

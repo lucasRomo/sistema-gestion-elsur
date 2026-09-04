@@ -71,6 +71,13 @@ public class MatrizSeguridadValidator implements AuthorizationManager<RequestAut
             return true;
         }
 
+        // 1.b Asistente de ayuda: accesible para CUALQUIER usuario autenticado,
+        // sin exigir ningún permiso puntual de la matriz (es una guía de uso,
+        // no una operación sobre datos sensibles del negocio).
+        if (pathMatcher.match("/api/asistente/**", path)) {
+            return true;
+        }
+
         // Extracción de permisos normalizados (sin tildes, mayúsculas y sin espacios extra)
         Set<String> permisosUsuario = usuario.getRol().getPermisos() != null
                 ? usuario.getRol().getPermisos().stream()

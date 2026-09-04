@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { ItemCompraInsumo } from '../types/compraInsumos';
+import { apiFetch } from '../../../config/api';
 
 interface ModalCargaIAProps {
   isOpen: boolean;
@@ -69,7 +70,7 @@ export const ModalCargaIA: React.FC<ModalCargaIAProps> = ({
     formData.append('catalogos', JSON.stringify(catalogos));
 
     try {
-      const res = await fetch('http://localhost:8080/api/ia/analizar-comprobante', {
+      const res = await apiFetch('http://localhost:8080/api/ia/analizar-comprobante', {
         method: 'POST',
         body: formData
       });

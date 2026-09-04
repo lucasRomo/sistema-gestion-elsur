@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../Context/ThemeContext';
+import { apiFetch } from '../../config/api';
 
 interface PersonaFormProps {
   formData: any;
@@ -25,7 +26,7 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({ formData, setFormData,
   const [tiposDocumento, setTiposDocumento] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/tipos-documento')
+    apiFetch('http://localhost:8080/api/tipos-documento')
       .then(res => {
         if (!res.ok) throw new Error();
         return res.json();

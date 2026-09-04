@@ -1,3 +1,4 @@
+import { apiFetch } from '../../../config/api';
 const API_URL = 'http://localhost:8080/api/pedidos';
 
 export const historialPedidoService = {
@@ -5,7 +6,7 @@ export const historialPedidoService = {
    * Obtiene los detalles completos de un pedido para la auditoría
    */
   obtenerPorId: async (idPedido: number): Promise<any> => {
-    const response = await fetch(`${API_URL}/${idPedido}`);
+    const response = await apiFetch(`${API_URL}/${idPedido}`);
     if (!response.ok) {
       throw new Error("No se pudo obtener el historial detallado de este pedido.");
     }
@@ -22,7 +23,7 @@ export const historialPedidoService = {
     idUsuario: number
   ): Promise<any> => {
     // CORRECCIÓN: La URL es /cambiar-estado y la clave es nuevoEstado
-    const response = await fetch(`${API_URL}/${idPedido}/cambiar-estado`, {
+    const response = await apiFetch(`${API_URL}/${idPedido}/cambiar-estado`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -47,7 +48,7 @@ export const historialPedidoService = {
     const formData = new FormData();
     formData.append('comprobante', archivo);
 
-    const response = await fetch(`${API_URL}/${idPedido}/comprobante`, {
+    const response = await apiFetch(`${API_URL}/${idPedido}/comprobante`, {
       method: 'POST',
       body: formData
     });
@@ -59,7 +60,7 @@ export const historialPedidoService = {
    * Elimina comprobante físico en el histórico
    */
   eliminarComprobanteFisico: async (idPedido: number): Promise<boolean> => {
-    const response = await fetch(`${API_URL}/${idPedido}/comprobante`, {
+    const response = await apiFetch(`${API_URL}/${idPedido}/comprobante`, {
       method: 'DELETE'
     });
 

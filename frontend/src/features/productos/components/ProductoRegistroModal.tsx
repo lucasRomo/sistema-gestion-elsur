@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Producto, Categoria } from '../types/Producto';
 import type { Maquina } from '../../maquinas/types/Maquina';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 interface Props {
   show: boolean;
@@ -47,7 +48,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
 
   const cargarCategorias = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/categorias');
+      const res = await apiFetch('http://localhost:8080/api/categorias');
       if (res.ok) {
         const data = await res.json();
         setCategorias(data);
@@ -57,7 +58,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
 
   const cargarMaquinas = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/maquinas');
+      const res = await apiFetch('http://localhost:8080/api/maquinas');
       if (res.ok) {
         const data = await res.json();
         setMaquinas(data);
@@ -117,7 +118,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     }
 
     try {
-      const res = await fetch('http://localhost:8080/api/categorias', {
+      const res = await apiFetch('http://localhost:8080/api/categorias', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre: nombreLimpio })
@@ -137,7 +138,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const handleEliminarCategoria = async (id: number) => {
     if (!confirm("¿Seguro que querés eliminar esta categoría?")) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/categorias/${id}`, {
+      const res = await apiFetch(`http://localhost:8080/api/categorias/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiFetch } from '../../../config/api';
 
 export const useHistorialPedidos = () => {
   const [pedidos, setPedidos] = useState<any[]>([]);
@@ -8,7 +9,7 @@ export const useHistorialPedidos = () => {
     setCargando(true);
     try {
       // Ajustá este endpoint según mapee tu backend para traer el histórico global
-      const response = await fetch('http://localhost:8080/api/pedidos');
+      const response = await apiFetch('http://localhost:8080/api/pedidos');
       if (response.ok) {
         const data = await response.json();
         // Ordenamos por fecha de creación descendentemente (más recientes primero)

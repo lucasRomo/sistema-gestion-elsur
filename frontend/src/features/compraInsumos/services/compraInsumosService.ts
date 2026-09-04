@@ -1,4 +1,5 @@
 import type { DatosCompraInsumo } from '../types/compraInsumos';
+import { apiFetch } from '../../../config/api';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -13,7 +14,7 @@ export const compraInsumosService = {
       idUsuario
     };
 
-    const response = await fetch(`${API_BASE_URL}/compras-insumos`, {
+    const response = await apiFetch(`${API_BASE_URL}/compras-insumos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../../../config/api';
 
 interface ClienteEditModalProps {
   cliente: any;
@@ -41,7 +42,7 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
 
   // Cargamos los tipos de documentos disponibles al montar el modal
   useEffect(() => {
-    fetch('http://localhost:8080/api/tipos-documento')
+    apiFetch('http://localhost:8080/api/tipos-documento')
       .then(res => {
         if (!res.ok) throw new Error();
         return res.json();

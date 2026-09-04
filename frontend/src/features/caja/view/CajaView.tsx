@@ -14,6 +14,7 @@ import { ModalCerrarTurno } from '../components/ModalCerrarTurno';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import type { NuevoMovimientoDTO } from '../services/cajaService';
 import { renderBadgeCategoria } from '../components/RenderBadgeCategoria';
+import { apiFetch } from '../../../config/api';
 
 export const CajaView: React.FC = () => {
   const navigate = useNavigate();
@@ -204,7 +205,7 @@ export const CajaView: React.FC = () => {
     if (idPedidoRaw && !isNaN(Number(idPedidoRaw))) {
       const idPedido = Number(idPedidoRaw);
       try {
-        const response = await fetch(`http://localhost:8080/api/pedidos/${idPedido}`);
+        const response = await apiFetch(`http://localhost:8080/api/pedidos/${idPedido}`);
         if (response.ok) {
           const pedidoCompleto = await response.json();
           setTicketSeleccionado({ pedido: pedidoCompleto, movimiento: m });

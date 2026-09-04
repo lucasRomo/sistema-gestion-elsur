@@ -1,4 +1,5 @@
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
+import { apiFetch } from '../../../config/api';
 
 const API_PEDIDOS = 'http://localhost:8080/api/pedidos';
 const API_CATEGORIAS = 'http://localhost:8080/api/categorias-cliente';
@@ -8,7 +9,7 @@ export const crearPedidoService = {
    * Obtiene la lista de categorías de cliente normalizando los datos de la respuesta.
    */
   obtenerCategoriasCliente: async (): Promise<CategoriaCliente[]> => {
-    const response = await fetch(API_CATEGORIAS);
+    const response = await apiFetch(API_CATEGORIAS);
     if (!response.ok) {
       throw new Error('Error al obtener las categorías de cliente');
     }
@@ -36,13 +37,13 @@ export const crearPedidoService = {
       formData.append('payload', JSON.stringify(payload));
       formData.append('comprobante', comprobante);
 
-      response = await fetch(API_PEDIDOS, {
+      response = await apiFetch(API_PEDIDOS, {
         method: 'POST',
         body: formData,
       });
     } else {
       // Envío en formato JSON tradicional
-      response = await fetch(API_PEDIDOS, {
+      response = await apiFetch(API_PEDIDOS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

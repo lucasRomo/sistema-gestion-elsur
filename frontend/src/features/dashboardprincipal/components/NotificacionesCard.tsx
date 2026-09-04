@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 interface PedidoBackend {
   id_pedido: number;
@@ -36,7 +37,7 @@ export const NotificacionesCard: React.FC = () => {
 
   const fetchNotificaciones = async () => {
     try {
-      const resCaja = await fetch('http://localhost:8080/api/turnos/estado-caja');
+      const resCaja = await apiFetch('http://localhost:8080/api/turnos/estado-caja');
       if (resCaja.ok) {
         const textRes = await resCaja.text();
         if (textRes) {
@@ -44,7 +45,7 @@ export const NotificacionesCard: React.FC = () => {
           setCajaAbierta(true);
           setDatosTurno(dataCaja);
 
-          const resTotales = await fetch('http://localhost:8080/api/movimientos-caja/totales');
+          const resTotales = await apiFetch('http://localhost:8080/api/movimientos-caja/totales');
           if (resTotales.ok) {
             const dataTotales = await resTotales.json();
             setIngresosTurno(dataTotales.totalIngresos || 0);
@@ -58,7 +59,7 @@ export const NotificacionesCard: React.FC = () => {
         }
       }
 
-      const resPedidos = await fetch('http://localhost:8080/api/pedidos');
+      const resPedidos = await apiFetch('http://localhost:8080/api/pedidos');
       if (resPedidos.ok) {
         const dataPedidos: PedidoBackend[] = await resPedidos.json();
         const ahora = new Date().getTime();

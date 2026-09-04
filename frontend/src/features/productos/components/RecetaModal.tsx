@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 interface Props {
   show: boolean;
@@ -57,7 +58,7 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
 
   const cargarInsumos = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/insumos');
+      const res = await apiFetch('http://localhost:8080/api/insumos');
       if (res.ok) {
         const data = await res.json();
         setInsumosDisponibles(data);
@@ -69,7 +70,7 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
 
   const cargarRecetaDelProducto = async () => {
     try {
-      const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`);
+      const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`);
       if (res.ok) {
         const data = await res.json();
         const listaMapeada = data.map((pi: any) => ({
@@ -136,7 +137,7 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
         cantidadConsumo: item.cantidadConsumo
       }));
 
-      const res = await fetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`, {
+      const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { UnidadMedida } from '../types/Insumo';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 interface GestionUnidadesModalProps {
   show: boolean;
@@ -69,7 +70,7 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
     try {
       setCargando(true);
       setError(null);
-      const res = await fetch('http://localhost:8080/api/unidades-medida', {
+      const res = await apiFetch('http://localhost:8080/api/unidades-medida', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre: nombreLimpio })
@@ -105,7 +106,7 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
     try {
       setCargando(true);
       setError(null);
-      const res = await fetch(`http://localhost:8080/api/unidades-medida/${idEliminar}`, {
+      const res = await apiFetch(`http://localhost:8080/api/unidades-medida/${idEliminar}`, {
         method: 'DELETE'
       });
 

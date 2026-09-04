@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
+import { apiFetch } from '../../../config/api';
 
 interface ModalRegistrarPagoProps {
   pedido: any;
@@ -43,7 +44,7 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   useEffect(() => {
     const verificarCaja = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/turnos/estado-caja');
+        const res = await apiFetch('http://localhost:8080/api/turnos/estado-caja');
         if (res.ok) {
           const text = await res.text(); 
           if (!text || text.trim() === "") {

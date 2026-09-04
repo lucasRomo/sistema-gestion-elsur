@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL, apiFetch } from '../config/api';
 
 const TurnoContext = createContext<any>(null);
 
@@ -13,7 +13,7 @@ export const TurnoProvider = ({ children }: { children: React.ReactNode }) => {
   // Función reutilizable para sincronizar el estado real con Spring Boot
   const verificarEstadoCaja = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/turnos/estado-caja`);
+      const res = await apiFetch(`${API_BASE_URL}/turnos/estado-caja`);
       if (res.ok) {
         const text = await res.text();
         // Si el backend devuelve null o un string vacío, la caja está CERRADA

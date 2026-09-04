@@ -1,6 +1,7 @@
 // src/components/EmpleadoModal.tsx
 import React from 'react';
 import logoGesta from '../../../assets/logo-gestaprog.png'; // Ajusta la ruta a tu carpeta de assets
+import { apiFetch } from '../../../config/api';
 
 interface EmpleadoModalProps {
   formData: any;
@@ -20,7 +21,7 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
 
     if (valor.length > 0) {
       try {
-        const response = await fetch(`http://localhost:8080/api/usuarios/exists?nombreUsuario=${encodeURIComponent(valor)}`);
+        const response = await apiFetch(`http://localhost:8080/api/usuarios/exists?nombreUsuario=${encodeURIComponent(valor)}`);
         if (response.ok) {
           const existe = await response.json();
           if (existe) {

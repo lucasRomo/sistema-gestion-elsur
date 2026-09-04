@@ -4,6 +4,7 @@ import type { Proveedor } from '../../proveedores/types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
 import { GestionUnidadesModal } from './GestionUnidadesModal';
 import { RelacionesModal } from './RelacionesModal';
+import { apiFetch } from '../../../config/api';
 
 interface InsumoModalProps {
   show: boolean;
@@ -57,7 +58,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   });
 
   const cargarUnidadesMedida = () => {
-    fetch('http://localhost:8080/api/unidades-medida')
+    apiFetch('http://localhost:8080/api/unidades-medida')
       .then(res => {
         if (!res.ok) throw new Error('Error al consultar unidades');
         return res.json();
@@ -75,7 +76,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
   useEffect(() => {
     if (show) {
-      fetch('http://localhost:8080/api/proveedores')
+      apiFetch('http://localhost:8080/api/proveedores')
         .then(res => {
           if (!res.ok) throw new Error('Error al obtener proveedores');
           return res.json();
