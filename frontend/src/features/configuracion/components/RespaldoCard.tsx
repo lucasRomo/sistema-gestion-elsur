@@ -104,7 +104,7 @@ export const RespaldoCard: React.FC<Props> = ({
 
         <div className="p-3 mb-4 rounded border border-secondary" style={{ backgroundColor: subBg }}>
           <h6 className="fw-bold text-warning mb-2 small">
-            <i className="bi bi-upload me-2"></i>Cargar / Restaurar Copia de Seguridad JSON
+            <i className="bi bi-upload me-2"></i>Cargar / Restaurar Copia de Seguridad
           </h6>
           <form onSubmit={handleRestaurarClick} className="d-flex gap-2">
             <input 
