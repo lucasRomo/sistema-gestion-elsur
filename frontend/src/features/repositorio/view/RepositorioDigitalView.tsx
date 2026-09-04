@@ -83,7 +83,6 @@ export const RepositorioDigitalView: React.FC = () => {
     >
       <div className="d-flex justify-content-between align-items-center mb-2">
         <h2 className="fw-bold mb-0">Repositorio Digital</h2>
-        <i className="bi bi-question-circle text-info fs-4" style={{ cursor: 'pointer' }}></i>
       </div>
 
       <div className="row g-3 flex-grow-1 overflow-hidden" style={{ minHeight: 0 }}>

@@ -352,7 +352,6 @@ export const PedidosPendientesView: React.FC = () => {
           <h1 className="fw-bold tracking-tight text-white m-0 text-center" style={{ fontSize: '1.85rem' }}>
             {filtroEstado === 'PRESUPUESTO' ? 'Presupuestos / Cotizaciones' : 'Cola de Producción Taller'}
           </h1>
-          <span className="badge bg-dark border border-info text-info font-monospace position-absolute end-0">Datos en Tiempo Real</span>
         </div>
 
         <div className="mt-3 mb-3">

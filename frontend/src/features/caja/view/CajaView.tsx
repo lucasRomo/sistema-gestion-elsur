@@ -48,7 +48,7 @@ export const CajaView: React.FC = () => {
   // Estado para alertas/validaciones personalizadas
   const [avisoModal, setAvisoModal] = useState<string | null>(null);
 
-  // Estado para el modal de éxito personalizado en apertura u otras operaciones generales
+  // Estado para el modal de éxito personalizado
   const [exitoModal, setExitoModal] = useState<{ titulo: string; descripcion: string } | null>(null);
 
   // Estados para tickets y comprobante
@@ -200,27 +200,38 @@ export const CajaView: React.FC = () => {
     }
   };
 
+  // Priorizando la consulta HTTP mediante apiFetch
   const handleVerTicket = async (m: any) => {
     const idPedidoRaw = m.pedido?.idPedido || m.pedido?.id_pedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1]?.trim() : null);
 
     if (idPedidoRaw && !isNaN(Number(idPedidoRaw))) {
       const idPedido = Number(idPedidoRaw);
+      
+      // 1° Prioridad: Intentar obtener el pedido directamente vía apiFetch
       try {
-        const response = await apiFetch(`http://localhost:8080/api/pedidos/${idPedido}`);
+        const response = await apiFetch(`/pedidos/${idPedido}`);
         if (response.ok) {
           const pedidoCompleto = await response.json();
           setTicketSeleccionado({ pedido: pedidoCompleto, movimiento: m });
           return;
         }
-      } catch (error) {
-        console.error("Error consultando datos completos del pedido:", error);
-      const pedidoCompleto = await cajaService.obtenerPedidoPorId(idPedido);
-      if (pedidoCompleto) {
-        setTicketSeleccionado({ pedido: pedidoCompleto, movimiento: m });
-        return;
+      } catch (errorApi) {
+        console.warn("Llamada directa con apiFetch fallida, intentando con cajaService:", errorApi);
+      }
+
+      // 2° Fallback: Intentar obtener mediante cajaService
+      try {
+        const pedidoCompleto = await cajaService.obtenerPedidoPorId(idPedido);
+        if (pedidoCompleto) {
+          setTicketSeleccionado({ pedido: pedidoCompleto, movimiento: m });
+          return;
+        }
+      } catch (errService) {
+        console.error("Error al obtener pedido mediante cajaService:", errService);
       }
     }
 
+    // 3° Adaptación fallback en caso de no obtener datos del servidor
     const pedidoAdaptado = {
       id_pedido: idPedidoRaw || '-',
       cliente: {
@@ -270,7 +281,6 @@ export const CajaView: React.FC = () => {
         
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1 className="fw-bold mx-auto font-monospace" style={{ fontSize: '2.8rem' }}>Caja</h1>
-          <i className="bi bi-question-circle text-info fs-3" style={{ cursor: 'pointer' }}></i>
         </div>
 
         <div className="row g-4 mb-4">
@@ -375,137 +385,134 @@ export const CajaView: React.FC = () => {
             
             <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: tableWrapBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle, height: '315px' }}>
               <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapBg, height: '100%', overflowY: 'auto' }}>
-               <table className="table table-hover m-0 align-middle text-center" style={{ '--bs-table-bg': tableWrapBg,
-  '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.075)', color: isDark ? '#fff' : 'inherit' } as React.CSSProperties}>
-   <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
-     <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
-       <th style={{ width: '60px' }}>ID</th>
-       <th style={{ width: '140px' }}>Fecha/Hora</th>
-       <th style={{ width: '90px' }}>Monto</th>
-       <th style={{ width: '110px' }}>Método</th>
-       <th style={{ width: '120px' }}>Categoría</th>
-       <th className="text-start">Descripción</th>
-       <th style={{ width: '60px' }}>Usu.</th>
-       <th style={{ width: '60px' }}>Ped.</th>
-       <th style={{ width: '120px' }}>Acciones</th>
-     </tr>
-   </thead>
-   <tbody>
-     {movimientos.length === 0 ? (
-       <tr><td colSpan={9} className="py-5 opacity-50">No hay movimientos registrados hoy</td></tr>
-     ) : (
-       [...movimientos].reverse().map((m, idx) => {
-         const imagenAdjunta = 
-           m.comprobanteImagen || 
-           m.comprobante || 
-           m.imagenComprobante || 
-           m.comprobante_imagen || 
-           m.imagen_comprobante ||
-           m.urlComprobante ||
-           m.url_comprobante;
+                <table className="table table-hover m-0 align-middle text-center" style={{ '--bs-table-bg': tableWrapBg, '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.075)', color: isDark ? '#fff' : 'inherit' } as React.CSSProperties}>
+                  <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
+                    <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
+                      <th style={{ width: '60px' }}>ID</th>
+                      <th style={{ width: '140px' }}>Fecha/Hora</th>
+                      <th style={{ width: '90px' }}>Monto</th>
+                      <th style={{ width: '110px' }}>Método</th>
+                      <th style={{ width: '120px' }}>Categoría</th>
+                      <th className="text-start">Descripción</th>
+                      <th style={{ width: '60px' }}>Usu.</th>
+                      <th style={{ width: '60px' }}>Ped.</th>
+                      <th style={{ width: '120px' }}>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {movimientos.length === 0 ? (
+                      <tr><td colSpan={9} className="py-5 opacity-50">No hay movimientos registrados hoy</td></tr>
+                    ) : (
+                      [...movimientos].reverse().map((m, idx) => {
+                        const imagenAdjunta = 
+                          m.comprobanteImagen || 
+                          m.comprobante || 
+                          m.imagenComprobante || 
+                          m.comprobante_imagen || 
+                          m.imagen_comprobante ||
+                          m.urlComprobante ||
+                          m.url_comprobante;
 
-         return (
-           <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
-             <td className="fw-bold opacity-75">
-               #{m.id_movimiento || m.idMovimiento || '-'}
-             </td>
-             <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
-             <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
-               {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
-             </td>
-             <td>
-               <span className="badge bg-secondary font-monospace">
-                 {m.metodoPago || 'EFECTIVO'}
-               </span>
-             </td>
-             <td>{renderBadgeCategoria(m, isDark)}</td>
-             
-             <td>
-               <div 
-                 className="text-start" 
-                 style={{ wordBreak: 'break-word', minWidth: '180px' }}
-                 title={m.descripcion || 'Sin descripción'}
-               >
-                 {m.descripcion || '-'}
-               </div>
-             </td>
-             
-             <td>
-               {(() => {
-                 const u = m.usuario;
+                        return (
+                          <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
+                            <td className="fw-bold opacity-75">
+                              #{m.id_movimiento || m.idMovimiento || '-'}
+                            </td>
+                            <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
+                            <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
+                              {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
+                            </td>
+                            <td>
+                              <span className="badge bg-secondary font-monospace">
+                                {m.metodoPago || 'EFECTIVO'}
+                              </span>
+                            </td>
+                            <td>{renderBadgeCategoria(m, isDark)}</td>
+                            
+                            <td>
+                              <div 
+                                className="text-start" 
+                                style={{ wordBreak: 'break-word', minWidth: '180px' }}
+                                title={m.descripcion || 'Sin descripción'}
+                              >
+                                {m.descripcion || '-'}
+                              </div>
+                            </td>
+                            
+                            <td>
+                              {(() => {
+                                const u = m.usuario;
 
-                 if (u && typeof u === 'object') {
-                   const nombreCompleto = `${u.nombre || u.first_name || ''} ${u.apellido || u.last_name || ''}`.trim();
-                   if (nombreCompleto) return nombreCompleto;
+                                if (u && typeof u === 'object') {
+                                  const nombreCompleto = `${u.nombre || u.first_name || ''} ${u.apellido || u.last_name || ''}`.trim();
+                                  if (nombreCompleto) return nombreCompleto;
 
-                   if (u.nombreUsuario) return u.nombreUsuario;
-                   if (u.username) return u.username;
-                   if (u.nombre_usuario) return u.nombre_usuario;
-                 }
+                                  if (u.nombreUsuario) return u.nombreUsuario;
+                                  if (u.username) return u.username;
+                                  if (u.nombre_usuario) return u.nombre_usuario;
+                                }
 
-                 if (typeof u === 'string' && isNaN(Number(u))) {
-                   return u;
-                 }
+                                if (typeof u === 'string' && isNaN(Number(u))) {
+                                  return u;
+                                }
 
-                 try {
-                   const localData = 
-                     localStorage.getItem('usuario_logueado') || 
-                     localStorage.getItem('usuario') || 
-                     localStorage.getItem('user');
+                                try {
+                                  const localData = 
+                                    localStorage.getItem('usuario_logueado') || 
+                                    localStorage.getItem('usuario') || 
+                                    localStorage.getItem('user');
 
-                   if (localData) {
-                     const parsed = JSON.parse(localData);
-                     
-                     const nombreLocal = `${parsed.nombre || parsed.first_name || ''} ${parsed.apellido || parsed.last_name || ''}`.trim();
-                     if (nombreLocal) return nombreLocal;
-                     
-                     if (parsed.nombreUsuario) return parsed.nombreUsuario;
-                     if (parsed.username) return parsed.username;
-                     if (parsed.nombre_usuario) return parsed.nombre_usuario;
-                   }
-                 } catch (e) {
-                   // Error de lectura/parseo
-                 }
+                                  if (localData) {
+                                    const parsed = JSON.parse(localData);
+                                    
+                                    const nombreLocal = `${parsed.nombre || parsed.first_name || ''} ${parsed.apellido || parsed.last_name || ''}`.trim();
+                                    if (nombreLocal) return nombreLocal;
+                                    
+                                    if (parsed.nombreUsuario) return parsed.nombreUsuario;
+                                    if (parsed.username) return parsed.username;
+                                    if (parsed.nombre_usuario) return parsed.nombre_usuario;
+                                  }
+                                } catch (e) {
+                                  // Ignorar parse error
+                                }
 
-                 return 'No se Encuentra al Usaurio';
-               })()}
-             </td>
-             <td>
-               {m.pedido?.idPedido || m.pedido?.id_pedido 
-                 ? `#${m.pedido?.idPedido || m.pedido?.id_pedido}` 
-                 : (m.descripcion?.includes('Pedido #') ? `#${m.descripcion.split('#')[1]?.trim()}` : '-')}
-             </td>
-             <td style={{ backgroundColor: 'transparent' }}>
-  <div className="d-flex justify-content-center gap-1">
-    {/* Botón Imagen / Comprobante de Transferencia (si existe adjunto) */}
-    {imagenAdjunta && (
-      <button
-        type="button"
-        className="btn btn-sm btn-outline-info border-0 p-1"
-        title="Ver Comprobante de Transferencia"
-        onClick={() => setImagenComprobanteModal(imagenAdjunta)}
-      >
-        <i className="bi bi-eye fs-5"></i>
-      </button>
-    )}
+                                return 'No se Encuentra al Usuario';
+                              })()}
+                            </td>
+                            <td>
+                              {m.pedido?.idPedido || m.pedido?.id_pedido 
+                                ? `#${m.pedido?.idPedido || m.pedido?.id_pedido}` 
+                                : (m.descripcion?.includes('Pedido #') ? `#${m.descripcion.split('#')[1]?.trim()}` : '-')}
+                            </td>
+                            <td style={{ backgroundColor: 'transparent' }}>
+                              <div className="d-flex justify-content-center gap-1">
+                                {imagenAdjunta && (
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-info border-0 p-1"
+                                    title="Ver Comprobante de Transferencia"
+                                    onClick={() => setImagenComprobanteModal(imagenAdjunta)}
+                                  >
+                                    <i className="bi bi-eye fs-5"></i>
+                                  </button>
+                                )}
 
-    {/* Botón Ticket de Comprobante / Pago */}
-    <button
-      type="button"
-      className="btn btn-sm btn-outline-info border-0 p-1"
-      title="Ver Ticket de Comprobante"
-      onClick={() => handleVerTicket(m)}
-    >
-      <i className="bi bi-receipt fs-5"></i>
-    </button>
-  </div>
-</td>
-           </tr>
-         );
-       })
-     )}
-   </tbody>
-</table>
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-info border-0 p-1"
+                                  title="Ver Ticket de Comprobante"
+                                  onClick={() => handleVerTicket(m)}
+                                >
+                                  <i className="bi bi-receipt fs-5"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -751,7 +758,7 @@ export const CajaView: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL DE VALIDACIÓN/AVISO GENERAL PARA CAJA */}
+      {/* Modal de Validación / Aviso */}
       {avisoModal && (
         <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1100 }} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
@@ -775,7 +782,7 @@ export const CajaView: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL DE ÉXITO ESTILO MINIMALISTA PARA OTRAS ACCIONES DE CAJA (COMO APERTURA) */}
+      {/* Modal Éxito */}
       {exitoModal && (
         <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1100 }} role="dialog">
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>
@@ -874,4 +881,3 @@ export const CajaView: React.FC = () => {
     </SidebarLayout>
   );
 };
-}

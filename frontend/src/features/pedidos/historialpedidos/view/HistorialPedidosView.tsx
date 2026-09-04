@@ -219,11 +219,6 @@ export const HistorialPedidosPage: React.FC = () => {
           <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
             Historial de Pedidos
           </h2>
-          {!isMobile && (
-            <span className="badge bg-dark border border-secondary text-secondary font-monospace position-absolute end-0">
-              Registros Históricos
-            </span>
-          )}
         </div>
 
         {/* Componente Filtros */}
