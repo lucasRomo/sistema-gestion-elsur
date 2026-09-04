@@ -102,8 +102,16 @@ export const CompraInsumosView: React.FC = () => {
 
     if (tipoItem === 'INSUMO') {
       if (!esNuevoInsumo && !idInsumoSel) return setAvisoModal('Debe seleccionar un insumo existente.');
+
       if (esNuevoInsumo) {
         if (!nombreNuevo.trim()) return setAvisoModal('Debe ingresar el nombre del nuevo insumo.');
+
+        const nombreLimpio = nombreNuevo.trim().toLowerCase();
+        const yaExiste = insumos.some((i: any) => (i.nombreInsumo || '').trim().toLowerCase() === nombreLimpio);
+        if (yaExiste) {
+          return setAvisoModal(`Ya existe un insumo llamado "${nombreNuevo.trim()}". Seleccionalo desde "Insumo Existente" en vez de crearlo de nuevo.`);
+        }
+
         if (!idUnidad || !idUnidadCompra) return setAvisoModal('Debe seleccionar la Unidad Suelta y la Unidad Empaque.');
         if (isNaN(factorNum) || factorNum <= 0) return setAvisoModal('El factor de conversión debe ser mayor a 0.');
       }
@@ -112,7 +120,7 @@ export const CompraInsumosView: React.FC = () => {
     }
 
     if (isNaN(cantNum) || cantNum <= 0) return setAvisoModal('La cantidad debe ser mayor a 0.');
-    if (isNaN(precioNum) || precioNum < 0) return setAvisoModal('El precio unitario no puede ser negativo.');
+    if (isNaN(precioNum) || precioNum <= 0) return setAvisoModal('El precio unitario debe ser mayor a 0.');
 
     let itemNombre = '';
     if (tipoItem === 'INSUMO') {
@@ -161,6 +169,11 @@ export const CompraInsumosView: React.FC = () => {
   };
 
   const handleConfirmarItemsIa = (nuevosItems: ItemCompraInsumo[]) => {
+    const elementosInvalidos = nuevosItems.some(item => isNaN(item.precioUnitario) || item.precioUnitario <= 0);
+    if (elementosInvalidos) {
+      return setAvisoModal('No se pueden incluir ítems traídos por IA con precio igual a 0 o números negativos.');
+    }
+
     const nuevaLista = [...itemsCompra, ...nuevosItems];
     setItemsCompra(nuevaLista);
 
@@ -177,6 +190,11 @@ export const CompraInsumosView: React.FC = () => {
     const montoTotalNum = Number(montoTotalGlobal);
     if (itemsCompra.length === 0) return setAvisoModal('Debe agregar al menos un ítem a la lista de compra.');
     if (isNaN(montoTotalNum) || montoTotalNum <= 0) return setAvisoModal('El monto total debe ser mayor a 0.');
+
+    const tieneItemInvalido = itemsCompra.some(item => item.precioUnitario <= 0);
+    if (tieneItemInvalido) {
+      return setAvisoModal('La lista contiene ítems con un precio menor o igual a 0. Ajuste sus precios antes de continuar.');
+    }
 
     setLoading(true);
     try {
@@ -244,6 +262,25 @@ export const CompraInsumosView: React.FC = () => {
 
   return (
     <div className={`container-fluid p-3 font-monospace ${textColor}`}>
+      <style>{`
+        .compra-scroll-x {
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          scrollbar-width: thin;
+          scrollbar-color: #52525b transparent;
+        }
+        .compra-scroll-x::-webkit-scrollbar {
+          height: 6px;
+        }
+        .compra-scroll-x::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .compra-scroll-x::-webkit-scrollbar-thumb {
+          background-color: #52525b;
+          border-radius: 10px;
+        }
+      `}</style>
+
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="fw-bold mx-auto font-monospace" style={{ fontSize: '2.5rem' }}>Compra de Insumos y Productos</h1>
       </div>
@@ -260,75 +297,75 @@ export const CompraInsumosView: React.FC = () => {
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="fw-bold text-info-custom m-0"><i className="bi bi-cart-plus me-2"></i>Agregar Ítems a la Compra</h5>
             <div className="d-flex align-items-center gap-2">
-  <button
-    type="button"
-    className="btn btn-sm fw-bold d-flex align-items-center gap-1 shadow-sm"
-    onClick={() => setModalIaAbierto(true)}
-    style={{ backgroundColor: '#7109e7', border: 'none', color: "#ffffff" }}
-  >
-    <i className="bi bi-magic"></i> Cargar con IA
-  </button>
+              <button
+                type="button"
+                className="btn btn-sm fw-bold d-flex align-items-center gap-1 shadow-sm"
+                onClick={() => setModalIaAbierto(true)}
+                style={{ backgroundColor: '#7109e7', border: 'none', color: "#ffffff" }}
+              >
+                <i className="bi bi-magic"></i> Cargar con IA
+              </button>
 
-  <div className="btn-group">
-    <button
-      type="button"
-      className="btn btn-sm fw-semibold"
-      style={{
-        backgroundColor: tipoItem === 'INSUMO' ? '#0f4685' : (isDark ? '#2b3035' : '#e2e8f0'),
-        color: tipoItem === 'INSUMO' ? '#ffffff' : (isDark ? '#a0a0a0' : '#475569'),
-        border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
-      }}
-      onClick={() => { setTipoItem('INSUMO'); resetFormItem(); }}
-    >
-      Insumo
-    </button>
-    <button
-      type="button"
-      className="btn btn-sm fw-semibold"
-      style={{
-        backgroundColor: tipoItem === 'PRODUCTO' ? '#2225d8' : (isDark ? '#2b3035' : '#e2e8f0'),
-        color: tipoItem === 'PRODUCTO' ? '#ffffff' : (isDark ? '#a0a0a0' : '#475569'),
-        border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
-      }}
-      onClick={() => { setTipoItem('PRODUCTO'); resetFormItem(); }}
-    >
-      Producto (Sin Receta)
-    </button>
-  </div>
-</div>
+              <div className="btn-group">
+                <button
+                  type="button"
+                  className="btn btn-sm fw-semibold"
+                  style={{
+                    backgroundColor: tipoItem === 'INSUMO' ? '#0f4685' : (isDark ? '#2b3035' : '#e2e8f0'),
+                    color: tipoItem === 'INSUMO' ? '#ffffff' : (isDark ? '#a0a0a0' : '#475569'),
+                    border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
+                  }}
+                  onClick={() => { setTipoItem('INSUMO'); resetFormItem(); }}
+                >
+                  Insumo
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm fw-semibold"
+                  style={{
+                    backgroundColor: tipoItem === 'PRODUCTO' ? '#2225d8' : (isDark ? '#2b3035' : '#e2e8f0'),
+                    color: tipoItem === 'PRODUCTO' ? '#ffffff' : (isDark ? '#a0a0a0' : '#475569'),
+                    border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
+                  }}
+                  onClick={() => { setTipoItem('PRODUCTO'); resetFormItem(); }}
+                >
+                  Producto (Sin Receta)
+                </button>
+              </div>
+            </div>
           </div>
 
           {tipoItem === 'INSUMO' ? (
             <>
               <div className="d-flex justify-content-between align-items-center mb-3">
-  <span className="fw-semibold small">Origen del Insumo:</span>
-  <div className="btn-group">
-    <button
-      type="button"
-      className="btn btn-sm fw-semibold"
-      style={{
-        backgroundColor: !esNuevoInsumo ? '#d17b0a' : (isDark ? '#2b3035' : '#e2e8f0'),
-        color: !esNuevoInsumo ? '#ffffff' : (isDark ? '#a0a0a0' : '#475569'),
-        border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
-      }}
-      onClick={() => setEsNuevoInsumo(false)}
-    >
-      Insumo Existente
-    </button>
-    <button
-      type="button"
-      className="btn btn-sm fw-semibold"
-      style={{
-        backgroundColor: esNuevoInsumo ? '#258618' : (isDark ? '#2b3035' : '#e2e8f0'),
-        color: esNuevoInsumo ? '#ffffff' : (isDark ? '#a0a0a0' : '#475569'),
-        border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
-      }}
-      onClick={() => setEsNuevoInsumo(true)}
-    >
-      + Nuevo Insumo
-    </button>
-  </div>
-</div>
+                <span className="fw-semibold small">Origen del Insumo:</span>
+                <div className="btn-group">
+                  <button
+                    type="button"
+                    className="btn btn-sm fw-semibold"
+                    style={{
+                      backgroundColor: !esNuevoInsumo ? '#d17b0a' : (isDark ? '#2b3035' : '#e2e8f0'),
+                      color: !esNuevoInsumo ? '#ffffff' : (isDark ? '#a0a0a0' : '#475569'),
+                      border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
+                    }}
+                    onClick={() => setEsNuevoInsumo(false)}
+                  >
+                    Insumo Existente
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm fw-semibold"
+                    style={{
+                      backgroundColor: esNuevoInsumo ? '#258618' : (isDark ? '#2b3035' : '#e2e8f0'),
+                      color: esNuevoInsumo ? '#ffffff' : (isDark ? '#a0a0a0' : '#475569'),
+                      border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
+                    }}
+                    onClick={() => setEsNuevoInsumo(true)}
+                  >
+                    + Nuevo Insumo
+                  </button>
+                </div>
+              </div>
 
               {!esNuevoInsumo ? (
                 <div className="mb-3">
@@ -355,8 +392,8 @@ export const CompraInsumosView: React.FC = () => {
                     />
                   </div>
 
-                  <div className="row g-3 mb-3">
-                    <div className="col-md-4">
+                  <div className="compra-scroll-x d-flex gap-3 mb-3 pb-2">
+                    <div style={{ minWidth: 220, flex: '1 1 220px' }}>
                       <label className="form-label small fw-semibold">Unidad Suelta (Consumo) *</label>
                       <select
                         className="form-select font-monospace"
@@ -371,7 +408,7 @@ export const CompraInsumosView: React.FC = () => {
                       </select>
                     </div>
 
-                    <div className="col-md-4">
+                    <div style={{ minWidth: 220, flex: '1 1 220px' }}>
                       <label className="form-label small fw-semibold">Unidad Empaque (Compra) *</label>
                       <select
                         className="form-select font-monospace"
@@ -386,7 +423,7 @@ export const CompraInsumosView: React.FC = () => {
                       </select>
                     </div>
 
-                    <div className="col-md-4">
+                    <div style={{ minWidth: 180, flex: '1 1 180px' }}>
                       <label className="form-label small fw-semibold">Factor Conversión</label>
                       <input
                         type="number"
@@ -439,7 +476,7 @@ export const CompraInsumosView: React.FC = () => {
               <input
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
                 className="form-control font-monospace"
                 style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                 value={precioUnitario}

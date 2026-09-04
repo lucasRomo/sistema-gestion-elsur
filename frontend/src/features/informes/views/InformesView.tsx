@@ -1,8 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { pedidoService } from '../../pedidos/general/service/pedidoService';
-import { cajaService, type MovimientoCaja } from '../../caja/services/cajaService';
-import { getProductos } from '../../productos/services/productoService';
-import { API_BASE_URL } from '../../../config/api';
+import React, { useEffect, useMemo, useState } from 'react';
 
 // Modal Registros de Arqueo y Comparación
 import { ModalRegistrosArqueo } from '../components/ModalRegistrosArqueos';
@@ -22,80 +18,61 @@ import { ControlCharts } from '../charts/ControlCharts';
 import { InformeChartRenderer } from '../charts/InformeChartRenderer';
 import { exportarInformePDF } from '../utils/exportarPdfUtils';
 
-// Tipos y Utilidades
-import type {
-  InformeComparacion,
-  TipoComparacion,
-  SeccionInforme,
-  ComparacionDataState
-} from '../types/informeTypes';
+// Hooks
+import { useFiltrosFecha } from '../hooks/useFiltrosFecha';
+import { useInformesData } from '../hooks/useInformesData';
+import { useMetricasInforme } from '../hooks/useMetricasInformes';
+import { useComparacionInforme } from '../hooks/useComparacionInforme';
 
-import {
-  generarPuntosSparkline,
-  procesarMetricas as procesarMetricasInforme,
-  calcularIncongruenciasArqueo
-} from '../utils/informesUtils';
+// Tipos y Utilidades
+import type { SeccionInforme } from '../types/informeTypes';
+import { generarPuntosSparkline } from '../utils/informesUtils';
+
+const hoy = new Date().toLocaleDateString('sv-SE');
 
 export const InformesView: React.FC = () => {
-  const hoy = new Date().toLocaleDateString('sv-SE');
-
   const [seccionActiva, setSeccionActiva] = useState<SeccionInforme>('MENU');
-
-  const [fechaDesdeInput, setFechaDesdeInput] = useState(hoy);
-  const [fechaHastaInput, setFechaHastaInput] = useState(hoy);
-
-  const [fechaDesde, setFechaDesde] = useState(hoy);
-  const [fechaHasta, setFechaHasta] = useState(hoy);
-
-  const [pedidosRaw, setPedidosRaw] = useState<any[]>([]);
-  const [movimientosCaja, setMovimientosCaja] = useState<MovimientoCaja[]>([]);
-  const [mermasRaw, setMermasRaw] = useState<any[]>([]);
-  const [cargando, setCargando] = useState(false);
-  const [, setListaProductos] = useState<any[]>([]);
-  const [topClientes, setTopClientes] = useState<any[]>([]);
-  const [incongruenciasArqueo, setIncongruenciasArqueo] = useState<any[]>([]);
-  const [turnosRaw, setTurnosRaw] = useState<any[]>([]);
-  const [averiasRaw, setAveriasRaw] = useState<any[]>([]);
-  const [categoriasClienteRaw, setCategoriasClienteRaw] = useState<any[]>([]);
-
-  // Modales
   const [showModalRegistrosArqueo, setShowModalRegistrosArqueo] = useState(false);
-  const [modalComparacionAbierto, setModalComparacionAbierto] = useState(false);
-  const [informeComparacion, setInformeComparacion] = useState<InformeComparacion | null>(null);
-  const [tipoComparacion, setTipoComparacion] = useState<TipoComparacion | null>(null);
 
-  // Fechas para el modal de comparación
-  const [modalFechaDesdeInput, setModalFechaDesdeInput] = useState(fechaDesdeInput);
-  const [modalFechaHastaInput, setModalFechaHastaInput] = useState(fechaHastaInput);
-  const [modalFechaDesdeCompInput, setModalFechaDesdeCompInput] = useState(fechaDesdeInput);
-  const [modalFechaHastaCompInput, setModalFechaHastaCompInput] = useState(fechaHastaInput);
-  const [deudoresRaw, setDeudoresRaw] = useState<any[]>([]);
+  const datos = useInformesData();
+  const { metricas, topClientes, incongruenciasArqueo, procesarMetricas } = useMetricasInforme();
 
-  const [comparacionData, setComparacionData] = useState<ComparacionDataState | null>(null);
-
-  const [metricas, setMetricas] = useState<any>({
-    ventasTotales: 0,
-    ticketsGenerados: 0,
-    ticketPromedio: '0.00',
-    cantidadMovimientos: 0,
-    ventasPorPeriodo: [],
-    distribucionMediosPago: [],
-    distribucionEstados: [],
-    rendimientoEmpleados: [],
-    pedidosCompletadosPorEmpleado: [],
-    pedidosDevueltosPorEmpleado: [],
-    detalleEgresos: [],
-    mermasPorPeriodo: [],
-    averiasPorPeriodo: [],
-    productosMasVendidos: [],
-    categoriasMasVendidas: [],
-    ventasPorCategoriaCliente: [],
-    topClientes: []
-  });
-
-  const handleExportarPDF = () => {
-    exportarInformePDF('area-informe-exportar', fechaDesde, fechaHasta, seccionActiva, metricas);
+  const recalcularMetricas = (fDesde: string, fHasta: string) => {
+    procesarMetricas(
+      fDesde,
+      fHasta,
+      datos.pedidosRaw,
+      datos.movimientosCaja,
+      true,
+      datos.mermasRaw,
+      datos.deudoresRaw,
+      datos.turnosRaw,
+      datos.averiasRaw,
+      datos.categoriasClienteRaw
+    );
   };
+
+  const {
+    fechaDesdeInput,
+    fechaHastaInput,
+    fechaDesde,
+    fechaHasta,
+    setFechaDesdeInput,
+    setFechaHastaInput,
+    confirmarRangoActual,
+    handleSeleccionarHoy,
+    handleSeleccionarEstaSemana,
+    handleSeleccionarEsteMes,
+  } = useFiltrosFecha(hoy, recalcularMetricas);
+
+  const comparacion = useComparacionInforme({
+    fechaDesdeInput,
+    fechaHastaInput,
+    pedidosRaw: datos.pedidosRaw,
+    movimientosCaja: datos.movimientosCaja,
+    turnosRaw: datos.turnosRaw,
+    procesarMetricas,
+  });
 
   const usuarioLogueado = useMemo(() => {
     try {
@@ -106,413 +83,66 @@ export const InformesView: React.FC = () => {
   }, []);
   const esAdmin = usuarioLogueado?.rol?.nombreRol?.toUpperCase() === 'ADMIN';
 
-  const procesarMetricas = (
-    fDesde: string,
-    fHasta: string,
-    pedidosLista = pedidosRaw,
-    cajaLista = movimientosCaja,
-    actualizarEstado = true,
-    mermasListaParam = mermasRaw,
-    deudoresListaParam = deudoresRaw,
-    turnosListaParam = turnosRaw,
-    averiasListaParam = averiasRaw,
-    categoriasListaParam = categoriasClienteRaw  
-  ) => {
-    const resultado = procesarMetricasInforme(
-      fDesde,
-      fHasta,
-      pedidosLista,
-      cajaLista,
-      mermasListaParam,
-      deudoresListaParam,
-      averiasListaParam,
-      categoriasListaParam  
-    );
-
-    if (actualizarEstado) {
-      setMetricas(resultado);
-      setTopClientes(resultado.topClientes);
-      setIncongruenciasArqueo(calcularIncongruenciasArqueo(turnosListaParam, fDesde, fHasta));
-    }
-
-    return resultado;
-  };
-
   useEffect(() => {
-    const cargarDatosIniciales = async () => {
-      setCargando(true);
-      try {
-        const [dataPedidos, dataCaja, dataProductos, resMermas, resDeudores, dataTurnos, resAverias, resCategorias] = await Promise.all([
-  pedidoService.obtenerTodos(),
-  cajaService.obtenerTodos(),
-  getProductos(),
-  fetch(`${API_BASE_URL}/mermas`),
-  fetch(`${API_BASE_URL}/cuentas-corrientes/resumen-deudores`),
-  cajaService.obtenerTodosLosTurnos(),
-  fetch(`${API_BASE_URL}/incidencias`),
-  fetch(`${API_BASE_URL}/categorias-cliente`)
-]);
-
-        const pedidosValidos = dataPedidos || [];
-        const cajaValida = dataCaja || [];
-        const mermasValidas = resMermas.ok ? await resMermas.json() : [];
-        const deudoresValidos = resDeudores.ok ? await resDeudores.json() : [];
-        const averiasValidas = resAverias.ok ? await resAverias.json() : [];
-        const categoriasValidas = resCategorias.ok ? await resCategorias.json() : [];
-
-        setTurnosRaw(dataTurnos || []); 
-        setPedidosRaw(pedidosValidos);
-        setMovimientosCaja(cajaValida);
-        setListaProductos(dataProductos || []);
-        setMermasRaw(mermasValidas);
-        setDeudoresRaw(deudoresValidos);
-        setAveriasRaw(averiasValidas);
-        setCategoriasClienteRaw(categoriasValidas); 
-
-        procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida, true, mermasValidas, deudoresValidos, dataTurnos, averiasValidas, categoriasValidas);
-      } catch (error) {
-        console.error("Error al cargar los informes iniciales:", error);
-      } finally {
-        setCargando(false);
-      }
-    };
-
-    cargarDatosIniciales();
+    datos.cargarDatos(true, 'Error al cargar los informes iniciales').then((resultado) => {
+      if (!resultado) return;
+      procesarMetricas(
+        fechaDesdeInput,
+        fechaHastaInput,
+        resultado.pedidosRaw,
+        resultado.movimientosCaja,
+        true,
+        resultado.mermasRaw,
+        resultado.deudoresRaw,
+        resultado.turnosRaw,
+        resultado.averiasRaw,
+        resultado.categoriasClienteRaw
+      );
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Equivalente a `handleAnalizar`: confirma el rango elegido y recalcula con datos frescos
   const handleAnalizar = async () => {
-    setCargando(true);
-    try {
-      setFechaDesde(fechaDesdeInput);
-      setFechaHasta(fechaHastaInput);
+    confirmarRangoActual();
+    const resultado = await datos.cargarDatos(false, 'Error al recalcular informes');
+    if (!resultado) return;
+    procesarMetricas(
+      fechaDesdeInput,
+      fechaHastaInput,
+      resultado.pedidosRaw,
+      resultado.movimientosCaja,
+      true,
+      resultado.mermasRaw,
+      resultado.deudoresRaw,
+      resultado.turnosRaw,
+      resultado.averiasRaw,
+      resultado.categoriasClienteRaw
+    );
+  };
 
-      const [nuevosPedidos, nuevosMovimientos, resMermas, resDeudores, nuevosTurnos, resAverias, resCategorias] = await Promise.all([
-  pedidoService.obtenerTodos(),
-  cajaService.obtenerTodos(),
-  fetch(`${API_BASE_URL}/mermas`),
-  fetch(`${API_BASE_URL}/cuentas-corrientes/resumen-deudores`),
-  cajaService.obtenerTodosLosTurnos(),
-  fetch(`${API_BASE_URL}/incidencias`),
-  fetch(`${API_BASE_URL}/categorias-cliente`)
-]);
-
-      const pedidosValidos = nuevosPedidos || [];
-      const cajaValida = nuevosMovimientos || [];
-      const mermasValidas = resMermas.ok ? await resMermas.json() : [];
-      const deudoresValidos = resDeudores.ok ? await resDeudores.json() : [];
-      const averiasValidas = resAverias.ok ? await resAverias.json() : [];
-      const categoriasValidas = resCategorias.ok ? await resCategorias.json() : [];
-
-      setTurnosRaw(nuevosTurnos || []); 
-      setPedidosRaw(pedidosValidos);
-      setMovimientosCaja(cajaValida);
-      setMermasRaw(mermasValidas);
-      setDeudoresRaw(deudoresValidos);
-      setAveriasRaw(averiasValidas);
-      setCategoriasClienteRaw(categoriasValidas); 
-
-      procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosValidos, cajaValida, true, mermasValidas, deudoresValidos, nuevosTurnos, averiasValidas, categoriasValidas);
-    } catch (error) {
-      console.error("Error al recalcular informes:", error);
-    } finally {
-      setCargando(false);
-    }
+  const handleExportarPDF = () => {
+    exportarInformePDF('area-informe-exportar', fechaDesde, fechaHasta, seccionActiva, metricas);
   };
 
   const esMismoDia = fechaDesde === fechaHasta;
 
-  const formatDateForInput = (date: Date): string => {
-    return date.toISOString().split('T')[0];
-  };
-
-  const handleSeleccionarHoy = () => {
-    const hoyObj = new Date();
-    const fechaStr = formatDateForInput(hoyObj);
-    setFechaDesdeInput(fechaStr);
-    setFechaHastaInput(fechaStr);
-    setFechaDesde(fechaStr);
-    setFechaHasta(fechaStr);
-
-    procesarMetricas(fechaStr, fechaStr, pedidosRaw, movimientosCaja, true, mermasRaw);
-  };
-
-  const handleSeleccionarEstaSemana = () => {
-    const hoyObj = new Date();
-    const hace6Dias = new Date(hoyObj);
-    hace6Dias.setDate(hace6Dias.getDate() - 6);
-
-    const desdeStr = formatDateForInput(hace6Dias);
-    const hastaStr = formatDateForInput(hoyObj);
-
-    setFechaDesdeInput(desdeStr);
-    setFechaHastaInput(hastaStr);
-    setFechaDesde(desdeStr);
-    setFechaHasta(hastaStr);
-
-    procesarMetricas(desdeStr, hastaStr, pedidosRaw, movimientosCaja, true, mermasRaw);
-  };
-
-  const handleSeleccionarEsteMes = () => {
-    const hoyObj = new Date();
-    const primerDiaMes = new Date(hoyObj.getFullYear(), hoyObj.getMonth(), 1);
-
-    const desdeStr = formatDateForInput(primerDiaMes);
-    const hastaStr = formatDateForInput(hoyObj);
-
-    setFechaDesdeInput(desdeStr);
-    setFechaHastaInput(hastaStr);
-    setFechaDesde(desdeStr);
-    setFechaHasta(hastaStr);
-
-    procesarMetricas(desdeStr, hastaStr, pedidosRaw, movimientosCaja, true, mermasRaw);
-  };
-
-  const obtenerNombreInforme = (informe: InformeComparacion | null): string => {
-    if (!informe) return '';
-    const nombres: Record<InformeComparacion, string> = {
-      ingresos: 'Evolución de Ingresos a Caja',
-      mediosPago: 'Tipos / Medios de Pago',
-      egresos: 'Egresos y Salidas de Caja Detallados',
-      estados: 'Distribución por Estados',
-      productos: 'Productos Más Vendidos',
-      categorias: 'Categorías Más Vendidas',
-      recaudacionEmpleados: 'Recaudación de Empleado por Pago Completado',
-      pedidosEmpleados: 'Pedidos Completados por Empleado',
-      pedidosdevueltosempleado: 'Pedidos Devueltos / Cancelados por Empleado',
-      clientes: 'Clientes Más Activos',
-      deudores: 'Clientes con más Deuda',
-      categoriasCliente: 'Ventas por Categoría de Cliente',
-      categoriasIngresos: 'Movimientos por Categorías de Ingresos',
-      categoriasEgresos: 'Movimientos por Categorías de Egresos',
-      tiempoPromedioPedido: 'Promedio de Tiempo de Finalizacion de Pedido',
-      tiempoMaximoEmpleado: 'Tiempo Maximo de Tardanza de Finalización de Empleado',
-      mermas: 'Registro de Mermas',
-      averias: 'Registro de Averías',
-      incongruencias: 'Incongruencias de Arqueo'
-    };
-    return nombres[informe] || '';
-  };
-
-  const abrirModalComparacion = (informe: InformeComparacion) => {
-    setInformeComparacion(informe);
-    setModalFechaDesdeInput(fechaDesdeInput);
-    setModalFechaHastaInput(fechaHastaInput);
-    setModalFechaDesdeCompInput(fechaDesdeInput);
-    setModalFechaHastaCompInput(fechaHastaInput);
-    setTipoComparacion('dia');
-
-    const [y, m, d] = fechaDesdeInput.split('-').map(Number);
-    const [yH, mH, dH] = fechaHastaInput.split('-').map(Number);
-    const dAct = new Date(y, m - 1, d);
-    const hAct = new Date(yH, mH - 1, dH);
-    const diffDias = Math.max(1, Math.round((hAct.getTime() - dAct.getTime()) / 86400000) + 1);
-    
-    const antD = new Date(dAct);
-    const antH = new Date(hAct);
-    antD.setDate(antD.getDate() - diffDias);
-    antH.setDate(antH.getDate() - diffDias);
-
-    const antDesdeStr = formatDateForInput(antD);
-    const antHastaStr = formatDateForInput(antH);
-
-    setModalFechaDesdeCompInput(antDesdeStr);
-    setModalFechaHastaCompInput(antHastaStr);
-
-    const metricasActuales = procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosRaw, movimientosCaja, false);
-    const metricasAnteriores = procesarMetricas(antDesdeStr, antHastaStr, pedidosRaw, movimientosCaja, false);
-
-    setComparacionData({
-      actual: {
-        ...metricasActuales,
-        incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, fechaDesdeInput, fechaHastaInput)
-      },
-      anterior: {
-        ...metricasAnteriores,
-        incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, antDesdeStr, antHastaStr)
-      },
-      periodoActual: { desde: fechaDesdeInput, hasta: fechaHastaInput },
-      periodoAnterior: { desde: antDesdeStr, hasta: antHastaStr }
-    });
-
-    setModalComparacionAbierto(true);
-  };
-
-  const cerrarModalComparacion = () => {
-    setModalComparacionAbierto(false);
-    setInformeComparacion(null);
-    setTipoComparacion(null);
-    setComparacionData(null);
-  };
-
-  const handleAnalizarComparacionModal = () => {
-    if (!informeComparacion) return;
-
-    const metricasActuales = procesarMetricas(
-      modalFechaDesdeInput,
-      modalFechaHastaInput,
-      pedidosRaw,
-      movimientosCaja,
-      false
-    );
-
-    const metricasAnteriores = procesarMetricas(
-      modalFechaDesdeCompInput,
-      modalFechaHastaCompInput,
-      pedidosRaw,
-      movimientosCaja,
-      false
-    );
-
-    setComparacionData({
-      actual: {
-        ...metricasActuales,
-        incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, modalFechaDesdeInput, modalFechaHastaInput)
-      },
-      anterior: {
-        ...metricasAnteriores,
-        incongruenciasArqueo: calcularIncongruenciasArqueo(turnosRaw, modalFechaDesdeCompInput, modalFechaHastaCompInput)
-      },
-      periodoActual: { desde: modalFechaDesdeInput, hasta: modalFechaHastaInput },
-      periodoAnterior: { desde: modalFechaDesdeCompInput, hasta: modalFechaHastaCompInput }
-    });
-  };
-
-  const seleccionarTipoComparacion = (tipo: TipoComparacion) => {
-    if (!informeComparacion) return;
-    setTipoComparacion(tipo);
-
-    const parse = (v: string) => {
-      const [y, m, d] = v.split('-').map(Number);
-      return new Date(y, m - 1, d);
-    };
-
-    const dAct = parse(modalFechaDesdeInput);
-    const hAct = parse(modalFechaHastaInput);
-
-    let pActual = { desde: modalFechaDesdeInput, hasta: modalFechaHastaInput };
-    let pAnterior = { desde: modalFechaDesdeInput, hasta: modalFechaHastaInput };
-
-    if (tipo === 'dia' || tipo === 'personalizado') {
-      const diffDias = Math.max(1, Math.round((hAct.getTime() - dAct.getTime()) / 86400000) + 1);
-      const antD = new Date(dAct);
-      const antH = new Date(hAct);
-      antD.setDate(antD.getDate() - diffDias);
-      antH.setDate(antH.getDate() - diffDias);
-
-      pAnterior = { desde: formatDateForInput(antD), hasta: formatDateForInput(antH) };
-    } else if (tipo === 'semana') {
-      const actualHasta = parse(modalFechaHastaInput);
-      const actualDesde = new Date(actualHasta);
-      actualDesde.setDate(actualDesde.getDate() - 6);
-
-      const anteriorHasta = new Date(actualDesde);
-      anteriorHasta.setDate(anteriorHasta.getDate() - 1);
-      const anteriorDesde = new Date(anteriorHasta);
-      anteriorDesde.setDate(anteriorDesde.getDate() - 6);
-
-      pActual = { desde: formatDateForInput(actualDesde), hasta: formatDateForInput(actualHasta) };
-      pAnterior = { desde: formatDateForInput(anteriorDesde), hasta: formatDateForInput(anteriorHasta) };
-    } else if (tipo === 'mes') {
-      const actualHasta = parse(modalFechaHastaInput);
-      const actualDesde = new Date(actualHasta.getFullYear(), actualHasta.getMonth(), 1);
-      const anteriorHasta = new Date(actualDesde);
-      anteriorHasta.setDate(anteriorHasta.getDate() - 1);
-      const anteriorDesde = new Date(anteriorHasta.getFullYear(), anteriorHasta.getMonth(), 1);
-
-      pActual = { desde: formatDateForInput(actualDesde), hasta: formatDateForInput(actualHasta) };
-      pAnterior = { desde: formatDateForInput(anteriorDesde), hasta: formatDateForInput(anteriorHasta) };
-    }
-
-    setModalFechaDesdeInput(pActual.desde);
-    setModalFechaHastaInput(pActual.hasta);
-    setModalFechaDesdeCompInput(pAnterior.desde);
-    setModalFechaHastaCompInput(pAnterior.hasta);
-
-    const metricasActuales = procesarMetricas(pActual.desde, pActual.hasta, pedidosRaw, movimientosCaja, false);
-    const metricasAnteriores = procesarMetricas(pAnterior.desde, pAnterior.hasta, pedidosRaw, movimientosCaja, false);
-
-    setComparacionData({
-      actual: metricasActuales,
-      anterior: metricasAnteriores,
-      periodoActual: pActual,
-      periodoAnterior: pAnterior
-    });
-  };
-
   const seccionesMenu = [
-    {
-      id: 'finanzas' as SeccionInforme,
-      label: 'FINANZAS Y CAJA',
-      desc: 'Evolución de ingresos, egresos y medios de pago.',
-      icon: 'bi-cash-coin',
-      color: '#8e45e0'
-    },
-    {
-      id: 'ventas' as SeccionInforme,
-      label: 'PRODUCTOS Y VENTAS',
-      desc: 'Ranking de productos y categorías más vendidas.',
-      icon: 'bi-bag-check',
-      color: '#20c997'
-    },
-    {
-      id: 'operaciones' as SeccionInforme,
-      label: 'RENDIMIENTO Y OPERACIONES',
-      desc: 'Desempeño de empleados y estado de pedidos.',
-      icon: 'bi-gear',
-      color: '#0dcaf0'
-    },
-    {
-      id: 'clientes' as SeccionInforme,
-      label: 'ANÁLISIS DE CLIENTES',
-      desc: 'Top clientes y comportamiento por categoría.',
-      icon: 'bi-people',
-      color: '#ffc107'
-    },
-    {
-      id: 'control' as SeccionInforme,
-      label: 'AUDITORÍA Y CONTROL',
-      desc: 'Incongruencias de arqueo y mermas registradas.',
-      icon: 'bi-shield-check',
-      color: '#dc3545'
-    }
+    { id: 'finanzas' as SeccionInforme, label: 'FINANZAS Y CAJA', desc: 'Evolución de ingresos, egresos y medios de pago.', icon: 'bi-cash-coin', color: '#8e45e0' },
+    { id: 'ventas' as SeccionInforme, label: 'PRODUCTOS Y VENTAS', desc: 'Ranking de productos y categorías más vendidas.', icon: 'bi-bag-check', color: '#20c997' },
+    { id: 'operaciones' as SeccionInforme, label: 'RENDIMIENTO Y OPERACIONES', desc: 'Desempeño de empleados y estado de pedidos.', icon: 'bi-gear', color: '#0dcaf0' },
+    { id: 'clientes' as SeccionInforme, label: 'ANÁLISIS DE CLIENTES', desc: 'Top clientes y comportamiento por categoría.', icon: 'bi-people', color: '#ffc107' },
+    { id: 'control' as SeccionInforme, label: 'AUDITORÍA Y CONTROL', desc: 'Incongruencias de arqueo y mermas registradas.', icon: 'bi-shield-check', color: '#dc3545' },
   ];
 
   const kpiCards = [
-    {
-      label: 'INGRESOS TOTALES',
-      sub: 'YMSUR / Total',
-      val: `$${Number(metricas.ventasTotales || 0).toLocaleString('es-AR')}`,
-      color: '#8e45e0',
-      icon: 'bi-currency-dollar',
-      points: generarPuntosSparkline(11, 360, 6, 26)
-    },
-    {
-      label: 'TICKETS GENERADOS',
-      sub: 'Operaciones',
-      val: metricas.ticketsGenerados || 0,
-      color: '#20c997',
-      icon: 'bi-receipt',
-      points: generarPuntosSparkline(22, 360, 6, 24)
-    },
-    {
-      label: 'TICKET PROMEDIO',
-      sub: 'Valor Medio',
-      val: `$${metricas.ticketPromedio || '0.00'}`,
-      color: '#0dcaf0',
-      icon: 'bi-graph-up-arrow',
-      points: generarPuntosSparkline(33, 360, 6, 27)
-    },
-    {
-      label: 'MOVIMIENTOS DE CAJA',
-      sub: 'Registros',
-      val: `${metricas.cantidadMovimientos || 0} reg`,
-      color: '#ffc107',
-      icon: 'bi-wallet2',
-      points: generarPuntosSparkline(31, 360, 6, 25)
-    }
+    { label: 'INGRESOS TOTALES', sub: 'YMSUR / Total', val: `$${Number(metricas.ventasTotales || 0).toLocaleString('es-AR')}`, color: '#8e45e0', icon: 'bi-currency-dollar', points: generarPuntosSparkline(11, 360, 6, 26) },
+    { label: 'TICKETS GENERADOS', sub: 'Operaciones', val: metricas.ticketsGenerados || 0, color: '#20c997', icon: 'bi-receipt', points: generarPuntosSparkline(22, 360, 6, 24) },
+    { label: 'TICKET PROMEDIO', sub: 'Valor Medio', val: `$${metricas.ticketPromedio || '0.00'}`, color: '#0dcaf0', icon: 'bi-graph-up-arrow', points: generarPuntosSparkline(33, 360, 6, 27) },
+    { label: 'MOVIMIENTOS DE CAJA', sub: 'Registros', val: `${metricas.cantidadMovimientos || 0} reg`, color: '#ffc107', icon: 'bi-wallet2', points: generarPuntosSparkline(31, 360, 6, 25) },
   ];
 
-  if (cargando && movimientosCaja.length === 0) {
+  if (datos.cargando && datos.movimientosCaja.length === 0) {
     return (
       <div className="text-center text-white mt-5">
         <div className="spinner-border text-info mb-3"></div>
@@ -576,6 +206,27 @@ export const InformesView: React.FC = () => {
           background-color: #52525b;
           border-radius: 10px;
         }
+
+        /* Apaga el foco nativo del navegador en TODO lo que Recharts pueda
+           enfocar (formas, texto de ejes, etiquetas de valores, etc.) */
+        .recharts-wrapper *:focus {
+          outline: none !important;
+        }
+
+        /* Resplandor violeta en las formas clickeables: porciones de torta,
+           barras, el trazo/relleno del área y su punto activo */
+        .recharts-sector:focus,
+        .recharts-rectangle:focus,
+        .recharts-bar-rectangle:focus,
+        .recharts-cell:focus,
+        .recharts-area-area:focus,
+        .recharts-area-curve:focus,
+        .recharts-line-curve:focus,
+        .recharts-active-dot:focus,
+        .recharts-dot:focus {
+          filter: drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 6px rgba(142, 69, 224, 0.6));
+          transition: filter 0.15s ease-in-out;
+        }
       `}</style>
 
       {/* HEADER DE CONTROL */}
@@ -602,20 +253,20 @@ export const InformesView: React.FC = () => {
             </button>
 
             <button
-  type="button"
-  className="btn btn-sm btn fw-semibold px-3 py-2 rounded-3 d-none d-md-flex align-items-center gap-2"
-  onClick={handleExportarPDF}
-  style={{
-    backgroundColor: '#6f42c1',
-    borderColor: '#6f42c1',
-    color: '#ffffff',
-    fontSize: '0.85rem',
-    paddingTop: '0.35rem',
-    paddingBottom: '0.35rem'
-  }}
->
-  <i className="bi bi-file-earmark-pdf"></i> Exportar PDF
-</button>
+              type="button"
+              className="btn btn-sm btn fw-semibold px-3 py-2 rounded-3 d-none d-md-flex align-items-center gap-2"
+              onClick={handleExportarPDF}
+              style={{
+                backgroundColor: '#6f42c1',
+                borderColor: '#6f42c1',
+                color: '#ffffff',
+                fontSize: '0.85rem',
+                paddingTop: '0.35rem',
+                paddingBottom: '0.35rem',
+              }}
+            >
+              <i className="bi bi-file-earmark-pdf"></i> Exportar PDF
+            </button>
           </div>
 
           <span className="text-body-secondary small">
@@ -645,21 +296,21 @@ export const InformesView: React.FC = () => {
           <FinanzasCharts
             metricas={metricas}
             esMismoDia={esMismoDia}
-            abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+            abrirModalComparacion={comparacion.abrirModalComparacion as (informe: string) => void}
           />
         )}
 
         {seccionActiva === 'ventas' && (
           <VentasCharts
             metricas={metricas}
-            abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+            abrirModalComparacion={comparacion.abrirModalComparacion as (informe: string) => void}
           />
         )}
 
         {seccionActiva === 'operaciones' && (
           <OperacionesCharts
             metricas={metricas}
-            abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+            abrirModalComparacion={comparacion.abrirModalComparacion as (informe: string) => void}
           />
         )}
 
@@ -667,7 +318,7 @@ export const InformesView: React.FC = () => {
           <ClientesCharts
             metricas={metricas}
             topClientes={topClientes}
-            abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+            abrirModalComparacion={comparacion.abrirModalComparacion as (informe: string) => void}
           />
         )}
 
@@ -676,7 +327,7 @@ export const InformesView: React.FC = () => {
             metricas={metricas}
             incongruenciasArqueo={incongruenciasArqueo}
             esMismoDia={esMismoDia}
-            abrirModalComparacion={abrirModalComparacion as (informe: string) => void}
+            abrirModalComparacion={comparacion.abrirModalComparacion as (informe: string) => void}
           />
         )}
       </div>
@@ -689,25 +340,25 @@ export const InformesView: React.FC = () => {
         />
       )}
 
-      {modalComparacionAbierto && (
+      {comparacion.modalComparacionAbierto && (
         <ModalComparacion
-          modalComparacionAbierto={modalComparacionAbierto}
-          informeComparacion={informeComparacion}
-          tipoComparacion={tipoComparacion}
-          comparacionData={comparacionData}
-          modalFechaDesdeInput={modalFechaDesdeInput}
-          modalFechaHastaInput={modalFechaHastaInput}
-          modalFechaDesdeCompInput={modalFechaDesdeCompInput}
-          modalFechaHastaCompInput={modalFechaHastaCompInput}
-          setModalFechaDesdeInput={setModalFechaDesdeInput}
-          setModalFechaHastaInput={setModalFechaHastaInput}
-          setModalFechaDesdeCompInput={setModalFechaDesdeCompInput}
-          setModalFechaHastaCompInput={setModalFechaHastaCompInput}
-          cerrarModalComparacion={cerrarModalComparacion}
-          seleccionarTipoComparacion={seleccionarTipoComparacion}
-          handleAnalizarComparacionModal={handleAnalizarComparacionModal}
+          modalComparacionAbierto={comparacion.modalComparacionAbierto}
+          informeComparacion={comparacion.informeComparacion}
+          tipoComparacion={comparacion.tipoComparacion}
+          comparacionData={comparacion.comparacionData}
+          modalFechaDesdeInput={comparacion.modalFechaDesdeInput}
+          modalFechaHastaInput={comparacion.modalFechaHastaInput}
+          modalFechaDesdeCompInput={comparacion.modalFechaDesdeCompInput}
+          modalFechaHastaCompInput={comparacion.modalFechaHastaCompInput}
+          setModalFechaDesdeInput={comparacion.setModalFechaDesdeInput}
+          setModalFechaHastaInput={comparacion.setModalFechaHastaInput}
+          setModalFechaDesdeCompInput={comparacion.setModalFechaDesdeCompInput}
+          setModalFechaHastaCompInput={comparacion.setModalFechaHastaCompInput}
+          cerrarModalComparacion={comparacion.cerrarModalComparacion}
+          seleccionarTipoComparacion={comparacion.seleccionarTipoComparacion}
+          handleAnalizarComparacionModal={comparacion.handleAnalizarComparacionModal}
           esMismoDia={esMismoDia}
-          obtenerNombreInforme={obtenerNombreInforme}
+          obtenerNombreInforme={comparacion.obtenerNombreInforme}
           renderGraficoEspecifico={(informe, data, esAnterior) => (
             <InformeChartRenderer
               informe={informe}

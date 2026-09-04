@@ -1,14 +1,5 @@
 import React from 'react';
-
-export interface KpiCard {
-  label: string;
-  sub: string;
-  val: string | number;
-  color: string;
-  icon: string;
-  points: string;
-  changePercent?: number;
-}
+import type { KpiCard } from '../types/informeTypes';
 
 interface KpiCardsGridProps {
   kpiCards: KpiCard[];

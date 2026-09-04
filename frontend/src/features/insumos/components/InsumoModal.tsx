@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Insumo, UnidadMedida } from '../types/Insumo';
 import type { Proveedor } from '../../proveedores/types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
 import { GestionUnidadesModal } from './GestionUnidadesModal';
 import { RelacionesModal } from './RelacionesModal';
-import { getProveedores, getUnidadesMedida } from '../services/insumoService';
+import { getProveedores, getUnidadesMedida, getInsumos } from '../services/insumoService';
 
 interface InsumoModalProps {
   show: boolean;
@@ -41,6 +41,8 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   const [showUnidadCompra, setShowUnidadCompra] = useState(false);
   const [showProveedor, setShowProveedor] = useState(false);
   const [showEstado, setShowEstado] = useState(false);
+  const [insumosExistentes, setInsumosExistentes] = useState<Insumo[]>([]);
+  const nombreInsumoRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     idInsumo: '',
@@ -69,16 +71,37 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
       });
   };
 
-  useEffect(() => {
-    if (show) {
-      getProveedores()
-        .then(data => {
-          if (Array.isArray(data)) setProveedores(data);
-        })
-        .catch(err => console.error("Error cargando proveedores:", err));
+  const validarNombreDuplicado = () => {
+    const nombreLimpio = formData.nombreInsumo.trim().toLowerCase();
+    if (!nombreLimpio || !nombreInsumoRef.current) return true;
 
-      cargarUnidadesMedida();
+    const idActual = insumoEditando?.idInsumo;
+    const duplicado = insumosExistentes.some(
+    i => i.nombreInsumo?.trim().toLowerCase() === nombreLimpio && i.idInsumo !== idActual
+    );
+
+    if (duplicado) {
+    nombreInsumoRef.current.setCustomValidity('Ya existe un insumo registrado con ese nombre.');
+    nombreInsumoRef.current.reportValidity();
+    return false;
     }
+
+    nombreInsumoRef.current.setCustomValidity('');
+    return true;
+  };
+
+  useEffect(() => {
+  if (show) {
+    getProveedores()
+      .then(data => { if (Array.isArray(data)) setProveedores(data); })
+      .catch(err => console.error("Error cargando proveedores:", err));
+
+    getInsumos()
+      .then(data => { if (Array.isArray(data)) setInsumosExistentes(data); })
+      .catch(err => console.error("Error cargando insumos existentes:", err));
+
+    cargarUnidadesMedida();
+  }
   }, [show]);
 
   useEffect(() => {
@@ -120,6 +143,8 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validarNombreDuplicado()) return;
 
     const unidadSuelteTrim = formData.nombreUnidad.trim().toLowerCase();
     const unidadCompraTrim = formData.nombreUnidadCompra.trim().toLowerCase();
@@ -221,33 +246,41 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                   <div className="col-md-8 mb-3">
                     <label className="form-label small fw-semibold" style={{ color: labelColor }}>Nombre del Insumo</label>
                     <input 
-                      type="text" 
-                      className="form-control shadow-none" 
-                      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                      name="nombreInsumo" 
-                      value={formData.nombreInsumo} 
-                      onChange={handleChange} 
-                      required 
-                      onInvalid={(e: any) => {
-                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre de Insumo No puede Estar Vacío");
-                      }}
-                      onInput={(e: any) => e.target.setCustomValidity("")}
+  ref={nombreInsumoRef}
+  type="text" 
+  className="form-control shadow-none" 
+  style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+  name="nombreInsumo" 
+  value={formData.nombreInsumo} 
+  onChange={handleChange} 
+  onBlur={validarNombreDuplicado}
+  required 
+  onInvalid={(e: any) => {
+    if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre de Insumo No puede Estar Vacío");
+  }}
+  onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
 
                   <div className="col-md-4 mb-3">
-                    <label className="form-label small fw-semibold" style={{ color: labelColor }}>Precio ($)</label>
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      className="form-control shadow-none" 
-                      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                      name="precio" 
-                      value={formData.precio} 
-                      onChange={handleChange} 
-                      required 
-                    />
-                  </div>
+  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Precio ($)</label>
+  <input 
+    type="number" 
+    step="0.01" 
+    min="0.01"
+    className="form-control shadow-none" 
+    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+    name="precio" 
+    value={formData.precio} 
+    onChange={handleChange} 
+    required 
+    onInvalid={(e: any) => {
+      if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Precio No puede Estar Vacío");
+      else if (e.target.validity.rangeUnderflow) e.target.setCustomValidity("No se puede crear un insumo con un precio negativo o igual a 0");
+    }}
+    onInput={(e: any) => e.target.setCustomValidity("")}
+  />
+</div>
                 </div>
 
                 <div className="p-3 mb-3 rounded" style={{ backgroundColor: boxBg, border: `1px solid ${boxBorder}` }}>

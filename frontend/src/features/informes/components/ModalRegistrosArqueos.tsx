@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { cajaService, type MovimientoCaja, type Turno } from '../../../features/caja/services/cajaService';
+import { type MovimientoCaja, type Turno } from '../../../features/caja/services/cajaService';
+import { informesService } from '../services/informesService';
 import { renderBadgeCategoria } from '../../../features/caja/components/RenderBadgeCategoria';
 import { useTheme } from '../../../Context/ThemeContext';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
@@ -50,23 +51,15 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
   const [ticketSeleccionado, setTicketSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [imagenComprobanteModal, setImagenComprobanteModal] = useState<string | null>(null);
 
-  // Helper para normalizar la URL de la imagen del comprobante
-  const obtenerUrlComprobante = (url?: string | null): string => {
-    if (!url) return '';
-    if (url.startsWith('http') || url.startsWith('data:')) return url;
-    return `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`;
-  };
-
-  // Handler para obtener los datos requeridos por VistaTicketPagoModal
+  // Handler para obtener los datos requeridos por VistaTicketPagoModal usando informesService
   const handleVerTicket = async (m: any) => {
     const idPedidoRaw = m.pedido?.idPedido || m.pedido?.id_pedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1]?.trim() : null);
 
     if (idPedidoRaw && !isNaN(Number(idPedidoRaw))) {
       const idPedido = Number(idPedidoRaw);
       try {
-        const response = await fetch(`http://localhost:8080/api/pedidos/${idPedido}`);
-        if (response.ok) {
-          const pedidoCompleto = await response.json();
+        const pedidoCompleto = await informesService.obtenerPedidoPorId(idPedido);
+        if (pedidoCompleto) {
           setTicketSeleccionado({ pedido: pedidoCompleto, movimiento: m });
           return;
         }
@@ -103,7 +96,7 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
     const cargarTurnos = async () => {
       setCargandoTurnos(true);
       try {
-        const data = await cajaService.obtenerTodosLosTurnos();
+        const data = await informesService.obtenerTodosLosTurnos();
         setTurnos(data);
       } finally {
         setCargandoTurnos(false);
@@ -121,7 +114,7 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
     setFiltroHoraHasta('');
     setCargandoMovimientos(true);
     try {
-      const data = await cajaService.obtenerMovimientosPorTurno(turno.idTurno);
+      const data = await informesService.obtenerMovimientosPorTurno(turno.idTurno);
       setMovimientosTurno(data);
     } finally {
       setCargandoMovimientos(false);
@@ -341,12 +334,12 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
                                 <td style={{ backgroundColor: 'transparent' }}>{badgeDiferencia(turno)}</td>
                                 <td style={{ backgroundColor: 'transparent' }}>
                                   <button
-  className="btn btn-sm fw-semibold border-0"
-  style={{ backgroundColor: '#149bdf', color: '#ffffff' }}
-  onClick={() => handleVerDetalle(turno)}
->
-  Ver Detalle
-</button>
+                                    className="btn btn-sm fw-semibold border-0"
+                                    style={{ backgroundColor: '#149bdf', color: '#ffffff' }}
+                                    onClick={() => handleVerDetalle(turno)}
+                                  >
+                                    Ver Detalle
+                                  </button>
                                 </td>
                               </tr>
                             ))
@@ -604,7 +597,7 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
               </div>
               <div className="text-center p-2">
                 <img 
-                  src={obtenerUrlComprobante(imagenComprobanteModal)} 
+                  src={informesService.obtenerUrlComprobante(imagenComprobanteModal)} 
                   alt="Comprobante Transferencia" 
                   className="img-fluid rounded shadow" 
                   style={{ maxHeight: '70vh', objectFit: 'contain' }} 

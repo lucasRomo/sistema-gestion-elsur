@@ -154,7 +154,6 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
                   </div>
                 </div>
 
-                {/* Sección del detalle de movimientos con mayor separación (mb-5) */}
                 <div className="mb-5">
                   <h6 className="fw-bold mb-2" style={{ color: textColor }}>Detalle de Movimientos del Turno</h6>
                   <div className="table-responsive rounded-3" style={{ maxHeight: '150px', overflowY: 'auto', border: `1px solid ${cardBorder}` }}>
@@ -222,7 +221,6 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
                   </div>
                 </div>
 
-                {/* Bloque de ingreso de efectivo con margen superior (mt-4) */}
                 <form id="form-cierre" onSubmit={handleValidarYSiguiente}>
                   <div className="p-3 rounded-3 mb-3 mt-4" style={{ backgroundColor: isDark ? '#18181b' : '#f8fafc', border: `1px solid ${cardBorder}` }}>
                     <label htmlFor="efectivoReal" className="form-label small text-uppercase fw-bold text-warning d-block text-center">
@@ -231,7 +229,6 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
                     <input
                       type="number"
                       step="0.01"
-                      min="0"
                       id="efectivoReal"
                       className="form-control form-control-lg font-monospace text-center fs-2 fw-bold"
                       style={{

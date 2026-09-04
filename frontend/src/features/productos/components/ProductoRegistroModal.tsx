@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Producto, Categoria } from '../types/Producto';
 import type { Maquina } from '../../maquinas/types/Maquina';
 import { useTheme } from '../../../Context/ThemeContext';
@@ -6,7 +6,8 @@ import {
   getCategorias, 
   crearCategoria, 
   eliminarCategoria, 
-  getMaquinas 
+  getMaquinas,
+  getProductos
 } from '../services/productoService';
 
 interface Props {
@@ -43,7 +44,15 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const [showDropdownEstado, setShowDropdownEstado] = useState<boolean>(false);
   const [showDropdownMaquina, setShowDropdownMaquina] = useState<boolean>(false);
   const [showDropdownCategorias, setShowDropdownCategorias] = useState<boolean>(false);
+
+  const [productosExistentes, setProductosExistentes] = useState<Producto[]>([]);
   
+  // Referencias para validaciones de HTML5
+  const nombreProductoRef = useRef<HTMLInputElement>(null);
+  const precioBaseRef = useRef<HTMLInputElement>(null);
+  const stockRef = useRef<HTMLInputElement>(null);
+  const categoriaRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     nombreProducto: '',
     precioBase: '',
@@ -71,6 +80,10 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     if (show) {
       cargarCategoriasData();
       cargarMaquinasData();
+
+      getProductos()
+        .then((data: any) => { if (Array.isArray(data)) setProductosExistentes(data); })
+        .catch((err: any) => console.error("Error cargando productos existentes:", err));
 
       if (producto) {
         setFormData({
@@ -104,6 +117,25 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
       }
     }
   }, [formData.idMaquinaNecesaria, maquinas]);
+
+  const validarNombreDuplicado = () => {
+    const nombreLimpio = formData.nombreProducto.trim().toLowerCase();
+    if (!nombreLimpio || !nombreProductoRef.current) return true;
+
+    const idActual = producto?.idProducto;
+    const duplicado = productosExistentes.some(
+      (p: any) => p.nombreProducto?.trim().toLowerCase() === nombreLimpio && p.idProducto !== idActual
+    );
+
+    if (duplicado) {
+      nombreProductoRef.current.setCustomValidity('Ya existe un producto registrado con ese nombre.');
+      nombreProductoRef.current.reportValidity();
+      return false;
+    }
+
+    nombreProductoRef.current.setCustomValidity('');
+    return true;
+  };
 
   const handleCrearCategoria = async () => {
     const nombreLimpio = nuevaCategoria.trim();
@@ -144,6 +176,8 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validarNombreDuplicado()) return;
 
     const catEncontrada = categorias.find(
       c => c.nombre.toLowerCase() === formData.nombreCategoria.trim().toLowerCase()
@@ -187,38 +221,55 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
             <form onSubmit={handleSubmit}>
               <div className="modal-body p-4">
                 
+                {/* Nombre del Producto */}
                 <div className="mb-3">
-                  <label className="form-label small fw-semibold" style={{ color: mutedText }}>Nombre del Producto</label>
+                  <label className="form-label small fw-semibold" style={{ color: mutedText }}>Nombre del Producto *</label>
                   <input 
+                    ref={nombreProductoRef}
                     className={`form-control ${textColor}`} 
                     style={{ backgroundColor: inputBg, borderColor: inputBorder }}
                     value={formData.nombreProducto} 
                     onChange={e => setFormData({...formData, nombreProducto: e.target.value})} 
+                    onBlur={validarNombreDuplicado}
                     required pattern="[A-Za-z0-9Á-Úá-ú\s]+"
                     onInvalid={(e: any) => {
-                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El nombre del producto es obligatorio");
-                      else if (e.target.validity.patternMismatch) e.target.setCustomValidity("Nombre inválido");
+                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El nombre del producto es obligatorio.");
+                      else if (e.target.validity.patternMismatch) e.target.setCustomValidity("Nombre inválido.");
                     }}
                     onInput={(e: any) => e.target.setCustomValidity("")}
                   />
                 </div>
                 
                 <div className="row mb-3">
+                  {/* Precio Base */}
                   <div className="col-6">
-                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Precio Base</label>
+                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Precio Base *</label>
                     <input 
+                      ref={precioBaseRef}
                       className={`form-control ${textColor}`} 
                       style={{ backgroundColor: inputBg, borderColor: inputBorder }}
                       type="number" 
                       step="0.01" 
+                      min="0.01"
                       value={formData.precioBase} 
                       onChange={e => setFormData({...formData, precioBase: e.target.value})} 
                       required 
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) {
+                          e.target.setCustomValidity("El precio base es obligatorio.");
+                        } else if (e.target.validity.rangeUnderflow) {
+                          e.target.setCustomValidity("El precio base debe ser mayor a 0.");
+                        }
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
+
+                  {/* Stock Inicial */}
                   <div className="col-6">
-                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Stock Inicial</label>
+                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Stock Inicial *</label>
                     <input 
+                      ref={stockRef}
                       className={`form-control ${textColor}`} 
                       style={{ backgroundColor: inputBg, borderColor: inputBorder }}
                       type="number" 
@@ -226,6 +277,14 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                       value={formData.stock} 
                       onChange={e => setFormData({...formData, stock: e.target.value})} 
                       required 
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) {
+                          e.target.setCustomValidity("El stock es obligatorio.");
+                        } else if (e.target.validity.rangeUnderflow) {
+                          e.target.setCustomValidity("El stock no puede ser negativo.");
+                        }
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
                 </div>
@@ -346,10 +405,12 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                   </div>
                 </div>
 
+                {/* Categoría */}
                 <div className="mb-3">
-                  <label className="form-label small fw-semibold" style={{ color: mutedText }}>Categoría</label>
+                  <label className="form-label small fw-semibold" style={{ color: mutedText }}>Categoría *</label>
                   <div className="input-group position-relative">
                     <input 
+                      ref={categoriaRef}
                       type="text"
                       autoComplete="off"
                       className={`form-control shadow-none ${textColor}`} 
@@ -360,6 +421,12 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                       onFocus={() => setShowDropdownCategorias(true)}
                       onBlur={() => setTimeout(() => setShowDropdownCategorias(false), 200)}
                       required
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) {
+                          e.target.setCustomValidity("Debe ingresar o seleccionar una categoría.");
+                        }
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                     <button type="button" className="btn btn-outline-warning" onClick={() => setShowCategorias(true)}>
                       <i className="bi bi-gear-fill"></i>
@@ -405,7 +472,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
               </div>
               
               <div className={`modal-footer border-top ${borderDivider} py-2`}>
-                <button type="button" className="btn btn-sm btn-danger px-4 fw-bold " onClick={onClose}>Cancelar</button>
+                <button type="button" className="btn btn-sm btn-danger px-4 fw-bold" onClick={onClose}>Cancelar</button>
                 <button 
                   type="submit" 
                   className="btn btn-sm px-4 fw-bold" 
