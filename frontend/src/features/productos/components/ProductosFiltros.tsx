@@ -9,15 +9,16 @@ interface ProductosFiltrosProps {
 }
 
 export const ProductosFiltros: React.FC<ProductosFiltrosProps> = ({
-  filtroNombre, setFiltroNombre,
-  filtroEstado, setFiltroEstado,
+  filtroNombre,
+  setFiltroNombre,
+  filtroEstado,
+  setFiltroEstado,
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables adaptativas para tema Claro/Oscuro
-  const containerBg = isDark ? '#1d1d1d' : '#f8fafc';
-  const containerBorder = isDark ? '#2d2d30' : '#e2e8f0';
+  const containerBg = isDark ? '#1b1b1b' : '#ffffff';
+  const containerBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
   const inputBg = isDark ? '#1b1b1b' : '#ffffff';
   const inputTextColor = isDark ? 'text-white' : 'text-dark';
@@ -25,7 +26,7 @@ export const ProductosFiltros: React.FC<ProductosFiltrosProps> = ({
 
   return (
     <div 
-      className="row g-3 align-items-center mb-4 p-3 rounded shadow-sm" 
+      className="row g-3 align-items-center mb-4 p-3 rounded-3 shadow-sm font-monospace" 
       style={{ 
         backgroundColor: containerBg, 
         border: `1px solid ${containerBorder}`,
@@ -33,29 +34,25 @@ export const ProductosFiltros: React.FC<ProductosFiltrosProps> = ({
       }}
     >
       <div className="col-md-6">
-        <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
-          Filtrar por Nombre:
+        <label className="form-label small fw-semibold" style={{ color: mutedText }}>
+          Filtrar por Nombre de Producto:
         </label>
-        <div className="input-group">
-          <span className="input-group-text border-end-0" style={{ backgroundColor: inputBg, borderColor: inputBorder, color: mutedText }}>
-            <i className="bi bi-search"></i>
-          </span>
-          <input 
-            type="text" 
-            className={`form-control border-start-0 ${inputTextColor} py-2`}
-            style={{ backgroundColor: inputBg, borderColor: inputBorder }}
-            placeholder="Buscar producto..." 
-            value={filtroNombre}
-            onChange={(e) => setFiltroNombre(e.target.value)}
-          />
-        </div>
+        <input 
+          type="text" 
+          className={`form-control ${inputTextColor} py-2 shadow-none`}
+          style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+          placeholder="Buscar producto..." 
+          value={filtroNombre}
+          onChange={(e) => setFiltroNombre(e.target.value)}
+        />
       </div>
+      
       <div className="col-md-6">
-        <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
+        <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Filtrar por Estado:
         </label>
         <select 
-          className={`form-select ${inputTextColor} py-2`}
+          className={`form-select ${inputTextColor} py-2 shadow-none`}
           style={{ backgroundColor: inputBg, borderColor: inputBorder }}
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value)}

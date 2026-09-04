@@ -4,7 +4,7 @@ import { SelectorProducto } from '../components/SelectorProducto';
 import { CarritoLista } from '../components/CarritoLista';
 import { ResumenVenta } from '../components/ResumenVenta';
 import { PedidosPendientesCard } from '../components/PedidosPendientesCard';
-import { VistaTicketModal } from '../../pedidos/modals/VistaTicketModal';
+import { VistaTicketModal } from '../../pedidos/general/modals/VistaTicketModal';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { NotificacionesCard } from '../components/NotificacionesCard';
 import { useTheme } from '../../../Context/ThemeContext';

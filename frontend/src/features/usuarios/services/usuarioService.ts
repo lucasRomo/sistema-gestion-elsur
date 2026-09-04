@@ -9,6 +9,22 @@ export const getUsuarios = async () => {
   return res.json();
 };
 
+ // Valida en el backend si un nombre de usuario ya se encuentra registrado.
+export const validarExisteUsuario = async (nombreUsuario: string): Promise<boolean> => {
+  if (!nombreUsuario.trim()) return false;
+
+  try {
+    const response = await fetch(`${API_URL}/exists?nombreUsuario=${encodeURIComponent(nombreUsuario.trim())}`);
+    if (response.ok) {
+      return await response.json();
+    }
+    return false;
+  } catch (error) {
+    console.error("Error al validar nombre de usuario:", error);
+    return false;
+  }
+};
+
 export const guardarUsuario = async (usuario: any) => {
   // 1. Extraemos el usuario autenticado que realiza la acción
   const usuarioGuardado = localStorage.getItem('usuario_logueado');

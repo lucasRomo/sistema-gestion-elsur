@@ -27,17 +27,17 @@ export const ListaUsuariosSidebar: React.FC<Props> = ({
       }}
     >
       <div className="d-flex justify-content-between align-items-center mb-2">
-        <h6 className={`fw-bold mb-0 small ${isDark ? 'text-white' : 'text-dark'}`}>
+        <h6 className={`fw-bold mb-0 ${isDark ? 'text-white' : 'text-dark'}`}>
           <i className="bi bi-people-fill text-warning me-2"></i>Usuarios
         </h6>
-        <span className="badge bg-secondary" style={{ fontSize: '0.7rem' }}>{usuarios.length}</span>
+        <span className="badge bg-secondary" style={{ fontSize: '0.9rem' }}>{usuarios.length}</span>
       </div>
 
       <div className="mb-2">
         <input 
           type="text" 
           className={`form-control form-control-sm border-secondary border-opacity-25 ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
-          style={{ fontSize: '0.75rem' }}
+          style={{ fontSize: '1rem' }}
           placeholder="Buscar usuario..."
           value={busquedaUsuario}
           onChange={(e) => setBusquedaUsuario(e.target.value)}
@@ -69,22 +69,22 @@ export const ListaUsuariosSidebar: React.FC<Props> = ({
               <div className="d-flex align-items-center gap-2">
                 <div 
                   className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
-                  style={{ width: '28px', height: '28px', backgroundColor: '#8e45e0', fontSize: '0.7rem' }}
+                  style={{ width: '28px', height: '28px', backgroundColor: '#8e45e0', fontSize: '1 rem' }}
                 >
                   {iniciales}
                 </div>
                 <div style={{ lineHeight: '1.1' }}>
-                  <p className={`mb-0 fw-bold ${isDark ? 'text-white' : 'text-dark'}`} style={{ fontSize: '0.75rem' }}>
+                  <p className={`mb-0 fw-bold ${isDark ? 'text-white' : 'text-dark'}`} style={{ fontSize: '1 rem' }}>
                     {u.persona ? `${u.persona.nombre} ${u.persona.apellido}` : u.nombreUsuario}
                   </p>
-                  <span className="text-secondary" style={{ fontSize: '0.65rem' }}>
+                  <span className="text-secondary" style={{ fontSize: '1rem' }}>
                     @{u.nombreUsuario}
                   </span>
                 </div>
               </div>
 
               <div className="d-flex align-items-center gap-1">
-                <span className="badge bg-dark border border-secondary text-info" style={{ fontSize: '0.6rem', padding: '3px 5px' }}>
+                <span className="badge bg-dark border border-secondary text-info" style={{ fontSize: '0.8rem', padding: '3px 5px' }}>
                   {nombreRolMostrar}
                 </span>
                 <button 

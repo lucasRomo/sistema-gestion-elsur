@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { CartItem } from '../../pedidos/types/Pedido';
+import type { CartItem } from '../../pedidos/general/types/Pedido';
 import type { Producto } from '../../productos/types/Producto';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 

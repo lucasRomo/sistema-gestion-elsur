@@ -1,42 +1,10 @@
-export const AVERIAS_MOCK = [
-  { id: 1, fecha: new Date().toISOString(), cantidad: 1, maquina: 'Plotter Roland VG3', detalle: 'Atasco en cabezal principal' },
-  { id: 2, fecha: new Date(Date.now() - 3600000 * 3).toISOString(), cantidad: 1, maquina: 'Guillotina Industrial', detalle: 'Fallo en sensor de seguridad' },
-  { id: 3, fecha: new Date(Date.now() - 86400000 * 1).toISOString(), cantidad: 2, maquina: 'Impresora Ricoh C7200', detalle: 'Sobrecalentamiento en fusor' }
-];
+import { COLORES_TORTA } from '../charts/Colores';
 
-export const COLORES_TORTA = ['#8e45e0', '#20c997', '#e22e2e', '#0dcaf0', '#ffc107'];
-
-export type TipoComparacion = 'dia' | 'semana' | 'mes' | 'personalizado';
-export type InformeComparacion = 
-  | 'ingresos' 
-  | 'mediosPago' 
-  | 'egresos' 
-  | 'estados' 
-  | 'productos' 
-  | 'categorias' 
-  | 'recaudacionEmpleados' 
-  | 'pedidosEmpleados' 
-  | 'clientes' 
-  | 'categoriasCliente'
-  | 'categoriasIngresos'
-  | 'categoriasEgresos'
-  | 'mermas'
-  | 'averias'
-  | 'incongruencias'
-  | 'pedidosdevueltosempleado'
-  | 'tiempoPromedioPedido'
-  | 'tiempoMaximoEmpleado';
-
-  export interface IncongruenciaEmpleado {
+export interface IncongruenciaEmpleado {
   empleado: string;
   montoDiferencia: number;
   cantidadIncongruencias: number;
-  }
-
-// Convierte un objeto Date a formato YYYY-MM-DD
-  export function formatDateForInput(date: Date): string {
-  return date.toISOString().split('T')[0];
-  }
+}
 
 // Genera un sparkline "tipo bolsa": variaciones chicas y acotadas
 export function generarPuntosSparkline(
@@ -145,36 +113,11 @@ export function agruparPorPeriodo<T>(
   }));
 }
 
-// Retorna el nombre legible del informe seleccionado
-export function obtenerNombreInforme(informe: InformeComparacion | null): string {
-  const nombres: Record<InformeComparacion, string> = {
-      ingresos: 'Evolución de Ingresos a Caja',
-      mediosPago: 'Tipos / Medios de Pago',
-      egresos: 'Egresos y Salidas de Caja Detallados',
-      estados: 'Distribución por Estados',
-      productos: 'Productos Más Vendidos',
-      categorias: 'Categorías Más Vendidas',
-      recaudacionEmpleados: 'Recaudación de Empleado por Pago Completado',
-      pedidosEmpleados: 'Pedidos Completados por Empleado',
-      pedidosdevueltosempleado: 'Pedidos Devueltos / Cancelados por Empleado', // <-- AGREGAR ESTA LÍNEA
-      clientes: 'Clientes Más Activos',
-      categoriasCliente: 'Ventas por Categoría de Cliente',
-      categoriasIngresos: 'Movimientos por Categorías de Ingresos',
-      categoriasEgresos: 'Movimientos por Categorías de Egresos',
-      tiempoPromedioPedido: 'Promedio de Tiempo de Finalizacion de Pedido',
-      tiempoMaximoEmpleado: 'Tiempo Maximo de Tardanza de Finalización de Empleado',
-      mermas: 'Registro de Mermas',
-      averias: 'Registro de Averías',
-      incongruencias: 'Incongruencias de Arqueo'
-  };
-  return informe ? nombres[informe] : '';
-}
-
-  export function calcularIncongruenciasArqueo(
+export function calcularIncongruenciasArqueo(
   turnos: any[],
   fDesde: string,
   fHasta: string
-  ): IncongruenciaEmpleado[] {
+): IncongruenciaEmpleado[] {
   const desde = new Date(`${fDesde}T00:00:00`);
   const hasta = new Date(`${fHasta}T23:59:59.999`);
 
@@ -205,61 +148,6 @@ export function obtenerNombreInforme(informe: InformeComparacion | null): string
       cantidadIncongruencias: cantidad
     }))
     .sort((a, b) => b.montoDiferencia - a.montoDiferencia);
-  }
-
-// Calcula los rangos de fechas (actual vs anterior) según el tipo de comparación
-export function calcularPeriodoComparacion(fDesde: string, fHasta: string, tipo: TipoComparacion) {
-  const parse = (v: string) => {
-    const [y, m, d] = v.split('-').map(Number);
-    return new Date(y, m - 1, d);
-  };
-  const format = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
-  const desde = parse(fDesde);
-  const hasta = parse(fHasta);
-
-  if (tipo === 'personalizado' || tipo === 'dia') {
-    const cantidadDias = Math.max(1, Math.round((hasta.getTime() - desde.getTime()) / 86400000) + 1);
-    const anteriorDesde = new Date(desde);
-    const anteriorHasta = new Date(hasta);
-
-    anteriorDesde.setDate(anteriorDesde.getDate() - cantidadDias);
-    anteriorHasta.setDate(anteriorHasta.getDate() - cantidadDias);
-
-    return {
-      actual: { desde: format(desde), hasta: format(hasta) },
-      anterior: { desde: format(anteriorDesde), hasta: format(anteriorHasta) }
-    };
-  }
-
-  if (tipo === 'semana') {
-    const actualHasta = parse(fHasta);
-    const actualDesde = new Date(actualHasta);
-    actualDesde.setDate(actualDesde.getDate() - 6);
-
-    const anteriorHasta = new Date(actualDesde);
-    anteriorHasta.setDate(anteriorHasta.getDate() - 1);
-    const anteriorDesde = new Date(anteriorHasta);
-    anteriorDesde.setDate(anteriorDesde.getDate() - 6);
-
-    return {
-      actual: { desde: format(actualDesde), hasta: format(actualHasta) },
-      anterior: { desde: format(anteriorDesde), hasta: format(anteriorHasta) }
-    };
-  }
-
-  // tipo === 'mes'
-  const actualHasta = parse(fHasta);
-  const actualDesde = new Date(actualHasta.getFullYear(), actualHasta.getMonth(), 1);
-  const anteriorHasta = new Date(actualDesde);
-  anteriorHasta.setDate(anteriorHasta.getDate() - 1);
-  const anteriorDesde = new Date(anteriorHasta.getFullYear(), anteriorHasta.getMonth(), 1);
-
-  return {
-    actual: { desde: format(actualDesde), hasta: format(actualHasta) },
-    anterior: { desde: format(anteriorDesde), hasta: format(anteriorHasta) }
-  };
 }
 
 // Procesa todas las métricas del sistema para un rango de fechas dado
@@ -342,7 +230,7 @@ export function procesarMetricas(
   movimientosEnRango.forEach((m: any) => {
     const esEgreso = esMovimientoEgreso(m);
     const montoAbs = Math.abs(Number(m.monto || 0));
-    
+
     let cat = (m.categoria || m.tipoCategoria || m.categoriaMovimiento || '').toString().toUpperCase().trim();
     if (!cat) {
       cat = esEgreso ? 'EGRESOS GENERALES' : 'INGRESOS GENERALES';
@@ -357,13 +245,13 @@ export function procesarMetricas(
     } else if (cat === 'INGRESO' || cat === 'INGRESOS') {
       cat = 'Ingresos Generales';
     } else if (
-      cat === 'EGRESO' || 
-      cat === 'EGRESOS' || 
-      cat === 'VARIOS' || 
-      cat === 'EGRESO_VARIOS' || 
+      cat === 'EGRESO' ||
+      cat === 'EGRESOS' ||
+      cat === 'VARIOS' ||
+      cat === 'EGRESO_VARIOS' ||
       cat === 'GASTOS VARIOS'
     ) {
-      cat = 'Egresos Generales';  
+      cat = 'Egresos Generales';
     }
 
     if (esEgreso) {
@@ -399,7 +287,7 @@ export function procesarMetricas(
   pedidosEnRango.forEach((p: any) => {
     const clienteObj = p.cliente;
     const catClienteObj = clienteObj?.categoriaCliente || clienteObj?.categoria || p.categoriaCliente;
-    
+
     // 1. Extraemos el nombre ya sea que venga como Objeto o como String directo
     let nombreCatRaw = '';
     if (typeof catClienteObj === 'string') {
@@ -425,7 +313,7 @@ export function procesarMetricas(
       nombreCatCliente = nombreCatRaw;
     } else {
       // Si no viene directo, buscamos dinámicamente en las categorías traídas de la base de datos
-      const categoriaEncontrada = (categoriasClienteLista || []).find((cat: any) => 
+      const categoriaEncontrada = (categoriasClienteLista || []).find((cat: any) =>
         textoBusqueda.includes((cat.nombre || '').toLowerCase())
       );
 
@@ -488,7 +376,7 @@ export function procesarMetricas(
 
   const productosMasVendidos = top5Productos.map((item, index) => ({
     name: item.nombre,
-    rank: index + 1, 
+    rank: index + 1,
     value: item.cantidad,
     color: COLORES_TORTA[index % COLORES_TORTA.length]
   }));
@@ -508,18 +396,18 @@ export function procesarMetricas(
   }));
 
   // --- RECAUDACIÓN, RENDIMIENTO Y TIEMPOS DE EMPLEADOS (OPERACIONES Y RRHH) ---
-  const mapaEmpleados: { 
-    [key: string]: { 
-      ventas: number; 
-      pedidos: number; 
-      sumaMinutos: number; 
+  const mapaEmpleados: {
+    [key: string]: {
+      ventas: number;
+      pedidos: number;
+      sumaMinutos: number;
       maxMinutos: number;
-    } 
+    }
   } = {};
 
   const mapaDevueltosPorEmpleado: { [key: string]: number } = {};
   const normalizarTexto = (str: any) =>
-  (str || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    (str || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
   const obtenerNombreOperario = (empObj: any) => {
     if (!empObj) return 'Sin Asignar';
@@ -539,28 +427,28 @@ export function procesarMetricas(
 
     // Métrica de Pedidos Devueltos / Cancelados por Empleado
     const listaHistoriales = p.historiales || p.historialEstadoPedidos || [];
- 
-const historialDevolucion = listaHistoriales.find((h: any) =>
-  h.estado_nuevo === 'DEVUELTO' ||
-  h.estadoNuevo === 'DEVUELTO' ||
-  normalizarTexto(h.observaciones).includes('devolucion')
-);
- 
-const huboDevolucion =
-  estado === 'DEVUELTO' ||
-  estado === 'CANCELADO' ||
-  estado === 'DEVOLUCION' ||
-  normalizarTexto(p.observaciones).includes('devolucion') ||
-  Boolean(historialDevolucion);
- 
-if (huboDevolucion) {
-  const ultimaAsignacion =
-    p.asignaciones && p.asignaciones.length > 0 ? p.asignaciones[p.asignaciones.length - 1] : null;
- 
-  const nombreEmp = obtenerNombreOperario(ultimaAsignacion?.empleado || p.empleado);
- 
-  mapaDevueltosPorEmpleado[nombreEmp] = (mapaDevueltosPorEmpleado[nombreEmp] || 0) + 1;
-}
+
+    const historialDevolucion = listaHistoriales.find((h: any) =>
+      h.estado_nuevo === 'DEVUELTO' ||
+      h.estadoNuevo === 'DEVUELTO' ||
+      normalizarTexto(h.observaciones).includes('devolucion')
+    );
+
+    const huboDevolucion =
+      estado === 'DEVUELTO' ||
+      estado === 'CANCELADO' ||
+      estado === 'DEVOLUCION' ||
+      normalizarTexto(p.observaciones).includes('devolucion') ||
+      Boolean(historialDevolucion);
+
+    if (huboDevolucion) {
+      const ultimaAsignacion =
+        p.asignaciones && p.asignaciones.length > 0 ? p.asignaciones[p.asignaciones.length - 1] : null;
+
+      const nombreEmp = obtenerNombreOperario(ultimaAsignacion?.empleado || p.empleado);
+
+      mapaDevueltosPorEmpleado[nombreEmp] = (mapaDevueltosPorEmpleado[nombreEmp] || 0) + 1;
+    }
 
     // Cálculo de tiempos de resolución
     const fechaInicioStr = p.fecha_creacion || p.fechaCreacion || p.fecha;
@@ -596,7 +484,7 @@ if (huboDevolucion) {
       }
 
       mapaEmpleados[nombreEmp].pedidos += 1;
-      
+
       if (tieneTiempoValido) {
         mapaEmpleados[nombreEmp].sumaMinutos += duracionMinutos;
         if (duracionMinutos > mapaEmpleados[nombreEmp].maxMinutos) {
@@ -677,8 +565,8 @@ if (huboDevolucion) {
     };
   });
 
-  const tiempoPromedioGeneralMinutos = cantidadPedidosConTiempo > 0 
-    ? Math.round(sumaTiempoGeneralMinutos / cantidadPedidosConTiempo) 
+  const tiempoPromedioGeneralMinutos = cantidadPedidosConTiempo > 0
+    ? Math.round(sumaTiempoGeneralMinutos / cantidadPedidosConTiempo)
     : 0;
 
   // --- AGRUPAMIENTO POR PERÍODO ---
@@ -784,12 +672,12 @@ if (huboDevolucion) {
       ? `${usuarioObj.persona.nombre} ${usuarioObj.persona.apellido}`
       : usuarioObj.nombreUsuario || `Usuario #${usuarioObj.idUsuario}`;
   };
- 
+
   const mermasEnRango = (mermasLista || []).filter((item) => {
     const f = new Date(item.fecha_merma || item.fechaMerma);
     return f >= desde && f <= hasta;
   });
- 
+
   let mermasPorPeriodo: any[] = [];
   if (esUnSoloDia) {
     mermasPorPeriodo = mermasEnRango.map((item, idx) => {
@@ -798,7 +686,7 @@ if (huboDevolucion) {
         minute: '2-digit',
         hour12: false
       });
- 
+
       return {
         ejeX: `${horaLabel}#${idx}`,   // clave ÚNICA para el eje (evita colisiones de Recharts)
         horaLabel,                      // texto real que se muestra
@@ -821,7 +709,7 @@ if (huboDevolucion) {
       (item) => new Date(item.fecha_merma || item.fechaMerma),
       (item) => Number(item.cantidad) || 0
     );
- 
+
     mermasPorPeriodo = mermasAgrupadas.map((item) => ({
       ejeX: item.name,
       cantidad: item.valor
@@ -829,77 +717,77 @@ if (huboDevolucion) {
   }
 
   const averiasEnRango = (averiasLista || []).filter((item) => {
-  const f = new Date(item.fechaReporte || item.fecha_reporte);
-  return f >= desde && f <= hasta;
+    const f = new Date(item.fechaReporte || item.fecha_reporte);
+    return f >= desde && f <= hasta;
   });
 
   let averiasPorPeriodo: any[] = [];
   if (esUnSoloDia) {
-  averiasPorPeriodo = averiasEnRango.map((item, idx) => ({
-    ejeX: `${new Date(item.fechaReporte).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}#${idx}`,
-    cantidad: 1,
-    maquina: item.maquina?.nombre || 'Sin especificar',
-    detalle: item.descripcion || 'Sin detalle'
-  }));
+    averiasPorPeriodo = averiasEnRango.map((item, idx) => ({
+      ejeX: `${new Date(item.fechaReporte).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}#${idx}`,
+      cantidad: 1,
+      maquina: item.maquina?.nombre || 'Sin especificar',
+      detalle: item.descripcion || 'Sin detalle'
+    }));
   } else {
-  const averiasAgrupadas = agruparPorPeriodo(
-    averiasEnRango, desde, hasta, esUnSoloDia, esPorSemanas, esPorMeses, esPorAnios,
-    (item) => new Date(item.fechaReporte),
-    () => 1
-  );
-  averiasPorPeriodo = averiasAgrupadas.map((item) => ({ ejeX: item.name, cantidad: item.valor }));
+    const averiasAgrupadas = agruparPorPeriodo(
+      averiasEnRango, desde, hasta, esUnSoloDia, esPorSemanas, esPorMeses, esPorAnios,
+      (item) => new Date(item.fechaReporte),
+      () => 1
+    );
+    averiasPorPeriodo = averiasAgrupadas.map((item) => ({ ejeX: item.name, cantidad: item.valor }));
   }
 
   // --- CLIENTES CON MÁS INGRESOS ---
   const mapaClientes: { [key: string]: { nombre: string; totalGastado: number; cantidadPedidos: number } } = {};
 
   const obtenerNombreCliente = (clienteObj: any, fallbackStr?: string): string => {
-  let clienteNombre = '';
+    let clienteNombre = '';
 
-  if (typeof clienteObj === 'string' && clienteObj.trim()) {
-    clienteNombre = clienteObj;
-  } else if (clienteObj && typeof clienteObj === 'object') {
-    const razonSocialLimpia = (clienteObj.razonSocial || '').trim().toLowerCase();
-    const razonSocialValida =
-      clienteObj.razonSocial &&
-      razonSocialLimpia !== '' &&
-      razonSocialLimpia !== 'ninguna' &&
-      razonSocialLimpia !== 'ninguno' &&
-      razonSocialLimpia !== 'n/a' &&
-      razonSocialLimpia !== 'na';
+    if (typeof clienteObj === 'string' && clienteObj.trim()) {
+      clienteNombre = clienteObj;
+    } else if (clienteObj && typeof clienteObj === 'object') {
+      const razonSocialLimpia = (clienteObj.razonSocial || '').trim().toLowerCase();
+      const razonSocialValida =
+        clienteObj.razonSocial &&
+        razonSocialLimpia !== '' &&
+        razonSocialLimpia !== 'ninguna' &&
+        razonSocialLimpia !== 'ninguno' &&
+        razonSocialLimpia !== 'n/a' &&
+        razonSocialLimpia !== 'na';
 
-    if (razonSocialValida) {
-      clienteNombre = clienteObj.razonSocial;
-    } else if (clienteObj.persona) {
-      const { nombre = '', apellido = '' } = clienteObj.persona;
-      clienteNombre = `${nombre} ${apellido}`.trim();
-    } else if (clienteObj.nombre) {
-      const apellido = clienteObj.apellido || '';
-      clienteNombre = `${clienteObj.nombre} ${apellido}`.trim();
+      if (razonSocialValida) {
+        clienteNombre = clienteObj.razonSocial;
+      } else if (clienteObj.persona) {
+        const { nombre = '', apellido = '' } = clienteObj.persona;
+        clienteNombre = `${nombre} ${apellido}`.trim();
+      } else if (clienteObj.nombre) {
+        const apellido = clienteObj.apellido || '';
+        clienteNombre = `${clienteObj.nombre} ${apellido}`.trim();
+      }
     }
-  }
 
-  if (!clienteNombre && fallbackStr && typeof fallbackStr === 'string') {
-    clienteNombre = fallbackStr;
-  }
+    if (!clienteNombre && fallbackStr && typeof fallbackStr === 'string') {
+      clienteNombre = fallbackStr;
+    }
 
-  const nombreLimpio = clienteNombre.trim().toLowerCase();
+    const nombreLimpio = clienteNombre.trim().toLowerCase();
 
-  if (
-    !nombreLimpio ||
-    nombreLimpio === 'ninguna' ||
-    nombreLimpio === 'ninguno' ||
-    nombreLimpio === 'null' ||
-    nombreLimpio === 'undefined' ||
-    nombreLimpio.includes('venta rápida') ||
-    nombreLimpio.includes('venta rapida') ||
-    nombreLimpio === 'caja'
-  ) {
-    return 'Consumidor Final';
-  }
+    if (
+      !nombreLimpio ||
+      nombreLimpio === 'ninguna' ||
+      nombreLimpio === 'ninguno' ||
+      nombreLimpio === 'null' ||
+      nombreLimpio === 'undefined' ||
+      nombreLimpio.includes('venta rápida') ||
+      nombreLimpio.includes('venta rapida') ||
+      nombreLimpio === 'caja'
+    ) {
+      return 'Consumidor Final';
+    }
 
-  return clienteNombre;
-};
+    return clienteNombre;
+  };
 
   const idsPedidosProcesados = new Set<string | number>();
 
@@ -977,12 +865,12 @@ if (huboDevolucion) {
       color: COLORES_TORTA[index % COLORES_TORTA.length]
     }));
 
-    const topDeudores = (deudoresLista || [])
-    .slice() 
+  const topDeudores = (deudoresLista || [])
+    .slice()
     .sort((a: any, b: any) => Number(b.saldoDeudor) - Number(a.saldoDeudor))
     .slice(0, 5)
     .map((item: any, index: number) => ({
-      name: item.nombre,                         
+      name: item.nombre,
       rank: index + 1,
       saldoDeudor: Number(item.saldoDeudor) || 0,
       limiteCredito: Number(item.limiteCredito) || 0,
@@ -1047,8 +935,8 @@ if (huboDevolucion) {
     distribucionEstados: distribucionEstados.length > 0 ? distribucionEstados : [{ name: 'Sin datos', value: 1 }],
     rendimientoEmpleados: rendimientoEmpleados.length > 0 ? rendimientoEmpleados : [{ name: 'Sin datos', ventas: 0 }],
     pedidosCompletadosPorEmpleado: pedidosCompletadosPorEmpleado.length > 0 ? pedidosCompletadosPorEmpleado : [{ name: 'Sin datos', value: 0 }],
-    pedidosDevueltosPorEmpleado: pedidosDevueltosPorEmpleado.length > 0 
-      ? pedidosDevueltosPorEmpleado 
+    pedidosDevueltosPorEmpleado: pedidosDevueltosPorEmpleado.length > 0
+      ? pedidosDevueltosPorEmpleado
       : [{ name: 'Sin datos', value: 0, color: '#52525b' }],
     detalleEgresos,
     mermasPorPeriodo,
@@ -1058,11 +946,11 @@ if (huboDevolucion) {
     ventasPorCategoriaCliente: ventasPorCategoriaCliente.length > 0 ? ventasPorCategoriaCliente : [{ name: 'Sin datos', ventas: 0, montoTotal: 0 }],
     topClientes: topClientesFormateados,
     topDeudores,
-    distribucionCategoriasIngreso: distribucionCategoriasIngreso.length > 0 
-      ? distribucionCategoriasIngreso 
+    distribucionCategoriasIngreso: distribucionCategoriasIngreso.length > 0
+      ? distribucionCategoriasIngreso
       : [{ name: 'Sin datos', value: 0, cantidad: 0, color: '#52525b' }],
-    distribucionCategoriasEgreso: distribucionCategoriasEgreso.length > 0 
-      ? distribucionCategoriasEgreso 
+    distribucionCategoriasEgreso: distribucionCategoriasEgreso.length > 0
+      ? distribucionCategoriasEgreso
       : [{ name: 'Sin datos', value: 0, cantidad: 0, color: '#52525b' }]
   };
 }

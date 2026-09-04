@@ -39,8 +39,16 @@ export const useConfiguracion = () => {
   const [mostrarModalConfirmacion, setMostrarModalConfirmacion] = useState(false);
 
   useEffect(() => {
+  const rolNombre = typeof usuario?.rol === 'string' 
+    ? usuario.rol 
+    : usuario?.rol?.nombreRol || usuario?.rol?.nombre || '';
+
+  const esAdmin = rolNombre.toString().toUpperCase() === 'ADMIN';
+
+  if (token && esAdmin) {
     cargarHistorialRespaldos();
-  }, []);
+  }
+}, []);
 
   const cargarHistorialRespaldos = async () => {
     try {
@@ -244,7 +252,7 @@ export const useConfiguracion = () => {
     datosUsuario, setDatosUsuario, mensajeUsuario, cargandoUsuario, handleCambiarUsuario,
     datosEmail, setDatosEmail, mensajeEmail, cargandoEmail, handleCambiarEmail,
     modalConfirmacionPerfil, setModalConfirmacionPerfil,
-    historialRespaldos, cargandoRespaldo, mensajeRespaldo, archivoSeleccionado, setArchivoSeleccionado,
+    historialRespaldos, cargarHistorialRespaldos, cargandoRespaldo, mensajeRespaldo, archivoSeleccionado, setArchivoSeleccionado,
     cargandoRestaurar, mostrarModalConfirmacion, setMostrarModalConfirmacion,
     handleGenerarRespaldo, handleDescargarRespaldoHistorial, handleEliminarRespaldo, ejecutarRestauracion
   };

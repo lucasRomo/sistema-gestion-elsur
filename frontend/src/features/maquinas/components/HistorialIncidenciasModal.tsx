@@ -250,7 +250,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-xl modal-dialog-centered">
-        <div className="modal-content" style={{ backgroundColor: modalBg, color: textColor, borderRadius: '12px', border: `1px solid ${modalBorder}` }}>
+        <div className="modal-content" style={{ backgroundColor: modalBg, color: textColor, borderRadius: '12px', border: '1.5px solid #07aadb' }}>
           
           {/* Header */}
 <div 

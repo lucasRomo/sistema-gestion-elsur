@@ -115,9 +115,14 @@ export const ModalCrearArea: React.FC<Props> = ({
                 <button type="button" className="btn btn-sm btn-danger text-white" onClick={handleCancelar}>
                   Cancelar
                 </button>
-                <button type="submit" className="btn btn-sm btn-warning fw-bold text-white" disabled={guardando}>
-                  {guardando ? 'Guardando...' : 'Guardar Cátedra'}
-                </button>
+                <button 
+  type="submit" 
+  className="btn btn-sm btn-warning fw-bold" 
+  style={{ color: '#ffffff' }}
+  disabled={guardando}
+>
+  {guardando ? 'Guardando...' : 'Guardar Cátedra'}
+</button>
               </div>
             </form>
           </div>

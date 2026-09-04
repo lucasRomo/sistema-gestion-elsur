@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../../../config/api';
+import { clienteService, type TipoDocumento } from '../services/clienteService';
 
 interface ClienteEditModalProps {
   cliente: any;
@@ -8,13 +9,11 @@ interface ClienteEditModalProps {
 }
 
 export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onCerrar, onConfirmar }) => {
-  // Lista dinámica traída del backend
-  const [tiposDocumento, setTiposDocumento] = useState<any[]>([]);
+  // Lista dinámica traída desde el servicio
+  const [tiposDocumento, setTiposDocumento] = useState<TipoDocumento[]>([]);
   const [showTipoDoc, setShowTipoDoc] = useState(false);
-  const [showEstado, setShowEstado] = useState(false);
   
   const [editData, setEditData] = useState<any>({
-    // 🟢 CLAVE PARA EL ERROR: Enviar id_cliente coincide con @JsonProperty("id_cliente") en Java
     id_cliente: cliente.id_cliente || cliente.idCliente,
     idCliente: cliente.idCliente || cliente.id_cliente,
     razonSocial: cliente.razonSocial || '',
@@ -40,7 +39,6 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
 
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
-  // Cargamos los tipos de documentos disponibles al montar el modal
   useEffect(() => {
     apiFetch('http://localhost:8080/api/tipos-documento')
       .then(res => {
@@ -90,7 +88,14 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
       {/* Contenedor del Modal Principal */}
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
         <div className="modal-dialog modal-lg modal-dialog-centered" style={{ maxWidth: '850px' }}>
-          <div className="modal-content border-secondary text-white" style={{ border: '1px solid #3f3f46', backgroundColor: '#1a1a1c', borderRadius: '14px' }}>
+          <div 
+            className="modal-content text-white" 
+            style={{ 
+              border: '1.5px solid #0dcaf0', 
+              backgroundColor: '#1a1a1c', 
+              borderRadius: '14px' 
+            }}
+          >
             
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center px-4 pt-4 pb-2">
@@ -108,8 +113,8 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                 
                 {/* SECCIÓN 1: DATOS PERSONALES */}
                 <h5 className="border-bottom pb-2 mb-3 mt-2 font-monospace fw-bold text-dark-emphasis" style={{ fontSize: '1.05rem' }}>
-  1. Datos Personales
-</h5>
+                  1. Datos Personales
+                </h5>
                 
                 <div className="row g-3 mb-4 mx-0">
                   <div className="col-md-4 px-1">
@@ -149,56 +154,56 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                   </div>
 
                   {/* Selector dinámico de tipo de documento */}
-<div className="col-md-4 px-1">
-  <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Tipo de Doc.</label>
-  <div className="position-relative">
-    <input
-      type="text"
-      readOnly
-      autoComplete="off"
-      className="form-control text-white"
-      style={{ backgroundColor: '#222226', borderColor: '#3f3f46', cursor: 'pointer' }}
-      value={
-        tiposDocumento.find((t: any) => t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento)
-          ?.nombreTipo ||
-        tiposDocumento.find((t: any) => t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento)
-          ?.nombre ||
-        'Seleccione Un Tipo'
-      }
-      onFocus={() => setShowTipoDoc(true)}
-      onClick={() => setShowTipoDoc(true)}
-      onBlur={() => setTimeout(() => setShowTipoDoc(false), 200)}
-    />
-    {showTipoDoc && (
-      <div
-        className="position-absolute w-100 shadow rounded mt-1 overflow-auto bg-dark text-white"
-        style={{ maxHeight: '180px', zIndex: 1060, border: '1px solid #3f3f46', top: '100%', left: 0 }}
-      >
-        {tiposDocumento.map((t: any) => {
-          const isSelected = t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento;
-          return (
-            <div
-              key={t.idTipoDocumento}
-              className="p-2 border-bottom text-truncate"
-              style={{
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                backgroundColor: isSelected ? '#0284c7' : '#27272a',
-                color: '#ffffff'
-              }}
-              onMouseDown={() => {
-                handleTipoDocChange(t.idTipoDocumento);
-                setShowTipoDoc(false);
-              }}
-            >
-              <span className="fw-semibold">{t.nombreTipo || t.nombre}</span>
-            </div>
-          );
-        })}
-      </div>
-    )}
-  </div>
-</div>
+                  <div className="col-md-4 px-1">
+                    <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Tipo de Doc.</label>
+                    <div className="position-relative">
+                      <input
+                        type="text"
+                        readOnly
+                        autoComplete="off"
+                        className="form-control text-white"
+                        style={{ backgroundColor: '#222226', borderColor: '#3f3f46', cursor: 'pointer' }}
+                        value={
+                          tiposDocumento.find((t: TipoDocumento) => t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento)
+                            ?.nombreTipo ||
+                          tiposDocumento.find((t: TipoDocumento) => t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento)
+                            ?.nombre ||
+                          'Seleccione Un Tipo'
+                        }
+                        onFocus={() => setShowTipoDoc(true)}
+                        onClick={() => setShowTipoDoc(true)}
+                        onBlur={() => setTimeout(() => setShowTipoDoc(false), 200)}
+                      />
+                      {showTipoDoc && (
+                        <div
+                          className="position-absolute w-100 shadow rounded mt-1 overflow-auto bg-dark text-white"
+                          style={{ maxHeight: '180px', zIndex: 1060, border: '1px solid #3f3f46', top: '100%', left: 0 }}
+                        >
+                          {tiposDocumento.map((t: TipoDocumento) => {
+                            const isSelected = t.idTipoDocumento === editData.persona.tipoDocumento?.idTipoDocumento;
+                            return (
+                              <div
+                                key={t.idTipoDocumento}
+                                className="p-2 border-bottom text-truncate"
+                                style={{
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem',
+                                  backgroundColor: isSelected ? '#0284c7' : '#27272a',
+                                  color: '#ffffff'
+                                }}
+                                onMouseDown={() => {
+                                  handleTipoDocChange(t.idTipoDocumento);
+                                  setShowTipoDoc(false);
+                                }}
+                              >
+                                <span className="fw-semibold">{t.nombreTipo || t.nombre}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium font-monospace" style={{ color: '#a1a1aa' }}>N° Documento / CUIT</label>
@@ -247,8 +252,8 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
 
                 {/* SECCIÓN 2: DATOS COMERCIALES */}
                 <h5 className="border-bottom pb-2 mb-3 font-monospace fw-bold text-dark-emphasis" style={{ fontSize: '1.05rem' }}>
-  2. Datos Comerciales
-</h5>
+                  2. Datos Comerciales
+                </h5>
                 
                 <div className="row g-3 mb-2 mx-0">
                   <div className="col-md-6 px-1">
@@ -292,9 +297,9 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
               {/* Botones de Acción Fijos Inferiores */}
               <div className="d-flex justify-content-end gap-2 mt-3 pt-3 border-top" style={{ borderColor: '#3f3f46 !important' }}>
                 <button type="button" className="btn btn-danger px-4 fw-semibold" style={{ borderRadius: '8px', color: '#ffffff' }} onClick={onCerrar}>
-  Cancelar
-</button>
-                <button type="submit" className="btn btn-info px-4 fw-semibold" style={{ borderRadius: '8px', color: '#ffffff' }}>Aceptar</button>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-info px-4 fw-semibold" style={{ borderRadius: 'none', borderColor: '#149bdf', backgroundColor: '#149bdf' , color: '#ffffff' }}>Aceptar</button>
               </div>
             </form>
           </div>

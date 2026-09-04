@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 import { apiFetch } from '../../../config/api';
+import type { PedidoNotificacion } from '../services/ventaRapidaService';
 
+// Definición de la interfaz del Pedido obtenida del Backend
 interface PedidoBackend {
   id_pedido: number;
+  observaciones?: string;
+  observacion?: string;
+  estante?: string;
+  estado?: string;
+  fecha_entrega_estimada?: string;
   cliente?: {
+    nombre?: string;
+    razonSocial?: string;
+    razon_social?: string;
     persona?: {
       nombre?: string;
       apellido?: string;
     };
-    razonSocial?: string;
-    razon_social?: string;
-    nombre?: string;
   };
-  fecha_entrega_estimada: string;
-  estado: string;
-  observaciones?: string; 
-  observacion?: string;
-  estante?: string;
 }
 
 export const NotificacionesCard: React.FC = () => {
@@ -30,13 +32,12 @@ export const NotificacionesCard: React.FC = () => {
   const [ingresosTurno, setIngresosTurno] = useState<number>(0);
   const [egresosTurno, setEgresosTurno] = useState<number>(0);
 
-  const [pedidosUrgentes, setPedidosUrgentes] = useState<
-    { id: number; cliente: string; estadoTiempo: 'vencido' | 'urgente'; minDiferencia: number }[]
-  >([]);
+  const [pedidosUrgentes, setPedidosUrgentes] = useState<PedidoNotificacion[]>([]);
   const [cargando, setCargando] = useState<boolean>(true);
 
   const fetchNotificaciones = async () => {
     try {
+      // 1. Obtener estado de la caja mediante apiFetch
       const resCaja = await apiFetch('http://localhost:8080/api/turnos/estado-caja');
       if (resCaja.ok) {
         const textRes = await resCaja.text();
@@ -59,17 +60,13 @@ export const NotificacionesCard: React.FC = () => {
         }
       }
 
+      // 2. Obtener pedidos urgentes/demorados mediante apiFetch
       const resPedidos = await apiFetch('http://localhost:8080/api/pedidos');
       if (resPedidos.ok) {
         const dataPedidos: PedidoBackend[] = await resPedidos.json();
         const ahora = new Date().getTime();
 
-        const urgentesOExcedidos: {
-          id: number;
-          cliente: string;
-          estadoTiempo: 'vencido' | 'urgente';
-          minDiferencia: number;
-        }[] = [];
+        const urgentesOExcedidos: PedidoNotificacion[] = [];
 
         dataPedidos.forEach((p) => {
           const obs = (p.observaciones || p.observacion || '').toLowerCase();
@@ -314,7 +311,7 @@ export const NotificacionesCard: React.FC = () => {
                     border: isDark ? '1px dashed #ef444455' : '1px dashed #fca5a5' 
                   }}
                 >
-                  Abra la caja del dia o Espere a mañana para continuar
+                  Abra la caja del día o Espere a mañana para continuar
                 </div>
               )}
             </div>

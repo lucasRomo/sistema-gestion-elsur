@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
 import { apiFetch } from '../../../config/api';
+import { getTodasLasRecetas } from '../services/productoService';
 
 interface Props {
   show: boolean;
@@ -20,7 +21,7 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const inputBg = isDark ? '#1a1a1c' : '#ffffff';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const thBg = isDark ? '#1a1a1c' : '#f8fafc';
+  const thBg = isDark ? '#1a1a1c' : '#ffffff';
   const thText = isDark ? '#a1a1aa' : '#475569';
   const rowBorder = isDark ? '#27272a' : '#e2e8f0';
   const mutedText = isDark ? '#a1a1aa' : '#64748b';
@@ -29,16 +30,15 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
   const [idsConReceta, setIdsConReceta] = useState<Set<number>>(new Set());
   const [cargando, setCargando] = useState(false);
 
-  // Al abrir el modal, consultamos la tabla Producto_Insumo en el backend
   useEffect(() => {
     if (show) {
       setCargando(true);
       apiFetch('http://localhost:8080/api/producto-insumo')
         .then(res => res.json())
+      getTodasLasRecetas()
         .then((data: any[]) => {
           const ids = new Set<number>();
           data.forEach(item => {
-            // Mapea los ID de producto presentes en la tabla asociativa
             const idProd = item.id?.idProducto || item.producto?.idProducto;
             if (idProd) ids.add(idProd);
           });
@@ -51,7 +51,6 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
 
   if (!show) return null;
 
-  // Filtrar los productos cuyo idProducto esté registrado en la tabla asociativa
   const productosFiltrados = productos.filter(p => {
     const tieneReceta = p.idProducto ? idsConReceta.has(p.idProducto) : false;
     const coincideBusqueda = p.nombreProducto?.toLowerCase().includes(busqueda.toLowerCase());

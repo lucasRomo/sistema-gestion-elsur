@@ -8,6 +8,15 @@ export type InformeComparacion =
   | 'tiempoPromedioPedido' | 'tiempoMaximoEmpleado' | 'pedidosdevueltosempleado' | 'mermas'
   | 'averias' | 'incongruencias'; 
 
+  
+export interface RendererChartProps {
+  data: any;
+  esAnterior?: boolean;
+  esMismoDia?: boolean;
+  isDark: boolean;
+  isMobile: boolean;
+}
+
 export interface KpiCard {
   label: string;
   sub: string;

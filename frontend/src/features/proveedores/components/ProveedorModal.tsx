@@ -27,11 +27,19 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
 
   const modalBg = isDark ? '#1e1e24' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const titleColor = isDark ? '#00d7ff' : '#0284c7';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#a1a1aa' : '#475569';
   const inputBg = isDark ? '#121214' : '#ffffff';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
+
+  // --- CONFIGURACIÓN DE COLORES DINÁMICOS SEGÚN MODO (CREAR vs EDITAR) ---
+  const borderColorModal = isEditing ? '#0dcaf0' : '#198754';
+  const titleColorModal = isEditing 
+    ? (isDark ? '#00d7ff' : '#0284c7') 
+    : (isDark ? '#22c55e' : '#198754');
+  const btnBgModal = isEditing 
+    ? (isDark ? '#0dcaf0' : '#0284c7') 
+    : '#198754';
 
   const [tiposProveedor, setTiposProveedor] = useState<any[]>([]);
   const [showCategorias, setShowCategorias] = useState<boolean>(false);
@@ -42,13 +50,15 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   const [showTipoProveedor, setShowTipoProveedor] = useState(false);
   const [showEstado, setShowEstado] = useState(false);
 
+  // Carga de categorías utilizando apiFetch
   const cargarCategorias = async () => {
     try {
       const res = await apiFetch('http://localhost:8080/api/tipos-proveedor');
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error('Error al obtener los tipos de proveedor');
       const data = await res.json();
       setTiposProveedor(data);
-    } catch {
+    } catch (error) {
+      console.error(error);
       setTiposProveedor([
         { idTipoProveedor: 1, descripcion: 'Insumos Gráficos' },
         { idTipoProveedor: 2, descripcion: 'Papelería' },
@@ -63,63 +73,68 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     }
   }, [show]);
 
+  // Creación de categoría utilizando apiFetch
   const handleCrearCategoria = async (e?: React.FormEvent) => {
-  if (e) e.preventDefault();
-  const nombreLimpio = nuevaCategoria.trim();
-  if (!nombreLimpio) return;
-  const inputElem = document.getElementById('inputNuevaCategoria') as HTMLInputElement;
-  const yaExiste = tiposProveedor.some(
-    (t) => t.descripcion.trim().toLowerCase() === nombreLimpio.toLowerCase()
-  );
+    if (e) e.preventDefault();
+    const nombreLimpio = nuevaCategoria.trim();
+    if (!nombreLimpio) return;
+    const inputElem = document.getElementById('inputNuevaCategoria') as HTMLInputElement;
+    const yaExiste = tiposProveedor.some(
+      (t) => t.descripcion.trim().toLowerCase() === nombreLimpio.toLowerCase()
+    );
 
-  if (yaExiste) {
-    if (inputElem) {
-      inputElem.setCustomValidity("Esta categoría ya existe");
-      inputElem.reportValidity();
+    if (yaExiste) {
+      if (inputElem) {
+        inputElem.setCustomValidity("Esta categoría ya existe");
+        inputElem.reportValidity();
+      }
+      return;
     }
-    return;
-  }
 
-  try {
-    const res = await apiFetch('http://localhost:8080/api/tipos-proveedor', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ descripcion: nombreLimpio })
-    });
-    if (res.ok) {
+    try {
+      const res = await apiFetch('http://localhost:8080/api/tipos-proveedor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ descripcion: nombreLimpio })
+      });
+
+      if (!res.ok) throw new Error('Error al crear la categoría');
+
       setNuevaCategoria('');
       if (inputElem) inputElem.setCustomValidity('');
-      cargarCategorias();
+      await cargarCategorias();
+    } catch (error) {
+      console.error(error);
+      alert("Error al guardar la nueva categoría");
     }
-  } catch {
-    alert("Error al guardar la nueva categoría");
-  }
   };
 
   const handleEliminarCategoria = (id: number) => {
-  setIdCategoriaAEliminar(id);
+    setIdCategoriaAEliminar(id);
   };
 
+  // Eliminación de categoría utilizando apiFetch
   const ejecutarEliminacionCategoria = async () => {
-  if (!idCategoriaAEliminar) return;
+    if (!idCategoriaAEliminar) return;
 
-  try {
-    const res = await apiFetch(`http://localhost:8080/api/tipos-proveedor/${idCategoriaAEliminar}`, {
-      method: 'DELETE'
-    });
+    try {
+      const res = await apiFetch(`http://localhost:8080/api/tipos-proveedor/${idCategoriaAEliminar}`, {
+        method: 'DELETE'
+      });
 
-    if (res.ok) {
+      if (!res.ok) throw new Error('Error al eliminar la categoría');
+
       if (formState?.tipoProveedor?.idTipoProveedor === idCategoriaAEliminar) {
         setFormState(prev => prev ? { ...prev, tipoProveedor: undefined } : null);
       }
-      cargarCategorias();
+      await cargarCategorias();
       setIdCategoriaAEliminar(null);
       setMostrarExitoEliminar(true); 
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo eliminar la categoría (puede que esté en uso por otra entidad).");
+      setIdCategoriaAEliminar(null);
     }
-  } catch (error) {
-    alert("No se pudo eliminar la categoría (puede que esté en uso por otra entidad).");
-    setIdCategoriaAEliminar(null);
-  }
   };
 
   const obtenerFormStateNormalizado = (): Proveedor | null => {
@@ -168,11 +183,15 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
         <div className="modal-dialog modal-lg modal-dialog-centered">
           <div 
             className="modal-content font-monospace shadow" 
-            style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}`, color: textColor }}
+            style={{ 
+              backgroundColor: modalBg, 
+              border: `1.5px solid ${borderColorModal}`, 
+              color: textColor 
+            }}
           >
             <div className="modal-header" style={{ borderBottom: `1px solid ${modalBorder}` }}>
-              <h5 className="modal-title fw-bold" style={{ color: titleColor }}>
-                <i className="bi bi-pencil-square me-2"></i> 
+              <h5 className="modal-title fw-bold" style={{ color: titleColorModal }}>
+                <i className={`bi ${isEditing ? 'bi-pencil-square' : 'bi-plus-circle-fill'} me-2`}></i> 
                 {isEditing ? 'Modificar Proveedor' : 'Registrar Nuevo Proveedor'}
               </h5>
               <button 
@@ -224,152 +243,151 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
 
                 <div className="row g-3 mb-3">
                   <div className="col-md-4">
-  <label className="form-label small fw-semibold" style={{ color: labelColor }}>
-    Email de Contacto
-  </label>
-  <input 
-    type="email" 
-    required 
-    className="form-control"
-    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-    value={formState.emailContacto || ''}
-    onChange={(e) => setFormState({ ...formState, emailContacto: e.target.value })}
-    onInvalid={(e: any) => {
-      const emailLimpio = formState.emailContacto?.trim().toLowerCase();
+                    <label className="form-label small fw-semibold" style={{ color: labelColor }}>
+                      Email de Contacto
+                    </label>
+                    <input 
+                      type="email" 
+                      required 
+                      className="form-control"
+                      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                      value={formState.emailContacto || ''}
+                      onChange={(e) => setFormState({ ...formState, emailContacto: e.target.value })}
+                      onInvalid={(e: any) => {
+                        const emailLimpio = formState.emailContacto?.trim().toLowerCase();
 
-      // Verificar si el correo ya existe en otro proveedor
-      const existeEmail = proveedores?.some(
-        (p) => p.emailContacto?.trim().toLowerCase() === emailLimpio && p.idProveedor !== formState.idProveedor
-      );
+                        const existeEmail = proveedores?.some(
+                          (p) => p.emailContacto?.trim().toLowerCase() === emailLimpio && p.idProveedor !== formState.idProveedor
+                        );
 
-      if (e.target.validity.valueMissing) {
-        e.target.setCustomValidity("El Campo de Email No puede Estar Vacío");
-      } else if (e.target.validity.typeMismatch) {
-        e.target.setCustomValidity("Ingresa un formato de email válido (ej: nombre@dominio.com)");
-      } else if (existeEmail) {
-        e.target.setCustomValidity("Este correo electrónico ya está registrado en la base de datos");
-      }
-    }}
-    onInput={(e: any) => {
-      const emailLimpio = e.target.value.trim().toLowerCase();
-      const existeEmail = proveedores?.some(
-        (p) => p.emailContacto?.trim().toLowerCase() === emailLimpio && p.idProveedor !== formState.idProveedor
-      );
+                        if (e.target.validity.valueMissing) {
+                          e.target.setCustomValidity("El Campo de Email No puede Estar Vacío");
+                        } else if (e.target.validity.typeMismatch) {
+                          e.target.setCustomValidity("Ingresa un formato de email válido (ej: nombre@dominio.com)");
+                        } else if (existeEmail) {
+                          e.target.setCustomValidity("Este correo electrónico ya está registrado en la base de datos");
+                        }
+                      }}
+                      onInput={(e: any) => {
+                        const emailLimpio = e.target.value.trim().toLowerCase();
+                        const existeEmail = proveedores?.some(
+                          (p) => p.emailContacto?.trim().toLowerCase() === emailLimpio && p.idProveedor !== formState.idProveedor
+                        );
 
-      if (existeEmail) {
-        e.target.setCustomValidity("Este correo electrónico ya está registrado en la base de datos");
-      } else {
-        e.target.setCustomValidity("");
-      }
-    }}
-  />
-</div>
-
-                  <div className="col-md-4">
-  <label className="form-label small fw-semibold" style={{ color: labelColor }}>
-    Tipo de Proveedor
-  </label>
-  <div className="d-flex gap-2">
-    <div className="position-relative flex-grow-1">
-      <input
-        type="text"
-        readOnly
-        autoComplete="off"
-        className="form-control"
-        style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
-        value={formState.tipoProveedor?.descripcion || 'Seleccione Tipo'}
-        onFocus={() => setShowTipoProveedor(true)}
-        onClick={() => setShowTipoProveedor(true)}
-        onBlur={() => setTimeout(() => setShowTipoProveedor(false), 200)}
-      />
-      {showTipoProveedor && (
-        <div
-          className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
-          style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
-        >
-          {tiposProveedor.map((t) => {
-            const isSelected = t.idTipoProveedor === formState.tipoProveedor?.idTipoProveedor;
-            return (
-              <div
-                key={t.idTipoProveedor}
-                className="p-2 border-bottom text-truncate"
-                style={{
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
-                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
-                }}
-                onMouseDown={() => {
-                  setFormState({ ...formState, tipoProveedor: t });
-                  setShowTipoProveedor(false);
-                }}
-              >
-                <span className="fw-semibold">{t.descripcion}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-    <button
-      type="button"
-      className="btn btn-outline-info"
-      title="Gestionar Categorías"
-      onClick={() => setShowCategorias(true)}
-      style={{ flexShrink: 0 }}
-    >
-      <i className="bi bi-gear-fill"></i>
-    </button>
-  </div>
-</div>
+                        if (existeEmail) {
+                          e.target.setCustomValidity("Este correo electrónico ya está registrado en la base de datos");
+                        } else {
+                          e.target.setCustomValidity("");
+                        }
+                      }}
+                    />
+                  </div>
 
                   <div className="col-md-4">
-  <label className="form-label small fw-semibold" style={{ color: labelColor }}>
-    Estado de Cuenta
-  </label>
-  <div className="position-relative">
-    <input
-      type="text"
-      readOnly
-      autoComplete="off"
-      className="form-control"
-      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
-      value={formState.estado || 'Activo'}
-      onFocus={() => setShowEstado(true)}
-      onClick={() => setShowEstado(true)}
-      onBlur={() => setTimeout(() => setShowEstado(false), 200)}
-    />
-    {showEstado && (
-      <div
-        className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
-        style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
-      >
-        {['Activo', 'Desactivado'].map((opcion) => {
-          const isSelected = opcion === (formState.estado || 'Activo');
-          return (
-            <div
-              key={opcion}
-              className="p-2 border-bottom text-truncate"
-              style={{
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
-                color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
-              }}
-              onMouseDown={() => {
-                setFormState({ ...formState, estado: opcion });
-                setShowEstado(false);
-              }}
-            >
-              <span className="fw-semibold">{opcion}</span>
-            </div>
-          );
-        })}
-      </div>
-    )}
-  </div>
-</div>
-</div>
+                    <label className="form-label small fw-semibold" style={{ color: labelColor }}>
+                      Tipo de Proveedor
+                    </label>
+                    <div className="d-flex gap-2">
+                      <div className="position-relative flex-grow-1">
+                        <input
+                          type="text"
+                          readOnly
+                          autoComplete="off"
+                          className="form-control"
+                          style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
+                          value={formState.tipoProveedor?.descripcion || 'Seleccione Tipo'}
+                          onFocus={() => setShowTipoProveedor(true)}
+                          onClick={() => setShowTipoProveedor(true)}
+                          onBlur={() => setTimeout(() => setShowTipoProveedor(false), 200)}
+                        />
+                        {showTipoProveedor && (
+                          <div
+                            className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+                            style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+                          >
+                            {tiposProveedor.map((t) => {
+                              const isSelected = t.idTipoProveedor === formState.tipoProveedor?.idTipoProveedor;
+                              return (
+                                <div
+                                  key={t.idTipoProveedor}
+                                  className="p-2 border-bottom text-truncate"
+                                  style={{
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem',
+                                    backgroundColor: isSelected ? '#149bdf' : (isDark ? '#27272a' : '#f8fafc'),
+                                    color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                                  }}
+                                  onMouseDown={() => {
+                                    setFormState({ ...formState, tipoProveedor: t });
+                                    setShowTipoProveedor(false);
+                                  }}
+                                >
+                                  <span className="fw-semibold">{t.descripcion}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-outline-warning"
+                        title="Gestionar Categorías"
+                        onClick={() => setShowCategorias(true)}
+                        style={{ flexShrink: 0 }}
+                      >
+                        <i className="bi bi-gear-fill"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <label className="form-label small fw-semibold" style={{ color: labelColor }}>
+                      Estado de Cuenta
+                    </label>
+                    <div className="position-relative">
+                      <input
+                        type="text"
+                        readOnly
+                        autoComplete="off"
+                        className="form-control"
+                        style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder, cursor: 'pointer' }}
+                        value={formState.estado || 'Activo'}
+                        onFocus={() => setShowEstado(true)}
+                        onClick={() => setShowEstado(true)}
+                        onBlur={() => setTimeout(() => setShowEstado(false), 200)}
+                      />
+                      {showEstado && (
+                        <div
+                          className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
+                          style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
+                        >
+                          {['Activo', 'Desactivado'].map((opcion) => {
+                            const isSelected = opcion === (formState.estado || 'Activo');
+                            return (
+                              <div
+                                key={opcion}
+                                className="p-2 border-bottom text-truncate"
+                                style={{
+                                  cursor: 'pointer',
+                                  fontSize: '0.875rem',
+                                  backgroundColor: isSelected ? '#149bdf' : (isDark ? '#27272a' : '#f8fafc'),
+                                  color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
+                                }}
+                                onMouseDown={() => {
+                                  setFormState({ ...formState, estado: opcion });
+                                  setShowEstado(false);
+                                }}
+                              >
+                                <span className="fw-semibold">{opcion}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
                 {!isEditing && (
                   <>
@@ -458,68 +476,68 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
                       </div>
 
                       <div className="col-md-3">
-  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Ciudad (Opcional)</label>
-  <input 
-    type="text" 
-    pattern="^$|[A-Za-zÁ-Úá-ú\s]+" 
-    className="form-control"
-    placeholder="Opcional"
-    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-    value={formState.direccion?.ciudad || ''}
-    onChange={(e) => setFormState({
-      ...formState, direccion: { ...formState.direccion!, ciudad: e.target.value }
-    })}
-    onInvalid={(e: any) => {
-      if (e.target.validity.patternMismatch) {
-        e.target.setCustomValidity("En el campo Ciudad solo se permiten letras");
-      }
-    }}
-    onInput={(e: any) => e.target.setCustomValidity("")}
-  />
-</div>
+                        <label className="form-label small fw-semibold" style={{ color: labelColor }}>Ciudad (Opcional)</label>
+                        <input 
+                          type="text" 
+                          pattern="^$|[A-Za-zÁ-Úá-ú\s]+" 
+                          className="form-control"
+                          placeholder="Opcional"
+                          style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                          value={formState.direccion?.ciudad || ''}
+                          onChange={(e) => setFormState({
+                            ...formState, direccion: { ...formState.direccion!, ciudad: e.target.value }
+                          })}
+                          onInvalid={(e: any) => {
+                            if (e.target.validity.patternMismatch) {
+                              e.target.setCustomValidity("En el campo Ciudad solo se permiten letras");
+                            }
+                          }}
+                          onInput={(e: any) => e.target.setCustomValidity("")}
+                        />
+                      </div>
 
                       <div className="col-md-3">
-  <label className="form-label small fw-semibold" style={{ color: labelColor }}>Provincia (Opcional)</label>
-  <input 
-    type="text" 
-    pattern="^$|[A-Za-zÁ-Úá-ú\s]+" 
-    className="form-control"
-    placeholder="Opcional"
-    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-    value={formState.direccion?.provincia || ''}
-    onChange={(e) => setFormState({
-      ...formState, direccion: { ...formState.direccion!, provincia: e.target.value }
-    })}
-    onInvalid={(e: any) => {
-      if (e.target.validity.patternMismatch) {
-        e.target.setCustomValidity("En el campo Provincia solo se permiten letras");
-      }
-    }}
-    onInput={(e: any) => e.target.setCustomValidity("")}
-  />
-</div>
+                        <label className="form-label small fw-semibold" style={{ color: labelColor }}>Provincia (Opcional)</label>
+                        <input 
+                          type="text" 
+                          pattern="^$|[A-Za-zÁ-Úá-ú\s]+" 
+                          className="form-control"
+                          placeholder="Opcional"
+                          style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                          value={formState.direccion?.provincia || ''}
+                          onChange={(e) => setFormState({
+                            ...formState, direccion: { ...formState.direccion!, provincia: e.target.value }
+                          })}
+                          onInvalid={(e: any) => {
+                            if (e.target.validity.patternMismatch) {
+                              e.target.setCustomValidity("En el campo Provincia solo se permiten letras");
+                            }
+                          }}
+                          onInput={(e: any) => e.target.setCustomValidity("")}
+                        />
+                      </div>
 
                       <div className="col-md-3">
-  <label className="form-label small fw-semibold" style={{ color: labelColor }}>País (Opcional)</label>
-  <input 
-    type="text" 
-    pattern="^$|[A-Za-zÁ-Úá-ú\s]+" 
-    className="form-control" 
-    placeholder="Opcional"
-    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-    value={formState.direccion?.pais || ''}
-    onChange={(e) => setFormState({
-      ...formState, 
-      direccion: { ...formState.direccion!, pais: e.target.value }
-    })}
-    onInvalid={(e: any) => {
-      if (e.target.validity.patternMismatch) { 
-        e.target.setCustomValidity("En el campo País solo se permiten letras");
-      }
-    }}
-    onInput={(e: any) => e.target.setCustomValidity("")}
-  />
-</div>
+                        <label className="form-label small fw-semibold" style={{ color: labelColor }}>País (Opcional)</label>
+                        <input 
+                          type="text" 
+                          pattern="^$|[A-Za-zÁ-Úá-ú\s]+" 
+                          className="form-control" 
+                          placeholder="Opcional"
+                          style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                          value={formState.direccion?.pais || ''}
+                          onChange={(e) => setFormState({
+                            ...formState, 
+                            direccion: { ...formState.direccion!, pais: e.target.value }
+                          })}
+                          onInvalid={(e: any) => {
+                            if (e.target.validity.patternMismatch) { 
+                              e.target.setCustomValidity("En el campo País solo se permiten letras");
+                            }
+                          }}
+                          onInput={(e: any) => e.target.setCustomValidity("")}
+                        />
+                      </div>
                     </div>
                   </>
                 )}
@@ -536,10 +554,10 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
                 </button>
                 <button 
                   type="submit" 
-                  className="btn btn-info fw-bold px-4" 
+                  className="btn fw-bold px-4" 
                   style={{ 
-                    color: isDark ? '#fffefe' : '#ffffff', 
-                    backgroundColor: isDark ? '#0dcaf0' : '#0284c7', 
+                    color: '#ffffff', 
+                    backgroundColor: btnBgModal, 
                     borderColor: 'transparent' 
                   }}
                 >
@@ -627,7 +645,6 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
         </div>
       )}
 
-      {/* Modal de Éxito al Eliminar Categoría */}
       {mostrarExitoEliminar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
@@ -690,56 +707,56 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
               </div>
 
               <div className="modal-body">
-  <label className="form-label small" style={{ color: labelColor }}>Nueva Categoría de Proveedor:</label>
-  <form onSubmit={handleCrearCategoria} className="input-group mb-3">
-    <input 
-      id="inputNuevaCategoria"
-      type="text" 
-      required
-      className="form-control" 
-      style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-      placeholder="Ej: Insumos de Computación"
-      value={nuevaCategoria}
-      onChange={(e) => setNuevaCategoria(e.target.value)}
-      onInput={(e: any) => e.target.setCustomValidity("")}
-      onInvalid={(e: any) => {
-        if (e.target.validity.valueMissing) {
-          e.target.setCustomValidity("Ingresa el nombre de la categoría");
-        }
-      }}
-    />
-    <button className="btn btn-success" type="submit">
-      <i className="bi bi-plus-lg"></i> Agregar
-    </button>
-  </form>
+                <label className="form-label small" style={{ color: labelColor }}>Nueva Categoría de Proveedor:</label>
+                <form onSubmit={handleCrearCategoria} className="input-group mb-3">
+                  <input 
+                    id="inputNuevaCategoria"
+                    type="text" 
+                    required
+                    className="form-control" 
+                    style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
+                    placeholder="Ej: Insumos de Computación"
+                    value={nuevaCategoria}
+                    onChange={(e) => setNuevaCategoria(e.target.value)}
+                    onInput={(e: any) => e.target.setCustomValidity("")}
+                    onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) {
+                        e.target.setCustomValidity("Ingresa el nombre de la categoría");
+                      }
+                    }}
+                  />
+                  <button className="btn btn-success" type="submit">
+                    <i className="bi bi-plus-lg"></i> Agregar
+                  </button>
+                </form>
 
-  <label className="form-label small d-block pb-1 mb-2" style={{ color: labelColor, borderBottom: `1px solid ${modalBorder}` }}>
-    Categorías Existentes:
-  </label>
-  <div style={{ maxHeight: '200px', overflowY: 'auto' }} className="pe-1">
-    {tiposProveedor.length === 0 ? (
-      <div className="text-muted small py-2 text-center">No hay categorías registradas.</div>
-    ) : (
-      tiposProveedor.map((t) => (
-        <div 
-          key={t.idTipoProveedor} 
-          className="d-flex justify-content-between align-items-center p-2 rounded mb-1"
-          style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}` }}
-        >
-          <span className="small">{t.descripcion}</span>
-          <button 
-            type="button" 
-            className="btn btn-sm p-0 text-danger fs-5 border-0 bg-transparent"
-            title="Eliminar Categoría"
-            onClick={() => handleEliminarCategoria(t.idTipoProveedor)}
-          >
-            <i className="bi bi-trash-fill"></i>
-          </button>
-        </div>
-      ))
-    )}
-  </div>
-</div>
+                <label className="form-label small d-block pb-1 mb-2" style={{ color: labelColor, borderBottom: `1px solid ${modalBorder}` }}>
+                  Categorías Existentes:
+                </label>
+                <div style={{ maxHeight: '200px', overflowY: 'auto' }} className="pe-1">
+                  {tiposProveedor.length === 0 ? (
+                    <div className="text-muted small py-2 text-center">No hay categorías registradas.</div>
+                  ) : (
+                    tiposProveedor.map((t) => (
+                      <div 
+                        key={t.idTipoProveedor} 
+                        className="d-flex justify-content-between align-items-center p-2 rounded mb-1"
+                        style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}` }}
+                      >
+                        <span className="small">{t.descripcion}</span>
+                        <button 
+                          type="button" 
+                          className="btn btn-sm p-0 text-danger fs-5 border-0 bg-transparent"
+                          title="Eliminar Categoría"
+                          onClick={() => handleEliminarCategoria(t.idTipoProveedor)}
+                        >
+                          <i className="bi bi-trash-fill"></i>
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
 
               <div className="modal-footer py-2" style={{ borderTop: `1px solid ${modalBorder}` }}>
                 <button 

@@ -22,7 +22,8 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
   const isDark = theme === 'dark';
 
   const modalBg = isDark ? '#18181b' : '#ffffff';
-  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
+  // Borde verde aplicado al modal
+  const modalBorder = '#22c55e'; 
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#e4e4e7' : '#334155';
   
@@ -91,9 +92,9 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
           className="modal-content shadow-lg p-4" 
           style={{ 
             backgroundColor: modalBg, 
-            borderColor: modalBorder, 
+            border: `2px solid ${modalBorder}`, 
             borderRadius: '14px',
-            border: `1px solid ${modalBorder}` 
+            boxShadow: isDark ? '0 0 20px rgba(34, 197, 94, 0.15)' : '0 10px 25px -5px rgba(0, 0, 0, 0.1)'
           }}
         >
           <div className="modal-header border-0 justify-content-center pt-1 pb-2">
@@ -228,14 +229,14 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
                 />
               </div>
 
-              {/* Contenedor de Comprobante Adjuntado (Estilo Registrar Pago) */}
+              {/* Contenedor de Comprobante Adjuntado */}
               {metodoPago === 'TRANSFERENCIA' && comprobanteImagen && (
                 <div className="mt-3">
                   <div 
                     className="d-flex align-items-center justify-content-between p-2 rounded shadow-sm" 
                     style={{ 
                       backgroundColor: isDark ? '#121214' : '#f1f5f9', 
-                      border: `1px solid ${modalBorder}` 
+                      border: `1px solid ${inputBorder}` 
                     }}
                   >
                     <div className="d-flex align-items-center gap-2 overflow-hidden">

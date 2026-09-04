@@ -29,6 +29,9 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
   const cardBorder = isDarkMode ? '#3f3f46' : '#dee2e6';
   const inputBg = isDarkMode ? '#1b1b1b' : '#ffffff';
 
+  // Color verde principal para bordes y acentos
+  const greenAccent = '#198754';
+
   const [titulo, setTitulo] = useState('');
   const [autor, setAutor] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -133,7 +136,7 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
             className={`modal-content p-4 position-relative ${textColor}`}
             style={{
               backgroundColor: cardBg,
-              border: '2px solid #8e45e0',
+              border: `2px solid ${greenAccent}`,
               borderRadius: '12px',
               overflow: 'hidden'
             }}
@@ -147,7 +150,7 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
                 className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center"
                 style={{
                   backgroundColor: isDarkMode ? 'rgba(27, 27, 27, 0.92)' : 'rgba(255, 255, 255, 0.92)',
-                  border: '3px dashed #8e45e0',
+                  border: `3px dashed ${greenAccent}`,
                   borderRadius: '12px',
                   zIndex: 100,
                   backdropFilter: 'blur(3px)',
@@ -156,17 +159,20 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
               >
                 <div
                   className="rounded-circle d-flex align-items-center justify-content-center mb-3"
-                  style={{ width: '80px', height: '80px', backgroundColor: 'rgba(142, 69, 224, 0.15)' }}
+                  style={{ width: '80px', height: '80px', backgroundColor: 'rgba(25, 135, 84, 0.15)' }}
                 >
-                  <i className="bi bi-paperclip" style={{ fontSize: '3rem', color: '#8e45e0' }}></i>
+                  <i className="bi bi-paperclip" style={{ fontSize: '3rem', color: greenAccent }}></i>
                 </div>
-                <h5 className="fw-bold text-white mb-1">Suelta los archivos aquí</h5>
+                <h5 className="fw-bold text-success mb-1">Suelta los archivos aquí</h5>
                 <p className="text-secondary small">El archivo seleccionado se vinculará automáticamente al registro</p>
               </div>
             )}
 
             <div className="d-flex justify-content-between align-items-center border-bottom border-secondary pb-2 mb-3">
-              <h5 className="modal-title fw-bold">Registrar Archivo en Repositorio</h5>
+              <h5 className="modal-title fw-bold text-success">
+                <i className="bi bi-file-earmark-plus me-2 text-success"></i>
+                Registrar Archivo en Repositorio
+              </h5>
               <button
                 className={`btn-close ${isDarkMode ? 'btn-close-white' : ''}`}
                 onClick={handleCerrarTodo}
@@ -275,53 +281,53 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
                 </div>
 
                 <div className="col-12">
-  <label className="form-label small text-secondary fw-bold">
-    Archivo Digital (PDF / DOCX / JPG / PNG) *
-  </label>
-  
-  {/* Input oculto mantenido con ref para la validación HTML y Drag&Drop */}
-  <input
-    ref={fileInputRef}
-    id="archivo-input"
-    type="file"
-    className="d-none"
-    required={!archivo}
-    accept=".pdf,.docx,.doc,.jpg,.jpeg,.png"
-    onChange={(e) => {
-      if (e.target.files && e.target.files[0]) {
-        setArchivo(e.target.files[0]);
-      }
-    }}
-  />
+                  <label className="form-label small text-secondary fw-bold">
+                    Archivo Digital (PDF / DOCX / JPG / PNG) *
+                  </label>
+                  
+                  {/* Input oculto mantenido con ref para la validación HTML y Drag&Drop */}
+                  <input
+                    ref={fileInputRef}
+                    id="archivo-input"
+                    type="file"
+                    className="d-none"
+                    required={!archivo}
+                    accept=".pdf,.docx,.doc,.jpg,.jpeg,.png"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setArchivo(e.target.files[0]);
+                      }
+                    }}
+                  />
 
-  <div className="d-flex align-items-center gap-2">
-    {/* Botón a la izquierda fuera del recuadro */}
-    <label
-      htmlFor="archivo-input"
-      className="btn px-3 text-nowrap cursor-pointer mb-0"
-      style={{ cursor: 'pointer', backgroundColor: 'rgba(60, 156, 211, 0.91)' }}
-    >
-      Seleccionar archivo
-    </label>
+                  <div className="d-flex align-items-center gap-2">
+                    {/* Botón a la izquierda fuera del recuadro */}
+                    <label
+                      htmlFor="archivo-input"
+                      className="btn px-3 text-nowrap cursor-pointer mb-0"
+                      style={{ cursor: 'pointer', backgroundColor: 'rgba(60, 156, 211, 0.91)', color: '#ffffff' }}
+                    >
+                      Seleccionar archivo
+                    </label>
 
-    {/* Campo de texto que muestra el estado o el nombre del archivo */}
-    <div
-      className="form-control d-flex align-items-center justify-content-between flex-grow-1"
-      style={{
-        backgroundColor: inputBg,
-        borderColor: cardBorder,
-        minHeight: '38px'
-      }}
-    >
-      <span className={`small flex-grow-1 text-truncate ${archivo ? 'text-success fw-bold' : 'text-secondary'}`}>
-        {archivo ? archivo.name : 'Seleccione o arrastre un archivo hacia la pantalla de Repositorio'}
-      </span>
-      {archivo && (
-        <i className="bi bi-check-circle-fill text-success ms-2"></i>
-      )}
-    </div>
-  </div>
-</div>
+                    {/* Campo de texto que muestra el estado o el nombre del archivo */}
+                    <div
+                      className="form-control d-flex align-items-center justify-content-between flex-grow-1"
+                      style={{
+                        backgroundColor: inputBg,
+                        borderColor: cardBorder,
+                        minHeight: '38px'
+                      }}
+                    >
+                      <span className={`small flex-grow-1 text-truncate ${archivo ? 'text-success fw-bold' : 'text-secondary'}`}>
+                        {archivo ? archivo.name : 'Seleccione o arrastre un archivo hacia la pantalla de Repositorio'}
+                      </span>
+                      {archivo && (
+                        <i className="bi bi-check-circle-fill text-success ms-2"></i>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="d-flex justify-content-end gap-2 mt-4">
@@ -348,11 +354,11 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
       {mostrarConfirmar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content shadow-lg font-monospace text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #8e45e0', borderRadius: '12px' }}>
+            <div className="modal-content shadow-lg font-monospace text-white p-3" style={{ backgroundColor: '#18181b', border: `1px solid ${greenAccent}`, borderRadius: '12px' }}>
               <div className="modal-body text-center py-3">
                 <div className="d-flex justify-content-center mb-3">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', border: '2px solid #8e45e0' }}>
-                    <i className="bi bi-question-lg" style={{ fontSize: '2rem', color: '#8e45e0' }}></i>
+                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', border: `2px solid ${greenAccent}` }}>
+                    <i className="bi bi-question-lg" style={{ fontSize: '2rem', color: greenAccent }}></i>
                   </div>
                 </div>
                 <h6 className="fw-bold my-2 text-white">¿Deseas guardar este documento en el repositorio?</h6>
@@ -360,7 +366,7 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
                   <button type="button" className="btn btn-sm btn-secondary px-3 fw-semibold" onClick={() => setMostrarConfirmar(false)}>
                     Cancelar
                   </button>
-                  <button type="button" className="btn btn-sm text-white px-3 fw-bold" style={{ backgroundColor: '#8e45e0' }} onClick={handleConfirmarGuardar}>
+                  <button type="button" className="btn btn-sm text-white px-3 fw-bold" style={{ backgroundColor: greenAccent }} onClick={handleConfirmarGuardar}>
                     Confirmar
                   </button>
                 </div>

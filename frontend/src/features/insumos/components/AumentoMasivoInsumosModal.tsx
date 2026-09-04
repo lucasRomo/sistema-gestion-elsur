@@ -24,7 +24,9 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
   const isDark = theme === 'dark';
 
   const modalBg = isDark ? '#1a1a1c' : '#ffffff';
-  const modalBorder = isDark ? '#10b981' : '#198754';
+  // Color naranja estático exacto
+  const orangeColor = '#d37c0b';
+  const modalBorder = orangeColor;
   const headerBorder = isDark ? '#27272a' : '#e2e8f0';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#a1a1aa' : '#475569';
@@ -133,8 +135,8 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
         >
           
           <div className="modal-header" style={{ borderColor: headerBorder }}>
-            <h5 className="modal-title fw-bold text-success">
-              <i className="bi bi-currency-exchange me-2"></i>Modificación Masiva de Precios
+            <h5 className="modal-title fw-bold" style={{ color: orangeColor }}>
+              <i className="bi bi-currency-exchange me-2" style={{ color: orangeColor }}></i>Modificación Masiva de Precios
             </h5>
             <button 
               type="button" 
@@ -148,7 +150,7 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
               
               {/* Opción de Aumento o Descuento */}
               <div className="mb-3">
-                <label className="form-label text-warning fw-bold">Tipo de Acción:</label>
+                <label className="form-label fw-bold" style={{ color: orangeColor }}>Tipo de Acción:</label>
                 <div className="d-flex gap-4">
                   <div className="form-check">
                     <input
@@ -182,7 +184,7 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
 
               {/* Porcentaje */}
               <div className="mb-4">
-                <label className="form-label text-warning fw-bold">
+                <label className="form-label fw-bold" style={{ color: orangeColor }}>
                   Porcentaje de {tipoOperacion === 'AUMENTO' ? 'Incremento' : 'Disminución'} (%):
                 </label>
                 <div className="input-group">
@@ -253,7 +255,7 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
               {/* Filtro por Proveedor */}
               {criterio === 'PROVEEDOR' && (
                 <div className="mb-3">
-                  <label className="form-label text-success fw-semibold">Seleccionar Proveedor:</label>
+                  <label className="form-label fw-semibold" style={{ color: orangeColor }}>Seleccionar Proveedor:</label>
                   <div className="position-relative">
                     <input
                       type="text"
@@ -264,7 +266,7 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
                       value={textoProveedor}
                       onChange={(e) => {
                         setTextoProveedor(e.target.value);
-                        setProveedorSeleccionado(null); // Resetea la selección si el usuario edita el texto
+                        setProveedorSeleccionado(null);
                       }}
                       onFocus={() => setShowProveedor(true)}
                       onBlur={() => setTimeout(() => setShowProveedor(false), 200)}
@@ -288,7 +290,7 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
                                   style={{ 
                                     cursor: 'pointer',
                                     fontSize: '0.875rem',
-                                    backgroundColor: isSelected ? '#0284c7' : (isDark ? '#27272a' : '#f8fafc'),
+                                    backgroundColor: isSelected ? orangeColor : (isDark ? '#27272a' : '#f8fafc'),
                                     color: isSelected ? '#ffffff' : (isDark ? '#e4e4e7' : '#1e293b')
                                   }}
                                   onMouseDown={() => {
@@ -312,11 +314,11 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
               {criterio === 'SELECCION' && (
                 <div className="mb-3">
                   <div className="d-flex justify-content-between align-items-center mb-2">
-                    <label className="form-label text-success fw-semibold mb-0">Seleccionar Insumos Específicos:</label>
+                    <label className="form-label fw-semibold mb-0" style={{ color: orangeColor }}>Seleccionar Insumos Específicos:</label>
                     <button
                       type="button"
                       className="btn btn-link btn-sm text-decoration-none p-0 fw-bold"
-                      style={{ color: '#10b981' }}
+                      style={{ color: orangeColor }}
                       onClick={handleToggleTodosVisibles}
                     >
                       Marcar / Desmarcar Visibles
@@ -373,9 +375,13 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
               </button>
               <button 
                 type="submit" 
-                className={`btn fw-bold px-4 ${tipoOperacion === 'AUMENTO' ? 'btn-success' : 'btn-warning'}`} 
+                className="btn fw-bold px-4" 
                 disabled={cargando}
-                style={{ color: '#ffffff' }}
+                style={{ 
+                  backgroundColor: orangeColor, 
+                  borderColor: orangeColor, 
+                  color: '#ffffff' 
+                }}
               >
                 {cargando ? 'Procesando...' : (tipoOperacion === 'AUMENTO' ? 'Aplicar Aumento' : 'Aplicar Descuento')}
               </button>

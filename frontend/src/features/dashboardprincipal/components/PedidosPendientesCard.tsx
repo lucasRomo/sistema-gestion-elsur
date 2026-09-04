@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import type { Pedido } from '../../pedidos/types/Pedido';
-import { pedidoService } from '../../pedidos/service/pedidoService';
+import type { Pedido } from '../../pedidos/general/types/Pedido';
+import { pedidoService } from '../../pedidos/general/service/pedidoService';
 import { useTheme } from '../../../Context/ThemeContext';
 
 export const PedidosPendientesCard: React.FC = () => {

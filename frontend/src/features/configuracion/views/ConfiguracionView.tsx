@@ -6,11 +6,13 @@ import { AjustesPerfilCard } from '../components/AjustesPerfilCard';
 import { RespaldoCard } from '../components/RespaldoCard';
 import { ConfirmarRestauracionModal } from '../components/ConfirmarRestauracionModal';
 import { ConfirmarAccionModal } from '../components/ConfirmarAccionModal';
+import { useIsMobile } from '../../../hook/useIsMobile'; 
 
 export const ConfiguracionView: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const esOscuro = theme === 'dark';
   const config = useConfiguracion();
+  const isMobile = useIsMobile(); // Hook detector de pantalla responsive
 
   // Clases dinámicas según el tema
   const cardBg = esOscuro ? '#18181b' : '#ffffff';
@@ -24,12 +26,13 @@ export const ConfiguracionView: React.FC = () => {
     <div className={`container-fluid font-monospace pb-5 ${esOscuro ? 'text-white' : 'text-dark'}`}>
       <div className="mb-4 pb-3" style={{ borderColor: esOscuro ? '#2d2d30' : '#dee2e6' }}>
         <div className="text-center">
-          <h3 className="fw-bold mb-0" style={{ color: textColor, fontSize: '1.8rem' }}>
-            Configuración y Respaldo
+          <h3 className="fw-bold mb-0" style={{ color: textColor, fontSize: '1.5rem' }}>
+            {isMobile ? 'Configuración' : 'Configuración y Respaldo'}
           </h3>
         </div>
       </div>
 
+      {/* Switch de Modo Claro / Oscuro */}
       <AparienciaSection 
         esOscuro={esOscuro}
         toggleTheme={toggleTheme}
@@ -40,6 +43,7 @@ export const ConfiguracionView: React.FC = () => {
       />
 
       <div className="row g-4">
+        {/* Cambios de Credenciales / Usuario */}
         <AjustesPerfilCard 
           config={config}
           cardBg={cardBg}
@@ -50,15 +54,18 @@ export const ConfiguracionView: React.FC = () => {
           inputBgClass={inputBgClass}
         />
 
-        <RespaldoCard 
-          config={config}
-          esOscuro={esOscuro}
-          cardBg={cardBg}
-          cardBorder={cardBorder}
-          subBg={subBg}
-          mutedTextColor={mutedTextColor}
-          inputBgClass={inputBgClass}
-        />
+        {/* Solo se muestra RespaldoCard si NO es Mobile */}
+        {!isMobile && (
+          <RespaldoCard 
+            config={config}
+            esOscuro={esOscuro}
+            cardBg={cardBg}
+            cardBorder={cardBorder}
+            subBg={subBg}
+            mutedTextColor={mutedTextColor}
+            inputBgClass={inputBgClass}
+          />
+        )}
       </div>
 
       {config.mostrarModalConfirmacion && (

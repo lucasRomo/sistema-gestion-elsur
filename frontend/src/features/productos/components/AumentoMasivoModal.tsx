@@ -132,7 +132,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
         >
           
           <div className="modal-header" style={{ borderColor: headerBorder }}>
-            <h5 className="modal-title fw-bold text-info">
+            <h5 className="modal-title fw-bold text-info-custom">
               <i className="bi bi-currency-exchange me-2"></i>Modificación Masiva de Precios de Productos
             </h5>
             <button 
@@ -356,7 +356,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
             <div className="modal-footer" style={{ borderColor: headerBorder }}>
               <button 
                 type="button" 
-                className="btn btn-danger px-4" 
+                className="btn fw-bold btn-danger px-4" 
                 onClick={onClose} 
                 disabled={cargando}
                 style={{ color: '#ffffff' }}

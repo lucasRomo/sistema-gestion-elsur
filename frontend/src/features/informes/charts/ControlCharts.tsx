@@ -23,23 +23,16 @@ export const ControlCharts: React.FC<ControlProps> = ({
       </div>
 
       <div className="row g-4 mb-4 align-items-stretch">
-        {/* Mermas y Material Desperdiciado */}
         <div className="col-12 col-xl-4">
           <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between im-surface">
             <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
               <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
                 <i className="bi bi-trash-fill me-2" style={{ color: '#ffc107' }}></i>Mermas y Material Desperdiciado
               </h5>
-              <button
-                type="button"
-                onClick={() => abrirModalComparacion('mermas')}
-                className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
-                style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #ffc107', color: '#ffc107' }}
-              >
+              <button type="button" onClick={() => abrirModalComparacion('mermas')} className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1" style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #ffc107', color: '#ffc107' }}>
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-
             {metricas.mermasPorPeriodo && metricas.mermasPorPeriodo.length > 0 ? (
               <div style={{ height: '320px', width: '100%' }} data-chart-id="mermas_chart">
                 <InformeChartRenderer informe="mermas" data={metricas} esMismoDia={esMismoDia} />
@@ -50,23 +43,16 @@ export const ControlCharts: React.FC<ControlProps> = ({
           </div>
         </div>
 
-        {/* Incongruencias en Arqueos de Caja */}
         <div className="col-12 col-xl-4">
           <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between im-surface">
             <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
               <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
                 <i className="bi bi-journal-x me-2" style={{ color: '#f43f5e' }}></i>Incongruencias en Arqueos de Caja
               </h5>
-              <button
-                type="button"
-                onClick={() => abrirModalComparacion('incongruencias')}
-                className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
-                style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #f43f5e', color: '#f43f5e' }}
-              >
+              <button type="button" onClick={() => abrirModalComparacion('incongruencias')} className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1" style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #f43f5e', color: '#f43f5e' }}>
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-
             {incongruenciasArqueo && incongruenciasArqueo.length > 0 ? (
               <div style={{ height: '320px', width: '100%' }} data-chart-id="incongruencias_chart">
                 <InformeChartRenderer informe="incongruencias" data={{ ...metricas, incongruenciasArqueo }} />
@@ -77,23 +63,16 @@ export const ControlCharts: React.FC<ControlProps> = ({
           </div>
         </div>
 
-        {/* Fallas y Averías en Máquinas */}
         <div className="col-12 col-xl-4">
           <div className="p-4 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between im-surface">
             <div className="d-flex align-items-center justify-content-between mb-3 gap-2">
               <h5 className="fw-bold mb-0" style={{ color: '#a1a1aa' }}>
                 <i className="bi bi-tools me-2" style={{ color: '#fd7e14' }}></i>Fallas y Averías en Máquinas
               </h5>
-              <button
-                type="button"
-                onClick={() => abrirModalComparacion('averias')}
-                className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1"
-                style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #fd7e14', color: '#fd7e14' }}
-              >
+              <button type="button" onClick={() => abrirModalComparacion('averias')} className="btn btn-sm px-2 py-1 d-flex align-items-center gap-1" style={{ fontSize: '0.7rem', backgroundColor: 'transparent', border: '1px solid #fd7e14', color: '#fd7e14' }}>
                 <i className="bi bi-arrow-left-right"></i> Comparar
               </button>
             </div>
-
             {metricas.averiasPorPeriodo && metricas.averiasPorPeriodo.length > 0 ? (
               <div style={{ height: '320px', width: '100%' }} data-chart-id="averias_chart">
                 <InformeChartRenderer informe="averias" data={metricas} esMismoDia={esMismoDia} />

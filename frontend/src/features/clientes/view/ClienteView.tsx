@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PersonaForm } from '../../auth/PersonaForm';
+import { PersonaForm } from '../../auth/persona/view/PersonaForm';
 import { ClienteExtraForm } from '../components/ClienteExtraForm';
 import { ClienteEditModal } from '../components/ClienteEditModal';
 import { CategoriaClienteModal } from '../components/CategoriaClienteModal';
@@ -11,15 +11,20 @@ import { useClientes } from '../hooks/useClientes';
 import { UbicacionViewModal } from '../../../components/modals/UbicacionViewModal';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
+import { useIsMobile } from '../../../hook/useIsMobile';
 import { exportarClientesExcel, exportarClientesPDF } from '../utils/exportClientesUtils';
 
 export const ClienteView = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   // Estilos adaptativos de paleta estandarizados
   const titleColor = isDark ? '#ffffff' : '#0f172a';
-  const tableWrapperBg = isDark ? '#1d1d1d' : '#f8fafc';
+  const mainCardBg = isDark ? '#1d1d1d' : '#ffffff';
+  const cardBorder = isDark ? '#27272a' : '#cbd5e1';
+  const textColor = isDark ? '#ffffff' : '#0f172a';
   const tableBg = isDark ? '#1d1d1d' : '#ffffff';
   const tableText = isDark ? '#e4e4e7' : '#18181b';
   const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
@@ -41,7 +46,6 @@ export const ClienteView = () => {
   const [filtroEstado, setFiltroEstado] = useState<string>('Sin Filtro');
   const [showSuccess, setShowSuccess] = useState(false);
   const [msgSuccess, setMsgSuccess] = useState('');
-  const navigate = useNavigate();
 
   const [formData, setFormData] = useState<any>({
     nombre: '', apellido: '', email: '', numeroDocumento: '', telefono: '', 
@@ -78,7 +82,6 @@ export const ClienteView = () => {
           piso: formData.piso || '',
           departamento: formData.depto || '',
           codigoPostal: formData.codPostal,
-          // Evitar null enviando un string no nulo o valor por defecto
           ciudad: formData.ciudad || 'Sin Especificar',
           provincia: formData.provincia || 'Sin Especificar',
           pais: formData.pais || 'Argentina'
@@ -93,23 +96,10 @@ export const ClienteView = () => {
 
       // Reiniciar formulario
       setFormData({
-        nombre: '',
-        apellido: '',
-        tipoDocumento: '',
-        numeroDocumento: '',
-        email: '',
-        telefono: '',
-        calle: '',
-        numero: '',
-        piso: '',
-        depto: '',
-        codPostal: '',
-        ciudad: '',
-        provincia: '',
-        pais: '',
-        razonSocial: '',
-        personaDeContacto: '',
-        limiteCredito: '0'
+        nombre: '', apellido: '', tipoDocumento: '', numeroDocumento: '',
+        email: '', telefono: '', calle: '', numero: '', piso: '',
+        depto: '', codPostal: '', ciudad: '', provincia: '', pais: '',
+        razonSocial: '', personaDeContacto: '', limiteCredito: '0'
       });
 
       setPaso(0); 
@@ -172,11 +162,13 @@ export const ClienteView = () => {
   };
 
   return (
-    <div className="container-fluid px-0">
-      <div className="d-flex justify-content-center align-items-center mb-4 position-relative">
-        <h1 className="fw-bold m-0 text-center font-monospace" style={{ fontSize: '2.25rem', color: titleColor }}>
-          Clientes
-        </h1>
+    <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
+      
+      {/* Encabezado Superior */}
+      <div className="d-flex justify-content-center align-items-center mb-4">
+        <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
+          Gestión de Clientes
+        </h2>
       </div>
 
       <SuccesModal 
@@ -192,45 +184,44 @@ export const ClienteView = () => {
         setFiltroEstado={setFiltroEstado}
       />
 
+      {/* Contenedor Único de Tabla con Scroll Interno (65.3vh) */}
       <div 
-        className="d-flex flex-column flex-grow-1 overflow-hidden mb-2 shadow-sm rounded-3 border font-monospace" 
+        className="rounded-3 border mb-3 font-monospace" 
         style={{ 
-          backgroundColor: tableWrapperBg, 
-          borderColor: theadBorder,
-          height: '64vh'
+          backgroundColor: mainCardBg, 
+          borderColor: cardBorder,
+          height: '65.3vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          display: 'block'
         }}
       >
-        <div 
-          className="table-responsive flex-grow-1" 
-          style={{ backgroundColor: tableWrapperBg, height: '100%', overflowY: 'auto' }}
+        <table 
+          className="table-hover m-0 align-middle w-100" 
+          style={{ 
+            borderCollapse: 'collapse', 
+            color: tableText,
+            backgroundColor: tableBg 
+          }}
         >
-          <table 
-            className="table-hover m-0 align-middle" 
-            style={{ 
-              width: '100%',
-              borderCollapse: 'collapse', 
-              color: tableText,
-              backgroundColor: tableBg 
-            }}
-          >
-            <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
-              <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                <th className="py-3 px-3 text-center">ID</th>
-                <th className="py-3 px-3 text-start">Nombre</th>
-                <th className="py-3 px-3 text-start">Apellido</th>
-                <th className="py-3 px-3 text-center">Documento</th>
-                <th className="py-3 px-3 text-start">Razón Social</th>
-                <th className="py-3 px-3 text-center">Cta. Cte.</th>
-                <th className="py-3 px-3 text-end">Saldo Deudor</th>
-                <th className="py-3 px-3 text-center">Estado</th>
-                <th className="py-3 px-3 text-center">Opciones</th>
-              </tr>
-            </thead>
-            <tbody style={{ fontSize: '0.9rem' }}>
-              {clientesOrdenados && clientesOrdenados.length > 0 ? (
-                clientesOrdenados.map((c: any) => {
-                  const tieneCtaCte = Number(c.limiteCredito || 0) > 0;
-                  const idClienteVal = c.id_cliente || c.idCliente;
+          <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
+            <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontSize: '0.85rem', textTransform: 'uppercase' }}>
+              <th className="py-3 px-3 text-center" style={{ width: '6%' }}>ID</th>
+              <th className="py-3 px-3 text-start" style={{ width: '15%' }}>Nombre</th>
+              <th className="py-3 px-3 text-start" style={{ width: '15%' }}>Apellido</th>
+              <th className="py-3 px-3 text-center" style={{ width: '12%' }}>Documento</th>
+              <th className="py-3 px-3 text-start" style={{ width: '18%' }}>Razón Social</th>
+              <th className="py-3 px-3 text-center" style={{ width: '12%' }}>Cta. Cte.</th>
+              <th className="py-3 px-3 text-end" style={{ width: '10%' }}>Saldo Deudor</th>
+              <th className="py-3 px-3 text-center" style={{ width: '6%' }}>Estado</th>
+              <th className="py-3 px-3 text-center" style={{ width: '6%' }}>Opciones</th>
+            </tr>
+          </thead>
+          <tbody style={{ fontSize: '0.9rem' }}>
+            {clientesOrdenados && clientesOrdenados.length > 0 ? (
+              clientesOrdenados.map((c: any) => {
+                const tieneCtaCte = Number(c.limiteCredito || 0) > 0;
+                const idClienteVal = c.id_cliente || c.idCliente;
 
                 return (
                   <tr 
@@ -239,8 +230,7 @@ export const ClienteView = () => {
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   >
-                    {/* Celda ID arreglada con color celeste, centrado y prefijo # */}
-                    <td className="py-3 px-3 text-center text-info fw-bold">#{idClienteVal}</td>
+                    <td className="py-3 px-3 text-center text-info-custom fw-bold">#{idClienteVal}</td>
                     
                     <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.persona?.nombre}</td>
                     <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.apellido}</td>
@@ -259,79 +249,85 @@ export const ClienteView = () => {
                       )}
                     </td>
 
-                      <td className="px-3 py-3 text-end">
-                        <span className={`fw-bold ${obtenerColorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
-                          ${Number(c.saldoDeudor || 0).toFixed(2)}
-                        </span>
-                      </td>
+                    <td className="px-3 py-3 text-end">
+                      <span className={`fw-bold ${obtenerColorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
+                        ${Number(c.saldoDeudor || 0).toFixed(2)}
+                      </span>
+                    </td>
 
-                      <td className="px-3 py-3 text-center">
-                        <span className={`badge rounded-pill px-3 py-2 ${c.estado === 'Activo' ? 'bg-success bg-opacity-75' : 'bg-danger bg-opacity-75'}`} style={{ color: '#ffffff' }}>
-                          {c.estado}
-                        </span>
-                      </td>
+                    <td className="px-3 py-3 text-center">
+                      <span className={`badge rounded-pill px-3 py-2 ${c.estado === 'Activo' ? 'bg-success bg-opacity-75' : 'bg-danger bg-opacity-75'}`} style={{ color: '#ffffff' }}>
+                        {c.estado}
+                      </span>
+                    </td>
 
-                      <td className="px-3 py-3 text-center">
-                        <div className="d-flex justify-content-center gap-2">
-                          <button 
-                            className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
-                              tieneCtaCte ? 'btn-outline-success' : 'btn-outline-secondary opacity-50'
-                            }`} 
-                            style={{ width: '34px', height: '34px' }} 
-                            title={tieneCtaCte ? "Gestionar Cuenta Corriente" : "Sin Cta. Cte. (Haz clic para asignar límite)"} 
-                            onClick={() => setClienteCuentaCorriente(c)}
-                          >
-                            <i className="bi bi-wallet2 fs-6"></i>
-                          </button>
+                    <td className="px-3 py-3 text-center">
+                      <div className="d-flex justify-content-center gap-2">
+                        <button 
+                          className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
+                            tieneCtaCte ? 'btn-outline-success' : 'btn-outline-secondary opacity-50'
+                          }`} 
+                          style={{ width: '34px', height: '34px' }} 
+                          title={tieneCtaCte ? "Gestionar Cuenta Corriente" : "Sin Cta. Cte. (Haz clic para asignar límite)"} 
+                          onClick={() => setClienteCuentaCorriente(c)}
+                        >
+                          <i className="bi bi-wallet2 fs-6"></i>
+                        </button>
 
-                          <button 
-                            className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 
-                            style={{ width: '34px', height: '34px' }} 
-                            title="Modificar Cliente" 
-                            onClick={() => setClienteAEditar(c)}
-                          >
-                            <i className="bi bi-pencil-square fs-6"></i>
-                          </button>
-                          
-                          <button 
-                            className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2" 
-                            style={{ width: '34px', height: '34px' }} 
-                            title="Ver Ubicación" 
-                            onClick={() => setClienteConUbicacionSeleccionada(c)}
-                          >
-                            <i className="bi bi-house-door fs-6"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={9} className="text-center py-5" style={{ color: '#ffffff' }}>
-                    <i className="bi display-5 d-block mb-2 opacity-50"></i>
-                    <span className="font-monospace">No se han registrado o encontrado clientes en el sistema.</span>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                        <button 
+                          className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                          style={{ width: '34px', height: '34px' }} 
+                          title="Modificar Cliente" 
+                          onClick={() => setClienteAEditar(c)}
+                        >
+                          <i className="bi bi-pencil-square fs-6"></i>
+                        </button>
+                        
+                        <button 
+                          className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2" 
+                          style={{ width: '34px', height: '34px' }} 
+                          title="Ver Ubicación" 
+                          onClick={() => setClienteConUbicacionSeleccionada(c)}
+                        >
+                          <i className="bi bi-house-door fs-6"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={9} className="text-center py-5 border-0" style={{ color: tableText }}>
+                  <i className="bi display-5 d-block mb-2 opacity-50"></i>
+                  <span className="font-monospace">No se han registrado o encontrado clientes en el sistema.</span>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Botonera Inferior: Volver + Exportar + Categorías + Cta Cte + Nuevo Cliente */}
-      <div className={`d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 ${isDark ? 'border-secondary border-opacity-50' : 'border-light-subtle'} font-monospace`}>
-        <button 
-          onClick={() => navigate('/dashboard')} 
-          className="btn btn-secondary px-4 py-2 fw-semibold" 
-          style={{ color: '#ffffff' }}
-        >
-          Volver
-        </button>
-
-        <div className="d-flex flex-wrap gap-2">
+      <div className={`d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
+        {!isMobile && (
           <button 
-            className="btn btn-outline-success fw-bold d-flex align-items-center gap-2"
+            onClick={() => navigate('/dashboard')} 
+            className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center" 
+            style={{ 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
+          >
+            Volver
+          </button>
+        )}
+
+        <div className={`d-flex flex-wrap gap-2 ${isMobile ? 'w-100' : ''}`}>
+          <button 
+            className="btn btn-outline-success fw-bold d-flex align-items-center justify-content-center px-3 py-2 shadow-sm"
             onClick={() => exportarClientesExcel(clientesFiltrados)}
             disabled={clientesFiltrados.length === 0}
             title="Exportar listado actual a Excel"
@@ -340,7 +336,7 @@ export const ClienteView = () => {
           </button>
 
           <button 
-            className="btn btn-outline-danger fw-bold d-flex align-items-center gap-2"
+            className="btn btn-outline-danger fw-bold d-flex align-items-center justify-content-center px-3 py-2 shadow-sm"
             onClick={() => exportarClientesPDF(clientesFiltrados)}
             disabled={clientesFiltrados.length === 0}
             title="Exportar listado actual a PDF"
@@ -350,24 +346,43 @@ export const ClienteView = () => {
 
           <button 
             type="button" 
-            className="btn btn-info px-4 py-2 fw-semibold font-monospace shadow-sm" 
-            style={{ backgroundColor: '#0caccc', borderColor: '#0caccc', color: '#ffffff' }}
+            className={`btn btn-info fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
+            style={{ 
+              backgroundColor: '#0caccc', 
+              borderColor: '#0caccc', 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
             onClick={() => setVerCategoriasModal(true)}
           >
-            Categorías de Clientes
+            Categorías
           </button>
 
           <button 
-            className="btn px-4 py-2 fw-semibold shadow-sm font-monospace d-flex align-items-center gap-2" 
-            style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}
+            className={`btn fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center gap-2 ${isMobile ? 'flex-fill text-nowrap' : ''}`}
+            style={{ 
+              backgroundColor: '#ca9e1b', 
+              borderColor: '#ca9e1b', 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
             onClick={() => setVerResumenCuentasModal(true)}
           >
-            <i className="bi bi-wallet2"></i> Ver Cuentas Corrientes Activas
+            <i className="bi bi-wallet2"></i> Cuentas Corrientes
           </button>
 
           <button 
-            className="btn btn-success px-4 py-2 fw-semibold shadow-sm" 
-            style={{ color: '#ffffff' }}
+            className={`btn btn-success fw-bold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
+            style={{ 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }}
             onClick={() => setPaso(1)}
           >
             Registrar Nuevo Cliente
@@ -376,14 +391,21 @@ export const ClienteView = () => {
       </div>  
 
       {paso === 1 && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content p-4 shadow-lg" style={{ backgroundColor: modalStepBg, color: tableText }}>
-              <PersonaForm formData={formData} setFormData={setFormData} clientes={clientes} onSiguiente={() => setPaso(2)} onVolver={() => setPaso(0)} />
-            </div>
-          </div>
-        </div>
-      )}
+  <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
+    <div className="modal-dialog modal-dialog-centered">
+      <div 
+        className="modal-content p-4 shadow-lg" 
+        style={{ 
+          backgroundColor: modalStepBg, 
+          color: tableText, 
+          border: '1.5px solid #0e9c09'
+        }}
+      >
+        <PersonaForm formData={formData} setFormData={setFormData} clientes={clientes} onSiguiente={() => setPaso(2)} onVolver={() => setPaso(0)} />
+      </div>
+    </div>
+  </div>
+)}
       {paso === 2 && <ClienteExtraForm formData={formData} setFormData={setFormData} onRegistrar={handleRegistrarFinal} onCerrar={() => setPaso(1)} />}
       {clienteAEditar && <ClienteEditModal cliente={clienteAEditar} onCerrar={() => setClienteAEditar(null)} onConfirmar={handleConfirmarEdicion} />}
       {clienteConUbicacionSeleccionada && <UbicacionViewModal cliente={clienteConUbicacionSeleccionada} onCerrar={() => setClienteConUbicacionSeleccionada(null)} onConfirmar={handleConfirmarEdicion} />}

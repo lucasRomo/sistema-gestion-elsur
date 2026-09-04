@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { Pedido, CartItem } from '../types/Pedido';
+import type { Pedido, CartItem } from '../general/types/Pedido';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { apiFetch } from '../../../config/api';
 

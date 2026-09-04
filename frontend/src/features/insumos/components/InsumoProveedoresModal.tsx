@@ -3,6 +3,7 @@ import type { Insumo } from '../types/Insumo';
 import type { Proveedor } from '../../proveedores/types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
 import { apiFetch } from '../../../config/api';
+import { getProveedores } from '../services/insumoService';
 
 interface InsumoProveedoresModalProps {
   show: boolean;
@@ -12,19 +13,24 @@ interface InsumoProveedoresModalProps {
 
 export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ show, insumo, onClose }) => {
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
-  const [filtroEstado, setFiltroEstado] = useState('Todos'); // ◄ NUEVO: Estado del filtro
+  const [filtroEstado, setFiltroEstado] = useState('Todos'); 
   const [cargando, setCargando] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
+
+  const modalBg = isDark ? '#18181b' : '#ffffff';
+  const modalBorder = isDark ? '#a855f7' : '#a855f7';
+  const tableHeaderBg = isDark ? '#18181b' : '#ffffff';
+  const tableHeaderTextColor = isDark ? '#a1a1aa' : '#475569';
 
   useEffect(() => {
     if (show && insumo?.proveedor?.tipoProveedor) {
       setCargando(true);
       apiFetch('http://localhost:8080/api/proveedores')
         .then(res => res.json())
+      getProveedores()
         .then((data: Proveedor[]) => {
-          // Filtramos primero por categoría
           const compat = data.filter(
             p => p.tipoProveedor?.idTipoProveedor === insumo.proveedor?.tipoProveedor?.idTipoProveedor
           );
@@ -38,7 +44,6 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
     }
   }, [show, insumo]);
 
-  // ◄ NUEVO: Lógica de filtrado local
   const proveedoresFiltrados = proveedores.filter(p => 
     filtroEstado === 'Todos' ? true : p.estado === filtroEstado
   );
@@ -48,7 +53,7 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1055 }}>
       <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content text-white font-monospace" style={{ backgroundColor: '#18181b', border: '1px solid #a855f7' }}>
+        <div className="modal-content text-body font-monospace" style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}` }}>
           
           <div className="modal-header border-bottom border-secondary">
             <h5 className="modal-title fw-bold" style={{ color: '#a855f7' }}>
@@ -64,11 +69,10 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
                 <span className="badge bg-dark border border-secondary text-info">{insumo.proveedor?.tipoProveedor?.descripcion || 'Sin categoría'}</span>
               </div>
               
-              {/* ◄ NUEVO: Selector de filtro */}
               <div className="d-flex align-items-center gap-2">
                 <span className="small" style={{ color: mutedText }}>Filtrar Estado:</span>
                 <select 
-                  className="form-select form-select-sm bg-dark border-secondary text-white"
+                  className={`form-select form-select-sm ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'} border-secondary`}
                   style={{ width: '130px' }}
                   value={filtroEstado}
                   onChange={(e) => setFiltroEstado(e.target.value)}
@@ -82,7 +86,14 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
 
             <div className="table-responsive rounded border border-secondary" style={{ maxHeight: '300px', overflowY: 'auto' }}>
               <table className={`table table-hover m-0 align-middle text-center ${isDark ? 'table-dark' : ''}`} style={{ fontSize: '0.85rem' }}>
-                <thead className="table-active sticky-top bg-dark text-secondary" style={{ zIndex: 1 }}>
+                <thead 
+                  className="sticky-top" 
+                  style={{ 
+                    backgroundColor: tableHeaderBg, 
+                    color: tableHeaderTextColor, 
+                    zIndex: 1 
+                  }}
+                >
                   <tr>
                     <th>ID</th>
                     <th>Nombre Comercial</th>

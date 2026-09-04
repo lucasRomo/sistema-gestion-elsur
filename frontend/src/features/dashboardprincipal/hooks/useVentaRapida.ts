@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { Producto } from '../../productos/types/Producto';
-import type { CartItem, Pedido } from '../../pedidos/types/Pedido';
+import type { CartItem, Pedido } from '../../pedidos/general/types/Pedido';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
 import { apiFetch } from '../../../config/api';

@@ -12,7 +12,7 @@ import { ModalNuevoIngreso } from '../components/ModalNuevoIngreso';
 import { ModalConsultarArqueo } from '../components/ModalConsultarArqueo';
 import { ModalCerrarTurno } from '../components/ModalCerrarTurno';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
-import type { NuevoMovimientoDTO } from '../services/cajaService';
+import { cajaService, type NuevoMovimientoDTO } from '../services/cajaService';
 import { renderBadgeCategoria } from '../components/RenderBadgeCategoria';
 import { apiFetch } from '../../../config/api';
 
@@ -48,6 +48,9 @@ export const CajaView: React.FC = () => {
   // Estado para alertas/validaciones personalizadas
   const [avisoModal, setAvisoModal] = useState<string | null>(null);
 
+  // Estado para el modal de éxito personalizado
+  const [exitoModal, setExitoModal] = useState<{ titulo: string; descripcion: string } | null>(null);
+
   // Estados para tickets y comprobante
   const [ticketSeleccionado, setTicketSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [imagenComprobanteModal, setImagenComprobanteModal] = useState<string | null>(null);
@@ -61,19 +64,13 @@ export const CajaView: React.FC = () => {
   const [motivoAjuste, setMotivoAjuste] = useState('');
   const [guardandoAjuste, setGuardandoAjuste] = useState(false);
 
-  const obtenerUrlComprobante = (url?: string | null): string => {
-    if (!url) return '';
-    if (url.startsWith('http') || url.startsWith('data:')) return url;
-    return `http://localhost:8080${url.startsWith('/') ? '' : '/'}${url}`;
-  };
-
   const textColor = isDark ? 'text-white' : 'text-dark';
   const cardBg = isDark ? '#1e1e1f' : '#ffffff';
   const cardBorder = isDark ? '#242427' : '#e2e8f0';
   const shadowStyle = isDark ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)';
   const graphInnerBg = isDark ? '#222122' : '#f1f5f9';
   const tableWrapBg = isDark ? '#1d1d1d' : '#ffffff';
-  const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
+  const theadBg = isDark ? '#1d1d1d' : '#ffffff';
 
   const chartGrid = isDark ? '#2d2d30' : '#e2e8f0';
   const chartTick = isDark ? '#aaa' : '#64748b';
@@ -111,6 +108,10 @@ export const CajaView: React.FC = () => {
     try {
       await abrirCaja(monto);
       setShowModalApertura(false);
+      setExitoModal({
+        titulo: "Turno abierto con éxito.",
+        descripcion: "Caja Abierta Registrada Correctamente"
+      });
     } catch (error: any) {
       setAvisoModal("Error al abrir caja: " + error.message);
     } finally {
@@ -199,23 +200,38 @@ export const CajaView: React.FC = () => {
     }
   };
 
+  // Priorizando la consulta HTTP mediante apiFetch
   const handleVerTicket = async (m: any) => {
     const idPedidoRaw = m.pedido?.idPedido || m.pedido?.id_pedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1]?.trim() : null);
 
     if (idPedidoRaw && !isNaN(Number(idPedidoRaw))) {
       const idPedido = Number(idPedidoRaw);
+      
+      // 1° Prioridad: Intentar obtener el pedido directamente vía apiFetch
       try {
-        const response = await apiFetch(`http://localhost:8080/api/pedidos/${idPedido}`);
+        const response = await apiFetch(`/pedidos/${idPedido}`);
         if (response.ok) {
           const pedidoCompleto = await response.json();
           setTicketSeleccionado({ pedido: pedidoCompleto, movimiento: m });
           return;
         }
-      } catch (error) {
-        console.error("Error consultando datos completos del pedido:", error);
+      } catch (errorApi) {
+        console.warn("Llamada directa con apiFetch fallida, intentando con cajaService:", errorApi);
+      }
+
+      // 2° Fallback: Intentar obtener mediante cajaService
+      try {
+        const pedidoCompleto = await cajaService.obtenerPedidoPorId(idPedido);
+        if (pedidoCompleto) {
+          setTicketSeleccionado({ pedido: pedidoCompleto, movimiento: m });
+          return;
+        }
+      } catch (errService) {
+        console.error("Error al obtener pedido mediante cajaService:", errService);
       }
     }
 
+    // 3° Adaptación fallback en caso de no obtener datos del servidor
     const pedidoAdaptado = {
       id_pedido: idPedidoRaw || '-',
       cliente: {
@@ -265,7 +281,6 @@ export const CajaView: React.FC = () => {
         
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1 className="fw-bold mx-auto font-monospace" style={{ fontSize: '2.8rem' }}>Caja</h1>
-          <i className="bi bi-question-circle text-info fs-3" style={{ cursor: 'pointer' }}></i>
         </div>
 
         <div className="row g-4 mb-4">
@@ -287,7 +302,7 @@ export const CajaView: React.FC = () => {
               </h1>
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span>Inicio de Caja:</span>
-                <span className="fw-bold text-info fs-6">
+                <span className="fw-bold text-info fs-6 text-info-custom">
                   ${cajaAbierta ? (turnoActual?.montoInicial || 0).toLocaleString('es-AR') : '0'}
                 </span>
               </div>
@@ -338,7 +353,7 @@ export const CajaView: React.FC = () => {
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
-                        <XAxis dataKey="hora" tick={{ fill: chartTick, fontSize: 11 }} axisLine={{ stroke: chartGrid }} tickLine={false} />
+                        <XAxis dataKey="hora" tick={{ fill: chartTick, fontSize: 11, dy: 15 }} axisLine={{ stroke: chartGrid }} tickLine={false} />
                         <YAxis domain={['auto', 'auto']} tick={{ fill: chartTick, fontSize: 11 }} axisLine={false} tickLine={false} />
                         <RechartsTooltip content={<CustomCajaAreaTooltip />} />
                         <Area
@@ -370,153 +385,140 @@ export const CajaView: React.FC = () => {
             
             <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: tableWrapBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle, height: '315px' }}>
               <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapBg, height: '100%', overflowY: 'auto' }}>
-               <table className="table table-hover m-0 align-middle text-center" style={{ '--bs-table-bg': tableWrapBg,
-  '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.075)', color: isDark ? '#fff' : 'inherit' } as React.CSSProperties}>
-   <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
-     <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
-       <th style={{ width: '60px' }}>ID</th>
-       <th style={{ width: '140px' }}>Fecha/Hora</th>
-       <th style={{ width: '90px' }}>Monto</th>
-       <th style={{ width: '110px' }}>Método</th>
-       <th style={{ width: '120px' }}>Categoría</th>
-       <th className="text-start">Descripción</th>
-       <th style={{ width: '60px' }}>Usu.</th>
-       <th style={{ width: '60px' }}>Ped.</th>
-       <th style={{ width: '120px' }}>Acciones</th>
-     </tr>
-   </thead>
-   <tbody>
-     {movimientos.length === 0 ? (
-       <tr><td colSpan={9} className="py-5 opacity-50">No hay movimientos registrados hoy</td></tr>
-     ) : (
-       [...movimientos].reverse().map((m, idx) => {
-         const imagenAdjunta = 
-           m.comprobanteImagen || 
-           m.comprobante || 
-           m.imagenComprobante || 
-           m.comprobante_imagen || 
-           m.imagen_comprobante ||
-           m.urlComprobante ||
-           m.url_comprobante;
+                <table className="table table-hover m-0 align-middle text-center" style={{ '--bs-table-bg': tableWrapBg, '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.075)', color: isDark ? '#fff' : 'inherit' } as React.CSSProperties}>
+                  <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
+                    <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
+                      <th style={{ width: '60px' }}>ID</th>
+                      <th style={{ width: '140px' }}>Fecha/Hora</th>
+                      <th style={{ width: '90px' }}>Monto</th>
+                      <th style={{ width: '110px' }}>Método</th>
+                      <th style={{ width: '120px' }}>Categoría</th>
+                      <th className="text-start">Descripción</th>
+                      <th style={{ width: '60px' }}>Usu.</th>
+                      <th style={{ width: '60px' }}>Ped.</th>
+                      <th style={{ width: '120px' }}>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {movimientos.length === 0 ? (
+                      <tr><td colSpan={9} className="py-5 opacity-50">No hay movimientos registrados hoy</td></tr>
+                    ) : (
+                      [...movimientos].reverse().map((m, idx) => {
+                        const imagenAdjunta = 
+                          m.comprobanteImagen || 
+                          m.comprobante || 
+                          m.imagenComprobante || 
+                          m.comprobante_imagen || 
+                          m.imagen_comprobante ||
+                          m.urlComprobante ||
+                          m.url_comprobante;
 
-         return (
-           <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
-             <td className="fw-bold opacity-75">
-               #{m.id_movimiento || m.idMovimiento || '-'}
-             </td>
-             <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
-             <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
-               {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
-             </td>
-             <td>
-               <span className="badge bg-secondary font-monospace">
-                 {m.metodoPago || 'EFECTIVO'}
-               </span>
-             </td>
-             <td>{renderBadgeCategoria(m, isDark)}</td>
-             
-             <td>
-               <div 
-                 className="text-start" 
-                 style={{ wordBreak: 'break-word', minWidth: '180px' }}
-                 title={m.descripcion || 'Sin descripción'}
-               >
-                 {m.descripcion || '-'}
-               </div>
-             </td>
-             
-             <td>
-               {(() => {
-                 const u = m.usuario;
+                        return (
+                          <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
+                            <td className="fw-bold opacity-75">
+                              #{m.id_movimiento || m.idMovimiento || '-'}
+                            </td>
+                            <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
+                            <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
+                              {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
+                            </td>
+                            <td>
+                              <span className="badge bg-secondary font-monospace">
+                                {m.metodoPago || 'EFECTIVO'}
+                              </span>
+                            </td>
+                            <td>{renderBadgeCategoria(m, isDark)}</td>
+                            
+                            <td>
+                              <div 
+                                className="text-start" 
+                                style={{ wordBreak: 'break-word', minWidth: '180px' }}
+                                title={m.descripcion || 'Sin descripción'}
+                              >
+                                {m.descripcion || '-'}
+                              </div>
+                            </td>
+                            
+                            <td>
+                              {(() => {
+                                const u = m.usuario;
 
-                 if (u && typeof u === 'object') {
-                   const nombreCompleto = `${u.nombre || u.first_name || ''} ${u.apellido || u.last_name || ''}`.trim();
-                   if (nombreCompleto) return nombreCompleto;
+                                if (u && typeof u === 'object') {
+                                  const nombreCompleto = `${u.nombre || u.first_name || ''} ${u.apellido || u.last_name || ''}`.trim();
+                                  if (nombreCompleto) return nombreCompleto;
 
-                   if (u.nombreUsuario) return u.nombreUsuario;
-                   if (u.username) return u.username;
-                   if (u.nombre_usuario) return u.nombre_usuario;
-                 }
+                                  if (u.nombreUsuario) return u.nombreUsuario;
+                                  if (u.username) return u.username;
+                                  if (u.nombre_usuario) return u.nombre_usuario;
+                                }
 
-                 if (typeof u === 'string' && isNaN(Number(u))) {
-                   return u;
-                 }
+                                if (typeof u === 'string' && isNaN(Number(u))) {
+                                  return u;
+                                }
 
-                 try {
-                   const localData = 
-                     localStorage.getItem('usuario_logueado') || 
-                     localStorage.getItem('usuario') || 
-                     localStorage.getItem('user');
+                                try {
+                                  const localData = 
+                                    localStorage.getItem('usuario_logueado') || 
+                                    localStorage.getItem('usuario') || 
+                                    localStorage.getItem('user');
 
-                   if (localData) {
-                     const parsed = JSON.parse(localData);
-                     
-                     const nombreLocal = `${parsed.nombre || parsed.first_name || ''} ${parsed.apellido || parsed.last_name || ''}`.trim();
-                     if (nombreLocal) return nombreLocal;
-                     
-                     if (parsed.nombreUsuario) return parsed.nombreUsuario;
-                     if (parsed.username) return parsed.username;
-                     if (parsed.nombre_usuario) return parsed.nombre_usuario;
-                   }
-                 } catch (e) {
-                   // Error de lectura/parseo
-                 }
+                                  if (localData) {
+                                    const parsed = JSON.parse(localData);
+                                    
+                                    const nombreLocal = `${parsed.nombre || parsed.first_name || ''} ${parsed.apellido || parsed.last_name || ''}`.trim();
+                                    if (nombreLocal) return nombreLocal;
+                                    
+                                    if (parsed.nombreUsuario) return parsed.nombreUsuario;
+                                    if (parsed.username) return parsed.username;
+                                    if (parsed.nombre_usuario) return parsed.nombre_usuario;
+                                  }
+                                } catch (e) {
+                                  // Ignorar parse error
+                                }
 
-                 return 'No se Encuentra al Usaurio';
-               })()}
-             </td>
-             <td>
-               {m.pedido?.idPedido || m.pedido?.id_pedido 
-                 ? `#${m.pedido?.idPedido || m.pedido?.id_pedido}` 
-                 : (m.descripcion?.includes('Pedido #') ? `#${m.descripcion.split('#')[1]?.trim()}` : '-')}
-             </td>
-             <td>
-               <div className="d-flex justify-content-center gap-1">
-                 {imagenAdjunta && (
-                   <button
-                     className="btn btn-sm btn-outline-info border-0 p-1"
-                     title="Ver Comprobante de Transferencia"
-                     onClick={() => setImagenComprobanteModal(imagenAdjunta)}
-                   >
-                     <i className="bi bi-eye fs-5"></i>
-                   </button>
-                 )}
-                 <button
-                   className="btn btn-sm btn-outline-info border-0 p-1"
-                   title="Ver Ticket de Comprobante"
-                   onClick={() => handleVerTicket(m)}
-                 >
-                   <i className="bi bi-receipt fs-5"></i>
-                 </button>
-                 <button
-                   className="btn btn-sm btn-outline-warning border-0 p-1"
-                   title="Corregir / Ajustar Cobro"
-                   disabled={!cajaAbierta || m.categoria === 'AJUSTE'}
-                   onClick={() => {
-                     setMovimientoAjuste(m);
-                     setMontoAjuste(String(m.monto));
-                     setTipoAjuste(m.tipoMovimiento === 'INGRESO' ? 'EGRESO' : 'INGRESO');
-                     setMetodoPagoAjuste(m.metodoPago || 'EFECTIVO');
-                     setImagenAjuste(null);
-                     setMotivoAjuste('');
-                   }}
-                 >
-                   <i className="bi bi-arrow-counterclockwise fs-5"></i>
-                 </button>
-               </div>
-             </td>
-           </tr>
-         );
-       })
-     )}
-   </tbody>
-</table>
+                                return 'No se Encuentra al Usuario';
+                              })()}
+                            </td>
+                            <td>
+                              {m.pedido?.idPedido || m.pedido?.id_pedido 
+                                ? `#${m.pedido?.idPedido || m.pedido?.id_pedido}` 
+                                : (m.descripcion?.includes('Pedido #') ? `#${m.descripcion.split('#')[1]?.trim()}` : '-')}
+                            </td>
+                            <td style={{ backgroundColor: 'transparent' }}>
+                              <div className="d-flex justify-content-center gap-1">
+                                {imagenAdjunta && (
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-info border-0 p-1"
+                                    title="Ver Comprobante de Transferencia"
+                                    onClick={() => setImagenComprobanteModal(imagenAdjunta)}
+                                  >
+                                    <i className="bi bi-eye fs-5"></i>
+                                  </button>
+                                )}
+
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-info border-0 p-1"
+                                  title="Ver Ticket de Comprobante"
+                                  onClick={() => handleVerTicket(m)}
+                                >
+                                  <i className="bi bi-receipt fs-5"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
 
           <div className="col-lg-3 d-flex flex-column justify-content-start align-items-stretch gap-4 pt-0">
-            <h5 className="mb-3 fw-semibold align-self-start" style={{ visibility: 'hidden' }}>Acciones</h5>
+            <h5 className="mb-5 fw-semibold align-self-start" style={{ visibility: 'hidden' }}>Acciones</h5>
 
             <button
               className="btn btn-success py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
@@ -530,7 +532,7 @@ export const CajaView: React.FC = () => {
 
             <button
               className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
-              style={{ backgroundColor: '#0c500c', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
+              style={{ backgroundColor: '#0c500c', color: '#ffffff', fontSize: '0.95rem', border: '#0c500c' }}
               disabled={!cajaAbierta || movimientos.length === 0}
               onClick={() =>
                 exportarCajaExcel(movimientos, {
@@ -547,7 +549,7 @@ export const CajaView: React.FC = () => {
 
             <button
               className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
-              style={{ backgroundColor: '#c0392b', color: '#ffffff', fontSize: '0.95rem', borderRadius: '8px' }}
+              style={{ backgroundColor: '#c0392b', color: '#ffffff', fontSize: '0.95rem', border: '#c0392b' }}
               disabled={!cajaAbierta || movimientos.length === 0}
               onClick={() =>
                 exportarCajaPDF(movimientos, {
@@ -571,7 +573,7 @@ export const CajaView: React.FC = () => {
             <span>Iniciar Caja del Día</span>
           </button>
           
-          <button className="btn d-flex align-items-center justify-content-center fw-semibold text-center" style={{ backgroundColor: '#10cbd8', color: '#ffffff', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }} disabled={!cajaAbierta} onClick={handleConsultarArqueo}>
+          <button className="btn d-flex align-items-center justify-content-center fw-semibold text-center" style={{ backgroundColor: '#149bdf', color: '#ffffff', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }} disabled={!cajaAbierta} onClick={handleConsultarArqueo}>
             <span>Consultar Arqueo</span>
           </button>
           
@@ -585,7 +587,7 @@ export const CajaView: React.FC = () => {
       {showModalApertura && (
         <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
-            <div className={`modal-content ${textColor} font-monospace`} style={{ backgroundColor: isDark ? '#18181b' : '#ffffff', border: `1px solid ${cardBorder}`, borderRadius: '12px' }}>
+            <div className={`modal-content ${textColor} font-monospace`} style={{ backgroundColor: isDark ? '#18181b' : '#ffffff', border: '2px solid #10b981', borderRadius: '12px' }}>
               <div className="modal-header border-bottom border-secondary">
                 <h5 className="modal-title fw-bold">Apertura de Caja</h5>
                 <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setShowModalApertura(false)}></button>
@@ -607,7 +609,7 @@ export const CajaView: React.FC = () => {
                     />
                   </div>
                   <p className="small text-center m-0 opacity-75">
-                    Este monto se guardará como saldo inicial en la base de datos PostgreSQL.
+                    Este monto se guardará como saldo inicial en el registro de arqueo.
                   </p>
                 </div>
                 <div className="modal-footer border-top border-secondary">
@@ -756,7 +758,7 @@ export const CajaView: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL DE VALIDACIÓN/AVISO GENERAL PARA CAJA */}
+      {/* Modal de Validación / Aviso */}
       {avisoModal && (
         <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1100 }} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
@@ -773,6 +775,46 @@ export const CajaView: React.FC = () => {
               <div className="modal-footer border-top border-secondary">
                 <button type="button" className="btn btn-primary px-4 fw-bold" onClick={() => setAvisoModal(null)}>
                   Entendido
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Éxito */}
+      {exitoModal && (
+        <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1100 }} role="dialog">
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>
+            <div 
+              className="modal-content text-white font-monospace text-center p-4" 
+              style={{ 
+                backgroundColor: '#18181b', 
+                border: '1.5px solid #a855f7', 
+                borderRadius: '16px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
+              }}
+            >
+              <div className="modal-body p-0">
+                <div className="mb-3 d-flex justify-content-center">
+                  <i className="bi bi-check-lg" style={{ fontSize: '3.5rem', color: '#a855f7', lineHeight: 1 }}></i>
+                </div>
+
+                <h4 className="fw-bold mb-2 text-white" style={{ fontSize: '1.4rem' }}>
+                  {exitoModal.titulo}
+                </h4>
+
+                <p className="text-secondary small mb-4 opacity-75" style={{ fontSize: '0.9rem', lineHeight: '1.4' }}>
+                  {exitoModal.descripcion}
+                </p>
+
+                <button 
+                  type="button" 
+                  className="btn btn-danger fw-bold px-4 py-2 border-0" 
+                  style={{ backgroundColor: '#ef4444', borderRadius: '8px', minWidth: '100px' }}
+                  onClick={() => setExitoModal(null)}
+                >
+                  Cerrar
                 </button>
               </div>
             </div>
@@ -823,7 +865,7 @@ export const CajaView: React.FC = () => {
               </div>
               <div className="text-center p-2">
                 <img 
-                  src={obtenerUrlComprobante(imagenComprobanteModal)} 
+                  src={cajaService.obtenerUrlComprobante(imagenComprobanteModal)} 
                   alt="Comprobante Transferencia" 
                   className="img-fluid rounded shadow" 
                   style={{ maxHeight: '70vh', objectFit: 'contain' }} 

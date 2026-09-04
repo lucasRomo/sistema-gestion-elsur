@@ -72,7 +72,15 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
     <>
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
         <div className="modal-dialog modal-lg modal-dialog-centered" style={{ maxWidth: '800px' }}>
-          <div className="modal-content shadow-lg" style={{ border: `1px solid ${modalBorder}`, backgroundColor: modalBg, color: textColor, borderRadius: '14px' }}>
+          <div 
+  className="modal-content shadow-lg" 
+  style={{ 
+    backgroundColor: modalBg, 
+    color: textColor, 
+    borderRadius: '14px',
+    border: '1.5px solid #0dcaf0'
+  }}
+>
             
             <div className="d-flex justify-content-between align-items-center px-4 pt-4 pb-2">
               <h4 className="m-0 fw-bold text-info d-flex align-items-center">
@@ -224,7 +232,7 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
               <div className="d-flex justify-content-end gap-2 mt-3 pt-3 border-top" style={{ borderColor: inputBorder }}>
                 <button 
                   type="button" 
-                  className="btn btn-danger px-4" 
+                  className="btn btn-danger px-4 fw-semibold" 
                   style={{ borderRadius: '8px', color: '#ffffff' }} 
                   onClick={onCerrar}
                 >
@@ -233,7 +241,7 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
                 <button 
   type="submit" 
   className="btn btn-info px-4 fw-semibold" 
-  style={{ borderRadius: '8px', color: '#ffffff' }}
+  style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: "#149bdf", borderColor: "#149bdf", }}
 >
   Guardar Cambios
 </button>

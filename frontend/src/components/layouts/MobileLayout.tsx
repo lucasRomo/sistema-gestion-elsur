@@ -2,11 +2,13 @@ import { useState } from "react";
 import { InformesView } from "../../features/informes/views/InformesView";
 import { MaquinasView } from "../../features/maquinas/view/MaquinasView";
 import { NotificacionesView } from "../../features/notificaciones/view/NotificacionesView";
+import { ConfiguracionView } from "../../features/configuracion/views/ConfiguracionView";
 
 const TABS = [
   { key: "notificaciones", label: "Notificaciones", icon: "bi-bell-fill", component: NotificacionesView },
   { key: "informes", label: "Informes", icon: "bi-file-earmark-bar-graph-fill", component: InformesView },
   { key: "maquinas", label: "Máquinas", icon: "bi-cpu", component: MaquinasView },
+  { key: "configuracion", label: "Ajustes", icon: "bi-gear-fill", component: ConfiguracionView },
 ];
 
 export function MobileLayout() {

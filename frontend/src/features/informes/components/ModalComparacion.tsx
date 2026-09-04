@@ -84,7 +84,7 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
           <div className="modal-header border-bottom border-secondary border-opacity-25 px-4 py-3 im-modal-comp-header">
             <div>
               <h5 className="modal-title fw-bold font-monospace d-flex align-items-center gap-2">
-                <i className="bi bi-arrow-left-right text-info"></i>
+                <i className="bi bi-arrow-left-right text-info-custom"></i>
                 Comparativa: {obtenerNombreInforme(informeComparacion)}
               </h5>
               <p className="text-secondary small mb-0">
@@ -102,36 +102,33 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
           <div className="modal-body p-4 im-modal-comp-body">
 
             {/* Botones de Tipo de Comparación */}
-            <div className="d-flex flex-wrap gap-2 mb-4 justify-content-center">
-              <button
-                type="button"
-                className={`btn btn-sm px-3 py-2 fw-semibold im-comp-btn ${tipoComparacion === 'dia' ? 'btn-info' : 'btn-outline-secondary text-light'}`}
-                onClick={() => seleccionarTipoComparacion('dia')}
-              >
-                Día Anterior
-              </button>
-              <button
-                type="button"
-                className={`btn btn-sm px-3 py-2 fw-semibold im-comp-btn ${tipoComparacion === 'semana' ? 'btn-info' : 'btn-outline-secondary text-light'}`}
-                onClick={() => seleccionarTipoComparacion('semana')}
-              >
-                Semana Anterior
-              </button>
-              <button
-                type="button"
-                className={`btn btn-sm px-3 py-2 fw-semibold im-comp-btn ${tipoComparacion === 'mes' ? 'btn-info' : 'btn-outline-secondary text-light'}`}
-                onClick={() => seleccionarTipoComparacion('mes')}
-              >
-                Mes Anterior
-              </button>
-              <button
-                type="button"
-                className={`btn btn-sm px-3 py-2 fw-semibold im-comp-btn ${tipoComparacion === 'personalizado' ? 'btn-info' : 'btn-outline-secondary text-light'}`}
-                onClick={() => seleccionarTipoComparacion('personalizado')}
-              >
-                Personalizado
-              </button>
-            </div>
+<div className="d-flex flex-wrap gap-2 mb-4 justify-content-center">
+  {([
+    { id: 'dia', label: 'Día Anterior' },
+    { id: 'semana', label: 'Semana Anterior' },
+    { id: 'mes', label: 'Mes Anterior' },
+    { id: 'personalizado', label: 'Personalizado' },
+  ] as const).map((item) => {
+    const isSelected = tipoComparacion === item.id;
+    return (
+      <button
+        key={item.id}
+        type="button"
+        className={`btn btn-sm px-3 py-2 fw-semibold im-comp-btn ${
+          isSelected ? 'text-white' : 'btn-outline-secondary text-light'
+        }`}
+        style={
+          isSelected
+            ? { backgroundColor: '#149bdf', borderColor: '#149bdf' }
+            : {}
+        }
+        onClick={() => seleccionarTipoComparacion(item.id)}
+      >
+        {item.label}
+      </button>
+    );
+  })}
+</div>
 
             {/* Configuración de Fechas de Comparación */}
             {tipoComparacion && (
@@ -140,7 +137,7 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
 
                   {/* Período Actual */}
                   <div className="col-12 col-md-5">
-                    <label className="form-label small text-info fw-bold mb-1">Período Actual</label>
+                    <label className="form-label small text-info-custom fw-bold mb-1">Período Actual</label>
                     <div className="d-flex align-items-center gap-2 im-date-row">
                       <input
                         type="date"
@@ -202,8 +199,8 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
 
                 {/* Gráfico Actual */}
                 <div className="col-12 col-lg-6">
-                  <div className="p-3 rounded-3 border border-info border-opacity-25 h-100">
-                    <h6 className="fw-bold text-info mb-3">
+                  <div className="p-3 rounded-3 border border-info  border-opacity-25 h-100">
+                    <h6 className="fw-bold text-info-custom mb-3">
                       Período Actual ({comparacionData.periodoActual.desde} a {comparacionData.periodoActual.hasta})
                     </h6>
                     <div style={{ height: '320px', width: '100%' }}>

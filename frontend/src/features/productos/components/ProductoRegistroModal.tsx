@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Producto, Categoria } from '../types/Producto';
 import type { Maquina } from '../../maquinas/types/Maquina';
 import { useTheme } from '../../../Context/ThemeContext';
@@ -15,8 +15,11 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
+  const isEditing = Boolean(producto);
+  const accentColor = isEditing ? '#149bdf' : '#198754';
+  const buttonBgColor = isEditing ? '#149bdf' : '#198754';
+
   const modalBg = isDark ? '#1e1e24' : '#ffffff';
-  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const subModalBg = isDark ? '#18181b' : '#ffffff';
   const subModalBorder = isDark ? '#ffc107' : '#f59e0b';
   const textColor = isDark ? 'text-white' : 'text-dark';
@@ -31,12 +34,19 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const [showCategorias, setShowCategorias] = useState<boolean>(false);
   const [nuevaCategoria, setNuevaCategoria] = useState<string>('');
   
-  // Estados para los menús desplegables custom
   const [textoMaquina, setTextoMaquina] = useState<string>('No aplica');
   const [showDropdownEstado, setShowDropdownEstado] = useState<boolean>(false);
   const [showDropdownMaquina, setShowDropdownMaquina] = useState<boolean>(false);
   const [showDropdownCategorias, setShowDropdownCategorias] = useState<boolean>(false);
+
+  const [productosExistentes, setProductosExistentes] = useState<Producto[]>([]);
   
+  // Referencias para validaciones de HTML5
+  const nombreProductoRef = useRef<HTMLInputElement>(null);
+  const precioBaseRef = useRef<HTMLInputElement>(null);
+  const stockRef = useRef<HTMLInputElement>(null);
+  const categoriaRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     nombreProducto: '',
     precioBase: '',
@@ -46,30 +56,47 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     estado: 'Activo'
   });
 
-  const cargarCategorias = async () => {
+  const cargarCategoriasData = async () => {
     try {
       const res = await apiFetch('http://localhost:8080/api/categorias');
       if (res.ok) {
         const data = await res.json();
         setCategorias(data);
       }
-    } catch (err) { console.error("Error cargando categorías:", err); }
+    } catch (err) { 
+      console.error("Error cargando categorías:", err); 
+    }
   };
 
-  const cargarMaquinas = async () => {
+  const cargarMaquinasData = async () => {
     try {
       const res = await apiFetch('http://localhost:8080/api/maquinas');
       if (res.ok) {
         const data = await res.json();
         setMaquinas(data);
       }
-    } catch (err) { console.error("Error cargando máquinas:", err); }
+    } catch (err) { 
+      console.error("Error cargando máquinas:", err); 
+    }
+  };
+
+  const cargarProductosExistentes = async () => {
+    try {
+      const res = await apiFetch('http://localhost:8080/api/productos');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setProductosExistentes(data);
+      }
+    } catch (err) {
+      console.error("Error cargando productos existentes:", err);
+    }
   };
 
   useEffect(() => {
     if (show) {
-      cargarCategorias();
-      cargarMaquinas();
+      cargarCategoriasData();
+      cargarMaquinasData();
+      cargarProductosExistentes();
 
       if (producto) {
         setFormData({
@@ -99,10 +126,29 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     } else if (maquinas.length > 0) {
       const m = maquinas.find((maq: any) => maq.idMaquina.toString() === formData.idMaquinaNecesaria);
       if (m) {
-        setTextoMaquina(`${m.nombre || m.nombre} (${m.estado})`);
+        setTextoMaquina(`${m.nombre || (m as any).nombreMaquina} (${m.estado})`);
       }
     }
   }, [formData.idMaquinaNecesaria, maquinas]);
+
+  const validarNombreDuplicado = () => {
+    const nombreLimpio = formData.nombreProducto.trim().toLowerCase();
+    if (!nombreLimpio || !nombreProductoRef.current) return true;
+
+    const idActual = producto?.idProducto;
+    const duplicado = productosExistentes.some(
+      (p: any) => p.nombreProducto?.trim().toLowerCase() === nombreLimpio && p.idProducto !== idActual
+    );
+
+    if (duplicado) {
+      nombreProductoRef.current.setCustomValidity('Ya existe un producto registrado con ese nombre.');
+      nombreProductoRef.current.reportValidity();
+      return false;
+    }
+
+    nombreProductoRef.current.setCustomValidity('');
+    return true;
+  };
 
   const handleCrearCategoria = async () => {
     const nombreLimpio = nuevaCategoria.trim();
@@ -126,12 +172,12 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
 
       if (res.ok) {
         setNuevaCategoria('');
-        cargarCategorias();
+        cargarCategoriasData();
       } else {
         alert("No se pudo crear la categoría.");
       }
     } catch (error) { 
-      alert("Error al conectar con el servidor."); 
+      alert("Error al crear categoría o conectar con el servidor."); 
     }
   };
 
@@ -146,17 +192,20 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
         if (catEliminada && formData.nombreCategoria === catEliminada.nombre) {
           setFormData(prev => ({ ...prev, nombreCategoria: '' }));
         }
-        cargarCategorias();
+        cargarCategoriasData();
       } else {
         alert("No se pudo eliminar, es posible que tenga productos asociados.");
       }
     } catch (error) {
+      alert("No se pudo eliminar, es posible que tenga productos asociados.");
       console.error("Error al eliminar categoría:", error);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validarNombreDuplicado()) return;
 
     const catEncontrada = categorias.find(
       c => c.nombre.toLowerCase() === formData.nombreCategoria.trim().toLowerCase()
@@ -183,10 +232,16 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     <>
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
         <div className="modal-dialog modal-dialog-centered">
-          <div className={`modal-content ${textColor} font-monospace shadow-lg`} style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}` }}>
+          <div 
+            className={`modal-content ${textColor} font-monospace shadow-lg`} 
+            style={{ 
+              backgroundColor: modalBg, 
+              border: `1.5px solid ${accentColor}` 
+            }}
+          >
             <div className={`modal-header border-bottom ${borderDivider}`}>
-              <h5 className="modal-title fw-bold" style={{ color: isDark ? '#0bc9f8' : '#0284c7' }}>
-                <i className="bi bi-box-seam me-2"></i> {producto ? 'Modificar Producto' : 'Registrar Producto'}
+              <h5 className="modal-title fw-bold" style={{ color: accentColor }}>
+                <i className="bi bi-box-seam me-2"></i> {isEditing ? 'Modificar Producto' : 'Registrar Producto'}
               </h5>
               <button className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose}></button>
             </div>
@@ -194,40 +249,55 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
             <form onSubmit={handleSubmit}>
               <div className="modal-body p-4">
                 
-                {/* Nombre */}
+                {/* Nombre del Producto */}
                 <div className="mb-3">
-                  <label className="form-label small fw-semibold" style={{ color: mutedText }}>Nombre del Producto</label>
+                  <label className="form-label small fw-semibold" style={{ color: mutedText }}>Nombre del Producto *</label>
                   <input 
+                    ref={nombreProductoRef}
                     className={`form-control ${textColor}`} 
                     style={{ backgroundColor: inputBg, borderColor: inputBorder }}
                     value={formData.nombreProducto} 
                     onChange={e => setFormData({...formData, nombreProducto: e.target.value})} 
+                    onBlur={validarNombreDuplicado}
                     required pattern="[A-Za-z0-9Á-Úá-ú\s]+"
                     onInvalid={(e: any) => {
-                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El nombre del producto es obligatorio");
-                      else if (e.target.validity.patternMismatch) e.target.setCustomValidity("Nombre inválido");
+                      if (e.target.validity.valueMissing) e.target.setCustomValidity("El nombre del producto es obligatorio.");
+                      else if (e.target.validity.patternMismatch) e.target.setCustomValidity("Nombre inválido.");
                     }}
                     onInput={(e: any) => e.target.setCustomValidity("")}
                   />
                 </div>
                 
-                {/* Precio y Stock */}
                 <div className="row mb-3">
+                  {/* Precio Base */}
                   <div className="col-6">
-                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Precio Base</label>
+                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Precio Base *</label>
                     <input 
+                      ref={precioBaseRef}
                       className={`form-control ${textColor}`} 
                       style={{ backgroundColor: inputBg, borderColor: inputBorder }}
                       type="number" 
                       step="0.01" 
+                      min="0.01"
                       value={formData.precioBase} 
                       onChange={e => setFormData({...formData, precioBase: e.target.value})} 
                       required 
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) {
+                          e.target.setCustomValidity("El precio base es obligatorio.");
+                        } else if (e.target.validity.rangeUnderflow) {
+                          e.target.setCustomValidity("El precio base debe ser mayor a 0.");
+                        }
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
+
+                  {/* Stock Inicial */}
                   <div className="col-6">
-                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Stock Inicial</label>
+                    <label className="form-label small fw-semibold" style={{ color: mutedText }}>Stock Inicial *</label>
                     <input 
+                      ref={stockRef}
                       className={`form-control ${textColor}`} 
                       style={{ backgroundColor: inputBg, borderColor: inputBorder }}
                       type="number" 
@@ -235,13 +305,19 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                       value={formData.stock} 
                       onChange={e => setFormData({...formData, stock: e.target.value})} 
                       required 
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) {
+                          e.target.setCustomValidity("El stock es obligatorio.");
+                        } else if (e.target.validity.rangeUnderflow) {
+                          e.target.setCustomValidity("El stock no puede ser negativo.");
+                        }
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
                 </div>
 
-                {/* Estado y Máquina */}
                 <div className="row mb-3">
-                  {/* Dropdown Custom: Estado del Producto */}
                   <div className="col-6">
                     <label className="form-label small fw-semibold" style={{ color: mutedText }}>Estado del Producto</label>
                     <div className="position-relative">
@@ -282,7 +358,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                     </div>
                   </div>
 
-                  {/* Dropdown Custom: Máquina Necesaria */}
                   <div className="col-6">
                     <label className="form-label small fw-semibold" style={{ color: mutedText }}>Máquina Necesaria</label>
                     <div className="position-relative">
@@ -305,7 +380,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                           className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
                           style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
                         >
-                          {/* Opción por defecto */}
                           <div
                             className="p-2 border-bottom text-truncate"
                             style={{ 
@@ -323,7 +397,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                             <span className="fw-semibold">No aplica</span>
                           </div>
                           
-                          {/* Lista de máquinas filtradas */}
                           {maquinas
                             .filter((m: any) => {
                               if (textoMaquina === 'No aplica' && formData.idMaquinaNecesaria === '') return true; 
@@ -360,11 +433,12 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                   </div>
                 </div>
 
-                {/* Dropdown Custom: Categoría */}
+                {/* Categoría */}
                 <div className="mb-3">
-                  <label className="form-label small fw-semibold" style={{ color: mutedText }}>Categoría</label>
+                  <label className="form-label small fw-semibold" style={{ color: mutedText }}>Categoría *</label>
                   <div className="input-group position-relative">
                     <input 
+                      ref={categoriaRef}
                       type="text"
                       autoComplete="off"
                       className={`form-control shadow-none ${textColor}`} 
@@ -375,8 +449,14 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                       onFocus={() => setShowDropdownCategorias(true)}
                       onBlur={() => setTimeout(() => setShowDropdownCategorias(false), 200)}
                       required
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) {
+                          e.target.setCustomValidity("Debe ingresar o seleccionar una categoría.");
+                        }
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
-                    <button type="button" className="btn btn-outline-info" onClick={() => setShowCategorias(true)}>
+                    <button type="button" className="btn btn-outline-warning" onClick={() => setShowCategorias(true)}>
                       <i className="bi bi-gear-fill"></i>
                     </button>
                     
@@ -420,8 +500,14 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
               </div>
               
               <div className={`modal-footer border-top ${borderDivider} py-2`}>
-                <button type="button" className="btn btn-sm btn-danger px-4" onClick={onClose}>Cancelar</button>
-                <button type="submit" className="btn btn-sm btn-info px-4" style={{ backgroundColor: '#278114', borderColor: "#278114", color: 'white' }} >Guardar</button>
+                <button type="button" className="btn btn-sm btn-danger px-4 fw-bold" onClick={onClose}>Cancelar</button>
+                <button 
+                  type="submit" 
+                  className="btn btn-sm px-4 fw-bold" 
+                  style={{ backgroundColor: buttonBgColor, borderColor: buttonBgColor, color: '#ffffff' }}
+                >
+                  Guardar
+                </button>
               </div>
             </form>
           </div>

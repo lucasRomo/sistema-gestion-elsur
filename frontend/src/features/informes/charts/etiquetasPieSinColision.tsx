@@ -17,6 +17,48 @@ interface EtiquetaCalculada {
   textAnchor: 'start' | 'end';
 }
 
+export function normalizarDatosTorta<T extends Record<string, any>>(
+  dataset: T[],
+  minFraccion: number = 0.06
+): (T & { valorGrafico: number })[] {
+  const obtenerValor = (d: T) =>
+    Number(d.value ?? d.totalGastado ?? d.saldoDeudor ?? 0);
+
+  const total = dataset.reduce((acc, d) => acc + obtenerValor(d), 0);
+
+  if (total <= 0 || dataset.length === 0) {
+    return dataset.map((d) => ({ ...d, valorGrafico: obtenerValor(d) }));
+  }
+
+  const minimoAbsoluto = total * minFraccion;
+
+  const chicas = dataset.filter((d) => {
+    const v = obtenerValor(d);
+    return v > 0 && v < minimoAbsoluto;
+  });
+  const grandes = dataset.filter((d) => obtenerValor(d) >= minimoAbsoluto);
+
+  const sumaGrandes = grandes.reduce((acc, d) => acc + obtenerValor(d), 0);
+  const deficit = chicas.reduce(
+    (acc, d) => acc + (minimoAbsoluto - obtenerValor(d)),
+    0
+  );
+
+
+  if (deficit <= 0 || sumaGrandes <= 0) {
+    return dataset.map((d) => ({ ...d, valorGrafico: obtenerValor(d) }));
+  }
+
+  return dataset.map((d) => {
+    const valor = obtenerValor(d);
+    if (valor <= 0) return { ...d, valorGrafico: 0 };
+    if (valor < minimoAbsoluto) return { ...d, valorGrafico: minimoAbsoluto };
+
+    const proporcion = valor / sumaGrandes;
+    return { ...d, valorGrafico: Math.max(0, valor - deficit * proporcion) };
+  });
+}
+
 const calcularPosicionesSinColision = (
   dataset: any[],
   cx: number,
@@ -25,15 +67,17 @@ const calcularPosicionesSinColision = (
 ): Record<number, EtiquetaCalculada> => {
   const total =
     dataset.reduce(
-      (acc, d) => acc + Number(d.value ?? d.totalGastado ?? d.saldoDeudor ?? 0),
+      (acc, d) =>
+        acc + Number(d.valorGrafico ?? d.value ?? d.totalGastado ?? d.saldoDeudor ?? 0),
       0
     ) || 1;
 
   let acumulado = 0;
 
   const crudas = dataset.map((d, i) => {
-    const valor = Number(d.value ?? d.totalGastado ?? d.saldoDeudor ?? 0);
-    const fraccion = valor / total;
+    const valorReal = Number(d.value ?? d.totalGastado ?? d.saldoDeudor ?? 0);
+    const valorAngulo = Number(d.valorGrafico ?? valorReal);
+    const fraccion = valorAngulo / total;
     const midAngle = 360 * (acumulado + fraccion / 2);
     acumulado += fraccion;
 
@@ -44,7 +88,7 @@ const calcularPosicionesSinColision = (
     const yObjetivo = cy + (outerRadius + RADIO_LABEL) * Math.sin(anguloRad);
     const lado: 'izquierda' | 'derecha' = Math.cos(anguloRad) >= 0 ? 'derecha' : 'izquierda';
 
-    return { index: i, name: d.name, value: valor, lado, xBorde, yBorde, xQuiebre, yObjetivo };
+    return { index: i, name: d.name, value: valorReal, lado, xBorde, yBorde, xQuiebre, yObjetivo };
   });
 
   const resultado: Record<number, EtiquetaCalculada> = {};

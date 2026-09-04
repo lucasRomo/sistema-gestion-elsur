@@ -20,6 +20,7 @@ export const ChartScrollWrapper: React.FC<ChartScrollWrapperProps> = ({
   return (
     <div 
       className="im-chart-scroll" 
+      tabIndex={-1}
       style={{ width: '100%', height, overflowX: 'auto', overflowY: 'hidden' }}
     >
       <div style={{ width: `${minWidth}px`, height: '100%', minWidth: '100%' }}>

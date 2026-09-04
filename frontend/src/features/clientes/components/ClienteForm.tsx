@@ -27,13 +27,13 @@ export const UsuariosFiltros: React.FC<UsuariosFiltrosProps> = ({
 
   return (
     <div 
-      className="row g-3 align-items-center mb-4 p-3 rounded shadow-sm" 
-      style={{ 
-        backgroundColor: containerBg, 
-        border: `1px solid ${containerBorder}`,
-        transition: 'all 0.2s ease-in-out'
-      }}
-    >
+  className="row g-3 align-items-center mb-4 p-3 rounded shadow-sm" 
+  style={{ 
+    backgroundColor: containerBg, 
+    border: '1.5px solid #a855f7',
+    transition: 'all 0.2s ease-in-out'
+  }}
+>
       <div className="col-md-6">
         <label className="form-label small font-monospace fw-semibold" style={{ color: mutedText }}>
           Filtrar por Usuario / Nombre / Apellido:

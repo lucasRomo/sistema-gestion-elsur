@@ -1,4 +1,5 @@
-import type { Insumo } from '../types/Insumo';
+import type { Insumo, UnidadMedida } from '../types/Insumo';
+import type { Proveedor } from '../../proveedores/types/Proveedor';
 import { API_BASE_URL, apiFetch } from '../../../config/api';
 
 const API_URL = `${API_BASE_URL}/insumos`;
@@ -13,6 +14,8 @@ const obtenerIdUsuarioLogueado = (): number | null => {
     return null;
   }
 };
+
+// --- INSUMOS ---
 
 export const getInsumos = async (): Promise<Insumo[]> => {
   const res = await apiFetch(API_URL);
@@ -102,4 +105,44 @@ export const actualizarInsumosMasivo = async (payload: ActualizarInsumosPayload)
     throw new Error(err);
   }
   return res.text();
+};
+
+// --- PROVEEDORES ---
+
+export const getProveedores = async (): Promise<Proveedor[]> => {
+  const res = await fetch(`${API_BASE_URL}/proveedores`);
+  if (!res.ok) throw new Error("Error al obtener proveedores");
+  return res.json();
+};
+
+// --- UNIDADES DE MEDIDA ---
+
+export const getUnidadesMedida = async (): Promise<UnidadMedida[]> => {
+  const res = await fetch(`${API_BASE_URL}/unidades-medida`);
+  if (!res.ok) throw new Error("Error al obtener unidades de medida");
+  return res.json();
+};
+
+export const crearUnidadMedida = async (nombre: string): Promise<UnidadMedida> => {
+  const res = await fetch(`${API_BASE_URL}/unidades-medida`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nombre })
+  });
+
+  if (!res.ok) {
+    const errorMsg = await res.text();
+    throw new Error(errorMsg || 'Error al guardar la unidad de medida');
+  }
+  return res.json();
+};
+
+export const eliminarUnidadMedida = async (idUnidad: number): Promise<void> => {
+  const res = await fetch(`${API_BASE_URL}/unidades-medida/${idUnidad}`, {
+    method: 'DELETE'
+  });
+
+  if (!res.ok) {
+    throw new Error('No se pudo eliminar la unidad. Es posible que esté asignada a un insumo.');
+  }
 };

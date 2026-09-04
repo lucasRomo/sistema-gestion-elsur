@@ -75,6 +75,26 @@ export interface Turno {
 }
 
 export const cajaService = {
+  // --- MÉTODOS DE COMPROBANTES Y URLS ---
+  obtenerUrlComprobante: (url?: string | null): string => {
+    if (!url) return '';
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
+    return `${API_BASE_URL.replace('/api', '')}${url.startsWith('/') ? '' : '/'}${url}`;
+  },
+
+  // --- MÉTODOS DE PEDIDOS ---
+  obtenerPedidoPorId: async (idPedido: number): Promise<any | null> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/pedidos/${idPedido}`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (error) {
+      console.error('Error en cajaService.obtenerPedidoPorId:', error);
+      return null;
+    }
+  },
+
+  // --- MÉTODOS DE CAJA Y MOVIMIENTOS ---
   obtenerTodos: async (): Promise<MovimientoCaja[]> => {
     try {
       const response = await apiFetch(`${API_BASE_URL}/movimientos-caja`);

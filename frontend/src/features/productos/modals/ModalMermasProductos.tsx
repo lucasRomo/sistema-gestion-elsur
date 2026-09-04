@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { Producto } from '../types/Producto';
 import { mermaService, type MermaEntity } from '../../../services/mermaService';
 import { useTheme } from '../../../Context/ThemeContext';
+import { getHistorialMermas, getRecetaPorProducto } from '../services/productoService';
 import { apiFetch } from '../../../config/api';
 
 interface ModalMermasProductosProps {
@@ -55,10 +56,10 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Estilos y colores fijos/dinámicos sin depender de .badge ni .text-white
   const bgModal = isDark ? '#18181b' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#0f172a';
-  const cardBg = isDark ? '#09090b' : '#f8fafc';
+  const subTextColor = isDark ? '#a1a1aa' : '#64748b';
+  const cardBg = isDark ? '#18181b' : '#f8fafc';
   const cardBorder = isDark ? '#27272a' : '#e2e8f0';
   const recipeBg = isDark ? 'rgba(0, 0, 0, 0.4)' : '#f1f5f9';
   const recipeBorder = isDark ? 'rgba(255, 255, 255, 0.15)' : '#cbd5e1';
@@ -77,13 +78,11 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
   const [cargandoHistorial, setCargandoHistorial] = useState<boolean>(false);
   const [guardando, setGuardando] = useState<boolean>(false);
 
-  // Estados para controlar el modal de alerta / validación
   const [mostrarAlerta, setMostrarAlerta] = useState<boolean>(false);
   const [mensajeAlerta, setMensajeAlerta] = useState<string>('');
 
   const [recetasMap, setRecetasMap] = useState<Record<number, InsumoReceta[]>>({});
 
-  // Filtros del Historial
   const [filtroHistorialNombre, setFiltroHistorialNombre] = useState<string>('');
   const [filtroHistorialCategoria, setFiltroHistorialCategoria] = useState<string>('TODOS');
   const [filtroHistorialMaquina, setFiltroHistorialMaquina] = useState<string>('TODOS');
@@ -96,6 +95,8 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
         const data = await res.json();
         setHistorial(data);
       }
+      const data = await getHistorialMermas();
+      setHistorial(data);
     } catch (err) {
       console.error('Error al cargar historial de mermas:', err);
     } finally {
@@ -122,6 +123,8 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                 const data = await res.json();
                 return { idProducto: prod.idProducto!, data };
               }
+              const data = await getRecetaPorProducto(prod.idProducto!);
+              return { idProducto: prod.idProducto!, data };
             } catch (e) {
               console.error(`Error al cargar insumos del producto ${prod.idProducto}`, e);
             }
@@ -248,7 +251,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
 
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
-      <div className="modal-dialog modal-lg modal-dialog-centered">
+      <div className="modal-dialog modal-xl modal-dialog-centered">
         <div
           className="modal-content font-monospace shadow-lg"
           style={{
@@ -258,7 +261,6 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
             color: textColor
           }}
         >
-          {/* Header */}
           <div className="modal-header border-bottom border-secondary-subtle pb-3">
             <h5 className="modal-title fw-bold text-warning d-flex align-items-center">
               <i className="bi bi-box-seam-fill me-2 fs-4"></i>
@@ -271,7 +273,6 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
             ></button>
           </div>
 
-          {/* Pestañas */}
           <div className="px-3 pt-3">
             <div className="btn-group w-100">
               <button
@@ -293,7 +294,6 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
             </div>
           </div>
 
-          {/* Body */}
           <div className="modal-body my-2" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             {tabActiva === 'registrar' ? (
               <div>
@@ -441,7 +441,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                           type="checkbox"
                                           id={keyIns}
                                           checked={insSelected}
-                                          onChange={() => toggleSelection(keyIns, { idInsumo: idIns, idProducto: idProd })}
+                                          onChange={() => toggleSelection(keyIns, { idInsumo: idIns, idProducto: idProd })} 
                                         />
                                         <label
                                           className="form-check-label small cursor-pointer m-0"
@@ -505,7 +505,6 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
               </div>
             ) : (
               <div>
-                {/* Filtros */}
                 <div className="row g-2 mb-3">
                   <div className="col-md-4">
                     <div className="position-relative">
@@ -558,25 +557,30 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                   <div className="text-center py-4 text-muted">No se encontraron registros de mermas.</div>
                 ) : (
                   <div className="table-responsive">
-                    <table
-                      className={`table ${
-                        isDark ? 'table-dark table-hover' : 'table-hover table-striped'
-                      } align-middle small`}
-                      style={{ color: textColor }}
+                    <table 
+                      className="table align-middle mb-0 small"
+                      style={{ 
+                        color: textColor,
+                        backgroundColor: 'transparent',
+                        '--bs-table-bg': 'transparent',
+                        '--bs-table-color': textColor,
+                        borderColor: cardBorder
+                      } as React.CSSProperties}
                     >
                       <thead>
-                        <tr
+                        <tr 
                           className="text-uppercase"
-                          style={{
+                          style={{ 
                             color: isDark ? '#eab308' : '#854d0e',
-                            backgroundColor: isDark ? '#1d1d1d' : '#f8fafc'
+                            backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
+                            borderBottom: `2px solid ${cardBorder}`
                           }}
                         >
-                          <th>Fecha</th>
-                          <th>Origen / Ítem</th>
-                          <th>Categoría / Máquina</th>
-                          <th className="text-center">Cant.</th>
-                          <th>Motivo / Detalle</th>
+                          <th className="py-2">Fecha</th>
+                          <th className="py-2">Origen / Ítem</th>
+                          <th className="py-2">Categoría / Máquina</th>
+                          <th className="py-2 text-center">Cant.</th>
+                          <th className="py-2">Motivo / Descripción</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -584,61 +588,39 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                           const esInsumo = Boolean(m.insumo);
 
                           return (
-                            <tr key={m.idMerma ?? `hist-${idx}`}>
+                            <tr key={m.idMerma ?? `hist-${idx}`} style={{ borderColor: cardBorder }}>
                               <td className="text-nowrap">
                                 {m.fechaMerma ? new Date(m.fechaMerma).toLocaleString('es-AR') : '-'}
                               </td>
-                              <td className="py-2">
+                              <td>
                                 <div className="d-flex flex-column gap-1">
-                                  {esInsumo ? (
-                                    <>
-                                      <div className="d-flex align-items-center gap-2">
-                                        <span
-                                          className="px-2 py-1 rounded small fw-bold font-monospace"
-                                          style={{
-                                            fontSize: '0.75rem',
-                                            backgroundColor: '#eab308',
-                                            color: '#000000'
-                                          }}
-                                        >
-                                          <i className="bi bi-layers-fill me-1"></i>INSUMO
-                                        </span>
-                                        <span className="fw-bold" style={{ color: textColor }}>
-                                          {m.insumo?.nombreInsumo}
-                                        </span>
-                                      </div>
-                                      {m.producto?.nombreProducto && (
-                                        <div className="small text-muted ms-1 d-flex align-items-center gap-1">
-                                          <i className="bi bi-arrow-return-right text-warning"></i>
-                                          <span>Pertenece al producto:</span>
-                                          <span
-                                            className={`fw-semibold ${
-                                              isDark ? 'text-warning' : 'text-warning-emphasis'
-                                            }`}
-                                          >
-                                            {m.producto.nombreProducto}
-                                          </span>
-                                        </div>
-                                      )}
-                                    </>
-                                  ) : (
-                                    <div className="d-flex align-items-center gap-2">
-                                      <span
-                                        className="px-2 py-1 rounded small fw-bold font-monospace"
-                                        style={{
-                                          fontSize: '0.75rem',
-                                          backgroundColor: '#2563eb',
-                                          color: '#ffffff'
-                                        }}
-                                      >
-                                        <i className="bi bi-box-seam-fill me-1"></i>PRODUCTO
-                                      </span>
-                                      <span
-                                        className={`fw-bold ${
-                                          isDark ? 'text-info' : 'text-primary-emphasis'
-                                        }`}
-                                      >
-                                        {m.producto?.nombreProducto || 'Producto'}
+                                  <div className="d-flex align-items-center gap-2">
+                                    <span 
+                                      className="text-uppercase fw-bold rounded-pill px-2 py-1 d-inline-flex align-items-center justify-content-center"
+                                      style={{
+                                        fontSize: '0.65rem',
+                                        lineHeight: '1',
+                                        backgroundColor: esInsumo 
+                                          ? (isDark ? '#0284c7' : '#e0f2fe')
+                                          : (isDark ? '#16a34a' : '#dcfce7'),
+                                        color: esInsumo 
+                                          ? (isDark ? '#ffffff' : '#0369a1')
+                                          : (isDark ? '#ffffff' : '#15803d'),
+                                        border: `1px solid ${esInsumo ? (isDark ? '#38bdf8' : '#0284c7') : (isDark ? '#4ade80' : '#16a34a')}`
+                                      }}
+                                    >
+                                      {esInsumo ? 'Insumo' : 'Producto'}
+                                    </span>
+                                    <span className="fw-bold" style={{ color: textColor }}>
+                                      {m.insumo?.nombreInsumo || m.producto?.nombreProducto || 'Merma'}
+                                    </span>
+                                  </div>
+                                  {esInsumo && m.producto?.nombreProducto && (
+                                    <div className="small ms-1 d-flex align-items-center gap-1" style={{ color: subTextColor }}>
+                                      <i className="bi bi-arrow-return-right text-warning"></i>
+                                      <span>En producto:</span>
+                                      <span className="fw-semibold text-warning">
+                                        {m.producto.nombreProducto}
                                       </span>
                                     </div>
                                   )}
@@ -648,9 +630,9 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                 <div className="d-flex flex-column gap-1">
                                   {m.producto?.categoria?.nombre && (
                                     <span
-                                      className="align-self-start px-2 py-1 rounded small fw-semibold"
+                                      className="align-self-start px-2 py-0.5 rounded small fw-semibold"
                                       style={{
-                                        fontSize: '0.75rem',
+                                        fontSize: '0.7rem',
                                         backgroundColor: isDark ? '#27272a' : '#e2e8f0',
                                         color: isDark ? '#f4f4f5' : '#0f172a',
                                         border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
@@ -662,9 +644,9 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                   {(m.producto?.maquinaNecesaria?.nombre ||
                                     m.producto?.maquinaNecesaria?.nombreMaquina) && (
                                     <span
-                                      className="align-self-start px-2 py-1 rounded small fw-semibold"
+                                      className="align-self-start px-2 py-0.5 rounded small fw-semibold"
                                       style={{
-                                        fontSize: '0.75rem',
+                                        fontSize: '0.7rem',
                                         backgroundColor: isDark ? 'rgba(234, 179, 8, 0.15)' : '#fef9c3',
                                         color: isDark ? '#fde047' : '#854d0e',
                                         border: `1px solid ${isDark ? '#ca8a04' : '#fef08a'}`
@@ -678,12 +660,12 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                   {!m.producto?.categoria?.nombre &&
                                     !m.producto?.maquinaNecesaria?.nombre &&
                                     !m.producto?.maquinaNecesaria?.nombreMaquina && (
-                                      <span className="text-muted small">-</span>
+                                      <span className="small" style={{ color: subTextColor }}>-</span>
                                     )}
                                 </div>
                               </td>
-                              <td className="text-center fw-bold text-danger fs-6">-{m.cantidad}</td>
-                              <td style={{ maxWidth: '200px', wordBreak: 'break-word' }}>{m.descripcion}</td>
+                              <td className="text-center fw-bold text-danger text-nowrap">-{m.cantidad}</td>
+                              <td style={{ maxWidth: '220px', wordBreak: 'break-word' }}>{m.descripcion}</td>
                             </tr>
                           );
                         })}
@@ -695,11 +677,10 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
             )}
           </div>
 
-          {/* Footer */}
           <div className="modal-footer border-top border-secondary-subtle pt-2">
             <button
               type="button"
-              className={`btn ${isDark ? 'btn-secondary' : 'btn-secondary'} px-4 fw-bold`}
+              className="btn btn-secondary px-4 fw-bold"
               onClick={onClose}
             >
               Volver
@@ -718,8 +699,6 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
         </div>
       </div>
 
-      {/* Modal Modal/Cartel de Advertencia Personalizado */}
-      {/* Modal / Cartel de Advertencia Personalizado (Adaptativo Claro/Oscuro) */}
       {mostrarAlerta && (
         <div
           className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
