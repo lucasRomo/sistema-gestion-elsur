@@ -38,7 +38,8 @@ export const incidenciaService = {
     });
 
     if (!res.ok) {
-      throw new Error('Error al cambiar estado a mantenimiento');
+      const errorText = await res.text();
+      throw new Error(errorText || 'Error al cambiar estado a mantenimiento');
     }
   },
 
@@ -54,7 +55,8 @@ export const incidenciaService = {
     });
 
     if (!res.ok) {
-      throw new Error('Error al resolver la incidencia');
+      const errorText = await res.text();
+      throw new Error(errorText || 'Error al resolver la incidencia');
     }
   },
 
@@ -80,7 +82,13 @@ export const incidenciaService = {
       body: formData
     });
 
-    const data: RespuestaPago = await res.json();
+    let data: RespuestaPago = {};
+    try {
+      data = await res.json();
+    } catch (e) {
+      data = { message: await res.text() };
+    }
+
     return { ok: res.ok, data };
   }
 };

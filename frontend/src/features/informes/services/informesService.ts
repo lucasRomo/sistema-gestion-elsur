@@ -117,5 +117,21 @@ export const informesService = {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('data:')) return url;
     return `${API_BASE_URL.replace('/api', '')}${url.startsWith('/') ? '' : '/'}${url}`;
-  }
+  },
+
+  async obtenerBlobComprobante(url?: string | null): Promise<string> {
+  if (!url) throw new Error('Sin comprobante');
+  if (url.startsWith('data:')) return url;
+
+  const path = url.startsWith('http')
+    ? url.substring(url.lastIndexOf('/') + 1)
+    : url;
+
+  const response = await apiFetch(`${API_BASE_URL}/movimientos-caja/comprobante/${encodeURIComponent(path)}`);
+  if (!response.ok) throw new Error('No se pudo cargar el comprobante');
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+  
 };

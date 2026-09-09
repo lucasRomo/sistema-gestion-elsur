@@ -63,6 +63,8 @@ export const CajaView: React.FC = () => {
   const [imagenAjuste, setImagenAjuste] = useState<string | null>(null);
   const [motivoAjuste, setMotivoAjuste] = useState('');
   const [guardandoAjuste, setGuardandoAjuste] = useState(false);
+  const [comprobanteBlobUrl, setComprobanteBlobUrl] = useState<string | null>(null);
+  const [cargandoComprobante, setCargandoComprobante] = useState(false);
 
   const textColor = isDark ? 'text-white' : 'text-dark';
   const cardBg = isDark ? '#1e1e1f' : '#ffffff';
@@ -245,6 +247,30 @@ export const CajaView: React.FC = () => {
 
     setTicketSeleccionado({ pedido: pedidoAdaptado, movimiento: m });
   };
+
+  useEffect(() => {
+  let urlCreada: string | null = null;
+
+  if (imagenComprobanteModal) {
+    setCargandoComprobante(true);
+    cajaService.obtenerBlobComprobante(imagenComprobanteModal)
+      .then((blobUrl) => {
+        urlCreada = blobUrl;
+        setComprobanteBlobUrl(blobUrl);
+      })
+      .catch((err) => {
+        console.error('Error al cargar comprobante:', err);
+        setComprobanteBlobUrl(null);
+      })
+      .finally(() => setCargandoComprobante(false));
+  } else {
+    setComprobanteBlobUrl(null);
+  }
+
+  return () => {
+    if (urlCreada) URL.revokeObjectURL(urlCreada);
+  };
+  }, [imagenComprobanteModal]);
 
   const CustomCajaAreaTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -864,13 +890,19 @@ export const CajaView: React.FC = () => {
                 <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setImagenComprobanteModal(null)}></button>
               </div>
               <div className="text-center p-2">
-                <img 
-                  src={cajaService.obtenerUrlComprobante(imagenComprobanteModal)} 
-                  alt="Comprobante Transferencia" 
-                  className="img-fluid rounded shadow" 
-                  style={{ maxHeight: '70vh', objectFit: 'contain' }} 
-                />
-              </div>
+  {cargandoComprobante ? (
+    <p className="opacity-50 py-4 m-0">Cargando comprobante...</p>
+  ) : comprobanteBlobUrl ? (
+    <img
+      src={comprobanteBlobUrl}
+      alt="Comprobante Transferencia"
+      className="img-fluid rounded shadow"
+      style={{ maxHeight: '70vh', objectFit: 'contain' }}
+    />
+  ) : (
+    <p className="text-danger py-4 m-0">No se pudo cargar el comprobante.</p>
+  )}
+</div>
               <div className="text-end mt-2">
                 <button className="btn btn-secondary btn-sm" onClick={() => setImagenComprobanteModal(null)}>Cerrar</button>
               </div>

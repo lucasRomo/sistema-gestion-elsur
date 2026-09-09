@@ -2,6 +2,7 @@ package com.elsur.sistema_gestion.controllers;
 
 import com.elsur.sistema_gestion.models.Pedido;
 import com.elsur.sistema_gestion.services.PedidoService;
+import com.elsur.sistema_gestion.services.SupabaseStorageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ public class PedidoController {
 
     @Autowired
     private PedidoService pedidoService;
+
+    @Autowired
+    private SupabaseStorageService supabaseStorageService;
 
     private ObjectMapper crearObjectMapperConfigurado() {
         ObjectMapper mapper = new ObjectMapper();
@@ -175,6 +179,21 @@ public class PedidoController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al buscar el pedido: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/comprobantes/archivo/{nombreArchivo:.+}")
+    public ResponseEntity<byte[]> verArchivoComprobante(@PathVariable String nombreArchivo) {
+    try {
+        byte[] datos = supabaseStorageService.descargarArchivo("comprobantes", nombreArchivo);
+        String contentType = supabaseStorageService.detectarContentType(nombreArchivo);
+        return ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + nombreArchivo + "\"")
+                .body(datos);
+    } catch (Exception e) {
+        return ResponseEntity.notFound().build();
+    }
     }
 
     @PutMapping("/{idPedido}/asignar-empleado") 

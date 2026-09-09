@@ -1,11 +1,8 @@
-export const API_BASE_URL = 'http://192.168.0.96:8080/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 /**
  * Wrapper de fetch que agrega automáticamente el header Authorization
- * con el token guardado en localStorage (misma clave que usa el login: 'token_sesion').
- *
- * Usar SIEMPRE en vez de fetch() directo para llamadas al backend, así no
- * volvemos a tener endpoints que "olviden" mandar el token.
+ * con el token guardado en localStorage.
  */
 export const apiFetch = (input: string, init: RequestInit = {}): Promise<Response> => {
   const token = localStorage.getItem('token_sesion');
@@ -15,5 +12,8 @@ export const apiFetch = (input: string, init: RequestInit = {}): Promise<Respons
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  return fetch(input, { ...init, headers });
+  // Si la ruta es relativa (ej: '/pedidos'), le antepone la base URL
+  const url = input.startsWith('http') ? input : `${API_BASE_URL}${input}`;
+
+  return fetch(url, { ...init, headers });
 };

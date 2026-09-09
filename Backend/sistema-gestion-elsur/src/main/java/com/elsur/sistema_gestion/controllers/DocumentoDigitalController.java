@@ -63,20 +63,16 @@ public class DocumentoDigitalController {
     }
 
     @GetMapping("/archivo/{nombreArchivo:.+}")
-    public ResponseEntity<Resource> verArchivo(@PathVariable String nombreArchivo) {
-        try {
-            Resource recurso = documentoDigitalService.cargarArchivoComoRecurso(nombreArchivo);
-            String contentType = Files.probeContentType(recurso.getFile().toPath());
-            if (contentType == null) {
-                contentType = "application/octet-stream";
-            }
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + recurso.getFilename() + "\"")
-                    .body(recurso);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+public ResponseEntity<byte[]> verArchivo(@PathVariable String nombreArchivo) {
+    try {
+        byte[] datos = documentoDigitalService.descargarArchivo(nombreArchivo);
+        String contentType = "application/pdf"; // el repositorio digital son PDFs
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + nombreArchivo + "\"")
+                .body(datos);
+    } catch (Exception e) {
+        return ResponseEntity.notFound().build();
     }
+}
 }

@@ -1,9 +1,17 @@
 import type { CategoriaCliente } from '../../../clientes/types/CategoriaCliente';
-import { apiFetch } from '../../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../../config/api';
 
-const API_PEDIDOS = 'http://localhost:8080/api/pedidos';
-const API_CATEGORIAS = 'http://localhost:8080/api/categorias-cliente';
-const API_PRODUCTO_INSUMO = 'http://localhost:8080/api/producto-insumo/producto';
+const API_PEDIDOS = `${API_BASE_URL}/pedidos`;
+const API_CATEGORIAS = `${API_BASE_URL}/categorias-cliente`;
+const API_PRODUCTO_INSUMO = `${API_BASE_URL}/producto-insumo/producto`;
+
+export interface GuardarPedidoPayload {
+  pedido: any;
+  idEmpleado: number;
+  idUsuario?: number;
+  tipoPago: string;
+  fileComprobante?: File | null;
+}
 
 export const crearPedidoService = {
   /**
@@ -28,7 +36,7 @@ export const crearPedidoService = {
    */
   obtenerRecetaProducto: async (idProducto: number): Promise<any[]> => {
     try {
-      const response = await fetch(`${API_PRODUCTO_INSUMO}/${idProducto}`);
+      const response = await apiFetch(`${API_PRODUCTO_INSUMO}/${idProducto}`);
       if (!response.ok) return [];
       return await response.json();
     } catch (error) {
@@ -40,27 +48,28 @@ export const crearPedidoService = {
   /**
    * Envía un pedido al backend. Admite envío con o sin comprobante físico (Multipart/JSON).
    */
-  guardarPedido: async (
-    payload: { pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string },
-    comprobante?: File | null
-  ): Promise<any> => {
+  guardarPedido: async (payloadData: GuardarPedidoPayload): Promise<any> => {
     let response: Response;
+    const { fileComprobante, ...datosJSON } = payloadData;
 
-    if (comprobante) {
+    if (fileComprobante) {
       const formData = new FormData();
-      formData.append('payload', JSON.stringify(payload));
-      formData.append('comprobante', comprobante);
+
+      // Convertimos el objeto JSON sin el archivo a un Blob
+      const jsonBlob = new Blob([JSON.stringify(datosJSON)], { type: 'application/json' });
+      formData.append('payload', jsonBlob);
+      formData.append('comprobante', fileComprobante);
 
       response = await apiFetch(API_PEDIDOS, {
         method: 'POST',
         body: formData,
       });
     } else {
-      // Envío en formato JSON tradicional
+      // Envío en formato JSON tradicional directo
       response = await apiFetch(API_PEDIDOS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(datosJSON),
       });
     }
 

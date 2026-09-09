@@ -1,9 +1,12 @@
 import type { DatosCompraInsumo } from '../types/compraInsumos';
-import { apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_COMPRAS_INSUMOS = `${API_BASE_URL}/compras-insumos`;
 
 export const compraInsumosService = {
+  /**
+   * Registra una compra de insumos/productos en el backend.
+   */
   registrarCompraInsumo: async (datos: DatosCompraInsumo): Promise<any> => {
     const usuarioGuardado = localStorage.getItem('usuario_logueado') || localStorage.getItem('usuario');
     const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
@@ -14,7 +17,7 @@ export const compraInsumosService = {
       idUsuario
     };
 
-    const response = await apiFetch(`${API_BASE_URL}/compras-insumos`, {
+    const response = await apiFetch(API_COMPRAS_INSUMOS, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -22,7 +25,7 @@ export const compraInsumosService = {
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(errText || 'Error al registrar la compra de insumos');
+      throw new Error(errText || 'Error al registrar la compra de insumos.');
     }
 
     try {

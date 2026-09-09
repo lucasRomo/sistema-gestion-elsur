@@ -1,17 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SuccesModal } from '../../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../../Context/ThemeContext';
-import { apiFetch } from '../../../../config/api';
 import { PedidoPendienteService } from '../service/pedidoPendienteService';
 
 interface ModalRegistrarPagoProps {
   pedido: any;
   show: boolean;
   onClose: () => void;
-  onConfirm: (tipoPago: string, monto: number, archivo: File | null) => Promise<void>;
+  onConfirm: (tipoPago: string, monto: number, archivo: File | null, idUsuario: number) => Promise<void>;
 }
 
-export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, onClose, onConfirm }) => {
+export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, show, onClose, onConfirm }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [tipoPago, setTipoPago] = useState('EFECTIVO');
@@ -20,14 +19,17 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   const [cajaAbierta, setCajaAbierta] = useState<boolean | null>(null);
   const [errorCajaModal, setErrorCajaModal] = useState({ show: false, mensaje: "" });
   const [stockError, setStockError] = useState({ show: false, mensaje: "" });
+  const [showConfirm, setShowConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
+  if (!show) return null;
+
   const idPed = pedido.id_pedido || pedido.idPedido;
   const total = pedido.monto_total ?? pedido.montoTotal ?? 0;
   const adelantado = pedido.monto_pago_adelantado ?? pedido.montoPagoAdelantado ?? 0;
   const saldoPendiente = total - adelantado;
 
-  const [showConfirm, setShowConfirm] = useState(false);
+  // Estilos de UI según tema
   const modalBg = isDark ? '#1a1a1c' : '#ffffff';
   const modalBorder = isDark ? '#334155' : '#cbd5e1';
   const resumenBg = isDark ? '#121214' : '#f1f5f9';
@@ -39,40 +41,23 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   const archivoBg = isDark ? '#121214' : '#f1f5f9';
   const botonAdjuntarBg = isDark ? '#1a1a1c' : '#f8fafc';
   const botonAdjuntarBorder = isDark ? '#38bdf8' : '#0284c7';
-  const botonAdjuntarText = isDark ? '#38bdf8' : '#0284c7'; 
+  const botonAdjuntarText = isDark ? '#38bdf8' : '#0284c7';
 
   useEffect(() => {
     const verificarCaja = async () => {
-      try {
-        const res = await apiFetch('http://localhost:8080/api/turnos/estado-caja');
-        if (res.ok) {
-          const text = await res.text(); 
-          if (!text || text.trim() === "") {
-            setCajaAbierta(false);
-          } else {
-            const turno = JSON.parse(text);
-            setCajaAbierta(turno !== null);
-          }
-        } else {
-          setCajaAbierta(false);
-        }
-      } catch (error) {
-        console.error("Error al comprobar el estado de la caja:", error);
-        setCajaAbierta(false);
-      }
       const estaAbierta = await PedidoPendienteService.verificarEstadoCaja();
       setCajaAbierta(estaAbierta);
     };
     verificarCaja();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
 
     if (cajaAbierta === false) {
       setErrorCajaModal({
         show: true,
-        mensaje: "La Caja No está Abierta. Por favor, inicie turno antes de continuar."
+        mensaje: "La Caja no está abierta. Por favor, inicie turno antes de continuar."
       });
       return;
     }
@@ -85,9 +70,13 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
       });
       return;
     }
-    
+
+    // Obtener ID del usuario activo desde la sesión
+    const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
+    const idUsuarioActivo = Number(userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1);
+
     try {
-      await onConfirm(tipoPago, montoNum, archivo);
+      await onConfirm(tipoPago, montoNum, archivo, idUsuarioActivo);
       onClose();
     } catch (err: any) {
       if (err.message && err.message.toLowerCase().includes('stock')) {
@@ -161,6 +150,7 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                   <option value="EFECTIVO">EFECTIVO</option>
                   <option value="TRANSFERENCIA">TRANSFERENCIA</option>
                   <option value="DEBITO">DÉBITO</option>
+                  <option value="CREDITO">CRÉDITO</option>
                 </select>
               </div>
 
@@ -312,9 +302,9 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                   type="button"
                   className="btn w-50 py-2 text-white fw-bold" 
                   style={{ backgroundColor: '#16a34a', border: 'none', borderRadius: '6px', fontSize: '0.95rem' }}
-                  onClick={(e) => {
+                  onClick={() => {
                     setShowConfirm(false);
-                    handleSubmit(e);
+                    handleSubmit();
                   }}
                 >
                   Sí, ingresar

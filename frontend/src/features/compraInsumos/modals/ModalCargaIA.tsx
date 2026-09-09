@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import type { ItemCompraInsumo } from '../types/compraInsumos';
-import { apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
+
+const API_IA_ANALIZAR = `${API_BASE_URL}/ia/analizar-comprobante`;
 
 interface ModalCargaIAProps {
   isOpen: boolean;
@@ -61,16 +63,22 @@ export const ModalCargaIA: React.FC<ModalCargaIAProps> = ({
     setAvisoMsg(null);
 
     const catalogos = {
-      insumos: insumos.map(i => ({ id: i.idInsumo || i.id, nombre: i.nombreInsumo })),
-      productos: productos.map(p => ({ id: p.idProducto, nombre: p.nombreProducto }))
-    };
+  insumos: insumos.map(i => ({ 
+    id: i.idInsumo || i.id_insumo || i.id, 
+    nombre: i.nombreInsumo || i.nombre_insumo 
+  })),
+  productos: productos.map(p => ({ 
+    id: p.idProducto || p.id_producto || p.id, 
+    nombre: p.nombreProducto || p.nombre_producto 
+  }))
+};
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('catalogos', JSON.stringify(catalogos));
 
     try {
-      const res = await apiFetch('http://localhost:8080/api/ia/analizar-comprobante', {
+      const res = await apiFetch(API_IA_ANALIZAR, {
         method: 'POST',
         body: formData
       });
@@ -115,7 +123,7 @@ export const ModalCargaIA: React.FC<ModalCargaIAProps> = ({
       return;
     }
 
-    const defaultUnidad = unidadesMedida.length > 0 ? unidadesMedida[0].idUnidad : undefined;
+    const defaultUnidad = unidadesMedida.length > 0 ? (unidadesMedida[0].idUnidad ?? unidadesMedida[0].id) : undefined;
 
     const itemsProcesados: ItemCompraInsumo[] = itemsValidos.map(item => {
       const cant = Number(item.cantidad) || 1;

@@ -15,14 +15,15 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [idPedido, setIdPedido] = useState<string | null>(null);
   const [fechaPlaceholder, setFechaPlaceholder] = useState('');
-  const [comprobanteImagen, setComprobanteImagen] = useState<string | null>(null);
+  
+  // Estado para gestionar únicamente el archivo seleccionado
+  const [archivoComprobante, setArchivoComprobante] = useState<File | null>(null);
   const [nombreArchivo, setNombreArchivo] = useState<string>('');
   
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
   const modalBg = isDark ? '#18181b' : '#ffffff';
-  // Borde verde aplicado al modal
   const modalBorder = '#22c55e'; 
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#e4e4e7' : '#334155';
@@ -48,12 +49,8 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
   const handleImagenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setArchivoComprobante(file);
       setNombreArchivo(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setComprobanteImagen(reader.result as string);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -67,6 +64,7 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
       return;
     }
 
+    // Se delega la responsabilidad de la subida a Supabase a `useCaja`
     onGuardar({
       monto: Number(monto),
       concepto: concepto.trim(),
@@ -74,14 +72,15 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
       categoria,
       metodoPago,
       idPedido: idPedido === "no-pedido" ? null : idPedido,
-      comprobanteImagen: metodoPago === 'TRANSFERENCIA' ? comprobanteImagen : null
+      comprobanteImagen: metodoPago === 'TRANSFERENCIA' ? archivoComprobante : null
     });
 
+    // Resetear formulario
     setMonto('');
     setConcepto('');
     setCategoria('INGRESO');
     setMetodoPago('EFECTIVO');
-    setComprobanteImagen(null);
+    setArchivoComprobante(null);
     setNombreArchivo('');
   };
 
@@ -176,7 +175,7 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
                     onChange={(e) => {
                       setMetodoPago(e.target.value);
                       if (e.target.value !== 'TRANSFERENCIA') {
-                        setComprobanteImagen(null);
+                        setArchivoComprobante(null);
                         setNombreArchivo('');
                       }
                     }}
@@ -230,7 +229,7 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
               </div>
 
               {/* Contenedor de Comprobante Adjuntado */}
-              {metodoPago === 'TRANSFERENCIA' && comprobanteImagen && (
+              {metodoPago === 'TRANSFERENCIA' && archivoComprobante && (
                 <div className="mt-3">
                   <div 
                     className="d-flex align-items-center justify-content-between p-2 rounded shadow-sm" 
@@ -242,14 +241,14 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
                     <div className="d-flex align-items-center gap-2 overflow-hidden">
                       <i className="bi bi-file-earmark-image text-primary fs-5"></i>
                       <span className="small text-truncate" style={{ color: labelColor, maxWidth: '280px' }}>
-                        {nombreArchivo || 'comprobante.png'}
+                        {nombreArchivo}
                       </span>
                     </div>
                     <button 
                       type="button" 
                       className="btn btn-sm btn-outline-danger border-0 p-1 d-flex align-items-center" 
                       onClick={() => {
-                        setComprobanteImagen(null);
+                        setArchivoComprobante(null);
                         setNombreArchivo('');
                       }}
                       title="Quitar comprobante"
@@ -287,7 +286,7 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
               >
                 <i className="bi bi-cloud-arrow-up fs-6"></i>
                 <span className="text-truncate" style={{ fontSize: '0.85rem' }}>
-                  {comprobanteImagen ? 'Cambiar Comprobante' : 'Vincular Comprobante'}
+                  {archivoComprobante ? 'Cambiar Comprobante' : 'Vincular Comprobante'}
                 </span>
                 <input 
                   type="file" 
@@ -299,7 +298,7 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
             )}
 
             <button 
-              className="btn btn-sm px-3 py-2 fw-bold border-0 shadow-sm" 
+              className="btn btn-sm px-3 py-2 fw-bold border-0 shadow-sm d-flex align-items-center justify-content-center gap-2" 
               style={{ 
                 backgroundColor: '#2b7a3e', 
                 color: '#ffffff', 

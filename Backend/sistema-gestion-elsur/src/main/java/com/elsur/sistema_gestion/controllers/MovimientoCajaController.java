@@ -2,6 +2,8 @@ package com.elsur.sistema_gestion.controllers;
 
 import com.elsur.sistema_gestion.models.MovimientoCaja;
 import com.elsur.sistema_gestion.services.MovimientoCajaService;
+import com.elsur.sistema_gestion.services.SupabaseStorageService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,9 @@ public class MovimientoCajaController {
 
     @Autowired
     private MovimientoCajaService movimientoCajaService;
+
+    @Autowired
+    private SupabaseStorageService supabaseStorageService;
 
     @GetMapping("/{id}")
     public ResponseEntity<MovimientoCaja> buscarPorId(@PathVariable Integer id) {
@@ -67,4 +72,28 @@ public class MovimientoCajaController {
     public ResponseEntity<Map<String, Double>> obtenerDesgloseArqueoPorTurno(@PathVariable Integer idTurno) {
     return ResponseEntity.ok(movimientoCajaService.obtenerDesgloseArqueoPorTurno(idTurno));
     }
+
+    @PostMapping(value = "/comprobante", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+public ResponseEntity<Map<String, String>> subirComprobante(
+        @RequestPart("archivo") org.springframework.web.multipart.MultipartFile archivo) {
+    try {
+        String path = supabaseStorageService.subirArchivo(archivo, "comprobantes");
+        return ResponseEntity.ok(Map.of("path", path));
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    }
+}
+
+@GetMapping("/comprobante/{nombreArchivo:.+}")
+public ResponseEntity<byte[]> verComprobante(@PathVariable String nombreArchivo) {
+    try {
+        byte[] datos = supabaseStorageService.descargarArchivo("comprobantes", nombreArchivo);
+        String contentType = supabaseStorageService.detectarContentType(nombreArchivo);
+        return ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                .body(datos);
+    } catch (Exception e) {
+        return ResponseEntity.notFound().build();
+    }
+}
 }

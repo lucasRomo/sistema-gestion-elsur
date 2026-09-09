@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../../../../Context/ThemeContext';
+import { verComprobantePedido } from '../../../../services/descargarArchivoProtegido';
 
 interface ModalAuditoriaPedidoProps {
   pedido: any;
@@ -26,21 +27,24 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
   const grayText = isDark ? '#a1a1aa' : '#64748b';
   const mutedBoxText = isDark ? 'rgba(255,255,255,0.5)' : '#2c3c52';
 
+  // Soportar múltiples nombres de array devueltos por la API (comprobantes, movimientos o cobros)
+  const listaCobros = pedido.comprobantes || pedido.movimientos || pedido.cobros || [];
+
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '1100px', width: '95%' }}>
         <div 
-  className="modal-content" 
-  style={{ 
-    backgroundColor: '#1a1a1c', 
-    border: '2px solid #248b05', 
-    borderRadius: '12px' 
-  }}
->
+          className="modal-content" 
+          style={{ 
+            backgroundColor: '#1a1a1c', 
+            border: '2px solid #248b05', 
+            borderRadius: '12px' 
+          }}
+        >
           
           <div className="modal-header border-0 pb-0">
             <h5 className="modal-title fw-bold" style={{ color: '#248b05' }}>
-              <i className="bi bi-shield-check me-2"></i>Auditoría Integral de Pedido #{pedido.id_pedido}
+              <i className="bi bi-shield-check me-2"></i>Auditoría Integral de Pedido #{pedido.id_pedido || pedido.id}
             </h5>
             <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
           </div>
@@ -61,7 +65,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                       className="font-monospace fw-bold" 
                       style={{ color: '#25d164', fontSize: '0.8rem' }}
                     >
-                      Pago Vinculada a Cuenta Corriente
+                      Pago Vinculado a Cuenta Corriente
                     </div>
                     <button 
                       type="button" 
@@ -80,7 +84,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                 )}
 
                 <div style={{ maxHeight: '800px', overflowY: 'auto' }}>
-                  {pedido.comprobantes && pedido.comprobantes.length > 0 ? (
+                  {listaCobros.length > 0 ? (
                     <table className="table-sm align-middle small text-white" style={{ backgroundColor: tableBg, borderCollapse: 'collapse', width: '100%' }}>
                       <thead>
                         <tr style={{ borderBottom: `1px solid ${theadBorder}`, color: grayText, fontSize: '0.75rem', textTransform: 'uppercase' }}>
@@ -91,19 +95,24 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                         </tr>
                       </thead>
                       <tbody>
-                        {[...pedido.comprobantes]
-                          .sort((a, b) => new Date(a.fechaCarga || a.fecha_carga || a.fecha).getTime() - new Date(b.fechaCarga || b.fecha_carga || b.fecha).getTime())
+                        {[...listaCobros]
+                          .sort((a, b) => {
+                            const fechaA = new Date(a.fechaCarga || a.fecha_carga || a.fecha || 0).getTime();
+                            const fechaB = new Date(b.fechaCarga || b.fecha_carga || b.fecha || 0).getTime();
+                            return fechaA - fechaB;
+                          })
                           .map((pago: any, idx: number, arrayOriginal: any[]) => {
                             const esUnico = arrayOriginal.length === 1;
                             const esPrimero = idx === 0;
 
                             const idCobro = pago.id_comprobante || pago.idComprobante || pago.id;
-                            const montoCobro = pago.montoPago || pago.monto_pago || pago.monto || 0;
+                            const montoCobro = pago.montoPago ?? pago.monto_pago ?? pago.monto ?? 0;
                             const tipoPagoCobro = pago.tipoPago || pago.tipo_pago || pago.metodoPago || 'EFECTIVO';
                             const fechaCobro = pago.fechaCarga || pago.fecha_carga || pago.fecha;
+                            const urlArchivo = pago.urlArchivoComprobante || pago.urlComprobante || pago.urlArchivo;
 
                             return (
-                              <tr key={idx} style={{ borderBottom: `1px solid ${rowBorder}` }}>
+                              <tr key={idCobro || idx} style={{ borderBottom: `1px solid ${rowBorder}` }}>
                                 <td className="px-3 py-3 font-monospace">#{idCobro || idx + 1}</td>
                                 <td className="py-3">
                                   <div className="d-flex align-items-center gap-1">
@@ -186,25 +195,17 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                                       <i className="bi bi-printer"></i>
                                     </button>
 
-                                    {pago.urlArchivoComprobante && (
-                                      <a 
-                                        href={`http://localhost:8080${pago.urlArchivoComprobante}`} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
-                                        className="btn btn-sm" 
+                                    {/* VISUALIZADOR DE ARCHIVO / COMPROBANTE ADJUNTO */}
+                                    {urlArchivo && (
+                                      <button
+                                        type="button"
+                                        onClick={() => verComprobantePedido(urlArchivo)}
+                                        className="btn btn-sm"
                                         title="Ver comprobante" 
-                                        style={{ 
-                                          backgroundColor: 'transparent', 
-                                          border: '1px solid #0cb7da', 
-                                          color: '#0cadce', 
-                                          padding: '2px 8px', 
-                                          borderRadius: '4px', 
-                                          fontSize: '0.9rem', 
-                                          textDecoration: 'none' 
-                                        }}
+                                        style={{ backgroundColor: 'transparent', border: '1px solid #0cb7da', color: '#0cadce', padding: '2px 8px', borderRadius: '4px', fontSize: '0.9rem' }}
                                       >
                                         <i className="bi bi-eye-fill"></i>
-                                      </a>
+                                      </button>
                                     )}
 
                                     {tipoPagoCobro === 'CUENTA_CORRIENTE' && (
@@ -244,10 +245,10 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                 </div>
 
                 <div className="mt-3 p-3 rounded" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-                  <div className="d-flex justify-content-between mb-1 text-white"><span>Monto Total:</span> <span className="fw-bold">${Number(pedido.monto_total || 0).toFixed(2)}</span></div>
-                  <div className="d-flex justify-content-between mb-1 text-white"><span>Total Abonado:</span> <span className="text-info-custom fw-bold">${Number(pedido.monto_pago_adelantado || 0).toFixed(2)}</span></div>
+                  <div className="d-flex justify-content-between mb-1 text-white"><span>Monto Total:</span> <span className="fw-bold">${Number(pedido.monto_total || pedido.montoTotal || 0).toFixed(2)}</span></div>
+                  <div className="d-flex justify-content-between mb-1 text-white"><span>Total Abonado:</span> <span className="text-info-custom fw-bold">${Number(pedido.monto_pago_adelantado || pedido.montoPagoAdelantado || 0).toFixed(2)}</span></div>
                   <div className="d-flex justify-content-between pt-2 border-top border-secondary text-white">
-                    <span>Restante / Saldo:</span> <span className="text-success fw-bold">${Number((pedido.monto_total || 0) - (pedido.monto_pago_adelantado || 0)).toFixed(2)}</span>
+                    <span>Restante / Saldo:</span> <span className="text-success fw-bold">${Number((pedido.monto_total || pedido.montoTotal || 0) - (pedido.monto_pago_adelantado || pedido.montoPagoAdelantado || 0)).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -259,10 +260,10 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                 </h6>
                 <div className="historial-timeline pe-2" style={{ maxHeight: '420px', overflowY: 'auto' }}>
                   {pedido.historiales && pedido.historiales.length > 0 ? ([...pedido.historiales]
-                    .sort((a, b) => new Date(a.fecha_cambio).getTime() - new Date(b.fecha_cambio).getTime())
+                    .sort((a, b) => new Date(a.fecha_cambio || a.fechaCambio).getTime() - new Date(b.fecha_cambio || b.fechaCambio).getTime())
                     .map((hist: any, index: number, arrayOriginal: any[]) => {
-                      const estAnt = hist.estado_anterior || '';
-                      const estNuv = hist.estado_nuevo || '';
+                      const estAnt = hist.estado_anterior || hist.estadoAnterior || '';
+                      const estNuv = hist.estado_nuevo || hist.estadoNuevo || '';
                       const esAsignacion = estAnt.startsWith('ASIGNADO:') || estNuv.startsWith('ASIGNADO:');
                       const esCancelado = estNuv.includes('CANCELADO');
                       const esDevueltoDirecto = estNuv.includes('DEVUELTO');
@@ -306,7 +307,6 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                       const formatearObservacion = (obs: string) => {
                         if (!obs) return '';
                         
-                        // Si es devolución, mantenemos la etiqueta adecuada sin forzar "Primera Observación"
                         if (/^Devolución \(Volver a Hacer\):/i.test(obs)) {
                           return obs.replace(/^Devolución \(Volver a Hacer\):/i, 'Devolución (Volver a Hacer):');
                         }
@@ -318,7 +318,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                       };
 
                       return (
-                        <div key={`hist-${hist.id_historial || index}`} className="d-flex gap-3 position-relative pb-4">
+                        <div key={`hist-${hist.id_historial || hist.idHistorial || index}`} className="d-flex gap-3 position-relative pb-4">
                           <div className="d-flex flex-column align-items-center flex-shrink-0 position-relative" style={{ width: '16px' }}>
                             {!esUltimo && (
                               <div 
@@ -348,7 +348,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                             {/* Fecha y Hora */}
                             <div className="text-secondary font-monospace small mb-1 d-flex align-items-center gap-1" style={{ fontSize: '0.80rem' }}>
                               <i className="bi bi-clock"></i>
-                              {new Date(hist.fecha_cambio).toLocaleString('es-AR', {
+                              {new Date(hist.fecha_cambio || hist.fechaCambio).toLocaleString('es-AR', {
                                 day: 'numeric', month: 'numeric', year: 'numeric',
                                 hour: '2-digit', minute: '2-digit', second: '2-digit'
                               })}
@@ -365,7 +365,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                               <span className="fw-semibold" style={{ color: colorTema }}>
                                 {hist.usuarioResponsable?.persona 
                                   ? `${hist.usuarioResponsable.persona.nombre} ${hist.usuarioResponsable.persona.apellido}` 
-                                  : (hist.usuarioResponsable?.nombre_usuario || '')}
+                                  : (hist.usuarioResponsable?.nombre_usuario || hist.usuarioResponsable?.nombreUsuario || '')}
                               </span>
                             </div>
                             {hist.observaciones && (

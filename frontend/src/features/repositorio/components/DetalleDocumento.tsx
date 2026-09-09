@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { DocumentoDigital } from '../types/Repositorio';
 import { repositorioService } from '../services/repositorioService';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 
 interface Props {
   documento: DocumentoDigital | null;
@@ -24,8 +25,10 @@ export const DetalleDocumento: React.FC<Props> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [cargandoPdf, setCargandoPdf] = useState(false);
+  const [imagenBlobUrl, setImagenBlobUrl] = useState<string | null>(null); // NUEVO
 
-  const ext = documento?.tipoArchivo?.toUpperCase();
+    const ext = documento?.tipoArchivo?.toUpperCase();
+
 
   const formatearTamano = (bytes: number) => {
     if (!bytes) return '0 KB';
@@ -77,6 +80,30 @@ export const DetalleDocumento: React.FC<Props> = ({
     };
   }, [documento, ext]);
 
+  useEffect(() => {
+    let urlActual: string | null = null;
+
+    const cargarImagen = async () => {
+      if (!documento?.urlArchivoLocal || !['JPG', 'JPEG', 'PNG'].includes(ext || '')) return;
+      try {
+        const response = await apiFetch(`${API_BASE_URL}/documentos-digital/archivo/${encodeURIComponent(documento.urlArchivoLocal)}`);
+        if (!response.ok) throw new Error('No se pudo obtener la imagen');
+        const blob = await response.blob();
+        urlActual = URL.createObjectURL(blob);
+        setImagenBlobUrl(urlActual);
+      } catch (error) {
+        console.error('Error al cargar la miniatura:', error);
+        setImagenBlobUrl(null);
+      }
+    };
+
+    cargarImagen();
+    return () => {
+      if (urlActual) URL.revokeObjectURL(urlActual);
+    };
+  }, [documento, ext]);
+
+
   return (
     <div
       className="card p-3 rounded-3 shadow-lg"
@@ -110,13 +137,17 @@ export const DetalleDocumento: React.FC<Props> = ({
                   )}
                   <canvas ref={canvasRef} className="shadow-sm rounded" style={{ display: cargandoPdf ? 'none' : 'block' }} />
                 </>
-              ) : ['JPG', 'JPEG', 'PNG'].includes(ext || '') ? (
-                <img
-                  src={repositorioService.getUrlArchivo(documento.urlArchivoLocal)}
-                  alt={documento.titulo}
-                  style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
-                />
-              ) : (
+              ) :  ['JPG', 'JPEG', 'PNG'].includes(ext || '') ? (
+      imagenBlobUrl ? (
+        <img
+          src={imagenBlobUrl}
+          alt={documento.titulo}
+          style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+        />
+      ) : (
+        <div className="spinner-border spinner-border-sm text-info" role="status"></div>
+      )
+    ) : (
                 <div className="text-center p-3 text-muted">
                   {getIconoArchivo(documento.tipoArchivo)}
                   <p className="mt-2 mb-0 small text-info fw-bold">{documento.nombreArchivoOriginal}</p>

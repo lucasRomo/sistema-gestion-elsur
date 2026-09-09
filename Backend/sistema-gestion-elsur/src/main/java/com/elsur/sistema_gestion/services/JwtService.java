@@ -49,4 +49,15 @@ public class JwtService {
         DecodedJWT jwt = JWT.decode(token);
         return jwt.getClaim("idUsuario").asLong();
     }
+
+    private static final long PORTON_EXPIRATION_TIME = 30 * 60 * 1000; // 30 minutos
+
+    public String generarTokenPorton() {
+    return JWT.create()
+            .withSubject("porton")
+            .withClaim("rol", "PORTON")
+            .withIssuedAt(new Date())
+            .withExpiresAt(new Date(System.currentTimeMillis() + PORTON_EXPIRATION_TIME))
+            .sign(Algorithm.HMAC256(SECRET_KEY));
+    }
 }

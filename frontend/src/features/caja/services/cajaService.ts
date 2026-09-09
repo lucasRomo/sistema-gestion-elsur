@@ -1,5 +1,6 @@
 import { API_BASE_URL, apiFetch } from '../../../config/api';
 
+
 export interface MovimientoCaja {
   id_movimiento?: number;
   idMovimiento?: number;
@@ -46,7 +47,7 @@ export interface NuevoMovimientoDTO {
   categoria?: string;
   idPedido?: string | null;
   metodoPago?: string;
-  comprobanteImagen?: string | null;
+  comprobanteImagen?: string | File | null;
 }
 
 export interface UsuarioCaja {
@@ -75,15 +76,49 @@ export interface Turno {
 }
 
 export const cajaService = {
-  // --- MÉTODOS DE COMPROBANTES Y URLS ---
   obtenerUrlComprobante: (url?: string | null): string => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('data:')) return url;
-    return `${API_BASE_URL.replace('/api', '')}${url.startsWith('/') ? '' : '/'}${url}`;
+    // Ya no es una ruta local /uploads/... sino un path de Supabase Storage
+    // servido por el backend detrás del login.
+    return `${API_BASE_URL}/movimientos-caja/comprobante/${encodeURIComponent(url)}`;
+  },
+
+  obtenerBlobComprobante: async (url?: string | null): Promise<string> => {
+  if (!url) throw new Error('Sin comprobante');
+  if (url.startsWith('data:')) return url; // ya es una preview local en base64
+
+  const path = url.startsWith('http')
+    ? url.substring(url.lastIndexOf('/') + 1) // por si ya viniera como URL completa
+    : url;
+
+  const response = await apiFetch(`/movimientos-caja/comprobante/${encodeURIComponent(path)}`);
+  if (!response.ok) throw new Error('No se pudo cargar el comprobante');
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+  },
+
+  subirComprobante: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('archivo', file);
+
+    const response = await apiFetch(`${API_BASE_URL}/movimientos-caja/comprobante`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err || 'Error al subir el comprobante');
+    }
+
+    const data = await response.json();
+    return data.path; // este es el valor que se guarda en comprobanteImagen
   },
 
   // --- MÉTODOS DE PEDIDOS ---
-  obtenerPedidoPorId: async (idPedido: number): Promise<any | null> => {
+    obtenerPedidoPorId: async (idPedido: number): Promise<any | null> => {
     try {
       const response = await fetch(`${API_BASE_URL}/pedidos/${idPedido}`);
       if (!response.ok) return null;
@@ -246,6 +281,4 @@ export const cajaService = {
 
 export const cajaServiceExtended = {
   ...cajaService,
-
-  
 };

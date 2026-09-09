@@ -3,9 +3,8 @@ import type { Producto } from '../../productos/types/Producto';
 import type { CartItem, Pedido } from '../../pedidos/general/types/Pedido';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
-import { apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 
-const API_BASE = 'http://localhost:8080/api';
 const MARGEN_MERMA_RESPALDO = 5;
 const TOLERANCIA_PRODUCTO_DIRECTO = 3;
 
@@ -32,7 +31,7 @@ export const useVentaRapida = () => {
 
   const fetchInsumos = async () => {
     try {
-      const response = await apiFetch(`${API_BASE}/insumos`);
+      const response = await apiFetch(`${API_BASE_URL}/insumos`);
       if (response.ok) {
         const data = await response.json();
         setInsumosCatalogo(data);
@@ -67,8 +66,8 @@ export const useVentaRapida = () => {
   const fetchProductos = async () => {
     try {
       const [resProductos, resRecetas] = await Promise.all([
-        apiFetch(`${API_BASE}/productos`),
-        apiFetch(`${API_BASE}/producto-insumo`)
+        apiFetch(`${API_BASE_URL}/productos`),
+        apiFetch(`${API_BASE_URL}/producto-insumo`)
       ]);
 
       if (resProductos.ok) {
@@ -96,13 +95,13 @@ export const useVentaRapida = () => {
 
   const fetchCategorias = async () => {
     try {
-      const response = await apiFetch(`${API_BASE}/categorias-cliente`);
+      const response = await apiFetch(`${API_BASE_URL}/categorias-cliente`);
       if (response.ok) {
         const data = await response.json();
         const categoriasNormalizadas = data.map((cat: any) => ({
           idCategoriaCliente: cat.idCategoria ?? cat.id_categoria ?? cat.idCategoriaCliente ?? cat.id,
           nombreCategoria: cat.nombre ?? cat.nombreCategoria ?? cat.nombre_categoria ?? 'Sin nombre',
-          porcentajeDescuento: cat.descuentoAutomatico ?? cat.descuento_automatico ?? cat.porcentajeDescuento ?? cat.descuento ?? 0
+          porcentajeDescuento: Number(cat.descuentoAutomatico ?? cat.descuento_automatico ?? cat.porcentajeDescuento ?? cat.descuento ?? 0)
         }));
         setCategorias(categoriasNormalizadas);
       }
@@ -113,7 +112,7 @@ export const useVentaRapida = () => {
 
   const fetchMaquinas = async () => {
     try {
-      const response = await apiFetch(`${API_BASE}/maquinas`);
+      const response = await apiFetch(`${API_BASE_URL}/maquinas`);
       if (response.ok) {
         const data = await response.json();
         setMaquinas(data);
@@ -125,7 +124,7 @@ export const useVentaRapida = () => {
 
   const fetchPedidosPendientes = async () => {
     try {
-      const response = await apiFetch(`${API_BASE}/pedidos`);
+      const response = await apiFetch(`${API_BASE_URL}/pedidos`);
       if (response.ok) {
         const data = await response.json();
         const ESTADOS_INACTIVOS = ['FINALIZADO', 'ENTREGADO', 'CANCELADO', 'COMPLETADO', 'RECHAZADO'];
@@ -316,7 +315,7 @@ export const useVentaRapida = () => {
     return id?.toString() === categoriaSeleccionadaId;
   });
   const porcentajeDescuento = categoriaActual
-    ? (categoriaActual.porcentajeDescuento ?? (categoriaActual as any).descuentoAutomatico ?? (categoriaActual as any).descuento_automatico ?? 0)
+    ? Number(categoriaActual.porcentajeDescuento ?? (categoriaActual as any).descuentoAutomatico ?? (categoriaActual as any).descuento_automatico ?? 0)
     : 0;
   const montoDescuento = (subtotalVenta * porcentajeDescuento) / 100;
   const totalFinal = subtotalVenta - montoDescuento;
@@ -333,7 +332,6 @@ export const useVentaRapida = () => {
       return;
     }
 
-    // 1. Validar Stock Bloqueante (saldo físico < 0)
     for (const item of elementosAfectados) {
       const saldoFisico = item.stockActual - item.cantTotalRequerida;
       if (saldoFisico < 0) {
@@ -348,7 +346,6 @@ export const useVentaRapida = () => {
       }
     }
 
-    // 2. Validar Stock Crítico (Respaldo de 5 unidades)
     const criticos: { nombre: string; tipo: string; quedaran: number; tolerancia: number; unidad: string }[] = [];
 
     for (const item of elementosAfectados) {
@@ -470,15 +467,16 @@ export const useVentaRapida = () => {
       let resCrear: Response;
       if (datosPago?.comprobanteFile) {
         const formData = new FormData();
-        formData.append('payload', JSON.stringify(payloadParaBackend));
+        const jsonBlob = new Blob([JSON.stringify(payloadParaBackend)], { type: 'application/json' });
+        formData.append('payload', jsonBlob);
         formData.append('comprobante', datosPago.comprobanteFile);
 
-        resCrear = await apiFetch(`${API_BASE}/pedidos`, {
+        resCrear = await apiFetch(`${API_BASE_URL}/pedidos`, {
           method: 'POST',
           body: formData
         });
       } else {
-        resCrear = await apiFetch(`${API_BASE}/pedidos`, {
+        resCrear = await apiFetch(`${API_BASE_URL}/pedidos`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payloadParaBackend)
@@ -492,7 +490,7 @@ export const useVentaRapida = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 300));
 
-      const resEstado = await apiFetch(`${API_BASE}/pedidos/${idPedido}/cambiar-estado`, {
+      const resEstado = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}/cambiar-estado`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

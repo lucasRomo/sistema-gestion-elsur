@@ -82,7 +82,7 @@ export const InformesHeader: React.FC<InformesHeaderProps> = ({
       {/* 2. CENTRO: Título */}
       <h2
         className="h5 mb-0 text-white font-monospace fw-bold tracking-wide text-center position-relative"
-        style={{ letterSpacing: '0.5px', fontSize: '2rem' }}
+        style={{ letterSpacing: '0.5px', fontSize: '2.5rem' }}
       >
         Métricas e Informes
       </h2>

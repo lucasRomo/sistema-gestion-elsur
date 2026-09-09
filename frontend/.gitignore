@@ -22,3 +22,17 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Variables de entorno y secretos
+.env
+.env.local
+.env.*.local
+**/.env.local
+
+# Archivos subidos por usuarios y backups — nunca versionar
+uploads/
+backups/
+materiales/
+
+# Configuración de IDE con credenciales en texto plano
+.vscode/launch.json

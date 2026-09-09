@@ -1,7 +1,6 @@
 package com.elsur.sistema_gestion.services;
 
 import com.elsur.sistema_gestion.models.DocumentoDigital;
-import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -20,5 +19,5 @@ public interface DocumentoDigitalService {
             MultipartFile archivo
     ) throws Exception;
     void eliminarLogico(Long id);
-    Resource cargarArchivoComoRecurso(String nombreArchivo) throws Exception;
+    byte[] descargarArchivo(String nombreArchivo) throws Exception;
 }

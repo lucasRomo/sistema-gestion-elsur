@@ -3,6 +3,7 @@ package com.elsur.sistema_gestion.services.impl;
 import com.elsur.sistema_gestion.models.*;
 import com.elsur.sistema_gestion.repositories.*;
 import com.elsur.sistema_gestion.services.PedidoService;
+import com.elsur.sistema_gestion.services.SupabaseStorageService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -26,6 +27,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Autowired private MovimientoCajaRepository cajaRepository;
     @Autowired private HistorialEstadoPedidoRepository historialRepository;
     @Autowired private ClienteRepository clienteRepository;
+    @Autowired private SupabaseStorageService supabaseStorageService;
 
     @Autowired private EmpleadoRepository empleadoRepository;
     @Autowired private AsignacionPedidoRepository asignacionRepository;
@@ -100,7 +102,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional
     public Pedido guardar(Pedido pedido, Integer idEmpleado, Integer idUsuario, String tipoPago, MultipartFile comprobante) {
-        boolean existeCajaAbierta = TurnoRepository.existsByEstadoAndFechaAperturaToday(EstadoTurno.ABIERTO);
+        boolean existeCajaAbierta = TurnoRepository.existsByEstado(EstadoTurno.ABIERTO);
         if (!existeCajaAbierta) { 
             throw new RuntimeException("La Caja No está Abierta. Por favor, inicie turno antes de continuar.");
         }
@@ -208,7 +210,7 @@ public class PedidoServiceImpl implements PedidoService {
                 }
                 movimiento.setComprobanteImagen(urlDeImagen);
 
-                Turno turnoActivo = TurnoRepository.findTurnoAbiertoHoy();
+                Turno turnoActivo = TurnoRepository.findFirstByEstado(EstadoTurno.ABIERTO).orElse(null);
                 movimiento.setTurno(turnoActivo);
 
                 Usuario usuarioResponsable = null;
@@ -333,13 +335,7 @@ public class PedidoServiceImpl implements PedidoService {
         MovimientoCaja movimientoAsociado = buscarMovimientoAsociado(comprobante, urlArchivo);
 
         if (urlArchivo != null && !urlArchivo.isEmpty()) {
-            try {
-                String nombreArchivo = urlArchivo.replace("/uploads/", "");
-                java.nio.file.Path ruta = java.nio.file.Paths.get("uploads").resolve(nombreArchivo);
-                java.nio.file.Files.deleteIfExists(ruta);
-            } catch (Exception e) {
-                System.err.println("No se pudo borrar el archivo físico: " + e.getMessage());
-            }
+        supabaseStorageService.eliminarArchivo("comprobantes", urlArchivo);
         }
 
         comprobante.setUrlArchivoComprobante(null);
@@ -516,7 +512,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional
     public Pedido agregarPago(Integer idPedido, Double monto, String tipoPago, String urlComprobante, Integer idUsuario) {
-        Turno turnoActivo = TurnoRepository.findTurnoAbiertoHoy();
+        Turno turnoActivo = TurnoRepository.findFirstByEstado(EstadoTurno.ABIERTO).orElse(null);
         if (turnoActivo == null) {
             throw new RuntimeException("La Caja No está Abierta. Por favor, inicie turno antes de registrar el cobro.");
         }
@@ -594,31 +590,16 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     private String guardarArchivoFisico(MultipartFile archivo) {
-        if (archivo == null || archivo.isEmpty()) {
-            return null;
-        }
-        try {
-            String carpetaDestino = "uploads/"; 
-            java.io.File directorio = new java.io.File(carpetaDestino);
-            
-            if (!directorio.exists()) {
-                directorio.mkdirs();
-            }
-
-            String nombreOriginal = archivo.getOriginalFilename();
-            String nombreSeguro = System.currentTimeMillis() + "_" + (nombreOriginal != null ? nombreOriginal.replaceAll("\\s+", "_") : "comprobante.png");
-            
-            java.nio.file.Path rutaCompleta = java.nio.file.Paths.get(carpetaDestino + nombreSeguro);
-            java.nio.file.Files.write(rutaCompleta, archivo.getBytes());
-
-            return "/uploads/" + nombreSeguro;
-            
-        } catch (Exception e) {
-            System.err.println("Error al guardar el comprobante físico: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
+    if (archivo == null || archivo.isEmpty()) {
+        return null;
     }
+    try {
+        return supabaseStorageService.subirArchivo(archivo, "comprobantes");
+    } catch (Exception e) {
+        System.err.println("Error al subir el comprobante a Supabase: " + e.getMessage());
+        e.printStackTrace();
+        return null;
+    }}
 
     @Override
     @Transactional
@@ -651,7 +632,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional
     public Pedido agregarPagoConArchivo(Integer idPedido, Double monto, String tipoPago, Integer idUsuario, MultipartFile comprobante) {
-        Turno turnoActivo = TurnoRepository.findTurnoAbiertoHoy();
+        Turno turnoActivo = TurnoRepository.findFirstByEstado(EstadoTurno.ABIERTO).orElse(null);
         if (turnoActivo == null) {
             throw new RuntimeException("La Caja No está Abierta. Por favor, inicie turno antes de registrar el cobro.");
         }
