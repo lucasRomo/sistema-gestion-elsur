@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Producto } from '../../../productos/types/Producto';
 import type { Pedido } from '../../general/types/Pedido';
 import type { Maquina } from '../../../maquinas/types/Maquina';
-import { apiFetch } from '../../../../config/api';
-
-const API_BASE_URL = 'http://localhost:8080/api'; 
+import { API_BASE_URL, apiFetch } from '../../../../config/api';
 
 export const useRegistrarPedido = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -37,17 +35,16 @@ export const useRegistrarPedido = () => {
         const rawRecetas = resProductoInsumo.ok ? await resProductoInsumo.json() : [];
         const rawPedidos = resPedidos.ok ? await resPedidos.json() : [];
 
-        // Filtrar únicamente los pedidos que estén vigentes o pendientes de descontar/completar
         const pendientes = rawPedidos.filter((p: any) => 
-        p.estado && (
-        p.estado.toUpperCase().includes('PENDIENTE') || 
-        p.estado.toUpperCase().includes('PROCESO') ||
-        p.estado.toUpperCase().includes('EN ESPERA')
-        ));
+          p.estado && (
+            p.estado.toUpperCase().includes('PENDIENTE') || 
+            p.estado.toUpperCase().includes('PROCESO') ||
+            p.estado.toUpperCase().includes('EN ESPERA')
+          )
+        );
 
         setPedidosPendientes(pendientes);
 
-        // Mapea y vincula la lista de insumos/receta a cada producto
         const productosConReceta = rawProductos.map((p: any) => {
           const receta = rawRecetas.filter((r: any) => 
             (r.idProducto ?? r.producto?.idProducto) === p.idProducto
@@ -85,17 +82,14 @@ export const useRegistrarPedido = () => {
     try {
       let respuesta: Response;
 
-      // 1. Si enviamos un archivo de comprobante, usamos FormData
       if (fileComprobante) {
         const formData = new FormData();
         
-        // Adjuntamos el JSON estructurado como un Blob con su respectivo tipo
         formData.append(
           'payload', 
           new Blob([JSON.stringify(payload)], { type: 'application/json' })
         );
         
-        // Adjuntamos el archivo físico del comprobante
         formData.append('comprobante', fileComprobante);
 
         respuesta = await apiFetch(`${API_BASE_URL}/pedidos`, {

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { cajaService, cajaServiceExtended } from '../services/cajaService';
+import { cajaService } from '../services/cajaService';
 import type { MovimientoCaja, DatosArqueo, NuevoMovimientoDTO, Turno } from '../services/cajaService';
 
 export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
@@ -11,12 +11,12 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
   const [datosArqueo, setDatosArqueo] = useState<DatosArqueo | null>(null);
 
   const fetchTotales = useCallback(async (idTurno: number, montoInicial: number = 0) => {
-  const data = await cajaService.obtenerTotalesPorTurno(idTurno);
-  if (data) {
-    setIngresosTurno(data.totalIngresos);
-    setEgresosTurno(data.totalEgresos);
-    setSaldoCaja(montoInicial + data.saldoActual);
-  }
+    const data = await cajaService.obtenerTotalesPorTurno(idTurno);
+    if (data) {
+      setIngresosTurno(data.totalIngresos);
+      setEgresosTurno(data.totalEgresos);
+      setSaldoCaja(montoInicial + data.saldoActual);
+    }
   }, []);
 
   const fetchMovimientos = useCallback(async (idTurno: number) => {
@@ -51,10 +51,10 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
   };
 
   const consultarArqueo = async () => {
-  if (!turnoActual) return null;
-  const data = await cajaService.obtenerDesgloseArqueoPorTurno(turnoActual.idTurno);
-  setDatosArqueo(data);
-  return data;
+    if (!turnoActual) return null;
+    const data = await cajaService.obtenerDesgloseArqueoPorTurno(turnoActual.idTurno);
+    setDatosArqueo(data);
+    return data;
   };
 
   const guardarMovimiento = async (data: NuevoMovimientoDTO) => {
@@ -66,20 +66,29 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
       throw new Error('No se detectó un usuario logueado activo.');
     }
 
+    let urlComprobante: string | null = null;
+
+    // Si viene un objeto File, lo subimos a Supabase Storage primero
+    if (data.comprobanteImagen instanceof File) {
+      urlComprobante = await cajaService.subirComprobante(data.comprobanteImagen);
+    } else if (typeof data.comprobanteImagen === 'string') {
+      urlComprobante = data.comprobanteImagen;
+    }
+
     const pad = (num: number) => String(num).padStart(2, '0');
     const ahora = new Date();
     const fechaMomento = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`;
 
     const nuevoMovimiento = {
-    monto: Number(data.monto),
-    tipoMovimiento: data.tipoMovimiento,
-    categoria: data.categoria || (data.tipoMovimiento === 'EGRESO' ? 'VARIOS' : 'VENTA'), 
-    descripcion: data.concepto,
-    metodoPago: data.metodoPago, 
-    comprobanteImagen: data.comprobanteImagen || null,
-    usuario: { idUsuario },
-    pedido: data.idPedido ? { idPedido: Number(data.idPedido) } : null,
-    fecha: fechaMomento
+      monto: Number(data.monto),
+      tipoMovimiento: data.tipoMovimiento,
+      categoria: data.categoria || (data.tipoMovimiento === 'EGRESO' ? 'VARIOS' : 'VENTA'), 
+      descripcion: data.concepto,
+      metodoPago: data.metodoPago, 
+      comprobanteImagen: urlComprobante,
+      usuario: { idUsuario },
+      pedido: data.idPedido ? { idPedido: Number(data.idPedido) } : null,
+      fecha: fechaMomento
     };
 
     await cajaService.guardarMovimiento(nuevoMovimiento);
@@ -95,21 +104,26 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     if (turnoActual) await fetchMovimientos(turnoActual.idTurno);
   };
 
-  
-
   const ajustarMovimiento = async (
     movimientoOriginal: MovimientoCaja,
     montoAjuste: number,
     tipoAjuste: 'INGRESO' | 'EGRESO',
     motivo: string,
     metodoPago: string = 'EFECTIVO',
-    comprobanteImagen?: string | null
+    comprobanteImagen?: string | File | null
   ) => {
     const usuarioGuardado = localStorage.getItem('usuario_logueado');
     const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
     const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario || 1;
 
     const idMovOriginal = movimientoOriginal.id_movimiento || movimientoOriginal.idMovimiento;
+
+    let urlComprobante: string | null = null;
+    if (comprobanteImagen instanceof File) {
+      urlComprobante = await cajaService.subirComprobante(comprobanteImagen);
+    } else if (typeof comprobanteImagen === 'string') {
+      urlComprobante = comprobanteImagen;
+    }
 
     const pad = (num: number) => String(num).padStart(2, '0');
     const ahora = new Date();
@@ -123,7 +137,7 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
       categoria: 'AJUSTE',
       descripcion: `[CORRECCIÓN Mov #${idMovOriginal || '-'}] ${motivo}`,
       metodoPago: metodoPago,
-      comprobanteImagen: comprobanteImagen || null,
+      comprobanteImagen: urlComprobante,
       usuario: { idUsuario },
       pedido: idPedidoRelacionado ? { idPedido: Number(idPedidoRelacionado) } : null,
       fecha: fechaMomento
@@ -144,20 +158,20 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
   };
 
   const cerrarCaja = async (montoReal: number, observaciones?: string) => {
-  if (!turnoActual) return false;
+    if (!turnoActual) return false;
 
-  const usuarioGuardado = localStorage.getItem('usuario_logueado');
-  const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
-  const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario;
+    const usuarioGuardado = localStorage.getItem('usuario_logueado');
+    const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario;
 
-  await cajaService.cerrarTurno(turnoActual.idTurno, montoReal, observaciones, idUsuario);
-  setCajaAbierta(false);
-  setTurnoActual(null);
-  setMovimientos([]);
-  setSaldoCaja(0);
-  setIngresosTurno(0);
-  setEgresosTurno(0);
-  return true;
+    await cajaService.cerrarTurno(turnoActual.idTurno, montoReal, observaciones, idUsuario);
+    setCajaAbierta(false);
+    setTurnoActual(null);
+    setMovimientos([]);
+    setSaldoCaja(0);
+    setIngresosTurno(0);
+    setEgresosTurno(0);
+    return true;
   };
 
   return {

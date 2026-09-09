@@ -38,7 +38,10 @@ export const guardarMaquinaAPI = async (maquina: Maquina & { observacion?: strin
     })
   });
 
-  if (!res.ok) throw new Error('No se pudo procesar la solicitud de la máquina.');
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || 'No se pudo procesar la solicitud de la máquina.');
+  }
 
   if (maquina.idMaquina && maquina.observacion) {
     try {
@@ -98,10 +101,16 @@ export const reportarFallaAPI = async (idMaquina: number, descripcion: string, p
     })
   });
 
-  if (!res.ok) throw new Error('Error al reportar la incidencia.');
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || 'Error al reportar la incidencia.');
+  }
 };
 
 export const eliminarMaquinaAPI = async (id: number): Promise<void> => {
   const res = await apiFetch(`${API_MAQUINAS}/${id}`, { method: 'DELETE' });
-  if (!res.ok) throw new Error('Error al eliminar la máquina.');
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || 'Error al eliminar la máquina.');
+  }
 };

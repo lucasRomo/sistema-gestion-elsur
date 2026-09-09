@@ -15,6 +15,7 @@ import { CajaView } from '../../features/caja/view/CajaView';
 import { RepositorioDigitalView } from '../../features/repositorio/view/RepositorioDigitalView';
 import { SidebarLayout } from '../../components/layouts/SidebarLayout';
 import { ProtectedRoute } from '../../components/common/ProtectedRoute';
+import { PortonGate } from '../../components/common/PortonGate'; // NUEVO
 import { MatrizPermisosView } from '../../features/matrizpermisos/view/MatrizPermisosView';
 import { ConfiguracionView } from '../../features/configuracion/views/ConfiguracionView';
 import { InformesView } from '../../features/informes/views/InformesView';
@@ -41,16 +42,27 @@ function App() {
       <TurnoProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<WelcomeView onIrARegistro={() => window.location.href='/registro'} onIrALogin={() => window.location.href='/login'} />} />
-            <Route path="/registro" element={<RegisterView onVolver={() => window.location.href='/'} />} />
+            <Route path="/" element={
+              <PortonGate>
+                <WelcomeView onIrARegistro={() => window.location.href='/registro'} onIrALogin={() => window.location.href='/login'} />
+              </PortonGate>
+            } />
+
+            <Route path="/registro" element={
+              <PortonGate>
+                <RegisterView onVolver={() => window.location.href='/'} />
+              </PortonGate>
+            } />
             
             <Route path="/login" element={
-              <LoginView 
-                onLoginExitoso={() => {
-                  window.location.href = isMobile ? '/informes' : '/dashboard';
-                }} 
-                onVolver={() => window.location.href='/'} 
-              />
+              <PortonGate>
+                <LoginView 
+                  onLoginExitoso={() => {
+                    window.location.href = isMobile ? '/informes' : '/dashboard';
+                  }} 
+                  onVolver={() => window.location.href='/'} 
+                />
+              </PortonGate>
             } />
 
             <Route path="/clientes" element={
@@ -74,14 +86,6 @@ function App() {
             <Route path="/productos" element={
               <ProtectedRoute permisoRequerido="Productos">
                 {renderLayout(<Productos />, "Productos")}
-              </ProtectedRoute>
-            } />
-
-            <Route path="/compra-insumos" element={
-              <ProtectedRoute permisoRequerido="Compra de Insumos">
-                <SidebarLayout activeItem="Compra de Insumos">
-                  <CompraInsumosView />
-                </SidebarLayout>
               </ProtectedRoute>
             } />
 

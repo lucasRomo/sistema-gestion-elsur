@@ -50,6 +50,8 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
   // Estados para modales de Comprobante e Imagen de Transferencia
   const [ticketSeleccionado, setTicketSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [imagenComprobanteModal, setImagenComprobanteModal] = useState<string | null>(null);
+  const [comprobanteBlobUrl, setComprobanteBlobUrl] = useState<string | null>(null);
+  const [cargandoComprobante, setCargandoComprobante] = useState(false);
 
   // Handler para obtener los datos requeridos por VistaTicketPagoModal usando informesService
   const handleVerTicket = async (m: any) => {
@@ -105,6 +107,30 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
 
     cargarTurnos();
   }, [isOpen]);
+
+  useEffect(() => {
+  let urlCreada: string | null = null;
+
+  if (imagenComprobanteModal) {
+    setCargandoComprobante(true);
+    informesService.obtenerBlobComprobante(imagenComprobanteModal)
+      .then((blobUrl) => {
+        urlCreada = blobUrl;
+        setComprobanteBlobUrl(blobUrl);
+      })
+      .catch((err) => {
+        console.error('Error al cargar comprobante:', err);
+        setComprobanteBlobUrl(null);
+      })
+      .finally(() => setCargandoComprobante(false));
+  } else {
+    setComprobanteBlobUrl(null);
+  }
+
+  return () => {
+    if (urlCreada) URL.revokeObjectURL(urlCreada);
+  };
+  }, [imagenComprobanteModal]);
 
   const handleVerDetalle = async (turno: Turno) => {
     setTurnoSeleccionado(turno);
@@ -596,13 +622,19 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
                 <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={() => setImagenComprobanteModal(null)}></button>
               </div>
               <div className="text-center p-2">
-                <img 
-                  src={informesService.obtenerUrlComprobante(imagenComprobanteModal)} 
-                  alt="Comprobante Transferencia" 
-                  className="img-fluid rounded shadow" 
-                  style={{ maxHeight: '70vh', objectFit: 'contain' }} 
-                />
-              </div>
+  {cargandoComprobante ? (
+    <p className="opacity-50 py-4 m-0" style={{ color: textMuted }}>Cargando comprobante...</p>
+  ) : comprobanteBlobUrl ? (
+    <img
+      src={comprobanteBlobUrl}
+      alt="Comprobante Transferencia"
+      className="img-fluid rounded shadow"
+      style={{ maxHeight: '70vh', objectFit: 'contain' }}
+    />
+  ) : (
+    <p className="text-danger py-4 m-0">No se pudo cargar el comprobante.</p>
+  )}
+</div>
               <div className="text-end mt-2">
                 <button className="btn btn-secondary btn-sm" onClick={() => setImagenComprobanteModal(null)}>Cerrar</button>
               </div>

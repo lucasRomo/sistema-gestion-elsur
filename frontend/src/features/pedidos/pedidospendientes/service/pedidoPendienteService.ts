@@ -1,5 +1,6 @@
-import { apiFetch } from '../../../../config/api';
-const API_URL = 'http://localhost:8080/api/pedidos';
+import { API_BASE_URL, apiFetch } from '../../../../config/api';
+
+const API_URL = `${API_BASE_URL}/pedidos`;
 
 export const PedidoPendienteService = {
   /**
@@ -18,12 +19,12 @@ export const PedidoPendienteService = {
    */
   verificarEstadoCaja: async (): Promise<boolean> => {
     try {
-      const res = await fetch('http://localhost:8080/api/turnos/estado-caja');
+      const res = await apiFetch(`${API_BASE_URL}/turnos/estado-caja`);
       if (!res.ok) return false;
       const text = await res.text();
-      if (!text || text.trim() === "") return false;
+      if (!text || text.trim() === "" || text === "null") return false;
       const turno = JSON.parse(text);
-      return turno !== null;
+      return turno !== null && typeof turno === 'object' && 'idTurno' in turno;
     } catch (error) {
       console.error("Error al comprobar el estado de la caja:", error);
       return false;
@@ -108,7 +109,7 @@ export const PedidoPendienteService = {
   },
 
   obtenerRecetaProducto: async (idProducto: number): Promise<any[]> => {
-    const response = await fetch(`http://localhost:8080/api/producto-insumo/producto/${idProducto}`);
+    const response = await apiFetch(`${API_BASE_URL}/producto-insumo/producto/${idProducto}`);
     if (!response.ok) {
       throw new Error(`Error al obtener la receta del producto ${idProducto}`);
     }
@@ -203,7 +204,7 @@ export const PedidoPendienteService = {
    * Actualiza el límite de crédito configurado para un cliente.
    */
   actualizarLimiteCredito: async (idCliente: number, nuevoLimite: number): Promise<any> => {
-    const response = await apiFetch(`http://localhost:8080/api/clientes/${idCliente}/limite-credito`, {
+    const response = await apiFetch(`${API_BASE_URL}/clientes/${idCliente}/limite-credito`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ limiteCredito: nuevoLimite })

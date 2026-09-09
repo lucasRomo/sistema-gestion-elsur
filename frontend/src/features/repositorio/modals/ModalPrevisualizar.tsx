@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { DocumentoDigital } from '../types/Repositorio';
-import { repositorioService } from '../services/repositorioService';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 
 interface Props {
   show: boolean;
@@ -19,6 +19,39 @@ export const ModalPrevisualizar: React.FC<Props> = ({
   cardBg,
   isDarkMode,
 }) => {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [cargando, setCargando] = useState(false);
+
+  useEffect(() => {
+    let urlActual: string | null = null;
+
+    const cargarArchivo = async () => {
+      if (!documento?.urlArchivoLocal) return;
+      setCargando(true);
+      try {
+        const response = await apiFetch(`${API_BASE_URL}/documentos-digital/archivo/${encodeURIComponent(documento.urlArchivoLocal)}`);
+        if (!response.ok) throw new Error('No se pudo obtener el archivo');
+        const blob = await response.blob();
+        urlActual = URL.createObjectURL(blob);
+        setBlobUrl(urlActual);
+      } catch (error) {
+        console.error('Error al cargar la previsualización:', error);
+        setBlobUrl(null);
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    if (show && documento) {
+      cargarArchivo();
+    }
+
+    // Liberamos el blob anterior al cerrar el modal o cambiar de documento
+    return () => {
+      if (urlActual) URL.revokeObjectURL(urlActual);
+    };
+  }, [show, documento]);
+
   if (!show || !documento) return null;
 
   const ext = documento.tipoArchivo?.toUpperCase();
@@ -39,9 +72,13 @@ export const ModalPrevisualizar: React.FC<Props> = ({
           </div>
 
           <div className="modal-body p-0 flex-grow-1 bg-black d-flex justify-content-center align-items-center">
-            {ext === 'PDF' ? (
+            {cargando ? (
+              <div className="spinner-border text-info" role="status"></div>
+            ) : !blobUrl ? (
+              <p className="text-white">No se pudo cargar el archivo.</p>
+            ) : ext === 'PDF' ? (
               <iframe
-                src={repositorioService.getUrlArchivo(documento.urlArchivoLocal)}
+                src={blobUrl}
                 title={documento.titulo}
                 width="100%"
                 height="100%"
@@ -49,7 +86,7 @@ export const ModalPrevisualizar: React.FC<Props> = ({
               />
             ) : ['JPG', 'JPEG', 'PNG'].includes(ext || '') ? (
               <img
-                src={repositorioService.getUrlArchivo(documento.urlArchivoLocal)}
+                src={blobUrl}
                 alt={documento.titulo}
                 style={{ maxHeight: '90vh', maxWidth: '100%', objectFit: 'contain' }}
               />
@@ -58,12 +95,11 @@ export const ModalPrevisualizar: React.FC<Props> = ({
                 <i className="bi bi-file-earmark-word text-primary display-1 mb-3"></i>
                 <h4>Previsualización directa no soportada para archivos Office ({documento.tipoArchivo}).</h4>
                 <a
-                  href={repositorioService.getUrlArchivo(documento.urlArchivoLocal)}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={blobUrl}
+                  download={documento.nombreArchivoOriginal || documento.titulo}
                   className="btn btn-outline-info mt-2 text-white"
                 >
-                  Descargar / Abrir Archivo
+                  Descargar Archivo
                 </a>
               </div>
             )}

@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { verComprobantePedido } from '../../../../services/descargarArchivoProtegido';
 
 interface ModalGestionarComprobantesProps {
   pedido: any;
@@ -133,66 +134,53 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
                           </td>
                           <td>
                             <div className="d-flex justify-content-center gap-2">
-  {/* Botón Imprimir Ticket de Cobro específico */}
-  <button
-    type="button"
-    className="btn btn-sm btn-outline-warning d-flex align-items-center gap-1"
-    style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
-    title="Imprimir Ticket de Cobro"
-    onClick={() => {
-      if (onVerTicket) {
-        onVerTicket(pedido, {
-          id: idCobro,
-          monto: montoCobro,
-          metodoPago: tipoPagoCobro,
-          fecha: fechaCobro
-        });
-      }
-    }}
-  >
-    <i className="bi bi-printer"></i> Ticket
-  </button>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-warning d-flex align-items-center gap-1"
+                                style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
+                                title="Imprimir Ticket de Cobro"
+                                onClick={() => {
+                                  if (onVerTicket) {
+                                    onVerTicket(pedido, {
+                                      id: idCobro,
+                                      monto: montoCobro,
+                                      metodoPago: tipoPagoCobro,
+                                      fecha: fechaCobro
+                                    });
+                                  }
+                                }}
+                              >
+                                <i className="bi bi-printer"></i> Ticket
+                              </button>
 
-  {esDigital && !tieneArchivo && (
-    <button
-      type="button"
-      className="btn btn-sm d-flex align-items-center gap-1 btn-outline-purple"
-      style={{ 
-        border: '1px solid #8e45e0', 
-        color: '#ffffff',
-        '--bs-btn-hover-color': '#ffffff', 
-        '--bs-btn-active-color': '#ffffff' 
-      } as React.CSSProperties}
-      onClick={() => abrirSelectorArchivo(idCobro)}
-    >
-      <i className="bi bi-file-earmark-arrow-up"></i> Vincular
-    </button>
-  )}
+                              {esDigital && !tieneArchivo && (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm d-flex align-items-center gap-1 btn-outline-purple"
+                                  style={{ 
+                                    border: '1px solid #8e45e0', 
+                                    color: '#ffffff',
+                                    '--bs-btn-hover-color': '#ffffff', 
+                                    '--bs-btn-active-color': '#ffffff' 
+                                  } as React.CSSProperties}
+                                  onClick={() => abrirSelectorArchivo(idCobro)}
+                                >
+                                  <i className="bi bi-file-earmark-arrow-up"></i> Vincular
+                                </button>
+                              )}
 
-  {tieneArchivo && (
-    <>
-      <a
-        href={`http://localhost:8080${urlArchivo}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="btn btn-sm btn-outline-info"
-        style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
-        title="Ver Comprobante Adjunto"
-      >
-        <i className="bi bi-eye"></i>
-      </a>
-      <button
-        type="button"
-        className="btn btn-sm btn-outline-danger"
-        style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
-        title="Eliminar Comprobante"
-        onClick={() => onEliminarComprobante(idCobro)}
-      >
-        <i className="bi bi-trash"></i>
-      </button>
-    </>
-  )}
-</div>
+                              {tieneArchivo && (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-info"
+                                  style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
+                                  title="Ver Comprobante Adjunto"
+                                  onClick={() => verComprobantePedido(urlArchivo)}
+                                >
+                                  <i className="bi bi-eye"></i>
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );

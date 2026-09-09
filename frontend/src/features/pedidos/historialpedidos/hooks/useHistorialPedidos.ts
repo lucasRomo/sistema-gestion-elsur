@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { apiFetch } from '../../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../../config/api';
 
 export const useHistorialPedidos = () => {
   const [pedidos, setPedidos] = useState<any[]>([]);
@@ -8,11 +8,9 @@ export const useHistorialPedidos = () => {
   const cargarHistorial = async () => {
     setCargando(true);
     try {
-      // Ajustá este endpoint según mapee tu backend para traer el histórico global
-      const response = await apiFetch('http://localhost:8080/api/pedidos');
+      const response = await apiFetch(`${API_BASE_URL}/pedidos`);
       if (response.ok) {
         const data = await response.json();
-        // Ordenamos por fecha de creación descendentemente (más recientes primero)
         const ordenados = data.sort((a: any, b: any) => 
           new Date(b.fecha_creacion || b.id_pedido).getTime() - new Date(a.fecha_creacion || a.id_pedido).getTime()
         );
@@ -21,7 +19,7 @@ export const useHistorialPedidos = () => {
         console.error('Error al traer el historial de la API.');
       }
     } catch (error) {
-      console.error('Error de conexión con Spring Boot:', error);
+      console.error('Error de conexión con la API:', error);
     } finally {
       setCargando(false);
     }

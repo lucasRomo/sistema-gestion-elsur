@@ -1,9 +1,7 @@
 import type { Producto } from '../../productos/types/Producto';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
-import { apiFetch } from '../../../config/api';
-
-const API_BASE = 'http://localhost:8080/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 
 export interface EstadoCajaNotificacion {
   cajaAbierta: boolean;
@@ -39,25 +37,25 @@ interface PedidoBackend {
 
 export const ventaRapidaService = {
   async getProductosActivos(): Promise<Producto[]> {
-    const res = await apiFetch(`${API_BASE}/productos`);
+    const res = await apiFetch(`${API_BASE_URL}/productos`);
     if (!res.ok) throw new Error('Error al obtener productos');
     const data: Producto[] = await res.json();
     return data.filter((p) => p.estado === 'Activo');
   },
 
   async getCategorias(): Promise<CategoriaCliente[]> {
-    const res = await apiFetch(`${API_BASE}/categorias-cliente`);
+    const res = await apiFetch(`${API_BASE_URL}/categorias-cliente`);
     if (!res.ok) throw new Error('Error al obtener categorías');
     const data = await res.json();
     return data.map((cat: any) => ({
       idCategoriaCliente: cat.idCategoria ?? cat.id_categoria ?? cat.idCategoriaCliente ?? cat.id,
       nombreCategoria: cat.nombre ?? cat.nombreCategoria ?? cat.nombre_categoria ?? 'Sin nombre',
-      porcentajeDescuento: cat.descuentoAutomatico ?? cat.descuento_automatico ?? cat.porcentajeDescuento ?? cat.descuento ?? 0
+      porcentajeDescuento: Number(cat.descuentoAutomatico ?? cat.descuento_automatico ?? cat.porcentajeDescuento ?? cat.descuento ?? 0)
     }));
   },
 
   async getMaquinas(): Promise<Maquina[]> {
-    const res = await apiFetch(`${API_BASE}/maquinas`);
+    const res = await apiFetch(`${API_BASE_URL}/maquinas`);
     if (!res.ok) throw new Error('Error al obtener máquinas');
     return res.json();
   },
@@ -68,16 +66,17 @@ export const ventaRapidaService = {
     nombreCategoria?: string;
     detalles: any[];
     idUsuario: number;
+    tipoPago?: string;
+    comprobanteFile?: File | null;
   }) {
     const fechaActualIso = new Date().toISOString().slice(0, 19);
 
-    // 1. Crear Pedido
     const payloadPedido = {
       pedido: {
         cliente: { id_cliente: 1 },
-        fecha_finalizacion: fechaActualIso,
+        fecha_entrega_estimada: fechaActualIso,
         monto_total: payload.montoTotal,
-        monto_pago_adelantado: 0,
+        monto_pago_adelantado: payload.montoTotal,
         es_cuenta_corriente: false,
         es_presupuesto: false,
         observaciones: `Venta Rápida ${payload.porcentajeDescuento > 0 ? `(Categoría: ${payload.nombreCategoria} - ${payload.porcentajeDescuento}% Desc.)` : ''}`,
@@ -85,36 +84,37 @@ export const ventaRapidaService = {
       },
       idEmpleado: payload.idUsuario,
       idUsuario: payload.idUsuario,
-      tipoPago: 'EFECTIVO'
+      tipoPago: payload.tipoPago || 'EFECTIVO'
     };
 
-    const resCrear = await apiFetch(`${API_BASE}/pedidos`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payloadPedido)
-    });
+    let resCrear: Response;
+
+    if (payload.comprobanteFile) {
+      const formData = new FormData();
+      const jsonBlob = new Blob([JSON.stringify(payloadPedido)], { type: 'application/json' });
+      formData.append('payload', jsonBlob);
+      formData.append('comprobante', payload.comprobanteFile);
+
+      resCrear = await apiFetch(`${API_BASE_URL}/pedidos`, {
+        method: 'POST',
+        body: formData
+      });
+    } else {
+      resCrear = await apiFetch(`${API_BASE_URL}/pedidos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payloadPedido)
+      });
+    }
+
     if (!resCrear.ok) throw new Error(await resCrear.text());
     const pedidoGuardado = await resCrear.json();
     const idPedido = pedidoGuardado.id_pedido || pedidoGuardado.idPedido;
 
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    // 2. Registrar Pago en Caja
-    const formDataPago = new FormData();
-    formDataPago.append("payload", JSON.stringify({
-      monto: payload.montoTotal,
-      tipoPago: 'EFECTIVO',
-      idUsuario: payload.idUsuario
-    }));
-
-    const resPago = await apiFetch(`${API_BASE}/pedidos/${idPedido}/pagos`, {
-      method: 'POST',
-      body: formDataPago
-    });
-    if (!resPago.ok) throw new Error(await resPago.text() || "Error al registrar cobro en caja.");
-
-    // 3. Cambiar estado a FINALIZADO
-    const resEstado = await apiFetch(`${API_BASE}/pedidos/${idPedido}/cambiar-estado`, {
+    // Cambiar estado a FINALIZADO
+    const resEstado = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}/cambiar-estado`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -123,6 +123,7 @@ export const ventaRapidaService = {
         idUsuario: payload.idUsuario
       })
     });
+    
     if (!resEstado.ok) throw new Error(await resEstado.text() || "Error al actualizar estado.");
 
     return pedidoGuardado;
@@ -131,7 +132,7 @@ export const ventaRapidaService = {
   // --- MÉTODOS DE NOTIFICACIONES ---
 
   async getEstadoCajaNotificacion(): Promise<EstadoCajaNotificacion> {
-    const resCaja = await fetch(`${API_BASE}/turnos/estado-caja`);
+    const resCaja = await apiFetch(`${API_BASE_URL}/turnos/estado-caja`);
     if (!resCaja.ok) {
       return { cajaAbierta: false, datosTurno: null, ingresosTurno: 0, egresosTurno: 0 };
     }
@@ -146,7 +147,7 @@ export const ventaRapidaService = {
     let egresosTurno = 0;
 
     try {
-      const resTotales = await fetch(`${API_BASE}/movimientos-caja/totales`);
+      const resTotales = await apiFetch(`${API_BASE_URL}/movimientos-caja/totales`);
       if (resTotales.ok) {
         const dataTotales = await resTotales.json();
         ingresosTurno = dataTotales.totalIngresos || 0;
@@ -165,7 +166,7 @@ export const ventaRapidaService = {
   },
 
   async getPedidosUrgentesNotificacion(): Promise<PedidoNotificacion[]> {
-    const resPedidos = await fetch(`${API_BASE}/pedidos`);
+    const resPedidos = await apiFetch(`${API_BASE_URL}/pedidos`);
     if (!resPedidos.ok) throw new Error("Error al consultar pedidos");
 
     const dataPedidos: PedidoBackend[] = await resPedidos.json();

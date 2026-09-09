@@ -1,32 +1,30 @@
 import type { DocumentoDigital, AreaCurso, Institucion } from '../types/Repositorio';
-import { apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 import * as pdfjsLib from 'pdfjs-dist';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
-const API_BASE = 'http://localhost:8080/api';
-
 export const repositorioService = {
   async getDocumentos(): Promise<DocumentoDigital[]> {
-    const res = await apiFetch(`${API_BASE}/documentos-digital`);
+    const res = await apiFetch(`${API_BASE_URL}/documentos-digital`);
     if (!res.ok) throw new Error('Error al obtener documentos');
     return res.json();
   },
 
   async getAreas(): Promise<AreaCurso[]> {
-    const res = await apiFetch(`${API_BASE}/areas-curso`);
+    const res = await apiFetch(`${API_BASE_URL}/areas-curso`);
     if (!res.ok) throw new Error('Error al obtener áreas/cátedras');
     return res.json();
   },
 
   async getInstituciones(): Promise<Institucion[]> {
-    const res = await apiFetch(`${API_BASE}/instituciones`);
+    const res = await apiFetch(`${API_BASE_URL}/instituciones`);
     if (!res.ok) throw new Error('Error al obtener instituciones');
     return res.json();
   },
 
   async crearInstitucion(nombreInstitucion: string, tipoInstitucion?: string): Promise<Institucion> {
-    const res = await apiFetch(`${API_BASE}/instituciones`, {
+    const res = await apiFetch(`${API_BASE_URL}/instituciones`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombreInstitucion, tipoInstitucion }),
@@ -36,7 +34,7 @@ export const repositorioService = {
   },
 
   async crearArea(nombreArea: string, idInstitucion: number): Promise<AreaCurso> {
-    const res = await apiFetch(`${API_BASE}/areas-curso`, {
+    const res = await apiFetch(`${API_BASE_URL}/areas-curso`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombreArea, institucion: { idInstitucion } }),
@@ -46,7 +44,7 @@ export const repositorioService = {
   },
 
   async subirDocumento(formData: FormData): Promise<DocumentoDigital> {
-    const res = await apiFetch(`${API_BASE}/documentos-digital`, {
+    const res = await apiFetch(`${API_BASE_URL}/documentos-digital`, {
       method: 'POST',
       body: formData,
     });
@@ -55,24 +53,22 @@ export const repositorioService = {
   },
 
   async eliminarDocumento(id: number): Promise<void> {
-    const res = await apiFetch(`${API_BASE}/documentos-digital/${id}`, {
+    const res = await apiFetch(`${API_BASE_URL}/documentos-digital/${id}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Error al eliminar el documento');
   },
 
-  getUrlArchivo: (nombreArchivo?: string) => {
-  if (!nombreArchivo) return '';
-  return `http://localhost:8080/api/documentos-digital/archivo/${encodeURIComponent(nombreArchivo)}`;
-},
-
-async renderizarPaginaPdf(
+  async renderizarPaginaPdf(
     nombreArchivoLocal: string,
     canvas: HTMLCanvasElement,
     container: HTMLDivElement
   ): Promise<void> {
-    const url = repositorioService.getUrlArchivo(nombreArchivoLocal);
-    const loadingTask = pdfjsLib.getDocument({ url });
+    const response = await apiFetch(`${API_BASE_URL}/documentos-digital/archivo/${encodeURIComponent(nombreArchivoLocal)}`);
+    if (!response.ok) throw new Error('No se pudo obtener el PDF');
+    const arrayBuffer = await response.arrayBuffer();
+
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
     const pdf = await loadingTask.promise;
     const page = await pdf.getPage(1);
 
@@ -92,10 +88,6 @@ async renderizarPaginaPdf(
     canvas.width = viewport.width;
     canvas.height = viewport.height;
 
-    await page.render({
-      canvasContext: context,
-      viewport: viewport,
-      canvas: canvas,
-    }).promise;
+    await page.render({ canvasContext: context, viewport, canvas }).promise;
   }
 };

@@ -79,18 +79,18 @@ export const CompraInsumosView: React.FC = () => {
 
   const handleSelectInsumo = (val: string) => {
     setIdInsumoSel(val);
-    const ins = insumos.find((i: any) => String(i.idInsumo || i.id) === String(val));
+    const ins = insumos.find((i: any) => String(i.id_insumo || i.idInsumo || i.id) === String(val));
     if (ins) {
       setPrecioUnitario(String(ins.precio || 0));
-      setFactorConversion(String(ins.factorConversion || 1));
+      setFactorConversion(String(ins.factor_conversion || ins.factorConversion || 1));
     }
   };
 
   const handleSelectProducto = (val: string) => {
     setIdProductoSel(val);
-    const prod = productos.find((p: any) => String(p.idProducto) === String(val));
+    const prod = productos.find((p: any) => String(p.id_producto || p.idProducto || p.id) === String(val));
     if (prod) {
-      setPrecioUnitario(String(prod.precioBase || 0));
+      setPrecioUnitario(String(prod.precio_base || prod.precioBase || 0));
       setFactorConversion('1');
     }
   };
@@ -107,7 +107,7 @@ export const CompraInsumosView: React.FC = () => {
         if (!nombreNuevo.trim()) return setAvisoModal('Debe ingresar el nombre del nuevo insumo.');
 
         const nombreLimpio = nombreNuevo.trim().toLowerCase();
-        const yaExiste = insumos.some((i: any) => (i.nombreInsumo || '').trim().toLowerCase() === nombreLimpio);
+        const yaExiste = insumos.some((i: any) => (i.nombre_insumo || i.nombreInsumo || '').trim().toLowerCase() === nombreLimpio);
         if (yaExiste) {
           return setAvisoModal(`Ya existe un insumo llamado "${nombreNuevo.trim()}". Seleccionalo desde "Insumo Existente" en vez de crearlo de nuevo.`);
         }
@@ -126,9 +126,11 @@ export const CompraInsumosView: React.FC = () => {
     if (tipoItem === 'INSUMO') {
       itemNombre = esNuevoInsumo
         ? nombreNuevo.trim()
-        : insumos.find((i: any) => String(i.idInsumo || i.id) === String(idInsumoSel))?.nombreInsumo || '';
+        : insumos.find((i: any) => String(i.id_insumo || i.idInsumo || i.id) === String(idInsumoSel))?.nombre_insumo ||
+          insumos.find((i: any) => String(i.id_insumo || i.idInsumo || i.id) === String(idInsumoSel))?.nombreInsumo || '';
     } else {
-      itemNombre = productos.find((p: any) => String(p.idProducto) === String(idProductoSel))?.nombreProducto || '';
+      itemNombre = productos.find((p: any) => String(p.id_producto || p.idProducto || p.id) === String(idProductoSel))?.nombre_producto ||
+        productos.find((p: any) => String(p.id_producto || p.idProducto || p.id) === String(idProductoSel))?.nombreProducto || '';
     }
 
     const subtotal = Number((cantNum * precioNum).toFixed(2));
@@ -199,8 +201,17 @@ export const CompraInsumosView: React.FC = () => {
     setLoading(true);
     try {
       const resumenItems = itemsCompra.map(i => `${i.nombreInsumo} (${i.tipoItem}) x${i.cantidadEmpaquetada}`).join(', ');
-      const provSeleccionado = proveedores.find(p => String(p.idProveedor) === idProveedorSel);
-      const textoProveedor = provSeleccionado ? ` - Prov: ${provSeleccionado.nombreComercial}` : '';
+      
+      // ✅ FIX: Búsqueda del proveedor tolerante a id_proveedor, idProveedor e id
+      // ✅ Búsqueda tolerante a camelCase, snake_case e id
+const provSeleccionado = proveedores.find(
+  (p) => String(p.idProveedor || (p as any).id_proveedor || (p as any).id) === idProveedorSel
+);
+
+// ✅ Concatenación tolerante a tipos
+const textoProveedor = provSeleccionado
+  ? ` - Prov: ${provSeleccionado.nombreComercial || (provSeleccionado as any).nombre_comercial || ''}`
+  : '';
 
       const datosCompra: DatosCompraInsumo = {
         montoTotal: montoTotalNum,
@@ -249,15 +260,15 @@ export const CompraInsumosView: React.FC = () => {
   };
 
   const opcionesInsumos: OptionItem[] = insumos.map(i => ({
-    id: i.idInsumo || i.id,
-    label: i.nombreInsumo,
-    sublabel: `Stock Bultos: ${i.stockEmpaquetado || 0} - $${i.precio}`
+    id: i.id_insumo || i.idInsumo || i.id,
+    label: i.nombre_insumo || i.nombreInsumo,
+    sublabel: `Stock Bultos: ${i.stock_empaquetado || i.stockEmpaquetado || 0} - $${i.precio}`
   }));
 
   const opcionesProductos: OptionItem[] = productos.map(p => ({
-    id: p.idProducto,
-    label: p.nombreProducto,
-    sublabel: `Stock Actual: ${p.stock || 0} - $${p.precioBase}`
+    id: p.id_producto || p.idProducto || p.id,
+    label: p.nombre_producto || p.nombreProducto,
+    sublabel: `Stock Actual: ${p.stock || 0} - $${p.precio_base || p.precioBase || p.precio || 0}`
   }));
 
   return (
@@ -403,7 +414,9 @@ export const CompraInsumosView: React.FC = () => {
                       >
                         <option value="">-- Seleccionar --</option>
                         {unidadesMedida.map((u: any) => (
-                          <option key={u.idUnidad} value={u.idUnidad}>{u.nombre}</option>
+                          <option key={u.id_unidad || u.idUnidad || u.id} value={u.id_unidad || u.idUnidad || u.id}>
+                            {u.nombre}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -418,7 +431,9 @@ export const CompraInsumosView: React.FC = () => {
                       >
                         <option value="">-- Seleccionar --</option>
                         {unidadesMedida.map((u: any) => (
-                          <option key={u.idUnidad} value={u.idUnidad}>{u.nombre}</option>
+                          <option key={u.id_unidad || u.idUnidad || u.id} value={u.id_unidad || u.idUnidad || u.id}>
+                            {u.nombre}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -516,9 +531,9 @@ export const CompraInsumosView: React.FC = () => {
                 onChange={(e) => setIdProveedorSel(e.target.value)}
               >
                 <option value="">-- No especificado --</option>
-                {proveedores.map((p) => (
-                  <option key={p.idProveedor} value={p.idProveedor}>
-                    {p.nombreComercial}
+                {proveedores.map((p: any) => (
+                  <option key={p.id_proveedor || p.idProveedor || p.id} value={p.id_proveedor || p.idProveedor || p.id}>
+                    {p.nombre_comercial || p.nombreComercial}
                   </option>
                 ))}
               </select>

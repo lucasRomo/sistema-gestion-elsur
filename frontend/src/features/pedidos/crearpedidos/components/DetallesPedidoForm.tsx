@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Pedido, CartItem } from '../../general/types/Pedido';
 import { VistaTicketPagoModal } from '../../../../components/modals/VistaTicketPagoModal';
+import { PedidoPendienteService } from '../../pedidospendientes/service/pedidoPendienteService';
 
 interface Props {
   clientes: any[];
@@ -10,8 +11,27 @@ interface Props {
   categoriaNombre?: string;
   carrito: CartItem[];
   onVolver: () => void;
-  onGuardar: (payload: { pedido: Pedido; idEmpleado: number; tipoPago: string; fileComprobante?: File | null }) => void;
+  onGuardar: (payload: { 
+    pedido: Pedido; 
+    idEmpleado: number; 
+    idUsuario?: number; 
+    tipoPago: string; 
+    fileComprobante?: File | null 
+  }) => void;
 }
+
+/**
+ * Devuelve la fecha/hora actual en el formato que espera un
+ * <input type="datetime-local"> ("YYYY-MM-DDTHH:mm"), respetando la hora
+ * LOCAL del usuario (no UTC). Sin este ajuste de offset, toISOString()
+ * devuelve la hora en UTC y en Argentina (UTC-3) el mínimo quedaría 3 horas
+ * adelantado respecto a la hora real, bloqueando horarios válidos.
+ */
+const obtenerFechaHoraActualLocal = (): string => {
+  const ahora = new Date();
+  const offsetMs = ahora.getTimezoneOffset() * 60000;
+  return new Date(ahora.getTime() - offsetMs).toISOString().slice(0, 16);
+};
 
 export const DetallesPedidoForm: React.FC<Props> = ({ 
   clientes, 
@@ -34,6 +54,11 @@ export const DetallesPedidoForm: React.FC<Props> = ({
   const [comprobanteFile, setComprobanteFile] = useState<File | null>(null);
   const [mostrarPreviewTicket, setMostrarPreviewTicket] = useState(false);
 
+  // Se calcula una sola vez al montar el formulario: valor mínimo permitido
+  // para el picker de fecha/hora de entrega (bloquea visualmente elegir
+  // algo anterior al momento en que se abrió el formulario).
+  const [minFechaEntrega] = useState<string>(() => obtenerFechaHoraActualLocal());
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const empleadosActivos = empleados.filter((emp) => {
@@ -44,30 +69,27 @@ export const DetallesPedidoForm: React.FC<Props> = ({
   useEffect(() => {
     const fetchPedidosPendientes = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/pedidos');
-        if (response.ok) {
-          const data = await response.json();
-          const conteo: Record<number, number> = {};
+        const data = await PedidoPendienteService.obtenerTodos();
+        const conteo: Record<number, number> = {};
 
-          data.forEach((ped: any) => {
-            const estadoUpper = String(ped.estado || '').toUpperCase();
-            const estaPendiente = !['FINALIZADO', 'CANCELADO', 'ENTREGADO', 'PRESUPUESTO'].includes(estadoUpper);
+        data.forEach((ped: any) => {
+          const estadoUpper = String(ped.estado || '').toUpperCase();
+          const estaPendiente = !['FINALIZADO', 'CANCELADO', 'ENTREGADO', 'PRESUPUESTO'].includes(estadoUpper);
 
-            if (estaPendiente) {
-              if (Array.isArray(ped.asignaciones) && ped.asignaciones.length > 0) {
-                ped.asignaciones.forEach((asig: any) => {
-                  const empId = asig.empleado?.idEmpleado ?? asig.empleado?.id_empleado ?? asig.idEmpleado;
-                  if (empId) conteo[empId] = (conteo[empId] || 0) + 1;
-                });
-              } else if (ped.empleado) {
-                const empId = ped.empleado.idEmpleado ?? ped.empleado.id_empleado ?? ped.empleado.id;
+          if (estaPendiente) {
+            if (Array.isArray(ped.asignaciones) && ped.asignaciones.length > 0) {
+              ped.asignaciones.forEach((asig: any) => {
+                const empId = asig.empleado?.idEmpleado ?? asig.empleado?.id_empleado ?? asig.idEmpleado;
                 if (empId) conteo[empId] = (conteo[empId] || 0) + 1;
-              }
+              });
+            } else if (ped.empleado) {
+              const empId = ped.empleado.idEmpleado ?? ped.empleado.id_empleado ?? ped.empleado.id;
+              if (empId) conteo[empId] = (conteo[empId] || 0) + 1;
             }
-          });
+          }
+        });
 
-          setPedidosPorEmpleado(conteo);
-        }
+        setPedidosPorEmpleado(conteo);
       } catch (error) {
         console.error("Error al consultar carga laboral:", error);
       }
@@ -112,6 +134,25 @@ export const DetallesPedidoForm: React.FC<Props> = ({
       return;
     }
 
+    // Validación de la fecha de entrega: no puede ser anterior al momento
+    // actual. Se recalcula "ahora" en este punto (no se reutiliza
+    // minFechaEntrega) para cubrir el caso de que el formulario haya
+    // quedado abierto un buen rato antes de confirmar. Se da 1 minuto de
+    // margen para no rechazar por el propio tiempo que tarda el submit.
+    if (estado !== 'PRESUPUESTO') {
+      if (!fechaEntrega) {
+        alert("Por favor, seleccione una fecha y hora estimada de entrega.");
+        return;
+      }
+
+      const fechaEntregaMs = new Date(fechaEntrega).getTime();
+      const margenMs = 60 * 1000;
+      if (fechaEntregaMs < Date.now() - margenMs) {
+        alert("La fecha y hora de entrega estimada no puede ser anterior al momento actual.");
+        return;
+      }
+    }
+
     const detallesFormateados = carrito.map(item => ({
       producto: { idProducto: item.producto.idProducto! },
       cantidad: item.cantidad,
@@ -130,6 +171,10 @@ export const DetallesPedidoForm: React.FC<Props> = ({
       ? ` [Descuento aplicado: ${porcentajeDescuento}% - Cat: ${categoriaNombre}]` 
       : (categoriaNombre ? ` [Cat: ${categoriaNombre}]` : '');
 
+    // Recuperación del usuario logueado en la sesión
+    const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
+    const idUsuarioActivo = Number(userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1);
+
     const nuevoPedido: Pedido = {
       cliente: { id_cliente: Number(clienteId) },
       detalles: detallesFormateados,
@@ -146,6 +191,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
     onGuardar({
       pedido: nuevoPedido,
       idEmpleado: Number(empleadoId),
+      idUsuario: idUsuarioActivo,
       tipoPago: tipoPago, 
       fileComprobante: comprobanteFile 
     });
@@ -207,7 +253,14 @@ export const DetallesPedidoForm: React.FC<Props> = ({
 
           <div className="col-12">
             <label className="form-label small fw-bold">Fecha y Hora Estimada de Entrega:</label>
-            <input type="datetime-local" className="form-control bg-dark text-white border-secondary" required={estado !== 'PRESUPUESTO'} value={fechaEntrega} onChange={(e) => setFechaEntrega(e.target.value)} />
+            <input
+              type="datetime-local"
+              className="form-control bg-dark text-white border-secondary"
+              required={estado !== 'PRESUPUESTO'}
+              min={minFechaEntrega}
+              value={fechaEntrega}
+              onChange={(e) => setFechaEntrega(e.target.value)}
+            />
           </div>
 
           <div className="col-md-6">

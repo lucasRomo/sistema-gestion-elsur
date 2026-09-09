@@ -1,5 +1,6 @@
-import { apiFetch } from '../../../../config/api';
-const API_URL = 'http://localhost:8080/api/pedidos';
+import { API_BASE_URL, apiFetch } from '../../../../config/api';
+
+const API_URL = `${API_BASE_URL}/pedidos`;
 
 export const historialPedidoService = {
   /**
@@ -22,7 +23,6 @@ export const historialPedidoService = {
     observaciones: string, 
     idUsuario: number
   ): Promise<any> => {
-    // CORRECCIÓN: La URL es /cambiar-estado y la clave es nuevoEstado
     const response = await apiFetch(`${API_URL}/${idPedido}/cambiar-estado`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },

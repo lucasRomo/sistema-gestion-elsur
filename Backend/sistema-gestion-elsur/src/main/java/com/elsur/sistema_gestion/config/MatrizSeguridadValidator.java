@@ -29,34 +29,54 @@ public class MatrizSeguridadValidator implements AuthorizationManager<RequestAut
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public AuthorizationDecision authorize(Supplier<? extends Authentication> authenticationSupplier, RequestAuthorizationContext context) {
-        Authentication auth = authenticationSupplier.get();
-        HttpServletRequest request = context.getRequest();
+@Transactional(readOnly = true)
+public AuthorizationDecision authorize(Supplier<? extends Authentication> authenticationSupplier, RequestAuthorizationContext context) {
+    Authentication auth = authenticationSupplier.get();
+    HttpServletRequest request = context.getRequest();
 
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            return new AuthorizationDecision(false);
-        }
-
-        String username = auth.getName();
-        
-        // Obtener la ruta limpia descartando Context Path
-        String path = request.getServletPath();
-        if (path == null || path.isEmpty()) {
-            path = request.getRequestURI();
-        }
-        
-        // Normalizar trailing slash
-        if (path.length() > 1 && path.endsWith("/")) {
-            path = path.substring(0, path.length() - 1);
-        }
-
-        String metodo = request.getMethod();
-
-        boolean permitido = evaluarPermisoEnBaseDeDatos(username, path, metodo);
-
-        return new AuthorizationDecision(permitido);
+    if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+        return new AuthorizationDecision(false);
     }
+
+    // Obtener la ruta limpia descartando Context Path
+    String path = request.getServletPath();
+    if (path == null || path.isEmpty()) {
+        path = request.getRequestURI();
+    }
+
+    // Normalizar trailing slash
+    if (path.length() > 1 && path.endsWith("/")) {
+        path = path.substring(0, path.length() - 1);
+    }
+
+    String metodo = request.getMethod();
+
+    // Token del "portón": no corresponde a ningún usuario real de la tabla,
+    // solo habilita el mínimo necesario para poder registrarse.
+    boolean esPorton = auth.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_PORTON"));
+    if (esPorton) {
+        return new AuthorizationDecision(evaluarPermisoPorton(path, metodo));
+    }
+
+    String username = auth.getName();
+
+    boolean permitido = evaluarPermisoEnBaseDeDatos(username, path, metodo);
+
+    return new AuthorizationDecision(permitido);
+}
+
+private boolean evaluarPermisoPorton(String path, String metodo) {
+    if ("GET".equalsIgnoreCase(metodo)) {
+        return pathMatcher.match("/api/tipos-documento/**", path)
+            || pathMatcher.match("/api/usuarios/exists", path);
+    }
+    if ("POST".equalsIgnoreCase(metodo)) {
+        return pathMatcher.match("/api/usuarios", path)
+            || pathMatcher.match("/api/empleados", path);
+    }
+    return false;
+}
 
     private boolean evaluarPermisoEnBaseDeDatos(String username, String path, String metodo) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByNombreUsuario(username);

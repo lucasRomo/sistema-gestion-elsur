@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Usuario } from '../../../types/Usuario';
-import { API_BASE_URL } from '../../../config/api'; // Ajustá la profundidad si tus carpetas difieren
+import { API_BASE_URL, apiFetch } from '../../../config/api'; // Ajustá la profundidad si tus carpetas difieren
 
 export const useRegister = () => {
   const [personaData, setPersonaData] = useState({
@@ -50,11 +50,11 @@ export const useRegister = () => {
     };
 
     try {
-      const responseUsuario = await fetch(`${API_BASE_URL}/usuarios`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nuevoUsuario)
-      });
+      const responseUsuario = await apiFetch('/usuarios', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(nuevoUsuario)
+});
 
       if (responseUsuario.ok) {
         const usuarioGuardado: Usuario = await responseUsuario.json();
@@ -73,11 +73,11 @@ export const useRegister = () => {
           persona: { idPersona: usuarioGuardado.persona?.idPersona }
         };
 
-        const responseEmpleado = await fetch(`${API_BASE_URL}/empleados`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(nuevoEmpleado)
-        });
+        const responseEmpleado = await apiFetch('/empleados', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(nuevoEmpleado)
+});
 
         if (responseEmpleado.ok) {
           if (esPrimerAdmin) {
