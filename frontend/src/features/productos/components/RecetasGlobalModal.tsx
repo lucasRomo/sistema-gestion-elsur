@@ -33,8 +33,6 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
   useEffect(() => {
     if (show) {
       setCargando(true);
-      apiFetch('http://localhost:8080/api/producto-insumo')
-        .then(res => res.json())
       getTodasLasRecetas()
         .then((data: any[]) => {
           const ids = new Set<number>();

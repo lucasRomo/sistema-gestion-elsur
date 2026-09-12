@@ -72,11 +72,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
 
         if (idProd && !mapa[idProd]) {
           try {
-            const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${idProd}`);
-            if (res.ok) {
-              const data = await res.json();
-              mapa[idProd] = data;
-            }
             const data = await PedidoPendienteService.obtenerRecetaProducto(idProd);
             mapa[idProd] = data;
           } catch (e) {

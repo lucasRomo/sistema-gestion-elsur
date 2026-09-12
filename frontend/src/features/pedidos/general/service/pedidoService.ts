@@ -109,5 +109,44 @@ export const pedidoService = {
       throw new Error(errorText || "Error al actualizar el límite de crédito.");
     }
     return true;
+  },
+
+  /**
+   * Obtiene la carga de trabajo actual de los empleados contando sus pedidos pendientes
+   */
+  obtenerCargaTrabajoEmpleados: async (): Promise<Record<number, number>> => {
+    try {
+      const response = await apiFetch(`${API_BASE_URL}/pedidos`);
+      if (!response.ok) return {};
+
+      const data = await response.json();
+      const conteo: Record<number, number> = {};
+
+      data.forEach((ped: any) => {
+        const estadoUpper = String(ped.estado || '').toUpperCase();
+        const estaPendiente = !['FINALIZADO', 'CANCELADO', 'ENTREGADO', 'PRESUPUESTO'].includes(estadoUpper);
+
+        if (estaPendiente) {
+          if (Array.isArray(ped.asignaciones) && ped.asignaciones.length > 0) {
+            ped.asignaciones.forEach((asig: any) => {
+              const empId = asig.empleado?.idEmpleado ?? asig.empleado?.id_empleado ?? asig.idEmpleado;
+              if (empId) {
+                conteo[empId] = (conteo[empId] || 0) + 1;
+              }
+            });
+          } else if (ped.empleado) {
+            const empId = ped.empleado.idEmpleado ?? ped.empleado.id_empleado ?? ped.empleado.id;
+            if (empId) {
+              conteo[empId] = (conteo[empId] || 0) + 1;
+            }
+          }
+        }
+      });
+
+      return conteo;
+    } catch (error) {
+      console.error("Error al consultar carga de trabajo de empleados:", error);
+      return {};
+    }
   }
 };

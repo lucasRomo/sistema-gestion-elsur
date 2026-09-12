@@ -1,8 +1,8 @@
 import type { Proveedor } from '../types/Proveedor';
-import { apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
 
-const API_URL = 'http://localhost:8080/api/proveedores';
-const API_TIPOS_URL = 'http://localhost:8080/api/tipos-proveedor';
+const API_URL = `${API_BASE_URL}/proveedores`;
+const API_TIPOS_URL = `${API_BASE_URL}/tipos-proveedor`;
 
 export const getProveedores = async (): Promise<Proveedor[]> => {
   const res = await apiFetch(API_URL);
@@ -36,13 +36,13 @@ export const guardarProveedor = async (proveedor: Proveedor) => {
 /* --- MÉTODOS PARA TIPOS / CATEGORÍAS DE PROVEEDOR --- */
 
 export const getTiposProveedor = async (): Promise<any[]> => {
-  const res = await fetch(API_TIPOS_URL);
+  const res = await apiFetch(API_TIPOS_URL);
   if (!res.ok) throw new Error("Error al obtener tipos de proveedor");
   return res.json();
 };
 
 export const crearTipoProveedor = async (descripcion: string): Promise<any> => {
-  const res = await fetch(API_TIPOS_URL, {
+  const res = await apiFetch(API_TIPOS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ descripcion })
@@ -52,7 +52,7 @@ export const crearTipoProveedor = async (descripcion: string): Promise<any> => {
 };
 
 export const eliminarTipoProveedor = async (id: number): Promise<void> => {
-  const res = await fetch(`${API_TIPOS_URL}/${id}`, {
+  const res = await apiFetch(`${API_TIPOS_URL}/${id}`, {
     method: 'DELETE'
   });
   if (!res.ok) throw new Error("Error al eliminar tipo de proveedor");

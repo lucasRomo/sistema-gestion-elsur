@@ -57,11 +57,6 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
 
   const cargarInsumos = async () => {
     try {
-      const res = await apiFetch('http://localhost:8080/api/insumos');
-      if (res.ok) {
-        const data = await res.json();
-        setInsumosDisponibles(data);
-      }
       const data = await getInsumos();
       setInsumosDisponibles(data);
     } catch (e) {
@@ -71,17 +66,6 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
 
   const cargarRecetaDelProducto = async () => {
     try {
-      const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`);
-      if (res.ok) {
-        const data = await res.json();
-        const listaMapeada = data.map((pi: any) => ({
-          idInsumo: pi.insumo?.idInsumo || pi.id?.idInsumo,
-          nombreInsumo: pi.insumo?.nombreInsumo || 'Insumo',
-          unidadMedida: obtenerNombreUnidad(pi.insumo?.unidadMedida),
-          cantidadConsumo: pi.cantidadConsumo
-        }));
-        setRecetaActual(listaMapeada);
-      }
       if (!producto.idProducto) return;
       const data = await getRecetaPorProducto(producto.idProducto);
       const listaMapeada = data.map((pi: any) => ({
@@ -148,17 +132,6 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
         cantidadConsumo: item.cantidadConsumo
       }));
 
-      const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        onClose();
-      } else {
-        alert('Ocurrió un error al guardar la receta.');
-      }
       await guardarRecetaProducto(producto.idProducto, payload);
       onClose();
     } catch (e) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Insumo, UnidadMedida } from '../types/Insumo';
+import { getUnidadesMedida, getProveedores, getInsumos } from '../services/insumoService';
 import type { Proveedor } from '../../proveedores/types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
 import { GestionUnidadesModal } from './GestionUnidadesModal';
@@ -59,16 +60,13 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   });
 
   const cargarUnidadesMedida = async () => {
-    try {
-      const res = await apiFetch('http://localhost:8080/api/unidades-medida');
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) setUnidadesMedida(data);
-      }
-    } catch (err) {
-      console.error("No se pudieron cargar las unidades desde el servidor:", err);
-      setUnidadesMedida([]);
-    }
+  try {
+    const data = await getUnidadesMedida();
+    if (Array.isArray(data)) setUnidadesMedida(data);
+  } catch (err) {
+    console.error("No se pudieron cargar las unidades desde el servidor:", err);
+    setUnidadesMedida([]);
+  }
   };
 
   const validarNombreDuplicado = () => {
@@ -91,31 +89,24 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   };
 
   useEffect(() => {
-    if (show) {
-      const cargarDatosIníciales = async () => {
-        try {
-          const [resProv, resIns] = await Promise.all([
-            apiFetch('http://localhost:8080/api/proveedores'),
-            apiFetch('http://localhost:8080/api/insumos')
-          ]);
+  if (show) {
+    const cargarDatosIníciales = async () => {
+      try {
+        const [dataProv, dataIns] = await Promise.all([
+          getProveedores(),
+          getInsumos()
+        ]);
 
-          if (resProv.ok) {
-            const dataProv = await resProv.json();
-            if (Array.isArray(dataProv)) setProveedores(dataProv);
-          }
+        if (Array.isArray(dataProv)) setProveedores(dataProv);
+        if (Array.isArray(dataIns)) setInsumosExistentes(dataIns);
+      } catch (error) {
+        console.error("Error al cargar los datos iniciales del modal:", error);
+      }
+    };
 
-          if (resIns.ok) {
-            const dataIns = await resIns.json();
-            if (Array.isArray(dataIns)) setInsumosExistentes(dataIns);
-          }
-        } catch (error) {
-          console.error("Error al cargar los datos iniciales del modal:", error);
-        }
-      };
-
-      cargarDatosIníciales();
-      cargarUnidadesMedida();
-    }
+    cargarDatosIníciales();
+    cargarUnidadesMedida();
+  }
   }, [show]);
 
   useEffect(() => {

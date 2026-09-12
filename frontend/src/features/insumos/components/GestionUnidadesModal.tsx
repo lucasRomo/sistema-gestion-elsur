@@ -50,44 +50,34 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
 
   if (!show) return null;
 
-  const handleAgregar = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const nombreLimpio = nuevoNombre.trim();
-    if (!nombreLimpio) return;
+ const handleAgregar = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const nombreLimpio = nuevoNombre.trim();
+  if (!nombreLimpio) return;
 
-    const existeDuplicado = unidades.some(
-      u => u.nombre?.trim().toLowerCase() === nombreLimpio.toLowerCase()
-    );
+  const existeDuplicado = unidades.some(
+    u => u.nombre?.trim().toLowerCase() === nombreLimpio.toLowerCase()
+  );
 
-    if (existeDuplicado) {
-      setError(`Ya existe una unidad de medida llamada "${nombreLimpio}".`);
-      return;
-    }
+  if (existeDuplicado) {
+    setError(`Ya existe una unidad de medida llamada "${nombreLimpio}".`);
+    return;
+  }
 
-    try {
-      setCargando(true);
-      setError(null);
-      const res = await apiFetch('http://localhost:8080/api/unidades-medida', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: nombreLimpio })
-      });
+  try {
+    setCargando(true);
+    setError(null);
+    await crearUnidadMedida(nombreLimpio);
 
-      if (!res.ok) {
-        const errorMsg = await res.text();
-        throw new Error(errorMsg || 'Error al guardar la unidad de medida');
-      }
-      await crearUnidadMedida(nombreLimpio);
-
-      setNuevoNombre('');
-      onActualizar();
-      setMensajeExito("Unidad de medida agregada con éxito");
-      setMostrarModalExito(true);
-    } catch (err: any) {
-      setError(err.message || 'Error al conectar con el servidor');
-    } finally {
-      setCargando(false);
-    }
+    setNuevoNombre('');
+    onActualizar();
+    setMensajeExito("Unidad de medida agregada con éxito");
+    setMostrarModalExito(true);
+  } catch (err: any) {
+    setError(err.message || 'Error al conectar con el servidor');
+  } finally {
+    setCargando(false);
+  }
   };
 
   const solicitarEliminar = (idUnidad?: number) => {
@@ -97,30 +87,25 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
   };
 
   const confirmarEliminacion = async () => {
-    if (!idEliminar) return;
+  if (!idEliminar) return;
 
-    try {
-      setCargando(true);
-      setError(null);
-      const res = await apiFetch(`http://localhost:8080/api/unidades-medida/${idEliminar}`, {
-        method: 'DELETE'
-      });
+  try {
+    setCargando(true);
+    setError(null);
+    await eliminarUnidadMedida(idEliminar);
 
-      if (!res.ok) throw new Error('No se pudo eliminar la unidad. Es posible que esté asignada a un insumo.');
-      await eliminarUnidadMedida(idEliminar);
+    setMostrarModalConfirmar(false);
+    setIdEliminar(null);
+    onActualizar();
 
-      setMostrarModalConfirmar(false);
-      setIdEliminar(null);
-      onActualizar();
-
-      setMensajeExito("Unidad de medida eliminada con éxito");
-      setMostrarModalExito(true);
-    } catch (err: any) {
-      setMostrarModalConfirmar(false);
-      setError(err.message || 'Error al eliminar');
-    } finally {
-      setCargando(false);
-    }
+    setMensajeExito("Unidad de medida eliminada con éxito");
+    setMostrarModalExito(true);
+  } catch (err: any) {
+    setMostrarModalConfirmar(false);
+    setError(err.message || 'Error al eliminar');
+  } finally {
+    setCargando(false);
+  }
   };
 
   return (

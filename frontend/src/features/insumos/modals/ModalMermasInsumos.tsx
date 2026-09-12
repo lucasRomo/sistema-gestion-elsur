@@ -3,6 +3,7 @@ import type { Insumo } from '../types/Insumo';
 import { mermaService, type MermaEntity } from '../../../services/mermaService';
 import { useTheme } from '../../../Context/ThemeContext';
 import { apiFetch } from '../../../config/api';
+import { getMermas } from '../services/insumoService';
 
 interface ModalMermasInsumosProps {
   show: boolean;
@@ -49,19 +50,15 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
   const [filtroHistorialProveedor, setFiltroHistorialProveedor] = useState<string>('TODOS');
 
   const cargarHistorial = async () => {
-    setCargandoHistorial(true);
-    try {
-      const res = await apiFetch('http://localhost:8080/api/mermas');
-      if (res.ok) {
-        const data = await res.json();
-        setHistorial(data);
-      }
-    } catch (err) {
-      console.error("Error al cargar historial de mermas:", err);
-    } finally {
-      setCargandoHistorial(false);
-    }
-  };
+  setCargandoHistorial(true);
+  try {
+    const data = await getMermas();
+    setHistorial(data);
+  } catch (err) {
+    console.error("Error al cargar historial de mermas:", err);
+  } finally {
+    setCargandoHistorial(false);
+  }};
 
   useEffect(() => {
     if (show) {

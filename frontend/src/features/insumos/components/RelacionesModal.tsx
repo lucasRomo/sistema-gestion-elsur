@@ -23,22 +23,20 @@ export const RelacionesModal: React.FC<RelacionesModalProps> = ({ show, onClose 
   const accentColor = isDark ? '#0bc9f8' : '#0284c7';
 
   useEffect(() => {
-    if (show) {
-      setCargando(true);
-      apiFetch('http://localhost:8080/api/insumos')
-        .then(res => res.json())
-      getInsumos()
-        .then(data => {
-          if (Array.isArray(data)) {
-            const filtrados = data.filter((i: Insumo) => 
-              i.unidadCompra && i.unidadMedida && i.factorConversion && i.factorConversion > 0
-            );
-            setInsumosConRelacion(filtrados);
-          }
-        })
-        .catch(err => console.error('Error al cargar relaciones:', err))
-        .finally(() => setCargando(false));
-    }
+  if (show) {
+    setCargando(true);
+    getInsumos()
+      .then(data => {
+        if (Array.isArray(data)) {
+          const filtrados = data.filter((i: Insumo) => 
+            i.unidadCompra && i.unidadMedida && i.factorConversion && i.factorConversion > 0
+          );
+          setInsumosConRelacion(filtrados);
+        }
+      })
+      .catch(err => console.error('Error al cargar relaciones:', err))
+      .finally(() => setCargando(false));
+  }
   }, [show]);
 
   if (!show) return null;

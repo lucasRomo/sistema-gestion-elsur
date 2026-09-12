@@ -103,14 +103,11 @@ export const Productos: React.FC = () => {
     if (!producto.idProducto) return;
     if (!producto.stockVinculado) {
       try {
-        const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${producto.idProducto}`);
-        if (res.ok) {
-          const recetaData = await getRecetaPorProducto(producto.idProducto);
-          if (!recetaData || recetaData.length === 0) {
-            setProductoSinReceta(producto);
-            setShowSinRecetaModal(true);
-            return; 
-          }
+        const recetaData = await getRecetaPorProducto(producto.idProducto);
+        if (!recetaData || recetaData.length === 0) {
+          setProductoSinReceta(producto);
+          setShowSinRecetaModal(true);
+          return; 
         }
       } catch (err) {
         console.error("Error al verificar la receta del producto:", err);
