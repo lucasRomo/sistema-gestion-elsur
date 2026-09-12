@@ -25,23 +25,20 @@ export const InsumoProveedoresModal: React.FC<InsumoProveedoresModalProps> = ({ 
   const tableHeaderTextColor = isDark ? '#a1a1aa' : '#475569';
 
   useEffect(() => {
-    if (show && insumo?.proveedor?.tipoProveedor) {
-      setCargando(true);
-      apiFetch('http://localhost:8080/api/proveedores')
-        .then(res => res.json())
-      getProveedores()
-        .then((data: Proveedor[]) => {
-          const compat = data.filter(
-            p => p.tipoProveedor?.idTipoProveedor === insumo.proveedor?.tipoProveedor?.idTipoProveedor
-          );
-          setProveedores(compat);
-          setCargando(false);
-        })
-        .catch(err => {
-          console.error("Error cargando proveedores:", err);
-          setCargando(false);
-        });
-    }
+  if (show && insumo?.proveedor?.tipoProveedor) {
+    setCargando(true);
+    getProveedores()
+      .then((data: Proveedor[]) => {
+        const compat = data.filter(
+          p => p.tipoProveedor?.idTipoProveedor === insumo.proveedor?.tipoProveedor?.idTipoProveedor
+        );
+        setProveedores(compat);
+      })
+      .catch(err => {
+        console.error("Error cargando proveedores:", err);
+      })
+      .finally(() => setCargando(false));
+  }
   }, [show, insumo]);
 
   const proveedoresFiltrados = proveedores.filter(p => 

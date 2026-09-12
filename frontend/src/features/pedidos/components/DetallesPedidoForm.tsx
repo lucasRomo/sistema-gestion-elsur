@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Pedido, CartItem } from '../general/types/Pedido';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
-import { apiFetch } from '../../../config/api';
+import { pedidoService } from '../general/service/pedidoService';
 
 interface Props {
   clientes: any[];
@@ -47,38 +47,8 @@ export const DetallesPedidoForm: React.FC<Props> = ({
 
   useEffect(() => {
     const fetchPedidosPendientes = async () => {
-      try {
-        const response = await apiFetch('http://localhost:8080/api/pedidos');
-        if (response.ok) {
-          const data = await response.json();
-          const conteo: Record<number, number> = {};
-
-          data.forEach((ped: any) => {
-            const estadoUpper = String(ped.estado || '').toUpperCase();
-            const estaPendiente = !['FINALIZADO', 'CANCELADO', 'ENTREGADO', 'PRESUPUESTO'].includes(estadoUpper);
-
-            if (estaPendiente) {
-              if (Array.isArray(ped.asignaciones) && ped.asignaciones.length > 0) {
-                ped.asignaciones.forEach((asig: any) => {
-                  const empId = asig.empleado?.idEmpleado ?? asig.empleado?.id_empleado ?? asig.idEmpleado;
-                  if (empId) {
-                    conteo[empId] = (conteo[empId] || 0) + 1;
-                  }
-                });
-              } else if (ped.empleado) {
-                const empId = ped.empleado.idEmpleado ?? ped.empleado.id_empleado ?? ped.empleado.id;
-                if (empId) {
-                  conteo[empId] = (conteo[empId] || 0) + 1;
-                }
-              }
-            }
-          });
-
-          setPedidosPorEmpleado(conteo);
-        }
-      } catch (error) {
-        console.error("Error al consultar carga de trabajo de empleados:", error);
-      }
+      const conteo = await pedidoService.obtenerCargaTrabajoEmpleados();
+      setPedidosPorEmpleado(conteo);
     };
 
     fetchPedidosPendientes();
@@ -258,14 +228,14 @@ export const DetallesPedidoForm: React.FC<Props> = ({
 
           {/* Estado y Método Comercial */}
           <div className="col-md-6">
-  <label className="form-label small text-secondary fw-bold">Tipo / Estado de Registro:</label>
-  <select className="form-select" value={estado} onChange={(e) => setEstado(e.target.value)}>
-    <option value="PENDIENTE" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>PENDIENTE (A Producción)</option>
-    <option value="EN PROCESO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>EN PROCESO (Taller)</option>
-    <option value="ENTREGADO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>ENTREGADO (Terminado)</option>
-    <option value="PRESUPUESTO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>PRESUPUESTO (Solo Guardar)</option>
-  </select>
-</div>
+            <label className="form-label small text-secondary fw-bold">Tipo / Estado de Registro:</label>
+            <select className="form-select" value={estado} onChange={(e) => setEstado(e.target.value)}>
+              <option value="PENDIENTE" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>PENDIENTE (A Producción)</option>
+              <option value="EN PROCESO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>EN PROCESO (Taller)</option>
+              <option value="ENTREGADO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>ENTREGADO (Terminado)</option>
+              <option value="PRESUPUESTO" style={{ backgroundColor: '#1e1e1f', color: '#fff' }}>PRESUPUESTO (Solo Guardar)</option>
+            </select>
+          </div>
 
           <div className="col-md-6">
             <label className="form-label small text-secondary fw-bold">Método Comercial:</label>
@@ -336,15 +306,15 @@ export const DetallesPedidoForm: React.FC<Props> = ({
             />
           </div>
 
-        {/* Botones Inferiores */}
-        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 w-100 pt-3">
-          <button 
-            type="button" 
-            className="btn btn-secondary px-4 fw-semibold"
-            onClick={onVolver}
-          >
-            <i className="bi me-1"></i> Volver al Carrito
-          </button>
+          {/* Botones Inferiores */}
+          <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 w-100 pt-3">
+            <button 
+              type="button" 
+              className="btn btn-secondary px-4 fw-semibold"
+              onClick={onVolver}
+            >
+              <i className="bi me-1"></i> Volver al Carrito
+            </button>
 
             <div className="d-flex align-items-center gap-2 flex-wrap">
               {tipoPago === 'Tarjeta / Transferencia' && estado !== 'PRESUPUESTO' && (
@@ -383,7 +353,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
                 </>
               )}
 
-              {/* Botón para Ver Ticket (solo habilitado si la seña es mayor a 0) */}
+              {/* Botón para Ver Ticket */}
               <button 
                 type="button"
                 className="btn btn-outline-warning font-monospace d-flex align-items-center gap-2 px-3"

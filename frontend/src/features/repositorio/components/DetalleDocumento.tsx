@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { DocumentoDigital } from '../types/Repositorio';
 import { repositorioService } from '../services/repositorioService';
-import { API_BASE_URL, apiFetch } from '../../../config/api';
 
 interface Props {
   documento: DocumentoDigital | null;
@@ -81,27 +80,25 @@ export const DetalleDocumento: React.FC<Props> = ({
   }, [documento, ext]);
 
   useEffect(() => {
-    let urlActual: string | null = null;
+  let urlActual: string | null = null;
 
-    const cargarImagen = async () => {
-      if (!documento?.urlArchivoLocal || !['JPG', 'JPEG', 'PNG'].includes(ext || '')) return;
-      try {
-        const response = await apiFetch(`${API_BASE_URL}/documentos-digital/archivo/${encodeURIComponent(documento.urlArchivoLocal)}`);
-        if (!response.ok) throw new Error('No se pudo obtener la imagen');
-        const blob = await response.blob();
-        urlActual = URL.createObjectURL(blob);
-        setImagenBlobUrl(urlActual);
-      } catch (error) {
-        console.error('Error al cargar la miniatura:', error);
-        setImagenBlobUrl(null);
-      }
-    };
+  const cargarImagen = async () => {
+    if (!documento?.urlArchivoLocal || !['JPG', 'JPEG', 'PNG'].includes(ext || '')) return;
+    try {
+      const blob = await repositorioService.obtenerArchivoBlob(documento.urlArchivoLocal);
+      urlActual = URL.createObjectURL(blob);
+      setImagenBlobUrl(urlActual);
+    } catch (error) {
+      console.error('Error al cargar la miniatura:', error);
+      setImagenBlobUrl(null);
+    }
+  };
 
-    cargarImagen();
-    return () => {
-      if (urlActual) URL.revokeObjectURL(urlActual);
-    };
-  }, [documento, ext]);
+  cargarImagen();
+  return () => {
+    if (urlActual) URL.revokeObjectURL(urlActual);
+  };
+}, [documento, ext]);
 
 
   return (

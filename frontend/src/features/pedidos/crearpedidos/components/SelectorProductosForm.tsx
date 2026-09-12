@@ -83,35 +83,27 @@ export const SelectorProductosForm: React.FC<Props> = ({
   }, [productos, busquedaProducto]);
 
   const handleAgregar = async () => {
-    if (!productoId || Number(cantidad) <= 0) return;
-    const prodSeleccionado = productos.find(p => p.idProducto === Number(productoId));
-    if (!prodSeleccionado) return;
+  if (!productoId || Number(cantidad) <= 0) return;
+  const prodSeleccionado = productos.find(p => p.idProducto === Number(productoId));
+  
+  if (!prodSeleccionado || prodSeleccionado.idProducto === undefined) return;
 
-    // Se declara 'recetaInsumos' una sola vez utilizando apiFetch
-    let recetaInsumos: any[] = [];
-    try {
-      const res = await apiFetch(`http://localhost:8080/api/producto-insumo/producto/${prodSeleccionado.idProducto}`);
-      if (res.ok) {
-        recetaInsumos = await res.json();
-      }
-    } catch (error) {
-      console.error("Error al obtener la receta del producto:", error);
-    }
+  const recetaInsumos = await crearPedidoService.obtenerRecetaProducto(prodSeleccionado.idProducto);
 
-    const nuevoItem: CartItem & { receta?: any[] } = {
-      producto: {
-        ...prodSeleccionado,
-        receta: recetaInsumos.length > 0 ? recetaInsumos : (prodSeleccionado as any).receta
-      },
-      cantidad: Number(cantidad),
-      subtotal: prodSeleccionado.precioBase * Number(cantidad)
-    };
-
-    setCarrito([...carrito, nuevoItem]);
-    setProductoId('');
-    setBusquedaProducto('');
-    setCantidad('1');
+  const nuevoItem: CartItem & { receta?: any[] } = {
+    producto: {
+      ...prodSeleccionado,
+      receta: recetaInsumos.length > 0 ? recetaInsumos : (prodSeleccionado as any).receta
+    },
+    cantidad: Number(cantidad),
+    subtotal: prodSeleccionado.precioBase * Number(cantidad)
   };
+
+  setCarrito([...carrito, nuevoItem]);
+  setProductoId('');
+  setBusquedaProducto('');
+  setCantidad('1');
+};
 
   const handleEliminar = (index: number) => {
     setCarrito(carrito.filter((_, i) => i !== index));

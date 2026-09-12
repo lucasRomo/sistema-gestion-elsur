@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import type { Proveedor } from '../types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
 import { apiFetch } from '../../../config/api';
+import { 
+  getTiposProveedor, 
+  crearTipoProveedor, 
+  eliminarTipoProveedor 
+} from '../services/proveedorService';
 
 interface ProveedorModalProps {
   show: boolean;
@@ -53,9 +58,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   // Carga de categorías utilizando apiFetch
   const cargarCategorias = async () => {
     try {
-      const res = await apiFetch('http://localhost:8080/api/tipos-proveedor');
-      if (!res.ok) throw new Error('Error al obtener los tipos de proveedor');
-      const data = await res.json();
+      const data = await getTiposProveedor();
       setTiposProveedor(data);
     } catch (error) {
       console.error(error);
@@ -92,14 +95,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     }
 
     try {
-      const res = await apiFetch('http://localhost:8080/api/tipos-proveedor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ descripcion: nombreLimpio })
-      });
-
-      if (!res.ok) throw new Error('Error al crear la categoría');
-
+      await crearTipoProveedor(nombreLimpio);
       setNuevaCategoria('');
       if (inputElem) inputElem.setCustomValidity('');
       await cargarCategorias();
@@ -118,11 +114,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     if (!idCategoriaAEliminar) return;
 
     try {
-      const res = await apiFetch(`http://localhost:8080/api/tipos-proveedor/${idCategoriaAEliminar}`, {
-        method: 'DELETE'
-      });
-
-      if (!res.ok) throw new Error('Error al eliminar la categoría');
+      await eliminarTipoProveedor(idCategoriaAEliminar);
 
       if (formState?.tipoProveedor?.idTipoProveedor === idCategoriaAEliminar) {
         setFormState(prev => prev ? { ...prev, tipoProveedor: undefined } : null);

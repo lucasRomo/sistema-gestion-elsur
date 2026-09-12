@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
-import { apiFetch } from '../../../config/api';
+import { ventaRapidaService } from '../services/ventaRapidaService';
 import type { PedidoNotificacion } from '../services/ventaRapidaService';
 
 // Definición de la interfaz del Pedido obtenida del Backend
@@ -37,89 +37,16 @@ export const NotificacionesCard: React.FC = () => {
 
   const fetchNotificaciones = async () => {
     try {
-      // 1. Obtener estado de la caja mediante apiFetch
-      const resCaja = await apiFetch('http://localhost:8080/api/turnos/estado-caja');
-      if (resCaja.ok) {
-        const textRes = await resCaja.text();
-        if (textRes) {
-          const dataCaja = JSON.parse(textRes);
-          setCajaAbierta(true);
-          setDatosTurno(dataCaja);
+      // 1. Obtener estado de caja usando el servicio
+      const estadoCaja = await ventaRapidaService.getEstadoCajaNotificacion();
+      setCajaAbierta(estadoCaja.cajaAbierta);
+      setDatosTurno(estadoCaja.datosTurno);
+      setIngresosTurno(estadoCaja.ingresosTurno);
+      setEgresosTurno(estadoCaja.egresosTurno);
 
-          const resTotales = await apiFetch('http://localhost:8080/api/movimientos-caja/totales');
-          if (resTotales.ok) {
-            const dataTotales = await resTotales.json();
-            setIngresosTurno(dataTotales.totalIngresos || 0);
-            setEgresosTurno(dataTotales.totalEgresos || 0);
-          }
-        } else {
-          setCajaAbierta(false);
-          setDatosTurno(null);
-          setIngresosTurno(0);
-          setEgresosTurno(0);
-        }
-      }
-
-      // 2. Obtener pedidos urgentes/demorados mediante apiFetch
-      const resPedidos = await apiFetch('http://localhost:8080/api/pedidos');
-      if (resPedidos.ok) {
-        const dataPedidos: PedidoBackend[] = await resPedidos.json();
-        const ahora = new Date().getTime();
-
-        const urgentesOExcedidos: PedidoNotificacion[] = [];
-
-        dataPedidos.forEach((p) => {
-          const obs = (p.observaciones || p.observacion || '').toLowerCase();
-          const esVentaRapida = obs.includes('venta rápida') || p.estante === 'Venta Rápida';
-          if (esVentaRapida) return;
-
-          const estadoUpper = (p.estado || '').toUpperCase().trim();
-          if (
-            !estadoUpper ||
-            estadoUpper === 'PRESUPUESTO' ||
-            estadoUpper === 'ENTREGADO' ||
-            estadoUpper === 'CANCELADO' ||
-            estadoUpper === 'FINALIZADO' ||
-            estadoUpper === 'COMPLETADO'
-          ) {
-            return;
-          }
-
-          if (!p.fecha_entrega_estimada) return;
-
-          const fechaEntrega = new Date(p.fecha_entrega_estimada).getTime();
-          const diffMs = fechaEntrega - ahora;
-          const diffMin = Math.floor(diffMs / (1000 * 60));
-
-          const nombreCliente = p.cliente?.persona
-            ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido || ''}`.trim()
-            : (p.cliente?.razonSocial || p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
-
-          if (diffMin <= 0) {
-            urgentesOExcedidos.push({
-              id: p.id_pedido,
-              cliente: nombreCliente,
-              estadoTiempo: 'vencido',
-              minDiferencia: Math.abs(diffMin),
-            });
-          } else if (diffMin <= 60) {
-            urgentesOExcedidos.push({
-              id: p.id_pedido,
-              cliente: nombreCliente,
-              estadoTiempo: 'urgente',
-              minDiferencia: diffMin,
-            });
-          }
-        });
-
-        urgentesOExcedidos.sort((a, b) => {
-          if (a.estadoTiempo === 'vencido' && b.estadoTiempo !== 'vencido') return -1;
-          if (a.estadoTiempo !== 'vencido' && b.estadoTiempo === 'vencido') return 1;
-          return a.minDiferencia - b.minDiferencia;
-        });
-
-        setPedidosUrgentes(urgentesOExcedidos);
-      }
+      // 2. Obtener pedidos urgentes/demorados usando el servicio
+      const urgentes = await ventaRapidaService.getPedidosUrgentesNotificacion();
+      setPedidosUrgentes(urgentes);
     } catch (error) {
       console.error('Error al cargar notificaciones:', error);
     } finally {

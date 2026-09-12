@@ -14,7 +14,7 @@ export const validarExisteUsuario = async (nombreUsuario: string): Promise<boole
   if (!nombreUsuario.trim()) return false;
 
   try {
-    const response = await fetch(`${API_URL}/exists?nombreUsuario=${encodeURIComponent(nombreUsuario.trim())}`);
+    const response = await apiFetch(`${API_URL}/exists?nombreUsuario=${encodeURIComponent(nombreUsuario.trim())}`);
     if (response.ok) {
       return await response.json();
     }

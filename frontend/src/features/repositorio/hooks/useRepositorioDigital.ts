@@ -157,7 +157,6 @@ export const useRepositorioDigital = () => {
     try {
       const nueva = await repositorioService.crearInstitucion(nombreInstNueva, tipoInstNueva);
       setInstituciones((prev) => [...prev, nueva]);
-      // ❌ SE QUITÓ: cerrarModalNuevaInst();
     } catch (err) {
       console.error('Error al crear institución:', err);
       throw err;

@@ -23,6 +23,8 @@ export const repositorioService = {
     return res.json();
   },
 
+  
+
   async crearInstitucion(nombreInstitucion: string, tipoInstitucion?: string): Promise<Institucion> {
     const res = await apiFetch(`${API_BASE_URL}/instituciones`, {
       method: 'POST',
@@ -57,6 +59,12 @@ export const repositorioService = {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Error al eliminar el documento');
+  },
+
+  async obtenerArchivoBlob(nombreArchivoLocal: string): Promise<Blob> {
+    const response = await apiFetch(`${API_BASE_URL}/documentos-digital/archivo/${encodeURIComponent(nombreArchivoLocal)}`);
+    if (!response.ok) throw new Error('No se pudo obtener el archivo');
+    return response.blob();
   },
 
   async renderizarPaginaPdf(

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { DocumentoDigital } from '../types/Repositorio';
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { repositorioService } from '../services/repositorioService';
 
 interface Props {
   show: boolean;
@@ -23,34 +23,31 @@ export const ModalPrevisualizar: React.FC<Props> = ({
   const [cargando, setCargando] = useState(false);
 
   useEffect(() => {
-    let urlActual: string | null = null;
+  let urlActual: string | null = null;
 
-    const cargarArchivo = async () => {
-      if (!documento?.urlArchivoLocal) return;
-      setCargando(true);
-      try {
-        const response = await apiFetch(`${API_BASE_URL}/documentos-digital/archivo/${encodeURIComponent(documento.urlArchivoLocal)}`);
-        if (!response.ok) throw new Error('No se pudo obtener el archivo');
-        const blob = await response.blob();
-        urlActual = URL.createObjectURL(blob);
-        setBlobUrl(urlActual);
-      } catch (error) {
-        console.error('Error al cargar la previsualización:', error);
-        setBlobUrl(null);
-      } finally {
-        setCargando(false);
-      }
-    };
-
-    if (show && documento) {
-      cargarArchivo();
+  const cargarArchivo = async () => {
+    if (!documento?.urlArchivoLocal) return;
+    setCargando(true);
+    try {
+      const blob = await repositorioService.obtenerArchivoBlob(documento.urlArchivoLocal);
+      urlActual = URL.createObjectURL(blob);
+      setBlobUrl(urlActual);
+    } catch (error) {
+      console.error('Error al cargar la previsualización:', error);
+      setBlobUrl(null);
+    } finally {
+      setCargando(false);
     }
+  };
 
-    // Liberamos el blob anterior al cerrar el modal o cambiar de documento
-    return () => {
-      if (urlActual) URL.revokeObjectURL(urlActual);
-    };
-  }, [show, documento]);
+  if (show && documento) {
+    cargarArchivo();
+  }
+
+  return () => {
+    if (urlActual) URL.revokeObjectURL(urlActual);
+  };
+}, [show, documento]);
 
   if (!show || !documento) return null;
 

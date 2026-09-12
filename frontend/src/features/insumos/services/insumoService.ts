@@ -107,10 +107,18 @@ export const actualizarInsumosMasivo = async (payload: ActualizarInsumosPayload)
   return res.text();
 };
 
+// --- MERMAS ---
+
+export const getMermas = async (): Promise<any[]> => {
+  const res = await apiFetch(`${API_BASE_URL}/mermas`);
+  if (!res.ok) throw new Error("Error al obtener el historial de mermas");
+  return res.json();
+};
+
 // --- PROVEEDORES ---
 
 export const getProveedores = async (): Promise<Proveedor[]> => {
-  const res = await fetch(`${API_BASE_URL}/proveedores`);
+  const res = await apiFetch(`${API_BASE_URL}/proveedores`);
   if (!res.ok) throw new Error("Error al obtener proveedores");
   return res.json();
 };
@@ -118,13 +126,13 @@ export const getProveedores = async (): Promise<Proveedor[]> => {
 // --- UNIDADES DE MEDIDA ---
 
 export const getUnidadesMedida = async (): Promise<UnidadMedida[]> => {
-  const res = await fetch(`${API_BASE_URL}/unidades-medida`);
+  const res = await apiFetch(`${API_BASE_URL}/unidades-medida`);
   if (!res.ok) throw new Error("Error al obtener unidades de medida");
   return res.json();
 };
 
 export const crearUnidadMedida = async (nombre: string): Promise<UnidadMedida> => {
-  const res = await fetch(`${API_BASE_URL}/unidades-medida`, {
+  const res = await apiFetch(`${API_BASE_URL}/unidades-medida`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ nombre })
@@ -138,7 +146,7 @@ export const crearUnidadMedida = async (nombre: string): Promise<UnidadMedida> =
 };
 
 export const eliminarUnidadMedida = async (idUnidad: number): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/unidades-medida/${idUnidad}`, {
+  const res = await apiFetch(`${API_BASE_URL}/unidades-medida/${idUnidad}`, {
     method: 'DELETE'
   });
 

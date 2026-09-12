@@ -1,5 +1,6 @@
-import { apiFetch } from '../../../config/api';
-const BASE_URL = 'http://localhost:8080/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
+
+const BASE_URL = API_BASE_URL || 'http://localhost:8080/api';
 
 export interface TipoDocumento {
   idTipoDocumento: number;
@@ -35,7 +36,7 @@ export const clienteService = {
 
   getTiposDocumento: async (): Promise<TipoDocumento[]> => {
     try {
-      const res = await fetch(`${BASE_URL}/tipos-documento`);
+      const res = await apiFetch(`${BASE_URL}/tipos-documento`);
       if (!res.ok) throw new Error("Error al consultar tipos de documento");
       return await res.json();
     } catch {
