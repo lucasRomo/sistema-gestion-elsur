@@ -72,8 +72,21 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             || pathMatcher.match("/api/usuarios/exists", path);
     }
     if ("POST".equalsIgnoreCase(metodo)) {
-        return pathMatcher.match("/api/usuarios", path)
-            || pathMatcher.match("/api/empleados", path);
+        // Antes esto valía siempre, sin importar cuántos usuarios ya existieran:
+        // cualquiera que conociera la clave del portón (pensada para abrir la
+        // puerta física del local, app.clave-acceso) podía sacar este token y
+        // crear un usuario en cualquier momento -- incluido un ADMIN, si el
+        // payload traía rol.idRol=1, porque UsuarioServiceImpl.guardar() solo
+        // fuerza un rol por defecto cuando el payload no trae ninguno.
+        // El portón ahora solo sirve para el alta real inicial (tabla usuario
+        // vacía). Una vez que existe al menos un usuario, dar de alta gente
+        // nueva requiere estar autenticado con el permiso correspondiente
+        // ("Gestión de Usuarios"), no la clave de la puerta.
+        boolean esBootstrapInicial = usuarioRepository.count() == 0;
+        return esBootstrapInicial && (
+            pathMatcher.match("/api/usuarios", path)
+            || pathMatcher.match("/api/empleados", path)
+        );
     }
     return false;
 }
@@ -152,7 +165,7 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
 
             // Habilitación de lectura para MATRIZ DE PERMISOS (necesita listar usuarios en la barra lateral)
             if (permisosUsuario.contains(normalizar("MATRIZ DE PERMISOS"))) {
-                if (pathMatcher.match("/api/permisos/**", path) || 
+                if (pathMatcher.match("/api/permisos/**", path) ||
                     pathMatcher.match("/api/usuarios/**", path)) {
                     return true;
                 }
@@ -241,7 +254,7 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
         }
 
         // Pagos e Imputaciones en Cuenta Corriente
-        if ("POST".equalsIgnoreCase(metodo) && 
+        if ("POST".equalsIgnoreCase(metodo) &&
             (pathMatcher.match("/api/cuentas-corrientes/**", path) || pathMatcher.match("/api/clientes/**", path))) {
             if (tieneAlgunPermiso(permisosUsuario, "HISTORIAL DE PEDIDOS", "PEDIDOS PENDIENTES", "CLIENTES", "CAJA")) {
                 return true;
@@ -305,50 +318,50 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
         }
 
         // Módulo Clientes
-        if (pathMatcher.match("/api/clientes/**", path) || 
-            pathMatcher.match("/api/categorias-cliente/**", path) || 
+        if (pathMatcher.match("/api/clientes/**", path) ||
+            pathMatcher.match("/api/categorias-cliente/**", path) ||
             pathMatcher.match("/api/cuentas-corrientes/**", path)) {
             return "Clientes";
         }
 
         // Módulo Insumos
-        if (pathMatcher.match("/api/insumos/**", path) || 
+        if (pathMatcher.match("/api/insumos/**", path) ||
             pathMatcher.match("/api/unidades-medida/**", path)) {
             return "Insumos";
         }
 
         // Módulo Productos
-        if (pathMatcher.match("/api/productos/**", path) || 
-            pathMatcher.match("/api/producto-insumo/**", path) || 
-            pathMatcher.match("/api/categorias/**", path)) { 
+        if (pathMatcher.match("/api/productos/**", path) ||
+            pathMatcher.match("/api/producto-insumo/**", path) ||
+            pathMatcher.match("/api/categorias/**", path)) {
             return "Productos";
         }
 
         // Módulo Proveedores
-        if (pathMatcher.match("/api/proveedores/**", path) || 
+        if (pathMatcher.match("/api/proveedores/**", path) ||
             pathMatcher.match("/api/tipos-proveedor/**", path)) {
             return "Proveedores";
         }
-        
+
         // Módulo Gestión de Usuarios y Empleados
-        if (pathMatcher.match("/api/usuarios/**", path) || 
+        if (pathMatcher.match("/api/usuarios/**", path) ||
             pathMatcher.match("/api/tipos-documento/**", path)) {
             return "Gestión de Usuarios";
         }
 
-        // Módulo Equipos / Máquinas e Incidencias 
-        if (pathMatcher.match("/api/equipos/**", path) || 
-            pathMatcher.match("/api/maquinas/**", path) || 
+        // Módulo Equipos / Máquinas e Incidencias
+        if (pathMatcher.match("/api/equipos/**", path) ||
+            pathMatcher.match("/api/maquinas/**", path) ||
             pathMatcher.match("/api/incidencias/**", path)) {
             return "Equipos / Máquinas";
         }
-        
+
         // Ventas y Pedidos
         if (pathMatcher.match("/api/pedidos/historial/**", path)) return "Historial de Pedidos";
         if (pathMatcher.match("/api/pedidos/pendientes/**", path) || pathMatcher.match("/api/pedidos/*/**", path)) return "Pedidos Pendientes";
         if (pathMatcher.match("/api/pedidos/**", path)) return "Crear Pedido";
         if (pathMatcher.match("/api/comprobantes/**", path)) return "Pedidos Pendientes";
-        
+
         // Compras de Insumos (incluye Compras a Proveedores y sus Detalles, mismo módulo)
         if (pathMatcher.match("/api/compras-insumos/**", path) ||
             pathMatcher.match("/api/compras/**", path) ||
@@ -358,8 +371,8 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
         }
 
         // Módulo Caja
-        if (pathMatcher.match("/api/caja/**", path) || 
-            pathMatcher.match("/api/turnos/**", path) || 
+        if (pathMatcher.match("/api/caja/**", path) ||
+            pathMatcher.match("/api/turnos/**", path) ||
             pathMatcher.match("/api/movimientos-caja/**", path) ||
             pathMatcher.match("/api/arqueos/**", path) ||
             pathMatcher.match("/api/registros-arqueo/**", path) ||
@@ -370,9 +383,9 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
         }
 
         // Repositorio Digital
-        if (pathMatcher.match("/api/repositorio/**", path) || 
-            pathMatcher.match("/api/documentos-digital/**", path) || 
-            pathMatcher.match("/api/areas-curso/**", path) || 
+        if (pathMatcher.match("/api/repositorio/**", path) ||
+            pathMatcher.match("/api/documentos-digital/**", path) ||
+            pathMatcher.match("/api/areas-curso/**", path) ||
             pathMatcher.match("/api/instituciones/**", path)) {
             return "Repositorio Digital";
         }
@@ -381,14 +394,14 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
         if (pathMatcher.match("/api/informes/**", path) || pathMatcher.match("/api/reportes/**", path)) {
             return "Informes";
         }
-        
+
         // Historial de Actividad
-        if (pathMatcher.match("/api/registro-actividad/**", path) || 
-            pathMatcher.match("/api/historial-actividad/**", path) || 
+        if (pathMatcher.match("/api/registro-actividad/**", path) ||
+            pathMatcher.match("/api/historial-actividad/**", path) ||
             pathMatcher.match("/api/auditoria/**", path)) {
             return "Historial de Actividad";
         }
-        
+
         // Panel Principal
         if (pathMatcher.match("/api/dashboard/**", path) || pathMatcher.match("/api/panel/**", path)) {
             return "Panel Principal";

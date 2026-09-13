@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/unidades-medida")
-@CrossOrigin(origins = "*")
 public class UnidadMedidaController {
 
     @Autowired
@@ -22,17 +21,14 @@ public class UnidadMedidaController {
         return unidadMedidaService.obtenerTodas();
     }
 
+    // Antes tenía un try/catch (IllegalArgumentException / Exception) que
+    // devolvía 400 o 500 a mano. Ahora UnidadMedidaServiceImpl tira
+    // SolicitudInvalidaException (400) o RecursoDuplicadoException (409)
+    // según corresponda, y el GlobalExceptionHandler arma la respuesta.
     @PostMapping
     public ResponseEntity<?> guardar(@RequestBody UnidadMedida unidadMedida) {
-        try {
-            UnidadMedida guardada = unidadMedidaService.guardar(unidadMedida);
-            return ResponseEntity.status(HttpStatus.CREATED).body(guardada);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al procesar la solicitud en el servidor.");
-        }
+        UnidadMedida guardada = unidadMedidaService.guardar(unidadMedida);
+        return ResponseEntity.status(HttpStatus.CREATED).body(guardada);
     }
 
     @DeleteMapping("/{id}")

@@ -11,7 +11,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/maquinas")
-@CrossOrigin(origins = "*")
 public class MaquinaController {
 
     @Autowired

@@ -34,7 +34,6 @@ import com.elsur.sistema_gestion.repositories.ComprobantePagoRepository;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@CrossOrigin(origins = "*")
 public class ComprobantePagoController {
 
     // java.nio.file.Path correcto

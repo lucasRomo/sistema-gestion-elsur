@@ -13,7 +13,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/permisos")
-@CrossOrigin(origins = "*")
 public class PermisoController {
 
     @Autowired
@@ -44,27 +43,23 @@ public class PermisoController {
         return ResponseEntity.ok(permisosActivos);
     }
 
+    // Antes tenía un try/catch (Exception e) que devolvía siempre 500. Ahora,
+    // si el rol no existe, PermisoServiceImpl tira RecursoNoEncontradoException
+    // (404) y el GlobalExceptionHandler arma la respuesta.
     @PostMapping("/rol/{idRol}/actualizar")
     public ResponseEntity<?> actualizarPermisosRol(@PathVariable Integer idRol, @RequestBody List<Integer> permisosIds) {
-        try {
-            permisoService.actualizarPermisosRol(idRol, permisosIds);
-            return ResponseEntity.ok().body(Map.of("mensaje", "Matriz actualizada correctamente"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
-        }
+        permisoService.actualizarPermisosRol(idRol, permisosIds);
+        return ResponseEntity.ok().body(Map.of("mensaje", "Matriz actualizada correctamente"));
     }
 
+    // Antes el chequeo de "no se pueden borrar los roles por defecto" y el
+    // try/catch para el rol-en-uso vivían acá. Ahora los dos viven en
+    // RolServiceImpl.eliminar (SolicitudInvalidaException / 400 y
+    // ConflictoDeIntegridadException / 409 respectivamente), así valen para
+    // cualquier lugar que borre un rol, no solo para este endpoint.
     @DeleteMapping("/roles/{idRol}")
     public ResponseEntity<?> eliminarRol(@PathVariable Integer idRol) {
-        try {
-            if (idRol == 1 || idRol == 2) {
-                return ResponseEntity.status(400).body(Map.of("error", "No se pueden eliminar los roles del sistema por defecto."));
-            }
-            
-            rolService.eliminar(idRol);
-            return ResponseEntity.ok(Map.of("mensaje", "Perfil eliminado correctamente"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "No se puede eliminar el perfil porque está asignado a uno o más usuarios activos."));
-        }
+        rolService.eliminar(idRol);
+        return ResponseEntity.ok(Map.of("mensaje", "Perfil eliminado correctamente"));
     }
 }

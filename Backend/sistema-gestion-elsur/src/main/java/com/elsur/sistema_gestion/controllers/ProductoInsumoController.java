@@ -18,7 +18,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/producto-insumo")
-@CrossOrigin(origins = "*")
 public class ProductoInsumoController {
 
     @Autowired

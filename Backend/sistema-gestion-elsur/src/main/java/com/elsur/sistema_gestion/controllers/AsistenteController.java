@@ -10,7 +10,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/asistente")
-@CrossOrigin(origins = "*")
 public class AsistenteController {
 
     private final GeminiAsistenteService geminiAsistenteService;

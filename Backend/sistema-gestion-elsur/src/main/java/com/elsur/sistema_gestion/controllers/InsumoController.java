@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.controllers;
 
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Insumo;
 import com.elsur.sistema_gestion.services.InsumoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/insumos")
-@CrossOrigin(origins = "*")
 public class InsumoController {
 
     @Autowired
@@ -28,15 +28,14 @@ public class InsumoController {
         return insumoService.listarInsumosBajoStock();
     }
 
+    // Antes tenía un try/catch (RuntimeException e) que devolvía 400 a mano.
+    // Ahora InsumoServiceImpl tira SolicitudInvalidaException ante cualquier
+    // validación fallida y el GlobalExceptionHandler arma la respuesta (400).
     @PostMapping
     public ResponseEntity<?> crear(
             @RequestBody Insumo insumo,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
-        try {
-            return ResponseEntity.ok(insumoService.guardar(insumo, idUsuario));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        return ResponseEntity.ok(insumoService.guardar(insumo, idUsuario));
     }
 
     @PutMapping("/{id}")
@@ -44,40 +43,35 @@ public class InsumoController {
             @PathVariable Integer id,
             @RequestBody Insumo insumo,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
-        try {
-            insumo.setIdInsumo(id);
-            return ResponseEntity.ok(insumoService.guardar(insumo, idUsuario));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        insumo.setIdInsumo(id);
+        return ResponseEntity.ok(insumoService.guardar(insumo, idUsuario));
     }
 
+    // Antes el catch (Exception e) envolvía tanto el parseo del BigDecimal
+    // como los errores de negocio del service; ahora ambos casos son
+    // SolicitudInvalidaException (400) y los maneja el GlobalExceptionHandler.
     @PostMapping("/{id}/convertir")
     public ResponseEntity<?> convertirStock(
             @PathVariable Integer id,
             @RequestBody Map<String, Object> payload,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
         if (payload.get("cantidadBultos") == null) {
-            return ResponseEntity.badRequest().body("Debe especificar la cantidad de bultos a abrir.");
+            throw new SolicitudInvalidaException("Debe especificar la cantidad de bultos a abrir.");
         }
-        try {
-            BigDecimal cantidadBultos = new BigDecimal(payload.get("cantidadBultos").toString());
-            Insumo insumoConvertido = insumoService.convertirStock(id, cantidadBultos, idUsuario);
-            return ResponseEntity.ok(insumoConvertido);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        BigDecimal cantidadBultos = new BigDecimal(payload.get("cantidadBultos").toString());
+        Insumo insumoConvertido = insumoService.convertirStock(id, cantidadBultos, idUsuario);
+        return ResponseEntity.ok(insumoConvertido);
     }
 
     @PatchMapping("/actualizar-masivo")
     public ResponseEntity<String> actualizarMasivo(
             @RequestBody Map<String, Object> payload,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
-        
+
         double porcentaje = payload.get("porcentaje") != null ? Double.parseDouble(payload.get("porcentaje").toString()) : 0.0;
         Integer idProveedor = payload.get("idProveedor") != null ? Integer.parseInt(payload.get("idProveedor").toString()) : null;
         String criterio = payload.get("criterio") != null ? payload.get("criterio").toString() : "TODOS";
-        
+
         @SuppressWarnings("unchecked")
         List<Integer> idsInsumos = (List<Integer>) payload.get("idsInsumos");
 

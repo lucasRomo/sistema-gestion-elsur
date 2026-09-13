@@ -49,6 +49,14 @@
     		<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
+		<!-- Necesaria para que @Valid / @NotBlank / @Size en los DTOs (por ejemplo
+		     CambioPasswordDTO) se validen de verdad. Desde Spring Boot 2.3 este starter
+		     ya no viene incluido transitivamente en el de web. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>

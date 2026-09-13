@@ -16,7 +16,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/documentos-digital")
-@CrossOrigin(origins = "*")
 public class DocumentoDigitalController {
 
     @Autowired

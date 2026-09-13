@@ -15,7 +15,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/respaldos")
-@CrossOrigin(origins = "*")
 public class RespaldoController {
 
     @Autowired

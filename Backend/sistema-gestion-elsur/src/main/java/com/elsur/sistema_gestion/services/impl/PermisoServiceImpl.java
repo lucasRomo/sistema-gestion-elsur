@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
 import com.elsur.sistema_gestion.models.Permiso;
 import com.elsur.sistema_gestion.models.Rol;
 import com.elsur.sistema_gestion.repositories.PermisoRepository;
@@ -43,8 +44,8 @@ public class PermisoServiceImpl implements PermisoService {
     @Override
     public List<Integer> obtenerPermisosPorRol(Integer idRol) {
         Rol rol = rolRepository.findById(idRol)
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
-        
+                .orElseThrow(() -> new RecursoNoEncontradoException("Rol no encontrado"));
+
         return rol.getPermisos().stream()
                 .map(Permiso::getIdPermiso)
                 .collect(Collectors.toList());
@@ -54,7 +55,7 @@ public class PermisoServiceImpl implements PermisoService {
     @Transactional
     public void actualizarPermisosRol(Integer idRol, List<Integer> permisosIds) {
         Rol rol = rolRepository.findById(idRol)
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Rol no encontrado"));
 
         List<Integer> idsFinales = new ArrayList<>(permisosIds);
 
@@ -72,7 +73,7 @@ public class PermisoServiceImpl implements PermisoService {
                 }
             }
         }
-        
+
         List<Permiso> nuevosPermisos = permisoRepository.findAllById(idsFinales);
         rol.setPermisos(nuevosPermisos);
         rolRepository.save(rol);
