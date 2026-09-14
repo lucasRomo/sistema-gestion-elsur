@@ -1,5 +1,5 @@
 import type { Pedido } from '../../general/types/Pedido';
-import { API_BASE_URL, apiFetch } from '../../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../../config/api';
 
 export const pedidoService = {
   /**
@@ -86,8 +86,7 @@ export const pedidoService = {
       });
 
       if (!response.ok) {
-        const errorMsg = await response.text();
-        throw new Error(errorMsg || 'Error al cambiar el estado del pedido');
+        throw new Error(await extraerMensajeError(response, 'Error al cambiar el estado del pedido'));
       }
 
       return await response.json();
@@ -105,8 +104,7 @@ export const pedidoService = {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Error al actualizar el límite de crédito.");
+      throw new Error(await extraerMensajeError(response, "Error al actualizar el límite de crédito."));
     }
     return true;
   },

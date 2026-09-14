@@ -1,5 +1,5 @@
-import { apiFetch } from '../../../config/api';
-const BASE_URL = 'http://localhost:8080/api';
+import { API_BASE_URL, apiFetch } from '../../../config/api';
+const BASE_URL = API_BASE_URL;
 
 export interface ModuloPermiso {
   idPermiso: number;

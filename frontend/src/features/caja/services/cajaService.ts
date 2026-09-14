@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
 
 export interface MovimientoCaja {
@@ -109,8 +109,7 @@ export const cajaService = {
     });
 
     if (!response.ok) {
-      const err = await response.text();
-      throw new Error(err || 'Error al subir el comprobante');
+      throw new Error(await extraerMensajeError(response, 'Error al subir el comprobante'));
     }
 
     const data = await response.json();
@@ -219,8 +218,7 @@ export const cajaService = {
       })
     });
     if (!response.ok) {
-      const err = await response.text();
-      throw new Error(err || 'Error al abrir la caja');
+      throw new Error(await extraerMensajeError(response, 'Error al abrir la caja'));
     }
     return response.json();
   },
@@ -261,8 +259,7 @@ export const cajaService = {
     });
 
     if (!response.ok) {
-      const err = await response.text();
-      throw new Error(err || 'Error al guardar movimiento');
+      throw new Error(await extraerMensajeError(response, 'Error al guardar movimiento'));
     }
   },
 
@@ -272,8 +269,7 @@ export const cajaService = {
     }${idUsuario ? `&idUsuario=${idUsuario}` : ''}`;
     const response = await apiFetch(url, { method: 'POST' });
     if (!response.ok) {
-      const err = await response.text();
-      throw new Error(err || 'Error al cerrar caja');
+      throw new Error(await extraerMensajeError(response, 'Error al cerrar caja'));
     }
     return true;
   }

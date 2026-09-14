@@ -1,5 +1,5 @@
 import type { DatosCompraInsumo } from '../types/compraInsumos';
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
 const API_COMPRAS_INSUMOS = `${API_BASE_URL}/compras-insumos`;
 
@@ -24,8 +24,7 @@ export const compraInsumosService = {
     });
 
     if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(errText || 'Error al registrar la compra de insumos.');
+      throw new Error(await extraerMensajeError(response, 'Error al registrar la compra de insumos.'));
     }
 
     try {

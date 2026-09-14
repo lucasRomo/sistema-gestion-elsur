@@ -180,7 +180,7 @@ export const CrearPedidoView: React.FC = () => {
 
   return (
     <>
-      <div className="container-fluid min-vh-100 d-flex flex-column py-2">
+      <div className="container-fluid h-100 d-flex flex-column py-2">
         {paso === 1 ? (
           <SelectorProductosForm 
             productos={productos}

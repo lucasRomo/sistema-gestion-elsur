@@ -1,6 +1,6 @@
 import type { Producto, Categoria } from '../types/Producto';
 import type { Maquina } from '../../maquinas/types/Maquina';
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
 const API_URL = `${API_BASE_URL}/productos`;
 const API_CATEGORIAS_URL = `${API_BASE_URL}/categorias`;
@@ -45,8 +45,7 @@ export const guardarProducto = async (producto: Partial<Producto>) => {
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err);
+    throw new Error(await extraerMensajeError(res, 'Error al guardar el producto.'));
   }
   return res.json();
 };
@@ -74,8 +73,7 @@ export const actualizarPreciosMasivo = async (payload: ActualizarPreciosPayload)
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err);
+    throw new Error(await extraerMensajeError(res, 'Error al actualizar los precios.'));
   }
   return res.text();
 };

@@ -3,7 +3,7 @@ import type { Producto } from '../../productos/types/Producto';
 import type { CartItem, Pedido } from '../../pedidos/general/types/Pedido';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
 const MARGEN_MERMA_RESPALDO = 5;
 const TOLERANCIA_PRODUCTO_DIRECTO = 3;
@@ -483,7 +483,7 @@ export const useVentaRapida = () => {
         });
       }
 
-      if (!resCrear.ok) throw new Error(await resCrear.text());
+      if (!resCrear.ok) throw new Error(await extraerMensajeError(resCrear, 'Error al crear el pedido.'));
 
       const pedidoGuardado = await resCrear.json();
       const idPedido = pedidoGuardado.id_pedido || pedidoGuardado.idPedido;
@@ -501,8 +501,7 @@ export const useVentaRapida = () => {
       });
 
       if (!resEstado.ok) {
-        const errorText = await resEstado.text();
-        throw new Error(errorText || 'Error al actualizar estado del pedido.');
+        throw new Error(await extraerMensajeError(resEstado, 'Error al actualizar estado del pedido.'));
       }
 
       await fetchProductos();

@@ -1,5 +1,5 @@
 // src/services/usuarioService.ts
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
 const API_URL = `${API_BASE_URL}/usuarios`;
 
@@ -46,6 +46,6 @@ export const guardarUsuario = async (usuario: any) => {
     body: JSON.stringify(usuario)
   });
 
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al guardar el usuario.'));
   return res.json();
 };

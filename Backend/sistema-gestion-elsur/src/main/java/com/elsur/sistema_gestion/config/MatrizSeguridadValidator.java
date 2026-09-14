@@ -29,56 +29,67 @@ public class MatrizSeguridadValidator implements AuthorizationManager<RequestAut
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public AuthorizationDecision authorize(Supplier<? extends Authentication> authenticationSupplier, RequestAuthorizationContext context) {
-        Authentication auth = authenticationSupplier.get();
-        HttpServletRequest request = context.getRequest();
+@Transactional(readOnly = true)
+public AuthorizationDecision authorize(Supplier<? extends Authentication> authenticationSupplier, RequestAuthorizationContext context) {
+    Authentication auth = authenticationSupplier.get();
+    HttpServletRequest request = context.getRequest();
 
-        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
-            return new AuthorizationDecision(false);
-        }
-
-        // Obtener la ruta limpia descartando Context Path
-        String path = request.getServletPath();
-        if (path == null || path.isEmpty()) {
-            path = request.getRequestURI();
-        }
-
-        // Normalizar trailing slash
-        if (path.length() > 1 && path.endsWith("/")) {
-            path = path.substring(0, path.length() - 1);
-        }
-
-        String metodo = request.getMethod();
-
-        // Token del "portón": no corresponde a ningún usuario real de la tabla,
-        // solo habilita el mínimo necesario para poder registrarse.
-        boolean esPorton = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_PORTON"));
-        if (esPorton) {
-            return new AuthorizationDecision(evaluarPermisoPorton(path, metodo));
-        }
-
-        String username = auth.getName();
-        boolean permitido = evaluarPermisoEnBaseDeDatos(username, path, metodo);
-
-        return new AuthorizationDecision(permitido);
+    if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+        return new AuthorizationDecision(false);
     }
 
-    private boolean evaluarPermisoPorton(String path, String metodo) {
-        if ("GET".equalsIgnoreCase(metodo)) {
-            return pathMatcher.match("/api/tipos-documento/**", path)
-                || pathMatcher.match("/api/usuarios/exists", path);
-        }
-        if ("POST".equalsIgnoreCase(metodo)) {
-            boolean esBootstrapInicial = usuarioRepository.count() == 0;
-            return esBootstrapInicial && (
-                pathMatcher.match("/api/usuarios", path)
-                || pathMatcher.match("/api/empleados", path)
-            );
-        }
-        return false;
+    // Obtener la ruta limpia descartando Context Path
+    String path = request.getServletPath();
+    if (path == null || path.isEmpty()) {
+        path = request.getRequestURI();
     }
+
+    // Normalizar trailing slash
+    if (path.length() > 1 && path.endsWith("/")) {
+        path = path.substring(0, path.length() - 1);
+    }
+
+    String metodo = request.getMethod();
+
+    // Token del "portón": no corresponde a ningún usuario real de la tabla,
+    // solo habilita el mínimo necesario para poder registrarse.
+    boolean esPorton = auth.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_PORTON"));
+    if (esPorton) {
+        return new AuthorizationDecision(evaluarPermisoPorton(path, metodo));
+    }
+
+    String username = auth.getName();
+
+    boolean permitido = evaluarPermisoEnBaseDeDatos(username, path, metodo);
+
+    return new AuthorizationDecision(permitido);
+}
+
+private boolean evaluarPermisoPorton(String path, String metodo) {
+    if ("GET".equalsIgnoreCase(metodo)) {
+        return pathMatcher.match("/api/tipos-documento/**", path)
+            || pathMatcher.match("/api/usuarios/exists", path);
+    }
+    if ("POST".equalsIgnoreCase(metodo)) {
+        // Antes esto valía siempre, sin importar cuántos usuarios ya existieran:
+        // cualquiera que conociera la clave del portón (pensada para abrir la
+        // puerta física del local, app.clave-acceso) podía sacar este token y
+        // crear un usuario en cualquier momento -- incluido un ADMIN, si el
+        // payload traía rol.idRol=1, porque UsuarioServiceImpl.guardar() solo
+        // fuerza un rol por defecto cuando el payload no trae ninguno.
+        // El portón ahora solo sirve para el alta real inicial (tabla usuario
+        // vacía). Una vez que existe al menos un usuario, dar de alta gente
+        // nueva requiere estar autenticado con el permiso correspondiente
+        // ("Gestión de Usuarios"), no la clave de la puerta.
+        boolean esBootstrapInicial = usuarioRepository.count() == 0;
+        return esBootstrapInicial && (
+            pathMatcher.match("/api/usuarios", path)
+            || pathMatcher.match("/api/empleados", path)
+        );
+    }
+    return false;
+}
 
     private boolean evaluarPermisoEnBaseDeDatos(String username, String path, String metodo) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByNombreUsuario(username);
@@ -94,7 +105,8 @@ public class MatrizSeguridadValidator implements AuthorizationManager<RequestAut
         }
 
         // 1.b Asistente de ayuda: accesible para CUALQUIER usuario autenticado,
-        // sin exigir ningún permiso puntual de la matriz.
+        // sin exigir ningún permiso puntual de la matriz (es una guía de uso,
+        // no una operación sobre datos sensibles del negocio).
         if (pathMatcher.match("/api/asistente/**", path)) {
             return true;
         }
@@ -350,7 +362,7 @@ public class MatrizSeguridadValidator implements AuthorizationManager<RequestAut
         if (pathMatcher.match("/api/pedidos/**", path)) return "Crear Pedido";
         if (pathMatcher.match("/api/comprobantes/**", path)) return "Pedidos Pendientes";
 
-        // Compras de Insumos (incluye Compras a Proveedores y sus Detalles)
+        // Compras de Insumos (incluye Compras a Proveedores y sus Detalles, mismo módulo)
         if (pathMatcher.match("/api/compras-insumos/**", path) ||
             pathMatcher.match("/api/compras/**", path) ||
             pathMatcher.match("/api/compras-proveedor/**", path) ||
@@ -395,7 +407,10 @@ public class MatrizSeguridadValidator implements AuthorizationManager<RequestAut
             return "Panel Principal";
         }
 
-        // Respaldos (exclusivo para ADMIN)
+        // Respaldos: operación sensible (descarga/restauración de base de datos),
+        // queda reservada exclusivamente a ADMIN (que ya tiene bypass total más arriba).
+        // No se mapea a ningún permiso para que ningún OPERARIO pueda acceder aunque
+        // tenga el permiso "Configuración".
         if (pathMatcher.match("/api/respaldos/**", path)) {
             return null;
         }
