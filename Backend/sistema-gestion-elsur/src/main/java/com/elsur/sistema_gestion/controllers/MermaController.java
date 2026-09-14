@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/mermas")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class MermaController {
 

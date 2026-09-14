@@ -1,5 +1,7 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoDuplicadoException;
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
 import com.elsur.sistema_gestion.models.EstadoTurno;
 import com.elsur.sistema_gestion.models.Turno;
 import com.elsur.sistema_gestion.repositories.MovimientoCajaRepository;
@@ -29,13 +31,13 @@ public class TurnoServiceImpl implements TurnoService {
     @Override
     public Turno abrirTurno(Turno turno) {
         if (existeTurnoAbiertoHoy()) {
-            throw new RuntimeException("¡Error! Ya existe una caja abierta en este momento.");
+            throw new RecursoDuplicadoException("¡Error! Ya existe una caja abierta en este momento.");
         }
-        turno.setFechaApertura(LocalDateTime.now());    
+        turno.setFechaApertura(LocalDateTime.now());
         turno.setEstado(EstadoTurno.ABIERTO);
-        
+
         // Seteamos inicialmente el monto esperado igual al monto con el que inicia
-        turno.setMontoEsperadoSistema(turno.getMontoInicial()); 
+        turno.setMontoEsperadoSistema(turno.getMontoInicial());
         turno.setDiferenciaArqueo(0.0);
 
         return turnoRepository.save(turno);
@@ -44,7 +46,7 @@ public class TurnoServiceImpl implements TurnoService {
     @Override
     public Turno cerrarTurno(Integer idTurno, Double montoReal, String observaciones, Integer idUsuario) {
     Turno turno = turnoRepository.findById(idTurno)
-            .orElseThrow(() -> new RuntimeException("No se encontró el turno con ID: " + idTurno));
+            .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró el turno con ID: " + idTurno));
 
     turno.setEstado(EstadoTurno.CERRADO);
     turno.setFechaCierre(LocalDateTime.now());
@@ -75,7 +77,7 @@ public class TurnoServiceImpl implements TurnoService {
 
     return turnoRepository.save(turno);
     }
-    
+
     @Override
     public Optional<Turno> obtenerTurnoAbiertoHoy() {
         // Busca el turno activo usando el estado ABIERTO

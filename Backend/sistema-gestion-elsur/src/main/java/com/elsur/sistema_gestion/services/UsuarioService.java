@@ -10,7 +10,10 @@ public interface UsuarioService {
     Usuario buscarPorId(Integer id);
     Optional<Usuario> buscarPorNombreUsuario(String nombreUsuario);
     void eliminar(Integer id);
-    void cambiarPassword(Integer idUsuario, String nuevaPassword);
+    // Antes: cambiarPassword(Integer idUsuario, String nuevaPassword) — cualquiera que supiera
+    // el id de otro usuario podía llamarla sin probar que conocía la contraseña actual.
+    // Ahora exige passwordActual y el service la valida con BCrypt antes de aceptar el cambio.
+    void cambiarPassword(Integer idUsuario, String passwordActual, String nuevaPassword);
     void cambiarNombreUsuario(Integer idUsuario, String usuarioActual, String usuarioNuevo);
     void cambiarEmail(Integer idUsuario, String emailActual, String emailNuevo);
 

@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tipos-proveedor")
-@CrossOrigin(origins = "*") // Si tenés una config global de CORS en tu Filter de Security, podés quitar esto
 public class TipoProveedorController {
 
     @Autowired

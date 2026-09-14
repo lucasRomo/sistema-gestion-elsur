@@ -8,7 +8,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tipos-documento")
-@CrossOrigin(origins = "*") // Permite la comunicación directa con React
 public class TipoDocumentoController {
 
     private final TipoDocumentoService tipoDocumentoService;

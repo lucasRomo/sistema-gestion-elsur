@@ -11,7 +11,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ia")
-@CrossOrigin(origins = "*")
 public class IaController {
 
     private final GeminiIaService geminiIaService;

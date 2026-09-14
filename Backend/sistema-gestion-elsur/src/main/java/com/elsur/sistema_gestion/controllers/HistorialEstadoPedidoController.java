@@ -9,7 +9,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/historiales-estado")
-@CrossOrigin(origins = "*")
 public class HistorialEstadoPedidoController {
 
     @Autowired

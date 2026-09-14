@@ -16,7 +16,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@CrossOrigin(origins = "*")
 public class PedidoController {
 
     @Autowired
@@ -41,6 +40,8 @@ public class PedidoController {
         return procesarYGuardarPedido(payload, null);
     }
 
+    // Este método sí conserva su try/catch: envuelve mapper.readValue(...), que
+    // tira JsonProcessingException (checked), no una RuntimeException de negocio.
     @PostMapping(consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> crearMultipart(
         @RequestPart("payload") String payloadJson,
@@ -56,84 +57,70 @@ public class PedidoController {
         }
     }
 
+    // Antes tenía un try/catch (Exception e) -> 400. Ahora, si el comprobante
+    // no existe, PedidoServiceImpl tira RuntimeException("Comprobante no
+    // encontrado") y el GlobalExceptionHandler la resuelve (400).
     @PostMapping(value = "/comprobantes/{idComprobante}/archivo", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> vincularArchivoAComprobante(
         @PathVariable Integer idComprobante,
         @RequestPart("comprobante") MultipartFile comprobante
     ) {
-        try {
-            Pedido pedidoActualizado = pedidoService.asociarArchivoAComprobanteExistente(idComprobante, comprobante);
-            return ResponseEntity.ok(pedidoActualizado);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+        Pedido pedidoActualizado = pedidoService.asociarArchivoAComprobanteExistente(idComprobante, comprobante);
+        return ResponseEntity.ok(pedidoActualizado);
     }
 
     @DeleteMapping("/comprobantes/{idComprobante}/archivo")
     public ResponseEntity<?> eliminarArchivoDeComprobante(@PathVariable Integer idComprobante) {
-        try {
-            Pedido pedidoActualizado = pedidoService.eliminarArchivoDeComprobante(idComprobante);
-            return ResponseEntity.ok(pedidoActualizado);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+        Pedido pedidoActualizado = pedidoService.eliminarArchivoDeComprobante(idComprobante);
+        return ResponseEntity.ok(pedidoActualizado);
     }
 
+    // Antes tenía un try/catch (Exception e) con e.printStackTrace() -> 400.
+    // El stack trace completo ahora lo loguea el GlobalExceptionHandler
+    // (log.warn / log.error) de forma centralizada, sin repetirlo en cada
+    // controller.
     private ResponseEntity<?> procesarYGuardarPedido(Map<String, Object> payload, MultipartFile comprobante) {
-        try {
-            ObjectMapper mapper = crearObjectMapperConfigurado();
-            Pedido pedido = mapper.convertValue(payload.get("pedido"), Pedido.class); 
-            
-            Integer idEmpleado = payload.get("idEmpleado") != null ?  
-                                 Integer.valueOf(payload.get("idEmpleado").toString()) : null;
-                                 
-            Integer idUsuario = payload.get("idUsuario") != null ?
-                                Integer.valueOf(payload.get("idUsuario").toString()) : null;
+        ObjectMapper mapper = crearObjectMapperConfigurado();
+        Pedido pedido = mapper.convertValue(payload.get("pedido"), Pedido.class);
 
-            String tipoPago = payload.get("tipoPago") != null ? 
-                              payload.get("tipoPago").toString() : "Efectivo";
+        Integer idEmpleado = payload.get("idEmpleado") != null ?
+                             Integer.valueOf(payload.get("idEmpleado").toString()) : null;
 
-            Pedido guardado = pedidoService.guardar(pedido, idEmpleado, idUsuario, tipoPago, comprobante);
-            return ResponseEntity.ok(guardado); 
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+        Integer idUsuario = payload.get("idUsuario") != null ?
+                            Integer.valueOf(payload.get("idUsuario").toString()) : null;
+
+        String tipoPago = payload.get("tipoPago") != null ?
+                          payload.get("tipoPago").toString() : "Efectivo";
+
+        Pedido guardado = pedidoService.guardar(pedido, idEmpleado, idUsuario, tipoPago, comprobante);
+        return ResponseEntity.ok(guardado);
     }
 
     @PatchMapping("/{id}/finalizar")
     public ResponseEntity<?> finalizarPedido(@PathVariable Integer id) {
-        try {
-            pedidoService.procesarDescuentoStock(id);
-            return ResponseEntity.ok("Pedido #" + id + " finalizado correctamente.");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        pedidoService.procesarDescuentoStock(id);
+        return ResponseEntity.ok("Pedido #" + id + " finalizado correctamente.");
     }
 
     @PutMapping("/{id}/cambiar-estado")
     public ResponseEntity<?> cambiarEstado(@PathVariable Integer id, @RequestBody Map<String, Object> payload) {
-        try {
-            String nuevoEstado = payload.get("nuevoEstado") != null ? payload.get("nuevoEstado").toString() : null;
-            String observaciones = payload.get("observaciones") != null ? payload.get("observaciones").toString() : "";
-            
-            Integer idUsuario = 1; 
-            if (payload.get("idUsuario") != null) {
-                idUsuario = Double.valueOf(payload.get("idUsuario").toString()).intValue();
-            }
+        String nuevoEstado = payload.get("nuevoEstado") != null ? payload.get("nuevoEstado").toString() : null;
+        String observaciones = payload.get("observaciones") != null ? payload.get("observaciones").toString() : "";
 
-            Pedido actualizado = pedidoService.cambiarEstadoPedido(id, nuevoEstado, observaciones, idUsuario);
-            return ResponseEntity.ok(actualizado);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al cambiar estado: " + e.getMessage());
+        Integer idUsuario = 1;
+        if (payload.get("idUsuario") != null) {
+            idUsuario = Double.valueOf(payload.get("idUsuario").toString()).intValue();
         }
+
+        Pedido actualizado = pedidoService.cambiarEstadoPedido(id, nuevoEstado, observaciones, idUsuario);
+        return ResponseEntity.ok(actualizado);
     }
 
     @PutMapping("/{id}/ubicacion")
     public ResponseEntity<?> actualizarUbicacion(
-        @PathVariable Integer id, 
+        @PathVariable Integer id,
         @RequestBody Map<String, String> payload) {
-    
+
         String nuevaUbicacion = payload.get("ubicacionEstante");
         if (nuevaUbicacion == null) {
             nuevaUbicacion = payload.get("ubicacion_estante");
@@ -149,38 +136,38 @@ public class PedidoController {
         @RequestPart("payload") String payloadJson,
         @RequestPart(value = "comprobante", required = false) MultipartFile comprobante
     ) {
+        ObjectMapper mapper = crearObjectMapperConfigurado();
+        Map<String, Object> payload;
         try {
-            ObjectMapper mapper = crearObjectMapperConfigurado();
-            Map<String, Object> payload = mapper.readValue(payloadJson, Map.class);
-
-            Double monto = Double.valueOf(payload.get("monto").toString());
-            String tipoPago = payload.get("tipoPago").toString();
-            Integer idUsuario = null;
-            if (payload.get("idUsuario") != null) {
-                idUsuario = Double.valueOf(payload.get("idUsuario").toString()).intValue();
-            }
-
-            Pedido pedidoActualizado = pedidoService.agregarPagoConArchivo(id, monto, tipoPago, idUsuario, comprobante);
-            return ResponseEntity.ok(pedidoActualizado);
+            payload = mapper.readValue(payloadJson, Map.class);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Error al parsear el JSON del pago: " + e.getMessage());
         }
+
+        Double monto = Double.valueOf(payload.get("monto").toString());
+        String tipoPago = payload.get("tipoPago").toString();
+        Integer idUsuario = null;
+        if (payload.get("idUsuario") != null) {
+            idUsuario = Double.valueOf(payload.get("idUsuario").toString()).intValue();
+        }
+
+        Pedido pedidoActualizado = pedidoService.agregarPagoConArchivo(id, monto, tipoPago, idUsuario, comprobante);
+        return ResponseEntity.ok(pedidoActualizado);
     }
 
+    // Antes tenía un try/catch (Exception e) -> 400 y un chequeo `if (pedido !=
+    // null)` que nunca daba false: PedidoServiceImpl.buscarPorId ya tira
+    // RecursoNoEncontradoException (404) por orElseThrow si el pedido no
+    // existe, nunca devuelve null.
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
-        try {
-            Pedido pedido = pedidoService.buscarPorId(id); 
-            if (pedido != null) {
-                return ResponseEntity.ok(pedido);
-            } else {
-                return ResponseEntity.status(404).body("No se encontró el pedido #" + id);
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al buscar el pedido: " + e.getMessage());
-        }
+        Pedido pedido = pedidoService.buscarPorId(id);
+        return ResponseEntity.ok(pedido);
     }
 
+    // Este método sí conserva su try/catch: es servido de archivo (I/O legítimo),
+    // no el anti-patrón de negocio que se está limpiando en el resto del controller.
     @GetMapping("/comprobantes/archivo/{nombreArchivo:.+}")
     public ResponseEntity<byte[]> verArchivoComprobante(@PathVariable String nombreArchivo) {
     try {
@@ -196,10 +183,10 @@ public class PedidoController {
     }
     }
 
-    @PutMapping("/{idPedido}/asignar-empleado") 
+    @PutMapping("/{idPedido}/asignar-empleado")
     public ResponseEntity<?> asignarEmpleado(@PathVariable Integer idPedido, @RequestBody Map<String, String> request) {
         Integer idEmpleado = Integer.parseInt(request.get("idEmpleado"));
-        pedidoService.asignarEmpleado(idPedido, idEmpleado); 
+        pedidoService.asignarEmpleado(idPedido, idEmpleado);
         return ResponseEntity.ok().build();
     }
 }

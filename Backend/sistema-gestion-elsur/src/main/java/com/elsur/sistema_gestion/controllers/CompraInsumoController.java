@@ -9,20 +9,19 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/compras-insumos")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class CompraInsumoController {
 
     private final CompraInsumoService compraInsumoService;
 
+    // Antes tenía un try/catch (Exception e) que devolvía siempre 500, incluso
+    // para errores de validación (ítems vacíos, insumo/producto inexistente,
+    // caja cerrada). Ahora CompraInsumoServiceImpl tira SolicitudInvalidaException
+    // (400) o RecursoNoEncontradoException (404) según corresponda, y el
+    // GlobalExceptionHandler arma la respuesta.
     @PostMapping
     public ResponseEntity<?> registrarCompraInsumo(@RequestBody CompraInsumoDTO dto) {
-        try {
-            compraInsumoService.registrarCompraInsumo(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al registrar la compra de insumo: " + e.getMessage());
-        }
+        compraInsumoService.registrarCompraInsumo(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }

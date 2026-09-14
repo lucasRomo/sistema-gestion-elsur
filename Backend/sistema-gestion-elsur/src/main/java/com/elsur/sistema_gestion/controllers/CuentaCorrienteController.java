@@ -20,7 +20,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/cuentas-corrientes")
-@CrossOrigin(origins = "*")
 public class CuentaCorrienteController {
 
     @Autowired

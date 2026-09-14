@@ -9,7 +9,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/registro-actividad")
-@CrossOrigin(origins = "*") // Permite peticiones desde el React frontend
 public class RegistroActividadController {
 
     @Autowired

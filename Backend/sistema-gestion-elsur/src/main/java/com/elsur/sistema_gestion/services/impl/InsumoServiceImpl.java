@@ -1,5 +1,7 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Insumo;
 import com.elsur.sistema_gestion.models.Usuario;
 import com.elsur.sistema_gestion.repositories.InsumoRepository;
@@ -37,7 +39,7 @@ public class InsumoServiceImpl implements InsumoService {
     @Override
     public Insumo buscarPorId(Integer id) {
         return insumoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Insumo no encontrado con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Insumo no encontrado con id: " + id));
     }
 
     @Override
@@ -51,24 +53,24 @@ public class InsumoServiceImpl implements InsumoService {
             if (nomSuelta != null && nomCompra != null &&
                 !nomSuelta.trim().isEmpty() &&
                 nomSuelta.trim().equalsIgnoreCase(nomCompra.trim())) {
-                throw new RuntimeException("La unidad suelta y la unidad de empaque no pueden ser iguales.");
+                throw new SolicitudInvalidaException("La unidad suelta y la unidad de empaque no pueden ser iguales.");
             }
         }
 
         if (insumo.getPrecio() != null && insumo.getPrecio().compareTo(BigDecimal.ZERO) < 0) {
-            throw new RuntimeException("El precio no puede ser negativo");
+            throw new SolicitudInvalidaException("El precio no puede ser negativo");
         }
 
         if (insumo.getStockActual() != null && insumo.getStockActual().compareTo(BigDecimal.ZERO) < 0) {
-            throw new RuntimeException("El stock actual no puede ser negativo");
+            throw new SolicitudInvalidaException("El stock actual no puede ser negativo");
         }
 
         if (insumo.getStockEmpaquetado() != null && insumo.getStockEmpaquetado().compareTo(BigDecimal.ZERO) < 0) {
-            throw new RuntimeException("El stock empaquetado no puede ser negativo");
+            throw new SolicitudInvalidaException("El stock empaquetado no puede ser negativo");
         }
 
         if (insumo.getFactorConversion() != null && insumo.getFactorConversion().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("El factor de conversión debe ser mayor a cero");
+            throw new SolicitudInvalidaException("El factor de conversión debe ser mayor a cero");
         }
 
         if (insumo.getEstado() == null || insumo.getEstado().trim().isEmpty()) {
@@ -102,7 +104,7 @@ public class InsumoServiceImpl implements InsumoService {
                 compararYRegistrar(usuarioActual, "Insumo", "estado", insumo.getIdInsumo(),
                         insumoViejo.getEstado(), insumo.getEstado());
 
-                String provViejo = (insumoViejo.getProveedor() != null && insumoViejo.getProveedor().getNombreComercial() != null) 
+                String provViejo = (insumoViejo.getProveedor() != null && insumoViejo.getProveedor().getNombreComercial() != null)
                         ? insumoViejo.getProveedor().getNombreComercial() : "";
 
                 String provNuevo = "";
@@ -110,7 +112,7 @@ public class InsumoServiceImpl implements InsumoService {
                     if (insumo.getProveedor().getNombreComercial() != null && !insumo.getProveedor().getNombreComercial().trim().isEmpty()) {
                         provNuevo = insumo.getProveedor().getNombreComercial();
                     } else if (insumo.getProveedor().getIdProveedor() != null) {
-                        if (insumoViejo.getProveedor() != null && 
+                        if (insumoViejo.getProveedor() != null &&
                             insumoViejo.getProveedor().getIdProveedor().equals(insumo.getProveedor().getIdProveedor())) {
                             provNuevo = provViejo;
                         }
@@ -118,7 +120,7 @@ public class InsumoServiceImpl implements InsumoService {
                 }
                 compararYRegistrar(usuarioActual, "Insumo", "proveedor", insumo.getIdInsumo(), provViejo, provNuevo);
 
-                String uniVieja = (insumoViejo.getUnidadMedida() != null) 
+                String uniVieja = (insumoViejo.getUnidadMedida() != null)
                         ? String.valueOf(insumoViejo.getUnidadMedida().getNombre()) : "";
 
                 String uniNueva = "";
@@ -127,7 +129,7 @@ public class InsumoServiceImpl implements InsumoService {
                 }
                 compararYRegistrar(usuarioActual, "Insumo", "unidadMedida", insumo.getIdInsumo(), uniVieja, uniNueva);
 
-                String uniCompraVieja = (insumoViejo.getUnidadCompra() != null) 
+                String uniCompraVieja = (insumoViejo.getUnidadCompra() != null)
                         ? String.valueOf(insumoViejo.getUnidadCompra().getNombre()) : "";
 
                 String uniCompraNueva = "";
@@ -181,7 +183,7 @@ public class InsumoServiceImpl implements InsumoService {
                     .filter(i -> i.getProveedor() != null && idProveedor.equals(i.getProveedor().getIdProveedor()))
                     .collect(Collectors.toList());
 
-        } else { 
+        } else {
             aModificar = todos;
         }
 
@@ -210,18 +212,18 @@ public class InsumoServiceImpl implements InsumoService {
     @Transactional
     public Insumo convertirStock(Integer idInsumo, BigDecimal cantidadBultos, Integer idUsuario) {
         if (cantidadBultos == null || cantidadBultos.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("La cantidad de bultos a abrir debe ser mayor a cero");
+            throw new SolicitudInvalidaException("La cantidad de bultos a abrir debe ser mayor a cero");
         }
 
         Insumo insumo = buscarPorId(idInsumo);
 
         if (insumo.getFactorConversion() == null || insumo.getFactorConversion().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("El insumo no tiene un factor de conversión configurado");
+            throw new SolicitudInvalidaException("El insumo no tiene un factor de conversión configurado");
         }
 
         BigDecimal stockEmp = insumo.getStockEmpaquetado() != null ? insumo.getStockEmpaquetado() : BigDecimal.ZERO;
         if (stockEmp.compareTo(cantidadBultos) < 0) {
-            throw new RuntimeException("Stock insuficiente de empaques/bultos cerrados. Disponible: " + stockEmp);
+            throw new SolicitudInvalidaException("Stock insuficiente de empaques/bultos cerrados. Disponible: " + stockEmp);
         }
 
         BigDecimal stockEmpaquetadoAnterior = stockEmp;

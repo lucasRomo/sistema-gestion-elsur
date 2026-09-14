@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categorias")
-@CrossOrigin(origins = "*") // Permite que React se conecte
 public class CategoriaController {
 
     @Autowired

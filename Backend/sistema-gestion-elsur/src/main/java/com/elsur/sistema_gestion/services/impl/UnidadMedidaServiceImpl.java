@@ -1,5 +1,7 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoDuplicadoException;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.UnidadMedida;
 import com.elsur.sistema_gestion.repositories.UnidadMedidaRepository;
 import com.elsur.sistema_gestion.services.UnidadMedidaService;
@@ -22,7 +24,7 @@ public class UnidadMedidaServiceImpl implements UnidadMedidaService {
     @Override
     public UnidadMedida guardar(UnidadMedida unidadMedida) {
         if (unidadMedida.getNombre() == null || unidadMedida.getNombre().trim().isEmpty()) {
-            throw new IllegalArgumentException("El nombre de la unidad de medida no puede estar vacío.");
+            throw new SolicitudInvalidaException("El nombre de la unidad de medida no puede estar vacío.");
         }
 
         String nombreFormateado = unidadMedida.getNombre().trim();
@@ -32,7 +34,7 @@ public class UnidadMedidaServiceImpl implements UnidadMedidaService {
                 .anyMatch(u -> u.getNombre() != null && u.getNombre().trim().equalsIgnoreCase(nombreFormateado));
 
         if (existe) {
-            throw new IllegalArgumentException("Ya existe una unidad de medida registrada con el nombre '" + nombreFormateado + "'.");
+            throw new RecursoDuplicadoException("Ya existe una unidad de medida registrada con el nombre '" + nombreFormateado + "'.");
         }
 
         unidadMedida.setNombre(nombreFormateado);
