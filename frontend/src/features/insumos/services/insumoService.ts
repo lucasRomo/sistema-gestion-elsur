@@ -1,6 +1,6 @@
 import type { Insumo, UnidadMedida } from '../types/Insumo';
 import type { Proveedor } from '../../proveedores/types/Proveedor';
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
 const API_URL = `${API_BASE_URL}/insumos`;
 
@@ -41,8 +41,7 @@ export const guardarInsumo = async (insumo: any): Promise<Insumo> => {
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err);
+    throw new Error(await extraerMensajeError(res, 'Error al guardar el insumo.'));
   }
   return res.json();
 };
@@ -61,8 +60,7 @@ export const convertirInsumo = async (idInsumo: number, cantidadBultos: number):
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err);
+    throw new Error(await extraerMensajeError(res, 'Error al convertir el insumo.'));
   }
   return res.json();
 };
@@ -101,8 +99,7 @@ export const actualizarInsumosMasivo = async (payload: ActualizarInsumosPayload)
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err);
+    throw new Error(await extraerMensajeError(res, 'Error al actualizar los insumos.'));
   }
   return res.text();
 };
@@ -139,8 +136,7 @@ export const crearUnidadMedida = async (nombre: string): Promise<UnidadMedida> =
   });
 
   if (!res.ok) {
-    const errorMsg = await res.text();
-    throw new Error(errorMsg || 'Error al guardar la unidad de medida');
+    throw new Error(await extraerMensajeError(res, 'Error al guardar la unidad de medida'));
   }
   return res.json();
 };

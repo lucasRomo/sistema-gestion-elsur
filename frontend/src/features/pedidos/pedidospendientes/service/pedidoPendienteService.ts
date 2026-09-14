@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiFetch } from '../../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../../config/api';
 
 const API_URL = `${API_BASE_URL}/pedidos`;
 
@@ -51,8 +51,7 @@ export const PedidoPendienteService = {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Error al actualizar el estado del pedido.");
+      throw new Error(await extraerMensajeError(response, "Error al actualizar el estado del pedido."));
     }
 
     return await response.json();
@@ -82,8 +81,7 @@ export const PedidoPendienteService = {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Error al procesar el pago.");
+      throw new Error(await extraerMensajeError(response, "Error al procesar el pago."));
     }
 
     return await response.json();
@@ -166,8 +164,7 @@ export const PedidoPendienteService = {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "No se pudo actualizar la ubicación del pedido.");
+      throw new Error(await extraerMensajeError(response, "No se pudo actualizar la ubicación del pedido."));
     }
 
     const text = await response.text();

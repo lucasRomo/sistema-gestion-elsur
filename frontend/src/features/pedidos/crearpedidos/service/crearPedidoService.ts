@@ -1,5 +1,5 @@
 import type { CategoriaCliente } from '../../../clientes/types/CategoriaCliente';
-import { API_BASE_URL, apiFetch } from '../../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../../config/api';
 
 const API_PEDIDOS = `${API_BASE_URL}/pedidos`;
 const API_CATEGORIAS = `${API_BASE_URL}/categorias-cliente`;
@@ -74,8 +74,7 @@ export const crearPedidoService = {
     }
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || 'Error al guardar el pedido.');
+      throw new Error(await extraerMensajeError(response, 'Error al guardar el pedido.'));
     }
 
     return await response.json();

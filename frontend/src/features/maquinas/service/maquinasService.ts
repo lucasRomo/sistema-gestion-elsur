@@ -1,5 +1,5 @@
 import type { Maquina } from '../types/Maquina';
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
 const API_MAQUINAS = `${API_BASE_URL}/maquinas`;
 const API_INCIDENCIAS = `${API_BASE_URL}/incidencias`;
@@ -39,8 +39,7 @@ export const guardarMaquinaAPI = async (maquina: Maquina & { observacion?: strin
   });
 
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(errorText || 'No se pudo procesar la solicitud de la máquina.');
+    throw new Error(await extraerMensajeError(res, 'No se pudo procesar la solicitud de la máquina.'));
   }
 
   if (maquina.idMaquina && maquina.observacion) {
@@ -102,15 +101,13 @@ export const reportarFallaAPI = async (idMaquina: number, descripcion: string, p
   });
 
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(errorText || 'Error al reportar la incidencia.');
+    throw new Error(await extraerMensajeError(res, 'Error al reportar la incidencia.'));
   }
 };
 
 export const eliminarMaquinaAPI = async (id: number): Promise<void> => {
   const res = await apiFetch(`${API_MAQUINAS}/${id}`, { method: 'DELETE' });
   if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(errorText || 'Error al eliminar la máquina.');
+    throw new Error(await extraerMensajeError(res, 'Error al eliminar la máquina.'));
   }
 };

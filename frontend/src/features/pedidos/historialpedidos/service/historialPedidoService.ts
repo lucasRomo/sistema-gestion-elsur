@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiFetch } from '../../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../../config/api';
 
 const API_URL = `${API_BASE_URL}/pedidos`;
 
@@ -34,8 +34,7 @@ export const historialPedidoService = {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Error al procesar la devolución.");
+      throw new Error(await extraerMensajeError(response, "Error al procesar la devolución."));
     }
 
     return await response.json();

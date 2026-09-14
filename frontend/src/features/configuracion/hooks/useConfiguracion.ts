@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { configuracionService } from '../services/configuracionService';
 import type { RespaldoLog } from '../services/configuracionService';
+import { extraerMensajeError } from '../../../config/api';
 
 export const useConfiguracion = () => {
   const [opcionPerfil, setOpcionPerfil] = useState<'usuario' | 'password' | 'email'>('password');
@@ -70,8 +71,8 @@ export const useConfiguracion = () => {
         setMensajePass({ texto: '¡Contraseña actualizada con éxito!', tipo: 'exito' });
         setPasswords({ actual: '', nueva: '', confirmar: '' });
       } else {
-        const err = await response.text();
-        setMensajePass({ texto: err || 'Error al cambiar la contraseña.', tipo: 'error' });
+        const mensaje = await extraerMensajeError(response, 'Error al cambiar la contraseña.');
+        setMensajePass({ texto: mensaje, tipo: 'error' });
       }
     } catch {
       setMensajePass({ texto: 'Error de conexión con el backend.', tipo: 'error' });
@@ -113,8 +114,8 @@ export const useConfiguracion = () => {
         }
         setDatosUsuario({ actual: datosUsuario.nuevo, nuevo: '' });
       } else {
-        const errText = await response.text();
-        setMensajeUsuario({ texto: errText || 'Error al actualizar usuario.', tipo: 'error' });
+        const mensaje = await extraerMensajeError(response, 'Error al actualizar usuario.');
+        setMensajeUsuario({ texto: mensaje, tipo: 'error' });
       }
     } catch {
       setMensajeUsuario({ texto: 'Error de conexión con el servidor.', tipo: 'error' });
@@ -152,8 +153,8 @@ export const useConfiguracion = () => {
         }
         setDatosEmail({ actual: datosEmail.nuevo, nuevo: '' });
       } else {
-        const errText = await response.text();
-        setMensajeEmail({ texto: errText || 'Error al actualizar email.', tipo: 'error' });
+        const mensaje = await extraerMensajeError(response, 'Error al actualizar email.');
+        setMensajeEmail({ texto: mensaje, tipo: 'error' });
       }
     } catch {
       setMensajeEmail({ texto: 'Error de conexión con el servidor.', tipo: 'error' });
@@ -235,8 +236,8 @@ export const useConfiguracion = () => {
         setMensajeRespaldo({ texto: '¡Base de datos restaurada con éxito!', tipo: 'exito' });
         setArchivoSeleccionado(null);
       } else {
-        const errorText = await response.text();
-        setMensajeRespaldo({ texto: `Error al restaurar: ${errorText}`, tipo: 'error' });
+        const mensaje = await extraerMensajeError(response, 'Error al restaurar la base de datos.');
+        setMensajeRespaldo({ texto: mensaje, tipo: 'error' });
       }
     } catch {
       setMensajeRespaldo({ texto: 'Error de conexión al restaurar.', tipo: 'error' });

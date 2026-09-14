@@ -467,7 +467,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           width: '100%',
           height: '100vh',
           overflowX: 'hidden',
-          overflowY: activeItem === 'Informes' ? 'auto' : 'hidden' 
+          overflowY: 'auto'
         }}
       >
         <div className="p-4" style={{ width: '100%', maxWidth: '100%' }}>

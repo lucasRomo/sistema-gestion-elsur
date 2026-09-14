@@ -1,7 +1,7 @@
 import type { Producto } from '../../productos/types/Producto';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
 export interface EstadoCajaNotificacion {
   cajaAbierta: boolean;
@@ -107,7 +107,7 @@ export const ventaRapidaService = {
       });
     }
 
-    if (!resCrear.ok) throw new Error(await resCrear.text());
+    if (!resCrear.ok) throw new Error(await extraerMensajeError(resCrear, 'Error al crear el pedido.'));
     const pedidoGuardado = await resCrear.json();
     const idPedido = pedidoGuardado.id_pedido || pedidoGuardado.idPedido;
 
@@ -124,7 +124,7 @@ export const ventaRapidaService = {
       })
     });
     
-    if (!resEstado.ok) throw new Error(await resEstado.text() || "Error al actualizar estado.");
+    if (!resEstado.ok) throw new Error(await extraerMensajeError(resEstado, "Error al actualizar estado."));
 
     return pedidoGuardado;
   },

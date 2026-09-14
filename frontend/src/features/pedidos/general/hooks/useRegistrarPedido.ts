@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Producto } from '../../../productos/types/Producto';
 import type { Pedido } from '../../general/types/Pedido';
 import type { Maquina } from '../../../maquinas/types/Maquina';
-import { API_BASE_URL, apiFetch } from '../../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../../config/api';
 
 export const useRegistrarPedido = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -105,8 +105,7 @@ export const useRegistrarPedido = () => {
       }
 
       if (!respuesta.ok) {
-        const errorTexto = await respuesta.text();
-        throw new Error(errorTexto || "Error del servidor al crear el pedido");
+        throw new Error(await extraerMensajeError(respuesta, "Error del servidor al crear el pedido"));
       }
 
       return true;

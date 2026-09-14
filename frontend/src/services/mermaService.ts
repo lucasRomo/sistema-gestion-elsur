@@ -1,5 +1,5 @@
-import { apiFetch } from '../config/api';
-const BASE_URL = 'http://localhost:8080/api/mermas';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../config/api';
+const BASE_URL = `${API_BASE_URL}/mermas`;
 
 export interface MermaEntity {
   idMerma?: number;
@@ -26,8 +26,7 @@ export const mermaService = {
       body: JSON.stringify(mermas)
     });
     if (!res.ok) {
-      const err = await res.text();
-      throw new Error(err || 'Error al guardar la merma.');
+      throw new Error(await extraerMensajeError(res, 'Error al guardar la merma.'));
     }
     return await res.json();
   }

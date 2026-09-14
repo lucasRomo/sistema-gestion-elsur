@@ -1,5 +1,5 @@
 import type { Proveedor } from '../types/Proveedor';
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
 const API_URL = `${API_BASE_URL}/proveedores`;
 const API_TIPOS_URL = `${API_BASE_URL}/tipos-proveedor`;
@@ -29,7 +29,7 @@ export const guardarProveedor = async (proveedor: Proveedor) => {
     body: JSON.stringify(proveedor)
   });
 
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al guardar el proveedor.'));
   return res.json();
 };
 

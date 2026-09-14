@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
 const BASE_URL = API_BASE_URL || 'http://localhost:8080/api';
 
@@ -30,7 +30,7 @@ export const clienteService = {
       body: JSON.stringify(cliente)
     });
 
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al crear el cliente.'));
     return res;
   },
 

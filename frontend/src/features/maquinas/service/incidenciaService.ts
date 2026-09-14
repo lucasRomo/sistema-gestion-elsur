@@ -1,5 +1,5 @@
 import type { Incidencia } from '../types/Incidencia';
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
 const API_URL = `${API_BASE_URL}/incidencias`;
 
@@ -38,8 +38,7 @@ export const incidenciaService = {
     });
 
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(errorText || 'Error al cambiar estado a mantenimiento');
+      throw new Error(await extraerMensajeError(res, 'Error al cambiar estado a mantenimiento'));
     }
   },
 
@@ -55,8 +54,7 @@ export const incidenciaService = {
     });
 
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(errorText || 'Error al resolver la incidencia');
+      throw new Error(await extraerMensajeError(res, 'Error al resolver la incidencia'));
     }
   },
 
