@@ -134,6 +134,13 @@ export const DetallesPedidoForm: React.FC<Props> = ({
       return;
     }
 
+    // El input de seña/adelanto es un <input type="number"> sin min="0": nada
+    // impedía tipear un valor negativo y mandarlo tal cual al backend.
+    if (isNaN(Number(montoEntregado)) || Number(montoEntregado) < 0) {
+      alert("El monto de seña/adelanto no puede ser negativo.");
+      return;
+    }
+
     // Validación de la fecha de entrega: no puede ser anterior al momento
     // actual. Se recalcula "ahora" en este punto (no se reutiliza
     // minFechaEntrega) para cubrir el caso de que el formulario haya

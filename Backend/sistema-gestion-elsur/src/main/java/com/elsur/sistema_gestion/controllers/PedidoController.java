@@ -92,7 +92,14 @@ public class PedidoController {
         String tipoPago = payload.get("tipoPago") != null ?
                           payload.get("tipoPago").toString() : "Efectivo";
 
-        Pedido guardado = pedidoService.guardar(pedido, idEmpleado, idUsuario, tipoPago, comprobante);
+        // true solo cuando el frontend manda esta confirmación explícita, es decir
+        // cuando el operario ya vio el aviso de "máquina fuera de servicio/falla/
+        // mantenimiento" y clickeó "Continuar de todos modos". Sin esto, el backend
+        // rechaza la venta por default si hace falta una máquina caída.
+        boolean confirmarMaquinaNoDisponible = Boolean.TRUE.equals(payload.get("confirmarMaquinaNoDisponible"));
+
+        Pedido guardado = pedidoService.guardar(pedido, idEmpleado, idUsuario, tipoPago, comprobante,
+                confirmarMaquinaNoDisponible);
         return ResponseEntity.ok(guardado);
     }
 
@@ -112,7 +119,12 @@ public class PedidoController {
             idUsuario = Double.valueOf(payload.get("idUsuario").toString()).intValue();
         }
 
-        Pedido actualizado = pedidoService.cambiarEstadoPedido(id, nuevoEstado, observaciones, idUsuario);
+        // Mismo criterio que en el alta: solo true si el frontend confirma que el
+        // operario ya vio el aviso de máquina caída y decidió seguir igual.
+        boolean confirmarMaquinaNoDisponible = Boolean.TRUE.equals(payload.get("confirmarMaquinaNoDisponible"));
+
+        Pedido actualizado = pedidoService.cambiarEstadoPedido(id, nuevoEstado, observaciones, idUsuario,
+                confirmarMaquinaNoDisponible);
         return ResponseEntity.ok(actualizado);
     }
 

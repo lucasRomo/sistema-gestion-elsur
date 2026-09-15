@@ -13,10 +13,13 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import com.elsur.sistema_gestion.services.JwtService;
+import com.elsur.sistema_gestion.security.JwtService;
 import com.elsur.sistema_gestion.repositories.EmpleadoRepository;
 
 import java.util.HashMap;
@@ -36,6 +39,14 @@ public class UsuarioController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    // NUEVO: reemplaza la comparación manual de hash en login() por el flujo
+    // "oficial" de Spring Security (ver UserDetailsServiceImpl + el bean
+    // AuthenticationManager en SecurityConfig). Sigue haciendo falta
+    // passwordEncoder acá arriba para verContrasenaReal(), que reautentica
+    // contra el hash directamente y no pasa por login.
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     @Autowired
     private EmpleadoRepository EmpleadoRepository;
@@ -133,16 +144,34 @@ public class UsuarioController {
     public ResponseEntity<?> login(@RequestBody Usuario credenciales) {
         // A propósito, "usuario no existe" y "contraseña incorrecta" tiran la MISMA excepción
         // con el MISMO mensaje: si distinguiéramos, alguien podría usar el login para
-        // averiguar qué nombres de usuario existen en el sistema.
-        Usuario usuario = usuarioService.buscarPorNombreUsuario(credenciales.getNombreUsuario())
-                .orElseThrow(() -> new CredencialesInvalidasException("Credenciales incorrectas"));
-
-        // Antes: usuario.getPassword().equals(credenciales.getPassword()) -> comparaba texto
-        // plano contra texto plano. Ahora compara la contraseña que mandó el usuario contra el
-        // hash BCrypt guardado; encoder.matches() se encarga de extraer el salt y recalcular.
-        if (!passwordEncoder.matches(credenciales.getPassword(), usuario.getPassword())) {
+        // averiguar qué nombres de usuario existen en el sistema. Ahora esto lo refuerza
+        // además Spring Security: UserDetailsServiceImpl.loadUserByUsername() tira
+        // UsernameNotFoundException cuando el usuario no existe, y DaoAuthenticationProvider
+        // la esconde por defecto detrás de un BadCredentialsException genérico -- ni por
+        // tipo de excepción ni por mensaje se puede distinguir un caso del otro desde afuera.
+        //
+        // TC_L09: este chequeo explícito de null sigue acá aunque AuthenticationManager ya
+        // corta con un BadCredentialsException limpio si credentials es null (el provider de
+        // Spring lo valida antes de llegar a comparar el hash) -- lo dejamos para que la
+        // intención quede clara sin depender de ese detalle interno de Spring Security.
+        if (credenciales.getPassword() == null) {
             throw new CredencialesInvalidasException("Credenciales incorrectas");
         }
+
+        Usuario usuario;
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(credenciales.getNombreUsuario(), credenciales.getPassword())
+            );
+        } catch (AuthenticationException e) {
+            throw new CredencialesInvalidasException("Credenciales incorrectas");
+        }
+
+        // Si authenticate() no tiró excepción, las credenciales son válidas: recargamos
+        // el Usuario completo (con persona, rol, etc.) para armar el JWT y la respuesta,
+        // igual que hacía el flujo manual anterior.
+        usuario = usuarioService.buscarPorNombreUsuario(credenciales.getNombreUsuario())
+                .orElseThrow(() -> new CredencialesInvalidasException("Credenciales incorrectas"));
 
         if (usuario.getPersona() != null) {
             Optional<Empleado> empleadoOpt = EmpleadoRepository.findByPersona_IdPersona(usuario.getPersona().getIdPersona());

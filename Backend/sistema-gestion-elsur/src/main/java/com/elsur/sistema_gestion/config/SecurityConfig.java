@@ -1,9 +1,15 @@
 package com.elsur.sistema_gestion.config;
 
+import com.elsur.sistema_gestion.security.JwtAccessDeniedHandler;
+import com.elsur.sistema_gestion.security.JwtAuthenticationEntryPoint;
+import com.elsur.sistema_gestion.security.JwtAuthenticationFilter;
+import com.elsur.sistema_gestion.security.MatrizSeguridadValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -79,6 +85,18 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    // NUEVO: Spring Boot no expone un AuthenticationManager automáticamente cuando
+    // hay un SecurityFilterChain propio como el de acá arriba. Sin este bean,
+    // UsuarioController no podría inyectar AuthenticationManager para el login.
+    // Por debajo, este AuthenticationManager arma solo un DaoAuthenticationProvider
+    // usando el único UserDetailsService (UserDetailsServiceImpl) y el único
+    // PasswordEncoder (el bean de más abajo) que encuentra en el contexto -- no
+    // hace falta declarar el DaoAuthenticationProvider a mano.
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
     }
 
     @Bean

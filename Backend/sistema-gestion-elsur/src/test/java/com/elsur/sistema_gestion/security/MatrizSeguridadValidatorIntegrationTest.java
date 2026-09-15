@@ -1,4 +1,10 @@
-package com.elsur.sistema_gestion.config;
+package com.elsur.sistema_gestion.security;
+// MOVIDO de config/ a security/, junto con MatrizSeguridadValidator. También se
+// renombra el ARCHIVO: antes era "Matrizseguridadvalidatortest .java" (minúsculas
+// y un espacio al final del nombre, aunque la clase adentro se llama
+// MatrizSeguridadValidatorIntegrationTest bien escrita) -- compilaba igual porque
+// la clase no es "public", pero es un nombre de archivo con errores de tipeo que
+// convenía corregir.
 
 import com.elsur.sistema_gestion.models.Permiso;
 import com.elsur.sistema_gestion.models.Rol;
@@ -6,7 +12,7 @@ import com.elsur.sistema_gestion.models.Usuario;
 import com.elsur.sistema_gestion.repositories.PermisoRepository;
 import com.elsur.sistema_gestion.repositories.RolRepository;
 import com.elsur.sistema_gestion.repositories.UsuarioRepository;
-import com.elsur.sistema_gestion.services.JwtService;
+import com.elsur.sistema_gestion.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;

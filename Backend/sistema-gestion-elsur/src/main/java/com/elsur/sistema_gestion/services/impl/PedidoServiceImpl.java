@@ -1,6 +1,8 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.ConflictoDeIntegridadException;
 import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.*;
 import com.elsur.sistema_gestion.repositories.*;
 import com.elsur.sistema_gestion.services.PedidoService;
@@ -102,7 +104,8 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     @Transactional
-    public Pedido guardar(Pedido pedido, Integer idEmpleado, Integer idUsuario, String tipoPago, MultipartFile comprobante) {
+    public Pedido guardar(Pedido pedido, Integer idEmpleado, Integer idUsuario, String tipoPago, MultipartFile comprobante,
+                           boolean confirmarMaquinaNoDisponible) {
         boolean existeCajaAbierta = TurnoRepository.existsByEstado(EstadoTurno.ABIERTO);
         if (!existeCajaAbierta) {
             throw new RuntimeException("La Caja No está Abierta. Por favor, inicie turno antes de continuar.");
@@ -128,6 +131,17 @@ public class PedidoServiceImpl implements PedidoService {
                     Producto prod = productoRepository.findById(detalle.getProducto().getIdProducto())
                         .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
                     detalle.setProducto(prod);
+                } else {
+                    // Antes esto se dejaba pasar en silencio: un detalle sin producto (o con
+                    // un producto sin idProducto) llegaba así hasta procesarDescuentoStock,
+                    // que hace detalle.getProducto().getStockVinculado() sin chequear null ->
+                    // NullPointerException. En el alta normal esa excepción terminaba tragada
+                    // (ver más abajo), así que el pedido se guardaba igual con un detalle roto;
+                    // si más tarde alguien finalizaba ese pedido, la misma NPE volvía a saltar
+                    // pero esta vez sin nada que la atajara. Cortamos acá, con un mensaje claro,
+                    // antes de que el detalle llegue a guardarse.
+                    throw new SolicitudInvalidaException(
+                        "Cada detalle del pedido debe indicar un producto válido (falta el producto o su id).");
                 }
             }
         }
@@ -161,6 +175,18 @@ public class PedidoServiceImpl implements PedidoService {
         }
 
         BigDecimal seña = p.getMonto_pago_adelantado();
+
+        // Validación que faltaba: el formulario de Crear Pedido manda este campo
+        // como <input type="number"> sin min="0" y nada del lado del cliente
+        // impedía tipear un monto negativo. Si eso llegaba hasta acá, quedaba
+        // persistido tal cual en Pedido.monto_pago_adelantado (un "pago negativo"
+        // sin sentido), sin siquiera generar el ComprobantePago/MovimientoCaja de
+        // abajo (que solo corre con seña > 0) -- el dato quedaba corrupto y en
+        // silencio.
+        if (seña != null && seña.compareTo(BigDecimal.ZERO) < 0) {
+            throw new SolicitudInvalidaException("El monto de seña/adelanto no puede ser negativo.");
+        }
+
         if (seña != null && seña.compareTo(BigDecimal.ZERO) > 0) {
 
             if (p.getComprobantes() == null) {
@@ -262,13 +288,33 @@ public class PedidoServiceImpl implements PedidoService {
             }
         }
 
-        if (p.getObservaciones() != null && p.getObservaciones().contains("Venta Rápida")) {
-            try {
-                this.procesarDescuentoStock(p.getId_pedido());
-                p = pedidoRepository.findById(p.getId_pedido()).orElse(p);
-            } catch (Exception e) {
-                System.err.println("Aviso: El descuento de stock de Venta Rápida se procesará en la actualización de estado: " + e.getMessage());
-            }
+        boolean esVentaRapidaAlAlta = p.getObservaciones() != null && p.getObservaciones().contains("Venta Rápida");
+
+        // HALLAZGO de este trabajo: Crear Pedido (alta formal) permite elegir
+        // "Estado / Destino" = ENTREGADO directamente en el mismo formulario que
+        // arma el pedido (ver DetallesPedidoForm.tsx) -- no es exclusivo de
+        // "Cambiar estado" después. Antes, esta rama de guardar() solo disparaba
+        // procesarDescuentoStock() para Venta Rápida; un pedido formal creado ya
+        // en ENTREGADO se guardaba tal cual, SIN descontar stock, SIN validar
+        // insumos ni máquina -- quedaba marcado como entregado sin que el
+        // inventario se haya tocado nunca. Ahora cualquier pedido que nazca ya en
+        // un estado final corre la misma validación que Venta Rápida.
+        boolean creadoDirectoEnEstadoFinal = "ENTREGADO".equalsIgnoreCase(p.getEstado())
+                || "FINALIZADO".equalsIgnoreCase(p.getEstado());
+
+        if (esVentaRapidaAlAlta || creadoDirectoEnEstadoFinal) {
+            // Antes, cualquier falla acá (stock insuficiente, máquina fuera de servicio,
+            // un detalle sin producto válido) se tragaba en silencio: el pedido quedaba
+            // igual guardado con HTTP 200, con parte del stock ya descontado (lo que sí
+            // llegó a procesarse antes de la excepción) y sin descontar el resto. Un
+            // "Cambiar estado a FINALIZADO" posterior volvía a correr
+            // procesarDescuentoStock desde cero y descontaba una segunda vez lo que ya
+            // se había descontado acá (bug de doble descuento). Dejamos que la excepción
+            // se propague: @Transactional hace que TODO este guardar() se revierta (el
+            // pedido, sus detalles, el comprobante/movimiento de caja si ya se habían
+            // armado, el ajuste de cuenta corriente) en vez de dejar una venta a medias.
+            this.procesarDescuentoStock(p.getId_pedido(), confirmarMaquinaNoDisponible);
+            p = pedidoRepository.findById(p.getId_pedido()).orElse(p);
         }
 
         return pedidoRepository.save(p);
@@ -380,8 +426,28 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional
     public void procesarDescuentoStock(Integer idPedido) {
+        // Variante estricta: nunca deja pasar una máquina caída sin confirmación
+        // explícita. La usa PATCH /{id}/finalizar, que hoy no tiene ningún flujo
+        // de aviso/confirmación del lado del frontend.
+        procesarDescuentoStock(idPedido, false);
+    }
+
+    @Override
+    @Transactional
+    public void procesarDescuentoStock(Integer idPedido, boolean confirmarMaquinaNoDisponible) {
     Pedido pedido = pedidoRepository.findById(idPedido)
         .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+    // Guarda de idempotencia (ver Pedido.stockDescontado): si este pedido ya
+    // descontó su stock una vez -- ya sea porque el alta de Venta Rápida lo hizo
+    // al vuelo, o porque ya se había finalizado antes -- correrlo de nuevo (por
+    // ejemplo, un cambio de estado FINALIZADO -> PENDIENTE -> FINALIZADO) no debe
+    // volver a tocar ni Insumo.stockActual ni Producto.stock. Antes la única
+    // guarda vivía en cambiarEstadoPedido() comparando strings de estado, y no
+    // cubría todos los caminos que llegan acá (por ejemplo, PATCH /finalizar).
+    if (pedido.isStockDescontado()) {
+        return;
+    }
 
     if (pedido.getDetalles().isEmpty()) {
         List<DetallePedido> detalles = detallePedidoRepository.findByPedidoIdPedido(idPedido);
@@ -394,6 +460,43 @@ public class PedidoServiceImpl implements PedidoService {
 
     for (DetallePedido detalle : pedido.getDetalles()) {
         Producto producto = detalle.getProducto();
+        if (producto == null) {
+            throw new SolicitudInvalidaException(
+                "El pedido tiene un detalle sin producto válido; no se puede procesar el stock.");
+        }
+
+        // Validación de máquina: es una decisión de negocio que las máquinas NO
+        // son un bloqueo duro -- el operario puede ver el aviso en el frontend y
+        // elegir "Continuar de todos modos" igual. Por default (sin confirmación
+        // explícita) el backend rechaza la venta si el producto necesita una
+        // máquina puntual y esa máquina está FUERA DE SERVICIO / con FALLA / en
+        // MANTENIMIENTO -- así una llamada directa a la API (sin pasar por el
+        // aviso del frontend) no puede saltearse el chequeo. Si
+        // confirmarMaquinaNoDisponible llega en true (el operario ya vio el aviso
+        // y decidió seguir igual), dejamos pasar la venta. "no aplica" (o sin
+        // nombre cargado) se sigue tratando como "no hace falta ninguna máquina en
+        // particular", igual que en el frontend.
+        Maquina maquinaNecesaria = producto.getMaquinaNecesaria();
+        if (maquinaNecesaria != null) {
+            String nombreMaquina = maquinaNecesaria.getNombre() != null ? maquinaNecesaria.getNombre().trim() : "";
+            boolean noAplica = nombreMaquina.isEmpty() || nombreMaquina.toLowerCase().contains("no aplica");
+
+            if (!noAplica) {
+                String estadoMaquina = maquinaNecesaria.getEstado() != null
+                        ? maquinaNecesaria.getEstado().trim().toUpperCase().replace('_', ' ')
+                        : "";
+                boolean maquinaNoDisponible = estadoMaquina.contains("FUERA DE SERVICIO")
+                        || estadoMaquina.contains("FALLA")
+                        || estadoMaquina.contains("MANTENIMIENTO");
+
+                if (maquinaNoDisponible && !confirmarMaquinaNoDisponible) {
+                    throw new ConflictoDeIntegridadException(
+                        "No se puede completar el pedido: la máquina '" + nombreMaquina +
+                        "' que requiere \"" + producto.getNombreProducto() + "\" está " +
+                        maquinaNecesaria.getEstado() + ".");
+                }
+            }
+        }
 
         // SI EL PRODUCTO ES "AUTO" / VINCULADO A INSUMOS (Receta)
         if (Boolean.TRUE.equals(producto.getStockVinculado())) {
@@ -432,6 +535,7 @@ public class PedidoServiceImpl implements PedidoService {
         pedido.setEstado("ENTREGADO");
     }
     pedido.setFecha_finalizacion(LocalDateTime.now());
+    pedido.setStockDescontado(true);
     pedidoRepository.save(pedido);
     }
 
@@ -464,7 +568,8 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     @Transactional
-    public Pedido cambiarEstadoPedido(Integer idPedido, String nuevoEstado, String observaciones, Integer idUsuario) {
+    public Pedido cambiarEstadoPedido(Integer idPedido, String nuevoEstado, String observaciones, Integer idUsuario,
+                                       boolean confirmarMaquinaNoDisponible) {
         Pedido pedido = buscarPorId(idPedido);
         String estadoAnterior = pedido.getEstado();
 
@@ -478,7 +583,7 @@ public class PedidoServiceImpl implements PedidoService {
             // tapaba el tipo real de la excepción sin aportar nada: la dejamos
             // propagarse tal cual la tira procesarDescuentoStock y la resuelve
             // el GlobalExceptionHandler.
-            this.procesarDescuentoStock(idPedido);
+            this.procesarDescuentoStock(idPedido, confirmarMaquinaNoDisponible);
             pedido = buscarPorId(idPedido);
 
             pedido.setEstado(nuevoEstado);

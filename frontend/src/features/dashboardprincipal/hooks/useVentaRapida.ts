@@ -28,6 +28,12 @@ export const useVentaRapida = () => {
   const [showModalMaquinas, setShowModalMaquinas] = useState(false);
   const [showModalMetodoPago, setShowModalMetodoPago] = useState(false);
   const [showModalStockCritico, setShowModalStockCritico] = useState(false);
+  // true solo cuando el operario ya vio el aviso de "máquina fuera de servicio /
+  // falla / mantenimiento" (modal de arriba) y clickeó "Continuar de todos modos".
+  // Las máquinas no bloquean la venta por decisión de negocio, pero el backend
+  // igual exige esta confirmación explícita para no dejar pasar una llamada
+  // directa a la API que se salte el aviso.
+  const [confirmarMaquinaNoDisponible, setConfirmarMaquinaNoDisponible] = useState(false);
 
   const fetchInsumos = async () => {
     try {
@@ -306,6 +312,7 @@ export const useVentaRapida = () => {
     setProductoSeleccionado('');
     setCategoriaSeleccionadaId('');
     setCantidad('1');
+    setConfirmarMaquinaNoDisponible(false);
   };
 
   // --- CÁLCULOS DE MONTO Y DESCUENTO ---
@@ -460,7 +467,12 @@ export const useVentaRapida = () => {
       },
       idEmpleado: idUsuario,
       idUsuario: idUsuario,
-      tipoPago: tipoPagoElegido
+      tipoPago: tipoPagoElegido,
+      // Va fuera de "pedido" a propósito: no es un campo de la entidad Pedido,
+      // es la confirmación explícita que el backend exige para dejar pasar la
+      // venta cuando el operario ya vio el aviso de máquina caída y decidió
+      // seguir igual (ver "Continuar de todos modos" en DashboardPrincipalView).
+      confirmarMaquinaNoDisponible
     };
 
     try {
@@ -496,7 +508,11 @@ export const useVentaRapida = () => {
         body: JSON.stringify({
           nuevoEstado: 'FINALIZADO',
           observaciones: `Venta Rápida ${porcentajeDescuento > 0 ? `(Categoría: ${categoriaActual?.nombreCategoria} - ${porcentajeDescuento}% Desc.)` : ''}`,
-          idUsuario: idUsuario
+          idUsuario: idUsuario,
+          // Normalmente esto ya es un no-op del lado del backend (el POST inicial
+          // ya descontó el stock y quedó marcado stockDescontado=true), pero lo
+          // mandamos igual para cubrir el mismo caso si algún día cambia el orden.
+          confirmarMaquinaNoDisponible
         })
       });
 
@@ -576,6 +592,8 @@ export const useVentaRapida = () => {
     conflictosStockCritico,
     continuarFlujoPostStock,
     conflictosMaquinas,
+    confirmarMaquinaNoDisponible,
+    setConfirmarMaquinaNoDisponible,
     ultimoPedidoRealizado,
     verTicketPedido,
     setVerTicketPedido,

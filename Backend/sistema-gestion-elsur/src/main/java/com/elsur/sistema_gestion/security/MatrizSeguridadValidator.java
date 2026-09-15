@@ -1,4 +1,11 @@
-package com.elsur.sistema_gestion.config;
+package com.elsur.sistema_gestion.security;
+
+// MOVIDO de config/ a security/ (agrupado con el resto de la infraestructura de
+// seguridad: JwtService, JwtAuthenticationFilter, UserDetailsServiceImpl,
+// JwtAuthenticationEntryPoint, JwtAccessDeniedHandler). Sin cambios de
+// comportamiento -- el archivo del profe no tiene un equivalente a esta clase
+// (ellos no tienen matriz de permisos por rol), es un agregado propio del
+// proyecto, pero organizativamente encaja acá y no en config/ genérico.
 
 import com.elsur.sistema_gestion.models.Usuario;
 import com.elsur.sistema_gestion.repositories.UsuarioRepository;

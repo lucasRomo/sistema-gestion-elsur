@@ -1,6 +1,7 @@
 package com.elsur.sistema_gestion.config;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,7 +13,15 @@ import com.elsur.sistema_gestion.models.*;
 import com.elsur.sistema_gestion.repositories.*;
 import com.elsur.sistema_gestion.services.CifradoService;
 
+// @Profile("!test"): este inicializador corre SQL nativo específico de Postgres
+// (pg_get_serial_sequence, ON CONFLICT DO NOTHING) contra la base real. Los tests que
+// levantan el contexto completo (@SpringBootTest: SistemaGestionApplicationTests y
+// MatrizSeguridadValidatorIntegrationTest) ahora usan una base H2 en memoria (ver
+// src/test/resources/application.properties, perfil "test"), donde ese SQL no corre.
+// TestDataInitializer (src/test/java/.../config/TestDataInitializer.java) es el
+// reemplazo -- mismo propósito, pero con JPA puro -- que corre SOLO en ese perfil.
 @Component
+@Profile("!test")
 public class DataInitializer implements CommandLineRunner {
 
     private final TipoDocumentoRepository tipoDocumentoRepository;

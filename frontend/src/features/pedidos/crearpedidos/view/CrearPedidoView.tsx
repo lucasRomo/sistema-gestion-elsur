@@ -26,6 +26,11 @@ export const CrearPedidoView: React.FC = () => {
   const [carrito, setCarrito] = useState<CartItem[]>([]);
   const [categoriaSeleccionadaId, setCategoriaSeleccionadaId] = useState<string>('');
   const [categorias, setCategorias] = useState<CategoriaCliente[]>([]);
+  // true cuando en el paso 1 se vio el aviso de máquina caída y se clickeó
+  // "Continuar de todos modos" -- se manda al backend solo si el pedido termina
+  // naciendo ya en estado ENTREGADO (único caso en que Crear Pedido valida
+  // máquina al guardar). Se resetea si se vuelve al paso 1 a tocar el carrito.
+  const [confirmarMaquinaNoDisponible, setConfirmarMaquinaNoDisponible] = useState(false);
   
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
   const [confirmarGuardado, setConfirmarGuardado] = useState(false);
@@ -122,7 +127,8 @@ export const CrearPedidoView: React.FC = () => {
       pedido: payloadEstructurado.pedido,
       idEmpleado: payloadEstructurado.idEmpleado,
       idUsuario: idUsuarioLogueado,
-      tipoPago: payloadEstructurado.tipoPago
+      tipoPago: payloadEstructurado.tipoPago,
+      confirmarMaquinaNoDisponible
     };
 
     setPayloadTemporal(payloadConUsuario); 
@@ -191,18 +197,24 @@ export const CrearPedidoView: React.FC = () => {
             setCategoriaSeleccionadaId={setCategoriaSeleccionadaId}
             maquinas={maquinas}
             pedidosPendientes={pedidosPendientes}
-            onSiguiente={() => setPaso(2)}
+            onSiguiente={(confirmoMaquinaNoDisponible) => {
+              setConfirmarMaquinaNoDisponible(!!confirmoMaquinaNoDisponible);
+              setPaso(2);
+            }}
             onCancelar={() => navigate('/dashboard')}
           />
         ) : (
-          <DetallesPedidoForm 
+          <DetallesPedidoForm
             clientes={clientes}
             empleados={empleados}
             total={totalConDescuento}
             porcentajeDescuento={porcentajeDescuento}
             categoriaNombre={categoriaNombre}
             carrito={carrito}
-            onVolver={() => setPaso(1)}
+            onVolver={() => {
+              setConfirmarMaquinaNoDisponible(false);
+              setPaso(1);
+            }}
             onGuardar={handlePreGuardar}
           />
         )}

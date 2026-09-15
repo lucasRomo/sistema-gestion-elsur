@@ -92,6 +92,15 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Base en memoria SOLO para tests: permite que SistemaGestionApplicationTests
+		     y MatrizSeguridadValidatorIntegrationTest (@SpringBootTest, contexto completo)
+		     levanten sin Postgres/Supabase real. La configura src/test/resources/application.properties
+		     (perfil "test", activo automáticamente en cualquier @SpringBootTest). -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
     		<groupId>com.fasterxml.jackson.core</groupId>
     		<artifactId>jackson-databind</artifactId>

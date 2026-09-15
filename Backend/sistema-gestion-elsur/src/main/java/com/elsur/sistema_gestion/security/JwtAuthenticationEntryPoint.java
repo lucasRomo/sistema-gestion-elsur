@@ -1,4 +1,4 @@
-package com.elsur.sistema_gestion.config;
+package com.elsur.sistema_gestion.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
 
+// MOVIDO de config/ a security/ (agrupado con el resto de la infraestructura JWT).
+// Sin cambios de comportamiento.
 /**
  * Qué responde Spring Security cuando la petición NO trae un token válido
  * (falta el header, está vencido, la firma no verifica, etc.).

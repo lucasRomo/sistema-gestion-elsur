@@ -1,6 +1,6 @@
 package com.elsur.sistema_gestion.controllers;
 
-import com.elsur.sistema_gestion.services.JwtService;
+import com.elsur.sistema_gestion.security.JwtService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
