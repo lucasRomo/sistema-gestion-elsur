@@ -1,4 +1,5 @@
-package com.elsur.sistema_gestion.config;
+package com.elsur.sistema_gestion.security;
+// MOVIDO de config/ a security/, junto con la clase que testea (MatrizSeguridadValidator).
 
 import com.elsur.sistema_gestion.models.Permiso;
 import com.elsur.sistema_gestion.models.Rol;
@@ -190,13 +191,17 @@ class MatrizSeguridadValidatorUnitTest {
     // ==================== Permisos normales + normalización ====================
 
     @Test
-    @DisplayName("OPERARIO sin el permiso 'Clientes' (ni ninguno de lectura cruzada) no puede leer /api/clientes")
+    @DisplayName("OPERARIO sin el permiso 'Clientes' (ni ninguno de la regla de lectura cruzada) no puede leer /api/clientes")
     void operarioSinPermiso_noAccedeAClientes() {
         validator = validador();
-        // OJO: "Caja", "Crear Pedido", "Pedidos Pendientes" e "Historial de Pedidos" SÍ dan
-        // lectura cruzada de /api/clientes a propósito (esRutaCatalogoVentasYCaja: hace falta
-        // poder buscar un cliente al facturar/cobrar). "Insumos" no tiene ninguna relación con
-        // clientes, así que es el permiso correcto para probar el caso negativo real.
+        // OJO: acá antes se probaba con "Caja", pero evaluarPermisoEnBaseDeDatos() tiene
+        // una regla de LECTURA CRUZADA (GET) a propósito: cualquiera con "Crear Pedido",
+        // "Pedidos Pendientes", "Historial de Pedidos" o "Caja" SÍ puede leer /api/clientes
+        // (esRutaCatalogoVentasYCaja) -- un cajero necesita ver los datos del cliente al
+        // cobrar, aunque no tenga el permiso "Clientes" completo (que habilita además
+        // crear/editar/borrar clientes). Ese comportamiento es intencional, así que "Caja"
+        // no sirve como caso negativo. Se usa "Insumos", que no tiene ninguna relación con
+        // el módulo Clientes en ninguna regla de la matriz.
         when(usuarioRepository.findByNombreUsuario(anyString()))
                 .thenReturn(Optional.of(usuarioConPermisos("OPERARIO", "Insumos")));
 
@@ -207,8 +212,8 @@ class MatrizSeguridadValidatorUnitTest {
     }
 
     @Test
-    @DisplayName("REGLA DE NEGOCIO: OPERARIO con 'Caja' SÍ puede leer /api/clientes (lectura cruzada para facturar)")
-    void operarioConCaja_siPuedeLeerClientes_porLecturaCruzada() {
+    @DisplayName("REGRESIÓN/documentación: OPERARIO con 'Caja' SÍ puede leer /api/clientes (lectura cruzada a propósito, para cobrar)")
+    void operarioConCaja_siAccedeAClientesPorLecturaCruzada() {
         validator = validador();
         when(usuarioRepository.findByNombreUsuario(anyString()))
                 .thenReturn(Optional.of(usuarioConPermisos("OPERARIO", "Caja")));

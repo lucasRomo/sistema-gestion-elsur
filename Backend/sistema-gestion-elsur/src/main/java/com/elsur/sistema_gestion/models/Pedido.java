@@ -73,6 +73,18 @@ public class Pedido {
     @Column(nullable = false)
     private boolean es_presupuesto = false;
 
+    // Guarda de idempotencia para procesarDescuentoStock(): antes, un pedido que
+    // pasaba por FINALIZADO -> (cualquier otro estado) -> FINALIZADO de nuevo (a
+    // mano, por error, o por dos clics del mismo cambio de estado) volvía a
+    // descontar el mismo stock una segunda vez, porque la única guarda era
+    // comparar el string de estado actual contra una lista de "estados finales".
+    // Este flag se prende una sola vez, la primera vez que el stock de este
+    // pedido se descuenta de verdad, y procesarDescuentoStock lo respeta sin
+    // importar por qué método o cuántas veces se lo vuelva a llamar.
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private boolean stockDescontado = false;
+
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("pedido")
     @JsonProperty("asignaciones")

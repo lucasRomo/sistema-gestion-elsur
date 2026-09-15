@@ -95,6 +95,23 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new RecursoDuplicadoException("El nombre de usuario ya está en uso");
         }
 
+        // TC_22: antes esto no se validaba acá -- la única barrera contra un DNI
+        // duplicado era la restricción UNIQUE de la columna numero_documento en la
+        // base. Eso funcionaba, pero al reventar como DataIntegrityViolationException
+        // sin ningún catch propio, terminaba en el @ExceptionHandler(RuntimeException.class)
+        // genérico (400, con el mensaje crudo de Hibernate/Postgres) en vez de un 409
+        // con un mensaje pensado para el usuario. Mismo patrón que el chequeo de
+        // nombreUsuario de arriba: se busca por DNI y se compara el idUsuario para no
+        // romper la edición de la propia persona (si no, cualquiera que edite su
+        // propio perfil sin cambiar el DNI se vería a sí mismo como "duplicado").
+        if (usuario.getPersona() != null && usuario.getPersona().getNumeroDocumento() != null) {
+            Optional<Usuario> existentePorDni = usuarioRepository.findByPersonaNumeroDocumento(
+                    usuario.getPersona().getNumeroDocumento());
+            if (existentePorDni.isPresent() && !existentePorDni.get().getIdUsuario().equals(usuario.getIdUsuario())) {
+                throw new RecursoDuplicadoException("Ya existe una persona registrada con ese número de documento");
+            }
+        }
+
         // Asignación de Rol / Primer Usuario
         if (usuarioRepository.count() == 0) {
             // Bootstrap real: el primer usuario del sistema nace ADMIN sin

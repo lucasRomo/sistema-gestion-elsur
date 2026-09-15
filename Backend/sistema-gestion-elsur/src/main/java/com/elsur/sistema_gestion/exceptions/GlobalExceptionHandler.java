@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -66,6 +67,22 @@ public class GlobalExceptionHandler {
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .collect(Collectors.joining("; "));
         return construirRespuesta(HttpStatus.BAD_REQUEST, mensaje.isEmpty() ? "Datos inválidos" : mensaje, request);
+    }
+
+    // NUEVO (surge al incorporar AuthenticationManager/UserDetailsServiceImpl en el
+    // login, ver UsuarioController.login()): AuthenticationException es la excepción
+    // que tira Spring Security cuando authenticate() falla (usuario inexistente,
+    // password que no matchea, etc. -- todo colapsado por Spring en un
+    // BadCredentialsException genérico, sin distinguir el caso, mismo criterio
+    // anti-enumeración que ya usábamos a mano). Hoy UsuarioController.login() ya la
+    // atrapa y la convierte en CredencialesInvalidasException antes de que llegue
+    // hasta acá, así que este handler es una red de contención: si en el futuro se
+    // agrega otro punto de entrada que llame a authenticationManager.authenticate()
+    // sin ese try/catch, igual cae en un 401 prolijo en vez de en el catch-all de
+    // RuntimeException de más abajo (que la devolvería como 400).
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthenticationException(AuthenticationException ex, HttpServletRequest request) {
+        return construirRespuesta(HttpStatus.UNAUTHORIZED, "Credenciales incorrectas", request);
     }
 
     // Cubre un AccessDeniedException lanzado "a mano" desde un service (por ejemplo,

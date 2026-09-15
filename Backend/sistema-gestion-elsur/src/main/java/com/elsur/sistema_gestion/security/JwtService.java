@@ -1,4 +1,4 @@
-package com.elsur.sistema_gestion.services;
+package com.elsur.sistema_gestion.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -10,6 +10,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 
+// MOVIDO de services/ a security/ (antes vivía junto a los demás services de
+// negocio como UsuarioService, GeminiIaService, etc., mezclando infraestructura
+// de seguridad con lógica de dominio). Sin cambios de comportamiento: mismo
+// contenido, solo cambia el paquete, para agrupar todo lo de JWT/seguridad
+// igual que en la estructura de referencia (JwtService, JwtAuthenticationFilter,
+// UserDetailsServiceImpl, JwtAuthenticationEntryPoint, JwtAccessDeniedHandler
+// todos juntos acá).
 @Service
 public class JwtService {
 

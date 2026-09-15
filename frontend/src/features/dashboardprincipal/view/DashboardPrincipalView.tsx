@@ -41,6 +41,7 @@ export const DashboardPrincipal: React.FC = () => {
     conflictosStockCritico,
     continuarFlujoPostStock,
     conflictosMaquinas,
+    setConfirmarMaquinaNoDisponible,
     ultimoPedidoRealizado,
     verTicketPedido,
     setVerTicketPedido,
@@ -288,6 +289,7 @@ export const DashboardPrincipal: React.FC = () => {
                   style={{ backgroundColor: '#ffc107', color: '#ffff', border: '1px solid #ffc107', borderRadius: '6px', fontWeight: 'bold' }}
                   onClick={() => {
                     setShowModalMaquinas(false);
+                    setConfirmarMaquinaNoDisponible(true);
                     setShowModalMetodoPago(true);
                   }}
                 >

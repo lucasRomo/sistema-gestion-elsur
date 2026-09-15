@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Usuario } from '../../../types/Usuario';
-import { API_BASE_URL, apiFetch } from '../../../config/api'; // Ajustá la profundidad si tus carpetas difieren
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api'; // Ajustá la profundidad si tus carpetas difieren
 
 export const useRegister = () => {
   const [personaData, setPersonaData] = useState({
@@ -92,13 +92,15 @@ export const useRegister = () => {
           alert('Usuario creado, pero falló el alta del legajo de empleado.');
         }
       } else {
-        const mensajeError = await responseUsuario.text();
-
-        if (responseUsuario.status === 409) {
-          alert(mensajeError);
-        } else {
-          alert('Error al registrar el usuario en el backend.');
-        }
+        // Antes: "await responseUsuario.text()" mostraba tal cual el JSON crudo que
+        // devuelve GlobalExceptionHandler (ej. {"timestamp":...,"mensaje":"El nombre de
+        // usuario ya está en uso",...}) en el alert de un 409 -- mismo problema ya
+        // resuelto en el resto de los services esta sesión; acá faltaba.
+        const mensajeError = await extraerMensajeError(
+          responseUsuario,
+          'Error al registrar el usuario en el backend.'
+        );
+        alert(mensajeError);
       }
     } catch (error) {
       console.error(error);

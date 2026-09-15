@@ -16,7 +16,11 @@ interface Props {
   setCategoriaSeleccionadaId: (id: string) => void;
   maquinas?: Maquina[];
   pedidosPendientes?: any[];
-  onSiguiente: () => void;
+  // confirmoMaquinaNoDisponible=true solo cuando se llega acá por el botón
+  // "Continuar de todos modos" del aviso de máquina -- permite que quien arma
+  // el pedido (CrearPedidoView) sepa que debe mandar esa confirmación al
+  // backend si el pedido termina naciendo ya en estado ENTREGADO.
+  onSiguiente: (confirmoMaquinaNoDisponible?: boolean) => void;
   onCancelar: () => void;
 }
 
@@ -632,7 +636,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
               </div>
               <div className="d-flex gap-2 justify-content-center">
                 <button className="btn btn-sm btn-danger px-3" onClick={() => setShowModalMaquinas(false)}>Cancelar</button>
-                <button className="btn btn-sm btn-warning px-3 fw-bold text-dark" onClick={() => { setShowModalMaquinas(false); onSiguiente(); }}>
+                <button className="btn btn-sm btn-warning px-3 fw-bold text-dark" onClick={() => { setShowModalMaquinas(false); onSiguiente(true); }}>
                   Continuar de todos modos
                 </button>
               </div>
