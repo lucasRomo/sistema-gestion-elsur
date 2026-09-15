@@ -9,6 +9,7 @@ import com.elsur.sistema_gestion.models.Rol;
 import com.elsur.sistema_gestion.models.Usuario;
 import com.elsur.sistema_gestion.repositories.UsuarioRepository;
 import com.elsur.sistema_gestion.services.UsuarioService;
+import com.elsur.sistema_gestion.services.CifradoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private CifradoService cifradoService;
 
     @Override
     public List<Usuario> listarTodos() {
@@ -135,10 +139,17 @@ public class UsuarioServiceImpl implements UsuarioService {
         //   tiene su propio endpoint (PUT /api/usuarios/{id}/password, ver cambiarPassword),
         //   así que en la edición general siempre se conserva el hash que ya estaba en la base.
         if (usuario.getIdUsuario() == null) {
+            // Guardamos la copia reversible ANTES de pisar usuario.getPassword() con el
+            // hash -- si el orden se invirtiera, cifraríamos el hash en vez de la
+            // contraseña real que mandó el formulario de alta.
+            usuario.setContrasenaVisible(cifradoService.encriptar(usuario.getPassword()));
             usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         } else {
             usuarioRepository.findById(usuario.getIdUsuario())
-                    .ifPresent(actual -> usuario.setPassword(actual.getPassword()));
+                    .ifPresent(actual -> {
+                        usuario.setPassword(actual.getPassword());
+                        usuario.setContrasenaVisible(actual.getContrasenaVisible());
+                    });
         }
 
         // --- LÓGICA DE AUDITORÍA EN EDICIÓN ---
@@ -265,6 +276,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
 
         user.setPassword(passwordEncoder.encode(nuevaPassword));
+        user.setContrasenaVisible(cifradoService.encriptar(nuevaPassword));
         usuarioRepository.save(user);
     }
 

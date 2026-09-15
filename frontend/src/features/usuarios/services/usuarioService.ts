@@ -49,3 +49,18 @@ export const guardarUsuario = async (usuario: any) => {
   if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al guardar el usuario.'));
   return res.json();
 };
+
+// "Ver contraseña" en Gestión de Usuarios. Le pedimos al admin logueado que
+// reingrese SU PROPIA contraseña (no la del usuario que quiere ver) para
+// confirmar la operación; el backend valida eso y recién ahí desencripta.
+export const obtenerPasswordReal = async (idUsuario: number, passwordAdmin: string): Promise<string> => {
+  const res = await apiFetch(`${API_URL}/${idUsuario}/password-real`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ passwordAdmin })
+  });
+
+  if (!res.ok) throw new Error(await extraerMensajeError(res, 'No se pudo obtener la contraseña.'));
+  const data = await res.json();
+  return data.passwordReal;
+};
