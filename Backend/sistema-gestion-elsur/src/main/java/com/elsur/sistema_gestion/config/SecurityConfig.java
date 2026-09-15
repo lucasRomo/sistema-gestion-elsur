@@ -35,6 +35,15 @@ public class SecurityConfig {
     @Value("${app.cors.allowed-origins}")
     private List<String> allowedOrigins;
 
+    // Además de los orígenes exactos de arriba (que cubren localhost), estos patrones
+    // cubren el caso de abrir el front desde la IP de la red local (por ejemplo
+    // http://192.168.1.15:5173 desde el celu o la notebook de un compañero conectados
+    // al mismo WiFi/router que la compu que corre el backend). Sin esto, el navegador
+    // bloquea la petición por CORS aunque el usuario y la contraseña sean correctos,
+    // porque el Origin de la petición (la IP) no está en la lista exacta de arriba.
+    @Value("${app.cors.allowed-origin-patterns}")
+    private List<String> allowedOriginPatterns;
+
     // Inyectamos el filtro, la matriz y los handlers de error por constructor
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
                            MatrizSeguridadValidator matrizSeguridadValidator,
@@ -82,6 +91,7 @@ public class SecurityConfig {
         // una cookie, así que allowCredentials no hace falta para que el login funcione.
         // Restringimos el origen a los que configuremos explícitamente.
         configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedOriginPatterns(allowedOriginPatterns);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setExposedHeaders(List.of("Authorization"));

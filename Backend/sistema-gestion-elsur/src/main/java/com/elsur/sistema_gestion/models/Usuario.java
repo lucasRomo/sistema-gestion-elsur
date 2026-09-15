@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -31,6 +32,17 @@ public class Usuario {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "contrasena", nullable = false)
     private String password;
+
+    // Copia de la contraseña real, encriptada de forma reversible (ver CifradoService),
+    // guardada SOLO para poder mostrarla desde "Ver contraseña" en Gestión de Usuarios.
+    // El login sigue validando exclusivamente contra el hash BCrypt de arriba; esto no
+    // se usa nunca para autenticar. @JsonIgnore (a diferencia de WRITE_ONLY) la bloquea
+    // en los dos sentidos porque nunca llega ni se manda como JSON: el valor sale de acá
+    // adentro (guardar/cambiarPassword) y solo se lee, ya desencriptado, a través del
+    // endpoint protegido /api/usuarios/{id}/password-real.
+    @JsonIgnore
+    @Column(name = "contrasena_visible")
+    private String contrasenaVisible;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_persona")

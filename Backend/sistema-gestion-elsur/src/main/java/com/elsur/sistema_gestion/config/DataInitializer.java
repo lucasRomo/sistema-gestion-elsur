@@ -1,12 +1,16 @@
 package com.elsur.sistema_gestion.config;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.jdbc.core.JdbcTemplate;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 
 import com.elsur.sistema_gestion.models.*;
 import com.elsur.sistema_gestion.repositories.*;
+import com.elsur.sistema_gestion.services.CifradoService;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -15,18 +19,24 @@ public class DataInitializer implements CommandLineRunner {
     private final TipoPersonaRepository tipoPersonaRepository;
     private final RolRepository rolRepository;
     private final ClienteRepository clienteRepository;
-    private final JdbcTemplate jdbcTemplate; 
+    private final JdbcTemplate jdbcTemplate;
+    private final PasswordEncoder passwordEncoder;
+    private final CifradoService cifradoService;
 
     public DataInitializer(TipoDocumentoRepository tipoDocumentoRepository,
                            TipoPersonaRepository tipoPersonaRepository,
                            RolRepository rolRepository,
                            ClienteRepository clienteRepository,
-                           JdbcTemplate jdbcTemplate) {
+                           JdbcTemplate jdbcTemplate,
+                           PasswordEncoder passwordEncoder,
+                           CifradoService cifradoService) {
         this.tipoDocumentoRepository = tipoDocumentoRepository;
         this.tipoPersonaRepository = tipoPersonaRepository;
         this.rolRepository = rolRepository;
         this.clienteRepository = clienteRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.passwordEncoder = passwordEncoder;
+        this.cifradoService = cifradoService;
     }
 
     @Override 
@@ -118,6 +128,33 @@ public class DataInitializer implements CommandLineRunner {
             // Asigna el permiso 17 a los roles existentes ADMIN y OPERARIO
             jdbcTemplate.execute("INSERT INTO rol_permiso (id_rol, id_permiso) SELECT 1, 17 ON CONFLICT DO NOTHING");
             jdbcTemplate.execute("INSERT INTO rol_permiso (id_rol, id_permiso) SELECT 2, 17 ON CONFLICT DO NOTHING");
+        }
+
+        // 7. ARREGLO AUTOMÁTICO DE CONTRASEÑAS SIN HASHEAR
+        // Cualquier fila de "usuario" cuya "contrasena" no arranca con "$2" (formato BCrypt)
+        // tiene ahí mismo, tal cual, la contraseña real en texto plano -- pasa cuando alguien
+        // se registra desde un backend desactualizado (sin el hasheo en el alta). En vez de
+        // arreglarlo a mano con SQL cada vez, cada arranque revisa y corrige solo, hasheando
+        // esa misma contraseña y guardando también su copia cifrada para "Ver contraseña".
+        // Una vez arreglada una fila deja de aparecer en el WHERE, así que esto no hace nada
+        // en los arranques siguientes (no re-hashea un hash ya hecho).
+        List<Map<String, Object>> contrasenasSinHashear = jdbcTemplate.queryForList(
+                "SELECT id_usuario, contrasena FROM usuario WHERE contrasena NOT LIKE '$2%'");
+
+        for (Map<String, Object> fila : contrasenasSinHashear) {
+            Integer idUsuario = (Integer) fila.get("id_usuario");
+            String passwordPlano = (String) fila.get("contrasena");
+
+            String hash = passwordEncoder.encode(passwordPlano);
+            String visible = cifradoService.encriptar(passwordPlano);
+
+            jdbcTemplate.update(
+                    "UPDATE usuario SET contrasena = ?, contrasena_visible = ? WHERE id_usuario = ?",
+                    hash, visible, idUsuario);
+        }
+        if (!contrasenasSinHashear.isEmpty()) {
+            System.out.println("[DataInitializer] -> Se hasheó automáticamente la contraseña de "
+                    + contrasenasSinHashear.size() + " usuario(s) que estaban en texto plano.");
         }
 
         System.out.println("[DataInitializer] Sincronización completada con éxito.");

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SidebarLayout } from '../../../components/layouts/SidebarLayout';
 import { UsuarioEditModal } from '../components/UsuarioEditModal';
+import { VerPasswordModal } from '../components/VerPasswordModal';
 import { useUsuarios } from '../hooks/useUsuarios';
 import { UbicacionViewModal } from '../../../components/modals/UbicacionViewModal';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
@@ -30,6 +31,20 @@ export const GestionUsuariosView: React.FC = () => {
   const [filtroEstado, setFiltroEstado] = useState('Sin Filtro');
   const [usuarioAEditar, setUsuarioAEditar] = useState<any | null>(null);
   const [usuarioConUbicacion, setUsuarioConUbicacion] = useState<any | null>(null);
+  const [usuarioAVerPassword, setUsuarioAVerPassword] = useState<any | null>(null);
+
+  // El botón "Ver contraseña" solo tiene sentido (y el backend solo lo permite) para
+  // el rol ADMIN -- lo ocultamos acá también para no mostrar un botón que va a
+  // terminar en un 403 para cualquier otro rol.
+  const usuarioLogueadoRaw = localStorage.getItem('usuario_logueado');
+  const esAdmin = (() => {
+    try {
+      const u = usuarioLogueadoRaw ? JSON.parse(usuarioLogueadoRaw) : null;
+      return (u?.rol?.nombreRol || '').toUpperCase() === 'ADMIN';
+    } catch {
+      return false;
+    }
+  })();
   const [mostrarExito, setMostrarExito] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
   const [vistaActual, setVistaActual] = useState<'gestion' | 'registro'>('gestion');
@@ -109,7 +124,19 @@ export const GestionUsuariosView: React.FC = () => {
                     >
                       <td className="py-3 px-3 text-center text-info-custom fw-bold">#{u.idUsuario}</td>
                       <td className="py-3 px-3 fw-bold" style={{ color: tableText }}>{u.nombreUsuario}</td>
-                      <td className="py-3 px-3" style={{ color: tableText }}>{u.password}</td>
+                      <td className="py-3 px-3" style={{ color: tableText }}>
+                        {esAdmin ? (
+                          <button
+                            className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
+                            onClick={() => setUsuarioAVerPassword(u)}
+                            title="Ver contraseña"
+                          >
+                            <i className="bi bi-eye"></i> Ver
+                          </button>
+                        ) : (
+                          <span style={{ color: isDark ? '#71717a' : '#94a3b8' }}>••••••</span>
+                        )}
+                      </td>
                       <td className="py-3 px-3" style={{ color: tableText }}>{u.persona?.nombre || '-'}</td>
                       <td className="py-3 px-3" style={{ color: tableText }}>{u.persona?.apellido || '-'}</td>
                       <td className="py-3 px-3" style={{ color: tableText }}>{u.persona?.numeroDocumento || '-'}</td>
@@ -252,6 +279,13 @@ export const GestionUsuariosView: React.FC = () => {
         />
       )}
       
+      {usuarioAVerPassword && (
+        <VerPasswordModal
+          usuario={usuarioAVerPassword}
+          onCerrar={() => setUsuarioAVerPassword(null)}
+        />
+      )}
+
       {mostrarExito && (
         <SuccesModal 
           show={mostrarExito} 

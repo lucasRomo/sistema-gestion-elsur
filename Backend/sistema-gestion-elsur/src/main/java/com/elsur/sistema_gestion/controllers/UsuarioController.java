@@ -2,13 +2,18 @@ package com.elsur.sistema_gestion.controllers;
 
 import com.elsur.sistema_gestion.exceptions.CredencialesInvalidasException;
 import com.elsur.sistema_gestion.exceptions.CuentaNoHabilitadaException;
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
 import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Empleado;
 import com.elsur.sistema_gestion.models.Usuario;
+import com.elsur.sistema_gestion.dto.VerContrasenaDTO;
+import com.elsur.sistema_gestion.services.CifradoService;
 import com.elsur.sistema_gestion.services.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.elsur.sistema_gestion.services.JwtService;
@@ -34,6 +39,9 @@ public class UsuarioController {
 
     @Autowired
     private EmpleadoRepository EmpleadoRepository;
+
+    @Autowired
+    private CifradoService cifradoService;
 
     @GetMapping
     public List<Usuario> listar() {
@@ -155,6 +163,44 @@ public class UsuarioController {
         respuesta.put("token", token);
         respuesta.put("usuario", usuario);
 
+        return ResponseEntity.ok(respuesta);
+    }
+
+    // "Ver contraseña" de Gestión de Usuarios. Dos candados antes de desencriptar algo:
+    // 1) reautenticación -- quien pide ver la contraseña tiene que probar de nuevo SU
+    //    PROPIA contraseña (no la del usuario que quiere ver). Así, una sesión abierta
+    //    en una compu no alcanza para curiosear contraseñas ajenas.
+    // 2) rol ADMIN consultado fresco en la base (no el del JWT, que puede haber quedado
+    //    desactualizado si a alguien le cambiaron el rol después de loguearse) -- mismo
+    //    criterio que ya usa MatrizSeguridadValidator para el resto de la API.
+    @PostMapping("/{id}/password-real")
+    public ResponseEntity<?> verContrasenaReal(
+            @PathVariable Integer id,
+            @Valid @RequestBody VerContrasenaDTO dto,
+            Authentication authentication) {
+
+        Usuario admin = usuarioService.buscarPorNombreUsuario(authentication.getName())
+                .orElseThrow(() -> new CredencialesInvalidasException("Credenciales incorrectas"));
+
+        if (!passwordEncoder.matches(dto.getPasswordAdmin(), admin.getPassword())) {
+            throw new CredencialesInvalidasException("Credenciales incorrectas");
+        }
+
+        String rolAdmin = admin.getRol() != null ? admin.getRol().getNombreRol() : "";
+        if (!"ADMIN".equalsIgnoreCase(rolAdmin)) {
+            throw new AccessDeniedException("Solo un administrador puede ver contraseñas.");
+        }
+
+        Usuario objetivo = usuarioService.buscarPorId(id);
+        if (objetivo.getContrasenaVisible() == null) {
+            throw new RecursoNoEncontradoException(
+                "Este usuario no tiene una contraseña visible guardada todavía " +
+                "(se creó o se le cambió la clave antes de que existiera esta función). " +
+                "Restablecele la contraseña para poder verla de acá en adelante.");
+        }
+
+        Map<String, String> respuesta = new HashMap<>();
+        respuesta.put("passwordReal", cifradoService.desencriptar(objetivo.getContrasenaVisible()));
         return ResponseEntity.ok(respuesta);
     }
 }
