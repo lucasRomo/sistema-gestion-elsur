@@ -26,6 +26,8 @@ import { ThemeProvider } from '../../Context/ThemeContext';
 import { MobileLayout } from '../../components/layouts/MobileLayout';
 import { useIsMobile } from "../../hook/useIsMobile";
 import { CompraInsumosView } from '../compraInsumos/views/CompraInsumosView';
+import { LoadingOverlay } from '../../components/common/LoadingOverlay';
+import { BackupReminderModal } from '../../components/common/BackupReminderModal';
 
 function App() {
   const isMobile = useIsMobile();
@@ -178,6 +180,8 @@ function App() {
 
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
+          <LoadingOverlay />
+          <BackupReminderModal />
         </BrowserRouter>
       </TurnoProvider>
     </ThemeProvider>

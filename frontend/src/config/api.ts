@@ -1,21 +1,40 @@
+import { showLoading, hideLoading } from './loadingStore';
+
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
-/**
- * Wrapper de fetch que agrega automáticamente el header Authorization
- * con el token guardado en localStorage.
- */
-export const apiFetch = (input: string, init: RequestInit = {}): Promise<Response> => {
+interface ApiFetchOptions extends RequestInit {
+  /** true = nunca mostrar el overlay en esta llamada, aunque sea POST/PUT/DELETE */
+  skipLoading?: boolean;
+  /** true = mostrar el overlay aunque sea un GET (casos puntuales, ej. reporte pesado) */
+  forceLoading?: boolean;
+  /** Mensaje a mostrar mientras dura esta llamada */
+  loadingMessage?: string;
+}
+
+export const apiFetch = async (
+  input: string,
+  init: ApiFetchOptions = {}
+): Promise<Response> => {
+  const { skipLoading, forceLoading, loadingMessage, ...restInit } = init;
   const token = localStorage.getItem('token_sesion');
 
-  const headers = new Headers(init.headers || {});
+  const headers = new Headers(restInit.headers || {});
   if (token && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  // Si la ruta es relativa (ej: '/pedidos'), le antepone la base URL
   const url = input.startsWith('http') ? input : `${API_BASE_URL}${input}`;
 
-  return fetch(url, { ...init, headers });
+  const metodo = (restInit.method || 'GET').toUpperCase();
+  const esMutacion = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(metodo);
+  const debeCargar = (esMutacion || forceLoading) && !skipLoading;
+
+  if (debeCargar) showLoading(loadingMessage);
+  try {
+    return await fetch(url, { ...restInit, headers });
+  } finally {
+    if (debeCargar) hideLoading();
+  }
 };
 
 /**
