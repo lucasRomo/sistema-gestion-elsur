@@ -10,6 +10,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.stream.Collectors;
 
@@ -92,6 +93,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiError> handleAccesoDenegado(AccessDeniedException ex, HttpServletRequest request) {
         return construirRespuesta(HttpStatus.FORBIDDEN, "No tiene permisos para realizar esta operación", request);
+    }
+
+    // NUEVO (bug reportado: "no me deja subir archivos al repositorio" -- el navegador
+    // mostraba un error de conexión nativo en vez de nuestro modal): sin este handler,
+    // un archivo que supera spring.servlet.multipart.max-file-size caía en el catch-all
+    // de Exception de más abajo (500, "Ocurrió un error inesperado", sin decir por qué).
+    // Ahora se distingue este caso puntual con un mensaje que sí explica el motivo real.
+    // Ver application.properties (server.tomcat.max-swallow-size) para la otra mitad de
+    // este arreglo: sin esa configuración, la conexión se cortaba en seco ANTES de que
+    // este handler llegue a ejecutarse.
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiError> handleArchivoDemasiadoGrande(MaxUploadSizeExceededException ex, HttpServletRequest request) {
+        return construirRespuesta(HttpStatus.PAYLOAD_TOO_LARGE,
+                "El archivo supera el tamaño máximo permitido (15MB). Elegí un archivo más liviano o comprimilo antes de subirlo.",
+                request);
     }
 
     // Red de contención para el resto de los controllers del proyecto que todavía

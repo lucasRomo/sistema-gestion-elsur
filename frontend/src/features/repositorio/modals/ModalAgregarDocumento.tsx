@@ -1,6 +1,10 @@
 import React, { useState, useRef } from 'react';
 import type { AreaCurso } from '../types/Repositorio';
 import { useTheme } from '../../../Context/ThemeContext';
+// NUEVO (bug reportado: "no me deja subir archivos al repositorio"): reemplaza el
+// alert() nativo de más abajo por nuestro propio modal de error, mismo criterio que
+// ya se usa en el resto de la app (ver useRegister.ts / RegisterView.tsx).
+import { ErrorModal } from '../../../components/modals/ErrorModal';
 
 interface Props {
   show: boolean;
@@ -46,6 +50,8 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
+  const [mostrarError, setMostrarError] = useState(false);
+  const [mensajeError, setMensajeError] = useState('');
 
   if (!show) return null;
 
@@ -111,11 +117,13 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
       setMostrarExito(true);
     } catch (error) {
       // FIX: antes el rechazo del backend (ej. título vacío, precio negativo, área
-      // inexistente -- ver DocumentoDigitalServiceImpl) solo se logueaba en consola;
-      // el modal de confirmación se cerraba y el usuario se quedaba sin saber que
-      // el documento NO se guardó ni por qué.
+      // inexistente, o el archivo supera el tamaño máximo -- ver
+      // DocumentoDigitalServiceImpl / GlobalExceptionHandler) solo se logueaba en
+      // consola y se mostraba con un alert() nativo del navegador, sin el estilo del
+      // resto de los modales de la app.
       console.error('Error al guardar documento:', error);
-      alert((error as Error)?.message || 'No se pudo registrar el documento en el repositorio.');
+      setMensajeError((error as Error)?.message || 'No se pudo registrar el documento en el repositorio.');
+      setMostrarError(true);
     }
   };
 
@@ -404,6 +412,14 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {mostrarError && (
+        <ErrorModal
+          titulo="No se pudo subir el documento"
+          message={mensajeError}
+          onCerrar={() => setMostrarError(false)}
+        />
       )}
     </>
   );
