@@ -69,8 +69,19 @@ public class ClienteServiceImpl implements ClienteService {
             throw new SolicitudInvalidaException("La razón social del cliente es obligatoria.");
         }
         String razonSocialNormalizada = cliente.getRazonSocial().trim();
+
+        // CORREGIDO (Bug 4, según aclaración del usuario -- el problema real no
+        // era el número de documento, que ya funcionaba bien, sino la razón
+        // social): "Ninguna" se usa como razón social genérica para clientes
+        // ocasionales/sin datos comerciales propios (ej. consumidor final), y a
+        // propósito se va a repetir en más de un cliente -- no es un nombre real
+        // de negocio, así que no tiene sentido exigirle unicidad. El resto de
+        // las razones sociales (nombres reales) sigue validándose como antes.
+        boolean esRazonSocialGenerica = "NINGUNA".equalsIgnoreCase(razonSocialNormalizada);
+
         Integer idClienteExcluido = cliente.getIdCliente() != null ? cliente.getIdCliente() : -1;
-        if (clienteRepository.existsByRazonSocialIgnoreCaseAndIdClienteNot(razonSocialNormalizada, idClienteExcluido)) {
+        if (!esRazonSocialGenerica
+                && clienteRepository.existsByRazonSocialIgnoreCaseAndIdClienteNot(razonSocialNormalizada, idClienteExcluido)) {
             throw new RecursoDuplicadoException("Ya existe un cliente registrado con la razón social '" + razonSocialNormalizada + "'.");
         }
         cliente.setRazonSocial(razonSocialNormalizada);

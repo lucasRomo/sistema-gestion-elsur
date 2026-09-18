@@ -79,21 +79,27 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             || pathMatcher.match("/api/usuarios/exists", path);
     }
     if ("POST".equalsIgnoreCase(metodo)) {
-        // Antes esto valía siempre, sin importar cuántos usuarios ya existieran:
-        // cualquiera que conociera la clave del portón (pensada para abrir la
-        // puerta física del local, app.clave-acceso) podía sacar este token y
-        // crear un usuario en cualquier momento -- incluido un ADMIN, si el
-        // payload traía rol.idRol=1, porque UsuarioServiceImpl.guardar() solo
-        // fuerza un rol por defecto cuando el payload no trae ninguno.
-        // El portón ahora solo sirve para el alta real inicial (tabla usuario
-        // vacía). Una vez que existe al menos un usuario, dar de alta gente
-        // nueva requiere estar autenticado con el permiso correspondiente
-        // ("Gestión de Usuarios"), no la clave de la puerta.
-        boolean esBootstrapInicial = usuarioRepository.count() == 0;
-        return esBootstrapInicial && (
-            pathMatcher.match("/api/usuarios", path)
-            || pathMatcher.match("/api/empleados", path)
-        );
+        // CORREGIDO (Bug 2, aclarado por el usuario): el portón tiene que poder
+        // dar de alta MÁS de un usuario, no solo el primero -- el negocio
+        // necesita que varios empleados se autorregistren con la clave de la
+        // puerta y queden "Pendiente" hasta que un ADMIN los active desde
+        // Gestión de Usuarios (ver UsuarioServiceImpl.guardar). Por eso ya NO
+        // se limita a "usuarioRepository.count() == 0": alcanza con conocer la
+        // clave del portón para poder registrarse, sin importar cuántos
+        // usuarios existan.
+        //
+        // Esto sigue siendo seguro porque UsuarioServiceImpl.guardar() no
+        // respeta el rol que venga en el payload para una alta nueva: fuerza
+        // ADMIN únicamente si la tabla está vacía (el primer usuario real del
+        // sistema) y OPERARIO para cualquier otra alta, sin excepción -- así
+        // que abrir esto no permite crear administradores adicionales ni
+        // saltear la aprobación del admin.
+        //
+        // "/api/empleados" ya no hace falta acá: el alta de usuario + legajo de
+        // empleado ahora es atómica en un único POST /api/usuarios (antes eran
+        // dos pedidos separados, y el segundo era justamente lo que se rompía
+        // apenas dejaba de ser el primer usuario -- ver Bug 1).
+        return pathMatcher.match("/api/usuarios", path);
     }
     return false;
 }

@@ -3,18 +3,24 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { PersonaForm } from '../../auth/persona/view/PersonaForm';
 import { EmpleadoModal } from '../../usuarios/components/EmpleadoModal';
 import { ExitoModal } from '../../../components/modals/ExitoModal';
+import { ErrorModal } from '../../../components/modals/ErrorModal';
 import { useRegister } from '../hooks/useRegister';
 
 interface RegisterViewProps {
   onVolver: () => void;
 }
 
+// A propósito, esta pantalla NO restringe el registro al primer usuario del
+// sistema: el negocio necesita que se puedan autorregistrar varios empleados
+// con la clave de la puerta (portón). Cada alta que no es la primera queda
+// "Pendiente" hasta que un ADMIN la activa desde Gestión de Usuarios (ver
+// UsuarioServiceImpl.guardar y MatrizSeguridadValidator.evaluarPermisoPorton).
 export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const backgroundGradient = isDark 
-    ? 'linear-gradient(145deg, #240f47 20%, #0c0c0e 80%)' 
+  const backgroundGradient = isDark
+    ? 'linear-gradient(145deg, #240f47 20%, #0c0c0e 80%)'
     : 'linear-gradient(145deg, #e2e8f0 20%, #f1f5f9 80%)';
   const containerBg = isDark ? '#1a1a1c' : '#ffffff';
   const containerBorder = isDark ? '#3f3f46' : '#cbd5e1';
@@ -30,44 +36,54 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
     mostrarModalExito,
     cerrarModalExito,
     mensajeExito,
+    mostrarModalError,
+    cerrarModalError,
+    mensajeError,
     handleRegistrarTodo
   } = useRegister();
 
   return (
-    <div 
-      className="container-fluid min-vh-100 d-flex justify-content-center align-items-center" 
+    <div
+      className="container-fluid min-vh-100 d-flex justify-content-center align-items-center"
       style={{ background: backgroundGradient, minHeight: '100vh' }}>
-      
-      <div className="w-100 p-4 rounded-3 position-relative shadow-lg" 
+
+      <div className="w-100 p-4 rounded-3 position-relative shadow-lg"
      style={{ maxWidth: '750px', backgroundColor: containerBg, border: '1.5px solid #a855f7' }}>
-        
+
         <div className="position-relative" style={{ zIndex: 1 }}>
-          <PersonaForm 
-            formData={personaData} 
-            setFormData={setPersonaData} 
-            onSiguiente={abrirModalEmpleado} 
-            onVolver={onVolver} 
+          <PersonaForm
+            formData={personaData}
+            setFormData={setPersonaData}
+            onSiguiente={abrirModalEmpleado}
+            onVolver={onVolver}
             titulo="Registrar Nuevo Usuario"
           />
         </div>
       </div>
 
       {mostrarModalEmpleado && (
-        <EmpleadoModal 
-          formData={empleadoData} 
-          setFormData={setEmpleadoData} 
-          onRegistrar={handleRegistrarTodo} 
-          onCerrar={cerrarModalEmpleado} 
+        <EmpleadoModal
+          formData={empleadoData}
+          setFormData={setEmpleadoData}
+          onRegistrar={handleRegistrarTodo}
+          onCerrar={cerrarModalEmpleado}
         />
       )}
 
       {mostrarModalExito && (
-        <ExitoModal 
-          message={mensajeExito} 
+        <ExitoModal
+          message={mensajeExito}
           onAceptar={() => {
             cerrarModalExito();
             onVolver();
-          }} 
+          }}
+        />
+      )}
+
+      {mostrarModalError && (
+        <ErrorModal
+          message={mensajeError}
+          onCerrar={cerrarModalError}
         />
       )}
     </div>

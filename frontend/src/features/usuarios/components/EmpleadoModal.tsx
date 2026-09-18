@@ -66,7 +66,35 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
 
                 <div className="col-12">
                   <label className="form-label text-light small">Contraseña:</label>
-                  <input type="password" className="form-control bg-dark text-white border-secondary" placeholder="Ingrese una Contraseña" value={formData.password} onChange={e => handleChange('password', e.target.value)} required />
+                  {/* CORREGIDO (Bug 3): antes esto no tenía minLength ni ningún aviso
+                      visual de que el backend exige entre 8 y 72 caracteres (ver
+                      UsuarioServiceImpl.guardar) -- el único indicio era el alert()
+                      nativo del navegador que aparecía recién DESPUÉS de intentar
+                      registrar. Ahora se avisa desde antes (texto de ayuda) y el
+                      propio input valida el largo mínimo, con el mismo patrón de
+                      setCustomValidity que ya usa el campo Cargo de acá abajo. */}
+                  <input
+                    type="password"
+                    className="form-control bg-dark text-white border-secondary"
+                    placeholder="Ingrese una Contraseña (mínimo 8 caracteres)"
+                    value={formData.password}
+                    onChange={e => {
+                      e.target.setCustomValidity("");
+                      handleChange('password', e.target.value);
+                    }}
+                    minLength={8}
+                    maxLength={72}
+                    onInvalid={(e: any) => {
+                      if (e.target.validity.valueMissing) e.target.setCustomValidity("Completa este campo");
+                      else if (e.target.validity.tooShort) e.target.setCustomValidity("La contraseña debe tener al menos 8 caracteres");
+                      else e.target.setCustomValidity("La contraseña no puede superar los 72 caracteres");
+                    }}
+                    onInput={(e: any) => e.target.setCustomValidity("")}
+                    required
+                  />
+                  <div className="form-text text-secondary" style={{ fontSize: '0.78rem' }}>
+                    Debe tener entre 8 y 72 caracteres.
+                  </div>
                 </div>
 
                 <div className="col-12">

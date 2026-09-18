@@ -86,7 +86,7 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const target = e.target as HTMLFormElement;
       const emailInput = target.querySelector('input[type="email"]') as HTMLInputElement;
@@ -222,12 +222,12 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({
         
         <div className="col-md-6 px-1">
           <label className="form-label small fw-medium" style={{ color: labelColor }}>N° de Documento / CUIT:</label>
-          <input 
-            type="text" 
-            className={`form-control ${errores.numeroDocumento ? 'is-invalid' : ''}`} 
-            style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
-            placeholder="N° de Documento" 
-            value={formData.numeroDocumento || ""} 
+          <input
+            type="text"
+            className={`form-control ${errores.numeroDocumento ? 'is-invalid' : ''}`}
+            style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }}
+            placeholder="N° de Documento"
+            value={formData.numeroDocumento || ""}
             onChange={e => handleChange('numeroDocumento', e.target.value)}
             pattern={`[0-9]{${getMaxLength()}}`}
             onInvalid={(e: any) => {
@@ -242,7 +242,7 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({
               }
             }}
             onInput={(e: any) => e.target.setCustomValidity("")}
-            required 
+            required
           />
           {errores.numeroDocumento && <div className="text-danger small mt-1"><i className="bi bi-exclamation-circle me-1"></i>{errores.numeroDocumento}</div>}
         </div>

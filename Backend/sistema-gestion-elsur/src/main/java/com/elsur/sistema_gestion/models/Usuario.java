@@ -60,4 +60,13 @@ public class Usuario {
 
     @Transient
     private String cargo;
+
+    // NUEVO (Bug 1 -- alta atómica de usuario+empleado): mismo criterio que
+    // salario/estado/cargo de arriba. Antes el alta desde el portón hacía DOS
+    // POST separados (uno a /api/usuarios, otro a /api/empleados) y la fecha
+    // de contratación solo viajaba en el segundo. Al unificar todo en un único
+    // POST /api/usuarios (ver UsuarioServiceImpl.guardar), esta fecha también
+    // tiene que poder viajar acá para no perderse.
+    @Transient
+    private java.time.LocalDate fechaContratacion;
 }

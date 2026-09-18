@@ -1,8 +1,8 @@
 import React from 'react';
-import fondoImg from '/src/assets/fondo-izq.png'; 
+import fondoImg from '/src/assets/fondo-izq.png';
 import logoGesta from '/src/assets/logo-gestapro.png';
 import logoSur from '/src/assets/logo-elsur.png';
-import { useTheme } from '../../../Context/ThemeContext'; 
+import { useTheme } from '../../../Context/ThemeContext';
 
 interface WelcomeViewProps {
   onIrARegistro: () => void;
@@ -19,9 +19,9 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onIrARegistro, onIrALo
 
   return (
     <div className="container-fluid min-vh-100 p-0 m-0 d-flex flex-column flex-md-row overflow-x-hidden">
-      
+
       {/* SECCIÓN IZQUIERDA */}
-      <div 
+      <div
         className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center p-4 text-center"
         style={{
           minHeight: '28vh',
@@ -40,21 +40,21 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onIrARegistro, onIrALo
       </div>
 
       {/* SECCIÓN DERECHA */}
-      <div 
+      <div
         className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center p-4 flex-grow-1"
         style={{ backgroundColor: bgDerecho, transition: 'background-color 0.3s ease', minHeight: '72vh' }}
       >
         <div className="w-100" style={{ maxWidth: '320px' }}>
           <div className="d-flex flex-column align-items-center mb-3">
-            <img 
-              src={logoSur} 
-              alt="El SUR" 
-              className="img-fluid mb-2" 
-              style={{ 
+            <img
+              src={logoSur}
+              alt="El SUR"
+              className="img-fluid mb-2"
+              style={{
                 maxWidth: '160px',
                 height: 'auto',
                 filter: esOscuro ? 'none' : 'drop-shadow(0px 0px 1px #000000) drop-shadow(0px 0px 1px #000000)'
-              }} 
+              }}
             />
             <h2 className="fs-4 fw-bold m-0" style={{ letterSpacing: '2px', color: textColor }}>EL SUR</h2>
           </div>
@@ -63,7 +63,7 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onIrARegistro, onIrALo
 
           {/* Botones */}
           <div className="d-flex flex-column gap-3">
-            <button 
+            <button
               className="btn w-100 py-2 fw-bold shadow-sm"
               onClick={onIrALogin}
               style={{
@@ -85,8 +85,12 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onIrARegistro, onIrALo
               Iniciar Sesión
             </button>
 
-            {/* Oculto en mobile (d-none), visible a partir de pantallas medianas (d-md-block) */}
-            <button 
+            {/* Oculto en mobile (d-none), visible a partir de pantallas medianas (d-md-block).
+                A propósito SIEMPRE visible (no solo para el primer usuario): el sistema
+                permite que se autorregistren varios usuarios -- quedan "Pendiente" hasta
+                que un ADMIN los activa desde Gestión de Usuarios (ver
+                MatrizSeguridadValidator.evaluarPermisoPorton y UsuarioServiceImpl.guardar). */}
+            <button
               className="btn w-100 py-2 fw-bold shadow-sm d-none d-md-block"
               onClick={onIrARegistro}
               style={{

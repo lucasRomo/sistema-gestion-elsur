@@ -155,6 +155,23 @@ public class UsuarioServiceImpl implements UsuarioService {
             Rol rolAdmin = new Rol();
             rolAdmin.setIdRol(1);
             usuario.setRol(rolAdmin);
+
+            // GAP corregido (Bug 1 -- alta atómica): antes, el frontend hacía este
+            // POST /api/usuarios y, si salía bien, mandaba un SEGUNDO POST separado
+            // a /api/empleados con cargo="ADMINISTRADOR" y estado="Activo" para el
+            // primer usuario. El problema es que evaluarPermisoPorton() (ver
+            // MatrizSeguridadValidator) solo autoriza escrituras con el token del
+            // portón mientras usuarioRepository.count() == 0 -- y ese conteo ya deja
+            // de ser 0 en cuanto ESTE guardar() termina. Resultado: el segundo POST
+            // llegaba siempre con la ventana de bootstrap ya cerrada y el usuario
+            // veía "se creó el usuario pero falló el legajo de empleado" con cada
+            // alta inicial, sin excepción. La solución es que este único guardar()
+            // deje todo listo para que el bloque de "Sincronización en tabla
+            // Empleado" de más abajo (que ya existía, se usa también al editar
+            // salario/cargo/estado desde Gestión de Usuarios) cree el legajo en la
+            // MISMA transacción -- no hace falta un segundo pedido HTTP.
+            usuario.setCargo("ADMINISTRADOR");
+            usuario.setEstado("Activo");
         } else if (usuario.getIdUsuario() == null) {
             // Alta de un usuario nuevo (no el primero): antes, si el payload
             // traía un rol explícito (por ejemplo rol.idRol=1), se respetaba
@@ -168,6 +185,16 @@ public class UsuarioServiceImpl implements UsuarioService {
             Rol rolEmpleado = new Rol();
             rolEmpleado.setIdRol(2);
             usuario.setRol(rolEmpleado);
+
+            // GAP corregido (Bug 1, mismo criterio que el bloque de arriba para el
+            // primer usuario): un alta que NO es la primera nace "Pendiente" hasta
+            // que un ADMIN la active desde Gestión de Usuarios -- así funcionaba ya
+            // con el segundo POST /empleados que se elimina. Solo se completa si el
+            // alta no trajo ya un estado propio (por si en el futuro se reutiliza
+            // este mismo guardar() desde un flujo que sí sabe qué estado poner).
+            if (usuario.getEstado() == null || usuario.getEstado().isBlank()) {
+                usuario.setEstado("Pendiente");
+            }
         } else if (usuario.getRol() == null || usuario.getRol().getIdRol() == null) {
             // Edición de un usuario existente sin rol en el payload: se
             // conserva el rol que ya tenía en la base en vez de pisarlo con
@@ -342,7 +369,13 @@ public class UsuarioServiceImpl implements UsuarioService {
             } else {
                 empleado = new com.elsur.sistema_gestion.models.Empleado();
                 empleado.setPersona(usuarioGuardado.getPersona());
-                empleado.setFechaContratacion(java.time.LocalDate.now());
+                // NUEVO (Bug 1): si el alta atómica mandó una fecha de contratación
+                // propia (ver Usuario.fechaContratacion), se respeta -- antes esto
+                // venía del segundo POST /empleados que ya no existe. Si no vino
+                // (por ejemplo, una edición vieja del formulario que no la incluye),
+                // se conserva el comportamiento anterior de usar la fecha actual.
+                empleado.setFechaContratacion(
+                    usuario.getFechaContratacion() != null ? usuario.getFechaContratacion() : java.time.LocalDate.now());
             }
 
             empleado.setSalario(usuario.getSalario());
