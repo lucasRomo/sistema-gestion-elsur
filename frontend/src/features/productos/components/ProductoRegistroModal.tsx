@@ -2,13 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { Producto, Categoria } from '../types/Producto';
 import type { Maquina } from '../../maquinas/types/Maquina';
 import { useTheme } from '../../../Context/ThemeContext';
-import { apiFetch } from '../../../config/api';
+import {
+  getCategorias,
+  getMaquinas,
+  getProductos,
+  crearCategoria,
+  eliminarCategoria
+} from '../services/productoService';
 
 interface Props {
   show: boolean;
   producto: Producto | null;
   onClose: () => void;
-  onGuardar: (data: any) => void;
+  onGuardar: (data: any) => Promise<void>;
 }
 
 export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose, onGuardar }) => {
@@ -40,6 +46,8 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const [showDropdownCategorias, setShowDropdownCategorias] = useState<boolean>(false);
 
   const [productosExistentes, setProductosExistentes] = useState<Producto[]>([]);
+  const [errorGuardado, setErrorGuardado] = useState<string>('');
+  const [guardando, setGuardando] = useState<boolean>(false);
   
   // Referencias para validaciones de HTML5
   const nombreProductoRef = useRef<HTMLInputElement>(null);
@@ -56,37 +64,34 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     estado: 'Activo'
   });
 
+  // CORREGIDO: estas tres funciones llamaban con fetch directo a URLs
+  // hardcodeadas ('http://localhost:8080/api/...'), lo que -- a diferencia del
+  // resto del sistema, que siempre pasa por apiFetch/API_BASE_URL -- ignoraba
+  // por completo la variable de entorno VITE_API_URL y rompía en cualquier
+  // entorno que no fuera localhost:8080. Ahora reutilizan productoService.ts,
+  // igual que el resto de los módulos.
   const cargarCategoriasData = async () => {
     try {
-      const res = await apiFetch('http://localhost:8080/api/categorias');
-      if (res.ok) {
-        const data = await res.json();
-        setCategorias(data);
-      }
-    } catch (err) { 
-      console.error("Error cargando categorías:", err); 
+      const data = await getCategorias();
+      setCategorias(data);
+    } catch (err) {
+      console.error("Error cargando categorías:", err);
     }
   };
 
   const cargarMaquinasData = async () => {
     try {
-      const res = await apiFetch('http://localhost:8080/api/maquinas');
-      if (res.ok) {
-        const data = await res.json();
-        setMaquinas(data);
-      }
-    } catch (err) { 
-      console.error("Error cargando máquinas:", err); 
+      const data = await getMaquinas();
+      setMaquinas(data);
+    } catch (err) {
+      console.error("Error cargando máquinas:", err);
     }
   };
 
   const cargarProductosExistentes = async () => {
     try {
-      const res = await apiFetch('http://localhost:8080/api/productos');
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) setProductosExistentes(data);
-      }
+      const data = await getProductos();
+      if (Array.isArray(data)) setProductosExistentes(data);
     } catch (err) {
       console.error("Error cargando productos existentes:", err);
     }
@@ -94,6 +99,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
 
   useEffect(() => {
     if (show) {
+      setErrorGuardado('');
       cargarCategoriasData();
       cargarMaquinasData();
       cargarProductosExistentes();
@@ -164,46 +170,34 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     }
 
     try {
-      const res = await apiFetch('http://localhost:8080/api/categorias', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: nombreLimpio })
-      });
-
-      if (res.ok) {
-        setNuevaCategoria('');
-        cargarCategoriasData();
-      } else {
-        alert("No se pudo crear la categoría.");
-      }
-    } catch (error) { 
-      alert("Error al crear categoría o conectar con el servidor."); 
+      await crearCategoria(nombreLimpio);
+      setNuevaCategoria('');
+      cargarCategoriasData();
+    } catch (error: any) {
+      // CORREGIDO: antes se mostraba siempre "No se pudo crear la categoría.",
+      // descartando el motivo real que devuelve el backend (ej. duplicado).
+      alert(error?.message || "Error al crear categoría o conectar con el servidor.");
     }
   };
 
   const handleEliminarCategoria = async (id: number) => {
     if (!confirm("¿Seguro que querés eliminar esta categoría?")) return;
     try {
-      const res = await apiFetch(`http://localhost:8080/api/categorias/${id}`, {
-        method: 'DELETE'
-      });
-      if (res.ok) {
-        const catEliminada = categorias.find(c => c.idCategoria === id);
-        if (catEliminada && formData.nombreCategoria === catEliminada.nombre) {
-          setFormData(prev => ({ ...prev, nombreCategoria: '' }));
-        }
-        cargarCategoriasData();
-      } else {
-        alert("No se pudo eliminar, es posible que tenga productos asociados.");
+      await eliminarCategoria(id);
+      const catEliminada = categorias.find(c => c.idCategoria === id);
+      if (catEliminada && formData.nombreCategoria === catEliminada.nombre) {
+        setFormData(prev => ({ ...prev, nombreCategoria: '' }));
       }
-    } catch (error) {
-      alert("No se pudo eliminar, es posible que tenga productos asociados.");
-      console.error("Error al eliminar categoría:", error);
+      cargarCategoriasData();
+    } catch (error: any) {
+      alert(error?.message || "No se pudo eliminar, es posible que tenga productos asociados.");
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (guardando) return;
 
     if (!validarNombreDuplicado()) return;
 
@@ -223,7 +217,18 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
       estado: formData.estado
     };
 
-    await onGuardar(payload);
+    setErrorGuardado('');
+    setGuardando(true);
+    try {
+      await onGuardar(payload);
+    } catch (err: any) {
+      // CORREGIDO: antes un error acá (ej. nombre duplicado saltando el chequeo
+      // del frontend) quedaba como una promesa rechazada sin manejar -- sin
+      // ningún aviso para el usuario, ni siquiera en consola.
+      setErrorGuardado(err?.message || 'Ocurrió un error al guardar el producto.');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   if (!show) return null;
@@ -248,7 +253,14 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
             
             <form onSubmit={handleSubmit}>
               <div className="modal-body p-4">
-                
+
+                {errorGuardado && (
+                  <div className="alert alert-danger py-2 small mb-3" role="alert">
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                    {errorGuardado}
+                  </div>
+                )}
+
                 {/* Nombre del Producto */}
                 <div className="mb-3">
                   <label className="form-label small fw-semibold" style={{ color: mutedText }}>Nombre del Producto *</label>
@@ -500,13 +512,14 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
               </div>
               
               <div className={`modal-footer border-top ${borderDivider} py-2`}>
-                <button type="button" className="btn btn-sm btn-danger px-4 fw-bold" onClick={onClose}>Cancelar</button>
-                <button 
-                  type="submit" 
-                  className="btn btn-sm px-4 fw-bold" 
+                <button type="button" className="btn btn-sm btn-danger px-4 fw-bold" onClick={onClose} disabled={guardando}>Cancelar</button>
+                <button
+                  type="submit"
+                  className="btn btn-sm px-4 fw-bold"
+                  disabled={guardando}
                   style={{ backgroundColor: buttonBgColor, borderColor: buttonBgColor, color: '#ffffff' }}
                 >
-                  Guardar
+                  {guardando ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
             </form>

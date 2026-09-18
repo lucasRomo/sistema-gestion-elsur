@@ -34,6 +34,13 @@ export const MatrizPermisosView: React.FC = () => {
     setMostrarModalNuevoRol,
     nuevoRolNombre,
     setNuevoRolNombre,
+    mostrarModalConfirmarEliminarRol,
+    setMostrarModalConfirmarEliminarRol,
+    perfilesHuerfanos,
+    mostrarPerfilesHuerfanos,
+    cargandoPerfilesHuerfanos,
+    alternarPerfilesHuerfanos,
+    eliminarPerfilHuerfano,
     togglePermiso,
     esPermisoProtegido,
     handleCambioPerfilSelect,
@@ -41,7 +48,8 @@ export const MatrizPermisosView: React.FC = () => {
     volverAModoGlobal,
     confirmarGuardado,
     handleCrearRol,
-    handleEliminarRol
+    handleEliminarRol,
+    confirmarEliminarRol
   } = useMatrizPermisos();
 
   return (
@@ -83,7 +91,7 @@ export const MatrizPermisosView: React.FC = () => {
           </button>
 
           {!usuarioEditar && rolSeleccionado > 2 && (
-            <button 
+            <button
               onClick={handleEliminarRol}
               className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1"
               style={{ backgroundColor: '#a52a2a', border: '1px solid #dc3545', fontSize: '0.8rem' }}
@@ -93,10 +101,31 @@ export const MatrizPermisosView: React.FC = () => {
             </button>
           )}
 
-          <div 
-            className="d-flex align-items-center gap-2 px-3 py-1 rounded-3 shadow-sm" 
-            style={{ 
-              backgroundColor: isDark ? (usuarioEditar ? '#1c102b' : '#18181b') : (usuarioEditar ? '#f3e8ff' : '#f8fafc'), 
+          {/*
+            GAP corregido: los perfiles "PERFIL_<usuario>" personalizados quedan
+            fuera del <select> de abajo a propósito (obtenerRoles() los
+            filtra), pero eso los dejaba invisibles para siempre una vez que el
+            usuario dueño pasaba a otro rol. Este botón es la única forma de
+            verlos y limpiarlos.
+          */}
+          <button
+            onClick={alternarPerfilesHuerfanos}
+            className="btn btn-sm fw-bold d-flex align-items-center gap-1"
+            style={{
+              backgroundColor: mostrarPerfilesHuerfanos ? '#8e45e0' : 'transparent',
+              color: mostrarPerfilesHuerfanos ? '#ffffff' : '#8e45e0',
+              border: '1px solid #8e45e0',
+              fontSize: '0.8rem'
+            }}
+            title="Ver perfiles personalizados sin usuarios asignados"
+          >
+            <i className="bi bi-person-x"></i> Perfiles huérfanos
+          </button>
+
+          <div
+            className="d-flex align-items-center gap-2 px-3 py-1 rounded-3 shadow-sm"
+            style={{
+              backgroundColor: isDark ? (usuarioEditar ? '#1c102b' : '#18181b') : (usuarioEditar ? '#f3e8ff' : '#f8fafc'),
               border: usuarioEditar ? '2px solid #20c997' : '2px solid #8e45e0',
               boxShadow: usuarioEditar ? '0 0 12px rgba(32, 201, 151, 0.3)' : '0 0 10px rgba(142, 69, 224, 0.2)'
             }}
@@ -111,10 +140,10 @@ export const MatrizPermisosView: React.FC = () => {
               </span>
             </div>
 
-            <select 
+            <select
               className={`form-select form-select-sm fw-bold shadow-sm py-1 px-2 ms-1 ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
-              style={{ 
-                width: '210px', 
+              style={{
+                width: '210px',
                 fontSize: '0.82rem',
                 cursor: 'pointer',
                 border: usuarioEditar ? '1px solid #20c997' : '1px solid #8e45e0'
@@ -128,8 +157,8 @@ export const MatrizPermisosView: React.FC = () => {
                 </option>
               )}
               {roles.map(rol => (
-                <option 
-                  key={rol.idRol} 
+                <option
+                  key={rol.idRol}
                   value={rol.idRol}
                   style={{ backgroundColor: isDark ? '#18181b' : '#ffffff', color: isDark ? '#ffffff' : '#0f172a' }}
                 >
@@ -140,6 +169,52 @@ export const MatrizPermisosView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {mostrarPerfilesHuerfanos && (
+        <div
+          className="p-3 mb-3 rounded-3"
+          style={{
+            backgroundColor: isDark ? '#18181b' : '#ffffff',
+            border: '1px solid #8e45e0'
+          }}
+        >
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <span className="fw-bold" style={{ fontSize: '0.85rem', color: isDark ? '#ffffff' : '#1e293b' }}>
+              Perfiles personalizados sin ningún usuario asignado
+            </span>
+            <span className="text-secondary" style={{ fontSize: '0.7rem' }}>
+              Se crean automáticamente al personalizar los permisos de un usuario puntual; quedan acá si ese
+              usuario después se reasigna a otro perfil.
+            </span>
+          </div>
+
+          {cargandoPerfilesHuerfanos ? (
+            <span className="text-secondary" style={{ fontSize: '0.8rem' }}>Cargando…</span>
+          ) : perfilesHuerfanos.length === 0 ? (
+            <span className="text-secondary" style={{ fontSize: '0.8rem' }}>No hay perfiles huérfanos por el momento.</span>
+          ) : (
+            <div className="d-flex flex-column gap-2">
+              {perfilesHuerfanos.map((rol: any) => (
+                <div
+                  key={rol.idRol}
+                  className="p-2 rounded d-flex justify-content-between align-items-center"
+                  style={{ backgroundColor: isDark ? '#222122' : '#f8fafc', border: isDark ? '1px solid #2d2d30' : '1px solid #e2e8f0' }}
+                >
+                  <span className={isDark ? 'text-white' : 'text-dark'} style={{ fontSize: '0.85rem' }}>{rol.nombreRol}</span>
+                  <button
+                    onClick={() => eliminarPerfilHuerfano(rol.idRol)}
+                    className="btn btn-sm text-white fw-bold d-flex align-items-center gap-1"
+                    style={{ backgroundColor: '#a52a2a', border: '1px solid #dc3545', fontSize: '0.75rem' }}
+                    title="Eliminar perfil huérfano"
+                  >
+                    <i className="bi bi-trash"></i>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="row g-3">
         {/* PANEL IZQUIERDO */}
@@ -236,6 +311,9 @@ export const MatrizPermisosView: React.FC = () => {
         mostrarModalBloqueo={mostrarModalBloqueo}
         setMostrarModalBloqueo={setMostrarModalBloqueo}
         mensajeBloqueoTexto={mensajeBloqueoTexto}
+        mostrarModalConfirmarEliminarRol={mostrarModalConfirmarEliminarRol}
+        setMostrarModalConfirmarEliminarRol={setMostrarModalConfirmarEliminarRol}
+        confirmarEliminarRol={confirmarEliminarRol}
       />
     </div>
   );

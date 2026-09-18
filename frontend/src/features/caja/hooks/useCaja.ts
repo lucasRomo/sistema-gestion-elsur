@@ -114,7 +114,17 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
   ) => {
     const usuarioGuardado = localStorage.getItem('usuario_logueado');
     const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
-    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario || 1;
+    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario;
+
+    // FIX: antes, si no se detectaba un usuario logueado en localStorage, la
+    // corrección se atribuía en silencio al usuario ID 1 (probablemente el
+    // admin/primer usuario creado) -- inconsistente con guardarMovimiento(), que sí
+    // rechaza la operación en ese mismo caso. Un ajuste contable atribuido al
+    // usuario equivocado es un problema de trazabilidad más serio todavía que un
+    // ingreso común, así que aplica la misma regla acá.
+    if (!idUsuario) {
+      throw new Error('No se detectó un usuario logueado activo.');
+    }
 
     const idMovOriginal = movimientoOriginal.id_movimiento || movimientoOriginal.idMovimiento;
 

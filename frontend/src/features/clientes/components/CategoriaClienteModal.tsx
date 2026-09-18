@@ -3,6 +3,9 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { clienteService } from '../services/clienteService';
 import type { CategoriaCliente } from '../types/CategoriaCliente';
 
+const extraerMensaje = (err: unknown, mensajePorDefecto: string): string =>
+  err instanceof Error && err.message ? err.message : mensajePorDefecto;
+
 interface CategoriaClienteModalProps {
   onCerrar: () => void;
 }
@@ -35,16 +38,22 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   const [categorias, setCategorias] = useState<CategoriaCliente[]>([]);
   const [nombre, setNombre] = useState('');
   const [descuento, setDescuento] = useState<number | string>(0);
+  const [errorCrear, setErrorCrear] = useState('');
+  const [guardandoCrear, setGuardandoCrear] = useState(false);
 
   // Estados para el Modal de Edición
   const [mostrarModalEditar, setMostrarModalEditar] = useState(false);
   const [categoriaEditar, setCategoriaEditar] = useState<CategoriaCliente | null>(null);
   const [editNombre, setEditNombre] = useState('');
   const [editDescuento, setEditDescuento] = useState<number | string>(0);
+  const [errorEditar, setErrorEditar] = useState('');
+  const [guardandoEditar, setGuardandoEditar] = useState(false);
 
   // Estados para el Modal de Confirmación de Eliminación
   const [idEliminar, setIdEliminar] = useState<number | null>(null);
   const [mostrarModalConfirmar, setMostrarModalConfirmar] = useState(false);
+  const [errorEliminar, setErrorEliminar] = useState('');
+  const [eliminando, setEliminando] = useState(false);
 
   // Estado para el Modal de Éxito
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
@@ -65,10 +74,13 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
 
   const handleCrear = async (e: React.FormEvent) => {
   e.preventDefault();
-  
+  if (guardandoCrear) return;
+
+  setErrorCrear('');
+  setGuardandoCrear(true);
   try {
-    await clienteService.crearCategoria({ 
-      nombre, 
+    await clienteService.crearCategoria({
+      nombre,
       descuentoAutomatico: descuento === '' ? 0 : Number(descuento)
     });
     setNombre('');
@@ -77,20 +89,30 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
     setMensajeExito("Categoría creada con éxito");
     setMostrarModalExito(true);
   } catch (err) {
+    // CORREGIDO: antes el error solo se logueaba con console.error, sin ningún
+    // aviso visible -- las validaciones nuevas del backend (nombre vacío/duplicado,
+    // descuento fuera de rango) fallaban en completo silencio desde el punto de
+    // vista del usuario (el formulario simplemente no se limpiaba, sin explicación).
     console.error(err);
+    setErrorCrear(extraerMensaje(err, 'No se pudo crear la categoría.'));
+  } finally {
+    setGuardandoCrear(false);
   }};
 
   const abrirModalEditar = (cat: CategoriaCliente) => {
     setCategoriaEditar(cat);
     setEditNombre(cat.nombre);
     setEditDescuento(cat.descuentoAutomatico);
+    setErrorEditar('');
     setMostrarModalEditar(true);
   };
 
   const handleGuardarEdicion = async (e: React.FormEvent) => {
   e.preventDefault();
-  if (!categoriaEditar?.idCategoria) return;
+  if (!categoriaEditar?.idCategoria || guardandoEditar) return;
 
+  setErrorEditar('');
+  setGuardandoEditar(true);
   try {
     await clienteService.actualizarCategoria(categoriaEditar.idCategoria, {
       nombre: editNombre,
@@ -103,19 +125,26 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
     setMensajeExito("Categoría actualizada con éxito");
     setMostrarModalExito(true);
   } catch (err) {
+    // CORREGIDO: mismo caso que handleCrear -- antes se perdía en la consola.
     console.error(err);
+    setErrorEditar(extraerMensaje(err, 'No se pudo actualizar la categoría.'));
+  } finally {
+    setGuardandoEditar(false);
   }};
 
   // Solicitar confirmación personalizada
   const solicitarEliminar = (id?: number) => {
     if (!id) return;
     setIdEliminar(id);
+    setErrorEliminar('');
     setMostrarModalConfirmar(true);
   };
 
   // Confirmar y procesar eliminación
   const confirmarEliminacion = async () => {
-    if (!idEliminar) return;
+    if (!idEliminar || eliminando) return;
+    setErrorEliminar('');
+    setEliminando(true);
     try {
       await clienteService.eliminarCategoria(idEliminar);
       setMostrarModalConfirmar(false);
@@ -125,8 +154,15 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
       setMensajeExito("Categoría eliminada con éxito");
       setMostrarModalExito(true);
     } catch (err) {
+      // CORREGIDO: antes el error se logueaba y el modal de confirmación se cerraba
+      // igual, como si la eliminación hubiera funcionado -- el usuario nunca se
+      // enteraba de que, por ejemplo, la categoría seguía en uso por un cliente
+      // (409 ConflictoDeIntegridad) y la eliminación en realidad había fallado.
+      // Ahora el modal de confirmación permanece abierto mostrando el motivo real.
       console.error(err);
-      setMostrarModalConfirmar(false);
+      setErrorEliminar(extraerMensaje(err, 'No se pudo eliminar la categoría.'));
+    } finally {
+      setEliminando(false);
     }
   };
 
@@ -193,10 +229,16 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
 </div>
 
                 <div className="col-md-2">
-                  <button type="submit" className="btn btn-success w-100 fw-bold shadow-sm" style={{ color: '#ffffff' }}>
-                    Guardar
+                  <button type="submit" className="btn btn-success w-100 fw-bold shadow-sm" style={{ color: '#ffffff' }} disabled={guardandoCrear}>
+                    {guardandoCrear ? 'Guardando...' : 'Guardar'}
                   </button>
                 </div>
+
+                {errorCrear && (
+                  <div className="col-12">
+                    <div className="alert alert-danger py-2 px-3 small mb-0 font-monospace">{errorCrear}</div>
+                  </div>
+                )}
               </form>
 
               <div 
@@ -334,17 +376,21 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   }} 
   onInvalid={e => (e.target as HTMLInputElement).setCustomValidity('El porcentaje de descuento debe ser mayor a 0.')}
   onInput={e => (e.target as HTMLInputElement).setCustomValidity('')}
-  required 
+  required
 />
 </div>
+
+                  {errorEditar && (
+                    <div className="alert alert-danger py-2 px-3 small mb-0 font-monospace">{errorEditar}</div>
+                  )}
                 </div>
 
                 <div className={`modal-footer border-top ${borderDivider} p-2 d-flex justify-content-between`}>
-                  <button type="button" className="btn btn-sm btn-secondary fw-semibold" onClick={() => setMostrarModalEditar(false)}>
+                  <button type="button" className="btn btn-sm btn-secondary fw-semibold" onClick={() => setMostrarModalEditar(false)} disabled={guardandoEditar}>
                     Cancelar
                   </button>
-                  <button type="submit" className="btn btn-sm btn-success text-white fw-bold">
-                    Actualizar
+                  <button type="submit" className="btn btn-sm btn-success text-white fw-bold" disabled={guardandoEditar}>
+                    {guardandoEditar ? 'Guardando...' : 'Actualizar'}
                   </button>
                 </div>
               </form>
@@ -366,22 +412,28 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
                 </div>
                 <h6 className="fw-bold my-2 text-white">¿Seguro de eliminar esta categoría?</h6>
                 <p className="small text-white-50 mb-3">Esta acción no se puede deshacer.</p>
-                
+
+                {errorEliminar && (
+                  <div className="alert alert-danger py-2 px-3 small mb-3 font-monospace text-start">{errorEliminar}</div>
+                )}
+
                 <div className="d-flex justify-content-center gap-2">
-                  <button 
-                    className="btn btn-sm btn-secondary px-3 fw-semibold" 
+                  <button
+                    className="btn btn-sm btn-secondary px-3 fw-semibold"
                     onClick={() => {
                       setMostrarModalConfirmar(false);
                       setIdEliminar(null);
                     }}
+                    disabled={eliminando}
                   >
                     Cancelar
                   </button>
-                  <button 
-                    className="btn btn-sm btn-danger px-3 fw-bold" 
+                  <button
+                    className="btn btn-sm btn-danger px-3 fw-bold"
                     onClick={confirmarEliminacion}
+                    disabled={eliminando}
                   >
-                    Eliminar
+                    {eliminando ? 'Eliminando...' : 'Eliminar'}
                   </button>
                 </div>
               </div>

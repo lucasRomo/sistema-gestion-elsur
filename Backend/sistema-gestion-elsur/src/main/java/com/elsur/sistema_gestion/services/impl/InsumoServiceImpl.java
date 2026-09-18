@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoDuplicadoException;
 import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
 import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Insumo;
@@ -45,6 +46,21 @@ public class InsumoServiceImpl implements InsumoService {
     @Override
     @Transactional
     public Insumo guardar(Insumo insumo, Integer idUsuario) {
+        // Validar y normalizar el nombre del insumo. Antes no había ningún chequeo de
+        // duplicados a nivel backend (solo una verificación en el frontend contra la
+        // lista de insumos cargada en el modal, fácil de evitar); ahora se recorta el
+        // nombre antes de compararlo y de guardarlo, y se rechaza si ya existe otro
+        // insumo con ese mismo nombre (insensible a mayúsculas/minúsculas y espacios).
+        if (insumo.getNombreInsumo() == null || insumo.getNombreInsumo().trim().isEmpty()) {
+            throw new SolicitudInvalidaException("El nombre del insumo es obligatorio");
+        }
+        String nombreNormalizado = insumo.getNombreInsumo().trim();
+        Integer idActual = insumo.getIdInsumo() != null ? insumo.getIdInsumo() : -1;
+        if (insumoRepository.existsByNombreInsumoIgnoreCaseAndIdInsumoNot(nombreNormalizado, idActual)) {
+            throw new RecursoDuplicadoException("Ya existe un insumo registrado con ese nombre");
+        }
+        insumo.setNombreInsumo(nombreNormalizado);
+
         // Validar que la unidad suelta y la unidad de empaque no sean iguales
         if (insumo.getUnidadMedida() != null && insumo.getUnidadCompra() != null) {
             String nomSuelta = insumo.getUnidadMedida().getNombre();
@@ -67,6 +83,12 @@ public class InsumoServiceImpl implements InsumoService {
 
         if (insumo.getStockEmpaquetado() != null && insumo.getStockEmpaquetado().compareTo(BigDecimal.ZERO) < 0) {
             throw new SolicitudInvalidaException("El stock empaquetado no puede ser negativo");
+        }
+
+        // FIX: antes stockMinimo era el único campo numérico de Insumo sin validar
+        // (ni en el frontend ni acá), a diferencia de precio/stockActual/stockEmpaquetado.
+        if (insumo.getStockMinimo() != null && insumo.getStockMinimo().compareTo(BigDecimal.ZERO) < 0) {
+            throw new SolicitudInvalidaException("El stock mínimo no puede ser negativo");
         }
 
         if (insumo.getFactorConversion() != null && insumo.getFactorConversion().compareTo(BigDecimal.ZERO) <= 0) {
@@ -244,12 +266,16 @@ public class InsumoServiceImpl implements InsumoService {
         return insumoRepository.save(insumo);
     }
 
+    // FIX: antes, si no se recibía un idUsuario válido, se atribuía en silencio el
+    // cambio (ajuste de stock, actualización masiva de precios, etc.) al primer
+    // usuario que devolviera la tabla, falseando el registro de actividad. Ahora se
+    // exige un usuario logueado real.
     private Usuario obtenerUsuarioOperador(Integer idUsuario) {
-        if (idUsuario != null) {
-            Usuario u = usuarioRepository.findById(idUsuario).orElse(null);
-            if (u != null) return u;
+        if (idUsuario == null) {
+            throw new SolicitudInvalidaException("No se detectó un usuario logueado activo.");
         }
-        return usuarioRepository.findAll().stream().findFirst().orElse(null);
+        return usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new SolicitudInvalidaException("El usuario indicado no existe."));
     }
 
     private void compararYRegistrar(Usuario usuario, String tabla, String columna, Integer idReg, Object viejoVal, Object nuevoVal) {

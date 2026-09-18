@@ -4,6 +4,11 @@ import type { Incidencia, Empleado } from '../types/Incidencia';
 import { useTheme } from '../../../Context/ThemeContext';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { incidenciaService } from '../service/incidenciaService';
+// CORREGIDO: se usa la misma getUsuarioActualId de maquinasService.ts en vez de
+// mantener una copia local duplicada. La copia local que existía acá seguía teniendo
+// el fallback silencioso "|| 1" (atribuía la acción a un usuario/empleado arbitrario
+// cuando no había sesión reconocible) que ya se había corregido en el original.
+import { getUsuarioActualId } from '../service/maquinasService';
 
 interface Props {
   show: boolean;
@@ -42,6 +47,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
   const [tipoAccion, setTipoAccion] = useState<'MANTENIMIENTO' | 'RESOLVER' | null>(null);
   const [textoNota, setTextoNota] = useState('');
   const [errorValidacion, setErrorValidacion] = useState('');
+  const [procesandoAccion, setProcesandoAccion] = useState(false);
 
   // Pago de Arreglo
   const [incidenciaAPagar, setIncidenciaAPagar] = useState<Incidencia | null>(null);
@@ -86,19 +92,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
 
   if (!show || !maquina) return null;
 
-  const getUsuarioActualId = () => {
-    const usrStr = localStorage.getItem('usuario_logueado');
-    if (usrStr) {
-      try {
-        const obj = JSON.parse(usrStr);
-        return obj.idEmpleado || obj.idUsuario || obj.id_usuario || 1;
-      } catch (e) {
-        return 1;
-      }
-    }
-    return 1;
-  };
-
   const formatEmpleado = (empleado?: Empleado, defaultTexto: string = 'Sin asignar') => {
     if (!empleado) return defaultTexto;
     if (empleado.persona && (empleado.persona.nombre || empleado.persona.apellido)) {
@@ -116,11 +109,21 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
       return;
     }
 
+    // CORREGIDO: antes se llamaba a getUsuarioActualId() confiando en su fallback
+    // silencioso a "1"; ahora que ese fallback no existe más, hay que validar
+    // explícitamente que haya un usuario detectable antes de llamar a la API.
+    const idUsuarioActual = getUsuarioActualId();
+    if (!idUsuarioActual) {
+      setErrorValidacion('No se pudo determinar el usuario logueado. Vuelva a iniciar sesión e intente nuevamente.');
+      return;
+    }
+
+    setProcesandoAccion(true);
     try {
       await incidenciaService.ponerEnMantenimiento(
-        idIncidencia, 
-        textoNota.trim(), 
-        getUsuarioActualId()
+        idIncidencia,
+        textoNota.trim(),
+        idUsuarioActual
       );
 
       setMaquina({ ...maquina, estado: 'MANTENIMIENTO' });
@@ -128,7 +131,12 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
       cargarHistorial();
       onIncidenciaResuelta();
     } catch (err) {
+      // CORREGIDO: antes el error solo se logueaba por consola sin ningún aviso
+      // visible -- el usuario no tenía forma de saber que la acción había fallado.
       console.error("Error al pasar a mantenimiento:", err);
+      setErrorValidacion(err instanceof Error ? err.message : 'Error al pasar el equipo a mantenimiento.');
+    } finally {
+      setProcesandoAccion(false);
     }
   };
 
@@ -138,11 +146,18 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
       return;
     }
 
+    const idUsuarioActual = getUsuarioActualId();
+    if (!idUsuarioActual) {
+      setErrorValidacion('No se pudo determinar el usuario logueado. Vuelva a iniciar sesión e intente nuevamente.');
+      return;
+    }
+
+    setProcesandoAccion(true);
     try {
       await incidenciaService.resolver(
-        idIncidencia, 
-        textoNota.trim(), 
-        getUsuarioActualId()
+        idIncidencia,
+        textoNota.trim(),
+        idUsuarioActual
       );
 
       setMaquina({ ...maquina, estado: 'OPERATIVA' });
@@ -150,7 +165,12 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
       cargarHistorial();
       onIncidenciaResuelta();
     } catch (err) {
+      // CORREGIDO: mismo caso que handlePonerEnMantenimiento -- antes el error se
+      // perdía en la consola sin avisar al usuario.
       console.error("Error al resolver la incidencia:", err);
+      setErrorValidacion(err instanceof Error ? err.message : 'Error al resolver la incidencia.');
+    } finally {
+      setProcesandoAccion(false);
     }
   };
 
@@ -159,6 +179,18 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
   
   if (!montoPago || Number(montoPago) <= 0) {
     setErrorPago("Ingrese un monto válido mayor a 0.");
+    return;
+  }
+
+  // CORREGIDO: antes se llamaba a getUsuarioActualId() confiando en su fallback
+  // silencioso a "1"; sin ese fallback, un idUsuario undefined llegaba a
+  // payload.idUsuario.toString() dentro de incidenciaService y explotaba como un
+  // TypeError, que el catch de más abajo mostraba como el genérico "Error de
+  // conexión al registrar pago con el servidor." -- un mensaje engañoso para lo
+  // que en realidad era "no hay sesión detectable". Ahora se valida antes.
+  const idUsuarioActual = getUsuarioActualId();
+  if (!idUsuarioActual) {
+    setErrorPago('No se pudo determinar el usuario logueado. Vuelva a iniciar sesión e intente nuevamente.');
     return;
   }
 
@@ -172,10 +204,10 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
         monto: Number(montoPago),
         metodoPago,
         descripcion: conceptoPago.trim() || `Pago reparación ${maquina.nombre}`,
-        idUsuario: getUsuarioActualId(),
+        idUsuario: idUsuarioActual,
         forzarSaldoInsuficiente: forzar
       },
-      comprobanteFile 
+      comprobanteFile
     );
 
     if (ok) {
@@ -211,17 +243,27 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
       setConceptoPago('');
       cargarHistorial();
     } else {
+      // NOTA: IncidenciaController.registrarPagoMantenimiento atrapa las excepciones
+      // a mano y arma su propia respuesta { code, message } en vez de dejar pasar el
+      // error al GlobalExceptionHandler (que usa el formato ApiError { mensaje }) --
+      // por eso este endpoint es distinto al resto de la API. Se deja data.mensaje
+      // como respaldo por si en el futuro algún caso (ver RecursoNoEncontradoException
+      // / SolicitudInvalidaException agregadas en este pase) terminara respondiendo
+      // con el formato ApiError en vez del { code, message } local.
       if (data.code === 'CAJA_CERRADA') {
         setErrorPago("Error: La caja se encuentra CERRADA. Inicie el turno de caja antes de realizar pagos.");
       } else if (data.code === 'SALDO_INSUFFICIENT') {
-        setMensajeErrorSaldo(data.message || 'El saldo en caja es menor al monto ingresado.');
+        setMensajeErrorSaldo(data.message || data.mensaje || 'El saldo en caja es menor al monto ingresado.');
         setShowModalSaldoInsuficiente(true);
       } else {
-        setErrorPago(data.message || "Error al procesar el pago.");
+        setErrorPago(data.message || data.mensaje || "Error al procesar el pago.");
       }
     }
   } catch (err) {
-    setErrorPago("Error de conexión al registrar pago con el servidor.");
+    // CORREGIDO: antes se mostraba siempre el mismo mensaje genérico sin importar
+    // la causa real del error; ahora se usa el mensaje real cuando está disponible.
+    console.error('Error al registrar pago de mantenimiento:', err);
+    setErrorPago(err instanceof Error ? err.message : "Error de conexión al registrar pago con el servidor.");
   } finally {
     setProcesandoPago(false);
   }};
@@ -444,8 +486,10 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                                   />
                                   {errorValidacion && <small className="text-danger d-block mb-1">{errorValidacion}</small>}
                                   <div className="d-flex gap-1 justify-content-end">
-                                    <button className={`btn btn-xs ${isDark ? 'btn-secondary' : 'btn-secondary'} py-0 px-2`} onClick={limpiarFormulario}>Cancelar</button>
-                                    <button className="btn btn-xs btn-warning fw-bold py-0 px-2" onClick={() => handlePonerEnMantenimiento(inc.idIncidencia!)}>Guardar</button>
+                                    <button className={`btn btn-xs ${isDark ? 'btn-secondary' : 'btn-secondary'} py-0 px-2`} onClick={limpiarFormulario} disabled={procesandoAccion}>Cancelar</button>
+                                    <button className="btn btn-xs btn-warning fw-bold py-0 px-2" onClick={() => handlePonerEnMantenimiento(inc.idIncidencia!)} disabled={procesandoAccion}>
+                                      {procesandoAccion ? 'Guardando...' : 'Guardar'}
+                                    </button>
                                   </div>
                                 </div>
                               ) : inc.notaMantenimiento ? (
@@ -516,8 +560,10 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                                   />
                                   {errorValidacion && <small className="text-danger d-block mb-1">{errorValidacion}</small>}
                                   <div className="d-flex gap-1 justify-content-end">
-                                    <button className={`btn btn-xs ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'} py-0 px-2`} onClick={limpiarFormulario}>Cancelar</button>
-                                    <button className="btn btn-xs btn-success fw-bold py-0 px-2" onClick={() => handleResolver(inc.idIncidencia!)}>Dar Alta</button>
+                                    <button className={`btn btn-xs ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'} py-0 px-2`} onClick={limpiarFormulario} disabled={procesandoAccion}>Cancelar</button>
+                                    <button className="btn btn-xs btn-success fw-bold py-0 px-2" onClick={() => handleResolver(inc.idIncidencia!)} disabled={procesandoAccion}>
+                                      {procesandoAccion ? 'Guardando...' : 'Dar Alta'}
+                                    </button>
                                   </div>
                                 </div>
                               ) : esResuelta ? (

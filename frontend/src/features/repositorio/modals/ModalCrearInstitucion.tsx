@@ -53,7 +53,13 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
       await onSubmit();
       setMostrarExito(true);
     } catch (err) {
+      // FIX: antes un rechazo del backend (ej. nombre duplicado o vacío) solo se
+      // logueaba en consola -- el modal se cerraba el paso de confirmación y no
+      // pasaba nada más, dejando al usuario sin ninguna explicación de por qué no
+      // se creó la institución. Ahora se muestra el mensaje real del backend
+      // (ver repositorioService.crearInstitucion + extraerMensajeError).
       console.error(err);
+      alert((err as Error)?.message || 'No se pudo crear la institución.');
     } finally {
       setGuardando(false);
     }

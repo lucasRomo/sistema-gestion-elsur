@@ -10,6 +10,7 @@ interface ModalComparacionProps {
   modalFechaDesdeCompInput: string;
   modalFechaHastaCompInput: string;
   comparacionData: ComparacionDataState | null;
+  errorRangoComparacion?: string | null;
   setModalFechaDesdeInput: (fecha: string) => void;
   setModalFechaHastaInput: (fecha: string) => void;
   setModalFechaDesdeCompInput: (fecha: string) => void;
@@ -31,6 +32,7 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
   modalFechaDesdeCompInput,
   modalFechaHastaCompInput,
   comparacionData,
+  errorRangoComparacion,
   setModalFechaDesdeInput,
   setModalFechaHastaInput,
   setModalFechaDesdeCompInput,
@@ -180,6 +182,13 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {errorRangoComparacion && (
+                  <div className="alert alert-danger py-2 px-3 mt-3 mb-0 small" role="alert">
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                    {errorRangoComparacion}
+                  </div>
+                )}
 
                 <div className="text-end mt-3">
                   <button

@@ -40,6 +40,8 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   const [comprobanteImagen, setComprobanteImagen] = useState<string | null>(null);
 
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
+  const [guardandoLimite, setGuardandoLimite] = useState(false);
+  const [guardandoPago, setGuardandoPago] = useState(false);
   const [ticketData, setTicketData] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [imagenModalUrl, setImagenModalUrl] = useState<string | null>(null);
 
@@ -85,29 +87,37 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   };
 
   const handleActualizarLimite = async (e: React.FormEvent) => {
-    e.preventDefault(); 
+    e.preventDefault();
+    if (guardandoLimite) return;
+    setGuardandoLimite(true);
     try {
       const limiteNumerico = limite === '' ? 0 : Number(limite);
       await clienteService.actualizarLimiteCredito(idCliente, limiteNumerico);
-      setSuceso({ 
-        show: true, 
-        titulo: "¡Éxito!", 
-        mensaje: "Límite de crédito actualizado correctamente.", 
-        tipo: "exito" 
-      }); 
-      onActualizar(); 
-    } catch (e) { 
-      setSuceso({ 
-        show: true, 
-        titulo: "Error", 
-        mensaje: "Error al actualizar el límite.", 
-        tipo: "error" 
-      }); 
+      setSuceso({
+        show: true,
+        titulo: "¡Éxito!",
+        mensaje: "Límite de crédito actualizado correctamente.",
+        tipo: "exito"
+      });
+      onActualizar();
+    } catch (e) {
+      // CORREGIDO: antes se mostraba siempre "Error al actualizar el límite." sin
+      // importar la causa real del rechazo del backend -- ahora clienteService usa
+      // extraerMensajeError, así que e.message ya trae el motivo real.
+      setSuceso({
+        show: true,
+        titulo: "Error",
+        mensaje: e instanceof Error ? e.message : "Error al actualizar el límite.",
+        tipo: "error"
+      });
+    } finally {
+      setGuardandoLimite(false);
     }
   };
 
   const handleRegistrarPago = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (guardandoPago) return;
     if (montoPago <= 0) {
       setSuceso({
         show: true,
@@ -128,6 +138,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
       return;
     }
 
+    setGuardandoPago(true);
     try {
       const resPago = await clienteService.registrarPago(
         idCliente,
@@ -176,12 +187,18 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
       });
 
     } catch (e) {
+      // CORREGIDO: antes se mostraba siempre "Error al registrar el pago." sin
+      // importar la causa real (ej. turno de caja cerrado) -- ahora clienteService
+      // usa extraerMensajeError, así que e.message ya trae el motivo real del
+      // backend (ver GlobalExceptionHandler).
       setSuceso({
         show: true,
         titulo: "Error",
-        mensaje: "Error al registrar el pago.",
+        mensaje: e instanceof Error ? e.message : "Error al registrar el pago.",
         tipo: "error"
       });
+    } finally {
+      setGuardandoPago(false);
     }
   };
 
@@ -259,20 +276,21 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                   <form onSubmit={handleActualizarLimite} className="p-3 rounded border d-flex gap-3 align-items-end" style={{ backgroundColor: cardBg, borderColor: inputBorder }}>
                     <div className="flex-grow-1">
                       <label className="form-label small fw-semibold" style={{ color: mutedText }}>Límite de Crédito Permitido ($)</label>
-                      <input 
-                        type="number" 
-                        step="0.01" 
-                        className={`form-control ${textColor}`} 
-                        style={{ backgroundColor: inputBg, borderColor: inputBorder }} 
-                        value={limite} 
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className={`form-control ${textColor}`}
+                        style={{ backgroundColor: inputBg, borderColor: inputBorder }}
+                        value={limite}
                         onChange={e => {
                           const val = e.target.value;
                           setLimite(val === '' ? '' : Number(val));
-                        }} 
+                        }}
                       />
                     </div>
-                    <button type="submit" className="btn fw-bold" style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }}>
-                      Actualizar Límite
+                    <button type="submit" className="btn fw-bold" style={{ backgroundColor: '#ca9e1b', color: '#ffffff' }} disabled={guardandoLimite}>
+                      {guardandoLimite ? 'Actualizando...' : 'Actualizar Límite'}
                     </button>
                   </form>
                 </div>
@@ -416,7 +434,9 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                   )}
 
                   <div className="col-12 mt-3 d-flex justify-content-end">
-                    <button type="submit" className="btn btn-success px-4 fw-bold">Imputar Pago</button>
+                    <button type="submit" className="btn btn-success px-4 fw-bold" disabled={guardandoPago}>
+                      {guardandoPago ? 'Procesando...' : 'Imputar Pago'}
+                    </button>
                   </div>
                 </div>
               </form>

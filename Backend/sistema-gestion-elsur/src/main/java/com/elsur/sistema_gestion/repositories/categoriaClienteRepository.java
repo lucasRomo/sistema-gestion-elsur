@@ -6,5 +6,5 @@ import com.elsur.sistema_gestion.models.categoriaCliente;
 
 @Repository
 public interface categoriaClienteRepository extends JpaRepository<categoriaCliente, Integer>{
-    
+    boolean existsByNombreIgnoreCaseAndIdCategoriaNot(String nombre, Integer idExcluido);
 }

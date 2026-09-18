@@ -124,13 +124,27 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
       return;
     }
 
+    // Validamos que cada cantidad cargada sea un número positivo antes de armar el payload.
+    // Antes, `Number(cantidad) || 1` solo cubría el caso vacío/0 (falsy) y dejaba pasar
+    // cualquier valor negativo tal cual, lo que terminaba AUMENTANDO stock en vez de
+    // registrarlo como pérdida (ver MermaServiceImpl.registrarMermas).
+    const cantidadInvalida = keys.some(k => {
+      const cant = Number(selections[k].cantidad);
+      return !Number.isFinite(cant) || cant <= 0;
+    });
+    if (cantidadInvalida) {
+      setMensajeAlerta('La cantidad de cada ítem de merma debe ser un número mayor a 0.');
+      setMostrarAlerta(true);
+      return;
+    }
+
     const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
     const idUsuario = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
 
     const mermasPayload: any[] = keys.map(k => ({
       pedido: { id_pedido: idPedido, idPedido: idPedido },
       idUsuario,
-      cantidad: Number(selections[k].cantidad) || 1,
+      cantidad: Number(selections[k].cantidad),
       descripcion: selections[k].descripcion || 'Merma registrada en el pedido',
       producto: selections[k].idProducto ? { idProducto: selections[k].idProducto, id_producto: selections[k].idProducto } : null,
       insumo: selections[k].idInsumo ? { idInsumo: selections[k].idInsumo, id_insumo: selections[k].idInsumo } : null
@@ -255,9 +269,10 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                           <div className="row g-2">
                             <div className="col-4">
                               <label className="form-label small text-warning m-0 fw-bold">Cantidad Rota / Falla:</label>
-                              <input 
-                                type="number" 
-                                step="0.01" 
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0.01"
                                 className={`form-control form-control-sm ${inputInnerBgClass}`}
                                 style={{ color: textColor }}
                                 value={selections[keyProd]?.cantidad || 1}
@@ -317,9 +332,10 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                                 {insSelected && (
                                   <div className="mt-2 row g-2">
                                     <div className="col-4">
-                                      <input 
-                                        type="number" 
-                                        step="0.01" 
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0.01"
                                         className={`form-control form-control-sm ${inputInnerBgClass}`}
                                         style={{ color: textColor }}
                                         placeholder="Cant."

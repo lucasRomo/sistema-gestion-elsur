@@ -1,5 +1,8 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoDuplicadoException;
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Producto;
 import com.elsur.sistema_gestion.models.ProductoInsumo;
 import com.elsur.sistema_gestion.models.Usuario;
@@ -73,8 +76,10 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     public Producto buscarPorId(Integer id) {
+        // CORREGIDO: antes tiraba un RuntimeException genérico, que el
+        // GlobalExceptionHandler traduce a 400; un producto inexistente es un 404.
         Producto p = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con id: " + id));
         if (Boolean.TRUE.equals(p.getStockVinculado())) {
             p.setStock(calcularStockDesdeInsumos(p.getIdProducto()));
         }
@@ -84,6 +89,34 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     @Transactional
     public Producto guardar(Producto producto, Integer idUsuario) {
+        // CORREGIDO: guardar() no tenía NINGÚN chequeo de nombre a nivel backend --
+        // ni obligatoriedad ni duplicados -- a diferencia de Insumo/Institución/Área,
+        // donde ya se había encontrado y corregido el mismo patrón de bug. La única
+        // validación de nombre duplicado vivía en el frontend (ProductoRegistroModal),
+        // fácil de esquivar llamando directo a la API.
+        if (producto.getNombreProducto() == null || producto.getNombreProducto().trim().isEmpty()) {
+            throw new SolicitudInvalidaException("El nombre del producto es obligatorio");
+        }
+        String nombreNormalizado = producto.getNombreProducto().trim();
+        Integer idActual = producto.getIdProducto() != null ? producto.getIdProducto() : -1;
+        if (productoRepository.existsByNombreProductoIgnoreCaseAndIdProductoNot(nombreNormalizado, idActual)) {
+            throw new RecursoDuplicadoException("Ya existe un producto registrado con ese nombre");
+        }
+        producto.setNombreProducto(nombreNormalizado);
+
+        // CORREGIDO: precioBase tampoco se validaba en ningún lado (ni frontend antes
+        // de este pase, aunque el frontend ya tenía min='0.01', ni backend), a
+        // diferencia del resto de los módulos con precio (Insumo, Caja).
+        if (producto.getPrecioBase() != null && producto.getPrecioBase().compareTo(BigDecimal.ZERO) < 0) {
+            throw new SolicitudInvalidaException("El precio base no puede ser negativo");
+        }
+
+        // CORREGIDO: stock (cuando no está vinculado a insumos y se carga a mano)
+        // tampoco se validaba contra negativos en el backend.
+        if (producto.getStock() != null && producto.getStock() < 0) {
+            throw new SolicitudInvalidaException("El stock no puede ser negativo");
+        }
+
         if (producto.getEstado() == null || producto.getEstado().trim().isEmpty()) {
             producto.setEstado("Activo");
         }
@@ -163,12 +196,16 @@ public class ProductoServiceImpl implements ProductoService {
         productoRepository.saveAll(aModificar);
     }
 
+    // CORREGIDO: antes, si no se recibía un idUsuario válido, se atribuía en
+    // silencio el cambio (edición, modificación masiva de precios) al primer
+    // usuario que devolviera la tabla, falseando el registro de actividad. Mismo
+    // patrón de bug ya corregido en InsumoServiceImpl/useCaja.ts.
     private Usuario obtenerUsuarioOperador(Integer idUsuario) {
-        if (idUsuario != null) {
-            Usuario u = usuarioRepository.findById(idUsuario).orElse(null);
-            if (u != null) return u;
+        if (idUsuario == null) {
+            throw new SolicitudInvalidaException("No se detectó un usuario logueado activo.");
         }
-        return usuarioRepository.findAll().stream().findFirst().orElse(null);
+        return usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new SolicitudInvalidaException("El usuario indicado no existe."));
     }
 
     private void compararYRegistrar(Usuario usuario, String tabla, String columna, Integer idReg, Object viejoVal, Object nuevoVal) {

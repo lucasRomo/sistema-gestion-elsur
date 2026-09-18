@@ -69,12 +69,19 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.guardar(usuario, idUsuarioOperador));
     }
 
+    // "idUsuario" (query param) es solo para auditoría (quién hizo el cambio, ver
+    // UsuarioServiceImpl.guardar) y lo manda el cliente sin validar contra nada
+    // -- no sirve para autorizar. Por eso la reasignación de rol se valida
+    // contra "authentication" (el principal real de la sesión, verificado por
+    // el filtro de JWT), no contra ese parámetro.
     @PutMapping("/{id}")
     public ResponseEntity<Usuario> actualizar(
             @PathVariable Integer id,
             @RequestBody Usuario usuario,
-            @RequestParam(value = "idUsuario", required = false) Integer idUsuarioOperador) {
+            @RequestParam(value = "idUsuario", required = false) Integer idUsuarioOperador,
+            Authentication authentication) {
         usuario.setIdUsuario(id);
+        usuarioService.validarPermisoParaReasignarRol(usuario, authentication.getName());
         return ResponseEntity.ok(usuarioService.guardar(usuario, idUsuarioOperador));
     }
 
@@ -117,11 +124,6 @@ public class UsuarioController {
 
         usuarioService.cambiarEmail(id, dto.getEmailActual(), dto.getEmailNuevo());
         return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/prueba-limpia")
-    public ResponseEntity<String> pruebaLlimpia(@RequestBody String texto) {
-        return ResponseEntity.ok("El POST funciona perfecto: " + texto);
     }
 
     @GetMapping("/exists")
@@ -231,5 +233,35 @@ public class UsuarioController {
         Map<String, String> respuesta = new HashMap<>();
         respuesta.put("passwordReal", cifradoService.desencriptar(objetivo.getContrasenaVisible()));
         return ResponseEntity.ok(respuesta);
+    }
+
+    // NUEVO: "cambiar la contraseña" de otro usuario desde Gestión de Usuarios.
+    // Antes esto no existía de verdad -- el campo "Contraseña" del modal de
+    // edición no tenía ningún efecto (el backend siempre conservaba el hash
+    // existente en una edición general), y cambiarPassword() exige conocer la
+    // contraseña ACTUAL del usuario objetivo, algo que un admin normalmente no
+    // tiene. Mismos dos candados que verContrasenaReal, reutilizados tal cual:
+    // 1) reautenticación -- quien pide esto prueba de nuevo SU PROPIA
+    //    contraseña; 2) rol ADMIN consultado fresco en la base, no el del JWT.
+    @PostMapping("/{id}/password-reset")
+    public ResponseEntity<?> restablecerPassword(
+            @PathVariable Integer id,
+            @Valid @RequestBody com.elsur.sistema_gestion.dto.RestablecerPasswordDTO dto,
+            Authentication authentication) {
+
+        Usuario admin = usuarioService.buscarPorNombreUsuario(authentication.getName())
+                .orElseThrow(() -> new CredencialesInvalidasException("Credenciales incorrectas"));
+
+        if (!passwordEncoder.matches(dto.getPasswordAdmin(), admin.getPassword())) {
+            throw new CredencialesInvalidasException("Credenciales incorrectas");
+        }
+
+        String rolAdmin = admin.getRol() != null ? admin.getRol().getNombreRol() : "";
+        if (!"ADMIN".equalsIgnoreCase(rolAdmin)) {
+            throw new AccessDeniedException("Solo un administrador puede restablecer contraseñas.");
+        }
+
+        usuarioService.restablecerPassword(id, dto.getPasswordNueva());
+        return ResponseEntity.ok().build();
     }
 }

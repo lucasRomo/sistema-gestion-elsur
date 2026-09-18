@@ -62,10 +62,16 @@ public class ProductoController {
 
     // Agrega este endpoint en ProductoController.java
 
+    // CORREGIDO: antes no recibía idUsuario y siempre llamaba a guardar(p, null),
+    // lo que -- tras corregir obtenerUsuarioOperador() para no adivinar más un
+    // usuario -- hacía que esta acción quedara inutilizable. Ahora recibe
+    // idUsuario igual que el resto de los endpoints de este controller.
     @PatchMapping("/{id}/toggle-stock-vinculado")
-    public ResponseEntity<Producto> toggleStockVinculado(@PathVariable Integer id) {
+    public ResponseEntity<Producto> toggleStockVinculado(
+            @PathVariable Integer id,
+            @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
         Producto p = productoService.buscarPorId(id);
         p.setStockVinculado(!Boolean.TRUE.equals(p.getStockVinculado()));
-        return ResponseEntity.ok(productoService.guardar(p, null));
+        return ResponseEntity.ok(productoService.guardar(p, idUsuario));
     }
 }

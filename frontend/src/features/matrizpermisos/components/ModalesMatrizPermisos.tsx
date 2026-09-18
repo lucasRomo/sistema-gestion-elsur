@@ -20,6 +20,10 @@ interface Props {
   mostrarModalBloqueo: boolean;
   setMostrarModalBloqueo: (val: boolean) => void;
   mensajeBloqueoTexto: string;
+
+  mostrarModalConfirmarEliminarRol: boolean;
+  setMostrarModalConfirmarEliminarRol: (val: boolean) => void;
+  confirmarEliminarRol: () => void;
 }
 
 export const ModalesMatrizPermisos: React.FC<Props> = ({
@@ -37,7 +41,10 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
   mensajeExitoTexto,
   mostrarModalBloqueo,
   setMostrarModalBloqueo,
-  mensajeBloqueoTexto
+  mensajeBloqueoTexto,
+  mostrarModalConfirmarEliminarRol,
+  setMostrarModalConfirmarEliminarRol,
+  confirmarEliminarRol
 }) => {
   return (
     <>
@@ -102,6 +109,27 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
                 </div>
                 <h6 className="fw-bold my-2 text-white">{mensajeExitoTexto}</h6>
                 <button className="btn btn-sm px-4 fw-bold mt-2" style={{ backgroundColor: '#a52a2a', color: '#ffffff', borderRadius: '6px', border: 'none' }} onClick={() => setMostrarModalExito(false)}>Cerrar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Confirmar Eliminación de Perfil (antes era un window.confirm) */}
+      {mostrarModalConfirmarEliminarRol && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
+          <div className="modal-dialog modal-dialog-centered modal-sm">
+            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #dc3545', borderRadius: '12px' }}>
+              <div className="modal-body text-center py-2">
+                <i className="bi bi-trash-fill text-danger" style={{ fontSize: '2.5rem' }}></i>
+                <h5 className="mt-2 fw-bold">¿Eliminar perfil?</h5>
+                <p className="text-secondary mt-1 small" style={{ fontSize: '0.75rem' }}>
+                  Esta acción no se puede deshacer.
+                </p>
+                <div className="d-flex justify-content-center gap-2 mt-3">
+                  <button className="btn btn-sm px-3 fw-bold w-50" style={{ backgroundColor: '#3f3f46', color: '#ffffff', border: 'none' }} onClick={() => setMostrarModalConfirmarEliminarRol(false)}>Cancelar</button>
+                  <button className="btn btn-sm px-3 fw-bold w-50" style={{ backgroundColor: '#a52a2a', color: '#ffffff', border: 'none' }} onClick={confirmarEliminarRol}>Eliminar</button>
+                </div>
               </div>
             </div>
           </div>

@@ -1,5 +1,8 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoDuplicadoException;
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.CategoriaProducto;
 import com.elsur.sistema_gestion.repositories.CategoriaRepository;
 import com.elsur.sistema_gestion.services.CategoriaService;
@@ -23,16 +26,24 @@ public class CategoriaServiceImpl implements CategoriaService {
     @Override
     @Transactional
     public CategoriaProducto guardar(CategoriaProducto categoria) {
-        if (categoria.getIdCategoria() == null && categoriaRepository.existsByNombreIgnoreCase(categoria.getNombre())) {
-            throw new RuntimeException("La categoría '" + categoria.getNombre() + "' ya existe.");
+        // CORREGIDO: nombre obligatorio (antes no se validaba) + excepciones tipadas
+        // (antes RuntimeException genérico -> 400; ahora 400/409 según corresponda,
+        // igual que el resto de los módulos con nombre único: Insumo, Institución).
+        if (categoria.getNombre() == null || categoria.getNombre().trim().isEmpty()) {
+            throw new SolicitudInvalidaException("El nombre de la categoría es obligatorio");
         }
+        String nombreNormalizado = categoria.getNombre().trim();
+        if (categoria.getIdCategoria() == null && categoriaRepository.existsByNombreIgnoreCase(nombreNormalizado)) {
+            throw new RecursoDuplicadoException("La categoría '" + nombreNormalizado + "' ya existe.");
+        }
+        categoria.setNombre(nombreNormalizado);
         return categoriaRepository.save(categoria);
     }
 
     @Override
     public CategoriaProducto buscarPorId(Integer id) {
         return categoriaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoría no encontrada con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con id: " + id));
     }
 
     @Override
@@ -41,7 +52,7 @@ public class CategoriaServiceImpl implements CategoriaService {
         if (categoriaRepository.existsById(id)) {
             categoriaRepository.deleteById(id);
         } else {
-            throw new RuntimeException("No se encontró la categoría con ID: " + id);
+            throw new RecursoNoEncontradoException("No se encontró la categoría con ID: " + id);
         }
     }
 }

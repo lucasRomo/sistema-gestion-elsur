@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TipoProveedorRepository extends JpaRepository<TipoProveedor, Integer> {
+    boolean existsByDescripcionIgnoreCaseAndIdTipoProveedorNot(String descripcion, Integer idExcluido);
 }

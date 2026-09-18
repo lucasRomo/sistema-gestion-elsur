@@ -24,6 +24,20 @@ export const useMatrizPermisos = () => {
   const [mostrarModalNuevoRol, setMostrarModalNuevoRol] = useState<boolean>(false);
   const [nuevoRolNombre, setNuevoRolNombre] = useState<string>('');
 
+  // Antes handleEliminarRol usaba window.confirm() para pedir confirmación:
+  // rompía la estética y, a diferencia de los otros modales de la pantalla,
+  // no se podía tematizar ni bloquear con el resto de la UI. Ahora usa el
+  // mismo sistema de modales propios que el resto del módulo.
+  const [mostrarModalConfirmarEliminarRol, setMostrarModalConfirmarEliminarRol] = useState<boolean>(false);
+
+  // GAP corregido: los perfiles "PERFIL_<usuario>" quedaban invisibles en el
+  // selector de perfiles globales (obtenerRoles() los filtra a propósito) y,
+  // una vez que un usuario dejaba de usarlos, no había ninguna forma de verlos
+  // ni borrarlos desde la UI. Esta sección los trae aparte, bajo demanda.
+  const [perfilesHuerfanos, setPerfilesHuerfanos] = useState<any[]>([]);
+  const [mostrarPerfilesHuerfanos, setMostrarPerfilesHuerfanos] = useState<boolean>(false);
+  const [cargandoPerfilesHuerfanos, setCargandoPerfilesHuerfanos] = useState<boolean>(false);
+
   const fetchInicial = useCallback(async () => {
     try {
       const [rolesData, permisosData, usuariosData, idsActivosAdmin] = await Promise.all([
@@ -250,26 +264,78 @@ export const useMatrizPermisos = () => {
       setMostrarModalBloqueo(true);
       return;
     }
+    // GAP corregido: antes no se validaba nada acá contra los roles ya
+    // cargados, así que se podía intentar crear (y hasta hace un momento, el
+    // backend lo permitía) un perfil con un nombre ya existente. El backend
+    // ahora lo rechaza con 409 (ver RolServiceImpl.guardar), pero conviene
+    // avisar antes de golpear la API si ya lo tenemos cargado en memoria.
+    const nombreNormalizado = nuevoRolNombre.trim().toUpperCase();
+    if (roles.some(r => (r.nombreRol || '').toUpperCase() === nombreNormalizado)) {
+      setMensajeBloqueoTexto('Ya existe un perfil con ese nombre.');
+      setMostrarModalBloqueo(true);
+      return;
+    }
     try {
       const rolCreado = await matrizPermisosService.crearRol(nuevoRolNombre);
       await fetchInicial();
       setRolSeleccionado(rolCreado.idRol);
       setMostrarModalNuevoRol(false);
       setNuevoRolNombre('');
-    } catch (error) {
-      setMensajeBloqueoTexto('Error al crear el perfil');
+    } catch (error: any) {
+      // BUG corregido: antes esto siempre mostraba el mismo texto genérico
+      // ('Error al crear el perfil'), sin importar el motivo real -- ahora
+      // matrizPermisosService.crearRol ya extrae el mensaje real del backend
+      // (por ejemplo, el 409 de nombre duplicado si igual se cuela una carrera
+      // entre dos pestañas).
+      setMensajeBloqueoTexto(error?.message || 'Error al crear el perfil');
       setMostrarModalBloqueo(true);
     }
   };
 
-  const handleEliminarRol = async () => {
+  const cargarPerfilesHuerfanos = useCallback(async () => {
+    setCargandoPerfilesHuerfanos(true);
+    try {
+      const data = await matrizPermisosService.obtenerPerfilesHuerfanos();
+      setPerfilesHuerfanos(data);
+    } catch (error) {
+      console.error('Error al traer perfiles huérfanos', error);
+    } finally {
+      setCargandoPerfilesHuerfanos(false);
+    }
+  }, []);
+
+  const alternarPerfilesHuerfanos = () => {
+    setMostrarPerfilesHuerfanos(prev => {
+      const nuevoValor = !prev;
+      if (nuevoValor) cargarPerfilesHuerfanos();
+      return nuevoValor;
+    });
+  };
+
+  const eliminarPerfilHuerfano = async (idRol: number) => {
+    try {
+      await matrizPermisosService.eliminarRol(idRol);
+      await cargarPerfilesHuerfanos();
+      setMensajeExitoTexto('Perfil huérfano eliminado con éxito.');
+      setMostrarModalExito(true);
+    } catch (error: any) {
+      setMensajeBloqueoTexto(error?.message || 'Error al eliminar el perfil huérfano.');
+      setMostrarModalBloqueo(true);
+    }
+  };
+
+  const handleEliminarRol = () => {
     if (rolSeleccionado === 1 || rolSeleccionado === 2) {
       setMensajeBloqueoTexto('No se pueden eliminar los perfiles principales del sistema.');
       setMostrarModalBloqueo(true);
       return;
     }
 
-    if (!window.confirm('¿Estás seguro de eliminar este perfil? Esta acción no se puede deshacer.')) return;
+    setMostrarModalConfirmarEliminarRol(true);
+  };
+
+  const confirmarEliminarRol = async () => {
+    setMostrarModalConfirmarEliminarRol(false);
 
     try {
       await matrizPermisosService.eliminarRol(rolSeleccionado);
@@ -317,6 +383,13 @@ export const useMatrizPermisos = () => {
     setMostrarModalNuevoRol,
     nuevoRolNombre,
     setNuevoRolNombre,
+    mostrarModalConfirmarEliminarRol,
+    setMostrarModalConfirmarEliminarRol,
+    perfilesHuerfanos,
+    mostrarPerfilesHuerfanos,
+    cargandoPerfilesHuerfanos,
+    alternarPerfilesHuerfanos,
+    eliminarPerfilHuerfano,
     togglePermiso,
     esPermisoProtegido,
     handleCambioPerfilSelect,
@@ -324,6 +397,7 @@ export const useMatrizPermisos = () => {
     volverAModoGlobal,
     confirmarGuardado,
     handleCrearRol,
-    handleEliminarRol
+    handleEliminarRol,
+    confirmarEliminarRol
   };
 };

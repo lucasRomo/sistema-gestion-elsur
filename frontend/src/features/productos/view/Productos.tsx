@@ -52,6 +52,7 @@ export const Productos: React.FC = () => {
   const location = useLocation();
 
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
   const [filtroNombre, setFiltroNombre] = useState('');
@@ -116,8 +117,10 @@ export const Productos: React.FC = () => {
     try {
       await toggleStockVinculado(producto.idProducto);
       await cargar();
-    } catch (err) {
-      console.error("Error al cambiar estado de vínculo de stock:", err);
+    } catch (err: any) {
+      // CORREGIDO: antes solo se logueaba en consola, sin ningún aviso visible
+      // si la operación fallaba (ej. producto eliminado entre tanto).
+      alert(err?.message || 'Error al cambiar el vínculo de stock del producto.');
     }
   };
 
@@ -373,20 +376,30 @@ export const Productos: React.FC = () => {
               <p className="small m-0" style={{ color: mutedText }}>Se sobreescribirán los datos del producto.</p>
               
               <div className="d-flex justify-content-center gap-2 mt-4">
-                <button className="btn btn-danger btn-sm px-3 fw-semibold" onClick={() => setMostrarConfirmacion(false)}>Volver</button>
-                <button 
-                  className="btn btn-success btn-sm px-3 fw-semibold text-white" 
+                <button className="btn btn-danger btn-sm px-3 fw-semibold" disabled={guardandoEdicion} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
+                <button
+                  className="btn btn-success btn-sm px-3 fw-semibold text-white"
+                  disabled={guardandoEdicion}
                   onClick={async () => {
-                    if (productoEditando) {
+                    if (guardandoEdicion || !productoEditando) return;
+                    setGuardandoEdicion(true);
+                    try {
                       await guardar(productoEditando);
+                      setMostrarConfirmacion(false);
+                      setShowModal(false);
+                      setMensajeExito('Modificación hecha exitosamente');
+                      setMostrarExito(true);
+                    } catch (err: any) {
+                      // CORREGIDO: antes esta confirmación no manejaba errores; si el
+                      // backend rechazaba la modificación (ej: nombre duplicado) el
+                      // error quedaba sin capturar y sin avisar al usuario.
+                      alert(err?.message || 'Error al modificar el producto.');
+                    } finally {
+                      setGuardandoEdicion(false);
                     }
-                    setMostrarConfirmacion(false);
-                    setShowModal(false);
-                    setMensajeExito('Modificación hecha exitosamente');
-                    setMostrarExito(true);
                   }}
                 >
-                  Confirmar
+                  {guardandoEdicion ? 'Guardando...' : 'Confirmar'}
                 </button>
               </div>
             </div>

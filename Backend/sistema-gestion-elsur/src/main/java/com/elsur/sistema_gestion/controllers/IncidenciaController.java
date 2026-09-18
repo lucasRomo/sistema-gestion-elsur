@@ -1,5 +1,7 @@
 package com.elsur.sistema_gestion.controllers;
 
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Incidencia;
 import com.elsur.sistema_gestion.models.MovimientoCaja;
 import com.elsur.sistema_gestion.services.IncidenciaService;
@@ -77,6 +79,20 @@ public class IncidenciaController {
             );
             
             return ResponseEntity.ok(mov);
+        // CORREGIDO -- HALLAZGO: este endpoint arma su propia respuesta { code,
+        // message } en vez de dejar pasar la excepción al GlobalExceptionHandler, y
+        // antes solo distinguía IllegalStateException/IllegalArgumentException. Las
+        // nuevas RecursoNoEncontradoException (incidencia/máquina inexistente) y
+        // SolicitudInvalidaException (monto inválido, usuario ausente/inexistente)
+        // agregadas en IncidenciaServiceImpl cAÍAN en el catch-all de más abajo,
+        // devolviendo 500 "Internal Server Error" -- como si fuera un bug del
+        // servidor -- en vez del 404/400 que realmente corresponde.
+        } catch (RecursoNoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("code", "NOT_FOUND", "message", e.getMessage()));
+        } catch (SolicitudInvalidaException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("code", "SOLICITUD_INVALIDA", "message", e.getMessage()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("code", "CAJA_CERRADA", "message", e.getMessage()));

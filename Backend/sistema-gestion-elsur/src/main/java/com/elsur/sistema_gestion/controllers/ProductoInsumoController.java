@@ -1,5 +1,7 @@
 package com.elsur.sistema_gestion.controllers;
 
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Insumo;
 import com.elsur.sistema_gestion.models.Producto;
 import com.elsur.sistema_gestion.models.ProductoInsumo;
@@ -14,7 +16,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/producto-insumo")
@@ -45,8 +49,30 @@ public class ProductoInsumoController {
             @PathVariable Integer idProducto,
             @RequestBody List<RecetaItemDTO> recetaDTOs) {
 
+        // CORREGIDO: antes usaba RuntimeException genérico (-> 400) para "no
+        // encontrado"; ahora RecursoNoEncontradoException (-> 404), igual que el
+        // resto del sistema.
         Producto producto = productoRepository.findById(idProducto)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + idProducto));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con ID: " + idProducto));
+
+        // CORREGIDO: antes no se validaba nada de los items recibidos -- una
+        // cantidadConsumo nula reventaba como una DataIntegrityViolationException
+        // opaca (la columna es NOT NULL), un insumo repetido en el mismo envío
+        // chocaba contra la clave primaria compuesta (idProducto + idInsumo) con el
+        // mismo resultado, y una cantidad <= 0 se guardaba igual sin avisar (aunque
+        // calcularStockDesdeInsumos ya la ignoraba al calcular el stock).
+        Set<Integer> idsInsumosVistos = new HashSet<>();
+        for (RecetaItemDTO dto : recetaDTOs) {
+            if (dto.getIdInsumo() == null) {
+                throw new SolicitudInvalidaException("Cada ítem de la receta debe indicar un insumo");
+            }
+            if (dto.getCantidadConsumo() == null || dto.getCantidadConsumo().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new SolicitudInvalidaException("La cantidad a consumir debe ser mayor a cero");
+            }
+            if (!idsInsumosVistos.add(dto.getIdInsumo())) {
+                throw new SolicitudInvalidaException("El insumo con ID " + dto.getIdInsumo() + " está repetido en la receta");
+            }
+        }
 
         // 1. Limpiar insumos asociados previamente a este producto
         List<ProductoInsumo> recetaExistente = productoInsumoRepository.findByIdIdProducto(idProducto);
@@ -58,7 +84,7 @@ public class ProductoInsumoController {
         List<ProductoInsumo> nuevasEntradas = new ArrayList<>();
         for (RecetaItemDTO dto : recetaDTOs) {
             Insumo insumo = insumoRepository.findById(dto.getIdInsumo())
-                    .orElseThrow(() -> new RuntimeException("Insumo no encontrado con ID: " + dto.getIdInsumo()));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Insumo no encontrado con ID: " + dto.getIdInsumo()));
 
             ProductoInsumo pi = new ProductoInsumo();
             pi.setId(new ProductoInsumoId(idProducto, dto.getIdInsumo()));

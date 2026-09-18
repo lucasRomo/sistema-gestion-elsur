@@ -58,6 +58,7 @@ export const InformesView: React.FC = () => {
     fechaHastaInput,
     fechaDesde,
     fechaHasta,
+    errorRangoFechas,
     setFechaDesdeInput,
     setFechaHastaInput,
     confirmarRangoActual,
@@ -72,6 +73,10 @@ export const InformesView: React.FC = () => {
     pedidosRaw: datos.pedidosRaw,
     movimientosCaja: datos.movimientosCaja,
     turnosRaw: datos.turnosRaw,
+    mermasRaw: datos.mermasRaw,
+    deudoresRaw: datos.deudoresRaw,
+    averiasRaw: datos.averiasRaw,
+    categoriasClienteRaw: datos.categoriasClienteRaw,
     procesarMetricas,
   });
 
@@ -105,7 +110,7 @@ export const InformesView: React.FC = () => {
   }, []);
 
   const handleAnalizar = async () => {
-    confirmarRangoActual();
+    if (!confirmarRangoActual()) return;
     const resultado = await datos.cargarDatos(false, 'Error al recalcular informes');
     if (!resultado) return;
     procesarMetricas(
@@ -233,10 +238,25 @@ export const InformesView: React.FC = () => {
         setFechaDesdeInput={setFechaDesdeInput}
         setFechaHastaInput={setFechaHastaInput}
         handleAnalizar={handleAnalizar}
+        cargando={datos.cargando}
         handleSeleccionarHoy={handleSeleccionarHoy}
         handleSeleccionarEstaSemana={handleSeleccionarEstaSemana}
         handleSeleccionarEsteMes={handleSeleccionarEsteMes}
       />
+
+      {errorRangoFechas && (
+        <div className="alert alert-danger py-2 px-3 mb-4 small" role="alert">
+          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+          {errorRangoFechas}
+        </div>
+      )}
+
+      {datos.errorCarga && (
+        <div className="alert alert-warning py-2 px-3 mb-4 small" role="alert">
+          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+          {datos.errorCarga}
+        </div>
+      )}
 
       {/* BARRA SUPERIOR DE SECCIÓN ACTIVA: BOTÓN VOLVER Y EXPORTAR PDF */}
       {seccionActiva !== 'MENU' && (
@@ -343,6 +363,7 @@ export const InformesView: React.FC = () => {
           informeComparacion={comparacion.informeComparacion}
           tipoComparacion={comparacion.tipoComparacion}
           comparacionData={comparacion.comparacionData}
+          errorRangoComparacion={comparacion.errorRangoComparacion}
           modalFechaDesdeInput={comparacion.modalFechaDesdeInput}
           modalFechaHastaInput={comparacion.modalFechaHastaInput}
           modalFechaDesdeCompInput={comparacion.modalFechaDesdeCompInput}

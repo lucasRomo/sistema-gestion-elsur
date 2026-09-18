@@ -64,3 +64,25 @@ export const obtenerPasswordReal = async (idUsuario: number, passwordAdmin: stri
   const data = await res.json();
   return data.passwordReal;
 };
+
+// NUEVO: "Restablecer contraseña" en Gestión de Usuarios. Antes esto no existía
+// de verdad -- el campo "Contraseña" del modal de edición de usuario no tenía
+// ningún efecto real (guardarUsuario/PUT siempre conserva el hash existente en
+// una edición general, ver UsuarioServiceImpl.guardar en el backend), así que
+// no había forma de fijarle una contraseña nueva a otro usuario sin que éste
+// supiera la actual. Mismo criterio de reautenticación que obtenerPasswordReal:
+// quien pide esto reingresa SU PROPIA contraseña de administrador, nunca la del
+// usuario objetivo.
+export const restablecerPassword = async (
+  idUsuario: number,
+  passwordAdmin: string,
+  passwordNueva: string
+): Promise<void> => {
+  const res = await apiFetch(`${API_URL}/${idUsuario}/password-reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ passwordAdmin, passwordNueva })
+  });
+
+  if (!res.ok) throw new Error(await extraerMensajeError(res, 'No se pudo restablecer la contraseña.'));
+};

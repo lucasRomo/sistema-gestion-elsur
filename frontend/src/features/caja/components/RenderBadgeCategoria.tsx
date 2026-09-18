@@ -69,7 +69,7 @@ export const renderBadgeCategoria = (m: MovimientoCaja, isDark: boolean) => {
           border: `1px solid ${isDark ? '#a855f7' : '#9333ea'}`
         }}
       >
-        <i className="bi"></i>CTA_CTE
+        <i className="bi bi-credit-card"></i>CTA_CTE
       </span>
     );
   }

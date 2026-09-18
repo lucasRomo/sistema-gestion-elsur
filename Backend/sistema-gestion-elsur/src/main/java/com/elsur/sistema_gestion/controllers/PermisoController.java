@@ -31,6 +31,16 @@ public class PermisoController {
         return permisoService.listarRoles();
     }
 
+    // Perfiles "PERFIL_<usuario>" sin ningún usuario asignado hoy. El listado
+    // normal de arriba (y matrizPermisosService.obtenerRoles() en el frontend)
+    // los excluye a propósito del selector de perfiles globales; este endpoint
+    // aparte es lo que permite verlos y limpiarlos (con el mismo DELETE
+    // /roles/{idRol} de siempre) en vez de quedar invisibles para siempre.
+    @GetMapping("/roles/huerfanos")
+    public List<Rol> listarPerfilesHuerfanos() {
+        return rolService.listarPerfilesPersonalizadosHuerfanos();
+    }
+
     @PostMapping("/roles")
     public ResponseEntity<Rol> crearRol(@RequestBody Rol nuevoRol) {
         Rol rolGuardado = rolService.guardar(nuevoRol);

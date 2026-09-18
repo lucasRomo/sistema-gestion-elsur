@@ -1,5 +1,9 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.ConflictoDeIntegridadException;
+import com.elsur.sistema_gestion.exceptions.RecursoDuplicadoException;
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Direccion;
 import com.elsur.sistema_gestion.models.Proveedor;
 import com.elsur.sistema_gestion.models.Usuario;
@@ -9,6 +13,7 @@ import com.elsur.sistema_gestion.services.ProveedorService;
 import com.elsur.sistema_gestion.services.RegistroActividadService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,20 +45,29 @@ public class ProveedorServiceImpl implements ProveedorService {
             proveedor.setEstado("Activo");
         }
 
+        // CORREGIDO: el nombre comercial no se validaba -- ni blanco, ni duplicado --
+        // pese a ser nullable=false. Mismo patrón ya cerrado en Insumo/Producto/
+        // Institución/Cliente.
+        if (proveedor.getNombreComercial() == null || proveedor.getNombreComercial().trim().isEmpty()) {
+            throw new SolicitudInvalidaException("El nombre comercial del proveedor es obligatorio.");
+        }
+        String nombreNormalizado = proveedor.getNombreComercial().trim();
+        Integer idProveedorExcluido = proveedor.getIdProveedor() != null ? proveedor.getIdProveedor() : -1;
+        if (proveedorRepository.existsByNombreComercialIgnoreCaseAndIdProveedorNot(nombreNormalizado, idProveedorExcluido)) {
+            throw new RecursoDuplicadoException("Ya existe un proveedor registrado con el nombre comercial '" + nombreNormalizado + "'.");
+        }
+        proveedor.setNombreComercial(nombreNormalizado);
+
         // --- LÓGICA DE AUDITORÍA EN EDICIÓN ---
         if (proveedor.getIdProveedor() != null && proveedorRepository.existsById(proveedor.getIdProveedor())) {
-            
+
             Proveedor proveedorViejo = proveedorRepository.findById(proveedor.getIdProveedor()).orElse(null);
 
             if (proveedorViejo != null) {
-                // Buscamos el usuario operador
-                Usuario usuarioActual = null;
-                if (idUsuario != null) {
-                    usuarioActual = usuarioRepository.findById(idUsuario).orElse(null);
-                }
-                if (usuarioActual == null) {
-                    usuarioActual = usuarioRepository.findAll().stream().findFirst().orElse(null);
-                }
+                // CORREGIDO: fallback en silencio al "primer usuario de la base" cuando
+                // faltaba idUsuario -- mismo patrón transversal cerrado en el resto del
+                // sistema. Ahora se exige un usuario real y válido.
+                Usuario usuarioActual = obtenerUsuarioOperador(idUsuario);
 
                 // 1. Auditoría de campos directos de Proveedor
                 compararYRegistrar(usuarioActual, "Proveedor", "nombreComercial", proveedor.getIdProveedor(),
@@ -106,7 +120,27 @@ public class ProveedorServiceImpl implements ProveedorService {
     @Override
     @Transactional
     public void eliminar(Integer id) {
-        proveedorRepository.deleteById(id);
+        if (!proveedorRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("No se encontró el proveedor con id: " + id);
+        }
+        try {
+            proveedorRepository.deleteById(id);
+            proveedorRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            // CORREGIDO: antes esta excepción (proveedor referenciado por compras de
+            // insumos, por ejemplo) no se atrapaba y devolvía el mensaje crudo de
+            // Hibernate/JDBC.
+            throw new ConflictoDeIntegridadException(
+                "No se puede eliminar el proveedor porque tiene compras u otros registros asociados.");
+        }
+    }
+
+    private Usuario obtenerUsuarioOperador(Integer idUsuario) {
+        if (idUsuario == null) {
+            throw new SolicitudInvalidaException("Debe indicar el usuario que realiza la modificación.");
+        }
+        return usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new SolicitudInvalidaException("El usuario indicado no existe."));
     }
 
     private void compararYRegistrar(Usuario usuario, String tabla, String columna, Integer idReg, Object viejoVal, Object nuevoVal) {

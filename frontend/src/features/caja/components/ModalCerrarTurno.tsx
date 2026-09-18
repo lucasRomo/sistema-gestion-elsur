@@ -73,6 +73,13 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
 
   const handleValidarYSiguiente = (e: React.FormEvent) => {
     e.preventDefault();
+    // FIX: antes no había ningún freno contra un efectivo contado negativo -- el input
+    // no tenía min y solo se validaba NaN indirectamente. Contar "efectivo negativo" no
+    // tiene sentido físico, así que se rechaza acá antes de calcular ninguna diferencia.
+    if (valorContado < 0) {
+      alert('El efectivo contado no puede ser un valor negativo.');
+      return;
+    }
     if (hayDiferencia && !pasoJustificacion) {
       setPasoJustificacion(true);
     } else {
@@ -229,6 +236,7 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
                     <input
                       type="number"
                       step="0.01"
+                      min="0"
                       id="efectivoReal"
                       className="form-control form-control-lg font-monospace text-center fs-2 fw-bold"
                       style={{

@@ -620,13 +620,31 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional
     public Pedido agregarPago(Integer idPedido, Double monto, String tipoPago, String urlComprobante, Integer idUsuario) {
+        if (monto == null || monto.isNaN() || monto <= 0) {
+            throw new SolicitudInvalidaException("El monto del pago debe ser un número mayor a 0.");
+        }
+
+        if (idUsuario == null) {
+            throw new SolicitudInvalidaException("Debe indicar el usuario que registra el cobro.");
+        }
+        Usuario usuarioOperador = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new SolicitudInvalidaException("El usuario indicado no existe."));
+
         Turno turnoActivo = TurnoRepository.findFirstByEstado(EstadoTurno.ABIERTO).orElse(null);
         if (turnoActivo == null) {
-            throw new RuntimeException("La Caja No está Abierta. Por favor, inicie turno antes de registrar el cobro.");
+            throw new SolicitudInvalidaException("La Caja No está Abierta. Por favor, inicie turno antes de registrar el cobro.");
         }
 
         Pedido pedido = pedidoRepository.findById(idPedido)
-            .orElseThrow(() -> new RuntimeException("No se encontró el pedido"));
+            .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró el pedido"));
+
+        BigDecimal montoBD = BigDecimal.valueOf(monto);
+        BigDecimal saldoPendiente = pedido.getMonto_total().subtract(pedido.getMonto_pago_adelantado());
+        if (montoBD.compareTo(saldoPendiente) > 0) {
+            throw new SolicitudInvalidaException(
+                "El monto ingresado ($" + montoBD + ") no puede superar el saldo pendiente del pedido ($" + saldoPendiente + ")."
+            );
+        }
 
         if ("CUENTA_CORRIENTE".equalsIgnoreCase(tipoPago) || "Cuenta Corriente".equalsIgnoreCase(tipoPago)) {
             if (pedido.getCliente() != null && pedido.getCliente().getIdCliente() == 1) {
@@ -635,7 +653,6 @@ public class PedidoServiceImpl implements PedidoService {
             pedido.setEs_cuenta_corriente(true);
         }
 
-        BigDecimal montoBD = BigDecimal.valueOf(monto);
         pedido.setMonto_pago_adelantado(pedido.getMonto_pago_adelantado().add(montoBD));
 
         if (pedido.isEs_cuenta_corriente() && pedido.getCliente() != null && pedido.getCliente().getIdCliente() != 1) {
@@ -679,9 +696,7 @@ public class PedidoServiceImpl implements PedidoService {
         }
         mov.setDescripcion(descripcion);
 
-        Usuario usuario = usuarioRepository.findById(idUsuario != null ? idUsuario : 1)
-                            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        mov.setUsuario(usuario);
+        mov.setUsuario(usuarioOperador);
 
         mov.setComprobanteImagen(urlComprobante);
 
@@ -740,13 +755,31 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional
     public Pedido agregarPagoConArchivo(Integer idPedido, Double monto, String tipoPago, Integer idUsuario, MultipartFile comprobante) {
+        if (monto == null || monto.isNaN() || monto <= 0) {
+            throw new SolicitudInvalidaException("El monto del pago debe ser un número mayor a 0.");
+        }
+
+        if (idUsuario == null) {
+            throw new SolicitudInvalidaException("Debe indicar el usuario que registra el cobro.");
+        }
+        Usuario usuarioOperador = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new SolicitudInvalidaException("El usuario indicado no existe."));
+
         Turno turnoActivo = TurnoRepository.findFirstByEstado(EstadoTurno.ABIERTO).orElse(null);
         if (turnoActivo == null) {
-            throw new RuntimeException("La Caja No está Abierta. Por favor, inicie turno antes de registrar el cobro.");
+            throw new SolicitudInvalidaException("La Caja No está Abierta. Por favor, inicie turno antes de registrar el cobro.");
         }
 
         Pedido pedido = pedidoRepository.findById(idPedido)
-            .orElseThrow(() -> new RuntimeException("No se encontró el pedido"));
+            .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró el pedido"));
+
+        BigDecimal montoBD = BigDecimal.valueOf(monto);
+        BigDecimal saldoPendiente = pedido.getMonto_total().subtract(pedido.getMonto_pago_adelantado());
+        if (montoBD.compareTo(saldoPendiente) > 0) {
+            throw new SolicitudInvalidaException(
+                "El monto ingresado ($" + montoBD + ") no puede superar el saldo pendiente del pedido ($" + saldoPendiente + ")."
+            );
+        }
 
         if ("CUENTA_CORRIENTE".equalsIgnoreCase(tipoPago) || "Cuenta Corriente".equalsIgnoreCase(tipoPago)) {
             if (pedido.getCliente() != null && pedido.getCliente().getIdCliente() == 1) {
@@ -755,7 +788,6 @@ public class PedidoServiceImpl implements PedidoService {
             pedido.setEs_cuenta_corriente(true);
         }
 
-        BigDecimal montoBD = BigDecimal.valueOf(monto);
         pedido.setMonto_pago_adelantado(pedido.getMonto_pago_adelantado().add(montoBD));
 
         if (pedido.isEs_cuenta_corriente() && pedido.getCliente() != null && pedido.getCliente().getIdCliente() != 1) {
@@ -814,9 +846,7 @@ public class PedidoServiceImpl implements PedidoService {
         }
         mov.setDescripcion(descripcion);
 
-        Usuario usuario = usuarioRepository.findById(idUsuario != null ? idUsuario : 1)
-                            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        mov.setUsuario(usuario);
+        mov.setUsuario(usuarioOperador);
 
         mov.setComprobanteImagen(urlDeImagen);
 

@@ -157,14 +157,21 @@ export const Proveedores: React.FC = () => {
         onClose={() => setShowModal(false)}
         onSave={async (proveedorNormalizado) => {
           const aGuardar = proveedorNormalizado || proveedorSeleccionado!;
-          await guardar(aGuardar);
-          setShowModal(false);
-          setSuccessMessage(isEditing ? "Proveedor modificado correctamente" : "Proveedor registrado correctamente");
-          setShowSuccess(true);
+          try {
+            await guardar(aGuardar);
+            setShowModal(false);
+            setSuccessMessage(isEditing ? "Proveedor modificado correctamente" : "Proveedor registrado correctamente");
+            setShowSuccess(true);
+          } catch (e: any) {
+            // CORREGIDO: antes este catch no existía y, como ProveedorModal llama a
+            // onSave sin await, un error del backend (ej. nombre comercial duplicado)
+            // se perdía como unhandled promise rejection, sin ningún feedback al usuario.
+            alert("Error: " + e.message);
+          }
         }}
       />
 
-      <ProveedorUbicacionModal 
+      <ProveedorUbicacionModal
         show={showUbicacionModal}
         proveedor={proveedorSeleccionado}
         onClose={() => {
@@ -172,11 +179,15 @@ export const Proveedores: React.FC = () => {
           setShowUbicacionModal(false);
         }}
         onSaveUbicacion={async (prov) => {
-          await guardar(prov);
-          setProveedorSeleccionado(null);
-          setShowUbicacionModal(false);
-          setSuccessMessage("Ubicación actualizada correctamente");
-          setShowSuccess(true);
+          try {
+            await guardar(prov);
+            setProveedorSeleccionado(null);
+            setShowUbicacionModal(false);
+            setSuccessMessage("Ubicación actualizada correctamente");
+            setShowSuccess(true);
+          } catch (e: any) {
+            alert("Error: " + e.message);
+          }
         }}
       />
     </div>

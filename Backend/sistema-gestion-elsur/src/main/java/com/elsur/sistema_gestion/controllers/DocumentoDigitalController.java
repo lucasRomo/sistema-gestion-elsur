@@ -40,38 +40,70 @@ public class DocumentoDigitalController {
             @RequestParam(value = "precioBase", required = false) BigDecimal precioBase,
             @RequestParam(value = "cantidadPaginas", required = false) Integer cantidadPaginas,
             @RequestParam("archivo") MultipartFile archivo
-    ) {
-        try {
-            DocumentoDigital doc = documentoDigitalService.guardarDocumento(
-                    titulo, autor, descripcion, idArea, precioBase, cantidadPaginas, archivo
-            );
-            return ResponseEntity.ok(doc);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    ) throws Exception {
+        // FIX: antes este método atrapaba cualquier Exception (validación de negocio,
+        // fallo real de subida a Supabase, error de compresión de PDF, etc.) y devolvía
+        // siempre el mismo ResponseEntity.badRequest().build() -- 400 sin cuerpo ni
+        // mensaje alguno, sin pasar por el GlobalExceptionHandler. Eso ocultaba errores
+        // reales del servidor detrás de un 400 genérico e ilegible para el frontend.
+        // Ahora se deja que la excepción se propague: SolicitudInvalidaException /
+        // RecursoNoEncontradoException se traducen a 400/404 con mensaje claro, y un
+        // error inesperado real llega como 500 (correctamente logueado), igual que en
+        // el resto de los controllers del sistema.
+        DocumentoDigital doc = documentoDigitalService.guardarDocumento(
+                titulo, autor, descripcion, idArea, precioBase, cantidadPaginas, archivo
+        );
+        return ResponseEntity.ok(doc);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarLogico(@PathVariable Long id) {
-        try {
-            documentoDigitalService.eliminarLogico(id);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        // FIX: mismo problema que en registrarDocumento -- cualquier excepción (incluida
+        // una falla real e inesperada) se convertía en un 404 silencioso. Ahora se deja
+        // propagar: RecursoNoEncontradoException ya da 404 con mensaje vía el
+        // GlobalExceptionHandler, sin necesidad de este catch.
+        documentoDigitalService.eliminarLogico(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/archivo/{nombreArchivo:.+}")
-public ResponseEntity<byte[]> verArchivo(@PathVariable String nombreArchivo) {
-    try {
+    public ResponseEntity<byte[]> verArchivo(@PathVariable String nombreArchivo) throws Exception {
         byte[] datos = documentoDigitalService.descargarArchivo(nombreArchivo);
-        String contentType = "application/pdf"; // el repositorio digital son PDFs
+        // FIX: antes el Content-Type se hardcodeaba siempre a "application/pdf",
+        // asumiendo que "el repositorio digital son PDFs". Pero tanto el formulario de
+        // carga (ModalAgregarDocumento, accept=".pdf,.docx,.doc,.jpg,.jpeg,.png") como la
+        // previsualización (DetalleDocumento/ModalPrevisualizar, que distinguen PDF /
+        // JPG-PNG / Office) soportan explícitamente otros formatos. Servir una imagen o
+        // un DOCX con Content-Type: application/pdf hace que el navegador reciba un tipo
+        // MIME incorrecto para ese blob. Ahora el tipo se resuelve según la extensión real
+        // del archivo guardado, con application/pdf solo como último recurso.
+        String contentType = resolverContentType(nombreArchivo);
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + nombreArchivo + "\"")
                 .body(datos);
-    } catch (Exception e) {
-        return ResponseEntity.notFound().build();
     }
-}
+
+    private String resolverContentType(String nombreArchivo) {
+        String ext = "";
+        int idx = nombreArchivo.lastIndexOf('.');
+        if (idx >= 0 && idx < nombreArchivo.length() - 1) {
+            ext = nombreArchivo.substring(idx + 1).toLowerCase();
+        }
+        switch (ext) {
+            case "pdf":
+                return "application/pdf";
+            case "jpg":
+            case "jpeg":
+                return "image/jpeg";
+            case "png":
+                return "image/png";
+            case "doc":
+                return "application/msword";
+            case "docx":
+                return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            default:
+                return "application/pdf";
+        }
+    }
 }

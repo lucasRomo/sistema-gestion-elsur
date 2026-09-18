@@ -33,9 +33,10 @@ export const GestionUsuariosView: React.FC = () => {
   const [usuarioConUbicacion, setUsuarioConUbicacion] = useState<any | null>(null);
   const [usuarioAVerPassword, setUsuarioAVerPassword] = useState<any | null>(null);
 
-  // El botón "Ver contraseña" solo tiene sentido (y el backend solo lo permite) para
-  // el rol ADMIN -- lo ocultamos acá también para no mostrar un botón que va a
-  // terminar en un 403 para cualquier otro rol.
+  // El botón "Ver / Restablecer" (ver contraseña actual o fijar una nueva) solo
+  // tiene sentido -- y el backend solo lo permite -- para el rol ADMIN. Lo
+  // ocultamos acá también para no mostrar un botón que va a terminar en un 403
+  // para cualquier otro rol.
   const usuarioLogueadoRaw = localStorage.getItem('usuario_logueado');
   const esAdmin = (() => {
     try {
@@ -50,15 +51,21 @@ export const GestionUsuariosView: React.FC = () => {
   const [vistaActual, setVistaActual] = useState<'gestion' | 'registro'>('gestion');
   const navigate = useNavigate();
 
+  // Antes la insignia de "Estado" de la tabla usaba u.estado directo (mostrando un
+  // badge rojo vacío para cualquier usuario sin fila en Empleado, ya que u.estado
+  // quedaba undefined), mientras que el filtro de arriba SÍ default-eaba a 'Activo'
+  // en ese mismo caso. Esta función unifica el criterio: se usa el mismo valor por
+  // defecto tanto para filtrar como para mostrar el badge.
+  const estadoMostrar = (u: any) => u.estado || 'Activo';
+
   const usuariosFiltrados = usuarios.filter(u => {
     const busqueda = filtroTexto.toLowerCase();
-    
+
     const coincideTexto = u.nombreUsuario?.toLowerCase().includes(busqueda) ||
                           u.persona?.nombre?.toLowerCase().includes(busqueda) ||
                           u.persona?.apellido?.toLowerCase().includes(busqueda);
-    
-    const estadoUsuario = u.estado || 'Activo';
-    const coincideEstado = filtroEstado === 'Sin Filtro' || estadoUsuario === filtroEstado;
+
+    const coincideEstado = filtroEstado === 'Sin Filtro' || estadoMostrar(u) === filtroEstado;
     return coincideTexto && coincideEstado;
   });
   const usuariosOrdenados = [...usuariosFiltrados].sort((a, b) => (a.idUsuario ?? 0) - (b.idUsuario ?? 0));
@@ -129,9 +136,9 @@ export const GestionUsuariosView: React.FC = () => {
                           <button
                             className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
                             onClick={() => setUsuarioAVerPassword(u)}
-                            title="Ver contraseña"
+                            title="Ver o restablecer contraseña"
                           >
-                            <i className="bi bi-eye"></i> Ver
+                            <i className="bi bi-eye"></i> Ver / Restablecer
                           </button>
                         ) : (
                           <span style={{ color: isDark ? '#71717a' : '#94a3b8' }}>••••••</span>
@@ -145,20 +152,20 @@ export const GestionUsuariosView: React.FC = () => {
                         ${Number(u.salario || 0).toLocaleString('es-AR')}
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <span 
+                        <span
                           className={`badge rounded-pill px-3 py-2 font-monospace ${
-                            u.estado === 'Activo' 
-                              ? 'bg-success bg-opacity-75' 
-                              : u.estado === 'Pendiente' 
-                              ? 'bg-warning bg-opacity-75' 
+                            estadoMostrar(u) === 'Activo'
+                              ? 'bg-success bg-opacity-75'
+                              : estadoMostrar(u) === 'Pendiente'
+                              ? 'bg-warning bg-opacity-75'
                               : 'bg-danger bg-opacity-75'
                           }`}
-                          style={{ 
+                          style={{
                             fontSize: '0.8rem',
                             color: '#ffffff'
                           }}
                         >
-                          {u.estado}
+                          {estadoMostrar(u)}
                         </span>
                       </td>
                       <td className="py-3 px-3 text-center">
@@ -200,10 +207,10 @@ export const GestionUsuariosView: React.FC = () => {
             <button 
               onClick={() => navigate('/dashboard')} 
               className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center"
-              style={{ 
+              style={{
                 color: '#ffffff',
                 padding: '11px 24px',
-                fontSize: '1 rem',
+                fontSize: '1rem',
                 minWidth: '90px'
               }}
             >
@@ -213,10 +220,10 @@ export const GestionUsuariosView: React.FC = () => {
             <button 
               onClick={() => setVistaActual('registro')} 
               className="btn btn-success fw-bold shadow-sm d-inline-flex align-items-center justify-content-center"
-              style={{ 
+              style={{
                 color: '#ffffff',
                 padding: '11px 24px',
-                fontSize: '1 rem',
+                fontSize: '1rem',
                 minWidth: '90px'
               }}
             >

@@ -467,6 +467,13 @@ export const CajaView: React.FC = () => {
                             
                             <td>
                               {(() => {
+                                // FIX: antes, si no se podía resolver el usuario del movimiento
+                                // (m.usuario), el código caía a leer el usuario ACTUALMENTE
+                                // logueado desde localStorage y mostrar SU nombre -- es decir,
+                                // el movimiento de otro operador podía mostrar el nombre de quien
+                                // está mirando la pantalla en ese momento, una atribución
+                                // incorrecta. Ahora, si no se puede resolver el usuario propio
+                                // del movimiento, se muestra un texto neutro en vez de adivinar.
                                 const u = m.usuario;
 
                                 if (u && typeof u === 'object') {
@@ -482,27 +489,7 @@ export const CajaView: React.FC = () => {
                                   return u;
                                 }
 
-                                try {
-                                  const localData = 
-                                    localStorage.getItem('usuario_logueado') || 
-                                    localStorage.getItem('usuario') || 
-                                    localStorage.getItem('user');
-
-                                  if (localData) {
-                                    const parsed = JSON.parse(localData);
-                                    
-                                    const nombreLocal = `${parsed.nombre || parsed.first_name || ''} ${parsed.apellido || parsed.last_name || ''}`.trim();
-                                    if (nombreLocal) return nombreLocal;
-                                    
-                                    if (parsed.nombreUsuario) return parsed.nombreUsuario;
-                                    if (parsed.username) return parsed.username;
-                                    if (parsed.nombre_usuario) return parsed.nombre_usuario;
-                                  }
-                                } catch (e) {
-                                  // Ignorar parse error
-                                }
-
-                                return 'No se Encuentra al Usuario';
+                                return 'Usuario no disponible';
                               })()}
                             </td>
                             <td>
