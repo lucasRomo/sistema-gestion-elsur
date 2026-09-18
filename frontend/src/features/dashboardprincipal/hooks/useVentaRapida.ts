@@ -4,6 +4,7 @@ import type { CartItem, Pedido } from '../../pedidos/general/types/Pedido';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
 import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 
 const MARGEN_MERMA_RESPALDO = 5;
 const TOLERANCIA_PRODUCTO_DIRECTO = 3;
@@ -475,6 +476,7 @@ export const useVentaRapida = () => {
       confirmarMaquinaNoDisponible
     };
 
+    showLoading('Procesando venta...');
     try {
       let resCrear: Response;
       if (datosPago?.comprobanteFile) {
@@ -520,8 +522,7 @@ export const useVentaRapida = () => {
         throw new Error(await extraerMensajeError(resEstado, 'Error al actualizar estado del pedido.'));
       }
 
-      await fetchProductos();
-      await fetchPedidosPendientes();
+      await Promise.all([fetchProductos(), fetchPedidosPendientes()]);
 
       const pedidoParaTicket = {
         ...pedidoGuardado,
@@ -549,6 +550,8 @@ export const useVentaRapida = () => {
         mensaje: error.message || 'No se pudo completar la venta.',
         tipo: 'error'
       });
+    } finally {
+      hideLoading();
     }
   };
 

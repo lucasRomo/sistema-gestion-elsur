@@ -55,22 +55,21 @@ export const BackupReminderModal: React.FC = () => {
           >
             <i className="bi bi-cloud-arrow-up" style={{ fontSize: '1.5rem', color: '#8e45e0' }}></i>
           </div>
-          <h5 className="fw-bold m-0">Recordatorio de respaldo</h5>
+          <h5 className="fw-bold m-0">Generación de Respaldo</h5>
         </div>
 
         <p className="text-body-secondary mb-4" style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>
-          Es viernes: buen momento para generar un respaldo de la información del sistema
-          y evitar la pérdida de datos importantes.
+          Ya han pasado 7 Dias desde el Ultimo Aviso de Generación de Respaldo de Datos. Recuerde Generar Respaldos de emergencia para guardarlos en la base de datos o localmente en la Computadora.
         </p>
 
         <div className="d-flex justify-content-end gap-2">
           <button
             type="button"
             className="btn btn-sm px-3 py-2 fw-semibold"
-            style={{ backgroundColor: '#27272a', color: '#fff', border: '1px solid #3f3f46' }}
+            style={{ backgroundColor: '#343335', color: '#fff', border: 'none' }}
             onClick={marcarComoVisto}
           >
-            Cancelar
+            Hacerlo en otro Momento
           </button>
           <button
             type="button"
