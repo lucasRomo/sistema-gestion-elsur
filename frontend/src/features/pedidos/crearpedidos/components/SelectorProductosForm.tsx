@@ -71,6 +71,8 @@ export const SelectorProductosForm: React.FC<Props> = ({
     tipo: 'Insumo' | 'Producto Directo';
   }[]>([]);
 
+  const [showModalCantidadInvalida, setShowModalCantidadInvalida] = useState(false);
+
   const [showModalStockError, setShowModalStockError] = useState(false);
   const [insumoFaltante, setInsumoFaltante] = useState<{
     nombre: string;
@@ -87,7 +89,14 @@ export const SelectorProductosForm: React.FC<Props> = ({
   }, [productos, busquedaProducto]);
 
   const handleAgregar = async () => {
-  if (!productoId || Number(cantidad) <= 0) return;
+  if (!productoId) return;
+
+  const cantidadNum = Number(cantidad);
+  if (cantidad.trim() === '' || Number.isNaN(cantidadNum) || cantidadNum <= 0) {
+    setShowModalCantidadInvalida(true);
+    return;
+  }
+
   const prodSeleccionado = productos.find(p => p.idProducto === Number(productoId));
   
   if (!prodSeleccionado || prodSeleccionado.idProducto === undefined) return;
@@ -99,8 +108,8 @@ export const SelectorProductosForm: React.FC<Props> = ({
       ...prodSeleccionado,
       receta: recetaInsumos.length > 0 ? recetaInsumos : (prodSeleccionado as any).receta
     },
-    cantidad: Number(cantidad),
-    subtotal: prodSeleccionado.precioBase * Number(cantidad)
+    cantidad: cantidadNum,
+    subtotal: prodSeleccionado.precioBase * cantidadNum
   };
 
   setCarrito([...carrito, nuevoItem]);
@@ -558,6 +567,27 @@ export const SelectorProductosForm: React.FC<Props> = ({
       </div>
 
       {/* Modales de Validación */}
+      {showModalCantidadInvalida && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content p-4 text-white" style={{ border: '2px solid #ffc107', backgroundColor: '#18181b', borderRadius: '12px' }}>
+              <div className="text-center mb-3">
+                <i className="bi bi-exclamation-triangle-fill fs-1 text-warning"></i>
+                <h5 className="fw-bold mt-2 text-warning">Cantidad inválida</h5>
+              </div>
+              <p className="small text-light text-center">
+                Ingrese una cantidad numérica mayor a 0 antes de agregar el producto al carrito.
+              </p>
+              <div className="d-flex justify-content-center mt-3">
+                <button className="btn btn-sm btn-warning px-4 fw-bold" onClick={() => setShowModalCantidadInvalida(false)}>
+                  Entendido
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showModalStockError && insumoFaltante && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered">

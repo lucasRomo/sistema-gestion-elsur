@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 
 interface UsuarioEditModalProps {
@@ -22,12 +22,9 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const inputTextColor = isDark ? '#ffffff' : '#0f172a';
 
-  const [roles, setRoles] = useState<any[]>([]);
-  
   const [editData, setEditData] = useState<any>({
     idUsuario: usuario.idUsuario,
     nombreUsuario: usuario.nombreUsuario || '',
-    password: usuario.password || '',
     salario: usuario.salario || 0,
     estado: usuario.estado || 'Activo',
     cargo: usuario.cargo || '', 
@@ -43,13 +40,6 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
   });
 
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
-
-  useEffect(() => {
-    setRoles([
-      { idRol: 1, nombre: 'ADMIN' },
-      { idRol: 2, nombre: 'EMPLEADO' }
-    ]);
-  }, []);
 
   const handlePersonaChange = (field: string, value: string) => {
     setEditData((prev: any) => ({
@@ -97,28 +87,34 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
                   1. Credenciales de Acceso
                 </h5>
                 <div className="row g-3 mb-4 mx-0">
-                  <div className="col-md-6 px-1">
+                  <div className="col-12 px-1">
                     <label className="form-label small fw-medium" style={{ color: labelColor }}>Usuario (Login)</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
-                      value={editData.nombreUsuario} 
-                      onChange={e => setEditData({...editData, nombreUsuario: e.target.value})} 
-                      required 
+                    <input
+                      type="text"
+                      className="form-control"
+                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }}
+                      value={editData.nombreUsuario}
+                      onChange={e => setEditData({...editData, nombreUsuario: e.target.value})}
+                      required
                     />
                   </div>
-                  <div className="col-md-6 px-1">
-                    <label className="form-label small fw-medium" style={{ color: labelColor }}>Contraseña</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
-                      value={editData.password} 
-                      onChange={e => setEditData({...editData, password: e.target.value})} 
-                      required 
-                    />
-                  </div>
+                  {/*
+                    Antes había acá un campo "Contraseña" (type="text", en texto plano, y
+                    required) precargado con usuario.password. Dos problemas reales:
+                    1) el backend nunca envía el campo password en las respuestas JSON
+                       (Usuario.password usa @JsonProperty WRITE_ONLY para no filtrar el
+                       hash), así que usuario.password siempre llegaba undefined acá y el
+                       campo arrancaba vacío pero marcado "required", obligando a
+                       escribir algo para poder guardar.
+                    2) lo que sea que se escribiera ahí se descartaba igual:
+                       UsuarioServiceImpl.guardar() siempre conserva el hash existente en
+                       una edición (usuario.getIdUsuario() != null), así que este campo
+                       nunca cambió una contraseña real -- solo confundía al administrador.
+                    El cambio de contraseña real tiene su propio flujo dedicado
+                    (PUT /api/usuarios/{id}/password, que exige la contraseña actual), y
+                    "Ver contraseña" ya cubre la consulta. Se saca el campo en vez de
+                    dejar algo que aparenta funcionar y no hace nada.
+                  */}
                 </div>
 
                 {/* SECCIÓN 2: DATOS DEL EMPLEADO */}

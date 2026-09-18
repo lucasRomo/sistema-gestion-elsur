@@ -12,8 +12,10 @@ export function useFiltrosFecha(
   const [fechaHastaInput, setFechaHastaInput] = useState(fechaInicial);
   const [fechaDesde, setFechaDesde] = useState(fechaInicial);
   const [fechaHasta, setFechaHasta] = useState(fechaInicial);
+  const [errorRangoFechas, setErrorRangoFechas] = useState<string | null>(null);
 
   const aplicarRango = (desde: string, hasta: string) => {
+    setErrorRangoFechas(null);
     setFechaDesdeInput(desde);
     setFechaHastaInput(hasta);
     setFechaDesde(desde);
@@ -21,9 +23,23 @@ export function useFiltrosFecha(
     onRangoSeleccionado?.(desde, hasta);
   };
 
-  const confirmarRangoActual = () => {
+  // CORREGIDO: antes no validaba que "Desde" no sea posterior a "Hasta"; un
+  // rango invertido cargado a mano generaba un dashboard vacío sin ningún
+  // aviso al usuario. Ahora se rechaza el rango inválido y se expone el
+  // mensaje de error para mostrarlo en la UI.
+  const confirmarRangoActual = (): boolean => {
+    if (!fechaDesdeInput || !fechaHastaInput) {
+      setErrorRangoFechas('Debe indicar ambas fechas del rango.');
+      return false;
+    }
+    if (fechaDesdeInput > fechaHastaInput) {
+      setErrorRangoFechas('La fecha "Desde" no puede ser posterior a la fecha "Hasta".');
+      return false;
+    }
+    setErrorRangoFechas(null);
     setFechaDesde(fechaDesdeInput);
     setFechaHasta(fechaHastaInput);
+    return true;
   };
 
   const handleSeleccionarHoy = () => {
@@ -49,6 +65,7 @@ export function useFiltrosFecha(
     fechaHastaInput,
     fechaDesde,
     fechaHasta,
+    errorRangoFechas,
     setFechaDesdeInput,
     setFechaHastaInput,
     confirmarRangoActual,

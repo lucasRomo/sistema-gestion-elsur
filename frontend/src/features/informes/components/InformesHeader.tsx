@@ -9,6 +9,15 @@ interface InformesHeaderProps {
   handleSeleccionarEstaSemana: () => void;
   handleSeleccionarEsteMes: () => void;
   handleAnalizar: () => void;
+  // CORREGIDO (GAP detectado al agregar más casos de prueba): el botón
+  // "Analizar" nunca se deshabilitaba mientras había una carga en curso, por
+  // lo que clickearlo varias veces seguidas (o cambiar de fecha y volver a
+  // clickear antes de que termine la carga anterior) disparaba pedidos
+  // superpuestos; si la respuesta más vieja llegaba después que la más
+  // nueva, sus datos (de un rango de fechas viejo) pisaban silenciosamente
+  // los del rango recién pedido. Ahora se recibe `cargando` para deshabilitar
+  // el botón mientras hay una carga en curso.
+  cargando?: boolean;
 }
 
 export const InformesHeader: React.FC<InformesHeaderProps> = ({
@@ -19,7 +28,8 @@ export const InformesHeader: React.FC<InformesHeaderProps> = ({
   handleSeleccionarHoy,
   handleSeleccionarEstaSemana,
   handleSeleccionarEsteMes,
-  handleAnalizar
+  handleAnalizar,
+  cargando = false
 }) => {
   return (
     <div className="d-flex flex-column flex-lg-row align-items-center justify-content-between gap-3 p-3 mb-4 rounded-3 im-surface-head">
@@ -115,16 +125,19 @@ export const InformesHeader: React.FC<InformesHeaderProps> = ({
           type="button"
           className="btn btn-sm fw-semibold px-3 rounded-2 ms-1 im-btn-analizar"
           onClick={handleAnalizar}
+          disabled={cargando}
           style={{
             backgroundColor: '#6f42c1',
             borderColor: '#6f42c1',
             color: '#ffffff',
             fontSize: '0.85rem',
             paddingTop: '0.35rem',
-            paddingBottom: '0.35rem'
+            paddingBottom: '0.35rem',
+            opacity: cargando ? 0.65 : 1,
+            cursor: cargando ? 'not-allowed' : 'pointer'
           }}
         >
-          Analizar
+          {cargando ? 'Analizando…' : 'Analizar'}
         </button>
       </div>
     </div>

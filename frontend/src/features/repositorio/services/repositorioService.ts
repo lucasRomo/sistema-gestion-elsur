@@ -1,5 +1,5 @@
 import type { DocumentoDigital, AreaCurso, Institucion } from '../types/Repositorio';
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 import * as pdfjsLib from 'pdfjs-dist';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
@@ -31,7 +31,14 @@ export const repositorioService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombreInstitucion, tipoInstitucion }),
     });
-    if (!res.ok) throw new Error('Error al crear institución');
+    if (!res.ok) {
+      // FIX: antes se descartaba el mensaje real del backend (ej. "Ya existe una
+      // institución con ese nombre") y se tiraba siempre el mismo texto genérico
+      // 'Error al crear institución' -- el usuario nunca se enteraba del motivo
+      // real del rechazo (nombre vacío, duplicado, etc.). Ahora se usa
+      // extraerMensajeError, igual que ya hace cajaService en el resto del sistema.
+      throw new Error(await extraerMensajeError(res, 'Error al crear institución'));
+    }
     return res.json();
   },
 
@@ -41,7 +48,9 @@ export const repositorioService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombreArea, institucion: { idInstitucion } }),
     });
-    if (!res.ok) throw new Error('Error al crear cátedra/área');
+    if (!res.ok) {
+      throw new Error(await extraerMensajeError(res, 'Error al crear cátedra/área'));
+    }
     return res.json();
   },
 
@@ -50,7 +59,9 @@ export const repositorioService = {
       method: 'POST',
       body: formData,
     });
-    if (!res.ok) throw new Error('Error al subir el archivo digital');
+    if (!res.ok) {
+      throw new Error(await extraerMensajeError(res, 'Error al subir el archivo digital'));
+    }
     return res.json();
   },
 
@@ -58,7 +69,9 @@ export const repositorioService = {
     const res = await apiFetch(`${API_BASE_URL}/documentos-digital/${id}`, {
       method: 'DELETE',
     });
-    if (!res.ok) throw new Error('Error al eliminar el documento');
+    if (!res.ok) {
+      throw new Error(await extraerMensajeError(res, 'Error al eliminar el documento'));
+    }
   },
 
   async obtenerArchivoBlob(nombreArchivoLocal: string): Promise<Blob> {

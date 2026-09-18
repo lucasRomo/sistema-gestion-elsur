@@ -1,6 +1,7 @@
 package com.elsur.sistema_gestion.services.impl;
 
 import com.elsur.sistema_gestion.exceptions.ConflictoDeIntegridadException;
+import com.elsur.sistema_gestion.exceptions.RecursoDuplicadoException;
 import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
 import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Rol;
@@ -30,10 +31,29 @@ public class RolServiceImpl implements RolService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Rol no encontrado con ID: " + id));
     }
 
+    // Antes no se validaba nada acá: se podían crear dos perfiles con el mismo
+    // nombre (por ejemplo "CAJERO" dos veces), ambos con ID distinto pero
+    // indistinguibles en el <select> de perfiles -- ver hallazgo documentado en
+    // Matriz de Permisos. La comparación es case-insensitive porque
+    // matrizPermisosService.crearRol ya normaliza a mayúsculas antes de mandar
+    // el nombre, pero conviene no confiar solo en eso (alguien podría llamar a
+    // este mismo service desde otro lado sin pasar por esa normalización).
     @Override
     @Transactional
     public Rol guardar(Rol rol) {
+        if (rol.getNombreRol() != null && !rol.getNombreRol().trim().isEmpty()) {
+            rolRepository.findByNombreRolIgnoreCase(rol.getNombreRol().trim())
+                    .filter(existente -> !existente.getIdRol().equals(rol.getIdRol()))
+                    .ifPresent(existente -> {
+                        throw new RecursoDuplicadoException("Ya existe un perfil con ese nombre.");
+                    });
+        }
         return rolRepository.save(rol);
+    }
+
+    @Override
+    public List<Rol> listarPerfilesPersonalizadosHuerfanos() {
+        return rolRepository.findPerfilesPersonalizadosHuerfanos();
     }
 
     @Override

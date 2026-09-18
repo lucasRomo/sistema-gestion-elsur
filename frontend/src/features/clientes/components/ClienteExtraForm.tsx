@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const ClienteExtraForm = ({ formData, setFormData, onRegistrar, onCerrar }: any) => {
+export const ClienteExtraForm = ({ formData, setFormData, onRegistrar, onCerrar, guardando = false }: any) => {
   const handleChange = (field: string, value: string) => {
     setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
@@ -45,15 +45,18 @@ export const ClienteExtraForm = ({ formData, setFormData, onRegistrar, onCerrar 
                 type="number" 
                 className="form-control" 
                 style={{ backgroundColor: '#1d1d1d', borderColor: '#292929'}}  
-                value={formData.limiteCredito || ''} 
-                onChange={e => handleChange('limiteCredito', e.target.value)} 
-                required 
+                value={formData.limiteCredito || ''}
+                onChange={e => handleChange('limiteCredito', e.target.value)}
+                required
+                min="0"
               />
             </div>
             
             <div className="d-flex gap-2">
-              <button type="button" className="btn btn-secondary w-100" onClick={onCerrar}>Volver</button>
-              <button type="submit" className="btn btn-success w-100">Registrar Cliente</button>
+              <button type="button" className="btn btn-secondary w-100" onClick={onCerrar} disabled={guardando}>Volver</button>
+              <button type="submit" className="btn btn-success w-100" disabled={guardando}>
+                {guardando ? 'Registrando...' : 'Registrar Cliente'}
+              </button>
             </div>
           </form>
         </div>

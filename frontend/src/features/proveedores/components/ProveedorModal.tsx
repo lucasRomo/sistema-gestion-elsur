@@ -14,7 +14,7 @@ interface ProveedorModalProps {
   isEditing: boolean;
   formState: Proveedor | null;
   setFormState: React.Dispatch<React.SetStateAction<Proveedor | null>>;
-  onSave: (proveedorNormalizado?: Proveedor) => void;
+  onSave: (proveedorNormalizado?: Proveedor) => Promise<void>;
   proveedores: Proveedor[];
 }
 
@@ -54,6 +54,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   const [mostrarExitoEliminar, setMostrarExitoEliminar] = useState<boolean>(false);
   const [showTipoProveedor, setShowTipoProveedor] = useState(false);
   const [showEstado, setShowEstado] = useState(false);
+  const [guardando, setGuardando] = useState(false);
 
   // Carga de categorías utilizando apiFetch
   const cargarCategorias = async () => {
@@ -147,24 +148,39 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     };
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (guardando) return;
     const datosNormalizados = obtenerFormStateNormalizado();
     if (!datosNormalizados) return;
 
     if (isEditing) {
       setMostrarConfirmacion(true);
     } else {
-      onSave(datosNormalizados); 
+      // CORREGIDO: antes se llamaba a onSave (función async) sin await y sin
+      // try/catch -- un error del backend (ej. nombre comercial duplicado) se
+      // perdía como unhandled promise rejection y el modal quedaba sin feedback.
+      // También faltaba protección contra doble-submit.
+      setGuardando(true);
+      try {
+        await onSave(datosNormalizados);
+      } finally {
+        setGuardando(false);
+      }
     }
   };
 
-  const handleGuardarDefinitivo = () => {
+  const handleGuardarDefinitivo = async () => {
+    if (guardando) return;
     const datosNormalizados = obtenerFormStateNormalizado();
-    if (datosNormalizados) {
-      onSave(datosNormalizados);
+    if (!datosNormalizados) return;
+    setGuardando(true);
+    try {
+      await onSave(datosNormalizados);
+      setMostrarConfirmacion(false);
+    } finally {
+      setGuardando(false);
     }
-    setMostrarConfirmacion(false);
   };
 
   if (!show || !formState) return null;
@@ -536,24 +552,26 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
               </div>
 
               <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
-                <button 
-                  type="button" 
-                  className="btn btn-danger fw-bold px-4" 
-                  style={{ color: '#ffffff' }} 
+                <button
+                  type="button"
+                  className="btn btn-danger fw-bold px-4"
+                  style={{ color: '#ffffff' }}
                   onClick={onClose}
+                  disabled={guardando}
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
-                  className="btn fw-bold px-4" 
-                  style={{ 
-                    color: '#ffffff', 
-                    backgroundColor: btnBgModal, 
-                    borderColor: 'transparent' 
+                <button
+                  type="submit"
+                  className="btn fw-bold px-4"
+                  style={{
+                    color: '#ffffff',
+                    backgroundColor: btnBgModal,
+                    borderColor: 'transparent'
                   }}
+                  disabled={guardando}
                 >
-                  Aceptar
+                  {guardando ? 'Guardando...' : 'Aceptar'}
                 </button>
               </div>
             </form>
@@ -577,19 +595,21 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
               <h5 className="fw-bold">¿Confirmar Modificaciones?</h5>
               <p className="small" style={{ color: labelColor }}>Se sobreescribirán de forma permanente los datos del proveedor.</p>
               <div className="d-flex justify-content-center gap-2 mt-3">
-                <button 
-                  className="btn btn-outline-secondary btn-sm px-3 text-white" 
-                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} 
+                <button
+                  className="btn btn-outline-secondary btn-sm px-3 text-white"
+                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}}
                   onClick={() => setMostrarConfirmacion(false)}
+                  disabled={guardando}
                 >
                   Volver
                 </button>
-                <button 
-                  className="btn btn-outline-secondary btn-sm px-3 text-white" 
-                  style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} 
+                <button
+                  className="btn btn-outline-secondary btn-sm px-3 text-white"
+                  style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }}
                   onClick={handleGuardarDefinitivo}
+                  disabled={guardando}
                 >
-                  Confirmar
+                  {guardando ? 'Guardando...' : 'Confirmar'}
                 </button>
               </div>
             </div>

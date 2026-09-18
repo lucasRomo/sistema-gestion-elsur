@@ -69,12 +69,12 @@ export const ListaUsuariosSidebar: React.FC<Props> = ({
               <div className="d-flex align-items-center gap-2">
                 <div 
                   className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
-                  style={{ width: '28px', height: '28px', backgroundColor: '#8e45e0', fontSize: '1 rem' }}
+                  style={{ width: '28px', height: '28px', backgroundColor: '#8e45e0', fontSize: '1rem' }}
                 >
                   {iniciales}
                 </div>
                 <div style={{ lineHeight: '1.1' }}>
-                  <p className={`mb-0 fw-bold ${isDark ? 'text-white' : 'text-dark'}`} style={{ fontSize: '1 rem' }}>
+                  <p className={`mb-0 fw-bold ${isDark ? 'text-white' : 'text-dark'}`} style={{ fontSize: '1rem' }}>
                     {u.persona ? `${u.persona.nombre} ${u.persona.apellido}` : u.nombreUsuario}
                   </p>
                   <span className="text-secondary" style={{ fontSize: '1rem' }}>

@@ -3,6 +3,7 @@ package com.elsur.sistema_gestion.services.impl;
 import com.elsur.sistema_gestion.exceptions.ApiError;
 import com.elsur.sistema_gestion.exceptions.GlobalExceptionHandler;
 import com.elsur.sistema_gestion.exceptions.RecursoDuplicadoException;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Persona;
 import com.elsur.sistema_gestion.models.Rol;
 import com.elsur.sistema_gestion.models.Usuario;
@@ -34,7 +35,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -153,22 +153,53 @@ class UsuarioServiceImplRegistroUnitTest {
     }
 
     @Test
-    void altaDeUsuario_passwordVacia_seHasheaIgualPorFaltaDeValidacionDeLongitud() {
-        // Documenta un hueco real: a diferencia de CambioPasswordDTO (@Size min=8),
-        // el alta (Usuario crudo, sin @Valid en el controller) no exige ningún largo
-        // mínimo. El service ni siquiera mira si password es vacía: se la pasa tal
-        // cual a passwordEncoder.encode().
-        when(usuarioRepository.count()).thenReturn(3L);
+    void altaDeUsuario_passwordVacia_lanzaSolicitudInvalidaYNoGuardaNada() {
+        // GAP corregido: a diferencia de CambioPasswordDTO (@Size min=8, max=72),
+        // el alta (Usuario crudo, sin @Valid en el controller) no exigía ningún largo
+        // mínimo -- se podía crear una cuenta con contraseña vacía o de un solo
+        // carácter. Ahora guardar() valida el largo a mano (ver GU20) antes de
+        // llegar a la asignación de rol o al hasheo.
         when(usuarioRepository.findByNombreUsuario(anyString())).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("")).thenReturn("HASH_DE_STRING_VACIO");
-        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Usuario payload = nuevoUsuario("juan", "");
 
-        usuarioService.guardar(payload, null);
+        SolicitudInvalidaException ex = assertThrows(SolicitudInvalidaException.class,
+                () -> usuarioService.guardar(payload, null));
+        assertEquals("La contraseña debe tener entre 8 y 72 caracteres.", ex.getMessage());
 
-        verify(passwordEncoder, times(1)).encode("");
-        // No se lanza ninguna excepción por password vacía: el alta se completa igual.
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(usuarioRepository, never()).save(any(Usuario.class));
+        verify(usuarioRepository, never()).count();
+    }
+
+    @Test
+    void altaDeUsuario_passwordDemasiadoLarga_lanzaSolicitudInvalida() {
+        when(usuarioRepository.findByNombreUsuario(anyString())).thenReturn(Optional.empty());
+
+        String passwordDe73Caracteres = "a".repeat(73);
+        Usuario payload = nuevoUsuario("juan", passwordDe73Caracteres);
+
+        SolicitudInvalidaException ex = assertThrows(SolicitudInvalidaException.class,
+                () -> usuarioService.guardar(payload, null));
+        assertEquals("La contraseña debe tener entre 8 y 72 caracteres.", ex.getMessage());
+
+        verify(usuarioRepository, never()).save(any(Usuario.class));
+    }
+
+    @Test
+    void altaDeUsuario_passwordEnElLargoPermitido_seHasheaYGuardaNormalmente() {
+        // Caso borde del fix de arriba: el mínimo (8) y el máximo (72) tienen que
+        // seguir aceptándose -- este test cubre el límite inferior exacto.
+        when(usuarioRepository.count()).thenReturn(3L);
+        when(usuarioRepository.findByNombreUsuario(anyString())).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("ocho1234")).thenReturn("HASH_LARGO_MINIMO");
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Usuario payload = nuevoUsuario("juan", "ocho1234"); // exactamente 8 caracteres
+
+        Usuario resultado = assertDoesNotThrow(() -> usuarioService.guardar(payload, null));
+
+        assertEquals("HASH_LARGO_MINIMO", resultado.getPassword());
     }
 
     // ------------------------------------------------------------------
@@ -238,14 +269,19 @@ class UsuarioServiceImplRegistroUnitTest {
     }
 
     @Test
-    void altaDeUsuario_siElUniqueDeLaBaseFrenaElInsert_laExcepcionNoSeTraduceAUnMensajeLimpio() {
-        // Gap residual (documentado, NO corregido por el fix de arriba): el chequeo
-        // previo (findByPersonaNumeroDocumento antes de guardar) cierra el caso
-        // normal de TC_22, pero sigue habiendo una ventana de carrera -- dos altas
-        // simultáneas con el mismo DNI podrían pasar ambas el chequeo antes de que
-        // cualquiera de las dos llegue a guardar(). Quien pierde la carrera sigue
-        // chocando contra el UNIQUE de la base sin que nada en el service lo
-        // traduzca a RecursoDuplicadoException.
+    void altaDeUsuario_siElUniqueDeLaBaseFrenaElInsert_seTraduceARecursoDuplicado() {
+        // GAP corregido: el chequeo previo (findByPersonaNumeroDocumento antes de
+        // guardar) cierra el caso normal de TC_22, pero seguía habiendo una ventana
+        // de carrera -- dos altas simultáneas con el mismo DNI podían pasar ambas el
+        // chequeo antes de que cualquiera de las dos llegara a guardar(). Antes,
+        // quien perdía la carrera chocaba contra el UNIQUE de la base con un
+        // DataIntegrityViolationException sin traducir, que terminaba como 400 con
+        // el mensaje crudo de Postgres. Ahora guardar() atrapa esa excepción puntual
+        // y la relanza como RecursoDuplicadoException (409): el resultado observable
+        // es siempre el mismo, sin importar el timing. La ventana de carrera en sí
+        // sigue existiendo (eso requeriría aislamiento de transacción a nivel de
+        // base, fuera de alcance acá), pero ya no se filtra como un error crudo de
+        // infraestructura.
         when(usuarioRepository.count()).thenReturn(5L);
         when(usuarioRepository.findByNombreUsuario(anyString())).thenReturn(Optional.empty());
         // Simula la ventana de carrera: el chequeo previo no encuentra nada...
@@ -264,21 +300,26 @@ class UsuarioServiceImplRegistroUnitTest {
         persona.setNumeroDocumento("45768342");
         payload.setPersona(persona);
 
-        DataIntegrityViolationException ex = assertThrows(DataIntegrityViolationException.class,
+        RecursoDuplicadoException ex = assertThrows(RecursoDuplicadoException.class,
                 () -> usuarioService.guardar(payload, null));
-        assertEquals(mensajeCrudoDePostgres, ex.getMessage());
-
-        // Y ese es justo el tipo de excepción que GlobalExceptionHandler no sabe
-        // traducir a un mensaje limpio -- ver el test siguiente, que cierra el
-        // circuito hasta la respuesta HTTP real.
+        assertEquals("Ya existe un usuario o una persona registrada con esos datos "
+                + "(nombre de usuario o número de documento).", ex.getMessage());
     }
 
     @Test
-    void handlerGlobal_conLaExcepcionDeLaBaseDelTestAnterior_devuelve400ConMensajeCrudo() {
+    void handlerGlobal_anteUnaExcepcionSinTraducir_devuelve400ConMensajeCrudo() {
+        // Este test YA NO reproduce un caso alcanzable por TC_22 -- el fix de arriba
+        // (altaDeUsuario_siElUniqueDeLaBaseFrenaElInsert_seTraduceARecursoDuplicado)
+        // ahora atrapa ese mismo DataIntegrityViolationException dentro de guardar()
+        // y lo traduce a un 409 limpio antes de que llegue tan lejos. Lo que queda
+        // documentado acá es el comportamiento GENÉRICO de
+        // GlobalExceptionHandler.handleRuntimeException como red de contención para
+        // cualquier RuntimeException que ningún service traduzca todavía: sigue
+        // devolviendo 400 con el mensaje crudo tal cual, sin adivinar nada.
         GlobalExceptionHandler handler = new GlobalExceptionHandler();
         String mensajeCrudoDePostgres =
             "could not execute statement [ERROR: duplicate key value violates unique "
-            + "constraint \"persona_numero_documento_key\"]";
+            + "constraint \"otra_columna_sin_traducir_key\"]";
         DataIntegrityViolationException ex = new DataIntegrityViolationException(mensajeCrudoDePostgres);
 
         HttpServletRequest request = mock(HttpServletRequest.class);

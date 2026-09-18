@@ -56,7 +56,11 @@ export const ModalCrearArea: React.FC<Props> = ({
       await onSubmit();
       setMostrarExito(true);
     } catch (err) {
+      // FIX: mismo problema que en ModalCrearInstitucion -- un rechazo del backend
+      // (nombre vacío, institución inexistente) solo se logueaba en consola, sin
+      // avisarle nada al usuario. Ahora se muestra el mensaje real del backend.
       console.error(err);
+      alert((err as Error)?.message || 'No se pudo crear la cátedra/área.');
     } finally {
       setGuardando(false);
     }

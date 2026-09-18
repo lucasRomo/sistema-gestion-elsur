@@ -111,7 +111,15 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
     }
 
     const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
-    const idUsuario = userLogueado.idUsuario ?? userLogueado.id_usuario ?? 1;
+    const idUsuario = userLogueado.idUsuario ?? userLogueado.id_usuario;
+
+    // FIX: antes, si no se detectaba un usuario logueado activo, la merma se
+    // atribuía en silencio al usuario ID 1 en lugar de avisar al operador.
+    if (!idUsuario) {
+      setMensajeAlerta('No se detectó un usuario logueado activo.');
+      setMostrarAlerta(true);
+      return;
+    }
 
     const payload: any[] = ids.map(idInsumo => ({
       usuario: { idUsuario },

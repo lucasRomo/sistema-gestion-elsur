@@ -1,5 +1,7 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Area_Curso;
 import com.elsur.sistema_gestion.models.DocumentoDigital;
 import com.elsur.sistema_gestion.models.Producto;
@@ -75,7 +77,7 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
     @Override
     public DocumentoDigital findById(Long id) {
         return documentoDigitalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Documento no encontrado con ID: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Documento no encontrado con ID: " + id));
     }
 
     @Override
@@ -89,11 +91,20 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
             MultipartFile archivo
     ) throws Exception {
         if (archivo == null || archivo.isEmpty()) {
-            throw new IllegalArgumentException("El archivo es obligatorio");
+            throw new SolicitudInvalidaException("El archivo es obligatorio");
+        }
+        if (titulo == null || titulo.isBlank()) {
+            throw new SolicitudInvalidaException("El título del documento es obligatorio");
+        }
+        if (autor == null || autor.isBlank()) {
+            throw new SolicitudInvalidaException("El autor/docente es obligatorio");
+        }
+        if (precioBase != null && precioBase.compareTo(BigDecimal.ZERO) < 0) {
+            throw new SolicitudInvalidaException("El precio base no puede ser un valor negativo");
         }
 
         Area_Curso area = areaCursoRepository.findById(idArea)
-                .orElseThrow(() -> new RuntimeException("El área/cátedra seleccionada no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("El área/cátedra seleccionada no existe"));
 
         String nombreOriginal = archivo.getOriginalFilename();
         String extension = "";

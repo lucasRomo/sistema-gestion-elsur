@@ -53,6 +53,10 @@ interface UseComparacionInformeParams {
   pedidosRaw: any[];
   movimientosCaja: any[];
   turnosRaw: any[];
+  mermasRaw?: any[];
+  deudoresRaw?: any[];
+  averiasRaw?: any[];
+  categoriasClienteRaw?: any[];
   procesarMetricas: ProcesarMetricasFn;
 }
 
@@ -62,12 +66,17 @@ export function useComparacionInforme({
   pedidosRaw,
   movimientosCaja,
   turnosRaw,
+  mermasRaw = [],
+  deudoresRaw = [],
+  averiasRaw = [],
+  categoriasClienteRaw = [],
   procesarMetricas,
 }: UseComparacionInformeParams) {
   const [modalComparacionAbierto, setModalComparacionAbierto] = useState(false);
   const [informeComparacion, setInformeComparacion] = useState<InformeComparacion | null>(null);
   const [tipoComparacion, setTipoComparacion] = useState<TipoComparacion | null>(null);
   const [comparacionData, setComparacionData] = useState<ComparacionDataState | null>(null);
+  const [errorRangoComparacion, setErrorRangoComparacion] = useState<string | null>(null);
 
   const [modalFechaDesdeInput, setModalFechaDesdeInput] = useState(fechaDesdeInput);
   const [modalFechaHastaInput, setModalFechaHastaInput] = useState(fechaHastaInput);
@@ -99,9 +108,13 @@ export function useComparacionInforme({
 
     setModalFechaDesdeCompInput(antDesdeStr);
     setModalFechaHastaCompInput(antHastaStr);
+    setErrorRangoComparacion(null);
 
-    const metricasActuales = procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosRaw, movimientosCaja, false);
-    const metricasAnteriores = procesarMetricas(antDesdeStr, antHastaStr, pedidosRaw, movimientosCaja, false);
+    // CORREGIDO: antes no se pasaban mermas/deudores/averías/categorías de
+    // cliente, por lo que la comparación de períodos siempre mostraba estos
+    // informes vacíos (en 0), sin importar los datos reales.
+    const metricasActuales = procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
+    const metricasAnteriores = procesarMetricas(antDesdeStr, antHastaStr, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
 
     setComparacionData({
       actual: {
@@ -129,8 +142,18 @@ export function useComparacionInforme({
   const handleAnalizarComparacionModal = () => {
     if (!informeComparacion) return;
 
-    const metricasActuales = procesarMetricas(modalFechaDesdeInput, modalFechaHastaInput, pedidosRaw, movimientosCaja, false);
-    const metricasAnteriores = procesarMetricas(modalFechaDesdeCompInput, modalFechaHastaCompInput, pedidosRaw, movimientosCaja, false);
+    // CORREGIDO: se valida que en ambos períodos (actual y a comparar)
+    // la fecha "Desde" no sea posterior a la fecha "Hasta"; antes un rango
+    // invertido cargado a mano en el modal producía gráficos vacíos sin
+    // ningún aviso.
+    if (modalFechaDesdeInput > modalFechaHastaInput || modalFechaDesdeCompInput > modalFechaHastaCompInput) {
+      setErrorRangoComparacion('En ambos períodos, la fecha "Desde" no puede ser posterior a la fecha "Hasta".');
+      return;
+    }
+    setErrorRangoComparacion(null);
+
+    const metricasActuales = procesarMetricas(modalFechaDesdeInput, modalFechaHastaInput, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
+    const metricasAnteriores = procesarMetricas(modalFechaDesdeCompInput, modalFechaHastaCompInput, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
 
     setComparacionData({
       actual: {
@@ -191,9 +214,10 @@ export function useComparacionInforme({
     setModalFechaHastaInput(pActual.hasta);
     setModalFechaDesdeCompInput(pAnterior.desde);
     setModalFechaHastaCompInput(pAnterior.hasta);
+    setErrorRangoComparacion(null);
 
-    const metricasActuales = procesarMetricas(pActual.desde, pActual.hasta, pedidosRaw, movimientosCaja, false);
-    const metricasAnteriores = procesarMetricas(pAnterior.desde, pAnterior.hasta, pedidosRaw, movimientosCaja, false);
+    const metricasActuales = procesarMetricas(pActual.desde, pActual.hasta, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
+    const metricasAnteriores = procesarMetricas(pAnterior.desde, pAnterior.hasta, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
 
     setComparacionData({
       actual: metricasActuales,
@@ -208,6 +232,7 @@ export function useComparacionInforme({
     informeComparacion,
     tipoComparacion,
     comparacionData,
+    errorRangoComparacion,
     modalFechaDesdeInput,
     modalFechaHastaInput,
     modalFechaDesdeCompInput,

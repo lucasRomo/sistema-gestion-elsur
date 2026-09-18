@@ -54,40 +54,50 @@ export interface DatosArqueo {
 }
 
 /**
- * Función auxiliar para realizar peticiones de forma segura usando apiFetch
+ * Función auxiliar para realizar peticiones de forma segura usando apiFetch.
+ *
+ * CORREGIDO (GAP): antes tragaba cualquier error (respuesta no-OK, red caída,
+ * JSON inválido) y devolvía siempre el valorPorDefecto, sin dejar ningún
+ * rastro para quien llama -- un endpoint caído era indistinguible de "no hay
+ * datos". Ahora acepta un callback opcional onFallo que se dispara en esos
+ * casos, para que el que llama pueda enterarse y avisarle al usuario, sin
+ * dejar de devolver el valor por defecto (la carga del resto del dashboard
+ * no se corta por la falla de una sola fuente de datos).
  */
-async function obtenerJsonSiOk<T>(endpoint: string, valorPorDefecto: T): Promise<T> {
+async function obtenerJsonSiOk<T>(endpoint: string, valorPorDefecto: T, onFallo?: () => void): Promise<T> {
   try {
     const res = await apiFetch(`${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`);
     if (!res.ok) {
       console.warn(`[informesService] Respuesta no satisfactoria (${res.status}) para ${endpoint}`);
+      onFallo?.();
       return valorPorDefecto;
     }
     const text = await res.text();
     return text ? JSON.parse(text) : valorPorDefecto;
   } catch (error) {
     console.error(`[informesService] Error de red o parseo al consultar ${endpoint}:`, error);
+    onFallo?.();
     return valorPorDefecto;
   }
 }
 
 export const informesService = {
   // --- MÉRMASE INCIDENCIAS ---
-  async obtenerMermas(): Promise<any[]> {
-    return obtenerJsonSiOk<any[]>('/mermas', []);
+  async obtenerMermas(onFallo?: () => void): Promise<any[]> {
+    return obtenerJsonSiOk<any[]>('/mermas', [], onFallo);
   },
 
-  async obtenerAverias(): Promise<any[]> {
-    return obtenerJsonSiOk<any[]>('/incidencias', []);
+  async obtenerAverias(onFallo?: () => void): Promise<any[]> {
+    return obtenerJsonSiOk<any[]>('/incidencias', [], onFallo);
   },
 
   // --- CUENTAS CORRIENTES Y CLIENTES ---
-  async obtenerResumenDeudores(): Promise<any[]> {
-    return obtenerJsonSiOk<any[]>('/cuentas-corrientes/resumen-deudores', []);
+  async obtenerResumenDeudores(onFallo?: () => void): Promise<any[]> {
+    return obtenerJsonSiOk<any[]>('/cuentas-corrientes/resumen-deudores', [], onFallo);
   },
 
-  async obtenerCategoriasCliente(): Promise<any[]> {
-    return obtenerJsonSiOk<any[]>('/categorias-cliente', []);
+  async obtenerCategoriasCliente(onFallo?: () => void): Promise<any[]> {
+    return obtenerJsonSiOk<any[]>('/categorias-cliente', [], onFallo);
   },
 
   // --- TURNOS Y MOVIMIENTOS DE CAJA ---
@@ -133,5 +143,5 @@ export const informesService = {
   const blob = await response.blob();
   return URL.createObjectURL(blob);
 }
-  
+
 };

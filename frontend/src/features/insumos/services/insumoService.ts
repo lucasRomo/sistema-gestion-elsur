@@ -147,6 +147,6 @@ export const eliminarUnidadMedida = async (idUnidad: number): Promise<void> => {
   });
 
   if (!res.ok) {
-    throw new Error('No se pudo eliminar la unidad. Es posible que esté asignada a un insumo.');
+    throw new Error(await extraerMensajeError(res, 'No se pudo eliminar la unidad. Es posible que esté asignada a un insumo.'));
   }
 };

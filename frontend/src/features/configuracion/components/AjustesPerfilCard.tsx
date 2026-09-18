@@ -147,7 +147,7 @@ export const AjustesPerfilCard: React.FC<Props> = ({
                 <input 
                   type="password" 
                   className={`form-control ${inputBgClass} font-monospace`}
-                  placeholder="Mínimo 4 caracteres"
+                  placeholder="Mínimo 8 caracteres"
                   value={passwords.nueva}
                   onChange={(e) => setPasswords({ ...passwords, nueva: e.target.value })}
                 />

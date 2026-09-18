@@ -46,6 +46,7 @@ export const ClienteView = () => {
   const [filtroEstado, setFiltroEstado] = useState<string>('Sin Filtro');
   const [showSuccess, setShowSuccess] = useState(false);
   const [msgSuccess, setMsgSuccess] = useState('');
+  const [guardando, setGuardando] = useState(false);
 
   const [formData, setFormData] = useState<any>({
     nombre: '', apellido: '', email: '', numeroDocumento: '', telefono: '', 
@@ -56,6 +57,8 @@ export const ClienteView = () => {
 
   const handleRegistrarFinal = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (guardando) return;
+    setGuardando(true);
 
     const payload = {
       razonSocial: formData.razonSocial || formData.nombre + " " + formData.apellido,
@@ -104,22 +107,30 @@ export const ClienteView = () => {
 
       setPaso(0); 
     } 
-    catch (e: any) { 
-      alert("Error: " + e.message); 
+    catch (e: any) {
+      alert("Error: " + e.message);
+    }
+    finally {
+      setGuardando(false);
     }
   };
 
   const handleConfirmarEdicion = async (data: any) => {
-    try { 
+    if (guardando) return;
+    setGuardando(true);
+    try {
       await registrarCliente(data);
       setMsgSuccess("Cambios guardados correctamente");
-      setShowSuccess(true); 
-      setClienteAEditar(null); 
-      setClienteConUbicacionSeleccionada(null); 
+      setShowSuccess(true);
+      setClienteAEditar(null);
+      setClienteConUbicacionSeleccionada(null);
       await cargarClientes();
     }
-    catch (e: any) { 
-      alert("Error: " + e.message); 
+    catch (e: any) {
+      alert("Error: " + e.message);
+    }
+    finally {
+      setGuardando(false);
     }
   };
 
@@ -406,7 +417,7 @@ export const ClienteView = () => {
     </div>
   </div>
 )}
-      {paso === 2 && <ClienteExtraForm formData={formData} setFormData={setFormData} onRegistrar={handleRegistrarFinal} onCerrar={() => setPaso(1)} />}
+      {paso === 2 && <ClienteExtraForm formData={formData} setFormData={setFormData} onRegistrar={handleRegistrarFinal} onCerrar={() => setPaso(1)} guardando={guardando} />}
       {clienteAEditar && <ClienteEditModal cliente={clienteAEditar} onCerrar={() => setClienteAEditar(null)} onConfirmar={handleConfirmarEdicion} />}
       {clienteConUbicacionSeleccionada && <UbicacionViewModal cliente={clienteConUbicacionSeleccionada} onCerrar={() => setClienteConUbicacionSeleccionada(null)} onConfirmar={handleConfirmarEdicion} />}
       

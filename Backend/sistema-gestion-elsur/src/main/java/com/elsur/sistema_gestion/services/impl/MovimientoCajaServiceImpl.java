@@ -6,8 +6,9 @@ import com.elsur.sistema_gestion.models.Pedido;
 import com.elsur.sistema_gestion.models.Turno;
 import com.elsur.sistema_gestion.repositories.MovimientoCajaRepository;
 import com.elsur.sistema_gestion.repositories.PedidoRepository;
-import com.elsur.sistema_gestion.repositories.TurnoRepository; 
+import com.elsur.sistema_gestion.repositories.TurnoRepository;
 import com.elsur.sistema_gestion.services.MovimientoCajaService;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,9 +44,15 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
     @Transactional
     public MovimientoCaja guardar(MovimientoCaja movimientoCaja) {
         // 1. Asignación de Turno
+        // FIX: antes, si no había ningún turno ABIERTO, el movimiento se guardaba igual
+        // con turno=null (huérfano, invisible en los totales/arqueo por turno), a
+        // diferencia de PedidoServiceImpl.agregarPago() que sí exige la caja abierta.
+        // Ahora se exige lo mismo acá para no permitir movimientos con la caja cerrada.
         if (movimientoCaja.getTurno() == null) {
-            turnoRepository.findFirstByEstado(EstadoTurno.ABIERTO)
-                .ifPresent(movimientoCaja::setTurno);
+            Turno turnoAbierto = turnoRepository.findFirstByEstado(EstadoTurno.ABIERTO)
+                    .orElseThrow(() -> new SolicitudInvalidaException(
+                            "La Caja no está abierta. Por favor, inicie turno antes de continuar."));
+            movimientoCaja.setTurno(turnoAbierto);
         }
 
         // 2. Solución al error de Pedido Transient
@@ -142,15 +149,21 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
 
         for (MovimientoCaja m : movimientos) {
             String metodo = (m.getMetodoPago() != null) ? m.getMetodoPago().toUpperCase() : "EFECTIVO";
+            // FIX: antes solo "TRANSFERENCIA" se consideraba dinero digital -- DEBITO y
+            // CREDITO (ambos ofrecidos como opciones reales en los formularios de Caja)
+            // caían en el balde de "efectivo", inflando el monto que se le pide al cajero
+            // que cuente físicamente en el cajón. Ahora cualquier método que no sea
+            // EFECTIVO se trata como no-físico ("transferencia"/digital).
+            boolean esDigital = !"EFECTIVO".equals(metodo);
 
             if ("INGRESO".equalsIgnoreCase(m.getTipoMovimiento())) {
-                if ("TRANSFERENCIA".equals(metodo)) {
+                if (esDigital) {
                     transferenciaIngresos = transferenciaIngresos.add(m.getMonto());
                 } else {
                     efectivoIngresos = efectivoIngresos.add(m.getMonto());
                 }
             } else if ("EGRESO".equalsIgnoreCase(m.getTipoMovimiento())) {
-                if ("TRANSFERENCIA".equals(metodo)) {
+                if (esDigital) {
                     transferenciaEgresos = transferenciaEgresos.add(m.getMonto());
                 } else {
                     efectivoEgresos = efectivoEgresos.add(m.getMonto());

@@ -7,10 +7,13 @@ import com.elsur.sistema_gestion.models.Direccion;
 import com.elsur.sistema_gestion.models.Persona;
 import com.elsur.sistema_gestion.models.Rol;
 import com.elsur.sistema_gestion.models.Usuario;
+import com.elsur.sistema_gestion.repositories.RolRepository;
 import com.elsur.sistema_gestion.repositories.UsuarioRepository;
 import com.elsur.sistema_gestion.services.UsuarioService;
 import com.elsur.sistema_gestion.services.CifradoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +41,21 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Autowired
     private CifradoService cifradoService;
+
+    @Autowired
+    private RolRepository rolRepository;
+
+    // Nombre exacto del permiso que habilita reasignar roles desde la Matriz de
+    // Permisos. Se compara ignorando mayúsculas/minúsculas, igual que el resto
+    // de las comparaciones de nombres de permiso en el proyecto.
+    private static final String PERMISO_MATRIZ_DE_PERMISOS = "Matriz de Permisos";
+    private static final Integer ID_ROL_ADMIN = 1;
+    private static final Integer ID_USUARIO_ADMIN_PRINCIPAL = 1;
+
+    private boolean rolTienePermiso(Rol rol, String nombrePermiso) {
+        return rol != null && rol.getPermisos() != null &&
+                rol.getPermisos().stream().anyMatch(p -> nombrePermiso.equalsIgnoreCase(p.getNombrePermiso()));
+    }
 
     @Override
     public List<Usuario> listarTodos() {
@@ -112,6 +130,24 @@ public class UsuarioServiceImpl implements UsuarioService {
             }
         }
 
+        // GAP corregido: a diferencia de CambioPasswordDTO (@Size min=8, max=72)
+        // para el cambio de contraseña de un usuario ya existente, el alta (esta
+        // misma entidad Usuario cruda, sin un DTO propio con @Valid) no exigía
+        // ningún largo mínimo -- se podía crear una cuenta con contraseña vacía
+        // o de un solo carácter. Se valida acá, a mano, en vez de agregar
+        // @Size directo en el campo de la entidad (eso hubiera afectado también
+        // a Hibernate con ddl-auto=update, arriesgando una alteración de columna
+        // no planeada). Solo aplica al alta: la edición general nunca manda
+        // password (se conserva el hash existente, ver más abajo), y el login
+        // tiene su propia validación de credenciales que no debe rechazar
+        // contraseñas históricas más cortas que este mínimo.
+        if (usuario.getIdUsuario() == null) {
+            String passwordPlano = usuario.getPassword();
+            if (passwordPlano == null || passwordPlano.length() < 8 || passwordPlano.length() > 72) {
+                throw new SolicitudInvalidaException("La contraseña debe tener entre 8 y 72 caracteres.");
+            }
+        }
+
         // Asignación de Rol / Primer Usuario
         if (usuarioRepository.count() == 0) {
             // Bootstrap real: el primer usuario del sistema nace ADMIN sin
@@ -140,11 +176,31 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuarioRepository.findById(usuario.getIdUsuario())
                     .map(Usuario::getRol)
                     .ifPresent(usuario::setRol);
+        } else {
+            // Caso restante: edición (idUsuario != null) con un rol explícito en
+            // el payload -> se respeta. Es la reasignación de rol desde la
+            // Matriz de Permisos, ya protegida por PUT /api/usuarios/{id} +
+            // permiso "Matriz de Permisos" (ver validarPermisoParaReasignarRol,
+            // llamado por el controller ANTES de este método).
+            //
+            // GAP corregido: hasta ahora nada impedía reasignar al usuario ID 1
+            // (el admin de arranque del sistema) a un rol sin el permiso
+            // "Matriz de Permisos". Si eso pasara y ningún otro usuario activo
+            // tuviera ese permiso, nadie podría volver a entrar a este módulo
+            // para revertirlo -- un bloqueo total y potencialmente irreversible.
+            // PermisoServiceImpl.actualizarPermisosRol ya protege el CONJUNTO DE
+            // PERMISOS del rol cuyo id es 1, pero eso no alcanza si al usuario 1
+            // se lo cambia a un rol DISTINTO (por ejemplo, a OPERARIO). Este
+            // chequeo cubre justo ese caso.
+            if (ID_USUARIO_ADMIN_PRINCIPAL.equals(usuario.getIdUsuario())) {
+                Rol rolDestino = rolRepository.findById(usuario.getRol().getIdRol()).orElse(null);
+                if (!rolTienePermiso(rolDestino, PERMISO_MATRIZ_DE_PERMISOS)) {
+                    throw new SolicitudInvalidaException(
+                        "No se puede reasignar al usuario administrador principal (ID 1) a un perfil sin el " +
+                        "permiso 'Matriz de Permisos': nadie podría volver a entrar a este módulo para revertirlo.");
+                }
+            }
         }
-        // Caso restante: edición (idUsuario != null) con un rol explícito en
-        // el payload -> se respeta. Es la reasignación de rol desde la Matriz
-        // de Permisos, ya protegida por PUT /api/usuarios/{id} + permiso
-        // "Matriz de Permisos".
 
         // --- CONTRASEÑA: hashear en el alta, conservar el hash existente en la edición ---
         // Este mismo endpoint (guardar) se usa tanto para crear como para editar un usuario.
@@ -249,7 +305,26 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
 
         // Guardamos el usuario
-        Usuario usuarioGuardado = usuarioRepository.save(usuario);
+        //
+        // GAP corregido (parcialmente): el chequeo de DNI duplicado de más arriba
+        // (findByPersonaNumeroDocumento) cierra el caso normal, pero deja una
+        // ventana de carrera real -- dos altas simultáneas con el mismo DNI
+        // pueden pasar ambas ese chequeo antes de que cualquiera de las dos
+        // llegue a este save(). Antes, quien perdía la carrera chocaba contra el
+        // UNIQUE de la base con un DataIntegrityViolationException que nadie
+        // traducía, y terminaba como 400 con el mensaje crudo de Postgres (ver
+        // GlobalExceptionHandler.handleRuntimeException). Esto no elimina la
+        // ventana de carrera en sí (eso requeriría aislamiento de transacción a
+        // nivel de base, fuera del alcance de esta corrección), pero sí asegura
+        // que el resultado observable sea siempre el mismo 409 prolijo,
+        // independientemente del timing.
+        Usuario usuarioGuardado;
+        try {
+            usuarioGuardado = usuarioRepository.save(usuario);
+        } catch (DataIntegrityViolationException e) {
+            throw new RecursoDuplicadoException(
+                "Ya existe un usuario o una persona registrada con esos datos (nombre de usuario o número de documento).");
+        }
 
         // Sincronización en tabla Empleado
         if (usuario.getSalario() != null && usuarioGuardado.getPersona() != null) {
@@ -292,6 +367,23 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new SolicitudInvalidaException("La contraseña actual no coincide.");
         }
 
+        user.setPassword(passwordEncoder.encode(nuevaPassword));
+        user.setContrasenaVisible(cifradoService.encriptar(nuevaPassword));
+        usuarioRepository.save(user);
+    }
+
+    // NUEVO: reseteo de contraseña por un ADMIN. A diferencia de cambiarPassword
+    // (que exige conocer la contraseña ACTUAL del usuario objetivo -- pensado
+    // para que alguien cambie su propia contraseña), este método no le pide
+    // nada al usuario objetivo: la reautenticación es del ADMIN que lo pide, y
+    // ya se validó en el controller (mismo criterio que verContrasenaReal)
+    // antes de llegar acá. Esto es lo que le faltaba a "Gestión de Usuarios"
+    // para poder cambiar la contraseña de otro usuario de verdad -- antes solo
+    // existía la consulta ("Ver contraseña").
+    @Override
+    @Transactional
+    public void restablecerPassword(Integer idUsuario, String nuevaPassword) {
+        Usuario user = buscarPorId(idUsuario);
         user.setPassword(passwordEncoder.encode(nuevaPassword));
         user.setContrasenaVisible(cifradoService.encriptar(nuevaPassword));
         usuarioRepository.save(user);
@@ -342,9 +434,63 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuarioRepository.save(user);
     }
 
+    // NUEVO: valida que reasignar el rol de "usuarioAEditar" esté autorizado
+    // para quien lo está pidiendo de verdad (nombreUsuarioOperador viene de
+    // Authentication.getName(), no del parámetro "idUsuario" de la query, que
+    // es un dato que manda el cliente sin validar contra nada -- confiar en
+    // ese parámetro para autorizar hubiera sido tan fácil de saltear como
+    // mandar cualquier id ajeno).
+    //
+    // GAP corregido: MatrizSeguridadValidator mapea CUALQUIER ruta
+    // /api/usuarios/** (incluido este mismo PUT) al permiso genérico "Gestión
+    // de Usuarios" como regla de respaldo, además de la regla específica para
+    // "Matriz de Permisos". Como guardar() respeta cualquier "rol" que venga
+    // en el payload de una edición, el resultado era que el permiso "Gestión
+    // de Usuarios" -- pensado para administrar legajos/datos de empleados --
+    // también alcanzaba, en la práctica, para reasignar el rol de cualquier
+    // usuario (incluso a ADMIN) armando el pedido a mano. Este chequeo cierra
+    // ese hueco a nivel de service, sin tocar la regla de autorización por
+    // ruta (que no puede leer el cuerpo del pedido).
+    @Override
+    public void validarPermisoParaReasignarRol(Usuario usuarioAEditar, String nombreUsuarioOperador) {
+        if (usuarioAEditar == null || usuarioAEditar.getIdUsuario() == null ||
+                usuarioAEditar.getRol() == null || usuarioAEditar.getRol().getIdRol() == null) {
+            return; // el payload no trae un rol explícito -> no es una reasignación
+        }
+
+        Usuario actual = usuarioRepository.findById(usuarioAEditar.getIdUsuario()).orElse(null);
+        if (actual == null || actual.getRol() == null ||
+                actual.getRol().getIdRol().equals(usuarioAEditar.getRol().getIdRol())) {
+            return; // no había rol previo, o el rol pedido es el mismo que ya tenía -> no es una reasignación real
+        }
+
+        Usuario operador = nombreUsuarioOperador != null
+                ? usuarioRepository.findByNombreUsuario(nombreUsuarioOperador).orElse(null)
+                : null;
+
+        boolean esAdmin = operador != null && operador.getRol() != null &&
+                ID_ROL_ADMIN.equals(operador.getRol().getIdRol());
+        boolean tienePermisoMatriz = operador != null && rolTienePermiso(operador.getRol(), PERMISO_MATRIZ_DE_PERMISOS);
+
+        if (!esAdmin && !tienePermisoMatriz) {
+            throw new AccessDeniedException(
+                "Solo un usuario con el permiso 'Matriz de Permisos' puede reasignar el rol de otro usuario.");
+        }
+    }
+
+    // GAP corregido (defensa en profundidad): a diferencia de RolServiceImpl.eliminar
+    // (que bloquea los roles 1/2), este método no tenía ninguna protección --
+    // ni siquiera para el usuario ID 1 (el admin de arranque). Hoy no es
+    // explotable porque UsuarioController no expone ningún @DeleteMapping que
+    // llame a esto, pero se agrega la misma barrera igual, para que quede
+    // protegido desde ya si en el futuro alguien agrega ese endpoint sin
+    // revisar este método primero.
     @Override
     @Transactional
     public void eliminar(Integer id) {
+        if (ID_USUARIO_ADMIN_PRINCIPAL.equals(id)) {
+            throw new SolicitudInvalidaException("No se puede eliminar al usuario administrador principal del sistema.");
+        }
         usuarioRepository.deleteById(id);
     }
 

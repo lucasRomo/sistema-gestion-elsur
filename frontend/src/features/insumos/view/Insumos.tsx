@@ -48,6 +48,7 @@ export const Insumos: React.FC = () => {
   
   const [insumoEditando, setInsumoEditando] = useState<Insumo | null>(null);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
 
@@ -271,18 +272,18 @@ export const Insumos: React.FC = () => {
         insumoEditando={insumoEditando}
         onClose={() => setShowModalForm(false)}
         onGuardar={async (data) => {
-          try {
-            if (insumoEditando) {
-              setInsumoEditando(data); 
-              setMostrarConfirmacion(true); 
-            } else {
-              await guardar(data);
-              setShowModalForm(false);
-              setMensajeExito('Insumo Creado Correctamente');
-              setMostrarExito(true);
-            }
-          } catch (err: any) {
-            console.error("Error al guardar insumo:", err);
+          // Nota: no se atrapa el error acá a propósito; InsumoModal es quien
+          // lo captura y lo muestra al usuario, manteniendo el modal abierto
+          // para que pueda corregir los datos (antes el error se perdía en
+          // consola sin ningún aviso).
+          if (insumoEditando) {
+            setInsumoEditando(data);
+            setMostrarConfirmacion(true);
+          } else {
+            await guardar(data);
+            setShowModalForm(false);
+            setMensajeExito('Insumo Creado Correctamente');
+            setMostrarExito(true);
           }
         }}
       />
@@ -317,20 +318,30 @@ export const Insumos: React.FC = () => {
               <p className="small m-0" style={{ color: mutedText }}>Se sobreescribirán los datos del insumo.</p>
               
               <div className="d-flex justify-content-center gap-2 mt-4">
-                <button className="btn btn-danger btn-sm px-3 fw-semibold" onClick={() => setMostrarConfirmacion(false)}>Volver</button>
-                <button 
-                  className="btn btn-success btn-sm px-3 fw-semibold text-white" 
+                <button className="btn btn-danger btn-sm px-3 fw-semibold" disabled={guardandoEdicion} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
+                <button
+                  className="btn btn-success btn-sm px-3 fw-semibold text-white"
+                  disabled={guardandoEdicion}
                   onClick={async () => {
-                    if (insumoEditando) {
+                    if (guardandoEdicion || !insumoEditando) return;
+                    setGuardandoEdicion(true);
+                    try {
                       await guardar(insumoEditando);
+                      setMostrarConfirmacion(false);
+                      setShowModalForm(false);
+                      setMensajeExito('Modificación hecha exitosamente');
+                      setMostrarExito(true);
+                    } catch (err: any) {
+                      // FIX: antes esta confirmación no manejaba errores; si el
+                      // backend rechazaba la modificación (ej: nombre duplicado)
+                      // el error quedaba sin capturar y sin avisar al usuario.
+                      alert(err?.message || 'Error al modificar el insumo.');
+                    } finally {
+                      setGuardandoEdicion(false);
                     }
-                    setMostrarConfirmacion(false);
-                    setShowModalForm(false);
-                    setMensajeExito('Modificación hecha exitosamente');
-                    setMostrarExito(true);
                   }}
                 >
-                  Confirmar
+                  {guardandoEdicion ? 'Guardando...' : 'Confirmar'}
                 </button>
               </div>
             </div>

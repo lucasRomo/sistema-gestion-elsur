@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.elsur.sistema_gestion.repositories.UsuarioRepository;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,10 +37,18 @@ public class MermaServiceImpl implements MermaService {
         List<Merma> guardadas = new ArrayList<>();
  
         for (Merma merma : mermas) {
+            // FIX: antes no se validaba la cantidad -- un valor negativo hacía que
+            // "stock - cantidad" (Producto) o "stockActual.subtract(cantidad)" (Insumo)
+            // SUMARA stock en vez de restarlo. Una merma nunca puede ser <= 0.
+            if (merma.getCantidad() == null || merma.getCantidad() <= 0) {
+                throw new SolicitudInvalidaException(
+                        "La cantidad de la merma debe ser un número mayor a 0.");
+            }
+
             if (merma.getFechaMerma() == null) {
                 merma.setFechaMerma(LocalDateTime.now());
             }
- 
+
             // Asignar el Pedido persistido en la BD (ya existía)
             if (merma.getPedido() != null) {
                 Integer idPed = merma.getPedido().getId_pedido();

@@ -5,7 +5,7 @@ import type { NuevoMovimientoDTO } from '../services/cajaService';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onGuardar: (data: NuevoMovimientoDTO) => void;
+  onGuardar: (data: NuevoMovimientoDTO) => void | Promise<void>;
 }
 
 export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGuardar }) => {
@@ -15,6 +15,10 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [idPedido, setIdPedido] = useState<string | null>(null);
   const [fechaPlaceholder, setFechaPlaceholder] = useState('');
+  // FIX: antes no había ninguna protección contra el doble clic -- un clic rápido
+  // repetido en "Guardar Movimiento" podía disparar dos guardarMovimiento() casi
+  // simultáneos antes de que el modal se cerrara.
+  const [guardando, setGuardando] = useState(false);
   
   // Estado para gestionar únicamente el archivo seleccionado
   const [archivoComprobante, setArchivoComprobante] = useState<File | null>(null);
@@ -37,6 +41,7 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
       const hoy = new Date();
       const fechaFormato = `${hoy.getDate().toString().padStart(2, '0')}/${(hoy.getMonth() + 1).toString().padStart(2, '0')}/${hoy.getFullYear().toString().substring(2)} - ${hoy.toLocaleTimeString()}`;
       setFechaPlaceholder(fechaFormato);
+      setGuardando(false);
     }
   }, [isOpen]);
 
@@ -54,7 +59,9 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (guardando) return;
+
     if (!monto || Number(monto) <= 0) {
       alert("Por favor ingrese un monto válido mayor a 0.");
       return;
@@ -64,24 +71,29 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
       return;
     }
 
-    // Se delega la responsabilidad de la subida a Supabase a `useCaja`
-    onGuardar({
-      monto: Number(monto),
-      concepto: concepto.trim(),
-      tipoMovimiento: esEgreso(categoria) ? 'EGRESO' : 'INGRESO',
-      categoria,
-      metodoPago,
-      idPedido: idPedido === "no-pedido" ? null : idPedido,
-      comprobanteImagen: metodoPago === 'TRANSFERENCIA' ? archivoComprobante : null
-    });
+    setGuardando(true);
+    try {
+      // Se delega la responsabilidad de la subida a Supabase a `useCaja`
+      await onGuardar({
+        monto: Number(monto),
+        concepto: concepto.trim(),
+        tipoMovimiento: esEgreso(categoria) ? 'EGRESO' : 'INGRESO',
+        categoria,
+        metodoPago,
+        idPedido: idPedido === "no-pedido" ? null : idPedido,
+        comprobanteImagen: metodoPago === 'TRANSFERENCIA' ? archivoComprobante : null
+      });
 
-    // Resetear formulario
-    setMonto('');
-    setConcepto('');
-    setCategoria('INGRESO');
-    setMetodoPago('EFECTIVO');
-    setArchivoComprobante(null);
-    setNombreArchivo('');
+      // Resetear formulario (solo si onGuardar no rechazó la promesa)
+      setMonto('');
+      setConcepto('');
+      setCategoria('INGRESO');
+      setMetodoPago('EFECTIVO');
+      setArchivoComprobante(null);
+      setNombreArchivo('');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -263,10 +275,11 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
 
           {/* Modal Footer */}
           <div className="modal-footer border-0 d-flex justify-content-between align-items-center pt-3 px-0">
-            <button 
-              className="btn btn-sm px-3 py-2 fw-bold border-0 shadow-sm" 
+            <button
+              className="btn btn-sm px-3 py-2 fw-bold border-0 shadow-sm"
               style={{ backgroundColor: '#a52a2a', color: '#ffffff', borderRadius: '6px', width: '30%' }}
               onClick={onClose}
+              disabled={guardando}
             >
               Cancelar
             </button>
@@ -297,18 +310,19 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
               </label>
             )}
 
-            <button 
-              className="btn btn-sm px-3 py-2 fw-bold border-0 shadow-sm d-flex align-items-center justify-content-center gap-2" 
-              style={{ 
-                backgroundColor: '#2b7a3e', 
-                color: '#ffffff', 
-                borderRadius: '6px', 
+            <button
+              className="btn btn-sm px-3 py-2 fw-bold border-0 shadow-sm d-flex align-items-center justify-content-center gap-2"
+              style={{
+                backgroundColor: '#2b7a3e',
+                color: '#ffffff',
+                borderRadius: '6px',
                 width: '30%',
-                marginLeft: metodoPago !== 'TRANSFERENCIA' ? 'auto' : undefined 
+                marginLeft: metodoPago !== 'TRANSFERENCIA' ? 'auto' : undefined
               }}
               onClick={handleSubmit}
+              disabled={guardando}
             >
-              Guardar Movimiento
+              {guardando ? 'Guardando...' : 'Guardar Movimiento'}
             </button>
           </div>
         </div>

@@ -333,7 +333,10 @@ export function procesarMetricas(
     const montoPedido = Number(p.monto_total || p.montoTotal || p.total || 0);
     let montoAhorrado = 0;
 
-    if (porcentajeDescuento > 0) {
+    // CORREGIDO: con porcentajeDescuento === 100 el cálculo dividía por cero
+    // (1 - 100/100 = 0), generando Infinity y corrompiendo el acumulado de
+    // "monto ahorrado" de la categoría para siempre. Se acota a (0, 100).
+    if (porcentajeDescuento > 0 && porcentajeDescuento < 100) {
       const montoOriginal = montoPedido / (1 - porcentajeDescuento / 100);
       montoAhorrado = montoOriginal - montoPedido;
     } else if (p.montoAhorrado || p.descuentoTotal) {
@@ -407,7 +410,7 @@ export function procesarMetricas(
 
   const mapaDevueltosPorEmpleado: { [key: string]: number } = {};
   const normalizarTexto = (str: any) =>
-    (str || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    (str || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
   const obtenerNombreOperario = (empObj: any) => {
     if (!empObj) return 'Sin Asignar';

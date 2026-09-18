@@ -11,7 +11,7 @@ interface InsumoModalProps {
   show: boolean;
   insumoEditando: Insumo | null;
   onClose: () => void;
-  onGuardar: (insumo: any) => void;
+  onGuardar: (insumo: any) => Promise<void>;
 }
 
 export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, onClose, onGuardar }) => {
@@ -34,6 +34,8 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [unidadesMedida, setUnidadesMedida] = useState<UnidadMedida[]>([]);
   const [errorUnidad, setErrorUnidad] = useState('');
+  const [errorGuardado, setErrorGuardado] = useState('');
+  const [guardando, setGuardando] = useState(false);
 
   const [showGestionUnidadesModal, setShowGestionUnidadesModal] = useState(false);
   const [showRelacionesModal, setShowRelacionesModal] = useState(false);
@@ -111,6 +113,7 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
   useEffect(() => {
     setErrorUnidad('');
+    setErrorGuardado('');
     if (insumoEditando) {
       setFormData({
         idInsumo: insumoEditando.idInsumo?.toString() || '',
@@ -146,8 +149,10 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (guardando) return;
 
     if (!validarNombreDuplicado()) return;
 
@@ -194,7 +199,15 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
         : formData.nombreProveedor.trim() ? { nombreComercial: formData.nombreProveedor.trim() } : null
     };
 
-    onGuardar(insumoAGuardar);
+    setErrorGuardado('');
+    setGuardando(true);
+    try {
+      await onGuardar(insumoAGuardar);
+    } catch (err: any) {
+      setErrorGuardado(err?.message || 'Ocurrió un error al guardar el insumo.');
+    } finally {
+      setGuardando(false);
+    }
   };
 
   const unidadesSueltasFiltradas = unidadesMedida.filter(u => 
@@ -239,6 +252,13 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
 
             <form onSubmit={handleSubmit}>
               <div className="modal-body p-4">
+
+                {errorGuardado && (
+                  <div className="alert alert-danger py-2 small mb-3" role="alert">
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                    {errorGuardado}
+                  </div>
+                )}
 
                 {errorUnidad && (
                   <div className="alert alert-danger py-2 small mb-3" role="alert">
@@ -436,42 +456,59 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
                 <div className="row">
                   <div className="col-md-4 mb-3">
                     <label className="form-label small fw-semibold" style={{ color: labelColor }}>Stock Empaquetado (Bultos)</label>
-                    <input 
-                      type="number" 
-                      step="1" 
-                      className="form-control shadow-none" 
+                    <input
+                      type="number"
+                      step="1"
+                      min="0"
+                      className="form-control shadow-none"
                       style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                      name="stockEmpaquetado" 
-                      value={formData.stockEmpaquetado} 
-                      onChange={handleChange} 
+                      name="stockEmpaquetado"
+                      value={formData.stockEmpaquetado}
+                      onChange={handleChange}
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.rangeUnderflow) e.target.setCustomValidity("El stock empaquetado no puede ser negativo");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
 
                   <div className="col-md-4 mb-3">
                     <label className="form-label small fw-semibold" style={{ color: labelColor }}>Stock Suelto (Actual)</label>
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      className="form-control shadow-none" 
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="form-control shadow-none"
                       style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                      name="stockActual" 
-                      value={formData.stockActual} 
-                      onChange={handleChange} 
-                      required 
+                      name="stockActual"
+                      value={formData.stockActual}
+                      onChange={handleChange}
+                      required
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Stock Actual No puede Estar Vacío");
+                        else if (e.target.validity.rangeUnderflow) e.target.setCustomValidity("El stock actual no puede ser negativo");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
 
                   <div className="col-md-4 mb-3">
                     <label className="form-label small fw-semibold" style={{ color: labelColor }}>Stock Mínimo (Suelto)</label>
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      className="form-control shadow-none" 
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="form-control shadow-none"
                       style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
-                      name="stockMinimo" 
-                      value={formData.stockMinimo} 
-                      onChange={handleChange} 
-                      required 
+                      name="stockMinimo"
+                      value={formData.stockMinimo}
+                      onChange={handleChange}
+                      required
+                      onInvalid={(e: any) => {
+                        if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Stock Mínimo No puede Estar Vacío");
+                        else if (e.target.validity.rangeUnderflow) e.target.setCustomValidity("El stock mínimo no puede ser negativo");
+                      }}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
                 </div>
@@ -576,20 +613,22 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
               </div>
 
               <div className="modal-footer border-top py-2" style={{ borderColor: headerBorder }}>
-                <button 
-                  type="button" 
-                  className="btn btn-danger px-4" 
+                <button
+                  type="button"
+                  className="btn btn-danger px-4"
                   onClick={onClose}
+                  disabled={guardando}
                   style={{ color: '#ffffff' }}
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
-                  className="btn px-4 fw-bold" 
+                <button
+                  type="submit"
+                  className="btn px-4 fw-bold"
+                  disabled={guardando}
                   style={{ backgroundColor: buttonBgColor, borderColor: buttonBgColor, color: '#ffffff' }}
                 >
-                  {isEditing ? 'Actualizar' : 'Guardar'}
+                  {guardando ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Guardar')}
                 </button>
               </div>
             </form>

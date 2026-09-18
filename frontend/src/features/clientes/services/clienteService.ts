@@ -61,7 +61,10 @@ export const clienteService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(categoria)
     });
-    if (!res.ok) throw new Error("Error al crear categoría");
+    // CORREGIDO: antes se lanzaba siempre el mismo mensaje genérico "Error al crear
+    // categoría", enmascarando el mensaje real del backend (nombre vacío, duplicado,
+    // descuento fuera de rango, etc.) -- el mismo patrón ya corregido en crearCliente.
+    if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al crear la categoría.'));
     return res.json();
   },
 
@@ -71,19 +74,19 @@ export const clienteService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(categoria)
     });
-    if (!res.ok) throw new Error("Error al actualizar categoría");
+    if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al actualizar la categoría.'));
     return res.json();
   },
 
   eliminarCategoria: async (id: number) => {
     const res = await apiFetch(`${BASE_URL}/categorias-cliente/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error("Error al eliminar categoría");
+    if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al eliminar la categoría.'));
     return res;
   },
 
   getMovimientos: async (idCliente: number) => {
     const res = await apiFetch(`${BASE_URL}/cuentas-corrientes/cliente/${idCliente}/movimientos`);
-    if (!res.ok) throw new Error("Error al obtener movimientos");
+    if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al obtener los movimientos de la cuenta corriente.'));
     return res.json();
   },
 
@@ -93,7 +96,10 @@ export const clienteService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ limiteCredito })
     });
-    if (!res.ok) throw new Error("Error al actualizar límite");
+    // CORREGIDO: antes se lanzaba siempre "Error al actualizar límite", enmascarando
+    // el motivo real del rechazo del backend (ej. límite negativo, saldo deudor
+    // actual mayor al nuevo límite, etc.)
+    if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al actualizar el límite de crédito.'));
     return res;
   },
 
@@ -116,10 +122,14 @@ export const clienteService = {
         descripcion, 
         metodoPago, 
         comprobanteImagen, 
-        idUsuario 
+        idUsuario
       })
     });
-    if (!res.ok) throw new Error("Error al registrar pago");
+    // CORREGIDO: antes se lanzaba siempre "Error al registrar pago" sin importar la
+    // causa real (ej. turno de caja cerrado, monto inválido, comprobante faltante en
+    // transferencias) -- el modal terminaba mostrando un mensaje genérico que no
+    // ayudaba al usuario a entender qué pasó.
+    if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al registrar el pago.'));
     return res.json();
   }
 };

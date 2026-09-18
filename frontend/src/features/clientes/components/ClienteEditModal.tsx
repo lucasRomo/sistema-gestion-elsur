@@ -37,6 +37,7 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
   });
 
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
     clienteService.getTiposDocumento()
@@ -67,8 +68,14 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
   };
 
   const handleGuardarDefinitivo = async () => {
-    await onConfirmar(editData);
-    setMostrarConfirmacion(false);
+    if (guardando) return;
+    setGuardando(true);
+    try {
+      await onConfirmar(editData);
+      setMostrarConfirmacion(false);
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -250,8 +257,9 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                       type="text" 
                       className="form-control text-white" 
                       style={{ backgroundColor: '#222226', borderColor: '#3f3f46' }} 
-                      value={editData.razonSocial} 
-                      onChange={e => setEditData({ ...editData, razonSocial: e.target.value })} 
+                      value={editData.razonSocial}
+                      onChange={e => setEditData({ ...editData, razonSocial: e.target.value })}
+                      required
                     />
                   </div>
 
@@ -303,8 +311,10 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
               <h5 className="fw-bold">¿Confirmar Modificaciones?</h5>
               <p className="small" style={{ color: '#a1a1aa' }}>Se sobreescribirán de forma permanente los datos del cliente en la base de datos de El Sur.</p>
               <div className="d-flex justify-content-center gap-2 mt-3">
-                <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
-                <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} onClick={handleGuardarDefinitivo}>Confirmar</button>
+                <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} onClick={() => setMostrarConfirmacion(false)} disabled={guardando}>Volver</button>
+                <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} onClick={handleGuardarDefinitivo} disabled={guardando}>
+                  {guardando ? 'Guardando...' : 'Confirmar'}
+                </button>
               </div>
             </div>
           </div>

@@ -20,6 +20,8 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   const [errorCajaModal, setErrorCajaModal] = useState({ show: false, mensaje: "" });
   const [stockError, setStockError] = useState({ show: false, mensaje: "" });
   const [showConfirm, setShowConfirm] = useState(false);
+  // Evita que un doble clic en "Sí, ingresar" dispare dos veces el cobro.
+  const [procesando, setProcesando] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!show) return null;
@@ -54,6 +56,8 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
+    if (procesando) return;
+
     if (cajaAbierta === false) {
       setErrorCajaModal({
         show: true,
@@ -75,6 +79,7 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
     const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
     const idUsuarioActivo = Number(userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1);
 
+    setProcesando(true);
     try {
       await onConfirm(tipoPago, montoNum, archivo, idUsuarioActivo);
       onClose();
@@ -90,6 +95,8 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
           mensaje: err.message || "Error al procesar el cobro."
         });
       }
+    } finally {
+      setProcesando(false);
     }
   };
 
@@ -290,24 +297,26 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
               </p>
 
               <div className="d-flex gap-2">
-                <button 
+                <button
                   type="button"
-                  className="btn w-50 py-2 text-white fw-bold" 
-                  style={{ backgroundColor: '#dc2626', border: 'none', borderRadius: '6px', fontSize: '0.95rem' }}
+                  className="btn w-50 py-2 text-white fw-bold"
+                  style={{ backgroundColor: '#dc2626', border: 'none', borderRadius: '6px', fontSize: '0.95rem', opacity: procesando ? 0.6 : 1 }}
                   onClick={() => setShowConfirm(false)}
+                  disabled={procesando}
                 >
                   No, volver
                 </button>
-                <button 
+                <button
                   type="button"
-                  className="btn w-50 py-2 text-white fw-bold" 
-                  style={{ backgroundColor: '#16a34a', border: 'none', borderRadius: '6px', fontSize: '0.95rem' }}
+                  className="btn w-50 py-2 text-white fw-bold"
+                  style={{ backgroundColor: '#16a34a', border: 'none', borderRadius: '6px', fontSize: '0.95rem', opacity: procesando ? 0.6 : 1 }}
                   onClick={() => {
                     setShowConfirm(false);
                     handleSubmit();
                   }}
+                  disabled={procesando}
                 >
-                  Sí, ingresar
+                  {procesando ? 'Procesando...' : 'Sí, ingresar'}
                 </button>
               </div>
             </div>

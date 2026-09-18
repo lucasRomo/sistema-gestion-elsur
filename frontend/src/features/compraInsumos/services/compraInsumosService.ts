@@ -10,7 +10,17 @@ export const compraInsumosService = {
   registrarCompraInsumo: async (datos: DatosCompraInsumo): Promise<any> => {
     const usuarioGuardado = localStorage.getItem('usuario_logueado') || localStorage.getItem('usuario');
     const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
-    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario || 1;
+    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario;
+
+    // CORREGIDO: antes, si no se detectaba un usuario logueado en localStorage,
+    // la compra se atribuía en silencio al usuario ID 1 (probablemente el
+    // admin/primer usuario creado) -- el mismo bug ya corregido en
+    // useCaja.ts/ModalMermasInsumos.tsx/ModalMermasProductos.tsx. Ahora se
+    // rechaza la operación en vez de falsear la autoría del movimiento de
+    // caja que genera la compra.
+    if (!idUsuario) {
+      throw new Error('No se detectó un usuario logueado activo. Vuelva a iniciar sesión antes de registrar la compra.');
+    }
 
     const payload = {
       ...datos,

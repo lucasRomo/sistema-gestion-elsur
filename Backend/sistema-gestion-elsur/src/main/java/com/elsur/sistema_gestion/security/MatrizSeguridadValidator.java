@@ -229,13 +229,34 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
 
         // 5. Reglas de Escritura Cruzada y Auto-Gestión de Perfil (POST / PUT / DELETE)
 
-        // Permitir a cualquier usuario autenticado actualizar sus propias credenciales (Ajustes de Perfil)
-        if ("PUT".equalsIgnoreCase(metodo) && (
-            pathMatcher.match("/api/usuarios/*/password", path) ||
-            pathMatcher.match("/api/usuarios/*/username", path) ||
-            pathMatcher.match("/api/usuarios/*/email", path)
-        )) {
-            return true;
+        // Permitir a un usuario autenticado actualizar SUS PROPIAS credenciales
+        // (Ajustes de Perfil) -- y solo las propias.
+        //
+        // GAP DE SEGURIDAD corregido: esta regla devolvía true para CUALQUIER
+        // usuario autenticado sin comparar nunca el {id} del path contra quién
+        // es en realidad -- "Ajustes de Perfil" es self-service por diseño (así
+        // lo dice el propio comentario original), pero nada lo hacía cumplir.
+        // Para /password el impacto quedaba mitigado porque UsuarioServiceImpl.
+        // cambiarPassword igual exige la contraseña ACTUAL real (verificada con
+        // BCrypt) del usuario objetivo. Pero para /username y /email, el "valor
+        // actual" que exige el service NO es un secreto -- el nombre de usuario
+        // y el email de otra persona suelen ser datos conocidos o adivinables
+        // (por ejemplo, visibles en la propia UI de Gestión de Usuarios para
+        // quien tenga ese permiso) -- así que cualquier usuario autenticado,
+        // sin importar su rol, podía apuntar el {id} de OTRA persona en la URL
+        // y cambiarle el nombre de usuario o el email con solo saber el valor
+        // actual. CORREGIDO extrayendo el {id} del path con el propio
+        // AntPathMatcher y comparándolo contra el idUsuario real del que pide
+        // el cambio (resuelto desde el username del JWT, no un dato del
+        // cliente) -- ahora la ruta solo autoriza al dueño de esa cuenta.
+        if ("PUT".equalsIgnoreCase(metodo)) {
+            for (String patronPropio : new String[]{
+                    "/api/usuarios/{id}/password", "/api/usuarios/{id}/username", "/api/usuarios/{id}/email"}) {
+                if (pathMatcher.match(patronPropio, path)) {
+                    String idDelPath = pathMatcher.extractUriTemplateVariables(patronPropio, path).get("id");
+                    return usuario.getIdUsuario() != null && usuario.getIdUsuario().toString().equals(idDelPath);
+                }
+            }
         }
 
         // Habilitación de escritura para MATRIZ DE PERMISOS (re-asignar rol de un usuario desde la Matriz)

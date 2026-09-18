@@ -95,6 +95,15 @@ class MatrizSeguridadValidatorUnitTest {
         return usuario;
     }
 
+    // Igual que usuarioConPermisos(), pero fijando el idUsuario -- lo necesitan
+    // los casos de "Ajustes de Perfil" de más abajo, que comparan el {id} del
+    // path contra el idUsuario real resuelto del que pide el cambio.
+    private Usuario usuarioConIdYRol(int idUsuario, String nombreRol) {
+        Usuario usuario = usuarioConPermisos(nombreRol);
+        usuario.setIdUsuario(idUsuario);
+        return usuario;
+    }
+
     // ==================== Casos base de autenticación ====================
 
     @Test
@@ -300,6 +309,111 @@ class MatrizSeguridadValidatorUnitTest {
 
         Authentication auth = autenticadoComo("porton", "ROLE_PORTON");
         AuthorizationDecision decision = validator.authorize(() -> auth, contextoPara("GET", "/api/tipos-documento"));
+
+        assertTrue(decision.isGranted());
+    }
+
+    // ==================== Ajustes de Perfil: self-service, solo la cuenta propia ====================
+    //
+    // REGRESIÓN del GAP DE SEGURIDAD cerrado en esta misma revisión: la regla de
+    // "PUT /api/usuarios/{id}/password|username|email" devolvía true para
+    // CUALQUIER usuario autenticado sin comparar nunca el {id} del path contra
+    // quién es en realidad. Para /password el impacto quedaba mitigado porque el
+    // service igual exige la contraseña ACTUAL real (BCrypt) del usuario
+    // objetivo -- pero para /username y /email el "valor actual" no es secreto,
+    // así que cualquier autenticado podía apuntar el {id} de OTRA persona y
+    // pisarle el username o el email. Estos casos prueban que ahora SOLO el
+    // dueño de la cuenta (idUsuario resuelto del JWT, nunca del {id} del path)
+    // puede pasar por esta regla, tanto para las 3 rutas como para un {id} ajeno.
+
+    @Test
+    @DisplayName("Un usuario puede cambiar SU PROPIA contraseña (mismo {id} que su idUsuario real)")
+    void usuarioPropio_puedeCambiarSuPropiaPassword() {
+        validator = validador();
+        when(usuarioRepository.findByNombreUsuario(anyString()))
+                .thenReturn(Optional.of(usuarioConIdYRol(5, "OPERARIO")));
+
+        Authentication auth = autenticadoComo("operario.test", "ROLE_OPERARIO");
+        AuthorizationDecision decision = validator.authorize(() -> auth, contextoPara("PUT", "/api/usuarios/5/password"));
+
+        assertTrue(decision.isGranted());
+    }
+
+    @Test
+    @DisplayName("Un usuario puede cambiar SU PROPIO username")
+    void usuarioPropio_puedeCambiarSuPropioUsername() {
+        validator = validador();
+        when(usuarioRepository.findByNombreUsuario(anyString()))
+                .thenReturn(Optional.of(usuarioConIdYRol(5, "OPERARIO")));
+
+        Authentication auth = autenticadoComo("operario.test", "ROLE_OPERARIO");
+        AuthorizationDecision decision = validator.authorize(() -> auth, contextoPara("PUT", "/api/usuarios/5/username"));
+
+        assertTrue(decision.isGranted());
+    }
+
+    @Test
+    @DisplayName("Un usuario puede cambiar SU PROPIO email")
+    void usuarioPropio_puedeCambiarSuPropioEmail() {
+        validator = validador();
+        when(usuarioRepository.findByNombreUsuario(anyString()))
+                .thenReturn(Optional.of(usuarioConIdYRol(5, "OPERARIO")));
+
+        Authentication auth = autenticadoComo("operario.test", "ROLE_OPERARIO");
+        AuthorizationDecision decision = validator.authorize(() -> auth, contextoPara("PUT", "/api/usuarios/5/email"));
+
+        assertTrue(decision.isGranted());
+    }
+
+    @Test
+    @DisplayName("REGRESIÓN: un usuario NO puede cambiar la contraseña de OTRO usuario apuntando su {id} en la URL")
+    void usuarioNoPropio_noPuedeCambiarPasswordAjena() {
+        validator = validador();
+        // idUsuario real del que pide el cambio es 5, pero el {id} del path es 99 (otra cuenta)
+        when(usuarioRepository.findByNombreUsuario(anyString()))
+                .thenReturn(Optional.of(usuarioConIdYRol(5, "OPERARIO")));
+
+        Authentication auth = autenticadoComo("operario.test", "ROLE_OPERARIO");
+        AuthorizationDecision decision = validator.authorize(() -> auth, contextoPara("PUT", "/api/usuarios/99/password"));
+
+        assertFalse(decision.isGranted());
+    }
+
+    @Test
+    @DisplayName("REGRESIÓN: un usuario NO puede cambiar el username de OTRO usuario apuntando su {id} en la URL")
+    void usuarioNoPropio_noPuedeCambiarUsernameAjeno() {
+        validator = validador();
+        when(usuarioRepository.findByNombreUsuario(anyString()))
+                .thenReturn(Optional.of(usuarioConIdYRol(5, "OPERARIO")));
+
+        Authentication auth = autenticadoComo("operario.test", "ROLE_OPERARIO");
+        AuthorizationDecision decision = validator.authorize(() -> auth, contextoPara("PUT", "/api/usuarios/99/username"));
+
+        assertFalse(decision.isGranted());
+    }
+
+    @Test
+    @DisplayName("REGRESIÓN: un usuario NO puede cambiar el email de OTRO usuario apuntando su {id} en la URL (el hallazgo más grave: el 'valor actual' de email no es secreto)")
+    void usuarioNoPropio_noPuedeCambiarEmailAjeno() {
+        validator = validador();
+        when(usuarioRepository.findByNombreUsuario(anyString()))
+                .thenReturn(Optional.of(usuarioConIdYRol(5, "OPERARIO")));
+
+        Authentication auth = autenticadoComo("operario.test", "ROLE_OPERARIO");
+        AuthorizationDecision decision = validator.authorize(() -> auth, contextoPara("PUT", "/api/usuarios/99/email"));
+
+        assertFalse(decision.isGranted());
+    }
+
+    @Test
+    @DisplayName("ADMIN sigue pudiendo cambiar el username de OTRO usuario vía la regla de Matriz de Permisos (PUT /api/usuarios/*), sin pasar por la de auto-gestión")
+    void admin_puedeCambiarDatosDeOtroUsuarioPorBypassTotal() {
+        validator = validador();
+        when(usuarioRepository.findByNombreUsuario(anyString()))
+                .thenReturn(Optional.of(usuarioConIdYRol(1, "ADMIN")));
+
+        Authentication auth = autenticadoComo("admin.test", "ROLE_ADMIN");
+        AuthorizationDecision decision = validator.authorize(() -> auth, contextoPara("PUT", "/api/usuarios/99/password"));
 
         assertTrue(decision.isGranted());
     }

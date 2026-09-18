@@ -40,6 +40,8 @@ export const CrearPedidoView: React.FC = () => {
 
   const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string } | null>(null);
   const [fileTemporal, setFileTemporal] = useState<File | null>(null);
+  // Evita que un doble clic en "Finalizar" dispare dos veces la petición de guardado.
+  const [guardando, setGuardando] = useState(false);
   
   useEffect(() => {
     const state = location.state as { productoAutoAgregar?: any };
@@ -137,12 +139,13 @@ export const CrearPedidoView: React.FC = () => {
   };
 
   const ejecutarGuardadoFinal = async () => {
-    if (!payloadTemporal) return;
-    setConfirmarGuardado(false); 
+    if (!payloadTemporal || guardando) return;
+    setGuardando(true);
+    setConfirmarGuardado(false);
 
     try {
       const resultado: any = await enviarPedido(payloadTemporal, fileTemporal);
-      
+
       // Si el backend devuelve el objeto pedido con sus movimientos (ticket)
       if (resultado) {
         const pedidoGuardado = (typeof resultado === 'object' && resultado.id_pedido) ? resultado : payloadTemporal.pedido;
@@ -161,13 +164,15 @@ export const CrearPedidoView: React.FC = () => {
           });
         }
       }
-    } catch (err: any) { 
+    } catch (err: any) {
       setSuceso({
         show: true,
         titulo: "Algo ha ido mal",
         mensaje: err.message || "Hubo un error al procesar el guardado del pedido.",
         tipo: "error"
       });
+    } finally {
+      setGuardando(false);
     }
   };
 
@@ -237,21 +242,23 @@ export const CrearPedidoView: React.FC = () => {
         </p>
         <div className="d-flex gap-2 justify-content-center mt-3">
           {/* BOTÓN VOLVER (Texto Blanco) */}
-          <button 
-            className="btn btn-sm px-3 fw-bold" 
-            style={{ borderRadius: '6px', backgroundColor: '#e22e2e', border: '1px solid #e22e2e', color: '#ffffff' }} 
+          <button
+            className="btn btn-sm px-3 fw-bold"
+            style={{ borderRadius: '6px', backgroundColor: '#e22e2e', border: '1px solid #e22e2e', color: '#ffffff', opacity: guardando ? 0.6 : 1 }}
             onClick={() => setConfirmarGuardado(false)}
+            disabled={guardando}
           >
             Volver
           </button>
 
           {/* BOTÓN FINALIZAR (Texto Blanco) */}
-          <button 
-            className="btn btn-sm px-3 fw-bold" 
-            style={{ borderRadius: '6px', backgroundColor: '#288f47', border: '1px solid #2e9225', color: '#ffffff' }} 
+          <button
+            className="btn btn-sm px-3 fw-bold"
+            style={{ borderRadius: '6px', backgroundColor: '#288f47', border: '1px solid #2e9225', color: '#ffffff', opacity: guardando ? 0.6 : 1 }}
             onClick={ejecutarGuardadoFinal}
+            disabled={guardando}
           >
-            Finalizar
+            {guardando ? 'Guardando...' : 'Finalizar'}
           </button>
         </div>
       </div>

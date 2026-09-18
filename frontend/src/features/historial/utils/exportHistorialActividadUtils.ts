@@ -15,6 +15,31 @@ const formatearDato = (dato: string | null) => {
   return dato.replace(/^"(.*)"$/, '$1');
 };
 
+// BUG corregido: HistorialActividadView.formatearFecha le agrega 'Z' a la fecha
+// cruda si no trae ya un sufijo de huso horario, para forzar que el navegador
+// la interprete como UTC (si no, un string ISO sin offset se interpreta como
+// hora LOCAL del navegador, no UTC). Estas funciones de exportación hacían
+// "new Date(act.fecha)" directo, sin esa misma normalización -- si alguna vez
+// 'fecha' llegara sin el offset (por ejemplo, un registro viejo serializado
+// antes de que Usuario.fecha tuviera el @JsonFormat con huso UTC), el Excel/PDF
+// exportado mostraría una hora distinta a la que se ve en la tabla en pantalla
+// para el mismo registro (diferencia de varias horas, según el huso del
+// navegador). Se duplica acá la misma normalización para que tabla y
+// exportación siempre muestren la misma hora para el mismo dato.
+const normalizarFechaUTC = (fechaRaw: string) => {
+  const isoString = fechaRaw.endsWith('Z') || fechaRaw.includes('+') ? fechaRaw : `${fechaRaw}Z`;
+  return new Date(isoString);
+};
+
+const formatearFechaExport = (fechaRaw: string) => {
+  const fechaObj = normalizarFechaUTC(fechaRaw);
+  if (isNaN(fechaObj.getTime())) return '-';
+  return fechaObj.toLocaleString('es-AR', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+};
+
 export const exportarHistorialActividadExcel = async (actividades: RegistroActividad[]) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Historial de Actividad');
@@ -33,10 +58,7 @@ export const exportarHistorialActividadExcel = async (actividades: RegistroActiv
   // 2. Cargar filas
   actividades.forEach((act) => {
     worksheet.addRow({
-      fecha: new Date(act.fecha).toLocaleString('es-AR', {
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
-      }),
+      fecha: formatearFechaExport(act.fecha),
       usuario: obtenerNombreUsuario(act),
       tabla: act.tablaAfectada || '-',
       columna: act.columnaAfectada || '-',
@@ -129,10 +151,7 @@ export const exportarHistorialActividadPDF = (
   ];
 
   const tableRows = actividades.map((act) => [
-    new Date(act.fecha).toLocaleString('es-AR', {
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', second: '2-digit'
-    }),
+    formatearFechaExport(act.fecha),
     obtenerNombreUsuario(act),
     act.tablaAfectada || '-',
     act.columnaAfectada || '-',

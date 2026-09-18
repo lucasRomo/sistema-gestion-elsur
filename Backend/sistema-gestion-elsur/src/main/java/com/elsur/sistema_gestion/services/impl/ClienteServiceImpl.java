@@ -1,5 +1,9 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.ConflictoDeIntegridadException;
+import com.elsur.sistema_gestion.exceptions.RecursoDuplicadoException;
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Cliente;
 import com.elsur.sistema_gestion.models.Direccion;
 import com.elsur.sistema_gestion.models.Persona;
@@ -13,12 +17,14 @@ import com.elsur.sistema_gestion.services.ClienteService;
 import com.elsur.sistema_gestion.services.RegistroActividadService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class ClienteServiceImpl implements ClienteService {
@@ -49,25 +55,68 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     public Cliente buscarPorId(Integer id) {
         return clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con id: " + id));
     }
 
     @Override
     @Transactional
     public Cliente guardar(Cliente cliente, Integer idUsuario) {
+        // CORREGIDO: la razón social no se validaba en absoluto -- ni blanco, ni
+        // duplicada -- pese a ser nullable=false y sin restricción de unicidad a
+        // nivel de base. Antes de este pase, dos clientes podían quedar con la
+        // misma razón social, o guardarse con el campo vacío.
+        if (cliente.getRazonSocial() == null || cliente.getRazonSocial().trim().isEmpty()) {
+            throw new SolicitudInvalidaException("La razón social del cliente es obligatoria.");
+        }
+        String razonSocialNormalizada = cliente.getRazonSocial().trim();
+        Integer idClienteExcluido = cliente.getIdCliente() != null ? cliente.getIdCliente() : -1;
+        if (clienteRepository.existsByRazonSocialIgnoreCaseAndIdClienteNot(razonSocialNormalizada, idClienteExcluido)) {
+            throw new RecursoDuplicadoException("Ya existe un cliente registrado con la razón social '" + razonSocialNormalizada + "'.");
+        }
+        cliente.setRazonSocial(razonSocialNormalizada);
+
+        // CORREGIDO: límite de crédito y saldo deudor negativos no se rechazaban
+        // (mismo patrón de "negativo sin validar" ya cerrado en Insumos/Productos).
+        if (cliente.getLimiteCredito() != null && cliente.getLimiteCredito().signum() < 0) {
+            throw new SolicitudInvalidaException("El límite de crédito no puede ser negativo.");
+        }
+        if (cliente.getSaldoDeudor() != null && cliente.getSaldoDeudor().signum() < 0) {
+            throw new SolicitudInvalidaException("El saldo deudor no puede ser negativo.");
+        }
+
         if (cliente.getPersona() != null) {
             Persona persona = cliente.getPersona();
-            
+
             if (persona.getTipoDocumento() != null && persona.getTipoDocumento().getIdTipoDocumento() != null) {
                 var tipoDoc = tipoDocumentoRepository.findById(persona.getTipoDocumento().getIdTipoDocumento())
-                    .orElseThrow(() -> new RuntimeException("Tipo documento no encontrado"));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Tipo documento no encontrado"));
                 persona.setTipoDocumento(tipoDoc);
             }
-            
+
             if (persona.getTipoPersona() != null && persona.getTipoPersona().getIdTipoPersona() != null) {
                 var tipoPer = tipoPersonaRepository.findById(persona.getTipoPersona().getIdTipoPersona())
-                    .orElseThrow(() -> new RuntimeException("Tipo persona no encontrado"));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Tipo persona no encontrado"));
                 persona.setTipoPersona(tipoPer);
+            }
+
+            // CORREGIDO -- HALLAZGO CENTRAL: numero_documento es unique=true a nivel de
+            // Persona (compartida entre Usuario y Cliente), pero acá nunca se validaba
+            // antes de guardar. El único freno existente era el chequeo del frontend
+            // (PersonaForm.tsx, contra la lista de clientes ya cargada en memoria), que
+            // no corre si se llama a la API directamente y tampoco cubre un choque
+            // contra el DNI de un Usuario. Sin este chequeo, el alta terminaba
+            // reventando con un DataIntegrityViolationException crudo (constraint de
+            // unicidad) en vez de un mensaje entendible. Mismo criterio que ya se usa
+            // para el DNI duplicado al registrar un Usuario (UsuarioServiceImpl.guardar).
+            if (persona.getNumeroDocumento() != null && !persona.getNumeroDocumento().trim().isEmpty()) {
+                String documentoNormalizado = persona.getNumeroDocumento().trim();
+                persona.setNumeroDocumento(documentoNormalizado);
+                Optional<Persona> personaExistente = personaRepository.findByNumeroDocumento(documentoNormalizado);
+                boolean esOtraPersona = personaExistente.isPresent()
+                        && !personaExistente.get().getIdPersona().equals(persona.getIdPersona());
+                if (esOtraPersona) {
+                    throw new RecursoDuplicadoException("Ya existe una persona registrada con ese número de documento.");
+                }
             }
         }
 
@@ -75,13 +124,11 @@ public class ClienteServiceImpl implements ClienteService {
             Cliente clienteViejo = clienteRepository.findById(cliente.getIdCliente()).orElse(null);
 
             if (clienteViejo != null) {
-                Usuario usuarioActual = null;
-                if (idUsuario != null) {
-                    usuarioActual = usuarioRepository.findById(idUsuario).orElse(null);
-                }
-                if (usuarioActual == null) {
-                    usuarioActual = usuarioRepository.findAll().stream().findFirst().orElse(null);
-                }
+                // CORREGIDO: antes, si no se mandaba idUsuario (o no existía), la
+                // auditoría se atribuía en silencio al "primer usuario de la base" --
+                // mismo patrón transversal ya cerrado en Caja/Insumos/Productos/Compra
+                // de Insumos/Pedidos. Ahora se exige un usuario real y válido.
+                Usuario usuarioActual = obtenerUsuarioOperador(idUsuario);
 
                 compararYRegistrar(usuarioActual, "Cliente", "razonSocial", cliente.getIdCliente(),
                         clienteViejo.getRazonSocial(), cliente.getRazonSocial());
@@ -158,7 +205,28 @@ public class ClienteServiceImpl implements ClienteService {
     @Transactional
     public void eliminar(Integer id) {
         Cliente cliente = buscarPorId(id);
-        clienteRepository.delete(cliente);
+        try {
+            clienteRepository.delete(cliente);
+            clienteRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            // CORREGIDO: antes esta excepción (violación de FK -- el cliente tiene
+            // pedidos, movimientos de cuenta corriente, etc.) no se atrapaba acá y
+            // caía en el manejador genérico de RuntimeException, mostrando el mensaje
+            // crudo de Hibernate/JDBC en vez de una respuesta entendible.
+            throw new ConflictoDeIntegridadException(
+                "No se puede eliminar el cliente porque tiene pedidos u otros registros asociados.");
+        }
+    }
+
+    // Mismo criterio que obtenerUsuarioOperador() en CompraInsumoServiceImpl /
+    // PedidoServiceImpl: rechaza en vez de atribuir en silencio a un usuario
+    // arbitrario cuando idUsuario falta o no existe.
+    private Usuario obtenerUsuarioOperador(Integer idUsuario) {
+        if (idUsuario == null) {
+            throw new SolicitudInvalidaException("Debe indicar el usuario que realiza la modificación.");
+        }
+        return usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new SolicitudInvalidaException("El usuario indicado no existe."));
     }
 
     private void compararYRegistrar(Usuario usuario, String tabla, String columna, Integer idReg, Object viejoVal, Object nuevoVal) {

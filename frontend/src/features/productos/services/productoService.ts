@@ -79,10 +79,17 @@ export const actualizarPreciosMasivo = async (payload: ActualizarPreciosPayload)
 };
 
 export const toggleStockVinculado = async (idProducto: number) => {
-  const res = await apiFetch(`${API_URL}/${idProducto}/toggle-stock-vinculado`, {
+  const idUsuarioActual = obtenerIdUsuarioLogueado();
+  const url = idUsuarioActual
+    ? `${API_URL}/${idProducto}/toggle-stock-vinculado?idUsuario=${idUsuarioActual}`
+    : `${API_URL}/${idProducto}/toggle-stock-vinculado`;
+
+  const res = await apiFetch(url, {
     method: 'PATCH'
   });
-  if (!res.ok) throw new Error("Error al cambiar vinculación de stock");
+  if (!res.ok) {
+    throw new Error(await extraerMensajeError(res, 'Error al cambiar vinculación de stock'));
+  }
   return res.json();
 };
 
@@ -105,7 +112,9 @@ export const guardarRecetaProducto = async (idProducto: number, payload: any[]):
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
-  if (!res.ok) throw new Error("Error al guardar la receta del producto");
+  if (!res.ok) {
+    throw new Error(await extraerMensajeError(res, 'Error al guardar la receta del producto'));
+  }
 };
 
 export const getTodasLasRecetas = async (): Promise<any[]> => {
@@ -127,7 +136,9 @@ export const crearCategoria = async (nombre: string): Promise<Categoria> => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ nombre })
   });
-  if (!res.ok) throw new Error("No se pudo crear la categoría");
+  if (!res.ok) {
+    throw new Error(await extraerMensajeError(res, 'No se pudo crear la categoría'));
+  }
   return res.json();
 };
 
@@ -135,7 +146,9 @@ export const eliminarCategoria = async (idCategoria: number): Promise<void> => {
   const res = await apiFetch(`${API_CATEGORIAS_URL}/${idCategoria}`, {
     method: 'DELETE'
   });
-  if (!res.ok) throw new Error("No se pudo eliminar la categoría");
+  if (!res.ok) {
+    throw new Error(await extraerMensajeError(res, 'No se pudo eliminar la categoría'));
+  }
 };
 
 // --- Máquinas ---

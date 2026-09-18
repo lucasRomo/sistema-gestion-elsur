@@ -1,24 +1,37 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
-import { obtenerPasswordReal } from '../services/usuarioService';
+import { obtenerPasswordReal, restablecerPassword } from '../services/usuarioService';
 
 interface VerPasswordModalProps {
   usuario: any;
   onCerrar: () => void;
 }
 
-// Reautenticación + revelado de contraseña para Gestión de Usuarios (solo ADMIN,
-// validado también en el backend). Primero pide la contraseña de quien está
-// logueado ahora mismo (no la del usuario que se quiere ver); si es correcta,
-// el backend desencripta y acá se muestra en pantalla.
+type Modo = 'menu' | 'ver' | 'restablecer' | 'restablecerExito';
+
+// Reautenticación + gestión de contraseña de otro usuario en Gestión de Usuarios
+// (solo ADMIN, validado también en el backend). Las dos acciones piden primero
+// la contraseña de quien está logueado ahora mismo (NUNCA la del usuario
+// objetivo) para confirmar la operación:
+// - "Ver contraseña actual": el backend desencripta la copia reversible y la
+//   muestra en pantalla.
+// - "Restablecer contraseña": el backend le asigna al usuario objetivo la
+//   contraseña nueva que se ingrese acá, sin necesitar que él mismo la sepa.
+//   GAP corregido: hasta ahora esta acción no existía -- el campo "Contraseña"
+//   del modal de edición general no cambiaba nada de verdad.
 export const VerPasswordModal: React.FC<VerPasswordModalProps> = ({ usuario, onCerrar }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+
+  const [modo, setModo] = useState<Modo>('menu');
 
   const [passwordAdmin, setPasswordAdmin] = useState('');
   const [passwordRevelada, setPasswordRevelada] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
+
+  const [passwordNueva, setPasswordNueva] = useState('');
+  const [passwordNuevaConfirmar, setPasswordNuevaConfirmar] = useState('');
 
   const modalBg = isDark ? '#18181b' : '#ffffff';
   const modalText = isDark ? '#ffffff' : '#18181b';
@@ -26,7 +39,16 @@ export const VerPasswordModal: React.FC<VerPasswordModalProps> = ({ usuario, onC
   const modalBorder = isDark ? '#8e45e0' : '#cbd5e1';
   const inputBg = isDark ? '#222122' : '#f8fafc';
 
-  const confirmar = async () => {
+  const volverAlMenu = () => {
+    setModo('menu');
+    setPasswordAdmin('');
+    setPasswordRevelada(null);
+    setPasswordNueva('');
+    setPasswordNuevaConfirmar('');
+    setError(null);
+  };
+
+  const confirmarVer = async () => {
     if (!passwordAdmin.trim()) {
       setError('Ingresá tu contraseña para confirmar.');
       return;
@@ -43,6 +65,33 @@ export const VerPasswordModal: React.FC<VerPasswordModalProps> = ({ usuario, onC
     }
   };
 
+  const confirmarRestablecer = async () => {
+    if (!passwordAdmin.trim()) {
+      setError('Ingresá tu contraseña para confirmar.');
+      return;
+    }
+    // Mismo mínimo/máximo que exige el backend (RestablecerPasswordDTO /
+    // CambioPasswordDTO): avisamos antes de golpear la API.
+    if (passwordNueva.length < 8 || passwordNueva.length > 72) {
+      setError('La nueva contraseña debe tener entre 8 y 72 caracteres.');
+      return;
+    }
+    if (passwordNueva !== passwordNuevaConfirmar) {
+      setError('Las dos contraseñas nuevas no coinciden.');
+      return;
+    }
+    setCargando(true);
+    setError(null);
+    try {
+      await restablecerPassword(usuario.idUsuario, passwordAdmin, passwordNueva);
+      setModo('restablecerExito');
+    } catch (e: any) {
+      setError(e?.message || 'No se pudo restablecer la contraseña. Intentá de nuevo.');
+    } finally {
+      setCargando(false);
+    }
+  };
+
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
       <div className="modal-dialog modal-dialog-centered">
@@ -53,7 +102,39 @@ export const VerPasswordModal: React.FC<VerPasswordModalProps> = ({ usuario, onC
           <div className="modal-body text-center py-4 px-4">
             <i className="bi bi-shield-lock-fill" style={{ fontSize: '2.5rem', color: '#8e45e0' }}></i>
 
-            {passwordRevelada === null ? (
+            {modo === 'menu' && (
+              <>
+                <h5 className="mt-3 fw-bold" style={{ color: modalText }}>
+                  Contraseña de {usuario?.nombreUsuario}
+                </h5>
+                <p style={{ color: descColor }} className="mb-3">
+                  Elegí qué querés hacer. En los dos casos vas a tener que confirmar con tu propia contraseña.
+                </p>
+                <div className="d-flex flex-column gap-2 mt-3">
+                  <button
+                    className="btn fw-bold d-flex align-items-center justify-content-center gap-2"
+                    style={{ backgroundColor: '#3f3f46', color: '#fff' }}
+                    onClick={() => setModo('ver')}
+                  >
+                    <i className="bi bi-eye"></i> Ver contraseña actual
+                  </button>
+                  <button
+                    className="btn fw-bold d-flex align-items-center justify-content-center gap-2"
+                    style={{ backgroundColor: '#8e45e0', color: '#fff' }}
+                    onClick={() => setModo('restablecer')}
+                  >
+                    <i className="bi bi-key"></i> Restablecer contraseña
+                  </button>
+                </div>
+                <div className="d-flex justify-content-center mt-4">
+                  <button className="btn fw-bold px-4" style={{ backgroundColor: 'transparent', border: `1px solid ${modalBorder}`, color: modalText }} onClick={onCerrar}>
+                    Cerrar
+                  </button>
+                </div>
+              </>
+            )}
+
+            {modo === 'ver' && passwordRevelada === null && (
               <>
                 <h5 className="mt-3 fw-bold" style={{ color: modalText }}>
                   Ver contraseña de {usuario?.nombreUsuario}
@@ -68,25 +149,27 @@ export const VerPasswordModal: React.FC<VerPasswordModalProps> = ({ usuario, onC
                   placeholder="Tu contraseña"
                   value={passwordAdmin}
                   onChange={(e) => setPasswordAdmin(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && confirmar()}
+                  onKeyDown={(e) => e.key === 'Enter' && confirmarVer()}
                   autoFocus
                 />
                 {error && <p className="text-danger mt-2 mb-0" style={{ fontSize: '0.9rem' }}>{error}</p>}
                 <div className="d-flex justify-content-center gap-2 mt-4">
-                  <button className="btn fw-bold px-4" style={{ backgroundColor: '#3f3f46', color: '#fff' }} onClick={onCerrar}>
-                    Cancelar
+                  <button className="btn fw-bold px-4" style={{ backgroundColor: '#3f3f46', color: '#fff' }} onClick={volverAlMenu}>
+                    Volver
                   </button>
                   <button
                     className="btn fw-bold px-4"
                     style={{ backgroundColor: '#8e45e0', color: '#fff' }}
-                    onClick={confirmar}
+                    onClick={confirmarVer}
                     disabled={cargando}
                   >
                     {cargando ? 'Verificando...' : 'Confirmar'}
                   </button>
                 </div>
               </>
-            ) : (
+            )}
+
+            {modo === 'ver' && passwordRevelada !== null && (
               <>
                 <h5 className="mt-3 fw-bold" style={{ color: modalText }}>
                   Contraseña de {usuario?.nombreUsuario}
@@ -103,6 +186,76 @@ export const VerPasswordModal: React.FC<VerPasswordModalProps> = ({ usuario, onC
                 <button
                   className="btn mt-4 px-4 fw-bold"
                   style={{ backgroundColor: '#e22e2e', borderColor: '#e62020', color: '#ffffff' }}
+                  onClick={onCerrar}
+                >
+                  Cerrar
+                </button>
+              </>
+            )}
+
+            {modo === 'restablecer' && (
+              <>
+                <h5 className="mt-3 fw-bold" style={{ color: modalText }}>
+                  Restablecer contraseña de {usuario?.nombreUsuario}
+                </h5>
+                <p style={{ color: descColor }} className="mb-3">
+                  Vas a fijarle una contraseña nueva sin necesitar la que tiene hoy. Confirmá primero con tu
+                  propia contraseña de administrador.
+                </p>
+                <input
+                  type="password"
+                  className="form-control font-monospace mb-2"
+                  style={{ backgroundColor: inputBg, color: modalText, border: `1px solid ${modalBorder}` }}
+                  placeholder="Tu contraseña (para confirmar)"
+                  value={passwordAdmin}
+                  onChange={(e) => setPasswordAdmin(e.target.value)}
+                  autoFocus
+                />
+                <input
+                  type="password"
+                  className="form-control font-monospace mb-2"
+                  style={{ backgroundColor: inputBg, color: modalText, border: `1px solid ${modalBorder}` }}
+                  placeholder={`Contraseña nueva para ${usuario?.nombreUsuario}`}
+                  value={passwordNueva}
+                  onChange={(e) => setPasswordNueva(e.target.value)}
+                />
+                <input
+                  type="password"
+                  className="form-control font-monospace mb-2"
+                  style={{ backgroundColor: inputBg, color: modalText, border: `1px solid ${modalBorder}` }}
+                  placeholder="Repetí la contraseña nueva"
+                  value={passwordNuevaConfirmar}
+                  onChange={(e) => setPasswordNuevaConfirmar(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && confirmarRestablecer()}
+                />
+                {error && <p className="text-danger mt-2 mb-0" style={{ fontSize: '0.9rem' }}>{error}</p>}
+                <div className="d-flex justify-content-center gap-2 mt-4">
+                  <button className="btn fw-bold px-4" style={{ backgroundColor: '#3f3f46', color: '#fff' }} onClick={volverAlMenu}>
+                    Volver
+                  </button>
+                  <button
+                    className="btn fw-bold px-4"
+                    style={{ backgroundColor: '#8e45e0', color: '#fff' }}
+                    onClick={confirmarRestablecer}
+                    disabled={cargando}
+                  >
+                    {cargando ? 'Guardando...' : 'Restablecer'}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {modo === 'restablecerExito' && (
+              <>
+                <h5 className="mt-3 fw-bold" style={{ color: modalText }}>
+                  ¡Contraseña restablecida!
+                </h5>
+                <p style={{ color: descColor }} className="mb-2">
+                  {usuario?.nombreUsuario} ya puede iniciar sesión con la contraseña nueva.
+                </p>
+                <button
+                  className="btn mt-4 px-4 fw-bold"
+                  style={{ backgroundColor: '#2b7a3e', borderColor: '#20c997', color: '#ffffff' }}
                   onClick={onCerrar}
                 >
                   Cerrar

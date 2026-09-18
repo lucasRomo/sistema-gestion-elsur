@@ -110,7 +110,12 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
       await onGuardar(formData);
       setMostrarExito(true);
     } catch (error) {
+      // FIX: antes el rechazo del backend (ej. título vacío, precio negativo, área
+      // inexistente -- ver DocumentoDigitalServiceImpl) solo se logueaba en consola;
+      // el modal de confirmación se cerraba y el usuario se quedaba sin saber que
+      // el documento NO se guardó ni por qué.
       console.error('Error al guardar documento:', error);
+      alert((error as Error)?.message || 'No se pudo registrar el documento en el repositorio.');
     }
   };
 
