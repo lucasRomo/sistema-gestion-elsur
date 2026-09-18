@@ -4,12 +4,16 @@ import { getUsuarios, guardarUsuario } from '../services/usuarioService';
 
 export const useUsuarios = () => {
   const [usuarios, setUsuarios] = useState<any[]>([]);
+  // NUEVO (bug reportado: falta indicador de carga en las tablas).
+  const [cargando, setCargando] = useState(true);
 
   const cargar = async () => {
+    setCargando(true);
     try {
       const data = await getUsuarios();
       setUsuarios(data);
     } catch (err) { console.error("Error cargando usuarios:", err); }
+    finally { setCargando(false); }
   };
 
   const guardar = async (usuario: any) => {
@@ -19,5 +23,5 @@ export const useUsuarios = () => {
 
   useEffect(() => { cargar(); }, []);
 
-  return { usuarios, guardar, cargar };
+  return { usuarios, guardar, cargar, cargando };
 };

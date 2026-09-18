@@ -36,7 +36,7 @@ export const Productos: React.FC = () => {
   const cardBorder = isDark ? '#27272a' : '#cbd5e1';
   const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
 
-  const { productos, guardar, cargar } = useProductos();
+  const { productos, guardar, cargar, cargando } = useProductos();
   
   const [showModal, setShowModal] = useState(false);
   const [showAumentoModal, setShowAumentoModal] = useState(false);
@@ -60,6 +60,20 @@ export const Productos: React.FC = () => {
   const [showSinRecetaModal, setShowSinRecetaModal] = useState(false);
   const [productoSinReceta, setProductoSinReceta] = useState<Producto | null>(null);
 
+  // CORREGIDO: "vincular el stock de un insumo a una impresión y registrar
+  // mermas hace que se abra editar Producto nuevamente". La causa real: este
+  // efecto depende de "productos" (para esperar a que la lista ya esté
+  // cargada la primera vez), pero "window.history.replaceState({}, ...)" NO
+  // le avisa a React Router que "location.state" cambió -- solo toca el
+  // History nativo del navegador por afuera del router, así que
+  // "location.state.productoEditar" seguía existiendo (obsoleto) en memoria
+  // para siempre. Resultado: la PRIMERA vez que este componente se abre
+  // navegando con { state: { productoEditar } } (ej. desde Stock Crítico) el
+  // modal se abre bien, pero CUALQUIER acción posterior que vuelva a cargar
+  // "productos" (vincular stock, registrar una merma, etc. -- todas llaman a
+  // cargar()) re-disparaba este efecto y reabría el modal de edición solo,
+  // sin que nadie lo pidiera. El fix es limpiar "state" a través del propio
+  // router (navigate con replace) para que React Router realmente lo borre.
   useEffect(() => {
     const state = location.state as { productoEditar?: Producto };
     if (state?.productoEditar && productos.length > 0) {
@@ -70,7 +84,7 @@ export const Productos: React.FC = () => {
 
       setProductoEditando(prodEncontrado);
       setShowModal(true);
-      window.history.replaceState({}, document.title);
+      navigate(location.pathname, { replace: true, state: null });
     }
   }, [location.state, productos]);
 
@@ -154,18 +168,25 @@ export const Productos: React.FC = () => {
           display: 'block'
         }}
       >
-        <ProductoTabla 
-          productos={productosFiltrados} 
-          onEditar={(p) => {
-            setProductoEditando(p);
-            setShowModal(true);
-          }} 
-          onConfigurarReceta={(p) => {
-            setProductoSeleccionadoReceta(p);
-            setShowRecetaModal(true);
-          }}
-          onToggleStockVinculado={handleToggleVinculo}
-        />
+        {cargando ? (
+          <div className="text-center py-5" style={{ color: textColor }}>
+            <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+            Cargando productos...
+          </div>
+        ) : (
+          <ProductoTabla
+            productos={productosFiltrados}
+            onEditar={(p) => {
+              setProductoEditando(p);
+              setShowModal(true);
+            }}
+            onConfigurarReceta={(p) => {
+              setProductoSeleccionadoReceta(p);
+              setShowRecetaModal(true);
+            }}
+            onToggleStockVinculado={handleToggleVinculo}
+          />
+        )}
       </div>
 
       {/* Botonera Inferior Completa */}

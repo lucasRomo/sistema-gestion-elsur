@@ -34,7 +34,7 @@ export const ClienteView = () => {
   const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
   const modalStepBg = isDark ? '#1e1e24' : '#ffffff';
 
-  const { clientes, registrarCliente, cargarClientes } = useClientes();
+  const { clientes, loading, registrarCliente, cargarClientes } = useClientes();
   const [paso, setPaso] = useState(0); 
   const [clienteConUbicacionSeleccionada, setClienteConUbicacionSeleccionada] = useState<any | null>(null);
   const [clienteAEditar, setClienteAEditar] = useState<any | null>(null);
@@ -229,7 +229,14 @@ export const ClienteView = () => {
             </tr>
           </thead>
           <tbody style={{ fontSize: '0.9rem' }}>
-            {clientesOrdenados && clientesOrdenados.length > 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={9} className="text-center py-5 border-0" style={{ color: tableText }}>
+                  <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                  Cargando clientes...
+                </td>
+              </tr>
+            ) : clientesOrdenados && clientesOrdenados.length > 0 ? (
               clientesOrdenados.map((c: any) => {
                 const tieneCtaCte = Number(c.limiteCredito || 0) > 0;
                 const idClienteVal = c.id_cliente || c.idCliente;

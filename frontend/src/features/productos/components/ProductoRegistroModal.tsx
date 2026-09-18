@@ -39,7 +39,12 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
   const [showCategorias, setShowCategorias] = useState<boolean>(false);
   const [nuevaCategoria, setNuevaCategoria] = useState<string>('');
-  
+  // CORREGIDO: crear (o eliminar) una categoría acá no mostraba ninguna
+  // confirmación -- el campo se limpiaba y la lista se actualizaba en
+  // silencio, sin aviso visual de que la operación funcionó.
+  const [mostrarExitoCategoria, setMostrarExitoCategoria] = useState<boolean>(false);
+  const [mensajeExitoCategoria, setMensajeExitoCategoria] = useState<string>('');
+
   const [textoMaquina, setTextoMaquina] = useState<string>('No aplica');
   const [showDropdownEstado, setShowDropdownEstado] = useState<boolean>(false);
   const [showDropdownMaquina, setShowDropdownMaquina] = useState<boolean>(false);
@@ -173,6 +178,8 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
       await crearCategoria(nombreLimpio);
       setNuevaCategoria('');
       cargarCategoriasData();
+      setMensajeExitoCategoria('Categoría creada correctamente');
+      setMostrarExitoCategoria(true);
     } catch (error: any) {
       // CORREGIDO: antes se mostraba siempre "No se pudo crear la categoría.",
       // descartando el motivo real que devuelve el backend (ej. duplicado).
@@ -189,6 +196,8 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
         setFormData(prev => ({ ...prev, nombreCategoria: '' }));
       }
       cargarCategoriasData();
+      setMensajeExitoCategoria('Categoría eliminada correctamente');
+      setMostrarExitoCategoria(true);
     } catch (error: any) {
       alert(error?.message || "No se pudo eliminar, es posible que tenga productos asociados.");
     }
@@ -271,7 +280,12 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                     value={formData.nombreProducto} 
                     onChange={e => setFormData({...formData, nombreProducto: e.target.value})} 
                     onBlur={validarNombreDuplicado}
-                    required pattern="[A-Za-z0-9Á-Úá-ú\s]+"
+                    // CORREGIDO: el pattern anterior ([A-Za-z0-9Á-Úá-ú\s]+) no dejaba
+                    // escribir puntos, comas, guiones, paréntesis ni "/" o "&" -- cosas
+                    // normales en un nombre de producto real (ej. "Folleto A4 (dúplex)",
+                    // "Tarjeta 8.5x11", "Volante B/N"). Se amplía para permitir la
+                    // puntuación más común sin dejar de bloquear caracteres raros.
+                    required pattern="[A-Za-z0-9Á-Úá-ú\s.,\-_()/&%]+"
                     onInvalid={(e: any) => {
                       if (e.target.validity.valueMissing) e.target.setCustomValidity("El nombre del producto es obligatorio.");
                       else if (e.target.validity.patternMismatch) e.target.setCustomValidity("Nombre inválido.");
@@ -564,6 +578,43 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {mostrarExitoCategoria && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+            <div
+              className="modal-content p-4 text-center shadow"
+              style={{
+                border: '2px solid #8e45e0',
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
+                color: isDark ? '#ffffff' : '#0f172a',
+                borderRadius: '12px'
+              }}
+            >
+              <div
+                className="d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+                style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: '#8e45e0', color: '#ffffff' }}
+              >
+                <i className="bi bi-check-lg fs-2"></i>
+              </div>
+              <h4 className="fw-bold mb-2">¡Éxito!</h4>
+              <p className="small mb-4" style={{ color: mutedText }}>
+                {mensajeExitoCategoria}
+              </p>
+              <div className="d-flex justify-content-center">
+                <button
+                  type="button"
+                  className="btn px-4 text-white fw-bold"
+                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }}
+                  onClick={() => setMostrarExitoCategoria(false)}
+                >
+                  Cerrar
+                </button>
               </div>
             </div>
           </div>

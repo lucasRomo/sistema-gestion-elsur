@@ -51,7 +51,12 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   const [nuevaCategoria, setNuevaCategoria] = useState<string>('');
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [idCategoriaAEliminar, setIdCategoriaAEliminar] = useState<number | null>(null);
-  const [mostrarExitoEliminar, setMostrarExitoEliminar] = useState<boolean>(false);
+  // CORREGIDO: antes solo existía este modal de éxito para BORRAR una
+  // categoría de proveedor -- crear una no mostraba ninguna confirmación, el
+  // formulario simplemente se limpiaba en silencio. Se generaliza a un solo
+  // modal reutilizable (mensaje variable) para los dos casos.
+  const [mostrarExitoCategoria, setMostrarExitoCategoria] = useState<boolean>(false);
+  const [mensajeExitoCategoria, setMensajeExitoCategoria] = useState<string>('');
   const [showTipoProveedor, setShowTipoProveedor] = useState(false);
   const [showEstado, setShowEstado] = useState(false);
   const [guardando, setGuardando] = useState(false);
@@ -100,6 +105,11 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
       setNuevaCategoria('');
       if (inputElem) inputElem.setCustomValidity('');
       await cargarCategorias();
+      // CORREGIDO: antes esto no avisaba nada -- el formulario se limpiaba y
+      // la categoría aparecía en la lista de abajo, pero sin ninguna
+      // confirmación visual de que se guardó.
+      setMensajeExitoCategoria('Categoría creada correctamente');
+      setMostrarExitoCategoria(true);
     } catch (error) {
       console.error(error);
       alert("Error al guardar la nueva categoría");
@@ -122,7 +132,8 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
       }
       await cargarCategorias();
       setIdCategoriaAEliminar(null);
-      setMostrarExitoEliminar(true); 
+      setMensajeExitoCategoria('Categoría eliminada correctamente');
+      setMostrarExitoCategoria(true);
     } catch (error) {
       console.error(error);
       alert("No se pudo eliminar la categoría (puede que esté en uso por otra entidad).");
@@ -657,19 +668,19 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
         </div>
       )}
 
-      {mostrarExitoEliminar && (
+      {mostrarExitoCategoria && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
-            <div 
-              className="modal-content p-4 text-center shadow" 
-              style={{ 
-                border: '2px solid #8e45e0', 
-                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+            <div
+              className="modal-content p-4 text-center shadow"
+              style={{
+                border: '2px solid #8e45e0',
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
                 color: textColor,
-                borderRadius: '12px' 
+                borderRadius: '12px'
               }}
             >
-              <div 
+              <div
                 className="d-inline-flex align-items-center justify-content-center mx-auto mb-3"
                 style={{
                   width: '50px',
@@ -683,14 +694,14 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
               </div>
               <h4 className="fw-bold mb-2">¡Éxito!</h4>
               <p className="small mb-4" style={{ color: labelColor }}>
-                Categoría eliminada correctamente
+                {mensajeExitoCategoria}
               </p>
               <div className="d-flex justify-content-center">
-                <button 
+                <button
                   type="button"
-                  className="btn px-4 text-white fw-bold" 
-                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }} 
-                  onClick={() => setMostrarExitoEliminar(false)}
+                  className="btn px-4 text-white fw-bold"
+                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }}
+                  onClick={() => setMostrarExitoCategoria(false)}
                 >
                   Cerrar
                 </button>

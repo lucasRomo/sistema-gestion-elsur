@@ -20,7 +20,7 @@ export const Proveedores: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const isMobile = useIsMobile();
-  const { proveedores, guardar } = useProveedores();
+  const { proveedores, guardar, cargando } = useProveedores();
   
   // Estilos y Paleta Adaptativa
   const mainCardBg = isDark ? '#1d1d1d' : '#ffffff';
@@ -80,14 +80,21 @@ export const Proveedores: React.FC = () => {
           display: 'block'
         }}
       >
-        <ProveedorTabla 
-          proveedores={proveedoresFiltrados}
-          onEditar={(prov) => { setIsEditing(true); setProveedorSeleccionado(prov); setShowModal(true); }}
-          onVerUbicacion={(prov) => { 
-            setProveedorSeleccionado(prov); 
-            setShowUbicacionModal(true);
-          }}
-        />
+        {cargando ? (
+          <div className="text-center py-5" style={{ color: textColor }}>
+            <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+            Cargando proveedores...
+          </div>
+        ) : (
+          <ProveedorTabla
+            proveedores={proveedoresFiltrados}
+            onEditar={(prov) => { setIsEditing(true); setProveedorSeleccionado(prov); setShowModal(true); }}
+            onVerUbicacion={(prov) => {
+              setProveedorSeleccionado(prov);
+              setShowUbicacionModal(true);
+            }}
+          />
+        )}
       </div>
 
       {/* Barra Inferior: Volver + Exportar + Nuevo Proveedor */}

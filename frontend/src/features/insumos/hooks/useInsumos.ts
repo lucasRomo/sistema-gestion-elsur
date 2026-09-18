@@ -5,12 +5,16 @@ import type { Insumo } from '../types/Insumo';
 
 export const useInsumos = () => {
   const [insumos, setInsumos] = useState<Insumo[]>([]);
+  // NUEVO (bug reportado: falta indicador de carga en las tablas).
+  const [cargando, setCargando] = useState(true);
 
   const cargar = async () => {
+    setCargando(true);
     try {
       const data = await getInsumos();
       setInsumos(data);
     } catch (err) { console.error("Error al cargar insumos:", err); }
+    finally { setCargando(false); }
   };
 
   const guardar = async (insumo: any) => {
@@ -20,5 +24,5 @@ export const useInsumos = () => {
 
   useEffect(() => { cargar(); }, []);
 
-  return { insumos, guardar, cargar };
+  return { insumos, guardar, cargar, cargando };
 };

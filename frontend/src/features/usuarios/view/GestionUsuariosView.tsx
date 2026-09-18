@@ -26,7 +26,7 @@ export const GestionUsuariosView: React.FC = () => {
   const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
   const theadText = isDark ? '#ffffff' : '#334155';
 
-  const { usuarios, guardar, cargar } = useUsuarios();
+  const { usuarios, guardar, cargar, cargando } = useUsuarios();
   const [filtroTexto, setFiltroTexto] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Sin Filtro');
   const [usuarioAEditar, setUsuarioAEditar] = useState<any | null>(null);
@@ -121,7 +121,14 @@ export const GestionUsuariosView: React.FC = () => {
                 </tr>
               </thead>
               <tbody style={{ fontSize: '0.9rem' }}>
-                {usuariosOrdenados && usuariosOrdenados.length > 0 ? (
+                {cargando ? (
+                  <tr>
+                    <td colSpan={10} className="text-center py-5 border-0" style={{ color: tableText }}>
+                      <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                      Cargando usuarios...
+                    </td>
+                  </tr>
+                ) : usuariosOrdenados && usuariosOrdenados.length > 0 ? (
                   usuariosOrdenados.map((u, index) => (
                     <tr 
                       key={u.idUsuario} 

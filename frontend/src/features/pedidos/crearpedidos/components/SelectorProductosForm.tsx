@@ -511,9 +511,18 @@ export const SelectorProductosForm: React.FC<Props> = ({
         className="card p-4 w-100 rounded mt-2 shadow-sm" 
         style={{ maxWidth: '1570px', backgroundColor: containerBg, color: textPrimary, border: `1px solid ${borderTheme}` }}
       >
-        <div className="d-flex align-items-center gap-2 mb-4">
+        <div className="d-flex align-items-center gap-2 mb-1">
           <i className="bi bi-boxes text-info fs-5"></i>
           <span className="small fw-bold">Impacto Estimado en el Stock de Insumos y Productos:</span>
+        </div>
+        {/* CORREGIDO: el margen de respaldo por mermas (MARGEN_MERMA_RESPALDO = 5,
+            más abajo) ya se restaba de "Stock Resultante" antes de este cambio, pero
+            no se avisaba en ningún lado de dónde salía esa diferencia -- para quien
+            mira la tabla, esas 5 unidades "desaparecían" sin explicación. Se deja
+            explícito acá y en el encabezado de la columna. */}
+        <div className="small mb-3" style={{ color: mutedText }}>
+          <i className="bi bi-info-circle me-1"></i>
+          El "Stock Resultante" ya descuenta un margen de respaldo de <b>+5 unidades</b> por mermas, además de lo reservado en pedidos pendientes.
         </div>
 
         <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted" style={{ borderColor: borderTheme }}>
@@ -521,7 +530,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
           <div style={{ width: '18%' }}>Unidad de Medida:</div>
           <div style={{ width: '18%' }}>Reservados:</div>
           <div style={{ width: '18%' }}>Stock Actual:</div>
-          <div style={{ width: '21%' }}>Stock Resultante:</div>
+          <div style={{ width: '21%' }}>Stock Resultante (–5 margen):</div>
         </div>
 
         <div style={{ height: '100px', overflowY: 'auto' }}>

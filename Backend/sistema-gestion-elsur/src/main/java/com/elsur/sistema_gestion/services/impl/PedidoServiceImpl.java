@@ -592,6 +592,52 @@ public class PedidoServiceImpl implements PedidoService {
             }
 
             pedidoRepository.save(pedido);
+
+            // NUEVO (bug reportado: "no se descontó el saldo corriente al crear un
+            // pedido con límite de saldo = 0 al usar el botón Autorizar solo esta
+            // vez. No aparece en el historial de ese cliente tampoco"): este método
+            // es al que llegan TANTO "Actualizar Límite y Entregar" COMO "Autorizar
+            // Solo Esta Vez" (ver ModalAdvertenciaDeuda / PedidosPendientesView --
+            // los dos terminan llamando a este mismo cambiarEstadoPedido con los
+            // mismos parámetros), y ninguno de los dos ajustaba la cuenta corriente:
+            // acá nunca se tocaba Cliente.saldoDeudor ni se generaba un
+            // MovimientoCuentaCorriente al entregar. La única vez que el proyecto sí
+            // hacía este ajuste era al CREAR un pedido ya en un estado final (ver
+            // procesarYGuardarPedido, más arriba en esta clase) -- pero un pedido que
+            // se crea PENDIENTE y se entrega después, pasando por acá, no quedaba
+            // nunca reflejado. Se replica el mismo patrón: si al entregar/finalizar
+            // queda saldo pendiente, se suma a la cuenta corriente del cliente (salvo
+            // Consumidor Final, id 1, que no opera con cuenta corriente) y se deja
+            // asentado el movimiento, igual que en el alta.
+            Cliente clienteDelPedido = pedido.getCliente();
+            if (clienteDelPedido != null && clienteDelPedido.getIdCliente() != 1) {
+                BigDecimal totalPedido = pedido.getMonto_total() != null ? pedido.getMonto_total() : BigDecimal.ZERO;
+                BigDecimal pagadoPedido = pedido.getMonto_pago_adelantado() != null ? pedido.getMonto_pago_adelantado() : BigDecimal.ZERO;
+                BigDecimal saldoPendienteEntrega = totalPedido.subtract(pagadoPedido);
+
+                if (saldoPendienteEntrega.compareTo(BigDecimal.ZERO) > 0) {
+                    pedido.setEs_cuenta_corriente(true);
+
+                    BigDecimal saldoActualCliente = clienteDelPedido.getSaldoDeudor() != null
+                            ? clienteDelPedido.getSaldoDeudor() : BigDecimal.ZERO;
+                    clienteDelPedido.setSaldoDeudor(saldoActualCliente.add(saldoPendienteEntrega));
+                    clienteRepository.save(clienteDelPedido);
+
+                    try {
+                        MovimientoCuentaCorriente movCC = new MovimientoCuentaCorriente();
+                        movCC.setCliente(clienteDelPedido);
+                        movCC.setTipo("COMPRA");
+                        movCC.setMonto(saldoPendienteEntrega);
+                        movCC.setDescripcion("Entrega con saldo pendiente - Pedido #" + pedido.getId_pedido());
+                        movCC.setFecha(LocalDateTime.now());
+                        movimientoCCRepository.save(movCC);
+                    } catch (Exception e) {
+                        System.err.println("Error al registrar historial de Cuenta Corriente en la entrega: " + e.getMessage());
+                    }
+
+                    pedido = pedidoRepository.save(pedido);
+                }
+            }
         } else {
             pedido.setEstado(nuevoEstado);
             if (esEstadoFinal) {

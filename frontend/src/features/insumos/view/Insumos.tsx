@@ -32,7 +32,7 @@ export const Insumos: React.FC = () => {
   const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
 
   const navigate = useNavigate();
-  const { insumos, guardar, cargar } = useInsumos();
+  const { insumos, guardar, cargar, cargando } = useInsumos();
   
   const [filtroNombre, setFiltroNombre] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('Sin Filtro');
@@ -112,15 +112,22 @@ export const Insumos: React.FC = () => {
           display: 'block'
         }}
       >
-        <InsumoTabla 
-          insumos={insumosFiltrados}
-          onEditar={(insumo) => { setInsumoEditando(insumo); setShowModalForm(true); }}
-          onVerProveedores={(insumo) => setInsumoProveedoresSeleccionado(insumo)}
-          onConvertir={(insumo) => {
-            setInsumoConvertirSeleccionado(insumo);
-            setShowConvertirModal(true);
-          }}
-        />
+        {cargando ? (
+          <div className="text-center py-5" style={{ color: textColor }}>
+            <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+            Cargando insumos...
+          </div>
+        ) : (
+          <InsumoTabla
+            insumos={insumosFiltrados}
+            onEditar={(insumo) => { setInsumoEditando(insumo); setShowModalForm(true); }}
+            onVerProveedores={(insumo) => setInsumoProveedoresSeleccionado(insumo)}
+            onConvertir={(insumo) => {
+              setInsumoConvertirSeleccionado(insumo);
+              setShowConvertirModal(true);
+            }}
+          />
+        )}
       </div>
 
       {/* Botonera Inferior Completa */}
