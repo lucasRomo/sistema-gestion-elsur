@@ -3,10 +3,18 @@ import React from 'react';
 interface Props {
   show: boolean;
   mensaje: string;
+  titulo?: string;
   onClose: () => void;
 }
 
-export const ModalErrorStock: React.FC<Props> = ({ show, mensaje, onClose }) => {
+// NUEVO: el título estaba fijo en "Error por Falta de Stock", pero este modal
+// (vía el estado sucesoError de PedidosPendientesView) también se usa para
+// otros errores que no tienen nada que ver con stock (ej: no se pudo
+// actualizar la ubicación del pedido, o -- el caso que agregó este prop -- no
+// se puede entregar un pedido de Consumidor Final con saldo pendiente).
+// Se agrega "titulo" opcional, con el texto de siempre como valor por
+// defecto, para no romper ningún uso existente del modal.
+export const ModalErrorStock: React.FC<Props> = ({ show, mensaje, titulo = 'Error por Falta de Stock', onClose }) => {
   if (!show) return null;
 
   return (
@@ -17,7 +25,7 @@ export const ModalErrorStock: React.FC<Props> = ({ show, mensaje, onClose }) => 
           style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px', fontFamily: 'monospace' }}
         >
           <i className="bi bi-x-circle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
-          <h5 className="fw-bold">Error por Falta de Stock</h5>
+          <h5 className="fw-bold">{titulo}</h5>
           <p className="small" style={{ color: '#a1a1aa' }}>{mensaje}</p>
           <button 
             className="btn btn-danger btn-sm px-4 mt-3 fw-bold"

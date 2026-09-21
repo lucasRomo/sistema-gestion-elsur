@@ -577,6 +577,35 @@ public class PedidoServiceImpl implements PedidoService {
         boolean yaEstabaFinalizado = "FINALIZADO".equalsIgnoreCase(estadoAnterior) || "ENTREGADO".equalsIgnoreCase(estadoAnterior) || "VENTA_RAPIDA".equalsIgnoreCase(estadoAnterior);
 
         if (esEstadoFinal && !yaEstabaFinalizado) {
+            // NUEVO (consulta: "¿qué pasa si el Consumidor Final tiene saldo
+            // pendiente?"): Consumidor Final (id 1) tiene prohibido operar con
+            // Cuenta Corriente (ver guardar(), más arriba, y registrarPago()/
+            // registrarAbono() más abajo -- las tres tiran la misma excepción si
+            // se intenta marcarlo es_cuenta_corriente=true). El problema es que,
+            // hasta este arreglo, esa prohibición NO impedía entregar/finalizar un
+            // pedido suyo con saldo sin cobrar: el bloque de más abajo que registra
+            // la deuda directamente salteaba a este cliente (`idCliente != 1`), así
+            // que la diferencia sin cobrar se perdía en silencio -- se entregaba
+            // igual, sin error, sin quedar registrada en ningún lado. Como acá no
+            // hay a quién cobrarle después (es una cuenta compartida, no una
+            // persona identificable), la única opción consistente con esa regla de
+            // negocio es no dejar entregar/finalizar hasta cobrar el total. Se
+            // valida ANTES de descontar stock o tocar el estado del pedido, para
+            // no dejar la operación a medio hacer si se corta acá.
+            Cliente clienteAntesDeEntregar = pedido.getCliente();
+            if (clienteAntesDeEntregar != null && clienteAntesDeEntregar.getIdCliente() == 1) {
+                BigDecimal totalAntesDeEntregar = pedido.getMonto_total() != null ? pedido.getMonto_total() : BigDecimal.ZERO;
+                BigDecimal pagadoAntesDeEntregar = pedido.getMonto_pago_adelantado() != null ? pedido.getMonto_pago_adelantado() : BigDecimal.ZERO;
+                BigDecimal saldoPendienteAntesDeEntregar = totalAntesDeEntregar.subtract(pagadoAntesDeEntregar);
+
+                if (saldoPendienteAntesDeEntregar.compareTo(BigDecimal.ZERO) > 0) {
+                    throw new SolicitudInvalidaException(
+                        "No se puede entregar/finalizar este pedido: el Consumidor Final tiene un saldo pendiente de $"
+                            + saldoPendienteAntesDeEntregar
+                            + ". Cobre el total antes de continuar -- el Consumidor Final no opera con Cuenta Corriente.");
+                }
+            }
+
             // Antes acá había un try/catch que envolvía cualquier excepción
             // (incluida una simple "stock insuficiente") en un RuntimeException
             // nuevo con mensaje genérico "Error al procesar stock: ...". Eso
