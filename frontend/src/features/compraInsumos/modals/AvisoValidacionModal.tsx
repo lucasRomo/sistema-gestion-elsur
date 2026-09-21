@@ -22,12 +22,11 @@ export const AvisoValidacionModal: React.FC<AvisoValidacionModalProps> = ({
           className={`modal-content ${textColor} font-monospace p-4 text-center`} 
           style={{ 
             backgroundColor: cardBg, 
-            border: '2px solid #ffc107', /* <--- Borde amarillo del modal */
+            border: '2px solid #ffc107',
             borderRadius: '20px' 
           }}
         >
           <div className="d-flex flex-column align-items-center gap-3">
-            {/* Ícono circular de advertencia */}
             <div 
               className="d-flex align-items-center justify-content-center rounded-circle"
               style={{
@@ -41,13 +40,11 @@ export const AvisoValidacionModal: React.FC<AvisoValidacionModalProps> = ({
               <i className="bi bi-exclamation-lg"></i>
             </div>
 
-            {/* Título y Mensaje */}
             <h4 className="fw-bold m-0 mt-2">Algo ha ido Mal</h4>
             <p className="m-0 text-muted fs-6" style={{ lineHeight: '1.5' }}>
               {mensaje}
             </p>
 
-            {/* Botón de cierre */}
             <button 
               type="button" 
               className="btn btn-secondary w-100 fw-bold mt-3 py-2" 

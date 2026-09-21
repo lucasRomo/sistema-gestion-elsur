@@ -24,24 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de ProductoServiceImpl (módulo
- * Productos, sidebar "Productos"). Hasta este trabajo no existía NINGUNA
- * suite de tests para este servicio.
- *
- * HALLAZGOS PRINCIPALES (CORREGIDOS en este pase), mismo patrón que en
- * InsumoServiceImpl (módulo Insumos):
- * 1) guardar() no tenía NINGÚN chequeo de nombre a nivel backend -- ni
- *    obligatoriedad ni duplicados -- pese a que el frontend (ProductoRegistroModal)
- *    ya tenía un chequeo de duplicado puramente client-side, fácil de esquivar
- *    llamando directo a la API.
- * 2) precioBase y stock no se validaban contra valores negativos en el backend.
- * 3) obtenerUsuarioOperador() caía en silencio al "primer usuario de la tabla"
- *    cuando no se recibía un idUsuario válido, falseando el registro de
- *    actividad de ediciones y modificaciones masivas de precio.
- * 4) buscarPorId() lanzaba un RuntimeException genérico (-> 400) en vez de
- *    RecursoNoEncontradoException (-> 404).
- */
+
 @ExtendWith(MockitoExtension.class)
 class ProductoServiceImplUnitTest {
 
@@ -68,7 +51,6 @@ class ProductoServiceImplUnitTest {
         return u;
     }
 
-    // ---------- Nombre: obligatorio, se recorta y no se puede duplicar ----------
 
     @Test
     @DisplayName("CORREGIDO: nombre de producto vacío se rechaza")
@@ -130,7 +112,6 @@ class ProductoServiceImplUnitTest {
         verify(productoRepository).existsByNombreProductoIgnoreCaseAndIdProductoNot("Apunte TP1", 7);
     }
 
-    // ---------- Campos numéricos ----------
 
     @Test
     @DisplayName("CORREGIDO: el precio base negativo ahora se rechaza (antes no se validaba en el backend)")
@@ -169,7 +150,6 @@ class ProductoServiceImplUnitTest {
         verifyNoInteractions(usuarioRepository);
     }
 
-    // ---------- buscarPorId ----------
 
     @Test
     @DisplayName("CORREGIDO: buscar un producto inexistente lanza RecursoNoEncontradoException (404), antes era un RuntimeException genérico (400)")
@@ -179,7 +159,6 @@ class ProductoServiceImplUnitTest {
         assertThrows(RecursoNoEncontradoException.class, () -> productoService.buscarPorId(999));
     }
 
-    // ---------- Auditoría: usuario operador (CORREGIDO) ----------
 
     @Test
     @DisplayName("CORREGIDO: al editar sin un idUsuario logueado ya no se atribuye la auditoría en silencio al primer usuario de la tabla, se rechaza")
@@ -214,7 +193,6 @@ class ProductoServiceImplUnitTest {
         verify(usuarioRepository, never()).findAll();
     }
 
-    // ---------- actualizarPreciosMasivo ----------
 
     @Test
     @DisplayName("CORREGIDO: la actualización masiva de precios sin un usuario logueado detectable ya no atribuye la auditoría a un usuario cualquiera")

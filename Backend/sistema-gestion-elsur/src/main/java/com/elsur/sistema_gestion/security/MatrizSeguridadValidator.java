@@ -1,11 +1,5 @@
 package com.elsur.sistema_gestion.security;
 
-// MOVIDO de config/ a security/ (agrupado con el resto de la infraestructura de
-// seguridad: JwtService, JwtAuthenticationFilter, UserDetailsServiceImpl,
-// JwtAuthenticationEntryPoint, JwtAccessDeniedHandler). Sin cambios de
-// comportamiento -- el archivo del profe no tiene un equivalente a esta clase
-// (ellos no tienen matriz de permisos por rol), es un agregado propio del
-// proyecto, pero organizativamente encaja acá y no en config/ genérico.
 
 import com.elsur.sistema_gestion.models.Usuario;
 import com.elsur.sistema_gestion.repositories.UsuarioRepository;
@@ -45,21 +39,17 @@ public AuthorizationDecision authorize(Supplier<? extends Authentication> authen
         return new AuthorizationDecision(false);
     }
 
-    // Obtener la ruta limpia descartando Context Path
     String path = request.getServletPath();
     if (path == null || path.isEmpty()) {
         path = request.getRequestURI();
     }
 
-    // Normalizar trailing slash
     if (path.length() > 1 && path.endsWith("/")) {
         path = path.substring(0, path.length() - 1);
     }
 
     String metodo = request.getMethod();
 
-    // Token del "portón": no corresponde a ningún usuario real de la tabla,
-    // solo habilita el mínimo necesario para poder registrarse.
     boolean esPorton = auth.getAuthorities().stream()
             .anyMatch(a -> a.getAuthority().equals("ROLE_PORTON"));
     if (esPorton) {
@@ -79,26 +69,6 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             || pathMatcher.match("/api/usuarios/exists", path);
     }
     if ("POST".equalsIgnoreCase(metodo)) {
-        // CORREGIDO (Bug 2, aclarado por el usuario): el portón tiene que poder
-        // dar de alta MÁS de un usuario, no solo el primero -- el negocio
-        // necesita que varios empleados se autorregistren con la clave de la
-        // puerta y queden "Pendiente" hasta que un ADMIN los active desde
-        // Gestión de Usuarios (ver UsuarioServiceImpl.guardar). Por eso ya NO
-        // se limita a "usuarioRepository.count() == 0": alcanza con conocer la
-        // clave del portón para poder registrarse, sin importar cuántos
-        // usuarios existan.
-        //
-        // Esto sigue siendo seguro porque UsuarioServiceImpl.guardar() no
-        // respeta el rol que venga en el payload para una alta nueva: fuerza
-        // ADMIN únicamente si la tabla está vacía (el primer usuario real del
-        // sistema) y OPERARIO para cualquier otra alta, sin excepción -- así
-        // que abrir esto no permite crear administradores adicionales ni
-        // saltear la aprobación del admin.
-        //
-        // "/api/empleados" ya no hace falta acá: el alta de usuario + legajo de
-        // empleado ahora es atómica en un único POST /api/usuarios (antes eran
-        // dos pedidos separados, y el segundo era justamente lo que se rompía
-        // apenas dejaba de ser el primer usuario -- ver Bug 1).
         return pathMatcher.match("/api/usuarios", path);
     }
     return false;
@@ -112,26 +82,20 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
 
         Usuario usuario = usuarioOpt.get();
 
-        // 1. Acceso total para ROL ADMIN
         if ("ADMIN".equalsIgnoreCase(usuario.getRol().getNombreRol())) {
             return true;
         }
 
-        // 1.b Asistente de ayuda: accesible para CUALQUIER usuario autenticado,
-        // sin exigir ningún permiso puntual de la matriz (es una guía de uso,
-        // no una operación sobre datos sensibles del negocio).
         if (pathMatcher.match("/api/asistente/**", path)) {
             return true;
         }
 
-        // Extracción de permisos normalizados (sin tildes, mayúsculas y sin espacios extra)
         Set<String> permisosUsuario = usuario.getRol().getPermisos() != null
                 ? usuario.getRol().getPermisos().stream()
                     .map(p -> normalizar(p.getNombrePermiso()))
                     .collect(Collectors.toSet())
                 : Collections.emptySet();
 
-        // 2. Reglas para Mermas e Inteligencia Artificial (OCR)
         if (pathMatcher.match("/api/mermas/**", path)) {
             if (tieneAlgunPermiso(permisosUsuario, "INSUMOS", "PRODUCTOS", "PEDIDOS PENDIENTES", "HISTORIAL DE PEDIDOS", "CAJA", "INFORMES")) {
                 return true;
@@ -144,7 +108,6 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             }
         }
 
-        // 3. Reglas para Módulo de Pedidos y Comprobantes
         if (pathMatcher.match("/api/pedidos/**", path) || pathMatcher.match("/api/comprobantes/**", path)) {
             if ("POST".equalsIgnoreCase(metodo) && pathMatcher.match("/api/pedidos", path)) {
                 return permisosUsuario.contains(normalizar("CREAR PEDIDO"));
@@ -156,7 +119,6 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             }
         }
 
-        // Detalle de Pedido: las líneas se cargan junto con el pedido -> mismo permiso que crearlo
         if (pathMatcher.match("/api/detalles-pedidos/**", path)) {
             if ("POST".equalsIgnoreCase(metodo)) {
                 return permisosUsuario.contains(normalizar("CREAR PEDIDO"));
@@ -166,17 +128,14 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             }
         }
 
-        // Historial de Estados de Pedido: seguimiento del ciclo de vida del pedido
         if (pathMatcher.match("/api/historiales-estado/**", path)) {
             if (tieneAlgunPermiso(permisosUsuario, "CREAR PEDIDO", "PEDIDOS PENDIENTES", "HISTORIAL DE PEDIDOS", "CAJA", "INFORMES")) {
                 return true;
             }
         }
 
-        // 4. Reglas de Lectura Cruzada (GET)
         if ("GET".equalsIgnoreCase(metodo)) {
 
-            // Habilitación de lectura para MATRIZ DE PERMISOS (necesita listar usuarios en la barra lateral)
             if (permisosUsuario.contains(normalizar("MATRIZ DE PERMISOS"))) {
                 if (pathMatcher.match("/api/permisos/**", path) ||
                     pathMatcher.match("/api/usuarios/**", path)) {
@@ -233,28 +192,6 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             }
         }
 
-        // 5. Reglas de Escritura Cruzada y Auto-Gestión de Perfil (POST / PUT / DELETE)
-
-        // Permitir a un usuario autenticado actualizar SUS PROPIAS credenciales
-        // (Ajustes de Perfil) -- y solo las propias.
-        //
-        // GAP DE SEGURIDAD corregido: esta regla devolvía true para CUALQUIER
-        // usuario autenticado sin comparar nunca el {id} del path contra quién
-        // es en realidad -- "Ajustes de Perfil" es self-service por diseño (así
-        // lo dice el propio comentario original), pero nada lo hacía cumplir.
-        // Para /password el impacto quedaba mitigado porque UsuarioServiceImpl.
-        // cambiarPassword igual exige la contraseña ACTUAL real (verificada con
-        // BCrypt) del usuario objetivo. Pero para /username y /email, el "valor
-        // actual" que exige el service NO es un secreto -- el nombre de usuario
-        // y el email de otra persona suelen ser datos conocidos o adivinables
-        // (por ejemplo, visibles en la propia UI de Gestión de Usuarios para
-        // quien tenga ese permiso) -- así que cualquier usuario autenticado,
-        // sin importar su rol, podía apuntar el {id} de OTRA persona en la URL
-        // y cambiarle el nombre de usuario o el email con solo saber el valor
-        // actual. CORREGIDO extrayendo el {id} del path con el propio
-        // AntPathMatcher y comparándolo contra el idUsuario real del que pide
-        // el cambio (resuelto desde el username del JWT, no un dato del
-        // cliente) -- ahora la ruta solo autoriza al dueño de esa cuenta.
         if ("PUT".equalsIgnoreCase(metodo)) {
             for (String patronPropio : new String[]{
                     "/api/usuarios/{id}/password", "/api/usuarios/{id}/username", "/api/usuarios/{id}/email"}) {
@@ -265,14 +202,12 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             }
         }
 
-        // Habilitación de escritura para MATRIZ DE PERMISOS (re-asignar rol de un usuario desde la Matriz)
         if (permisosUsuario.contains(normalizar("MATRIZ DE PERMISOS"))) {
             if ("PUT".equalsIgnoreCase(metodo) && pathMatcher.match("/api/usuarios/*", path)) {
                 return true;
             }
         }
 
-        // Movimientos de Caja desde Ventas y Cobros
         if (("POST".equalsIgnoreCase(metodo) || "PUT".equalsIgnoreCase(metodo)) &&
             (pathMatcher.match("/api/movimientos-caja/**", path) || pathMatcher.match("/api/caja/**", path))) {
             if (tieneAlgunPermiso(permisosUsuario, "CREAR PEDIDO", "PEDIDOS PENDIENTES", "HISTORIAL DE PEDIDOS", "CAJA")) {
@@ -280,14 +215,12 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             }
         }
 
-        // Límite de Crédito
         if ("PUT".equalsIgnoreCase(metodo) && pathMatcher.match("/api/clientes/*/limite-credito", path)) {
             if (tieneAlgunPermiso(permisosUsuario, "HISTORIAL DE PEDIDOS", "PEDIDOS PENDIENTES", "CLIENTES", "CAJA")) {
                 return true;
             }
         }
 
-        // Pagos e Imputaciones en Cuenta Corriente
         if ("POST".equalsIgnoreCase(metodo) &&
             (pathMatcher.match("/api/cuentas-corrientes/**", path) || pathMatcher.match("/api/clientes/**", path))) {
             if (tieneAlgunPermiso(permisosUsuario, "HISTORIAL DE PEDIDOS", "PEDIDOS PENDIENTES", "CLIENTES", "CAJA")) {
@@ -295,7 +228,6 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             }
         }
 
-        // 6. Evaluador por Módulo Directo
         String permisoRequerido = mapearRutaAPermiso(path);
         if (permisoRequerido == null) {
             return false;
@@ -345,58 +277,49 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
     }
 
     private String mapearRutaAPermiso(String path) {
-        // Módulo Matriz de Permisos
         if (pathMatcher.match("/api/permisos/**", path) ||
             pathMatcher.match("/api/matriz-permisos/**", path)) {
             return "Matriz de Permisos";
         }
 
-        // Módulo Clientes
         if (pathMatcher.match("/api/clientes/**", path) ||
             pathMatcher.match("/api/categorias-cliente/**", path) ||
             pathMatcher.match("/api/cuentas-corrientes/**", path)) {
             return "Clientes";
         }
 
-        // Módulo Insumos
         if (pathMatcher.match("/api/insumos/**", path) ||
             pathMatcher.match("/api/unidades-medida/**", path)) {
             return "Insumos";
         }
 
-        // Módulo Productos
         if (pathMatcher.match("/api/productos/**", path) ||
             pathMatcher.match("/api/producto-insumo/**", path) ||
             pathMatcher.match("/api/categorias/**", path)) {
             return "Productos";
         }
 
-        // Módulo Proveedores
         if (pathMatcher.match("/api/proveedores/**", path) ||
             pathMatcher.match("/api/tipos-proveedor/**", path)) {
             return "Proveedores";
         }
 
-        // Módulo Gestión de Usuarios y Empleados
         if (pathMatcher.match("/api/usuarios/**", path) ||
             pathMatcher.match("/api/tipos-documento/**", path)) {
             return "Gestión de Usuarios";
         }
 
-        // Módulo Equipos / Máquinas e Incidencias
         if (pathMatcher.match("/api/equipos/**", path) ||
             pathMatcher.match("/api/maquinas/**", path) ||
             pathMatcher.match("/api/incidencias/**", path)) {
             return "Equipos / Máquinas";
         }
 
-        // Ventas y Pedidos
         if (pathMatcher.match("/api/pedidos/historial/**", path)) return "Historial de Pedidos";
         if (pathMatcher.match("/api/pedidos/pendientes/**", path) || pathMatcher.match("/api/pedidos/*/**", path)) return "Pedidos Pendientes";
         if (pathMatcher.match("/api/pedidos/**", path)) return "Crear Pedido";
         if (pathMatcher.match("/api/comprobantes/**", path)) return "Pedidos Pendientes";
 
-        // Compras de Insumos (incluye Compras a Proveedores y sus Detalles, mismo módulo)
         if (pathMatcher.match("/api/compras-insumos/**", path) ||
             pathMatcher.match("/api/compras/**", path) ||
             pathMatcher.match("/api/compras-proveedor/**", path) ||
@@ -404,7 +327,6 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             return "Compra de Insumos";
         }
 
-        // Módulo Caja
         if (pathMatcher.match("/api/caja/**", path) ||
             pathMatcher.match("/api/turnos/**", path) ||
             pathMatcher.match("/api/movimientos-caja/**", path) ||
@@ -416,7 +338,6 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             return "Caja";
         }
 
-        // Repositorio Digital
         if (pathMatcher.match("/api/repositorio/**", path) ||
             pathMatcher.match("/api/documentos-digital/**", path) ||
             pathMatcher.match("/api/areas-curso/**", path) ||
@@ -424,32 +345,25 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             return "Repositorio Digital";
         }
 
-        // Informes
         if (pathMatcher.match("/api/informes/**", path) || pathMatcher.match("/api/reportes/**", path)) {
             return "Informes";
         }
 
-        // Historial de Actividad
         if (pathMatcher.match("/api/registro-actividad/**", path) ||
             pathMatcher.match("/api/historial-actividad/**", path) ||
             pathMatcher.match("/api/auditoria/**", path)) {
             return "Historial de Actividad";
         }
 
-        // Panel Principal
         if (pathMatcher.match("/api/dashboard/**", path) || pathMatcher.match("/api/panel/**", path)) {
             return "Panel Principal";
         }
 
-        // Respaldos: operación sensible (descarga/restauración de base de datos),
-        // queda reservada exclusivamente a ADMIN (que ya tiene bypass total más arriba).
-        // No se mapea a ningún permiso para que ningún OPERARIO pueda acceder aunque
-        // tenga el permiso "Configuración".
+
         if (pathMatcher.match("/api/respaldos/**", path)) {
             return null;
         }
 
-        // Módulo Configuración
         if (pathMatcher.match("/api/configuracion/**", path)) {
             return "Configuración";
         }

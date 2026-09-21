@@ -38,10 +38,10 @@ public class DocumentoDigital {
     private Long tamanoBytes;
 
     @Column(length = 20)
-    private String tipoArchivo; // PDF, DOCX, JPG, PNG
+    private String tipoArchivo; 
 
     @Column(length = 20, nullable = false)
-    private String estado = "Activo"; // 'Activo' o 'Inactivo'
+    private String estado = "Activo";
 
     private LocalDateTime fechaSubida;
 

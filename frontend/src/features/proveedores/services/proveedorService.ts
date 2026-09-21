@@ -33,7 +33,6 @@ export const guardarProveedor = async (proveedor: Proveedor) => {
   return res.json();
 };
 
-/* --- MÉTODOS PARA TIPOS / CATEGORÍAS DE PROVEEDOR --- */
 
 export const getTiposProveedor = async (): Promise<any[]> => {
   const res = await apiFetch(API_TIPOS_URL);

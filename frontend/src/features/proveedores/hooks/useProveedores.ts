@@ -4,7 +4,6 @@ import type { Proveedor } from '../types/Proveedor';
 
 export const useProveedores = () => {
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
-  // NUEVO (bug reportado: falta indicador de carga en las tablas).
   const [cargando, setCargando] = useState(true);
 
   const cargar = useCallback(async () => {

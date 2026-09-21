@@ -21,10 +21,9 @@ export const SuccesModal: React.FC<SuccesModalProps> = ({
 
   if (!show) return null;
 
-  // Estilos adaptativos según el tema activo
   const modalBg = isDark ? '#18181b' : '#ffffff';
   const modalText = isDark ? '#ffffff' : '#18181b';
-  const descColor = isDark ? '#a1a1aa' : '#64748b'; // Texto secundario visible y elegante en ambos modos
+  const descColor = isDark ? '#a1a1aa' : '#64748b';
   const modalBorder = isDark ? '#8e45e0' : '#cbd5e1';
 
   return (

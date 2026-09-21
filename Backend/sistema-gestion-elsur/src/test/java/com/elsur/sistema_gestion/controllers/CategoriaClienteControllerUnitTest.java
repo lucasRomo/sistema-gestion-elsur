@@ -21,18 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de CategoriaClienteController (módulo
- * Clientes, modal "Categorías"). Hasta este trabajo no existía NINGUNA suite
- * de tests para este controller -- a diferencia de la mayoría de las demás
- * entidades, esta no tiene una capa de service intermedia: la lógica de
- * negocio vive directamente en el controller.
- *
- * HALLAZGO PRINCIPAL (CORREGIDO en este pase): esta categoría (nombre y % de
- * descuento automático que se aplica en Crear Pedido) no tenía NINGUNA
- * validación -- ni nombre blanco/duplicado, ni rango del descuento. Mismo
- * criterio ya cerrado para CategoriaProducto.
- */
 @ExtendWith(MockitoExtension.class)
 class CategoriaClienteControllerUnitTest {
 
@@ -48,7 +36,6 @@ class CategoriaClienteControllerUnitTest {
         return c;
     }
 
-    // ---------- guardar (POST) ----------
 
     @Test
     @DisplayName("CORREGIDO: nombre nulo se rechaza")
@@ -123,7 +110,6 @@ class CategoriaClienteControllerUnitTest {
         verify(repository).existsByNombreIgnoreCaseAndIdCategoriaNot("Mayorista", -1);
     }
 
-    // ---------- actualizar (PUT) ----------
 
     @Test
     @DisplayName("actualizar: categoría inexistente lanza RecursoNoEncontradoException")
@@ -164,7 +150,6 @@ class CategoriaClienteControllerUnitTest {
         assertEquals(0, new BigDecimal("15").compareTo(resultado.getDescuentoAutomatico()));
     }
 
-    // ---------- eliminar ----------
 
     @Test
     @DisplayName("eliminar: categoría inexistente lanza RecursoNoEncontradoException")

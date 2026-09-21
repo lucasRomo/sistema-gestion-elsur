@@ -18,7 +18,6 @@ public class Incidencia {
     @JoinColumn(name = "id_maquina", nullable = false)
     private Maquina maquina;
 
-    // Etapa 1: Falla reportada
     @Column(columnDefinition = "TEXT", nullable = false)
     private String descripcion;
 
@@ -30,12 +29,11 @@ public class Incidencia {
     private Empleado empleadoReporta;
 
     @Column(name = "prioridad", length = 20)
-    private String prioridad = "MEDIA"; // 'BAJA', 'MEDIA', 'ALTA', 'CRITICA'
+    private String prioridad = "MEDIA"; 
 
     @Column(name = "estado_incidencia", length = 20)
-    private String estadoIncidencia = "PENDIENTE"; // 'PENDIENTE', 'MANTENIMIENTO', 'RESUELTA'
+    private String estadoIncidencia = "PENDIENTE"; 
 
-    // Etapa 2: Revisión en taller / Mantenimiento
     @Column(name = "nota_mantenimiento", columnDefinition = "TEXT")
     private String notaMantenimiento;
 
@@ -46,7 +44,6 @@ public class Incidencia {
     @JoinColumn(name = "id_empleado_mantenimiento")
     private Empleado empleadoMantenimiento;
 
-    // Etapa 3: Alta operativa y Solución
     @Column(columnDefinition = "TEXT")
     private String resolucion;
 
@@ -57,7 +54,6 @@ public class Incidencia {
     @JoinColumn(name = "id_empleado_resuelve")
     private Empleado empleadoResuelve;
 
-    // Control de Pago de Mantenimiento
     @Column(name = "pagado")
     private Boolean pagado = false;
 

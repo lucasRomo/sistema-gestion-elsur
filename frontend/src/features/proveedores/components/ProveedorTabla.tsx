@@ -21,7 +21,6 @@ export const ProveedorTabla: React.FC<ProveedorTablaProps> = ({ proveedores, onE
   const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
 
-  // Ordenamos la lista por idProveedor de forma ascendente
   const proveedoresOrdenados = [...proveedores].sort((a, b) => (a.idProveedor ?? 0) - (b.idProveedor ?? 0));
 
   return (

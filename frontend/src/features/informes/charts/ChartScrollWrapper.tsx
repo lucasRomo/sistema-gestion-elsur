@@ -1,4 +1,3 @@
-// ChartScrollWrapper.tsx
 import React from 'react';
 
 interface ChartScrollWrapperProps {
@@ -14,7 +13,6 @@ export const ChartScrollWrapper: React.FC<ChartScrollWrapperProps> = ({
   height,
   children
 }) => {
-  // Calculamos el ancho total requerido en base a la cantidad de elementos
   const minWidth = cantidadItems * anchoPorItem;
 
   return (

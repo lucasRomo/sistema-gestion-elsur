@@ -7,7 +7,6 @@ export const exportarProveedoresExcel = async (proveedores: Proveedor[]) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Gestión de Proveedores');
 
-  // 1. Definición de columnas
   worksheet.columns = [
     { header: 'ID', key: 'id' },
     { header: 'Nombre Comercial', key: 'nombreComercial' },
@@ -17,7 +16,6 @@ export const exportarProveedoresExcel = async (proveedores: Proveedor[]) => {
     { header: 'Estado', key: 'estado' },
   ];
 
-  // 2. Cargar filas
   proveedores.forEach((p) => {
     worksheet.addRow({
       id: p.idProveedor ?? '-',
@@ -29,7 +27,6 @@ export const exportarProveedoresExcel = async (proveedores: Proveedor[]) => {
     });
   });
 
-  // 3. Estilo para el encabezado
   const headerRow = worksheet.getRow(1);
   headerRow.font = { bold: true };
   headerRow.fill = {
@@ -38,7 +35,6 @@ export const exportarProveedoresExcel = async (proveedores: Proveedor[]) => {
     fgColor: { argb: 'E2E8F0' },
   };
 
-  // 4. Auto-ajuste de ancho de columnas
   worksheet.columns.forEach((column) => {
     let maxLen = 0;
 
@@ -56,7 +52,6 @@ export const exportarProveedoresExcel = async (proveedores: Proveedor[]) => {
     column.width = Math.max(maxLen + 6, 15);
   });
 
-  // 5. Descarga del archivo
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = window.URL.createObjectURL(blob);
@@ -78,17 +73,14 @@ export const exportarProveedoresPDF = (
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
 
-  // 1. Cabecera superior (Banner Oscuro)
   doc.setFillColor(24, 24, 27);
   doc.rect(0, 0, pageWidth, 28, 'F');
 
-  // Título principal
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   doc.text('INFORME DE GESTIÓN DE PROVEEDORES', margin, 12);
 
-  // Subtítulos y metadatos
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(161, 161, 170);
@@ -100,7 +92,6 @@ export const exportarProveedoresPDF = (
   doc.text(rangoTexto, margin, 20);
   doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, pageWidth - margin - 35, 20);
 
-  // 2. Construcción de la tabla
   const tableColumn = [
     'ID',
     'Nombre Comercial',

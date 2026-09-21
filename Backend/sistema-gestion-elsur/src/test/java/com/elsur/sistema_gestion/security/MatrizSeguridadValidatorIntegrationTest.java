@@ -1,10 +1,5 @@
 package com.elsur.sistema_gestion.security;
-// MOVIDO de config/ a security/, junto con MatrizSeguridadValidator. También se
-// renombra el ARCHIVO: antes era "Matrizseguridadvalidatortest .java" (minúsculas
-// y un espacio al final del nombre, aunque la clase adentro se llama
-// MatrizSeguridadValidatorIntegrationTest bien escrita) -- compilaba igual porque
-// la clase no es "public", pero es un nombre de archivo con errores de tipeo que
-// convenía corregir.
+
 
 import com.elsur.sistema_gestion.models.Permiso;
 import com.elsur.sistema_gestion.models.Rol;
@@ -26,19 +21,7 @@ import java.util.List;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Test de INTEGRACIÓN real (no unitario): levanta todo el contexto de Spring
- * -> filtro JWT real, SecurityConfig real, MatrizSeguridadValidator real ->
- * y hace peticiones HTTP de verdad contra tu base de datos de desarrollo
- * (la misma Postgres configurada en application.properties).
- *
- * REQUISITO: tener Postgres levantado localmente antes de correr esto.
- * Los usuarios/roles de prueba se crean y se BORRAN SOLOS: la clase entera
- * corre dentro de una transacción que se revierte al final de cada test
- * (@Transactional), así que nunca ensucia tu base real.
- *
- * Correrlo: mvn -Dtest=MatrizSeguridadValidatorIntegrationTest test
- */
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -51,11 +34,7 @@ class MatrizSeguridadValidatorIntegrationTest {
     @Autowired private JwtService jwtService;
     @Autowired private PasswordEncoder passwordEncoder;
 
-    /**
-     * Crea un usuario de prueba con un rol nuevo que solo tiene los permisos
-     * indicados (buscándolos entre los que YA existen en tu base, los que
-     * carga DataInitializer) y devuelve un JWT real y válido para ese usuario.
-     */
+
     private String tokenParaUsuarioDePrueba(String rolNombre, List<String> nombresPermisos, String username) {
         List<Permiso> permisosExistentes = permisoRepository.findAll().stream()
                 .filter(p -> nombresPermisos.contains(p.getNombrePermiso()))
@@ -75,7 +54,6 @@ class MatrizSeguridadValidatorIntegrationTest {
         return jwtService.generarToken(usuario);
     }
 
-    // ---------- Casos negativos: sin el permiso, tiene que dar 403 ----------
 
     @Test
     void operario_sin_permiso_de_compras_recibe_403_en_compras_proveedor() throws Exception {
@@ -110,7 +88,6 @@ class MatrizSeguridadValidatorIntegrationTest {
                 .andExpect(status().is4xxClientError());
     }
 
-    // ---------- Casos positivos: con el permiso, tiene que dejarlo pasar ----------
 
     @Test
     void operario_con_compra_de_insumos_puede_entrar_a_compras_proveedor() throws Exception {

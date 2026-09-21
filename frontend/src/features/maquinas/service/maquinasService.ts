@@ -4,13 +4,6 @@ import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api
 const API_MAQUINAS = `${API_BASE_URL}/maquinas`;
 const API_INCIDENCIAS = `${API_BASE_URL}/incidencias`;
 
-// CORREGIDO: se quitó el fallback silencioso a "1" (atribuía incidencias a un
-// usuario/empleado arbitrario cuando no había sesión reconocible). Ahora, si no se
-// puede determinar el id, se devuelve undefined y el campo queda sin enviar en vez
-// de mandar un id inventado. NOTA: esta función sigue mezclando dos espacios de id
-// distintos (idEmpleado vs idUsuario) como si fueran intercambiables -- eso es un
-// problema aparte del módulo de Incidencias/Empleados, fuera del alcance de este
-// pase sobre Clientes/Proveedores/Máquinas.
 export const getUsuarioActualId = (): number | undefined => {
   const usrStr = localStorage.getItem('usuario_logueado');
   if (usrStr) {
@@ -31,10 +24,6 @@ export const fetchMaquinas = async (): Promise<Maquina[]> => {
 };
 
 export const guardarMaquinaAPI = async (maquina: Maquina & { observacion?: string }): Promise<void> => {
-  // CORREGIDO: nunca se enviaba idUsuario al backend, así que el 100% de las
-  // altas/ediciones de máquinas quedaban mal atribuidas en el historial (el service
-  // caía en el fallback de "primer usuario de la base"). Se replica el mismo patrón
-  // ya usado en clienteService.ts / proveedorService.ts.
   const usuarioGuardado = localStorage.getItem('usuario_logueado');
   const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
   const idUsuarioActual = usuarioObj?.idUsuario || usuarioObj?.id_usuario;

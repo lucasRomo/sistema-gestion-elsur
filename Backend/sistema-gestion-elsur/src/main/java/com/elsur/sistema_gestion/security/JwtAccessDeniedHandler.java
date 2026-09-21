@@ -12,15 +12,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
 
-// MOVIDO de config/ a security/ (agrupado con el resto de la infraestructura JWT).
-// Sin cambios de comportamiento.
-/**
- * Qué responde Spring Security cuando el token SÍ es válido, pero el usuario
- * no tiene permiso para esa ruta/método (MatrizSeguridadValidator devolvió
- * AuthorizationDecision(false)). Sin este componente, Spring devuelve un 403
- * en blanco; acá se arma un JSON 403 consistente con el resto de la API.
- * Se conecta en SecurityConfig con .exceptionHandling(...).accessDeniedHandler(...).
- */
 @Component
 public class JwtAccessDeniedHandler implements AccessDeniedHandler {
 

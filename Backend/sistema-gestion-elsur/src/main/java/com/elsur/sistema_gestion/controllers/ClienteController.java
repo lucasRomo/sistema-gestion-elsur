@@ -6,12 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-// CORREGIDO: @CrossOrigin(origins = "*") permitía que cualquier sitio del mundo
-// llamara a este controller, pisando/duplicando la config de CORS restringida a
-// orígenes explícitos que ya se armó en SecurityConfig (ver app.cors.allowed-origins).
-// Una anotación @CrossOrigin a nivel de controller/método tiene prioridad sobre la
-// configuración global de Spring MVC, así que dejarla acá neutralizaba ese arreglo
-// para estas rutas puntuales.
+
 @RestController
 @RequestMapping("/api/clientes")
 public class ClienteController {

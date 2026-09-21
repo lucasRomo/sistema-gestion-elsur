@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Layouts, Contextos y Hooks globales
 import { SidebarLayout } from '../../../../components/layouts/SidebarLayout';
 import { SuccesModal } from '../../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../../Context/ThemeContext';
 
-// Servicios globales de otros módulos
 import { empleadoService } from '../../../../services/empleadoService';
 import { CuentaCorrienteModal } from '../../../clientes/components/CuentaCorrienteModal';
 import { VistaTicketPagoModal } from '../../../../components/modals/VistaTicketPagoModal';
 
-// Hooks y Servicios locales de 'pedidospendientes'
 import { usePedidosPendientes } from '../hooks/usePedidosPendientes';
 import { PedidoPendienteService } from '../service/pedidoPendienteService';
 
-// Componentes y Modales locales de 'pedidospendientes'
 import { FiltrosPedidos } from '../components/FiltrosPedidos';
 import { TarjetaPedido } from '../components/TarjetaPedido'; 
 import { ModalCambioEstado } from '../modals/ModalCambioEstado';
@@ -34,14 +30,12 @@ export const PedidosPendientesView: React.FC = () => {
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
 
-  // Estados
   const [empleados, setEmpleados] = useState<any[]>([]);
   const [filtroCliente, setFiltroCliente] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
   const [pedidoMermaSel, setPedidoMermaSel] = useState<any | null>(null);
   const [filtroEmpleado, setFiltroEmpleado] = useState('');
 
-  // Estados de Modales y Pedidos
   const [pedidoEstadoSel, setPedidoEstadoSel] = useState<any>(null);
   const [nuevoEstadoPendiente, setNuevoEstadoPendiente] = useState<string>('');
   const [pedidoPagoSel, setPedidoPagoSel] = useState<any>(null);
@@ -49,7 +43,6 @@ export const PedidosPendientesView: React.FC = () => {
   const [pedidoGestionComprobanteSel, setPedidoGestionComprobanteSel] = useState<any | null>(null);
   const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<any>(null);
 
-  // Estados de Notificación y Confirmación
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
   const [ticketPagoSel, setTicketPagoSel] = useState<{ pedido: any; movimiento?: any } | null>(null);
   const [sucesoError, setSucesoError] = useState<{ show: boolean; mensaje: string }>({ show: false, mensaje: '' });
@@ -298,7 +291,6 @@ export const PedidosPendientesView: React.FC = () => {
     }
   };
 
-  // Filtrado de pedidos
   const pedidosFiltrados = pedidos.filter(p => {
     const esVentaRapida = (p.observaciones?.toLowerCase().includes('venta rápida') || 
                          p.observacion?.toLowerCase().includes('venta rápida') || 
@@ -394,7 +386,6 @@ export const PedidosPendientesView: React.FC = () => {
           )}
         </div>
 
-        {/* Botonera Inferior Estandarizada */}
         <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-2 border-secondary pb-1 mt-auto">
           <button
             onClick={() => navigate('/dashboard')}
@@ -411,7 +402,6 @@ export const PedidosPendientesView: React.FC = () => {
         </div>
       </div>
 
-      {/* SECCIÓN DE MODALES */}
       {pedidoEstadoSel && (
         <ModalCambioEstado 
           pedido={pedidoEstadoSel}
@@ -448,7 +438,6 @@ export const PedidosPendientesView: React.FC = () => {
         />
       )}
 
-      {/* VISTA TICKET PAGO (CAJA) */}
       {ticketPagoSel && (
         <VistaTicketPagoModal 
           pedido={ticketPagoSel.pedido}
@@ -457,7 +446,6 @@ export const PedidosPendientesView: React.FC = () => {
         />
       )}
 
-      {/* GESTIÓN DE COMPROBANTES */}
       {pedidoGestionComprobanteSel && (
         <ModalGestionarComprobantes
           pedido={pedidoGestionComprobanteSel}
@@ -470,7 +458,6 @@ export const PedidosPendientesView: React.FC = () => {
         />
       )}
 
-      {/* GESTIÓN DE MERMAS */}
       {pedidoMermaSel && (
         <ModalGestionMermas
           pedido={pedidoMermaSel}
@@ -482,7 +469,6 @@ export const PedidosPendientesView: React.FC = () => {
         />
       )}
 
-      {/* MODAL ERROR STOCK */}
       <ModalErrorStock 
         show={sucesoError.show}
         mensaje={sucesoError.mensaje}
@@ -492,14 +478,12 @@ export const PedidosPendientesView: React.FC = () => {
         }}
       />
 
-      {/* MODAL CONFIRMAR DESVINCULAR COMPROBANTE */}
       <ModalConfirmarDesvincular 
         show={confirmarDesvincular.show}
         onClose={() => setConfirmarDesvincular({ show: false, idComprobante: null })}
         onConfirm={ejecutarEliminarComprobante}
       />
 
-      {/* MODAL AVISO CUENTA CORRIENTE */}
       <ModalAvisoCuentaCorriente 
         show={modalAvisoCuentaCorriente.show}
         isDarkMode={isDarkMode}

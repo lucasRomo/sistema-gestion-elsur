@@ -74,7 +74,6 @@ export const TablaDocumentos: React.FC<Props> = ({
                   <td className="py-3 px-3 text-truncate" style={{ maxWidth: '120px' }}>{doc.area?.nombreArea || 'S/N'}</td>
                   <td className="py-3 px-3 text-truncate" style={{ maxWidth: '120px' }}>{doc.area?.institucion?.nombreInstitucion || 'S/N'}</td>
                   <td className="py-3 px-3 text-center">
-                    {/* Botón para abrir Receta/Insumos (si tiene producto asociado) */}
                     {doc.producto && (
                       <button
                         className="btn btn-sm text-warning border-0 p-0 me-2"

@@ -32,11 +32,6 @@ export const repositorioService = {
       body: JSON.stringify({ nombreInstitucion, tipoInstitucion }),
     });
     if (!res.ok) {
-      // FIX: antes se descartaba el mensaje real del backend (ej. "Ya existe una
-      // institución con ese nombre") y se tiraba siempre el mismo texto genérico
-      // 'Error al crear institución' -- el usuario nunca se enteraba del motivo
-      // real del rechazo (nombre vacío, duplicado, etc.). Ahora se usa
-      // extraerMensajeError, igual que ya hace cajaService en el resto del sistema.
       throw new Error(await extraerMensajeError(res, 'Error al crear institución'));
     }
     return res.json();

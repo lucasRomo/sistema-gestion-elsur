@@ -6,7 +6,6 @@ let mensajeActual = 'Procesando...';
 let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 const listeners = new Set<Listener>();
 
-// Snapshot cacheado: solo se reemplaza cuando cambian los valores reales
 let snapshotActual: Snapshot = { visible: false, mensaje: mensajeActual };
 
 const actualizarSnapshot = () => {

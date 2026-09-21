@@ -1,10 +1,8 @@
-// src/hooks/useUsuarios.ts
 import { useState, useEffect } from 'react';
 import { getUsuarios, guardarUsuario } from '../services/usuarioService';
 
 export const useUsuarios = () => {
   const [usuarios, setUsuarios] = useState<any[]>([]);
-  // NUEVO (bug reportado: falta indicador de carga en las tablas).
   const [cargando, setCargando] = useState(true);
 
   const cargar = async () => {
@@ -18,7 +16,7 @@ export const useUsuarios = () => {
 
   const guardar = async (usuario: any) => {
     await guardarUsuario(usuario);
-    await cargar(); // Refresca la tabla automáticamente
+    await cargar();
   };
 
   useEffect(() => { cargar(); }, []);

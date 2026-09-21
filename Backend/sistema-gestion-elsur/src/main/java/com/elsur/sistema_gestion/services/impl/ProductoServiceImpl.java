@@ -11,6 +11,8 @@ import com.elsur.sistema_gestion.repositories.ProductoRepository;
 import com.elsur.sistema_gestion.repositories.UsuarioRepository;
 import com.elsur.sistema_gestion.services.ProductoService;
 import com.elsur.sistema_gestion.services.RegistroActividadService;
+import com.elsur.sistema_gestion.models.DocumentoDigital;
+import com.elsur.sistema_gestion.repositories.DocumentoDigitalRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class ProductoServiceImpl implements ProductoService {
@@ -37,16 +40,29 @@ public class ProductoServiceImpl implements ProductoService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private DocumentoDigitalRepository documentoDigitalRepository;
+
     @Override
     public List<Producto> listarTodos() {
-        List<Producto> productos = productoRepository.findAll();
-        for (Producto p : productos) {
-            if (Boolean.TRUE.equals(p.getStockVinculado())) {
-                p.setStock(calcularStockDesdeInsumos(p.getIdProducto()));
-            }
+    List<Producto> productos = productoRepository.findAll();
+    for (Producto p : productos) {
+        if (Boolean.TRUE.equals(p.getStockVinculado())) {
+            p.setStock(calcularStockDesdeInsumos(p.getIdProducto()));
         }
-        return productos;
+        sincronizarEstadoConRepositorioDigital(p);
     }
+    return productos;
+    }
+
+    private void sincronizarEstadoConRepositorioDigital(Producto p) {
+    if (!"Activo".equalsIgnoreCase(p.getEstado())) return; 
+
+    Optional<DocumentoDigital> doc = documentoDigitalRepository.findByProducto_IdProducto(p.getIdProducto());
+    if (doc.isPresent() && !"Activo".equalsIgnoreCase(doc.get().getEstado())) {
+        p.setEstado("Inactivo");
+        productoRepository.save(p);
+    }}
 
     private Integer calcularStockDesdeInsumos(Integer idProducto) {
         List<ProductoInsumo> receta = productoInsumoRepository.findByIdIdProducto(idProducto);

@@ -15,7 +15,7 @@ public class RespaldoLog {
     private String nombreArchivo;
     private String tamanio;
     private String usuarioOperador;
-    private String tipo; // "Manual" o "Contingencia"
+    private String tipo; 
 
     public RespaldoLog() {}
 
@@ -27,7 +27,6 @@ public class RespaldoLog {
         this.tipo = tipo;
     }
 
-    // Getters y Setters
     public Integer getIdRespaldo() { return idRespaldo; }
     public void setIdRespaldo(Integer idRespaldo) { this.idRespaldo = idRespaldo; }
 

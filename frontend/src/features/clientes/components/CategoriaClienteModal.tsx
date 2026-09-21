@@ -14,7 +14,6 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables adaptativas según el tema
   const modalBg = isDark ? '#1b1b1b' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const titleColor = isDark ? '#ffffff' : '#0f172a';
@@ -25,7 +24,6 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   const inputTextColor = isDark ? 'text-white' : 'text-dark';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
 
-  // Estilos de tabla limpia adaptativa
   const tableContainerBg = isDark ? '#1a1a1c' : '#ffffff';
   const tableText = isDark ? '#ffffff' : '#0f172a';
   const tableContainerBorder = isDark ? '#2d2d30' : '#e2e8f0';
@@ -34,14 +32,12 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   const hoverRowBg = isDark ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc';
   const emptyTextColor = isDark ? 'text-white-50' : 'text-muted';
 
-  // Estados principales
   const [categorias, setCategorias] = useState<CategoriaCliente[]>([]);
   const [nombre, setNombre] = useState('');
   const [descuento, setDescuento] = useState<number | string>(0);
   const [errorCrear, setErrorCrear] = useState('');
   const [guardandoCrear, setGuardandoCrear] = useState(false);
 
-  // Estados para el Modal de Edición
   const [mostrarModalEditar, setMostrarModalEditar] = useState(false);
   const [categoriaEditar, setCategoriaEditar] = useState<CategoriaCliente | null>(null);
   const [editNombre, setEditNombre] = useState('');
@@ -49,13 +45,11 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   const [errorEditar, setErrorEditar] = useState('');
   const [guardandoEditar, setGuardandoEditar] = useState(false);
 
-  // Estados para el Modal de Confirmación de Eliminación
   const [idEliminar, setIdEliminar] = useState<number | null>(null);
   const [mostrarModalConfirmar, setMostrarModalConfirmar] = useState(false);
   const [errorEliminar, setErrorEliminar] = useState('');
   const [eliminando, setEliminando] = useState(false);
 
-  // Estado para el Modal de Éxito
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
 
@@ -89,10 +83,6 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
     setMensajeExito("Categoría creada con éxito");
     setMostrarModalExito(true);
   } catch (err) {
-    // CORREGIDO: antes el error solo se logueaba con console.error, sin ningún
-    // aviso visible -- las validaciones nuevas del backend (nombre vacío/duplicado,
-    // descuento fuera de rango) fallaban en completo silencio desde el punto de
-    // vista del usuario (el formulario simplemente no se limpiaba, sin explicación).
     console.error(err);
     setErrorCrear(extraerMensaje(err, 'No se pudo crear la categoría.'));
   } finally {
@@ -125,14 +115,12 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
     setMensajeExito("Categoría actualizada con éxito");
     setMostrarModalExito(true);
   } catch (err) {
-    // CORREGIDO: mismo caso que handleCrear -- antes se perdía en la consola.
     console.error(err);
     setErrorEditar(extraerMensaje(err, 'No se pudo actualizar la categoría.'));
   } finally {
     setGuardandoEditar(false);
   }};
 
-  // Solicitar confirmación personalizada
   const solicitarEliminar = (id?: number) => {
     if (!id) return;
     setIdEliminar(id);
@@ -140,7 +128,6 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
     setMostrarModalConfirmar(true);
   };
 
-  // Confirmar y procesar eliminación
   const confirmarEliminacion = async () => {
     if (!idEliminar || eliminando) return;
     setErrorEliminar('');
@@ -154,11 +141,6 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
       setMensajeExito("Categoría eliminada con éxito");
       setMostrarModalExito(true);
     } catch (err) {
-      // CORREGIDO: antes el error se logueaba y el modal de confirmación se cerraba
-      // igual, como si la eliminación hubiera funcionado -- el usuario nunca se
-      // enteraba de que, por ejemplo, la categoría seguía en uso por un cliente
-      // (409 ConflictoDeIntegridad) y la eliminación en realidad había fallado.
-      // Ahora el modal de confirmación permanece abierto mostrando el motivo real.
       console.error(err);
       setErrorEliminar(extraerMensaje(err, 'No se pudo eliminar la categoría.'));
     } finally {
@@ -168,7 +150,6 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
 
   return (
     <>
-      {/* Modal Principal */}
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1050 }}>
         <div className="modal-dialog modal-lg modal-dialog-centered">
           <div 
@@ -331,7 +312,6 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
         </div>
       </div>
 
-      {/* --- SUB-MODAL DE EDICIÓN --- */}
       {mostrarModalEditar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
@@ -399,7 +379,6 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
         </div>
       )}
 
-      {/* --- SUB-MODAL DE CONFIRMACIÓN DE ELIMINACIÓN --- */}
       {mostrarModalConfirmar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1065 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
@@ -442,7 +421,6 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
         </div>
       )}
 
-      {/* --- SUB-MODAL DE ÉXITO --- */}
       {mostrarModalExito && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">

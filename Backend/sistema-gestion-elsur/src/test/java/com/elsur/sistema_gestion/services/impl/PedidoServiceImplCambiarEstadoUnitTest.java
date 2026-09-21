@@ -17,28 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de PedidoServiceImpl.cambiarEstadoPedido() --
- * el método que usa el módulo "Historial de Pedidos" del sidebar cuando se
- * procesa una devolución desde ModalDevolucionPedido.tsx ("Volver a Hacer" ->
- * nuevoEstado=PENDIENTE, "Marcar como Devuelto" -> nuevoEstado=DEVUELTO).
- *
- * GAP DE COBERTURA detectado al armar la planilla HistorialPedidos_TestCase.xlsx:
- * ninguna suite existente probaba este método -- toda la cobertura previa de
- * cambios de estado pasaba indirectamente por guardar()/procesarDescuentoStock()
- * (alta de pedidos), nunca por el camino real de "Historial > Devolución".
- *
- * COMPORTAMIENTO VERIFICADO de este trabajo (correcto, por diseño -- NO es un bug):
- * devolver un pedido que ya estaba ENTREGADO (con su stock ya descontado) a
- * PENDIENTE o a DEVUELTO NO restaura ni el stock de insumos ni el de productos
- * directos -- cambiarEstadoPedido() solo dispara procesarDescuentoStock() cuando
- * el NUEVO estado es FINALIZADO/ENTREGADO y el pedido no estaba ya finalizado;
- * no existe ningún camino simétrico que reintegre stock cuando el pedido sale
- * de un estado final. Esto es intencional: el material ya consumido/entregado
- * se considera pérdida (error de fabricación, producto dañado, etc.) y no es
- * reutilizable, por lo que NO debe reingresar al inventario. Estos tests
- * verifican y fijan (pinning) ese comportamiento esperado.
- */
+
 @ExtendWith(MockitoExtension.class)
 class PedidoServiceImplCambiarEstadoUnitTest {
 
@@ -86,7 +65,6 @@ class PedidoServiceImplCambiarEstadoUnitTest {
         return p;
     }
 
-    // ==================== Comportamiento correcto: "Volver a Hacer" NO restaura stock (material perdido) ====================
 
     @Test
     @DisplayName("TC_HP - Comportamiento correcto: devolver un pedido ENTREGADO a PENDIENTE ('Volver a Hacer') " +
@@ -99,9 +77,7 @@ class PedidoServiceImplCambiarEstadoUnitTest {
         Pedido resultado = pedidoService.cambiarEstadoPedido(700, "PENDIENTE", "Reclamo del cliente", 1, false);
 
         assertEquals("PENDIENTE", resultado.getEstado());
-        // Comportamiento esperado (no es un gap): sigue marcado como ya descontado,
-        // y ningún repositorio de stock fue tocado, porque el material consumido en la
-        // fabricación original se perdió (error/falla) y no puede reingresar al inventario.
+
         assertTrue(resultado.isStockDescontado(), "stockDescontado se mantiene en true: no corresponde reversión");
         verifyNoInteractions(insumoRepository, productoRepository, productoInsumoRepository);
         verify(historialRepository).save(any(HistorialEstadoPedido.class));
@@ -117,14 +93,11 @@ class PedidoServiceImplCambiarEstadoUnitTest {
         Pedido resultado = pedidoService.cambiarEstadoPedido(701, "DEVUELTO", "Producto con fallas", 1, false);
 
         assertEquals("DEVUELTO", resultado.getEstado());
-        // El material ya se dio de baja al entregar el pedido original; al ser pérdida
-        // por error y no reutilizable, es correcto que no se reintegre al reingresar
-        // el pedido como DEVUELTO.
+
         assertTrue(resultado.isStockDescontado());
         verifyNoInteractions(insumoRepository, productoRepository, productoInsumoRepository);
     }
 
-    // ==================== Camino ya cubierto indirectamente, ahora testeado directo ====================
 
     @Test
     @DisplayName("TC_HP - Cambiar a ENTREGADO desde un estado no final SÍ descuenta stock (camino normal)")
@@ -148,7 +121,7 @@ class PedidoServiceImplCambiarEstadoUnitTest {
     @Test
     @DisplayName("TC_HP - Cambiar a FINALIZADO cuando el pedido YA estaba en un estado final no vuelve a descontar stock")
     void cambiarEstadoPedido_yaFinalizado_noVuelveADescontar() {
-        Pedido pedido = pedidoEntregadoConStockDescontado(703); // ya ENTREGADO, stockDescontado=true
+        Pedido pedido = pedidoEntregadoConStockDescontado(703); 
 
         when(pedidoRepository.findById(703)).thenReturn(Optional.of(pedido));
         when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuario(1)));
@@ -159,7 +132,6 @@ class PedidoServiceImplCambiarEstadoUnitTest {
         verifyNoInteractions(insumoRepository, productoRepository, productoInsumoRepository);
     }
 
-    // ==================== Inconsistencia con agregarPago(): usuario inexistente NO tira excepción ====================
 
     @Test
     @DisplayName("TC_HP - GAP/inconsistencia: idUsuario inexistente NO lanza excepción acá (a diferencia de agregarPago) " +
@@ -175,8 +147,5 @@ class PedidoServiceImplCambiarEstadoUnitTest {
                 pedidoService.cambiarEstadoPedido(704, "DEVUELTO", "obs", 999, false));
 
         assertEquals("DEVUELTO", resultado.getEstado());
-        // A diferencia de PedidoServiceImplAgregarPagoUnitTest.agregarPago_usuarioInexistente_lanzaExcepcion,
-        // acá NO se rechaza: el historial queda atribuido a un usuario distinto del que efectivamente
-        // hizo la devolución, sin ningún aviso.
     }
 }

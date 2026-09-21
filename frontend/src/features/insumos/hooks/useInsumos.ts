@@ -5,7 +5,6 @@ import type { Insumo } from '../types/Insumo';
 
 export const useInsumos = () => {
   const [insumos, setInsumos] = useState<Insumo[]>([]);
-  // NUEVO (bug reportado: falta indicador de carga en las tablas).
   const [cargando, setCargando] = useState(true);
 
   const cargar = async () => {

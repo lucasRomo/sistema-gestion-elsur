@@ -7,7 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, Integer> {
 
-    // Usado para validar nombres duplicados (insensible a mayúsculas/minúsculas),
-    // excluyendo el propio producto cuando se trata de una edición.
     boolean existsByNombreProductoIgnoreCaseAndIdProductoNot(String nombreProducto, Integer idProducto);
 }

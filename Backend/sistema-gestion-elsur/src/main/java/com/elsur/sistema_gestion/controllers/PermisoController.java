@@ -31,11 +31,6 @@ public class PermisoController {
         return permisoService.listarRoles();
     }
 
-    // Perfiles "PERFIL_<usuario>" sin ningún usuario asignado hoy. El listado
-    // normal de arriba (y matrizPermisosService.obtenerRoles() en el frontend)
-    // los excluye a propósito del selector de perfiles globales; este endpoint
-    // aparte es lo que permite verlos y limpiarlos (con el mismo DELETE
-    // /roles/{idRol} de siempre) en vez de quedar invisibles para siempre.
     @GetMapping("/roles/huerfanos")
     public List<Rol> listarPerfilesHuerfanos() {
         return rolService.listarPerfilesPersonalizadosHuerfanos();
@@ -53,20 +48,12 @@ public class PermisoController {
         return ResponseEntity.ok(permisosActivos);
     }
 
-    // Antes tenía un try/catch (Exception e) que devolvía siempre 500. Ahora,
-    // si el rol no existe, PermisoServiceImpl tira RecursoNoEncontradoException
-    // (404) y el GlobalExceptionHandler arma la respuesta.
     @PostMapping("/rol/{idRol}/actualizar")
     public ResponseEntity<?> actualizarPermisosRol(@PathVariable Integer idRol, @RequestBody List<Integer> permisosIds) {
         permisoService.actualizarPermisosRol(idRol, permisosIds);
         return ResponseEntity.ok().body(Map.of("mensaje", "Matriz actualizada correctamente"));
     }
 
-    // Antes el chequeo de "no se pueden borrar los roles por defecto" y el
-    // try/catch para el rol-en-uso vivían acá. Ahora los dos viven en
-    // RolServiceImpl.eliminar (SolicitudInvalidaException / 400 y
-    // ConflictoDeIntegridadException / 409 respectivamente), así valen para
-    // cualquier lugar que borre un rol, no solo para este endpoint.
     @DeleteMapping("/roles/{idRol}")
     public ResponseEntity<?> eliminarRol(@PathVariable Integer idRol) {
         rolService.eliminar(idRol);

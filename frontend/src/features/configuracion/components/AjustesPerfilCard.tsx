@@ -1,4 +1,3 @@
-// src/features/configuracion/components/AjustesPerfilCard.tsx
 import React from 'react';
 import { useConfiguracion } from '../hooks/useConfiguracion';
 
@@ -40,7 +39,6 @@ export const AjustesPerfilCard: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Menú Tabs */}
         <div className="btn-group w-100 mb-4 p-1 rounded" style={{ backgroundColor: subBg, border: `1px solid ${cardBorder}` }}>
           <button
             type="button"
@@ -68,7 +66,6 @@ export const AjustesPerfilCard: React.FC<Props> = ({
           </button>
         </div>
 
-        {/* FORMULARIO 1: CAMBIAR USUARIO */}
         {opcionPerfil === 'usuario' && (
           <div>
             <h5 className="fw-bold mb-3" style={{ color: '#8e45e0' }}>
@@ -116,7 +113,6 @@ export const AjustesPerfilCard: React.FC<Props> = ({
           </div>
         )}
 
-        {/* FORMULARIO 2: CAMBIAR CONTRASEÑA */}
         {opcionPerfil === 'password' && (
           <div>
             <h5 className="fw-bold mb-3" style={{ color: '#8e45e0' }}>
@@ -176,7 +172,6 @@ export const AjustesPerfilCard: React.FC<Props> = ({
           </div>
         )}
 
-        {/* FORMULARIO 3: CAMBIAR EMAIL */}
         {opcionPerfil === 'email' && (
           <div>
             <h5 className="fw-bold mb-3" style={{ color: '#8e45e0' }}>

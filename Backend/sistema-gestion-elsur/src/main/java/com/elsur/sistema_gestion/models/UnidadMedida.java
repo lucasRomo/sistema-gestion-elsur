@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "unidad_medida") // <--- Cambiar 'unidades_medida' a 'unidad_medida'
+@Table(name = "unidad_medida") 
 public class UnidadMedida {
 
     @Id

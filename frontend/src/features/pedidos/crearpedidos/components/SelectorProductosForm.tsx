@@ -16,10 +16,6 @@ interface Props {
   setCategoriaSeleccionadaId: (id: string) => void;
   maquinas?: Maquina[];
   pedidosPendientes?: any[];
-  // confirmoMaquinaNoDisponible=true solo cuando se llega acá por el botón
-  // "Continuar de todos modos" del aviso de máquina -- permite que quien arma
-  // el pedido (CrearPedidoView) sepa que debe mandar esa confirmación al
-  // backend si el pedido termina naciendo ya en estado ENTREGADO.
   onSiguiente: (confirmoMaquinaNoDisponible?: boolean) => void;
   onCancelar: () => void;
 }
@@ -54,7 +50,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
   const [mostrarDropdown, setMostrarDropdown] = useState(false);
   const [cantidad, setCantidad] = useState('1');
 
-  // Modales de validación
   const [showModalMaquinas, setShowModalMaquinas] = useState(false);
   const [conflictosMaquinas, setConflictosMaquinas] = useState<{
     productoNombre: string;
@@ -336,7 +331,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
           Tabla para Calcular y Elegir Productos
         </h2>
         
-        {/* Búsqueda y Selección */}
         <div className="row g-3 mb-4 align-items-end">
           <div className="col-md-7 position-relative">
             <label className="form-label small fw-bold" style={{ color: mutedText }}>Buscar Producto:</label>
@@ -408,7 +402,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Tabla / Lista de Ítems */}
         <div className="mb-4">
           <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted" style={{ borderColor: borderTheme}}>
             <div style={{ width: '40%' }}>Lista de Productos:</div>
@@ -442,7 +435,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Categorías de Cliente */}
         <div className="mb-4">
           <label className="form-label small fw-bold d-flex align-items-center justify-content-between">
             <span><i className="bi bi-tags-fill me-1" style={{ color: "#27ace6" }}></i> Categoría de Cliente / Descuento:</span>
@@ -469,7 +461,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
           </select>
         </div>
 
-        {/* Cómputo Total */}
         <div className="p-3 rounded mb-4" style={{ backgroundColor: cardSectionBg, border: `1px solid ${borderTheme}` }}>
           <div className="d-flex justify-content-between mb-1 small">
             <span>Subtotal Productos:</span>
@@ -491,7 +482,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Acciones */}
         <div className="d-flex justify-content-between mt-3">
           <button className="btn btn-danger px-4 fw-semibold" onClick={onCancelar}>
             Cancelar
@@ -506,7 +496,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Impacto Estimado en Stock */}
       <div 
         className="card p-4 w-100 rounded mt-2 shadow-sm" 
         style={{ maxWidth: '1570px', backgroundColor: containerBg, color: textPrimary, border: `1px solid ${borderTheme}` }}
@@ -515,22 +504,13 @@ export const SelectorProductosForm: React.FC<Props> = ({
           <i className="bi bi-boxes text-info fs-5"></i>
           <span className="small fw-bold">Impacto Estimado en el Stock de Insumos y Productos:</span>
         </div>
-        {/* CORREGIDO: el margen de respaldo por mermas (MARGEN_MERMA_RESPALDO = 5,
-            más abajo) ya se restaba de "Stock Resultante" antes de este cambio, pero
-            no se avisaba en ningún lado de dónde salía esa diferencia -- para quien
-            mira la tabla, esas 5 unidades "desaparecían" sin explicación. Se deja
-            explícito acá y en el encabezado de la columna. */}
-        <div className="small mb-3" style={{ color: mutedText }}>
-          <i className="bi bi-info-circle me-1"></i>
-          El "Stock Resultante" ya descuenta un margen de respaldo de <b>+5 unidades</b> por mermas, además de lo reservado en pedidos pendientes.
-        </div>
 
         <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted" style={{ borderColor: borderTheme }}>
           <div style={{ width: '25%' }}>Insumo / Producto:</div>
           <div style={{ width: '18%' }}>Unidad de Medida:</div>
           <div style={{ width: '18%' }}>Reservados:</div>
           <div style={{ width: '18%' }}>Stock Actual:</div>
-          <div style={{ width: '21%' }}>Stock Resultante (–5 margen):</div>
+          <div style={{ width: '21%' }}>Stock Resultante (+5 Respaldo por Merma):</div>
         </div>
 
         <div style={{ height: '100px', overflowY: 'auto' }}>
@@ -575,7 +555,6 @@ export const SelectorProductosForm: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Modales de Validación */}
       {showModalCantidadInvalida && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered">

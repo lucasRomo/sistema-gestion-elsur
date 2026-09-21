@@ -1,28 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Layout global
 import { SidebarLayout } from '../../../../components/layouts/SidebarLayout';
 
-// Contextos y Hooks globales
 import { useTheme } from '../../../../Context/ThemeContext';
 import { useIsMobile } from '../../../../hook/useIsMobile';
 
-// Hooks y Servicios locales de 'historialpedidos'
 import { useHistorialPedidos } from '../hooks/useHistorialPedidos';
 import { historialPedidoService } from '../service/historialPedidoService';
 
-// Componentes Modularizados locales de 'historialpedidos'
 import { FiltrosHistorial } from '../components/FiltrosHistorial';
 import { FilaHistorial } from '../components/FilaHistorial';
 
-// Modales locales de 'historialpedidos'
 import { ModalAuditoriaPedido } from '../modals/ModalAuditoriaPedido';
 import { VistaTicketModal } from '../../general/modals/VistaTicketModal';
 import { ModalHistorialMermas } from '../modals/ModalHistorialMermas';
 import { ModalDevolucionPedido } from '../modals/ModalDevolucionPedido';
 
-// Modales de otros módulos / compartidos
 import { VistaTicketPagoModal } from '../../../../components/modals/VistaTicketPagoModal';
 import { CuentaCorrienteModal } from '../../../clientes/components/CuentaCorrienteModal';
 
@@ -41,21 +35,17 @@ export const HistorialPedidosPage: React.FC = () => {
   const { pedidos, cargando, recargarHistorial } = useHistorialPedidos();
   const navigate = useNavigate();
   
-  // Estados para control de modales
   const [pedidoAuditoria, setPedidoAuditoria] = useState<any>(null);
   const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<any>(null);
   const [verTicketPedido, setVerTicketPedido] = useState<any>(null);
   const [ticketPagoSeleccionado, setTicketPagoSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [pedidoMermas, setPedidoMermas] = useState<any>(null);
 
-  // Estado para el modal de devolución
   const [pedidoDevolucion, setPedidoDevolucion] = useState<any>(null);
 
-  // Filtros
   const [filtroTexto, setFiltroTexto] = useState('');
   const [filtroEstadoHistorial, setFiltroEstadoHistorial] = useState('TODOS');
 
-  // Estado de Suceso / Notificación
   const [suceso, setSuceso] = useState<{ show: boolean; titulo: string; mensaje: string; tipo: string }>({ 
     show: false, 
     titulo: '', 
@@ -67,7 +57,6 @@ export const HistorialPedidosPage: React.FC = () => {
     setPedidoMermas(pedido);
   };
 
-  // Operaciones de Servicio
   const handleAbrirAuditoria = async (idPedido: number) => {
     try {
       const pedidoCompleto = await historialPedidoService.obtenerPorId(idPedido);
@@ -214,14 +203,12 @@ export const HistorialPedidosPage: React.FC = () => {
     <SidebarLayout activeItem="Historial de Pedidos">
       <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
         
-        {/* Encabezado Superior */}
         <div className="d-flex justify-content-center align-items-center mb-4 position-relative d-print-none">
           <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
             Historial de Pedidos
           </h2>
         </div>
 
-        {/* Componente Filtros */}
         <FiltrosHistorial 
           filtroTexto={filtroTexto}
           setFiltroTexto={setFiltroTexto}
@@ -229,7 +216,6 @@ export const HistorialPedidosPage: React.FC = () => {
           setFiltroEstadoHistorial={setFiltroEstadoHistorial}
         />
 
-        {/* Contenedor Único de Tabla con Scroll Interno (65.3vh) */}
         <div 
           className="rounded-3 border mb-3 font-monospace" 
           style={{ 
@@ -297,7 +283,6 @@ export const HistorialPedidosPage: React.FC = () => {
           </table>
         </div>
 
-        {/* Botonera Inferior */}
         <div className={`d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
           <button 
             onClick={() => navigate('/dashboard')} 
@@ -314,7 +299,6 @@ export const HistorialPedidosPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Modales Complementarios */}
       {pedidoMermas && (
         <ModalHistorialMermas
           pedido={pedidoMermas}

@@ -113,7 +113,6 @@ export const DetalleDocumento: React.FC<Props> = ({
       {documento ? (
         <div className="d-flex flex-column">
           <div className="d-flex flex-column" style={{ minHeight: 0 }}>
-            {/* CONTENEDOR VISTA PREVIA (CANVAS) */}
             <div
               ref={containerRef}
               className="w-100 rounded mb-3 d-flex justify-content-center align-items-center position-relative overflow-hidden"
@@ -153,7 +152,6 @@ export const DetalleDocumento: React.FC<Props> = ({
               )}
             </div>
 
-            {/* DETALLES DEL DOCUMENTO */}
             <div className="small space-y-1 mb-2">
               <p className="mb-1"><strong className="text-secondary">Nombre:</strong> {documento.titulo}</p>
               <p className="mb-1"><strong className="text-secondary">Autor:</strong> {documento.autor}</p>
@@ -172,7 +170,6 @@ export const DetalleDocumento: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* BOTONES DE ACCIÓN */}
           <div className="d-flex flex-column gap-2 mt-2">
             <div className="d-flex gap-2">
               <button

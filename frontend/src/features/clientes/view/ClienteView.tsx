@@ -20,7 +20,6 @@ export const ClienteView = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
 
-  // Estilos adaptativos de paleta estandarizados
   const titleColor = isDark ? '#ffffff' : '#0f172a';
   const mainCardBg = isDark ? '#1d1d1d' : '#ffffff';
   const cardBorder = isDark ? '#27272a' : '#cbd5e1';
@@ -97,7 +96,6 @@ export const ClienteView = () => {
       setMsgSuccess("El Cliente ha sido registrado con éxito");
       setShowSuccess(true); 
 
-      // Reiniciar formulario
       setFormData({
         nombre: '', apellido: '', tipoDocumento: '', numeroDocumento: '',
         email: '', telefono: '', calle: '', numero: '', piso: '',
@@ -175,7 +173,6 @@ export const ClienteView = () => {
   return (
     <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
       
-      {/* Encabezado Superior */}
       <div className="d-flex justify-content-center align-items-center mb-4">
         <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
           Gestión de Clientes
@@ -195,7 +192,6 @@ export const ClienteView = () => {
         setFiltroEstado={setFiltroEstado}
       />
 
-      {/* Contenedor Único de Tabla con Scroll Interno (65.3vh) */}
       <div 
         className="rounded-3 border mb-3 font-monospace" 
         style={{ 
@@ -326,7 +322,6 @@ export const ClienteView = () => {
         </table>
       </div>
 
-      {/* Botonera Inferior: Volver + Exportar + Categorías + Cta Cte + Nuevo Cliente */}
       <div className={`d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
         {!isMobile && (
           <button 

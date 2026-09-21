@@ -9,22 +9,7 @@ export interface RespaldoLog {
   tipo: string;
 }
 
-// BUG corregido: este service tenía su propia 'API_URL' hardcodeada a
-// 'http://localhost:8080/api' y usaba fetch() directo con un header
-// Authorization armado a mano, en vez de la API_BASE_URL compartida
-// (config/api.ts, que respeta VITE_API_URL) y el helper apiFetch que ya usa
-// el resto del proyecto. Esto afectaba a TODO el módulo Configuración -- las
-// tres pestañas de Ajustes de Perfil (usuario/contraseña/email) y las cinco
-// operaciones de Respaldo (historial, generar, descargar, eliminar,
-// restaurar) -- que hubieran quedado rotas en cualquier entorno que no fuera
-// el de desarrollo local del autor, mientras el resto de los módulos (que sí
-// usan API_BASE_URL) funcionarían normalmente en el mismo despliegue. Se
-// mantiene la firma de cada función (sigue recibiendo 'token' desde
-// useConfiguracion, que lo lee de localStorage) para no tener que tocar
-// todos los call sites, pasándolo ahora como header explícito a apiFetch en
-// vez de a fetch() directo.
 export const configuracionService = {
-  // --- Perfil ---
   async cambiarPassword(idUsuario: number, token: string, passwords: { actual: string; nueva: string }) {
     return apiFetch(`${API_BASE_URL}/usuarios/${idUsuario}/password`, {
       method: 'PUT',
@@ -49,7 +34,6 @@ export const configuracionService = {
     });
   },
 
-  // --- Respaldos ---
   async getHistorialRespaldos(token: string): Promise<RespaldoLog[]> {
     const res = await apiFetch(`${API_BASE_URL}/respaldos/historial`, {
       headers: { 'Authorization': `Bearer ${token}` }

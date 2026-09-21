@@ -6,7 +6,6 @@ export const exportarClientesExcel = async (clientes: any[]) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Gestión de Clientes');
 
-  // 1. Definición de columnas
   worksheet.columns = [
     { header: 'ID', key: 'id' },
     { header: 'Nombre', key: 'nombre' },
@@ -18,7 +17,6 @@ export const exportarClientesExcel = async (clientes: any[]) => {
     { header: 'Estado', key: 'estado' },
   ];
 
-  // 2. Cargar filas
   clientes.forEach((c) => {
     worksheet.addRow({
       id: c.id_cliente ?? '-',
@@ -32,7 +30,6 @@ export const exportarClientesExcel = async (clientes: any[]) => {
     });
   });
 
-  // 3. Estilo para el encabezado
   const headerRow = worksheet.getRow(1);
   headerRow.font = { bold: true };
   headerRow.fill = {
@@ -41,7 +38,6 @@ export const exportarClientesExcel = async (clientes: any[]) => {
     fgColor: { argb: 'E2E8F0' },
   };
 
-  // 4. Auto-ajuste de ancho leyendo column.values (incluye los títulos)
   worksheet.columns.forEach((column) => {
     let maxLen = 0;
 
@@ -59,7 +55,6 @@ export const exportarClientesExcel = async (clientes: any[]) => {
     column.width = Math.max(maxLen + 6, 15);
   });
 
-  // 5. Descarga del archivo
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = window.URL.createObjectURL(blob);
@@ -81,17 +76,14 @@ export const exportarClientesPDF = (
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
 
-  // 1. Cabecera superior (Banner Oscuro)
   doc.setFillColor(24, 24, 27);
   doc.rect(0, 0, pageWidth, 28, 'F');
 
-  // Título principal
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   doc.text('INFORME DE GESTIÓN DE CLIENTES', margin, 12);
 
-  // Subtítulos y metadatos
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(161, 161, 170);
@@ -103,7 +95,6 @@ export const exportarClientesPDF = (
   doc.text(rangoTexto, margin, 20);
   doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, pageWidth - margin - 35, 20);
 
-  // 2. Construcción de la tabla
   const tableColumn = [
     'ID',
     'Nombre',

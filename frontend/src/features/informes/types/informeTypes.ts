@@ -1,4 +1,3 @@
-// src/features/informes/types/informesTypes.ts
 export type SeccionInforme = 'MENU' | 'finanzas' | 'ventas' | 'operaciones' | 'clientes' | 'control';
 export type TipoComparacion = 'dia' | 'semana' | 'mes' | 'personalizado';
 export type InformeComparacion = 

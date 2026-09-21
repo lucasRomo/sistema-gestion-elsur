@@ -19,24 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de MermaServiceImpl.registrarMermas() --
- * el método invocado desde ModalGestionMermas.tsx (Pedidos Pendientes) y que
- * alimenta a ModalHistorialMermas.tsx (Historial de Pedidos). Hasta este trabajo
- * no existía NINGUNA suite de tests para este servicio.
- *
- * HALLAZGO PRINCIPAL (bug real, CORREGIDO en este pase):
- * registrarMermas() no validaba que 'cantidad' fuera positiva. El descuento de
- * stock de Producto se calculaba como "stock - cantidad" (Math.max(0, ...)) y el
- * de Insumo como "stockActual.subtract(cantidad)" (clamp a BigDecimal.ZERO) --
- * si 'cantidad' llegaba en negativo (por ejemplo, porque ModalGestionMermas.tsx
- * tampoco lo validaba: `Number(selections[k].cantidad) || 1` solo cubría el caso
- * vacío/0, no el negativo), restar un número negativo SUMABA stock en vez de
- * restarlo. Se corrigió en ambas capas: MermaServiceImpl.registrarMermas() ahora
- * rechaza con SolicitudInvalidaException cualquier cantidad nula, cero o negativa
- * (ANTES de tocar ningún repositorio de stock), y ModalGestionMermas.tsx valida lo
- * mismo del lado del frontend antes de armar el payload.
- */
+
 @ExtendWith(MockitoExtension.class)
 class MermaServiceImplUnitTest {
 
@@ -84,7 +67,6 @@ class MermaServiceImplUnitTest {
         return m;
     }
 
-    // ==================== FIX: cantidad negativa/cero/nula ahora se rechaza ====================
 
     @Test
     @DisplayName("FIX: registrar una merma de Producto con cantidad NEGATIVA ahora se rechaza con SolicitudInvalidaException")
@@ -93,7 +75,6 @@ class MermaServiceImplUnitTest {
 
         assertThrows(SolicitudInvalidaException.class, () -> mermaService.registrarMermas(List.of(entrada)));
 
-        // La validación corta ANTES de tocar cualquier repositorio de stock.
         verifyNoInteractions(productoRepository, insumoRepository, mermaRepository);
     }
 
@@ -123,7 +104,6 @@ class MermaServiceImplUnitTest {
         assertThrows(SolicitudInvalidaException.class, () -> mermaService.registrarMermas(List.of(entrada)));
     }
 
-    // ==================== Camino feliz: cantidad positiva descuenta correctamente ====================
 
     @Test
     @DisplayName("Registrar una merma válida de Producto descuenta el stock correctamente")
@@ -161,7 +141,6 @@ class MermaServiceImplUnitTest {
         assertEquals(0, BigDecimal.ZERO.compareTo(ins.getStockActual()));
     }
 
-    // ==================== Gaps de integridad de datos ====================
 
     @Test
     @DisplayName("GAP: una merma sin producto NI insumo asociado se guarda igual (merma huérfana, sin ningún stock afectado)")
@@ -175,8 +154,6 @@ class MermaServiceImplUnitTest {
 
         assertEquals(1, guardadas.size());
         verifyNoInteractions(productoRepository, insumoRepository);
-        // No hay ninguna validación que exija que la merma tenga producto o insumo:
-        // queda un registro histórico "fantasma" que no bajó stock de nada.
     }
 
     @Test

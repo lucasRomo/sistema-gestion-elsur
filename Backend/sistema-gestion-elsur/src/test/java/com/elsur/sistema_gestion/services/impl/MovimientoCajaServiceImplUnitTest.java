@@ -24,12 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de MovimientoCajaServiceImpl -- el servicio
- * que registra ingresos/egresos manuales de Caja y calcula los totales y el desglose
- * de arqueo que se muestran en CajaView.tsx. Hasta este trabajo no existía NINGUNA
- * suite de tests para este servicio.
- */
+
 @ExtendWith(MockitoExtension.class)
 class MovimientoCajaServiceImplUnitTest {
 
@@ -48,7 +43,6 @@ class MovimientoCajaServiceImplUnitTest {
         return m;
     }
 
-    // ==================== guardar() ====================
 
     @Test
     @DisplayName("guardar() sin turno explícito le asigna automáticamente el turno ABIERTO actual")
@@ -76,11 +70,6 @@ class MovimientoCajaServiceImplUnitTest {
 
         assertThrows(SolicitudInvalidaException.class, () -> movimientoCajaService.guardar(entrada));
         verify(movimientoCajaRepository, never()).save(any(MovimientoCaja.class));
-        // ANTES: a diferencia de PedidoServiceImpl.agregarPago() (que sí valida que haya una
-        // caja abierta y rechaza con "La Caja no está abierta..."), MovimientoCajaServiceImpl
-        // .guardar() no tenía ningún control equivalente -- un movimiento manual de Caja podía
-        // registrarse con la caja cerrada y quedaba "flotando" sin turno. Corregido: ahora
-        // rechaza con el mismo mensaje que agregarPago().
     }
 
     @Test
@@ -122,7 +111,6 @@ class MovimientoCajaServiceImplUnitTest {
         verify(movimientoCajaRepository, never()).save(any(MovimientoCaja.class));
     }
 
-    // ==================== calcularTotales() ====================
 
     @Test
     @DisplayName("calcularTotalesDelDia() suma ingresos y egresos ignorando mayúsculas/minúsculas de tipoMovimiento")
@@ -135,9 +123,6 @@ class MovimientoCajaServiceImplUnitTest {
 
         Map<String, Double> totales = movimientoCajaService.calcularTotalesDelDia();
 
-        // TurnoServiceImpl.cerrarTurno() ahora usa el mismo criterio case-insensitive (ver
-        // TurnoServiceImplUnitTest.cerrarTurno_movimientoConTipoMovimientoEnMinuscula_ahoraSiSeCuenta),
-        // así que ambos servicios quedan consistentes entre sí.
         assertEquals(150.0, totales.get("totalIngresos"));
         assertEquals(30.0, totales.get("totalEgresos"));
         assertEquals(120.0, totales.get("saldoActual"));
@@ -186,12 +171,6 @@ class MovimientoCajaServiceImplUnitTest {
 
         Map<String, Double> desglose = movimientoCajaService.obtenerDesgloseArqueo();
 
-        // ANTES: calcularDesglose() solo reconocía "TRANSFERENCIA" como método digital --
-        // pagos con DEBITO o CREDITO (ambos ofrecidos como opciones reales en
-        // ModalNuevoIngreso.tsx y en el Ajuste de CajaView.tsx) se sumaban dentro de
-        // "efectivo" en el arqueo, inflando el "Total Esperado Físico" que se le pide al
-        // cajero que cuente a mano. Corregido: ahora cualquier método distinto de EFECTIVO
-        // se trata como dinero no físico.
         assertEquals(20.0, desglose.get("efectivoIngresos"), "Solo el pago en EFECTIVO debe contarse como físico");
         assertEquals(230.0, desglose.get("transferenciaIngresos"), "DEBITO + CREDITO deben sumarse como dinero digital");
     }

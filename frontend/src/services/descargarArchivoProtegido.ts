@@ -1,4 +1,3 @@
-// src/utils/descargarArchivoProtegido.ts (o donde lo hayas puesto)
 import { apiFetch, API_BASE_URL } from '../config/api'; 
 
 export const obtenerBlobUrl = async (rutaRelativaBackend: string): Promise<string> => {

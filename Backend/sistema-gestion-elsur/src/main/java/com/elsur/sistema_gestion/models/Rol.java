@@ -12,12 +12,11 @@ public class Rol {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idRol;
 
-    private String nombreRol; // Ejemplo: "ADMIN", "GERENTE", "OPERARIO"
+    private String nombreRol; 
 
-    // --- NUEVO: Relación directa con los permisos ---
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "rol_permiso", // El nombre real de tu tabla intermedia en la BD
+        name = "rol_permiso", 
         joinColumns = @JoinColumn(name = "id_rol"),
         inverseJoinColumns = @JoinColumn(name = "id_permiso")
     )

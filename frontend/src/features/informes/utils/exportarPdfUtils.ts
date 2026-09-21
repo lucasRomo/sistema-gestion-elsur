@@ -286,7 +286,6 @@ export const exportarInformePDF = async (
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 14;
 
-  // Cabecera superior
   doc.setFillColor(24, 24, 27);
   doc.rect(0, 0, pageWidth, 28, 'F');
 
@@ -304,11 +303,9 @@ export const exportarInformePDF = async (
   let currentY = 36;
   const secciones = construirConfigSecciones(seccionActiva, metricas, incongruenciasArqueo);
 
-  // Delimitamos la búsqueda usando elementId para corregir el aviso de TypeScript
   const rootContainer = document.getElementById(elementId) || document;
 
   for (const item of secciones) {
-    // 1. Renderizar la tabla si la sección define datos
     if (item.config && item.datos && item.datos.length > 0) {
       if (currentY + 25 > pageHeight) {
         doc.addPage();
@@ -334,7 +331,6 @@ export const exportarInformePDF = async (
       currentY = (doc as any).lastAutoTable.finalY + 10;
     }
 
-    // 2. Buscar el elemento del gráfico dentro del contenedor activo
     const chartEl = rootContainer.querySelector(`[data-chart-id="${item.chartId}"]`) as HTMLElement | null;
 
     if (chartEl) {

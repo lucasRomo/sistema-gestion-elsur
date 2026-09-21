@@ -26,7 +26,6 @@ export const useNotificaciones = () => {
       const items: NotificacionItem[] = [];
       const ahora = new Date();
 
-      // --- Pedidos: demorados y pendientes ---
       pedidos.forEach((p: any) => {
         if (ESTADOS_FINALES.includes(p.estado)) return;
 
@@ -52,7 +51,6 @@ export const useNotificaciones = () => {
         });
       });
 
-      // --- Stock bajo ---
       insumosBajoStock.forEach((i: any) => {
         items.push({
           id: `stock-${i.idInsumo}`,
@@ -65,7 +63,6 @@ export const useNotificaciones = () => {
         });
       });
 
-      // --- Movimientos de caja del día ---
       movimientosDia.forEach((m: any) => {
         items.push({
           id: `caja-${m.idMovimiento || m.id_movimiento}`,
@@ -78,7 +75,6 @@ export const useNotificaciones = () => {
         });
       });
 
-      // --- Fallas de máquina (recorriendo máquinas no operativas) ---
       const maquinasConProblema = maquinas.filter((m: Maquina) => m.estado !== 'OPERATIVA');
       const incidenciasPorMaquina = await Promise.all(
         maquinasConProblema.map((m) =>

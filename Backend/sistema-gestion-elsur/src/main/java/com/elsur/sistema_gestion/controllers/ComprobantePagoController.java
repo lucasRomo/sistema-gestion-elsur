@@ -1,6 +1,5 @@
 package com.elsur.sistema_gestion.controllers;
 
-// IMPORTS CRÍTICOS PARA SOLUCIONAR LOS ERRORES DE PATH Y FILES
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -12,12 +11,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-// IMPORTS PARA MANEJAR ARCHIVOS Y RECURSOS EN SPRING
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.StringUtils;
 
-// IMPORTS DE SPRING WEB Y ANOTACIONES
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-// IMPORTS DE TU PROPIO SISTEMA
 import com.elsur.sistema_gestion.models.Pedido;
 import com.elsur.sistema_gestion.models.ComprobantePago;
 import com.elsur.sistema_gestion.repositories.PedidoRepository;
@@ -36,7 +32,6 @@ import com.elsur.sistema_gestion.repositories.ComprobantePagoRepository;
 @RequestMapping("/api/pedidos")
 public class ComprobantePagoController {
 
-    // java.nio.file.Path correcto
     private final Path rootFolder = Paths.get("uploads/comprobantes");
 
     @Autowired
@@ -47,7 +42,6 @@ public class ComprobantePagoController {
 
     public ComprobantePagoController() {
         try {
-            // Se usa java.nio.file.Files de forma correcta
             if (!Files.exists(rootFolder)) {
                 Files.createDirectories(rootFolder);
             }
@@ -67,14 +61,11 @@ public class ComprobantePagoController {
                 return ResponseEntity.badRequest().body("El archivo está vacío");
             }
 
-            // Uso correcto de StringUtils de Spring Framework
             String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
             String filename = "comprobante-pedido-" + id + "-" + System.currentTimeMillis() + "." + extension;
             
-            // Copia física en disco
             Files.copy(file.getInputStream(), this.rootFolder.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
 
-            // URL pública para acceder al archivo
             String urlServidor = "http://localhost:8080/api/pedidos/comprobantes/files/" + filename;
 
             ComprobantePago nuevoComprobante = new ComprobantePago();
@@ -127,9 +118,7 @@ public class ComprobantePagoController {
                 String filename = url.substring(url.lastIndexOf("/") + 1);
                 Path fileToDelete = rootFolder.resolve(filename);
                 
-                // Eliminación física del archivo en el servidor
                 Files.deleteIfExists(fileToDelete);
-                // Eliminación del registro en Postgres
                 comprobanteRepository.delete(cp);
             }
 

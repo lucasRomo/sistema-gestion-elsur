@@ -10,7 +10,6 @@ export const useConfiguracion = () => {
   const usuario = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
   const token = localStorage.getItem('token_sesion') || '';
 
-  // Estados Perfil
   const [passwords, setPasswords] = useState({ actual: '', nueva: '', confirmar: '' });
   const [mensajePass, setMensajePass] = useState<{ texto: string; tipo: 'error' | 'exito' } | null>(null);
   const [cargandoPass, setCargandoPass] = useState(false);
@@ -23,7 +22,6 @@ export const useConfiguracion = () => {
   const [mensajeEmail, setMensajeEmail] = useState<{ texto: string; tipo: 'error' | 'exito' } | null>(null);
   const [cargandoEmail, setCargandoEmail] = useState(false);
 
-  // Estado Modal de Confirmación para cambios de Perfil
   const [modalConfirmacionPerfil, setModalConfirmacionPerfil] = useState<{
     mostrar: boolean;
     titulo: string;
@@ -31,7 +29,6 @@ export const useConfiguracion = () => {
     onConfirm: () => void;
   } | null>(null);
 
-  // Estados Respaldos
   const [historialRespaldos, setHistorialRespaldos] = useState<RespaldoLog[]>([]);
   const [cargandoRespaldo, setCargandoRespaldo] = useState(false);
   const [mensajeRespaldo, setMensajeRespaldo] = useState<{ texto: string; tipo: 'error' | 'exito' } | null>(null);
@@ -60,7 +57,6 @@ export const useConfiguracion = () => {
     }
   };
 
-  // --- EJECUCIONES Y HANDLERS DE PERFIL ---
 
   const ejecutarCambioPassword = async () => {
     setModalConfirmacionPerfil(null);
@@ -92,10 +88,7 @@ export const useConfiguracion = () => {
       setMensajePass({ texto: 'Las nuevas contraseñas no coinciden.', tipo: 'error' });
       return;
     }
-    // BUG corregido: el placeholder decía "Mínimo 4 caracteres" pero el backend
-    // (CambioPasswordDTO, @Size min=8 max=72) exige 8 -- se avisa acá antes de
-    // pegarle a la API, mismo criterio que el resto del proyecto (por ejemplo
-    // handleCrearRol en Matriz de Permisos).
+
     if (passwords.nueva.length < 8 || passwords.nueva.length > 72) {
       setMensajePass({ texto: 'La nueva contraseña debe tener entre 8 y 72 caracteres.', tipo: 'error' });
       return;

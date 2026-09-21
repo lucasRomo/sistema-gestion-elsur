@@ -11,7 +11,6 @@ export const ModalHistorialMermas: React.FC<ModalHistorialMermasProps> = ({ pedi
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Paleta de colores adaptativa
   const bgModal = isDark ? '#1b1b1b' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const subTextColor = isDark ? '#a1a1aa' : '#64748b';
@@ -57,7 +56,6 @@ export const ModalHistorialMermas: React.FC<ModalHistorialMermasProps> = ({ pedi
     color: textColor
   }}
 >
-          {/* Cabecera */}
           <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style={{ borderColor }}>
             <h5 className="fw-bold mb-0 text-warning d-flex align-items-center">
               <i className="bi bi-exclamation-diamond-fill me-2"></i>
@@ -70,7 +68,6 @@ export const ModalHistorialMermas: React.FC<ModalHistorialMermasProps> = ({ pedi
             ></button>
           </div>
 
-          {/* Contenido */}
           <div className="table-responsive my-2" style={{ maxHeight: '350px', overflowY: 'auto' }}>
             {cargando ? (
               <div className="text-center py-4 text-muted">Cargando mermas...</div>
@@ -176,7 +173,6 @@ export const ModalHistorialMermas: React.FC<ModalHistorialMermasProps> = ({ pedi
             )}
           </div>
 
-          {/* Footer */}
           <div className="d-flex justify-content-end mt-3 pt-2 border-top" style={{ borderColor }}>
             <button className="btn btn-secondary fw-bold px-4" onClick={onClose}>
               Cerrar

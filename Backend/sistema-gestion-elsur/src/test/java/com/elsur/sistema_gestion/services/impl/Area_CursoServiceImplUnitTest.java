@@ -19,17 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de Area_CursoServiceImpl (módulo
- * Repositorio Digital, modal "Nueva Cátedra/Área"). Hasta este trabajo no
- * existía NINGUNA suite de tests para este servicio.
- *
- * HALLAZGOS CORREGIDOS en este pase: save() guardaba cualquier cosa que llegara
- * sin validar nombre vacío ni que la institución referenciada existiera de
- * verdad -- una institución con un ID inexistente hacía fallar a JPA con una
- * excepción de integridad referencial sin traducir (500 opaco). Ahora ambos
- * casos se rechazan explícitamente con un mensaje claro.
- */
+
 @ExtendWith(MockitoExtension.class)
 class Area_CursoServiceImplUnitTest {
 

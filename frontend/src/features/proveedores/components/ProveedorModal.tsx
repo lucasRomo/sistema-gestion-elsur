@@ -37,7 +37,6 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   const inputBg = isDark ? '#121214' : '#ffffff';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
 
-  // --- CONFIGURACIÓN DE COLORES DINÁMICOS SEGÚN MODO (CREAR vs EDITAR) ---
   const borderColorModal = isEditing ? '#0dcaf0' : '#198754';
   const titleColorModal = isEditing 
     ? (isDark ? '#00d7ff' : '#0284c7') 
@@ -51,17 +50,12 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
   const [nuevaCategoria, setNuevaCategoria] = useState<string>('');
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [idCategoriaAEliminar, setIdCategoriaAEliminar] = useState<number | null>(null);
-  // CORREGIDO: antes solo existía este modal de éxito para BORRAR una
-  // categoría de proveedor -- crear una no mostraba ninguna confirmación, el
-  // formulario simplemente se limpiaba en silencio. Se generaliza a un solo
-  // modal reutilizable (mensaje variable) para los dos casos.
   const [mostrarExitoCategoria, setMostrarExitoCategoria] = useState<boolean>(false);
   const [mensajeExitoCategoria, setMensajeExitoCategoria] = useState<string>('');
   const [showTipoProveedor, setShowTipoProveedor] = useState(false);
   const [showEstado, setShowEstado] = useState(false);
   const [guardando, setGuardando] = useState(false);
 
-  // Carga de categorías utilizando apiFetch
   const cargarCategorias = async () => {
     try {
       const data = await getTiposProveedor();
@@ -82,7 +76,6 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     }
   }, [show]);
 
-  // Creación de categoría utilizando apiFetch
   const handleCrearCategoria = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const nombreLimpio = nuevaCategoria.trim();
@@ -105,9 +98,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
       setNuevaCategoria('');
       if (inputElem) inputElem.setCustomValidity('');
       await cargarCategorias();
-      // CORREGIDO: antes esto no avisaba nada -- el formulario se limpiaba y
-      // la categoría aparecía en la lista de abajo, pero sin ninguna
-      // confirmación visual de que se guardó.
+
       setMensajeExitoCategoria('Categoría creada correctamente');
       setMostrarExitoCategoria(true);
     } catch (error) {
@@ -120,7 +111,6 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     setIdCategoriaAEliminar(id);
   };
 
-  // Eliminación de categoría utilizando apiFetch
   const ejecutarEliminacionCategoria = async () => {
     if (!idCategoriaAEliminar) return;
 
@@ -168,10 +158,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     if (isEditing) {
       setMostrarConfirmacion(true);
     } else {
-      // CORREGIDO: antes se llamaba a onSave (función async) sin await y sin
-      // try/catch -- un error del backend (ej. nombre comercial duplicado) se
-      // perdía como unhandled promise rejection y el modal quedaba sin feedback.
-      // También faltaba protección contra doble-submit.
+
       setGuardando(true);
       try {
         await onSave(datosNormalizados);
@@ -674,7 +661,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
             <div
               className="modal-content p-4 text-center shadow"
               style={{
-                border: '2px solid #8e45e0',
+                border: '2px solid #198754',
                 backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
                 color: textColor,
                 borderRadius: '12px'
@@ -686,7 +673,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
                   width: '50px',
                   height: '50px',
                   borderRadius: '50%',
-                  backgroundColor: '#8e45e0',
+                  backgroundColor: '#198754',
                   color: '#ffffff'
                 }}
               >

@@ -15,7 +15,6 @@ export const MaquinasView: React.FC = () => {
   const isDark = theme === 'dark';
   const isMobile = useIsMobile();
 
-  // Variables de tema adaptativas unificadas
   const mainCardBg = isDark ? '#1d1d1d' : '#ffffff';
   const filterBg = isDark ? '#1b1b1b' : '#ffffff';
   const filterBorder = isDark ? '#3f3f46' : '#cbd5e1';
@@ -47,7 +46,6 @@ export const MaquinasView: React.FC = () => {
     handleReportarFalla
   } = useMaquinas();
 
-  // Estado para el SuccesModal
   const [successState, setSuccessState] = useState<{
     show: boolean;
     title: string;
@@ -64,7 +62,6 @@ export const MaquinasView: React.FC = () => {
     setSuccessState(prev => ({ ...prev, show: false }));
   };
 
-  // Interceptor para guardar (Nuevo / Modificar)
   const onGuardarConFeedback = async (maquinaData: any) => {
     const esEdicion = Boolean(maquinaData.idMaquina);
     await handleGuardarMaquina(maquinaData);
@@ -79,7 +76,6 @@ export const MaquinasView: React.FC = () => {
     });
   };
 
-  // Interceptor para reportar falla
   const onReportarFallaConFeedback = async (idMaquina: number, descripcion: string, prioridad: string) => {
     await handleReportarFalla(idMaquina, descripcion, prioridad);
 
@@ -94,14 +90,12 @@ export const MaquinasView: React.FC = () => {
   return (
     <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
       
-      {/* Encabezado Superior */}
       <div className="d-flex justify-content-center align-items-center mb-4">
         <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
           Gestión de Equipos y Máquinas
         </h2>
       </div>
 
-      {/* Contenedor de Filtros */}
       <div 
         className="row g-3 align-items-center mb-4 p-3 rounded-3 shadow-sm font-monospace" 
         style={{ 
@@ -128,7 +122,6 @@ export const MaquinasView: React.FC = () => {
         </div>
       </div>
 
-      {/* Contenedor de Tabla */}
       <div 
         className="table-responsive rounded-3 border mb-3 font-monospace" 
         style={{ 
@@ -159,7 +152,6 @@ export const MaquinasView: React.FC = () => {
         )}
       </div>
 
-      {/* Barra Inferior: Mismo padding, font-size y estructura exacta que Usuarios */}
       <div className={`d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
         
         {!isMobile && (
@@ -210,7 +202,6 @@ export const MaquinasView: React.FC = () => {
         </div>
       </div>
 
-      {/* Modales de Operación */}
       <MaquinaModal
         show={showModalCrud}
         maquinaEditar={maquinaAEditar}
@@ -240,7 +231,6 @@ export const MaquinasView: React.FC = () => {
         }}
       />
 
-      {/* Modal Reusable de Notificación de Éxito */}
       <SuccesModal
         show={successState.show}
         title={successState.title}

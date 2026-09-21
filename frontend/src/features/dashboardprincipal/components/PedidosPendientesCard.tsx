@@ -13,7 +13,6 @@ export const PedidosPendientesCard: React.FC = () => {
   useEffect(() => {
     const cargarPedidosPendientes = async () => {
       try {
-        // 1. Obtener datos del usuario logueado desde LocalStorage
         const usuarioJson = localStorage.getItem('usuario_logueado');
         let esAdmin = false;
         let idUsuarioLogueado: number | null = null;
@@ -22,7 +21,6 @@ export const PedidosPendientesCard: React.FC = () => {
         if (usuarioJson) {
           const uObj = JSON.parse(usuarioJson);
           
-          // Detectar Admin
           const rolString = JSON.stringify(uObj).toUpperCase();
           esAdmin = rolString.includes('"ADMIN"') || rolString.includes('ROLE_ADMIN') || uObj?.rol === 'ADMIN';
 
@@ -30,10 +28,8 @@ export const PedidosPendientesCard: React.FC = () => {
           nombreUsuarioLogueado = (uObj.nombreUsuario || uObj.nombre || '').toLowerCase().trim();
         }
 
-        // 2. Traer todos los pedidos desde el backend
         const lista: any[] = await pedidoService.obtenerTodos();
 
-        // 3. Filtrar estados activos (igual que la vista del Taller)
         const estadosInactivos = ['FINALIZADO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO', 'PRESUPUESTO'];
         
         let activos = lista.filter(p => {
@@ -47,10 +43,8 @@ export const PedidosPendientesCard: React.FC = () => {
           return !estadosInactivos.includes(estadoActual);
         });
 
-        // 4. Aplicar restricción si NO es Admin
         if (!esAdmin) {
           activos = activos.filter(p => {
-            // Extraer la última asignación del pedido (tal cual FilaPedido.tsx)
             const ultimaAsignacion = p.asignaciones && p.asignaciones.length > 0
               ? p.asignaciones[p.asignaciones.length - 1]
               : null;
@@ -58,7 +52,6 @@ export const PedidosPendientesCard: React.FC = () => {
             const empleado = ultimaAsignacion?.empleado || p.empleado;
             if (!empleado) return false;
 
-            // Extraer IDs y nombres del empleado
             const idEmp = empleado.idEmpleado || empleado.id_empleado || empleado.idUsuario || empleado.id;
             const personaEmp = empleado.persona;
             
@@ -66,7 +59,6 @@ export const PedidosPendientesCard: React.FC = () => {
               ? `${personaEmp.nombre} ${personaEmp.apellido}`.toLowerCase()
               : (empleado.nombre || '').toLowerCase();
 
-            // Match por ID de Usuario o por Coincidencia de Nombre
             const coincideId = idUsuarioLogueado && Number(idEmp) === Number(idUsuarioLogueado);
             const coincideNombre = nombreUsuarioLogueado && nombreCompletoEmp.includes(nombreUsuarioLogueado);
 

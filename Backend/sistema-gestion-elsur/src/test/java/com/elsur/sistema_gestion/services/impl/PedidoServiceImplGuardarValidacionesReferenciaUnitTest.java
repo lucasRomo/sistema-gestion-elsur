@@ -17,23 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de PedidoServiceImpl.guardar() para las
- * validaciones de REFERENCIA que faltaban cubrir: ¿qué pasa si el pedido llega
- * apuntando a un Cliente, un Empleado o un Producto cuyo id ya no existe en la
- * base (por ejemplo, alguien lo borró entre que el frontend cargó el formulario
- * y que el operario confirmó "Guardar")?
- *
- * GAP DE COBERTURA detectado al armar la planilla CrearPedido_TestCase.xlsx
- * (ver TC_CP35/36/37): las tres suites existentes de PedidoServiceImpl
- * (PedidoServiceImplGuardarPedidoFormalUnitTest, PedidoServiceImplGuardarVentaRapidaUnitTest,
- * PedidoServiceImplStockYMaquinaUnitTest) siempre mockean clienteRepository con éxito
- * usando el Consumidor Final (id=1), y ninguna cubre un Empleado o un Producto con
- * un id que directamente no existe -- distinto del caso ya cubierto en
- * PedidoServiceImplStockYMaquinaUnitTest.detalleSinProducto_lanzaSolicitudInvalida,
- * que es un producto NULO/sin id (SolicitudInvalidaException), no un id inexistente
- * (acá el código tira un RuntimeException distinto, "Producto no encontrado").
- */
+
 @ExtendWith(MockitoExtension.class)
 class PedidoServiceImplGuardarValidacionesReferenciaUnitTest {
 
@@ -41,7 +25,7 @@ class PedidoServiceImplGuardarValidacionesReferenciaUnitTest {
     @Mock private ProductoRepository productoRepository;
     @Mock private ClienteRepository clienteRepository;
     @Mock private EmpleadoRepository empleadoRepository;
-    @Mock private TurnoRepository TurnoRepository; // mismo nombre de campo que en PedidoServiceImpl
+    @Mock private TurnoRepository TurnoRepository;
 
     @InjectMocks
     private PedidoServiceImpl pedidoService;
@@ -73,7 +57,7 @@ class PedidoServiceImplGuardarValidacionesReferenciaUnitTest {
     private DetallePedido detalle(int idProductoRef, int cantidad) {
         DetallePedido d = new DetallePedido();
         Producto ref = new Producto();
-        ref.setIdProducto(idProductoRef); // solo el id, como llega armado desde el frontend
+        ref.setIdProducto(idProductoRef); 
         d.setProducto(ref);
         d.setCantidad(cantidad);
         d.setPrecioUnitario(BigDecimal.TEN);
@@ -92,7 +76,6 @@ class PedidoServiceImplGuardarValidacionesReferenciaUnitTest {
         return pedido;
     }
 
-    // ==================== TC_CP35: Cliente inexistente ====================
 
     @Test
     @DisplayName("TC_CP35 - Cliente indicado con id que no existe en la base -> RuntimeException('Cliente no encontrado')")
@@ -110,7 +93,6 @@ class PedidoServiceImplGuardarValidacionesReferenciaUnitTest {
         verify(pedidoRepository, never()).save(any());
     }
 
-    // ==================== TC_CP37: Producto de un detalle inexistente ====================
 
     @Test
     @DisplayName("TC_CP37 - Detalle con un idProducto que no existe en la base -> RuntimeException('Producto no encontrado') " +
@@ -129,7 +111,6 @@ class PedidoServiceImplGuardarValidacionesReferenciaUnitTest {
         verify(pedidoRepository, never()).save(any());
     }
 
-    // ==================== TC_CP36: Empleado inexistente ====================
 
     @Test
     @DisplayName("TC_CP36 - idEmpleado indicado que no existe en la base -> RuntimeException('Empleado no encontrado'), " +

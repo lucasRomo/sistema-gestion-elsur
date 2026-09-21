@@ -91,7 +91,6 @@ export const ModalCargaIA: React.FC<ModalCargaIAProps> = ({
 
       const { items: itemsCorregidos, avisos } = validarYCorregirItems(data.items || []);
 
-      // Mantiene máximo 3 decimales en el precio unitario traído de la IA
       const itemsConPrecioRedondeado = itemsCorregidos.map((item: any) => ({
         ...item,
         precioUnitario: item.precioUnitario ? Number(Number(item.precioUnitario).toFixed(3)) : 0

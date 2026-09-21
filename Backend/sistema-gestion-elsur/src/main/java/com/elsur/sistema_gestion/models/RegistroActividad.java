@@ -20,7 +20,6 @@ public class RegistroActividad {
     @Column(name = "id_reg_act")
     private Integer idRegAct;
 
-    // --- CAMBIO AQUÍ ---
     @Column(name = "fecha")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", timezone = "UTC")
     private Timestamp fecha;

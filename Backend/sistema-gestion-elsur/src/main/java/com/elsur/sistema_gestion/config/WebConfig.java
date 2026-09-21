@@ -10,10 +10,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Obtenemos la ruta absoluta de la carpeta "uploads" en la raíz del proyecto
         String uploadPath = Paths.get("uploads").toAbsolutePath().toUri().toString();
         
-        // Mapeamos la URL http://localhost:8080/uploads/** a la carpeta física del disco
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(uploadPath);
     }

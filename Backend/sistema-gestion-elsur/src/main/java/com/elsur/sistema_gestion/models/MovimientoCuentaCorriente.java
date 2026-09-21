@@ -26,7 +26,7 @@ public class MovimientoCuentaCorriente {
     private LocalDateTime fecha = LocalDateTime.now();
 
     @Column(nullable = false, length = 20)
-    private String tipo; // "CARGO" o "PAGO"
+    private String tipo; 
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal monto;

@@ -56,9 +56,6 @@ public class CategoriaClienteController {
         }
     }
 
-    // CORREGIDO: esta categoría (nombre y % de descuento automático que se aplica en
-    // Crear Pedido) no tenía NINGUNA validación -- ni nombre blanco/duplicado, ni
-    // rango del descuento. Mismo patrón ya cerrado en CategoriaProducto.
     private void validarYNormalizar(categoriaCliente categoria) {
         if (categoria.getNombre() == null || categoria.getNombre().trim().isEmpty()) {
             throw new SolicitudInvalidaException("El nombre de la categoría es obligatorio.");

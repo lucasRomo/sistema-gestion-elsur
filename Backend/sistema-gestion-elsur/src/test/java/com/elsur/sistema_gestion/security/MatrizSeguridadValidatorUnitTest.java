@@ -28,39 +28,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-/**
- * Tests UNITARIOS de MatrizSeguridadValidator: técnica de "caja blanca"
- * (Unidad 1 de Validación y Verificación) -- se conoce el código y se
- * diseñan los casos para recorrer las rutas lógicas más importantes de
- * evaluarPermisoPorton() / evaluarPermisoEnBaseDeDatos(), sin levantar
- * Spring ni necesitar Postgres: UsuarioRepository se mockea con Mockito
- * y la Authentication/RequestAuthorizationContext se arman a mano.
- *
- * Esto complementa (no reemplaza) al MatrizSeguridadValidatorIntegrationTest
- * que ya tenían: ese es un test de INTEGRACIÓN (caja negra, HTTP real,
- * Postgres real); este corre en milisegundos y sirve para validar la
- * lógica interna en detalle -- incluye regresión explícita de los dos
- * hallazgos de seguridad que se cerraron (escalada por el portón y
- * bypass de "Configuración" para /api/respaldos).
- *
- * Correrlo (no necesita Postgres levantado):
- *   mvn -Dtest=MatrizSeguridadValidatorUnitTest test
- */
+
 @ExtendWith(MockitoExtension.class)
 class MatrizSeguridadValidatorUnitTest {
 
     @Mock
     private UsuarioRepository usuarioRepository;
 
-    // No se usa @InjectMocks a propósito: el constructor de MatrizSeguridadValidator
-    // solo pide UsuarioRepository, así que se instancia directo -- queda más explícito.
     private MatrizSeguridadValidator validator;
 
     private MatrizSeguridadValidator validador() {
         return new MatrizSeguridadValidator(usuarioRepository);
     }
 
-    // ---------- Helpers para armar el contexto de cada request ----------
 
     private RequestAuthorizationContext contextoPara(String metodo, String path) {
         MockHttpServletRequest request = new MockHttpServletRequest(metodo, path);
@@ -73,8 +53,7 @@ class MatrizSeguridadValidatorUnitTest {
                 .map(SimpleGrantedAuthority::new)
                 .map(GrantedAuthority.class::cast)
                 .toList();
-        // El constructor de 3 argumentos marca isAuthenticated() = true, igual que
-        // hace JwtAuthenticationFilter al armar la Authentication desde el JWT.
+
         return new UsernamePasswordAuthenticationToken(username, null, authorities);
     }
 
@@ -95,16 +74,11 @@ class MatrizSeguridadValidatorUnitTest {
         return usuario;
     }
 
-    // Igual que usuarioConPermisos(), pero fijando el idUsuario -- lo necesitan
-    // los casos de "Ajustes de Perfil" de más abajo, que comparan el {id} del
-    // path contra el idUsuario real resuelto del que pide el cambio.
     private Usuario usuarioConIdYRol(int idUsuario, String nombreRol) {
         Usuario usuario = usuarioConPermisos(nombreRol);
         usuario.setIdUsuario(idUsuario);
         return usuario;
     }
-
-    // ==================== Casos base de autenticación ====================
 
     @Test
     @DisplayName("Sin Authentication (null) -> se deniega")
@@ -139,7 +113,6 @@ class MatrizSeguridadValidatorUnitTest {
         assertFalse(decision.isGranted());
     }
 
-    // ==================== ADMIN: bypass total ====================
 
     @Test
     @DisplayName("ADMIN entra a cualquier módulo sin tener el permiso puntual")
@@ -167,7 +140,6 @@ class MatrizSeguridadValidatorUnitTest {
         assertTrue(decision.isGranted());
     }
 
-    // ==================== Regresión: /api/respaldos nunca por permiso ====================
 
     @Test
     @DisplayName("REGRESIÓN: OPERARIO con 'Configuración' sigue sin poder entrar a /api/respaldos")
@@ -182,7 +154,6 @@ class MatrizSeguridadValidatorUnitTest {
         assertFalse(decision.isGranted());
     }
 
-    // ==================== Asistente: cualquier autenticado entra ====================
 
     @Test
     @DisplayName("Cualquier usuario autenticado entra a /api/asistente aunque no tenga ningún permiso")
@@ -197,20 +168,11 @@ class MatrizSeguridadValidatorUnitTest {
         assertTrue(decision.isGranted());
     }
 
-    // ==================== Permisos normales + normalización ====================
 
     @Test
     @DisplayName("OPERARIO sin el permiso 'Clientes' (ni ninguno de la regla de lectura cruzada) no puede leer /api/clientes")
     void operarioSinPermiso_noAccedeAClientes() {
         validator = validador();
-        // OJO: acá antes se probaba con "Caja", pero evaluarPermisoEnBaseDeDatos() tiene
-        // una regla de LECTURA CRUZADA (GET) a propósito: cualquiera con "Crear Pedido",
-        // "Pedidos Pendientes", "Historial de Pedidos" o "Caja" SÍ puede leer /api/clientes
-        // (esRutaCatalogoVentasYCaja) -- un cajero necesita ver los datos del cliente al
-        // cobrar, aunque no tenga el permiso "Clientes" completo (que habilita además
-        // crear/editar/borrar clientes). Ese comportamiento es intencional, así que "Caja"
-        // no sirve como caso negativo. Se usa "Insumos", que no tiene ninguna relación con
-        // el módulo Clientes en ninguna regla de la matriz.
         when(usuarioRepository.findByNombreUsuario(anyString()))
                 .thenReturn(Optional.of(usuarioConPermisos("OPERARIO", "Insumos")));
 
@@ -237,7 +199,6 @@ class MatrizSeguridadValidatorUnitTest {
     @DisplayName("normalizar() ignora tildes/mayúsculas: 'Gestión de Usuarios' habilita GET /api/usuarios")
     void normalizar_ignoraTildesYMayusculas() {
         validator = validador();
-        // El permiso se carga con tilde, tal cual lo siembra DataInitializer.
         when(usuarioRepository.findByNombreUsuario(anyString()))
                 .thenReturn(Optional.of(usuarioConPermisos("OPERARIO", "Gestión de Usuarios")));
 
@@ -260,7 +221,6 @@ class MatrizSeguridadValidatorUnitTest {
         assertTrue(decision.isGranted());
     }
 
-    // ==================== Portón: regresión de la escalada de privilegios ====================
 
     @Test
     @DisplayName("Portón en bootstrap (tabla usuario vacía) puede crear el primer usuario")
@@ -302,10 +262,6 @@ class MatrizSeguridadValidatorUnitTest {
     @DisplayName("El portón puede consultar tipos-documento por GET, con o sin bootstrap")
     void porton_puedeLeerTiposDocumento_sinImportarBootstrap() {
         validator = validador();
-        // Ojo: esta rama de evaluarPermisoPorton (GET) no llama a count(), por eso
-        // no se stubea acá -- si lo hiciera, Mockito con MockitoExtension fallaría
-        // por "stubbing innecesario", que es justamente la garantía de que la rama
-        // GET es independiente del estado de bootstrap.
 
         Authentication auth = autenticadoComo("porton", "ROLE_PORTON");
         AuthorizationDecision decision = validator.authorize(() -> auth, contextoPara("GET", "/api/tipos-documento"));
@@ -313,18 +269,6 @@ class MatrizSeguridadValidatorUnitTest {
         assertTrue(decision.isGranted());
     }
 
-    // ==================== Ajustes de Perfil: self-service, solo la cuenta propia ====================
-    //
-    // REGRESIÓN del GAP DE SEGURIDAD cerrado en esta misma revisión: la regla de
-    // "PUT /api/usuarios/{id}/password|username|email" devolvía true para
-    // CUALQUIER usuario autenticado sin comparar nunca el {id} del path contra
-    // quién es en realidad. Para /password el impacto quedaba mitigado porque el
-    // service igual exige la contraseña ACTUAL real (BCrypt) del usuario
-    // objetivo -- pero para /username y /email el "valor actual" no es secreto,
-    // así que cualquier autenticado podía apuntar el {id} de OTRA persona y
-    // pisarle el username o el email. Estos casos prueban que ahora SOLO el
-    // dueño de la cuenta (idUsuario resuelto del JWT, nunca del {id} del path)
-    // puede pasar por esta regla, tanto para las 3 rutas como para un {id} ajeno.
 
     @Test
     @DisplayName("Un usuario puede cambiar SU PROPIA contraseña (mismo {id} que su idUsuario real)")
@@ -369,7 +313,6 @@ class MatrizSeguridadValidatorUnitTest {
     @DisplayName("REGRESIÓN: un usuario NO puede cambiar la contraseña de OTRO usuario apuntando su {id} en la URL")
     void usuarioNoPropio_noPuedeCambiarPasswordAjena() {
         validator = validador();
-        // idUsuario real del que pide el cambio es 5, pero el {id} del path es 99 (otra cuenta)
         when(usuarioRepository.findByNombreUsuario(anyString()))
                 .thenReturn(Optional.of(usuarioConIdYRol(5, "OPERARIO")));
 

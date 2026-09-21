@@ -132,7 +132,6 @@ export const crearRendererEtiquetasSinColision = (
   let ultimoCy = 0;
   let ultimoRadio = 0;
 
-  // Ajuste de colores dinámicos
   const colorTexto = isDark ? '#e4e4e7' : '#0f172a';
   const colorLinea = isDark ? '#a1a1aa' : '#64748b';
 
@@ -191,7 +190,6 @@ export const crearRendererEtiquetasSinColision = (
   return RendererEtiqueta;
 };
 
-// Devolvemos objetos para aprovechar el renderizado multilínea
 export const formatearDinero = (name: string, value: number) => ({
   linea1: name,
   linea2: `$${Number(value || 0).toLocaleString('es-AR')}`

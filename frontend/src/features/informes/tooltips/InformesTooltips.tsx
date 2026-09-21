@@ -208,7 +208,6 @@ export const CustomDevueltosTooltip: React.FC<TooltipBaseProps> = ({ active, pay
   return null;
 };
 
-/** Tooltip genérico para pies "Top N" con nombre + valor formateado + una línea secundaria opcional. */
 interface CustomRankingTooltipProps {
   active?: boolean;
   payload?: any[];

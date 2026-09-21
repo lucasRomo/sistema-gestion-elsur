@@ -17,7 +17,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     localStorage.setItem('app_theme', theme);
-    // Aplicamos el atributo a nivel HTML o Body para estilos globales de Bootstrap / CSS custom
     document.documentElement.setAttribute('data-bs-theme', theme);
     if (theme === 'light') {
       document.body.classList.add('light-mode');

@@ -18,11 +18,6 @@ public class AsistenteController {
         this.geminiAsistenteService = geminiAsistenteService;
     }
 
-    /**
-     * Cualquier usuario autenticado puede usar el asistente, sin importar sus
-     * permisos de la matriz (ver regla dedicada en MatrizSeguridadValidator):
-     * es una guía de uso, no una operación sobre datos sensibles.
-     */
     @PostMapping("/preguntar")
     public ResponseEntity<?> preguntar(@RequestBody PreguntaAsistenteDTO pregunta) {
         try {

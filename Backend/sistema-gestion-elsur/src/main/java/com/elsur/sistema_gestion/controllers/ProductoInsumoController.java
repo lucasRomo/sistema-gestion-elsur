@@ -49,18 +49,9 @@ public class ProductoInsumoController {
             @PathVariable Integer idProducto,
             @RequestBody List<RecetaItemDTO> recetaDTOs) {
 
-        // CORREGIDO: antes usaba RuntimeException genérico (-> 400) para "no
-        // encontrado"; ahora RecursoNoEncontradoException (-> 404), igual que el
-        // resto del sistema.
         Producto producto = productoRepository.findById(idProducto)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con ID: " + idProducto));
 
-        // CORREGIDO: antes no se validaba nada de los items recibidos -- una
-        // cantidadConsumo nula reventaba como una DataIntegrityViolationException
-        // opaca (la columna es NOT NULL), un insumo repetido en el mismo envío
-        // chocaba contra la clave primaria compuesta (idProducto + idInsumo) con el
-        // mismo resultado, y una cantidad <= 0 se guardaba igual sin avisar (aunque
-        // calcularStockDesdeInsumos ya la ignoraba al calcular el stock).
         Set<Integer> idsInsumosVistos = new HashSet<>();
         for (RecetaItemDTO dto : recetaDTOs) {
             if (dto.getIdInsumo() == null) {
@@ -74,13 +65,11 @@ public class ProductoInsumoController {
             }
         }
 
-        // 1. Limpiar insumos asociados previamente a este producto
         List<ProductoInsumo> recetaExistente = productoInsumoRepository.findByIdIdProducto(idProducto);
         if (!recetaExistente.isEmpty()) {
             productoInsumoRepository.deleteAll(recetaExistente);
         }
 
-        // 2. Insertar las nuevas relaciones enviadas desde el frontend
         List<ProductoInsumo> nuevasEntradas = new ArrayList<>();
         for (RecetaItemDTO dto : recetaDTOs) {
             Insumo insumo = insumoRepository.findById(dto.getIdInsumo())
@@ -99,7 +88,6 @@ public class ProductoInsumoController {
         return ResponseEntity.ok(guardados);
     }
 
-    // DTO auxiliar para mapear el JSON enviado desde RecetaModal.tsx
     public static class RecetaItemDTO {
         private Integer idProducto;
         private Integer idInsumo;

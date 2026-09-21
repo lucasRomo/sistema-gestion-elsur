@@ -1,9 +1,6 @@
 import React, { useState, useRef } from 'react';
 import type { AreaCurso } from '../types/Repositorio';
 import { useTheme } from '../../../Context/ThemeContext';
-// NUEVO (bug reportado: "no me deja subir archivos al repositorio"): reemplaza el
-// alert() nativo de más abajo por nuestro propio modal de error, mismo criterio que
-// ya se usa en el resto de la app (ver useRegister.ts / RegisterView.tsx).
 import { ErrorModal } from '../../../components/modals/ErrorModal';
 
 interface Props {
@@ -33,7 +30,6 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
   const cardBorder = isDarkMode ? '#3f3f46' : '#dee2e6';
   const inputBg = isDarkMode ? '#1b1b1b' : '#ffffff';
 
-  // Color verde principal para bordes y acentos
   const greenAccent = '#198754';
 
   const [titulo, setTitulo] = useState('');
@@ -44,7 +40,6 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
   const [cantidadPaginas, setCantidadPaginas] = useState('');
   const [archivo, setArchivo] = useState<File | null>(null);
 
-  // Referencia para sincronizar el input de tipo file al arrastrar
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isDragging, setIsDragging] = useState(false);
@@ -83,7 +78,6 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
       const fileDropped = e.dataTransfer.files[0];
       setArchivo(fileDropped);
 
-      // Sincronizar el archivo en el input HTML para que muestre el nombre en el navegador
       if (fileInputRef.current) {
         const dt = new DataTransfer();
         dt.items.add(fileDropped);
@@ -116,11 +110,7 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
       await onGuardar(formData);
       setMostrarExito(true);
     } catch (error) {
-      // FIX: antes el rechazo del backend (ej. título vacío, precio negativo, área
-      // inexistente, o el archivo supera el tamaño máximo -- ver
-      // DocumentoDigitalServiceImpl / GlobalExceptionHandler) solo se logueaba en
-      // consola y se mostraba con un alert() nativo del navegador, sin el estilo del
-      // resto de los modales de la app.
+
       console.error('Error al guardar documento:', error);
       setMensajeError((error as Error)?.message || 'No se pudo registrar el documento en el repositorio.');
       setMostrarError(true);
@@ -298,7 +288,6 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
                     Archivo Digital (PDF / DOCX / JPG / PNG) *
                   </label>
                   
-                  {/* Input oculto mantenido con ref para la validación HTML y Drag&Drop */}
                   <input
                     ref={fileInputRef}
                     id="archivo-input"
@@ -314,7 +303,6 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
                   />
 
                   <div className="d-flex align-items-center gap-2">
-                    {/* Botón a la izquierda fuera del recuadro */}
                     <label
                       htmlFor="archivo-input"
                       className="btn px-3 text-nowrap cursor-pointer mb-0"
@@ -323,7 +311,6 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
                       Seleccionar archivo
                     </label>
 
-                    {/* Campo de texto que muestra el estado o el nombre del archivo */}
                     <div
                       className="form-control d-flex align-items-center justify-content-between flex-grow-1"
                       style={{
@@ -391,22 +378,34 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
 
       {mostrarExito && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1085 }}>
-          <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content shadow-lg font-monospace text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #267c34', borderRadius: '12px' }}>
-              <div className="modal-body text-center py-3">
-                <div className="d-flex justify-content-center mb-2">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', border: '2px solid #267c34' }}>
-                    <i className="bi bi-check-lg" style={{ fontSize: '2.2rem', color: '#267c34' }}></i>
-                  </div>
-                </div>
-                <h6 className="fw-bold my-2 text-white">Documento guardado con éxito</h6>
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+            <div
+              className="modal-content p-4 text-center shadow"
+              style={{
+                border: '2px solid #267c34',
+                backgroundColor: '#18181b',
+                color: '#ffffff',
+                borderRadius: '12px'
+              }}
+            >
+              <div
+                className="d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+                style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: '#267c34', color: '#ffffff' }}
+              >
+                <i className="bi bi-check-lg fs-2"></i>
+              </div>
+              <h4 className="fw-bold mb-2">¡Éxito!</h4>
+              <p className="small mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                Documento guardado con éxito
+              </p>
+              <div className="d-flex justify-content-center">
                 <button
                   type="button"
-                  className="btn btn-sm px-4 fw-bold mt-2 text-white"
-                  style={{ backgroundColor: '#267c34', borderRadius: '6px', border: 'none' }}
+                  className="btn px-4 text-white fw-bold"
+                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }}
                   onClick={handleCerrarTodo}
                 >
-                  Aceptar
+                  Cerrar
                 </button>
               </div>
             </div>

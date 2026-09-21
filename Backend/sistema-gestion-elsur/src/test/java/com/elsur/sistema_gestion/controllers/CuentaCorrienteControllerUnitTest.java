@@ -26,22 +26,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de CuentaCorrienteController (módulo
- * Clientes, modal "Cuenta Corriente"). Este controller -- igual que
- * CategoriaClienteController -- no tiene una capa de service intermedia; la
- * lógica de negocio vive directamente acá, y hasta este pase NUNCA había sido
- * auditado ni tenía ninguna suite de tests.
- *
- * HALLAZGOS CORREGIDOS en este pase:
- * - actualizarLimite() y registrarPago() usaban "new RuntimeException(...)" para
- *   "cliente no encontrado" (400 en vez de 404, inconsistente con el resto del
- *   sistema) y NO TENÍAN NINGUNA VALIDACIÓN de sus datos de entrada.
- * - registrarPago() caía en el mismo fallback silencioso "primer usuario de la
- *   base" (usuarioRepository.findAll().stream().findFirst()) que ya se había
- *   cerrado en Cliente/Proveedor/Maquina -- este controller había quedado
- *   afuera de esa limpieza porque nunca se había revisado.
- */
 @ExtendWith(MockitoExtension.class)
 class CuentaCorrienteControllerUnitTest {
 
@@ -71,7 +55,6 @@ class CuentaCorrienteControllerUnitTest {
         return u;
     }
 
-    // ---------- actualizarLimite ----------
 
     @Test
     @DisplayName("actualizarLimite: cliente inexistente lanza RecursoNoEncontradoException")
@@ -119,7 +102,6 @@ class CuentaCorrienteControllerUnitTest {
         verify(clienteRepository).save(cliente);
     }
 
-    // ---------- registrarPago ----------
 
     @Test
     @DisplayName("CORREGIDO: registrarPago sin el campo monto se rechaza")
@@ -164,9 +146,6 @@ class CuentaCorrienteControllerUnitTest {
 
         assertThrows(SolicitudInvalidaException.class, () -> controller.registrarPago(1, payload));
 
-        // HALLAZGO CRÍTICO ya cerrado: antes, si el id no existía, se caía en
-        // usuarioRepository.findAll().stream().findFirst() -- ahora debe rechazarse
-        // sin llegar a consultar "todos los usuarios".
         verify(usuarioRepository, never()).findAll();
         verify(movimientoCajaService, never()).guardar(any());
     }

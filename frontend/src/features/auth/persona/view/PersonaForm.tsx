@@ -23,7 +23,6 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables adaptativas de color según el tema activo
   const labelColor = isDark ? '#a1a1aa' : '#475569';
   const inputBg = isDark ? '#222226' : '#ffffff';
   const inputBorder = isDark ? '#3f3f46' : '#cbd5e1';
@@ -33,7 +32,6 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({
   const [errores, setErrores] = useState<any>({});
   const [tiposDocumento, setTiposDocumento] = useState<TipoDocumento[]>([]);
 
-  // Cargar lista de tipos de documento a través del servicio
   useEffect(() => {
     let isMounted = true;
     personaService.obtenerTiposDocumento().then(data => {
@@ -42,7 +40,6 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({
     return () => { isMounted = false; };
   }, []);
 
-  // Inicialización de campos de formulario
   useEffect(() => {
     setFormData({
       nombre: '',
@@ -95,7 +92,6 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({
       const emailNuevo = formData.email?.trim().toLowerCase();
       const dniNuevo = formData.numeroDocumento?.trim();
 
-      // Validar duplicados contra la lista de clientes existente
       const existeEmail = clientes?.some((c: any) => c.persona?.email?.toLowerCase() === emailNuevo);
       const existeDni = clientes?.some((c: any) => c.persona?.numeroDocumento === dniNuevo);
 

@@ -19,7 +19,6 @@ export const asistenteService = {
       body: JSON.stringify({
         mensaje,
         modulo,
-        // Le mandamos solo los últimos turnos para no hacer el pedido gigante
         historial: historial.slice(-8),
       }),
     });
@@ -30,7 +29,6 @@ export const asistenteService = {
         const data = await res.json();
         if (data?.error) mensajeError = data.error;
       } catch {
-        // sin body de error legible, se usa el mensaje genérico
       }
       throw new Error(mensajeError);
     }

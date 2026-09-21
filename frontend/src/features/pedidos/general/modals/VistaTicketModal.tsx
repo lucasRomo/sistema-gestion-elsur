@@ -29,7 +29,6 @@ export const VistaTicketModal: React.FC<Props> = ({
 
   const montoTotal = Number(pedido.monto_total) || 0;
   
-  // Si es venta rápida forzamos el abonado al total, si no, leemos el real del pedido (señas/pagos parciales)
   const montoAbonado = esVentaRapida 
     ? montoTotal 
     : Number(pedido.monto_pago_adelantado ?? pedido.montoAbonado ?? 0);
@@ -43,7 +42,6 @@ export const VistaTicketModal: React.FC<Props> = ({
     document.title = originalTitle;
   };
 
-  // Comprobar si el pedido proviene de Venta Rápida
   const esProcesoVentaRapida = esVentaRapida || pedido.estado === 'VENTA_RAPIDA';
 
   return (
@@ -75,7 +73,6 @@ export const VistaTicketModal: React.FC<Props> = ({
             </button>
           </div>
 
-          {/* Contenedor Envolvente del Ticket Físico */}
           <div 
              id="ticket-imprimible" 
              data-bs-theme="light"
@@ -88,7 +85,6 @@ export const VistaTicketModal: React.FC<Props> = ({
                backgroundColor: '#fff'
              }}
            >
-            {/* Encabezado General */}
             <div className="text-center mb-3">
               <h4 className="fw-bold mb-0">EL SUR</h4>
               <small className="text-uppercase d-block fw-semibold tracking-wider">Centro de Copiado</small>
@@ -115,7 +111,6 @@ export const VistaTicketModal: React.FC<Props> = ({
                   <p className="mb-1"><strong>Estante/Ubicación:</strong> <span className="p-1 bg-dark text-white rounded px-2 fw-bold">{pedido.ubicacion_estante || 'Entrega Inmediata'}</span></p>
                   <p className="mb-1"><strong>Operario Asignado:</strong> {nombreEmpleado}</p>
                   
-                  {/* Se oculta el Egreso Estimado en Venta Rápida */}
                   {!esProcesoVentaRapida && (
                     <p className="mb-1 text-danger">
                       <strong>Egreso Estimado:</strong> {pedido.fecha_entrega_estimada ? new Date(pedido.fecha_entrega_estimada).toLocaleString('es-AR') : 'Prioritario / Sín definir'}

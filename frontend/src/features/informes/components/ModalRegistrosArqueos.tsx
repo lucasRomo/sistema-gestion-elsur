@@ -24,7 +24,6 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables de estilo unificadas para el modal
   const modalBg = isDark ? '#18181b' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const textMuted = isDark ? '#a1a1aa' : '#475569';
@@ -42,18 +41,15 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
   const [movimientosTurno, setMovimientosTurno] = useState<MovimientoCaja[]>([]);
   const [cargandoMovimientos, setCargandoMovimientos] = useState(false);
 
-  // Filtros para la tabla de movimientos dentro del detalle de turno
   const [filtroCategoriaMov, setFiltroCategoriaMov] = useState('TODAS');
   const [filtroHoraDesde, setFiltroHoraDesde] = useState('');
   const [filtroHoraHasta, setFiltroHoraHasta] = useState('');
 
-  // Estados para modales de Comprobante e Imagen de Transferencia
   const [ticketSeleccionado, setTicketSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [imagenComprobanteModal, setImagenComprobanteModal] = useState<string | null>(null);
   const [comprobanteBlobUrl, setComprobanteBlobUrl] = useState<string | null>(null);
   const [cargandoComprobante, setCargandoComprobante] = useState(false);
 
-  // Handler para obtener los datos requeridos por VistaTicketPagoModal usando informesService
   const handleVerTicket = async (m: any) => {
     const idPedidoRaw = m.pedido?.idPedido || m.pedido?.id_pedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1]?.trim() : null);
 
@@ -273,10 +269,8 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
           </div>
 
           <div className="modal-body py-3" style={{ minHeight: '420px' }}>
-            {/* ---------- VISTA LISTA DE TURNOS ---------- */}
             {vista === 'lista' && (
               <>
-                {/* BARRA DE FILTROS */}
                 <div className="p-3 rounded-3 mb-4" style={{ backgroundColor: modalBg, border: `1px solid ${cardBorder}` }}>
                   <div className="row g-3 align-items-end">
                     <div className="col-12 col-md-8">
@@ -316,7 +310,6 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
                   </div>
                 </div>
 
-                {/* TABLA DE TURNOS */}
                 {cargandoTurnos ? (
                   <div className="text-center py-5">
                     <div className="spinner-border text-info mb-3"></div>
@@ -378,7 +371,6 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
               </>
             )}
 
-            {/* ---------- VISTA DETALLE DE TURNO ---------- */}
             {vista === 'detalle' && turnoSeleccionado && (
               <>
                 {/* Resumen del arqueo */}
@@ -409,7 +401,6 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
                   </div>
                 </div>
 
-                {/* Observación de la diferencia de arqueo */}
                 {turnoSeleccionado.observaciones && (
                   <div className="p-3 rounded-3 mb-4 border border-warning bg-warning bg-opacity-10">
                     <div className="fw-bold mb-1 text-warning">
@@ -420,7 +411,6 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
                   </div>
                 )}
 
-                {/* Movimientos del turno */}
                 <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                   <h6 className="fw-bold m-0" style={{ color: textColor }}>Movimientos registrados en el turno</h6>
                   {(filtroCategoriaMov !== 'TODAS' || filtroHoraDesde || filtroHoraHasta) && (
@@ -430,7 +420,6 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
                   )}
                 </div>
 
-                {/* FILTROS DE MOVIMIENTOS: Categoría + Rango Horario */}
                 <div className="p-3 rounded-3 mb-4" style={{ backgroundColor: modalBg, border: `1px solid ${cardBorder}` }}>
                   <div className="row g-3 align-items-end">
                     <div className="col-12 col-md-4">
@@ -602,7 +591,6 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
         </div>
       </div>
 
-      {/* MODAL VER TICKET DE PAGO */}
       {ticketSeleccionado && (
         <VistaTicketPagoModal
           pedido={ticketSeleccionado.pedido}
@@ -612,7 +600,6 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
         />
       )}
 
-      {/* MODAL VER IMAGEN DE COMPROBANTE DE TRANSFERENCIA */}
       {imagenComprobanteModal && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
           <div className="modal-dialog modal-lg modal-dialog-centered">

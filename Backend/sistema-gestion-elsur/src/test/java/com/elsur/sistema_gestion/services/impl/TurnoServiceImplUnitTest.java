@@ -25,11 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de TurnoServiceImpl -- el servicio detrás
- * del módulo "Caja" del sidebar (apertura, cierre y arqueo de turno). Hasta este
- * trabajo no existía NINGUNA suite de tests para este servicio.
- */
+
 @ExtendWith(MockitoExtension.class)
 class TurnoServiceImplUnitTest {
 
@@ -47,7 +43,6 @@ class TurnoServiceImplUnitTest {
         return m;
     }
 
-    // ==================== abrirTurno ====================
 
     @Test
     @DisplayName("Abrir un turno sin ningún turno abierto lo crea en estado ABIERTO con montoEsperadoSistema = montoInicial")
@@ -90,9 +85,7 @@ class TurnoServiceImplUnitTest {
 
         assertThrows(SolicitudInvalidaException.class, () -> turnoService.abrirTurno(turno));
         verify(turnoRepository, never()).save(any(Turno.class));
-        // ANTES: la única defensa contra un monto inicial negativo estaba en el frontend
-        // (CajaView.confirmarAperturaCaja: isNaN(monto) || monto < 0), saltable con una
-        // llamada directa a la API. Corregido: ahora el backend también lo valida.
+
     }
 
     @Test
@@ -106,7 +99,6 @@ class TurnoServiceImplUnitTest {
         assertThrows(SolicitudInvalidaException.class, () -> turnoService.abrirTurno(turno));
     }
 
-    // ==================== cerrarTurno ====================
 
     @Test
     @DisplayName("Cerrar un turno inexistente lanza RecursoNoEncontradoException")
@@ -135,7 +127,6 @@ class TurnoServiceImplUnitTest {
 
         Turno resultado = turnoService.cerrarTurno(10, 1600.0, "Cierre normal", null);
 
-        // esperado = 1000 (inicial) + 800 (ingresos) - 200 (egresos) = 1600
         assertEquals(1600.0, resultado.getMontoEsperadoSistema());
         assertEquals(0.0, resultado.getDiferenciaArqueo());
         assertEquals(EstadoTurno.CERRADO, resultado.getEstado());
@@ -151,8 +142,7 @@ class TurnoServiceImplUnitTest {
         turno.setEstado(EstadoTurno.ABIERTO);
 
         when(turnoRepository.findById(11)).thenReturn(Optional.of(turno));
-        // Un movimiento guardado con tipoMovimiento en minúsculas (ej. por un cliente de API
-        // distinto del frontend actual, que siempre manda mayúsculas)
+
         when(movimientoCajaRepository.findByTurno_IdTurno(11)).thenReturn(List.of(
                 movimiento("ingreso", 500.0)
         ));
@@ -160,10 +150,7 @@ class TurnoServiceImplUnitTest {
 
         Turno resultado = turnoService.cerrarTurno(11, 1500.0, null, null);
 
-        // ANTES: el ingreso en minúscula no se sumaba (comparación exacta), aunque
-        // MovimientoCajaServiceImpl.calcularTotales() (que alimenta la vista en vivo de Caja)
-        // sí lo contaba por usar equalsIgnoreCase, generando una diferencia de arqueo fantasma.
-        // Corregido: ahora ambos servicios usan el mismo criterio case-insensitive.
+
         assertEquals(1500.0, resultado.getMontoEsperadoSistema(), "El ingreso en minúscula ahora sí se suma al cálculo de cierre");
         assertEquals(0.0, resultado.getDiferenciaArqueo());
     }
@@ -178,9 +165,7 @@ class TurnoServiceImplUnitTest {
 
         when(turnoRepository.findById(12)).thenReturn(Optional.of(turnoAbierto));
 
-        // Simula lo que ocurre si el frontend arma la URL con Number('abc') = NaN:
-        // TurnoController.cerrarCaja(@RequestParam Double montoReal) parsea "NaN" con éxito
-        // (Double.valueOf("NaN") es válido en Java), así que este valor SÍ llega al service.
+
         assertThrows(SolicitudInvalidaException.class, () -> turnoService.cerrarTurno(12, Double.NaN, null, null));
         assertThrows(SolicitudInvalidaException.class, () -> turnoService.cerrarTurno(12, null, null, null));
         verify(turnoRepository, never()).save(any(Turno.class));
@@ -216,8 +201,7 @@ class TurnoServiceImplUnitTest {
 
         when(turnoRepository.findById(14)).thenReturn(Optional.of(turnoYaCerrado));
 
-        // Un segundo llamado a cerrarTurno sobre el mismo turno, con otro montoReal,
-        // ahora se rechaza en vez de reprocesarse y sobrescribir el arqueo original.
+
         assertThrows(SolicitudInvalidaException.class,
                 () -> turnoService.cerrarTurno(14, 5000.0, "segundo cierre", null));
 
@@ -226,7 +210,6 @@ class TurnoServiceImplUnitTest {
         assertEquals(1200.0, turnoYaCerrado.getMontoRealContado());
     }
 
-    // ==================== obtenerTurnoAbiertoHoy ====================
 
     @Test
     @DisplayName("obtenerTurnoAbiertoHoy() en realidad no filtra por fecha -- devuelve el primer turno ABIERTO sin importar cuándo se abrió")
@@ -242,10 +225,7 @@ class TurnoServiceImplUnitTest {
 
         assertTrue(resultado.isPresent());
         assertEquals(20, resultado.get().getIdTurno());
-        // Confirmado con el código y los comentarios de TurnoRepository: pese al nombre
-        // "obtenerTurnoAbiertoHoy", el método NO filtra por fecha (se abandonó
-        // FUNCTION('DATE', ...) por romperse con PgBouncer en modo Transaction). Si una caja
-        // queda abierta y nadie la cierra, seguirá apareciendo como "la caja de hoy" indefinidamente.
+
     }
 
     @Test

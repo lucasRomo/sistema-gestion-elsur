@@ -14,11 +14,6 @@ public class CompraInsumoController {
 
     private final CompraInsumoService compraInsumoService;
 
-    // Antes tenía un try/catch (Exception e) que devolvía siempre 500, incluso
-    // para errores de validación (ítems vacíos, insumo/producto inexistente,
-    // caja cerrada). Ahora CompraInsumoServiceImpl tira SolicitudInvalidaException
-    // (400) o RecursoNoEncontradoException (404) según corresponda, y el
-    // GlobalExceptionHandler arma la respuesta.
     @PostMapping
     public ResponseEntity<?> registrarCompraInsumo(@RequestBody CompraInsumoDTO dto) {
         compraInsumoService.registrarCompraInsumo(dto);

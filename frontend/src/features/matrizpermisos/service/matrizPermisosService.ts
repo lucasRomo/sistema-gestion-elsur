@@ -54,10 +54,7 @@ export const matrizPermisosService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombreRol: nombreRol.toUpperCase() })
     });
-    // BUG corregido: antes esto tiraba siempre 'Error al crear el perfil' sin
-    // importar el motivo real (por ejemplo, un nombre duplicado ahora
-    // rechazado por el backend con 409). extraerMensajeError lee el campo
-    // "mensaje" del ApiError que arma GlobalExceptionHandler.
+
     if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al crear el perfil'));
     return await res.json();
   },
@@ -66,19 +63,11 @@ export const matrizPermisosService = {
     const res = await apiFetch(`${BASE_URL}/permisos/roles/${idRol}`, {
       method: 'DELETE'
     });
-    // BUG corregido: leía "errorData.error", pero el backend (ver ApiError en
-    // GlobalExceptionHandler) manda el texto pensado para mostrarse en el
-    // campo "mensaje" -- "error" solo trae la frase genérica del status HTTP
-    // ("Conflict", "Bad Request"). El motivo real (por ejemplo "no se puede
-    // eliminar el perfil porque está asignado a uno o más usuarios activos")
-    // nunca le llegaba al usuario.
+
     if (!res.ok) throw new Error(await extraerMensajeError(res, 'No se pudo eliminar el perfil'));
     return true;
   },
 
-  // Perfiles "PERFIL_<usuario>" sin ningún usuario asignado hoy -- quedaban
-  // invisibles porque obtenerRoles() los filtra a propósito del selector de
-  // perfiles globales. Esto es lo que permite verlos y limpiarlos.
   obtenerPerfilesHuerfanos: async () => {
     const res = await apiFetch(`${BASE_URL}/permisos/roles/huerfanos`);
     if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al obtener los perfiles huérfanos'));

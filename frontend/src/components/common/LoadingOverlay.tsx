@@ -1,7 +1,7 @@
 import React, { useSyncExternalStore } from 'react';
 import { loadingStore } from '../../config/loadingStore';
 
-const COLOR_MORADO = '#8e45e0'; // mismo morado que usan en Informes (KPI de ingresos)
+const COLOR_MORADO = '#8e45e0';
 
 export const LoadingOverlay: React.FC = () => {
   const { visible, mensaje } = useSyncExternalStore(

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Importaciones internas del módulo insumos
 import { InsumoTabla } from '../components/InsumoTabla';
 import { InsumoProveedoresModal } from '../components/InsumoProveedoresModal';
 import { InsumoModal } from '../components/InsumoModal';
@@ -16,7 +15,6 @@ import type { Insumo } from '../types/Insumo';
 import { exportarInsumosExcel, exportarInsumosPDF } from '../utils/exportInsumosUtils';
 import { ModalStockCriticoList, type ItemStockCritico } from '../modals/ModalStockCriticoList';
 
-// Componentes y contextos compartidos globales
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useIsMobile } from '../../../hook/useIsMobile';
@@ -85,14 +83,12 @@ export const Insumos: React.FC = () => {
   return (
     <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
       
-      {/* Encabezado Superior */}
       <div className="d-flex justify-content-center align-items-center mb-4">
         <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
           Stock de Insumos
         </h2>
       </div>
 
-      {/* Componente Filtros */}
       <InsumosFiltros 
         filtroNombre={filtroNombre}
         setFiltroNombre={setFiltroNombre}
@@ -100,7 +96,6 @@ export const Insumos: React.FC = () => {
         setFiltroEstado={setFiltroEstado}
       />
 
-      {/* Contenedor Único de Tabla con Scroll Interno (65.3vh) */}
       <div 
         className="rounded-3 border mb-3 font-monospace" 
         style={{ 
@@ -130,7 +125,6 @@ export const Insumos: React.FC = () => {
         )}
       </div>
 
-      {/* Botonera Inferior Completa */}
       <div className={`d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
         {!isMobile && (
           <button 
@@ -243,7 +237,6 @@ export const Insumos: React.FC = () => {
         </div>
       </div>
 
-      {/* Modales Complementarios */}
       <ModalStockCriticoList
         show={showStockCriticoModal}
         titulo="Stock Crítico de Insumos"
@@ -279,10 +272,7 @@ export const Insumos: React.FC = () => {
         insumoEditando={insumoEditando}
         onClose={() => setShowModalForm(false)}
         onGuardar={async (data) => {
-          // Nota: no se atrapa el error acá a propósito; InsumoModal es quien
-          // lo captura y lo muestra al usuario, manteniendo el modal abierto
-          // para que pueda corregir los datos (antes el error se perdía en
-          // consola sin ningún aviso).
+
           if (insumoEditando) {
             setInsumoEditando(data);
             setMostrarConfirmacion(true);
@@ -339,9 +329,6 @@ export const Insumos: React.FC = () => {
                       setMensajeExito('Modificación hecha exitosamente');
                       setMostrarExito(true);
                     } catch (err: any) {
-                      // FIX: antes esta confirmación no manejaba errores; si el
-                      // backend rechazaba la modificación (ej: nombre duplicado)
-                      // el error quedaba sin capturar y sin avisar al usuario.
                       alert(err?.message || 'Error al modificar el insumo.');
                     } finally {
                       setGuardandoEdicion(false);

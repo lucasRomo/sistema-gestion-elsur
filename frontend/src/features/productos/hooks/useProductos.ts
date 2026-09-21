@@ -5,10 +5,6 @@ import type { Producto } from '../types/Producto';
 
 export const useProductos = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
-  // NUEVO (bug reportado: "agregar en las tablas que aparezca un círculo de
-  // cargando"): antes este hook no exponía ningún estado de carga, así que la
-  // tabla pasaba de vacía a llena sin ningún indicador visual mientras
-  // esperaba la respuesta del backend.
   const [cargando, setCargando] = useState(true);
 
   const cargar = async () => {

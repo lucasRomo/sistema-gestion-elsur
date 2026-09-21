@@ -18,7 +18,6 @@ export const ProductoTabla: React.FC<Props> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables cromáticas adaptativas estandarizadas
   const tableBg = isDark ? '#1d1d1d' : '#ffffff';
   const tableText = isDark ? '#e4e4e7' : '#18181b';
   const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
@@ -28,7 +27,6 @@ export const ProductoTabla: React.FC<Props> = ({
   const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
   const noMachineColor = isDark ? 'rgba(255, 255, 255, 0.5)' : '#64748b';
 
-  // Ordenamos la lista por idProducto de menor a mayor
   const productosOrdenados = [...productos].sort((a, b) => (a.idProducto ?? 0) - (b.idProducto ?? 0));
 
   return (
@@ -88,7 +86,6 @@ export const ProductoTabla: React.FC<Props> = ({
               </td>
               <td className="px-3 py-3 text-center">
                 <div className="d-flex justify-content-center gap-2">
-                  {/* Botón Toggle Vínculo de Stock */}
                   {onToggleStockVinculado && (
                     <button 
                       className={`btn btn-sm d-flex align-items-center justify-content-center rounded-2 ${
@@ -104,7 +101,6 @@ export const ProductoTabla: React.FC<Props> = ({
                     </button>
                   )}
                   
-                  {/* Botón Editar Producto */}
                   <button 
                     className="btn btn-outline-info btn-sm d-flex align-items-center justify-content-center rounded-2" 
                     style={{ width: '32px', height: '32px' }}
@@ -114,7 +110,6 @@ export const ProductoTabla: React.FC<Props> = ({
                     <i className="bi bi-pencil-square fs-6"></i>
                   </button>
 
-                  {/* Botón Configurar Receta / Insumos */}
                   {onConfigurarReceta && (
                     <button 
                       className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2" 

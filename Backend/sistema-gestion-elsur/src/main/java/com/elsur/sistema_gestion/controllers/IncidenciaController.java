@@ -79,14 +79,6 @@ public class IncidenciaController {
             );
             
             return ResponseEntity.ok(mov);
-        // CORREGIDO -- HALLAZGO: este endpoint arma su propia respuesta { code,
-        // message } en vez de dejar pasar la excepción al GlobalExceptionHandler, y
-        // antes solo distinguía IllegalStateException/IllegalArgumentException. Las
-        // nuevas RecursoNoEncontradoException (incidencia/máquina inexistente) y
-        // SolicitudInvalidaException (monto inválido, usuario ausente/inexistente)
-        // agregadas en IncidenciaServiceImpl cAÍAN en el catch-all de más abajo,
-        // devolviendo 500 "Internal Server Error" -- como si fuera un bug del
-        // servidor -- en vez del 404/400 que realmente corresponde.
         } catch (RecursoNoEncontradoException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("code", "NOT_FOUND", "message", e.getMessage()));

@@ -17,7 +17,7 @@ export const LoginFeedbackModal: React.FC<LoginFeedbackModalProps> = ({ mostrar,
       <div className="modal-dialog modal-sm modal-dialog-centered" style={{ maxWidth: '380px' }}>
         <div 
           className="modal-content p-4 text-white text-center" 
-          style={{ backgroundColor: '#18181b', border: '2px solid #8e45e0' }} // Borde violeta fijo
+          style={{ backgroundColor: '#18181b', border: '2px solid #8e45e0' }} 
         >
           <div className="mb-2">
             {esExito ? (
@@ -36,7 +36,7 @@ export const LoginFeedbackModal: React.FC<LoginFeedbackModalProps> = ({ mostrar,
           <div className="d-flex justify-content-center">
             <button 
               className="btn btn-sm px-4 fw-bold text-white" 
-              style={{ backgroundColor: '#8e45e0', borderColor: '#8e45e0' }} // Botón violeta
+              style={{ backgroundColor: '#8e45e0', borderColor: '#8e45e0' }} 
               onClick={onAceptar}
             >
               Aceptar

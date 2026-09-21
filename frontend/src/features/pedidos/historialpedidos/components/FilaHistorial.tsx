@@ -28,12 +28,10 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
   const fechaColor = isDark ? '#a1a1aa' : '#64748b';
   const empleadoColor = isDark ? '#d4d4d8' : '#334155';
 
-  // Nombre del cliente
   const nombreCliente = p.cliente?.persona 
     ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
     : (p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
 
-  // Operador de cierre
   const ultimaAsignacion = p.asignaciones && p.asignaciones.length > 0 
     ? p.asignaciones[p.asignaciones.length - 1] 
     : null;
@@ -42,7 +40,6 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
     ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
     : 'Sistema';
 
-  // Formateador de fechas
   const formatearFechaString = (fechaIso: string | null | undefined) => {
     if (!fechaIso) return '-';
     const [fecha, horaCompleta] = fechaIso.split('T');
@@ -73,17 +70,14 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg}
       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
     >
-      {/* ID */}
       <td className="py-3 px-3 text-center text-info fw-bold">
         #{p.id_pedido}
       </td>
       
-      {/* Cliente */}
       <td className="py-3 px-3 text-start">
         <span className="fw-semibold" style={{ color: clienteColor }}>{nombreCliente}</span>
       </td>
 
-      {/* Contacto */}
       <td className="py-3 px-3 text-center">
         <div className="d-flex justify-content-center gap-1">
           {p.cliente?.persona?.telefono && (
@@ -102,7 +96,6 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
         </div>
       </td>
 
-      {/* Operador de Cierre */}
       <td className="py-3 px-3 text-start">
         <span style={{ color: empleadoColor }}>
           <i className="bi bi-person-check text-secondary me-1"></i>
@@ -110,22 +103,18 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
         </span>
       </td>
 
-      {/* Fecha Creación */}
       <td className="py-3 px-3 text-center font-monospace" style={{ color: fechaColor, fontSize: '0.82rem' }}>
         {fechaAsignacionFormateada}
       </td>
 
-      {/* Entrega Estimada */}
       <td className="py-3 px-3 text-center font-monospace text-warning fw-semibold" style={{ fontSize: '0.82rem' }}>
         {fechaEntregaEstimadaFormateada}
       </td>
 
-      {/* Entrega Final */}
       <td className="py-3 px-3 text-center font-monospace text-info fw-semibold" style={{ fontSize: '0.82rem' }}>
         {fechaEntregaFinalFormateada}
       </td>
 
-      {/* Estado Final */}
       <td className="py-3 px-3 text-center">
         <span className={`badge rounded-pill px-3 py-2 ${
           p.estado === 'CANCELADO' 
@@ -140,17 +129,14 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
         </span>
       </td>
 
-      {/* Monto Total */}
       <td className="py-3 px-3 text-center fw-bold" style={{ color: tableText }}>
         ${Number(p.monto_total).toFixed(2)}
       </td>
 
-      {/* Monto Cobrado */}
       <td className="py-3 px-3 text-center text-success fw-bold">
         ${Number(p.monto_pago_adelantado).toFixed(2)}
       </td>
       
-      {/* Acciones */}
       <td className="py-3 px-3 text-center">
         <div className="d-flex justify-content-center gap-2 align-items-center">
           <button 

@@ -61,9 +61,7 @@ export const clienteService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(categoria)
     });
-    // CORREGIDO: antes se lanzaba siempre el mismo mensaje genérico "Error al crear
-    // categoría", enmascarando el mensaje real del backend (nombre vacío, duplicado,
-    // descuento fuera de rango, etc.) -- el mismo patrón ya corregido en crearCliente.
+
     if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al crear la categoría.'));
     return res.json();
   },
@@ -96,9 +94,7 @@ export const clienteService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ limiteCredito })
     });
-    // CORREGIDO: antes se lanzaba siempre "Error al actualizar límite", enmascarando
-    // el motivo real del rechazo del backend (ej. límite negativo, saldo deudor
-    // actual mayor al nuevo límite, etc.)
+
     if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al actualizar el límite de crédito.'));
     return res;
   },
@@ -125,10 +121,7 @@ export const clienteService = {
         idUsuario
       })
     });
-    // CORREGIDO: antes se lanzaba siempre "Error al registrar pago" sin importar la
-    // causa real (ej. turno de caja cerrado, monto inválido, comprobante faltante en
-    // transferencias) -- el modal terminaba mostrando un mensaje genérico que no
-    // ayudaba al usuario a entender qué pasó.
+
     if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al registrar el pago.'));
     return res.json();
   }

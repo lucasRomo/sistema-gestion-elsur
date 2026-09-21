@@ -24,7 +24,6 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Paleta de colores adaptativa estándar
   const bgModal = isDark ? '#18181b' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const subTextColor = isDark ? '#a1a1aa' : '#64748b';
@@ -40,11 +39,9 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
   const [cargandoHistorial, setCargandoHistorial] = useState<boolean>(false);
   const [guardando, setGuardando] = useState<boolean>(false);
 
-  // Modal de Advertencia
   const [mostrarAlerta, setMostrarAlerta] = useState<boolean>(false);
   const [mensajeAlerta, setMensajeAlerta] = useState<string>('');
 
-  // Filtros de Historial
   const [filtroHistorialNombre, setFiltroHistorialNombre] = useState<string>('');
   const [filtroHistorialProducto, setFiltroHistorialProducto] = useState<string>('TODOS');
   const [filtroHistorialProveedor, setFiltroHistorialProveedor] = useState<string>('TODOS');
@@ -113,8 +110,6 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
     const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
     const idUsuario = userLogueado.idUsuario ?? userLogueado.id_usuario;
 
-    // FIX: antes, si no se detectaba un usuario logueado activo, la merma se
-    // atribuía en silencio al usuario ID 1 en lugar de avisar al operador.
     if (!idUsuario) {
       setMensajeAlerta('No se detectó un usuario logueado activo.');
       setMostrarAlerta(true);
@@ -201,7 +196,6 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
             color: textColor
           }}
         >
-          {/* Header */}
           <div className="modal-header border-bottom border-secondary-subtle pb-3">
             <h5 className="modal-title fw-bold text-warning d-flex align-items-center">
               <i className="bi bi-exclamation-diamond-fill me-2 fs-4"></i>
@@ -214,7 +208,6 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
             ></button>
           </div>
 
-          {/* Navegación por pestañas */}
           <div className="px-3 pt-3">
             <div className="btn-group w-100">
               <button 
@@ -234,7 +227,6 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
             </div>
           </div>
 
-          {/* Cuerpo del Modal */}
           <div className="modal-body my-2" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             {tabActiva === 'registrar' ? (
               <div>
@@ -357,9 +349,7 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
                 )}
               </div>
             ) : (
-              /* TAB HISTORIAL */
               <div>
-                {/* FILTROS DE HISTORIAL */}
                 <div className="row g-2 mb-3">
                   <div className="col-md-4">
                     <div className="position-relative">
@@ -487,7 +477,6 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
             )}
           </div>
 
-          {/* Footer */}
           <div className="modal-footer border-top border-secondary-subtle pt-2">
             <button type="button" className="btn btn-secondary px-4 fw-bold" onClick={onClose}>
               Volver
@@ -505,7 +494,6 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
         </form>
       </div>
 
-      {/* Modal de Advertencia Personalizado */}
       {mostrarAlerta && (
         <div
           className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"

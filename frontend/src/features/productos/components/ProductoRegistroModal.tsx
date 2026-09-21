@@ -39,9 +39,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
   const [showCategorias, setShowCategorias] = useState<boolean>(false);
   const [nuevaCategoria, setNuevaCategoria] = useState<string>('');
-  // CORREGIDO: crear (o eliminar) una categoría acá no mostraba ninguna
-  // confirmación -- el campo se limpiaba y la lista se actualizaba en
-  // silencio, sin aviso visual de que la operación funcionó.
+
   const [mostrarExitoCategoria, setMostrarExitoCategoria] = useState<boolean>(false);
   const [mensajeExitoCategoria, setMensajeExitoCategoria] = useState<string>('');
 
@@ -54,7 +52,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
   const [errorGuardado, setErrorGuardado] = useState<string>('');
   const [guardando, setGuardando] = useState<boolean>(false);
   
-  // Referencias para validaciones de HTML5
   const nombreProductoRef = useRef<HTMLInputElement>(null);
   const precioBaseRef = useRef<HTMLInputElement>(null);
   const stockRef = useRef<HTMLInputElement>(null);
@@ -69,12 +66,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     estado: 'Activo'
   });
 
-  // CORREGIDO: estas tres funciones llamaban con fetch directo a URLs
-  // hardcodeadas ('http://localhost:8080/api/...'), lo que -- a diferencia del
-  // resto del sistema, que siempre pasa por apiFetch/API_BASE_URL -- ignoraba
-  // por completo la variable de entorno VITE_API_URL y rompía en cualquier
-  // entorno que no fuera localhost:8080. Ahora reutilizan productoService.ts,
-  // igual que el resto de los módulos.
   const cargarCategoriasData = async () => {
     try {
       const data = await getCategorias();
@@ -181,8 +172,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
       setMensajeExitoCategoria('Categoría creada correctamente');
       setMostrarExitoCategoria(true);
     } catch (error: any) {
-      // CORREGIDO: antes se mostraba siempre "No se pudo crear la categoría.",
-      // descartando el motivo real que devuelve el backend (ej. duplicado).
       alert(error?.message || "Error al crear categoría o conectar con el servidor.");
     }
   };
@@ -231,9 +220,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     try {
       await onGuardar(payload);
     } catch (err: any) {
-      // CORREGIDO: antes un error acá (ej. nombre duplicado saltando el chequeo
-      // del frontend) quedaba como una promesa rechazada sin manejar -- sin
-      // ningún aviso para el usuario, ni siquiera en consola.
       setErrorGuardado(err?.message || 'Ocurrió un error al guardar el producto.');
     } finally {
       setGuardando(false);
@@ -270,7 +256,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                   </div>
                 )}
 
-                {/* Nombre del Producto */}
                 <div className="mb-3">
                   <label className="form-label small fw-semibold" style={{ color: mutedText }}>Nombre del Producto *</label>
                   <input 
@@ -280,11 +265,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                     value={formData.nombreProducto} 
                     onChange={e => setFormData({...formData, nombreProducto: e.target.value})} 
                     onBlur={validarNombreDuplicado}
-                    // CORREGIDO: el pattern anterior ([A-Za-z0-9Á-Úá-ú\s]+) no dejaba
-                    // escribir puntos, comas, guiones, paréntesis ni "/" o "&" -- cosas
-                    // normales en un nombre de producto real (ej. "Folleto A4 (dúplex)",
-                    // "Tarjeta 8.5x11", "Volante B/N"). Se amplía para permitir la
-                    // puntuación más común sin dejar de bloquear caracteres raros.
                     required pattern="[A-Za-z0-9Á-Úá-ú\s.,\-_()/&%]+"
                     onInvalid={(e: any) => {
                       if (e.target.validity.valueMissing) e.target.setCustomValidity("El nombre del producto es obligatorio.");
@@ -295,7 +275,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                 </div>
                 
                 <div className="row mb-3">
-                  {/* Precio Base */}
                   <div className="col-6">
                     <label className="form-label small fw-semibold" style={{ color: mutedText }}>Precio Base *</label>
                     <input 
@@ -319,7 +298,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                     />
                   </div>
 
-                  {/* Stock Inicial */}
                   <div className="col-6">
                     <label className="form-label small fw-semibold" style={{ color: mutedText }}>Stock Inicial *</label>
                     <input 
@@ -459,7 +437,6 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                   </div>
                 </div>
 
-                {/* Categoría */}
                 <div className="mb-3">
                   <label className="form-label small fw-semibold" style={{ color: mutedText }}>Categoría *</label>
                   <div className="input-group position-relative">
@@ -584,13 +561,13 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
         </div>
       )}
 
-      {mostrarExitoCategoria && (
+       {mostrarExitoCategoria && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
             <div
               className="modal-content p-4 text-center shadow"
               style={{
-                border: '2px solid #8e45e0',
+                border: '2px solid #198754',
                 backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
                 color: isDark ? '#ffffff' : '#0f172a',
                 borderRadius: '12px'
@@ -598,7 +575,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
             >
               <div
                 className="d-inline-flex align-items-center justify-content-center mx-auto mb-3"
-                style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: '#8e45e0', color: '#ffffff' }}
+                style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: '#198754', color: '#ffffff' }}
               >
                 <i className="bi bi-check-lg fs-2"></i>
               </div>

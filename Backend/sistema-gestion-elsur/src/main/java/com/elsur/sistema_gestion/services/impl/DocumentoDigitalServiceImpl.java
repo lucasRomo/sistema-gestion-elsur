@@ -159,12 +159,16 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
         return documentoDigitalRepository.save(doc);
     }
 
-    @Override
+   @Override
     public void eliminarLogico(Long id) {
-        DocumentoDigital doc = findById(id);
-        doc.setEstado("Inactivo");
-        documentoDigitalRepository.save(doc);
-    }
+    DocumentoDigital doc = findById(id);
+    doc.setEstado("Inactivo");
+    documentoDigitalRepository.save(doc);
+    if (doc.getProducto() != null) {
+        Producto producto = doc.getProducto();
+        producto.setEstado("Inactivo");
+        productoRepository.save(producto);
+    }}
 
     @Override
     public byte[] descargarArchivo(String nombreArchivo) throws Exception {

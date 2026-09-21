@@ -28,9 +28,6 @@ public class InsumoController {
         return insumoService.listarInsumosBajoStock();
     }
 
-    // Antes tenía un try/catch (RuntimeException e) que devolvía 400 a mano.
-    // Ahora InsumoServiceImpl tira SolicitudInvalidaException ante cualquier
-    // validación fallida y el GlobalExceptionHandler arma la respuesta (400).
     @PostMapping
     public ResponseEntity<?> crear(
             @RequestBody Insumo insumo,
@@ -47,9 +44,6 @@ public class InsumoController {
         return ResponseEntity.ok(insumoService.guardar(insumo, idUsuario));
     }
 
-    // Antes el catch (Exception e) envolvía tanto el parseo del BigDecimal
-    // como los errores de negocio del service; ahora ambos casos son
-    // SolicitudInvalidaException (400) y los maneja el GlobalExceptionHandler.
     @PostMapping("/{id}/convertir")
     public ResponseEntity<?> convertirStock(
             @PathVariable Integer id,

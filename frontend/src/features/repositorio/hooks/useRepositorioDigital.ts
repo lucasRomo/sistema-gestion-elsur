@@ -15,28 +15,23 @@ export const useRepositorioDigital = () => {
 
   const [documentoSeleccionado, setDocumentoSeleccionado] = useState<DocumentoDigital | null>(null);
 
-  // Modales Principales
   const [modalAgregar, setModalAgregar] = useState<boolean>(false);
   const [modalPrevisualizar, setModalPrevisualizar] = useState<boolean>(false);
   const [modalNuevaInst, setModalNuevaInst] = useState<boolean>(false);
   const [modalNuevaArea, setModalNuevaArea] = useState<boolean>(false);
 
-  // 2. Estado para el Modal de Receta
   const [showRecetaModal, setShowRecetaModal] = useState<boolean>(false);
   const [productoParaReceta, setProductoParaReceta] = useState<Producto | null>(null);
 
-  // Modales Personalizados de Eliminar
   const [idAEliminar, setIdAEliminar] = useState<number | null>(null);
   const [mostrarConfirmarEliminar, setMostrarConfirmarEliminar] = useState<boolean>(false);
   const [mostrarExitoEliminar, setMostrarExitoEliminar] = useState<boolean>(false);
 
   const [guardando, setGuardando] = useState(false);
 
-  // Formulario Institución Rápida
   const [nombreInstNueva, setNombreInstNueva] = useState('');
   const [tipoInstNueva, setTipoInstNueva] = useState('Universidad');
 
-  // Formulario Cátedra Rápida
   const [nombreAreaNueva, setNombreAreaNueva] = useState('');
   const [idInstParaArea, setIdInstParaArea] = useState('');
 
@@ -86,7 +81,6 @@ export const useRepositorioDigital = () => {
   const handleAbrirReceta = (e: React.MouseEvent, doc: DocumentoDigital) => {
     e.stopPropagation();
     if (doc.producto) {
-      // Casteamos el productoAsociado como Producto para el modal
       setProductoParaReceta(doc.producto as unknown as Producto);
       setShowRecetaModal(true);
     }
@@ -97,7 +91,6 @@ export const useRepositorioDigital = () => {
     setProductoParaReceta(null);
   };
 
-  // Manejo de Eliminación Lógica con Modal Personalizado
   const solicitarEliminar = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
     setIdAEliminar(id);
@@ -137,7 +130,6 @@ export const useRepositorioDigital = () => {
     }
   };
 
-  // Reseteo de Formularios al Cerrar/Cancelar
   const cerrarModalNuevaInst = () => {
     setNombreInstNueva('');
     setTipoInstNueva('Universidad');
@@ -179,7 +171,6 @@ export const useRepositorioDigital = () => {
       };
 
       setAreas((prev) => [...prev, areaCompleta]);
-      // ❌ SE QUITÓ: cerrarModalNuevaArea();
     } catch (err) {
       console.error('Error al crear área:', err);
       throw err;

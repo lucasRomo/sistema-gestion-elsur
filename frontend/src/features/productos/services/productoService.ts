@@ -20,7 +20,6 @@ const obtenerIdUsuarioLogueado = (): number | null => {
   }
 };
 
-// --- Productos ---
 export const getProductos = async (): Promise<Producto[]> => {
   const res = await apiFetch(API_URL);
   if (!res.ok) throw new Error("Error al obtener productos");
@@ -93,7 +92,6 @@ export const toggleStockVinculado = async (idProducto: number) => {
   return res.json();
 };
 
-// --- Insumos y Recetas ---
 export const getInsumos = async (): Promise<any[]> => {
   const res = await apiFetch(API_INSUMOS_URL);
   if (!res.ok) throw new Error("Error al obtener insumos");
@@ -123,7 +121,6 @@ export const getTodasLasRecetas = async (): Promise<any[]> => {
   return res.json();
 };
 
-// --- Categorías ---
 export const getCategorias = async (): Promise<Categoria[]> => {
   const res = await apiFetch(API_CATEGORIAS_URL);
   if (!res.ok) throw new Error("Error al obtener categorías");
@@ -151,14 +148,12 @@ export const eliminarCategoria = async (idCategoria: number): Promise<void> => {
   }
 };
 
-// --- Máquinas ---
 export const getMaquinas = async (): Promise<Maquina[]> => {
   const res = await apiFetch(API_MAQUINAS_URL);
   if (!res.ok) throw new Error("Error al obtener máquinas");
   return res.json();
 };
 
-// --- Mermas ---
 export const getHistorialMermas = async (): Promise<any[]> => {
   const res = await apiFetch(API_MERMAS_URL);
   if (!res.ok) throw new Error("Error al obtener mermas");

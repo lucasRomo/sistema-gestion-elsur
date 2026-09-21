@@ -14,7 +14,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 @Repository
 public interface MovimientoCajaRepository extends JpaRepository<MovimientoCaja, Integer> {
 
-    // Usamos JPQL explícito mapeando la relación directa m.pedido.id_pedido
     @Query("SELECT m FROM MovimientoCaja m WHERE m.pedido.id_pedido = :idPedido")
     List<MovimientoCaja> buscarPorPedido(@Param("idPedido") Integer idPedido);
     List<MovimientoCaja> findByFechaBetween(LocalDateTime inicio, LocalDateTime fin);

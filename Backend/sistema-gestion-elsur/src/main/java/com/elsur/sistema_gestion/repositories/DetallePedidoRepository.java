@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DetallePedidoRepository extends JpaRepository<DetallePedido, Integer> {
-    // Spring Data JPA entiende que 'pedido.id_pedido' hace referencia al campo dentro del objeto pedido
     @Query("SELECT d FROM DetallePedido d WHERE d.pedido.id = :idPedido")
     List<DetallePedido> findByPedidoIdPedido(@Param("idPedido") Integer idPedido);
 }

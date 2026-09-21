@@ -40,7 +40,6 @@ export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
       }}
     >
       
-      {/* 1. Buscar por Cliente */}
       <div className="col-md-4">
         <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Buscar por Cliente:
@@ -55,7 +54,6 @@ export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
         />
       </div>
 
-      {/* 2. Filtrar por Estado Operativo */}
       <div className="col-md-4">
         <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Filtrar por Estado Operativo:
@@ -77,7 +75,6 @@ export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
         </select>
       </div>
 
-      {/* 3. Filtrar por Empleado Asignado */}
       <div className="col-md-4">
         <label className="form-label small fw-semibold" style={{ color: mutedText }}>
           Filtrar por Empleado Asignado:

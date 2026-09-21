@@ -22,14 +22,12 @@ export const SelectorProducto: React.FC<Props> = ({
 
   const borderTheme = isDark ? '#3f3f46' : '#cbd5e1';
 
-  // Sincronizar el campo de búsqueda cuando se limpia el producto seleccionando o agregando
   useEffect(() => {
     if (!productoId) {
       setBusquedaProducto('');
     }
   }, [productoId]);
 
-  // Filtrado reactivo de productos según lo que escriba el usuario
   const productosFiltrados = useMemo(() => {
     if (!busquedaProducto.trim()) return productos;
     return productos.filter(p => 
@@ -57,7 +55,6 @@ export const SelectorProducto: React.FC<Props> = ({
           onBlur={() => setTimeout(() => setMostrarDropdown(false), 200)}
         />
 
-        {/* Menú desplegable flotante para resultados de búsqueda */}
         {mostrarDropdown && (
           <div 
             className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}

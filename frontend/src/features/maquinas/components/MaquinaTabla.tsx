@@ -25,7 +25,6 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
   const rowBorder = isDark ? '#27272a' : '#f1f5f9';
   const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
 
-  // Ordenamos las máquinas por ID de forma ascendente
   const maquinasOrdenadas = [...maquinas].sort((a, b) => (a.idMaquina ?? 0) - (b.idMaquina ?? 0));
 
   const renderBadgeEstado = (estado: string) => {

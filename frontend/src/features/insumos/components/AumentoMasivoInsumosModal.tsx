@@ -24,7 +24,6 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
   const isDark = theme === 'dark';
 
   const modalBg = isDark ? '#1a1a1c' : '#ffffff';
-  // Color naranja estático exacto
   const orangeColor = '#d37c0b';
   const modalBorder = orangeColor;
   const headerBorder = isDark ? '#27272a' : '#e2e8f0';
@@ -45,7 +44,6 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
   const [showProveedor, setShowProveedor] = useState(false);
   const [textoProveedor, setTextoProveedor] = useState('');
 
-  // Buscador filtrado para selección manual
   const insumosFiltradosManual = useMemo(() => {
     if (!busquedaInsumo.trim()) return insumos;
     return insumos.filter(ins =>
@@ -102,7 +100,6 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
       return;
     }
 
-    // Convertir a valor negativo si es descuento
     const porcentajeFinal = tipoOperacion === 'DESCUENTO' ? -Math.abs(porcentaje) : Math.abs(porcentaje);
 
     setCargando(true);
@@ -148,7 +145,6 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
               
-              {/* Opción de Aumento o Descuento */}
               <div className="mb-3">
                 <label className="form-label fw-bold" style={{ color: orangeColor }}>Tipo de Acción:</label>
                 <div className="d-flex gap-4">
@@ -182,7 +178,6 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Porcentaje */}
               <div className="mb-4">
                 <label className="form-label fw-bold" style={{ color: orangeColor }}>
                   Porcentaje de {tipoOperacion === 'AUMENTO' ? 'Incremento' : 'Disminución'} (%):
@@ -204,7 +199,6 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Selección del Criterio */}
               <div className="mb-3">
                 <label className="form-label fw-bold" style={{ color: labelColor }}>Aplicar A:</label>
                 <div className="d-flex gap-3 flex-wrap">
@@ -252,7 +246,6 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Filtro por Proveedor */}
               {criterio === 'PROVEEDOR' && (
                 <div className="mb-3">
                   <label className="form-label fw-semibold" style={{ color: orangeColor }}>Seleccionar Proveedor:</label>
@@ -310,7 +303,6 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
                 </div>
               )}
 
-              {/* Selección manual con buscador */}
               {criterio === 'SELECCION' && (
                 <div className="mb-3">
                   <div className="d-flex justify-content-between align-items-center mb-2">
@@ -325,7 +317,6 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
                     </button>
                   </div>
 
-                  {/* Campo de búsqueda dinámico */}
                   <input
                     type="text"
                     className="form-control form-control-sm mb-2 shadow-none"

@@ -1,12 +1,10 @@
-// src/types/Empleado.ts
-// src/types/Empleado.ts
 import type { Persona } from './Persona';
 
 export interface Empleado {
     idEmpleado?: number;
-    fechaContratacion: string; // Formato YYYY-MM-DD para mapear con LocalDate
+    fechaContratacion: string; 
     cargo: string;
-    salario: number; // Mapea con BigDecimal
+    salario: number; 
     estado: string;
     persona: Persona;
 }

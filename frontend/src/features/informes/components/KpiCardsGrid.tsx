@@ -38,7 +38,6 @@ export const KpiCardsGrid: React.FC<KpiCardsGridProps> = ({ kpiCards }) => {
           <div
             className="p-3 rounded-4 h-100 shadow-sm d-flex flex-column position-relative overflow-hidden im-surface kpi-card-surface"
           >
-            {/* Cabecera: ícono + ticker + título */}
             <div className="d-flex align-items-center gap-2 mb-2 position-relative z-1">
               <div
                 className="d-flex align-items-center justify-content-center rounded-2 kpi-card-icon"
@@ -63,7 +62,6 @@ export const KpiCardsGrid: React.FC<KpiCardsGridProps> = ({ kpiCards }) => {
               </div>
             </div>
 
-            {/* Gráfico Sparkline SVG */}
             <div className="position-absolute start-0 end-0 bottom-0 w-100" style={{ height: '58%' }}>
               <svg viewBox="0 0 200 50" preserveAspectRatio="none" className="w-100 h-100">
                 <defs>
@@ -93,7 +91,6 @@ export const KpiCardsGrid: React.FC<KpiCardsGridProps> = ({ kpiCards }) => {
               </svg>
             </div>
 
-            {/* Valor principal */}
             <div className="mt-auto position-relative z-1">
               <h3 className="fw-bold mb-0 text-white kpi-card-value" style={{ fontSize: '1.6rem', letterSpacing: '-0.5px' }}>
                 {card.val}

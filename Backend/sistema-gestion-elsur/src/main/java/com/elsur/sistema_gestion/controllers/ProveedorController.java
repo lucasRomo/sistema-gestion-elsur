@@ -7,9 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-// CORREGIDO: @CrossOrigin(origins = "*") tiene prioridad sobre la config global de
-// CORS restringida (SecurityConfig/app.cors.allowed-origins) y la neutralizaba para
-// estas rutas.
 @RestController
 @RequestMapping("/api/proveedores")
 public class ProveedorController {

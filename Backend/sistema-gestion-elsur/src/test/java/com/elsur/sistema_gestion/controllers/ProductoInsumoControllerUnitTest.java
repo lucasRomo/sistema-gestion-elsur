@@ -24,21 +24,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de ProductoInsumoController.actualizarReceta
- * (módulo Productos, modal "Configurar Receta / Insumos"). Hasta este trabajo no
- * existía NINGUNA suite de tests para este controller -- la lógica de negocio vive
- * directamente en el controller, sin una capa de service intermedia.
- *
- * HALLAZGOS PRINCIPALES (CORREGIDOS en este pase):
- * 1) No se validaba nada de los ítems recibidos: una cantidadConsumo nula
- *    reventaba como una DataIntegrityViolationException opaca (la columna es
- *    NOT NULL) y un insumo repetido en el mismo envío chocaba contra la clave
- *    primaria compuesta (idProducto + idInsumo), ambos devolviendo un 500
- *    genérico sin ningún mensaje útil para el usuario.
- * 2) Producto/Insumo no encontrado usaba RuntimeException genérico (-> 400)
- *    en vez de RecursoNoEncontradoException (-> 404).
- */
 @ExtendWith(MockitoExtension.class)
 class ProductoInsumoControllerUnitTest {
 

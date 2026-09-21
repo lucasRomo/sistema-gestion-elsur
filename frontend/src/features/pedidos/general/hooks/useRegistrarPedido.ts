@@ -109,13 +109,6 @@ export const useRegistrarPedido = () => {
         throw new Error(await extraerMensajeError(respuesta, "Error del servidor al crear el pedido"));
       }
 
-      // Antes esto devolvía "true" (un booleano fijo) en vez del pedido real que
-      // manda el backend. CrearPedidoView.ejecutarGuardadoFinal esperaba poder
-      // leer resultado.id_pedido / resultado.movimientos para armar el ticket
-      // post-guardado, pero como "resultado" siempre era el booleano true, nunca
-      // entraba a esa rama: el ticket terminaba armándose con el payload que se
-      // había MANDADO (sin id_pedido, sin movimientos reales de caja), no con lo
-      // que el backend efectivamente guardó.
       return await respuesta.json();
     } catch (error: any) {
       console.error("Error en enviarPedido:", error.message);

@@ -24,28 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de InsumoServiceImpl (módulo
- * Insumos, sidebar "Insumos"). Hasta este trabajo no existía NINGUNA suite
- * de tests para este servicio.
- *
- * HALLAZGOS PRINCIPALES (CORREGIDOS en este pase):
- * 1) guardar() no tenía NINGÚN chequeo de nombre duplicado a nivel backend
- *    -- la única validación vivía en el frontend (InsumoModal.tsx), contra
- *    una lista de insumos cargada al abrir el modal, algo trivial de
- *    esquivar (llamando directo a la API, o si esa lista quedaba
- *    desactualizada). Mismo patrón de bug ya encontrado y corregido en
- *    Institución/Área del módulo Repositorio Digital.
- * 2) stockMinimo era el único campo numérico de Insumo sin validar contra
- *    negativos, ni en el frontend ni acá (a diferencia de precio,
- *    stockActual, stockEmpaquetado y factorConversion, que sí estaban
- *    protegidos).
- * 3) obtenerUsuarioOperador() caía en silencio al "primer usuario de la
- *    tabla" cuando no se recibía un idUsuario válido, falseando el registro
- *    de actividad (auditoría) de ediciones, conversiones de stock y
- *    modificaciones masivas de precio. Mismo patrón de bug ya encontrado y
- *    corregido en useCaja.ts (ajustarMovimiento) del módulo Caja.
- */
+
 @ExtendWith(MockitoExtension.class)
 class InsumoServiceImplUnitTest {
 
@@ -72,7 +51,6 @@ class InsumoServiceImplUnitTest {
         return u;
     }
 
-    // ---------- Nombre: obligatorio, se recorta y no se puede duplicar ----------
 
     @Test
     @DisplayName("CORREGIDO: nombre de insumo vacío se rechaza")
@@ -143,7 +121,6 @@ class InsumoServiceImplUnitTest {
         verify(insumoRepository).existsByNombreInsumoIgnoreCaseAndIdInsumoNot("Resma A4", 7);
     }
 
-    // ---------- Campos numéricos ----------
 
     @Test
     @DisplayName("precio negativo se rechaza")
@@ -224,7 +201,6 @@ class InsumoServiceImplUnitTest {
         verifyNoInteractions(usuarioRepository);
     }
 
-    // ---------- Auditoría: usuario operador (CORREGIDO) ----------
 
     @Test
     @DisplayName("CORREGIDO: al editar sin un idUsuario logueado ya no se atribuye la auditoría en silencio al primer usuario de la tabla, se rechaza")
@@ -276,7 +252,6 @@ class InsumoServiceImplUnitTest {
                 eq(usuario(3)), eq("UPDATE"), eq("Insumo"), eq("precio"), eq(5), any(), any());
     }
 
-    // ---------- convertirStock ----------
 
     @Test
     @DisplayName("convertirStock: cantidad de bultos <= 0 se rechaza")
@@ -342,7 +317,6 @@ class InsumoServiceImplUnitTest {
         assertEquals(0, new BigDecimal("1100").compareTo(resultado.getStockActual()));
     }
 
-    // ---------- actualizarMasivo ----------
 
     @Test
     @DisplayName("CORREGIDO: actualizarMasivo sin un idUsuario logueado ya no atribuye la auditoría al primer usuario de la tabla, se rechaza")

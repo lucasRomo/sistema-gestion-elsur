@@ -3,9 +3,6 @@ import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../../config/
 const API_URL = `${API_BASE_URL}/pedidos`;
 
 export const historialPedidoService = {
-  /**
-   * Obtiene los detalles completos de un pedido para la auditoría
-   */
   obtenerPorId: async (idPedido: number): Promise<any> => {
     const response = await apiFetch(`${API_URL}/${idPedido}`);
     if (!response.ok) {
@@ -14,9 +11,6 @@ export const historialPedidoService = {
     return await response.json();
   },
 
-  /**
-   * Procesa la devolución cambiando el estado
-   */
   procesarDevolucion: async (
     idPedido: number, 
     nuevoEstado: 'PENDIENTE' | 'DEVUELTO', 
@@ -40,9 +34,6 @@ export const historialPedidoService = {
     return await response.json();
   },
 
-  /**
-   * Adjunta comprobante físico en el histórico
-   */
   subirComprobanteFisico: async (idPedido: number, archivo: File): Promise<boolean> => {
     const formData = new FormData();
     formData.append('comprobante', archivo);
@@ -55,9 +46,6 @@ export const historialPedidoService = {
     return response.ok;
   },
 
-  /**
-   * Elimina comprobante físico en el histórico
-   */
   eliminarComprobanteFisico: async (idPedido: number): Promise<boolean> => {
     const response = await apiFetch(`${API_URL}/${idPedido}/comprobante`, {
       method: 'DELETE'

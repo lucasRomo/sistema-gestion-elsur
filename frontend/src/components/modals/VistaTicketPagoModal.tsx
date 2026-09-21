@@ -11,7 +11,6 @@ interface Props {
 export const VistaTicketPagoModal: React.FC<Props> = ({ pedido, movimiento, onClose, esVentaRapida = false }) => {
   if (!pedido) return null;
 
-  // Detectar si el movimiento es un egreso o compra de insumos
   const esEgreso = 
     movimiento?.tipoMovimiento === 'EGRESO' || 
     movimiento?.categoria === 'INSUMOS' || 
@@ -24,7 +23,6 @@ export const VistaTicketPagoModal: React.FC<Props> = ({ pedido, movimiento, onCl
   const totalPedido = Number(pedido.monto_total ?? 0);
   const montoEsteCobro = Number(movimiento?.monto ?? movimiento?.montoPago ?? movimiento?.monto_pago ?? 0);
 
-  // Cálculo de abonado histórico acumulativo (exclusivo para ingresos/ventas)
   const listaPagos = (pedido.comprobantes || pedido.pagos || pedido.movimientos || [])
     .slice()
     .sort((a: any, b: any) => {

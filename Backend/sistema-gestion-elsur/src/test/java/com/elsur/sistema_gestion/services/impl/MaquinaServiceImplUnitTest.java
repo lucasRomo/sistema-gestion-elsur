@@ -23,29 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de MaquinaServiceImpl (módulo
- * Máquinas). Hasta este trabajo no existía NINGUNA suite de tests para este
- * servicio.
- *
- * HALLAZGOS PRINCIPALES (CORREGIDOS en este pase):
- * 1) El nombre no se validaba -- ni blanco, ni duplicado. Además,
- *    MaquinaRepository.existsByNombreIgnoreCase ya existía en el código pero
- *    nunca se llamaba desde guardar(), así que la validación de duplicados
- *    nunca corría en la práctica (mismo patrón de "validación escrita pero
- *    nunca conectada" ya visto en Compra de Insumos).
- * 2) cambiarEstado()/guardar() aceptaban cualquier string como estado, sin
- *    whitelist -- un typo o valor arbitrario podía dejar la máquina en un
- *    estado que el resto del sistema (chequeo de máquina caída en Crear
- *    Pedido/Dashboard) no reconoce ni como "operativa" ni como "fuera de
- *    servicio".
- * 3) Al editar, si no se mandaba idUsuario (el frontend, maquinasService.ts,
- *    nunca lo mandaba), la auditoría se atribuía en silencio al "primer
- *    usuario de la base" -- el 100% de las ediciones quedaban mal atribuidas.
- * 4) eliminar() no atrapaba DataIntegrityViolationException (máquina
- *    referenciada por un Producto vía maquinaNecesaria) y dejaba pasar el
- *    mensaje crudo de Hibernate/JDBC.
- */
+
 @ExtendWith(MockitoExtension.class)
 class MaquinaServiceImplUnitTest {
 
@@ -70,7 +48,6 @@ class MaquinaServiceImplUnitTest {
         return u;
     }
 
-    // ---------- buscarPorId ----------
 
     @Test
     @DisplayName("buscarPorId: máquina inexistente lanza RecursoNoEncontradoException")
@@ -79,7 +56,6 @@ class MaquinaServiceImplUnitTest {
         assertThrows(RecursoNoEncontradoException.class, () -> maquinaService.buscarPorId(99));
     }
 
-    // ---------- guardar: nombre ----------
 
     @Test
     @DisplayName("CORREGIDO: nombre nulo se rechaza")
@@ -124,7 +100,6 @@ class MaquinaServiceImplUnitTest {
         assertEquals("Impresora Offset 1", resultado.getNombre());
     }
 
-    // ---------- guardar: estado ----------
 
     @Test
     @DisplayName("guardar: estado en blanco se completa automáticamente como 'OPERATIVA'")
@@ -162,7 +137,6 @@ class MaquinaServiceImplUnitTest {
         }
     }
 
-    // ---------- guardar: auditoría / obtenerOperador ----------
 
     @Test
     @DisplayName("CORREGIDO: al editar sin idUsuarioOperador se rechaza en vez de atribuir en silencio al primer usuario de la base")
@@ -210,8 +184,6 @@ class MaquinaServiceImplUnitTest {
         verify(usuarioRepository, never()).findById(any());
     }
 
-    // ---------- cambiarEstado ----------
-
     @Test
     @DisplayName("CORREGIDO: cambiarEstado con un valor inválido se rechaza")
     void cambiarEstado_valorInvalido_seRechaza() {
@@ -244,7 +216,6 @@ class MaquinaServiceImplUnitTest {
         verify(maquinaRepository, never()).save(any());
     }
 
-    // ---------- eliminar ----------
 
     @Test
     @DisplayName("eliminar: máquina inexistente lanza RecursoNoEncontradoException")

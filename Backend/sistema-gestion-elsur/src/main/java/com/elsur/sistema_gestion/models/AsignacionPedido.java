@@ -20,7 +20,7 @@ public class AsignacionPedido {
     private LocalDateTime fecha_asignacion;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "id_pedido", nullable = false) // O el nombre exacto de tu FK
+    @JoinColumn(name = "id_pedido", nullable = false) 
     @JsonIgnoreProperties({"detalles", "asignaciones", "comprobantes", "historiales"})
     private Pedido pedido;
 

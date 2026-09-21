@@ -13,8 +13,6 @@ import { useTheme } from '../../../Context/ThemeContext';
 export const GestionUsuariosView: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-
-  // Estilos adaptativos de paleta siguiendo la estructura de ClientesView
   const titleColor = isDark ? '#ffffff' : '#0f172a';
   const tableContainerBg = isDark ? '#1d1d1d' : '#ffffff';
   const tableText = isDark ? '#ffffff' : '#0f172a';
@@ -33,10 +31,6 @@ export const GestionUsuariosView: React.FC = () => {
   const [usuarioConUbicacion, setUsuarioConUbicacion] = useState<any | null>(null);
   const [usuarioAVerPassword, setUsuarioAVerPassword] = useState<any | null>(null);
 
-  // El botón "Ver / Restablecer" (ver contraseña actual o fijar una nueva) solo
-  // tiene sentido -- y el backend solo lo permite -- para el rol ADMIN. Lo
-  // ocultamos acá también para no mostrar un botón que va a terminar en un 403
-  // para cualquier otro rol.
   const usuarioLogueadoRaw = localStorage.getItem('usuario_logueado');
   const esAdmin = (() => {
     try {
@@ -51,11 +45,6 @@ export const GestionUsuariosView: React.FC = () => {
   const [vistaActual, setVistaActual] = useState<'gestion' | 'registro'>('gestion');
   const navigate = useNavigate();
 
-  // Antes la insignia de "Estado" de la tabla usaba u.estado directo (mostrando un
-  // badge rojo vacío para cualquier usuario sin fila en Empleado, ya que u.estado
-  // quedaba undefined), mientras que el filtro de arriba SÍ default-eaba a 'Activo'
-  // en ese mismo caso. Esta función unifica el criterio: se usa el mismo valor por
-  // defecto tanto para filtrar como para mostrar el badge.
   const estadoMostrar = (u: any) => u.estado || 'Activo';
 
   const usuariosFiltrados = usuarios.filter(u => {
@@ -75,7 +64,6 @@ export const GestionUsuariosView: React.FC = () => {
       {vistaActual === 'gestion' ? (
         <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace">
           
-          {/* Título de la Sección */}
           <div className="d-flex justify-content-center align-items-center mb-4 position-relative">
             <h1 
               className="fw-bold m-0 text-center font-monospace" 
@@ -209,7 +197,6 @@ export const GestionUsuariosView: React.FC = () => {
             </table>
           </div>
 
-          {/* Botonera Inferior con Botón Volver Agrandado Expresamente */}
           <div className="d-flex align-items-center justify-content-between mt-3 mb-4 font-monospace">
             <button 
               onClick={() => navigate('/dashboard')} 

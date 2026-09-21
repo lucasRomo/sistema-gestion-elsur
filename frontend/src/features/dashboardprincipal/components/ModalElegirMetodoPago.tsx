@@ -25,7 +25,6 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
 
   if (!show) return null;
 
-  // Paleta de colores adaptativa
   const bgModal = isDark ? '#1b1b1b' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const subTextColor = isDark ? '#a1a1aa' : '#64748b';
@@ -55,7 +54,6 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
   }}
 >
           
-          {/* HEADER */}
           <div className="modal-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
             <h5 className="modal-title fw-bold d-flex align-items-center gap-2 fs-5" style={{ color: '#10b981' }}>
               <i className="bi bi-currency-dollar fs-4"></i> Método de Pago
@@ -70,8 +68,7 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
 
           <form onSubmit={handleSubmit}>
             <div className="modal-body px-4 pt-3 pb-2">
-              
-              {/* TARJETA MONTO TOTAL */}
+
               <div 
                 className="p-3 mb-3 text-center rounded d-flex justify-content-between align-items-center" 
                 style={{ 
@@ -83,7 +80,6 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
                 <span className="fw-bold fs-5" style={{ color: '#22c55e' }}>${total.toFixed(2)}</span>
               </div>
 
-              {/* SELECTOR TIPO DE PAGO */}
               <div className="mb-3">
                 <label className="form-label fw-bold small mb-1" style={{ color: textColor }}>Tipo de Pago:</label>
                 <select
@@ -105,7 +101,6 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
                 </select>
               </div>
 
-              {/* VINCULAR COMPROBANTE (SOLO PARA TRANSFERENCIA) */}
               {tipoPago === 'TRANSFERENCIA' && (
                 <div className="mb-3">
                   <label className="form-label fw-bold small mb-1" style={{ color: textColor }}>Comprobante de Respaldo:</label>
@@ -140,7 +135,6 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
 
             </div>
 
-            {/* FOOTER BOTONES */}
             <div className="modal-footer border-0 px-4 pb-4 pt-2 d-flex justify-content-end gap-2">
               <button 
                 type="button" 

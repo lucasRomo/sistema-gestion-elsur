@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { API_BASE_URL } from '../../../config/api'; // ajustá el path si hace falta
+import { API_BASE_URL } from '../../../config/api';
 
 interface GateScreenProps {
   onAutorizado: () => void;

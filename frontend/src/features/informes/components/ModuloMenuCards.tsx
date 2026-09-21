@@ -49,7 +49,6 @@ export const ModuloMenuCards: React.FC<ModuloMenuCardsProps> = ({
           </div>
         ))}
 
-        {/* Tarjeta de Registros de Arqueo (En lugar de Exportar PDF, visible solo para Admin) */}
         {esAdmin && (
           <div className="col-12 col-md-6 col-xl-4 d-flex">
             <div 

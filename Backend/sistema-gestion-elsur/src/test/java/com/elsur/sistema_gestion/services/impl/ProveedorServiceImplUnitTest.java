@@ -23,27 +23,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de ProveedorServiceImpl (módulo
- * Proveedores). Hasta este trabajo no existía NINGUNA suite de tests para
- * este servicio.
- *
- * HALLAZGOS PRINCIPALES (CORREGIDOS en este pase):
- * 1) nombreComercial no se validaba -- ni blanco, ni duplicado -- pese a ser
- *    nullable=false a nivel de base.
- * 2) Al editar, si no se mandaba idUsuario (o no existía), la auditoría se
- *    atribuía en silencio al "primer usuario de la base" -- mismo patrón
- *    transversal ya cerrado en el resto del sistema.
- * 3) eliminar() no atrapaba DataIntegrityViolationException (proveedor con
- *    compras u otros registros asociados) y dejaba pasar el mensaje crudo de
- *    Hibernate/JDBC.
- *
- * NOTA (frontend, no cubierta acá): ProveedorModal.tsx llamaba a onSave (una
- * función async) sin await y sin try/catch -- cualquier error de estas nuevas
- * validaciones se hubiera perdido como unhandled promise rejection, sin
- * ningún feedback visible para el usuario. Corregido por separado en el
- * frontend (ProveedorModal.tsx / Proveedores.tsx).
- */
 @ExtendWith(MockitoExtension.class)
 class ProveedorServiceImplUnitTest {
 
@@ -68,7 +47,6 @@ class ProveedorServiceImplUnitTest {
         return u;
     }
 
-    // ---------- guardar: nombreComercial ----------
 
     @Test
     @DisplayName("CORREGIDO: nombreComercial nulo se rechaza")
@@ -128,7 +106,6 @@ class ProveedorServiceImplUnitTest {
         assertEquals("Activo", resultado.getEstado());
     }
 
-    // ---------- guardar: auditoría / obtenerUsuarioOperador ----------
 
     @Test
     @DisplayName("CORREGIDO: al editar sin idUsuario se rechaza en vez de atribuir en silencio al primer usuario de la base")
@@ -191,7 +168,6 @@ class ProveedorServiceImplUnitTest {
         verify(usuarioRepository, never()).findById(any());
     }
 
-    // ---------- eliminar ----------
 
     @Test
     @DisplayName("eliminar: proveedor inexistente lanza RecursoNoEncontradoException")

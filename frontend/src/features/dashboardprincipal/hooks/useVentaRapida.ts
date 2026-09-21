@@ -10,30 +10,23 @@ const MARGEN_MERMA_RESPALDO = 5;
 const TOLERANCIA_PRODUCTO_DIRECTO = 3;
 
 export const useVentaRapida = () => {
-  // --- ESTADOS DE DATOS / CATÁLOGOS ---
   const [productosDisponibles, setProductosDisponibles] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<CategoriaCliente[]>([]);
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
   const [pedidosPendientes, setPedidosPendientes] = useState<Pedido[]>([]);
   const [insumosCatalogo, setInsumosCatalogo] = useState<any[]>([]);
 
-  // --- ESTADOS DE FORMULARIO Y CARRITO ---
   const [productoSeleccionado, setProductoSeleccionado] = useState<string>('');
   const [cantidad, setCantidad] = useState<string>('1');
   const [categoriaSeleccionadaId, setCategoriaSeleccionadaId] = useState<string>('');
   const [carrito, setCarrito] = useState<CartItem[]>([]);
 
-  // --- ESTADOS DE MODALES Y NOTIFICACIONES ---
   const [confirmarCancelacion, setConfirmarCancelacion] = useState(false);
   const [suceso, setSuceso] = useState({ show: false, titulo: '', mensaje: '', tipo: 'exito' });
   const [showModalMaquinas, setShowModalMaquinas] = useState(false);
   const [showModalMetodoPago, setShowModalMetodoPago] = useState(false);
   const [showModalStockCritico, setShowModalStockCritico] = useState(false);
-  // true solo cuando el operario ya vio el aviso de "máquina fuera de servicio /
-  // falla / mantenimiento" (modal de arriba) y clickeó "Continuar de todos modos".
-  // Las máquinas no bloquean la venta por decisión de negocio, pero el backend
-  // igual exige esta confirmación explícita para no dejar pasar una llamada
-  // directa a la API que se salte el aviso.
+
   const [confirmarMaquinaNoDisponible, setConfirmarMaquinaNoDisponible] = useState(false);
 
   const fetchInsumos = async () => {
@@ -62,14 +55,12 @@ export const useVentaRapida = () => {
     unidad: string;
   }[]>([]);
 
-  // --- RECUPERAR ÚLTIMO PEDIDO DE LOCALSTORAGE ---
   const [ultimoPedidoRealizado, setUltimoPedidoRealizado] = useState<any | null>(() => {
     const guardado = localStorage.getItem('ultimo_pedido_venta_rapida');
     return guardado ? JSON.parse(guardado) : null;
   });
   const [verTicketPedido, setVerTicketPedido] = useState<{ pedido: any; tipo: 'cliente' | 'pago' } | null>(null);
 
-  // --- PETICIONES A LA API (FETCHING) ---
   const fetchProductos = async () => {
     try {
       const [resProductos, resRecetas] = await Promise.all([
@@ -157,7 +148,6 @@ export const useVentaRapida = () => {
     fetchInsumos();
   }, []);
 
-  // --- CÁLCULO DINÁMICO DE IMPACTO EN STOCK (elementosAfectados) ---
   const elementosAfectados = useMemo(() => {
     const mapaElementos = new Map<string, {
       key: string;
@@ -292,7 +282,6 @@ export const useVentaRapida = () => {
     return Array.from(mapaElementos.values()).filter(item => item.cantPedidoActual > 0);
   }, [carrito, pedidosPendientes, productosDisponibles, insumosCatalogo]);
 
-  // --- ACCIONES DEL CARRITO ---
   const handleAgregar = () => {
     if (!productoSeleccionado || !cantidad || parseInt(cantidad) <= 0) return;
     const producto = productosDisponibles.find((p) => p.idProducto?.toString() === productoSeleccionado);
@@ -316,7 +305,6 @@ export const useVentaRapida = () => {
     setConfirmarMaquinaNoDisponible(false);
   };
 
-  // --- CÁLCULOS DE MONTO Y DESCUENTO ---
   const subtotalVenta = carrito.reduce((acc, item) => acc + item.subtotal, 0);
   const categoriaActual = categorias.find((c) => {
     const id = c.idCategoriaCliente ?? (c as any).idCategoria ?? (c as any).id_categoria ?? (c as any).id;
@@ -328,7 +316,6 @@ export const useVentaRapida = () => {
   const montoDescuento = (subtotalVenta * porcentajeDescuento) / 100;
   const totalFinal = subtotalVenta - montoDescuento;
 
-  // --- VALIDACIÓN DE STOCK Y MAQUINARIA ---
   const handleValidarYCompletarVenta = () => {
     if (carrito.length === 0) {
       setSuceso({
@@ -469,10 +456,6 @@ export const useVentaRapida = () => {
       idEmpleado: idUsuario,
       idUsuario: idUsuario,
       tipoPago: tipoPagoElegido,
-      // Va fuera de "pedido" a propósito: no es un campo de la entidad Pedido,
-      // es la confirmación explícita que el backend exige para dejar pasar la
-      // venta cuando el operario ya vio el aviso de máquina caída y decidió
-      // seguir igual (ver "Continuar de todos modos" en DashboardPrincipalView).
       confirmarMaquinaNoDisponible
     };
 
@@ -511,9 +494,6 @@ export const useVentaRapida = () => {
           nuevoEstado: 'FINALIZADO',
           observaciones: `Venta Rápida ${porcentajeDescuento > 0 ? `(Categoría: ${categoriaActual?.nombreCategoria} - ${porcentajeDescuento}% Desc.)` : ''}`,
           idUsuario: idUsuario,
-          // Normalmente esto ya es un no-op del lado del backend (el POST inicial
-          // ya descontó el stock y quedó marcado stockDescontado=true), pero lo
-          // mandamos igual para cubrir el mismo caso si algún día cambia el orden.
           confirmarMaquinaNoDisponible
         })
       });

@@ -25,11 +25,10 @@ public class RespaldoController {
         return ResponseEntity.ok(respaldoService.obtenerHistorial());
     }
 
-    @PostMapping("/generar") // O @GetMapping según cómo lo mantengas
+    @PostMapping("/generar") 
     public ResponseEntity<String> generarRespaldo(
         @RequestParam(value = "usuario", required = false, defaultValue = "Operario") String usuario) {
     
-    // El servicio guarda el archivo físicamente en la carpeta 'backup' del servidor
     respaldoService.generarRespaldoContingente(usuario);
 
     return ResponseEntity.ok("Respaldo creado con éxito en el servidor.");

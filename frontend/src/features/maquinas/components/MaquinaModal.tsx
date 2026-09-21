@@ -48,7 +48,6 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
 
   if (!show) return null;
 
-  // Verificamos si cambió el estado operativo
   const haCambiadoEstado = Boolean(maquinaEditar && maquinaEditar.estado !== estado);
 
   const procesarGuardado = async () => {
@@ -81,7 +80,6 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
       return;
     }
 
-    // Solo exigimos observación si REALMENTE cambió el estado operativo (OPERATIVA/FALLA/MANTENIMIENTO)
     if (haCambiadoEstado && !observacion.trim()) {
       setErrorValidacion("Es obligatorio describir el motivo del cambio de estado u observación.");
       return;
@@ -272,7 +270,6 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
         </div>
       </div>
 
-      {/* Modal de Advertencia por omitir Mantenimiento */}
       {confirmarSinMantenimiento && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1100 }}>
           <div className="modal-dialog modal-dialog-centered">

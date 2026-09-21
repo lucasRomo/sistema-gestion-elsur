@@ -13,7 +13,6 @@ export const useMatrizPermisos = () => {
   const [busquedaUsuario, setBusquedaUsuario] = useState<string>('');
   const [usuarioEditar, setUsuarioEditar] = useState<Usuario | null>(null);
 
-  // Modales y Alertas
   const [mostrarModalConfirmacion, setMostrarModalConfirmacion] = useState<boolean>(false);
   const [mostrarModalExito, setMostrarModalExito] = useState<boolean>(false);
   const [mensajeExitoTexto, setMensajeExitoTexto] = useState<string>('¡Guardado exitosamente!');
@@ -24,16 +23,8 @@ export const useMatrizPermisos = () => {
   const [mostrarModalNuevoRol, setMostrarModalNuevoRol] = useState<boolean>(false);
   const [nuevoRolNombre, setNuevoRolNombre] = useState<string>('');
 
-  // Antes handleEliminarRol usaba window.confirm() para pedir confirmación:
-  // rompía la estética y, a diferencia de los otros modales de la pantalla,
-  // no se podía tematizar ni bloquear con el resto de la UI. Ahora usa el
-  // mismo sistema de modales propios que el resto del módulo.
   const [mostrarModalConfirmarEliminarRol, setMostrarModalConfirmarEliminarRol] = useState<boolean>(false);
 
-  // GAP corregido: los perfiles "PERFIL_<usuario>" quedaban invisibles en el
-  // selector de perfiles globales (obtenerRoles() los filtra a propósito) y,
-  // una vez que un usuario dejaba de usarlos, no había ninguna forma de verlos
-  // ni borrarlos desde la UI. Esta sección los trae aparte, bajo demanda.
   const [perfilesHuerfanos, setPerfilesHuerfanos] = useState<any[]>([]);
   const [mostrarPerfilesHuerfanos, setMostrarPerfilesHuerfanos] = useState<boolean>(false);
   const [cargandoPerfilesHuerfanos, setCargandoPerfilesHuerfanos] = useState<boolean>(false);
@@ -50,7 +41,6 @@ export const useMatrizPermisos = () => {
       setRoles(rolesData);
       setUsuarios(usuariosData);
 
-      // 2. Mapeamos la lista de módulos activando los de ADMIN desde la primera carga
       const permisosBase = permisosData.map((p: any) => {
         const esProtegido = ['Matriz de Permisos', 'Configuración', 'Gestión de Usuarios'].includes(p.nombrePermiso);
         
@@ -71,7 +61,6 @@ export const useMatrizPermisos = () => {
     fetchInicial();
   }, [fetchInicial]);
 
-  // Carga permisos al cambiar selección de Rol o Usuario
   useEffect(() => {
     const fetchPermisos = async () => {
       try {
@@ -170,7 +159,6 @@ export const useMatrizPermisos = () => {
       let idRolFinalAsignado: number | undefined;
 
       if (usuarioEditar) {
-        // CASO 1: Reasignación de Rol Global al Usuario
         if (rolSeleccionadoEnUsuario !== null) {
           const rolObjeto = roles.find(r => r.idRol === rolSeleccionadoEnUsuario);
 
@@ -188,7 +176,6 @@ export const useMatrizPermisos = () => {
           setUsuarioEditar(usuarioActualizado);
           setMensajeExitoTexto(`¡Se asignó el perfil "${rolObjeto?.nombreRol || 'ADMIN'}" a ${usuarioEditar.nombreUsuario}!`);
         } 
-        // CASO 2: Edición de permisos personalizados del usuario
         else {
           let idRolDestino = usuarioEditar.rol?.idRol;
 
@@ -213,14 +200,12 @@ export const useMatrizPermisos = () => {
           setMensajeExitoTexto(`¡Permisos de ${usuarioEditar.nombreUsuario} actualizados!`);
         }
       } else {
-        // CASO 3: Edición de la plantilla de Perfil Global
         await matrizPermisosService.actualizarPermisosRol(rolSeleccionado, permisosActivosIds);
         idRolFinalAsignado = rolSeleccionado;
 
         setMensajeExitoTexto('¡Permisos de perfil global actualizados!');
       }
 
-      // Sincronización de sesión local y eventos
       const usuarioSesionString = localStorage.getItem('usuario_logueado') || localStorage.getItem('usuario');
       if (usuarioSesionString) {
         const usuarioSesion = JSON.parse(usuarioSesionString);
@@ -264,11 +249,6 @@ export const useMatrizPermisos = () => {
       setMostrarModalBloqueo(true);
       return;
     }
-    // GAP corregido: antes no se validaba nada acá contra los roles ya
-    // cargados, así que se podía intentar crear (y hasta hace un momento, el
-    // backend lo permitía) un perfil con un nombre ya existente. El backend
-    // ahora lo rechaza con 409 (ver RolServiceImpl.guardar), pero conviene
-    // avisar antes de golpear la API si ya lo tenemos cargado en memoria.
     const nombreNormalizado = nuevoRolNombre.trim().toUpperCase();
     if (roles.some(r => (r.nombreRol || '').toUpperCase() === nombreNormalizado)) {
       setMensajeBloqueoTexto('Ya existe un perfil con ese nombre.');
@@ -282,11 +262,6 @@ export const useMatrizPermisos = () => {
       setMostrarModalNuevoRol(false);
       setNuevoRolNombre('');
     } catch (error: any) {
-      // BUG corregido: antes esto siempre mostraba el mismo texto genérico
-      // ('Error al crear el perfil'), sin importar el motivo real -- ahora
-      // matrizPermisosService.crearRol ya extrae el mensaje real del backend
-      // (por ejemplo, el 409 de nombre duplicado si igual se cuela una carrera
-      // entre dos pestañas).
       setMensajeBloqueoTexto(error?.message || 'Error al crear el perfil');
       setMostrarModalBloqueo(true);
     }

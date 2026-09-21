@@ -3,11 +3,8 @@ import { showLoading, hideLoading } from './loadingStore';
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 interface ApiFetchOptions extends RequestInit {
-  /** true = nunca mostrar el overlay en esta llamada, aunque sea POST/PUT/DELETE */
   skipLoading?: boolean;
-  /** true = mostrar el overlay aunque sea un GET (casos puntuales, ej. reporte pesado) */
   forceLoading?: boolean;
-  /** Mensaje a mostrar mientras dura esta llamada */
   loadingMessage?: string;
 }
 
@@ -37,17 +34,6 @@ export const apiFetch = async (
   }
 };
 
-/**
- * Extrae un mensaje de error legible de una respuesta HTTP no exitosa.
- *
- * El backend (ver GlobalExceptionHandler) devuelve siempre un JSON tipo
- * ApiError con un campo "mensaje" ({"timestamp":...,"status":400,"error":"Bad
- * Request","mensaje":"La Caja No está Abierta...","path":"/api/pedidos"}).
- * Antes, varios lugares del frontend hacían `throw new Error(await res.text())`
- * y mostraban eso tal cual en un modal -- el usuario terminaba viendo el JSON
- * crudo en pantalla en vez del mensaje. Esta función parsea ese cuerpo y se
- * queda solo con el texto pensado para mostrarse.
- */
 export const extraerMensajeError = async (
   response: Response,
   mensajePorDefecto = 'Ocurrió un error inesperado. Intentalo de nuevo.'
@@ -68,8 +54,6 @@ export const extraerMensajeError = async (
     if (typeof cuerpo?.error === 'string' && cuerpo.error.trim()) return cuerpo.error;
     return mensajePorDefecto;
   } catch {
-    // No era JSON: algunos endpoints viejos devuelven el mensaje en texto plano,
-    // sin envolver en ApiError -- en ese caso el texto tal cual ya es legible.
     return texto;
   }
 };

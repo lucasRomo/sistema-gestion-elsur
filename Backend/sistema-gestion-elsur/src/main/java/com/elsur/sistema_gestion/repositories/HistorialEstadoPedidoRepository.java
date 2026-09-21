@@ -10,7 +10,6 @@ import java.util.List;
 @Repository
 public interface HistorialEstadoPedidoRepository extends JpaRepository<HistorialEstadoPedido, Integer> {
 
-    // Forzamos la consulta usando la propiedad exacta 'id_pedido' de tu entidad Pedido
     @Query("SELECT h FROM HistorialEstadoPedido h WHERE h.pedido.id_pedido = :idPedido")
     List<HistorialEstadoPedido> findByPedidoId(@Param("idPedido") Integer idPedido);
 }

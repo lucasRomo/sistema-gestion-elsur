@@ -12,7 +12,6 @@ import java.util.List;
 public interface ComprobantePagoRepository extends JpaRepository<ComprobantePago, Integer> {
 
     
-    // Ajustado con c.pedido.id_pedido para que machee perfecto con tu entidad
     @Query("SELECT c FROM ComprobantePago c WHERE c.pedido.id_pedido = :idPedido")
     List<ComprobantePago> findByPedidoId(@Param("idPedido") Integer idPedido);
 }

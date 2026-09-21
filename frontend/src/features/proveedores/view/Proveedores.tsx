@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Componentes y hooks propios de la feature
 import { ProveedorFiltros } from '../components/ProveedorFiltros';
 import { ProveedorTabla } from '../components/ProveedorTabla';
 import { ProveedorModal } from '../components/ProveedorModal';
@@ -10,7 +9,6 @@ import { useProveedores } from '../hooks/useProveedores';
 import type { Proveedor } from '../types/Proveedor';
 import { exportarProveedoresExcel, exportarProveedoresPDF } from '../utils/exportProveedoresUtils';
 
-// Componentes globales compartidos
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useIsMobile } from '../../../hook/useIsMobile';
@@ -22,7 +20,6 @@ export const Proveedores: React.FC = () => {
   const isMobile = useIsMobile();
   const { proveedores, guardar, cargando } = useProveedores();
   
-  // Estilos y Paleta Adaptativa
   const mainCardBg = isDark ? '#1d1d1d' : '#ffffff';
   const cardBorder = isDark ? '#27272a' : '#cbd5e1';
   const textColor = isDark ? '#ffffff' : '#0f172a';
@@ -54,14 +51,12 @@ export const Proveedores: React.FC = () => {
   return (
     <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
       
-      {/* Encabezado Superior */}
       <div className="d-flex justify-content-center align-items-center mb-4">
         <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
           Gestión de Proveedores
         </h2>
       </div>
 
-      {/* Componente de Filtros */}
       <ProveedorFiltros 
         filtroNombre={filtroNombre} setFiltroNombre={setFiltroNombre}
         filtroEstado={filtroEstado} setFiltroEstado={setFiltroEstado}
@@ -69,7 +64,6 @@ export const Proveedores: React.FC = () => {
         tiposUnicos={tiposUnicos}
       />
 
-      {/* Contenedor Único de Tabla con Scroll Interno (65.3vh) */}
       <div 
         className="rounded-3 border mb-3 font-monospace" 
         style={{ 
@@ -97,7 +91,6 @@ export const Proveedores: React.FC = () => {
         )}
       </div>
 
-      {/* Barra Inferior: Volver + Exportar + Nuevo Proveedor */}
       <div className={`d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
         
         {!isMobile && (
@@ -170,9 +163,6 @@ export const Proveedores: React.FC = () => {
             setSuccessMessage(isEditing ? "Proveedor modificado correctamente" : "Proveedor registrado correctamente");
             setShowSuccess(true);
           } catch (e: any) {
-            // CORREGIDO: antes este catch no existía y, como ProveedorModal llama a
-            // onSave sin await, un error del backend (ej. nombre comercial duplicado)
-            // se perdía como unhandled promise rejection, sin ningún feedback al usuario.
             alert("Error: " + e.message);
           }
         }}

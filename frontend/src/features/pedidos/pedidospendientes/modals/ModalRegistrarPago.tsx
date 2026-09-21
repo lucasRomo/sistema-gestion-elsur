@@ -20,7 +20,6 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   const [errorCajaModal, setErrorCajaModal] = useState({ show: false, mensaje: "" });
   const [stockError, setStockError] = useState({ show: false, mensaje: "" });
   const [showConfirm, setShowConfirm] = useState(false);
-  // Evita que un doble clic en "Sí, ingresar" dispare dos veces el cobro.
   const [procesando, setProcesando] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -31,7 +30,6 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   const adelantado = pedido.monto_pago_adelantado ?? pedido.montoPagoAdelantado ?? 0;
   const saldoPendiente = total - adelantado;
 
-  // Estilos de UI según tema
   const modalBg = isDark ? '#1a1a1c' : '#ffffff';
   const modalBorder = isDark ? '#334155' : '#cbd5e1';
   const resumenBg = isDark ? '#121214' : '#f1f5f9';
@@ -75,7 +73,6 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
       return;
     }
 
-    // Obtener ID del usuario activo desde la sesión
     const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
     const idUsuarioActivo = Number(userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1);
 

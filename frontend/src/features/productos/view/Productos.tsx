@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-// Importaciones internas del módulo productos
 import { ProductoTabla } from '../components/ProductoTabla';
 import { ProductoRegistroModal } from '../components/ProductoRegistroModal';
 import { ProductosFiltros } from '../components/ProductosFiltros';
@@ -20,7 +19,6 @@ import type { Producto } from '../types/Producto';
 import { exportarProductosExcel, exportarProductosPDF } from '../utils/exportProductosUtils';
 import { ModalStockCriticoList, type ItemStockCritico } from '../../insumos/modals/ModalStockCriticoList';
 
-// Componentes y contextos compartidos globales
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
 import { apiFetch } from '../../../config/api';
@@ -60,20 +58,6 @@ export const Productos: React.FC = () => {
   const [showSinRecetaModal, setShowSinRecetaModal] = useState(false);
   const [productoSinReceta, setProductoSinReceta] = useState<Producto | null>(null);
 
-  // CORREGIDO: "vincular el stock de un insumo a una impresión y registrar
-  // mermas hace que se abra editar Producto nuevamente". La causa real: este
-  // efecto depende de "productos" (para esperar a que la lista ya esté
-  // cargada la primera vez), pero "window.history.replaceState({}, ...)" NO
-  // le avisa a React Router que "location.state" cambió -- solo toca el
-  // History nativo del navegador por afuera del router, así que
-  // "location.state.productoEditar" seguía existiendo (obsoleto) en memoria
-  // para siempre. Resultado: la PRIMERA vez que este componente se abre
-  // navegando con { state: { productoEditar } } (ej. desde Stock Crítico) el
-  // modal se abre bien, pero CUALQUIER acción posterior que vuelva a cargar
-  // "productos" (vincular stock, registrar una merma, etc. -- todas llaman a
-  // cargar()) re-disparaba este efecto y reabría el modal de edición solo,
-  // sin que nadie lo pidiera. El fix es limpiar "state" a través del propio
-  // router (navigate con replace) para que React Router realmente lo borre.
   useEffect(() => {
     const state = location.state as { productoEditar?: Producto };
     if (state?.productoEditar && productos.length > 0) {
@@ -129,26 +113,36 @@ export const Productos: React.FC = () => {
       }
     }
     try {
-      await toggleStockVinculado(producto.idProducto);
-      await cargar();
-    } catch (err: any) {
-      // CORREGIDO: antes solo se logueaba en consola, sin ningún aviso visible
-      // si la operación fallaba (ej. producto eliminado entre tanto).
-      alert(err?.message || 'Error al cambiar el vínculo de stock del producto.');
-    }
+     const estabaVinculado = !!producto.stockVinculado; 
+     await toggleStockVinculado(producto.idProducto);
+     await cargar();
+     setMensajeExito(
+       estabaVinculado
+       ? 'Stock desvinculado de los insumos exitosamente'
+       : 'Stock vinculado a los insumos exitosamente'
+      );
+     setMostrarExito(true);
+     } catch (err: any) {
+     alert(err?.message || 'Error al cambiar el vínculo de stock del producto.');
+    }};
+
+  const handleRecetaGuardada = async () => {
+  setShowRecetaModal(false);
+  setProductoSeleccionadoReceta(null);
+  await cargar();
+  setMensajeExito('Receta guardada exitosamente');
+  setMostrarExito(true);
   };
 
   return (
     <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
       
-      {/* Encabezado Superior */}
       <div className="d-flex justify-content-center align-items-center mb-4">
         <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
           Gestión de Productos
         </h2>
       </div>
       
-      {/* Componente Filtros */}
       <ProductosFiltros 
         filtroNombre={filtroNombre} 
         setFiltroNombre={setFiltroNombre}
@@ -156,7 +150,6 @@ export const Productos: React.FC = () => {
         setFiltroEstado={setFiltroEstado}
       />
 
-      {/* Contenedor Único de Tabla con Scroll Interno (65.3vh) */}
       <div 
         className="rounded-3 border mb-3 font-monospace" 
         style={{ 
@@ -189,7 +182,6 @@ export const Productos: React.FC = () => {
         )}
       </div>
 
-      {/* Botonera Inferior Completa */}
       <div className={`d-flex align-items-stretch mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
         {!isMobile && (
           <button 
@@ -270,7 +262,6 @@ export const Productos: React.FC = () => {
         </div>
       </div>
 
-      {/* Modales Complementarios */}
       <ModalStockCriticoList
         show={showStockCriticoModal}
         titulo="Stock Crítico de Productos"
@@ -311,6 +302,7 @@ export const Productos: React.FC = () => {
             setProductoSeleccionadoReceta(null);
             cargar();
           }}
+          onGuardado={handleRecetaGuardada}
         />
       )}
 
@@ -411,9 +403,6 @@ export const Productos: React.FC = () => {
                       setMensajeExito('Modificación hecha exitosamente');
                       setMostrarExito(true);
                     } catch (err: any) {
-                      // CORREGIDO: antes esta confirmación no manejaba errores; si el
-                      // backend rechazaba la modificación (ej: nombre duplicado) el
-                      // error quedaba sin capturar y sin avisar al usuario.
                       alert(err?.message || 'Error al modificar el producto.');
                     } finally {
                       setGuardandoEdicion(false);

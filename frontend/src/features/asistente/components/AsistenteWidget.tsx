@@ -3,7 +3,6 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { asistenteService, type MensajeChat } from '../services/asistenteService';
 
 interface AsistenteWidgetProps {
-  /** Nombre del módulo actual (el mismo "activeItem" del SidebarLayout). */
   modulo: string;
 }
 
@@ -27,8 +26,6 @@ export const AsistenteWidget: React.FC<AsistenteWidgetProps> = ({ modulo }) => {
   const burbujaUsuarioBg = '#8e45e0';
   const burbujaAsistenteBg = esOscuro ? '#2d2d30' : '#f1f5f9';
 
-  // Si el usuario cambia de módulo mientras el chat está abierto, avisamos
-  // en el propio historial que el contexto cambió (sin perder la conversación).
   useEffect(() => {
     if (moduloAnteriorRef.current !== modulo) {
       moduloAnteriorRef.current = modulo;
@@ -39,7 +36,7 @@ export const AsistenteWidget: React.FC<AsistenteWidgetProps> = ({ modulo }) => {
         ]);
       }
     }
-  }, [modulo]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [modulo]);
 
   useEffect(() => {
     if (listaRef.current) {
@@ -76,7 +73,6 @@ export const AsistenteWidget: React.FC<AsistenteWidgetProps> = ({ modulo }) => {
 
   return (
     <>
-      {/* Botón fijo arriba a la derecha, visible en cualquier módulo */}
       <button
         onClick={() => setAbierto((v) => !v)}
         title="Ayuda del sistema"
@@ -107,12 +103,10 @@ export const AsistenteWidget: React.FC<AsistenteWidgetProps> = ({ modulo }) => {
       top: '4.5rem',
       right: '1.5rem',
       zIndex: 1049,
-      /* --- TAMAÑO DE LA VENTANA AGRANDADO --- */
       width: '460px',
       maxWidth: '92vw',
       height: '620px',
       maxHeight: '82vh',
-      /* -------------------------------------- */
       backgroundColor: panelBg,
       border: `1px solid ${borderColor}`,
       borderRadius: '12px',
@@ -122,7 +116,6 @@ export const AsistenteWidget: React.FC<AsistenteWidgetProps> = ({ modulo }) => {
       overflow: 'hidden',
     }}
   >
-    {/* Header */}
     <div
       style={{
         padding: '0.75rem 1rem',
@@ -138,7 +131,6 @@ export const AsistenteWidget: React.FC<AsistenteWidgetProps> = ({ modulo }) => {
       </div>
     </div>
 
-    {/* Mensajes */}
     <div ref={listaRef} style={{ flex: 1, overflowY: 'auto', padding: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
       {mensajes.length === 0 && (
         <div style={{ fontSize: '0.98rem', color: mutedText }}>
@@ -176,7 +168,6 @@ export const AsistenteWidget: React.FC<AsistenteWidgetProps> = ({ modulo }) => {
       )}
     </div>
 
-    {/* Input */}
     <div style={{ padding: '0.65rem', borderTop: `1px solid ${borderColor}`, display: 'flex', gap: '0.5rem' }}>
       <input
         type="text"

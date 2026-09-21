@@ -21,7 +21,6 @@ public class Persona {
     private String telefono;
     private String email;
 
-    // --- RELACIONES ATÓMICAS ---
 
     @ManyToOne
     @JoinColumn(name = "id_tipo_documento")

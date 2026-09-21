@@ -24,27 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de CompraInsumoServiceImpl (módulo
- * "Compra de Insumos", pantalla de carga directa de compras a Insumos/Productos).
- *
- * HALLAZGOS PRINCIPALES (CORREGIDOS en este pase):
- * 1) El alta de un insumo nuevo (esNuevoInsumo=true) guardaba directo vía
- *    insumoRepository.save(), sin pasar por NINGUNA de las validaciones que sí
- *    tiene InsumoServiceImpl.guardar() -- en particular, sin chequear nombre
- *    duplicado. Esto permitía crear un insumo con el mismo nombre que uno ya
- *    existente directo desde "Compra de Insumos", sorteando la validación que
- *    el módulo Insumos sí exige (el mismo patrón de "nombre duplicado" ya
- *    encontrado y corregido en Insumos/Productos/Repositorio Digital).
- * 2) El usuario logueado que genera el movimiento de caja de la compra se
- *    resolvía con usuarioRepository.findById(...).orElse(null): un idUsuario
- *    inválido o ausente dejaba el movimiento sin autoría en silencio, en vez
- *    de rechazar la operación (mismo bug de trazabilidad ya corregido en
- *    Caja/Insumos/Productos).
- * 3) Un idProveedor inválido se ignoraba en silencio (.orElse(null)).
- * 4) No se validaba cantidad/precio de los ítems a nivel backend (dependía
- *    100% de las validaciones del formulario).
- */
+
 @ExtendWith(MockitoExtension.class)
 class CompraInsumoServiceImplUnitTest {
 
@@ -127,7 +107,6 @@ class CompraInsumoServiceImplUnitTest {
         return dto;
     }
 
-    // --- Validaciones generales ---
 
     @Test
     @DisplayName("Ítems vacíos o nulos se rechazan")
@@ -192,7 +171,6 @@ class CompraInsumoServiceImplUnitTest {
         verify(movimientoCajaRepository, never()).save(any());
     }
 
-    // --- Validación de ítems ---
 
     @Test
     @DisplayName("Cantidad comprada nula o <= 0 se rechaza")
@@ -212,7 +190,6 @@ class CompraInsumoServiceImplUnitTest {
         assertThrows(SolicitudInvalidaException.class, () -> service.registrarCompraInsumo(dto));
     }
 
-    // --- Rama Producto ---
 
     @Test
     @DisplayName("idProducto nulo con tipoItem PRODUCTO se rechaza")
@@ -254,7 +231,6 @@ class CompraInsumoServiceImplUnitTest {
         verify(movimientoCajaRepository).save(any(MovimientoCaja.class));
     }
 
-    // --- Rama Insumo existente ---
 
     private Insumo insumoExistente(int id, String nombre) {
         Insumo i = new Insumo();
@@ -302,7 +278,6 @@ class CompraInsumoServiceImplUnitTest {
         assertEquals(new BigDecimal("120"), captor.getValue().getPrecio());
     }
 
-    // --- Rama Insumo nuevo (foco: duplicado de nombre) ---
 
     @Test
     @DisplayName("Alta de insumo nuevo sin nombre se rechaza")
@@ -381,7 +356,6 @@ class CompraInsumoServiceImplUnitTest {
         assertEquals(BigDecimal.ZERO, creado.getStockActual());
     }
 
-    // --- Flujo feliz completo: autoría del movimiento de caja ---
 
     @Test
     @DisplayName("Compra exitosa: el movimiento de caja generado queda atribuido al usuario logueado real")

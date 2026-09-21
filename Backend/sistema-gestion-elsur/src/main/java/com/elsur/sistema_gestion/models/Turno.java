@@ -37,7 +37,6 @@ public class Turno {
     @Column(name = "diferencia_arqueo")
     private Double diferenciaArqueo;
 
-    // Agregamos el campo para las observaciones de cierre/arqueo
     @Column(name = "observaciones", columnDefinition = "TEXT")
     private String observaciones;
 

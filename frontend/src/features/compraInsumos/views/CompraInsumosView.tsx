@@ -201,14 +201,11 @@ export const CompraInsumosView: React.FC = () => {
     setLoading(true);
     try {
       const resumenItems = itemsCompra.map(i => `${i.nombreInsumo} (${i.tipoItem}) x${i.cantidadEmpaquetada}`).join(', ');
-      
-      // ✅ FIX: Búsqueda del proveedor tolerante a id_proveedor, idProveedor e id
-      // ✅ Búsqueda tolerante a camelCase, snake_case e id
+
 const provSeleccionado = proveedores.find(
   (p) => String(p.idProveedor || (p as any).id_proveedor || (p as any).id) === idProveedorSel
 );
 
-// ✅ Concatenación tolerante a tipos
 const textoProveedor = provSeleccionado
   ? ` - Prov: ${provSeleccionado.nombreComercial || (provSeleccionado as any).nombre_comercial || ''}`
   : '';

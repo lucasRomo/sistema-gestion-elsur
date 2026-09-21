@@ -21,14 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de IncidenciaServiceImpl (módulo
- * Máquinas, "Historial de Incidencias"). Hasta este pase esta clase no tenía
- * ninguna suite de tests, y usaba "new RuntimeException(...)" genérica para
- * TODOS sus casos de "no encontrado" (máquina/incidencia/usuario) -- 400 en
- * vez de 404, inconsistente con el resto del sistema -- y no validaba en
- * absoluto el monto ni el usuario al registrar un pago de mantenimiento.
- */
 @ExtendWith(MockitoExtension.class)
 class IncidenciaServiceImplUnitTest {
 
@@ -66,7 +58,6 @@ class IncidenciaServiceImplUnitTest {
         return t;
     }
 
-    // ---------- registrarFalla ----------
 
     @Test
     @DisplayName("CORREGIDO: registrarFalla sobre una máquina inexistente lanza RecursoNoEncontradoException (antes RuntimeException genérica)")
@@ -77,7 +68,6 @@ class IncidenciaServiceImplUnitTest {
         verify(incidenciaRepository, never()).save(any());
     }
 
-    // ---------- ponerEnMantenimiento ----------
 
     @Test
     @DisplayName("CORREGIDO: ponerEnMantenimiento sin nota se rechaza (antes se podía saltear vía llamada directa a la API)")
@@ -110,7 +100,6 @@ class IncidenciaServiceImplUnitTest {
         verify(maquinaRepository).save(m);
     }
 
-    // ---------- resolverIncidencia ----------
 
     @Test
     @DisplayName("CORREGIDO: resolverIncidencia sin detalle de resolución se rechaza")
@@ -144,7 +133,6 @@ class IncidenciaServiceImplUnitTest {
         assertEquals("OPERATIVA", m.getEstado());
     }
 
-    // ---------- registrarPagoMantenimiento ----------
 
     @Test
     @DisplayName("CORREGIDO: registrarPagoMantenimiento sobre una incidencia inexistente lanza RecursoNoEncontradoException (antes RuntimeException genérica)")

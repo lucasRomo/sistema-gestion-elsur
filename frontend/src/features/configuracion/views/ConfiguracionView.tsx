@@ -12,9 +12,8 @@ export const ConfiguracionView: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const esOscuro = theme === 'dark';
   const config = useConfiguracion();
-  const isMobile = useIsMobile(); // Hook detector de pantalla responsive
+  const isMobile = useIsMobile();
 
-  // Clases dinámicas según el tema
   const cardBg = esOscuro ? '#18181b' : '#ffffff';
   const cardBorder = esOscuro ? '#3f3f46' : '#e4e4e7';
   const subBg = esOscuro ? '#222122' : '#f4f4f5';
@@ -32,7 +31,6 @@ export const ConfiguracionView: React.FC = () => {
         </div>
       </div>
 
-      {/* Switch de Modo Claro / Oscuro */}
       <AparienciaSection 
         esOscuro={esOscuro}
         toggleTheme={toggleTheme}
@@ -43,7 +41,6 @@ export const ConfiguracionView: React.FC = () => {
       />
 
       <div className="row g-4">
-        {/* Cambios de Credenciales / Usuario */}
         <AjustesPerfilCard 
           config={config}
           cardBg={cardBg}
@@ -54,7 +51,6 @@ export const ConfiguracionView: React.FC = () => {
           inputBgClass={inputBgClass}
         />
 
-        {/* Solo se muestra RespaldoCard si NO es Mobile */}
         {!isMobile && (
           <RespaldoCard 
             config={config}

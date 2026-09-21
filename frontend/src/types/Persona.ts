@@ -1,5 +1,3 @@
-// src/types/Persona.ts
-// src/types/Persona.ts
 import type { Direccion } from './Direccion';
 import type { TipoDocumento } from './TipoDocumento';
 import type { TipoPersona } from './TipoPersona';

@@ -28,11 +28,8 @@ public class Producto {
     @JoinColumn(name = "id_maquina_necesaria")
     private Maquina maquinaNecesaria;
 
-    // ... dentro de la clase Producto
     @Column(nullable = false)
-    private Integer stock = 0; // Valor por defecto
-
-    // ... dentro de com.elsur.sistema_gestion.models.Producto.java
+    private Integer stock = 0;
 
     @Column(name = "stock_vinculado")
     private Boolean stockVinculado = false;

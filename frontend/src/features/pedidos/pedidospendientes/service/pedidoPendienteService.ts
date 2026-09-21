@@ -3,9 +3,7 @@ import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../../config/
 const API_URL = `${API_BASE_URL}/pedidos`;
 
 export const PedidoPendienteService = {
-  /**
-   * Obtiene la lista completa de pedidos.
-   */
+
   obtenerTodos: async (): Promise<any[]> => {
     const response = await apiFetch(API_URL);
     if (!response.ok) {
@@ -14,9 +12,6 @@ export const PedidoPendienteService = {
     return await response.json();
   },
 
-  /**
-   * Verifica si la caja está abierta.
-   */
   verificarEstadoCaja: async (): Promise<boolean> => {
     try {
       const res = await apiFetch(`${API_BASE_URL}/turnos/estado-caja`);
@@ -31,9 +26,6 @@ export const PedidoPendienteService = {
     }
   },
 
-  /**
-   * Cambia el estado del pedido y registra las observaciones e historial.
-   */
   cambiarEstado: async (
     idPedido: number,
     nuevoEstado: string,
@@ -57,9 +49,6 @@ export const PedidoPendienteService = {
     return await response.json();
   },
 
-  /**
-   * Registra un pago de pedido con soporte para payload JSON y archivo de comprobante opcional.
-   */
   registrarPago: async (
     idPedido: number,
     monto: number,
@@ -87,9 +76,6 @@ export const PedidoPendienteService = {
     return await response.json();
   },
 
-  /**
-   * Sube un comprobante digital en formato multipart/form-data.
-   */
   vincularComprobanteDigital: async (idComprobante: number, archivo: File): Promise<any> => {
     const formData = new FormData();
     formData.append("comprobante", archivo);
@@ -114,9 +100,6 @@ export const PedidoPendienteService = {
     return await response.json();
   },
 
-  /**
-   * Elimina la vinculación del comprobante digital.
-   */
   eliminarComprobanteDigital: async (idComprobante: number): Promise<any> => {
     const response = await apiFetch(`${API_URL}/comprobantes/${idComprobante}/archivo`, {
       method: 'DELETE'
@@ -129,9 +112,6 @@ export const PedidoPendienteService = {
     return await response.json();
   },
 
-  /**
-   * Asigna un empleado al pedido.
-   */
   asignarEmpleado: async (idPedido: number, idEmpleado: string, idUsuario: number): Promise<any> => {
     const response = await apiFetch(`${API_URL}/${idPedido}/asignar-empleado`, {
       method: 'PUT',
@@ -149,9 +129,6 @@ export const PedidoPendienteService = {
     return text ? JSON.parse(text) : { success: true };
   },
 
-  /**
-   * Actualiza el estante u ubicación del pedido.
-   */
   actualizarUbicacion: async (idPedido: number, nuevaUbicacion: string): Promise<any> => {
     const response = await apiFetch(`${API_URL}/${idPedido}/ubicacion`, {
       method: 'PUT',
@@ -171,9 +148,6 @@ export const PedidoPendienteService = {
     return text ? JSON.parse(text) : null;
   },
 
-  /**
-   * Sube el comprobante físico.
-   */
   subirComprobanteFisico: async (idPedido: number, archivo: File): Promise<boolean> => {
     const formData = new FormData();
     formData.append('archivo', archivo);
@@ -186,9 +160,6 @@ export const PedidoPendienteService = {
     return response.ok;
   },
 
-  /**
-   * Elimina el comprobante físico del servidor.
-   */
   eliminarComprobanteFisico: async (idPedido: number): Promise<boolean> => {
     const response = await apiFetch(`${API_URL}/${idPedido}/comprobante-fisico`, {
       method: 'DELETE'
@@ -197,9 +168,6 @@ export const PedidoPendienteService = {
     return response.ok;
   },
 
-  /**
-   * Actualiza el límite de crédito configurado para un cliente.
-   */
   actualizarLimiteCredito: async (idCliente: number, nuevoLimite: number): Promise<any> => {
     const response = await apiFetch(`${API_BASE_URL}/clientes/${idCliente}/limite-credito`, {
       method: 'PUT',

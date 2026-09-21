@@ -42,7 +42,6 @@ export const AumentoMasivoModal: React.FC<Props> = ({
   const [cargando, setCargando] = useState(false);
   const [showCategoria, setShowCategoria] = useState(false);
 
-  // Buscador dinámico para selección manual
   const productosFiltradosManual = useMemo(() => {
     if (!busquedaProducto.trim()) return productos;
     return productos.filter(p =>
@@ -52,7 +51,6 @@ export const AumentoMasivoModal: React.FC<Props> = ({
 
   if (!show) return null;
 
-  // Extraer categorías únicas disponibles
   const categoriasMap = new Map();
   productos.forEach(p => {
     if (p.categoria) {
@@ -99,7 +97,6 @@ export const AumentoMasivoModal: React.FC<Props> = ({
       return;
     }
 
-    // Convertir a negativo si es un descuento/disminución de precio
     const porcentajeFinal = tipoOperacion === 'DESCUENTO' ? -Math.abs(porcentaje) : Math.abs(porcentaje);
 
     setCargando(true);
@@ -145,7 +142,6 @@ export const AumentoMasivoModal: React.FC<Props> = ({
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
               
-              {/* Selector Aumento / Descuento */}
               <div className="mb-3">
                 <label className="form-label text-warning fw-bold">Tipo de Acción:</label>
                 <div className="d-flex gap-4">
@@ -179,7 +175,6 @@ export const AumentoMasivoModal: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Porcentaje */}
               <div className="mb-4">
                 <label className="form-label text-warning fw-bold">
                   Porcentaje de {tipoOperacion === 'AUMENTO' ? 'Incremento' : 'Disminución'} (%):
@@ -201,7 +196,6 @@ export const AumentoMasivoModal: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Criterio de Selección */}
               <div className="mb-3">
                 <label className="form-label fw-bold" style={{ color: labelColor }}>Aplicar A:</label>
                 <div className="d-flex gap-3 flex-wrap">
@@ -300,7 +294,6 @@ export const AumentoMasivoModal: React.FC<Props> = ({
   </div>
 )}
 
-              {/* Selección manual de Productos con Buscador */}
               {criterio === 'SELECCION' && (
                 <div className="mb-3">
                   <div className="d-flex justify-content-between align-items-center mb-2">
@@ -315,7 +308,6 @@ export const AumentoMasivoModal: React.FC<Props> = ({
                     </button>
                   </div>
 
-                  {/* Input del buscador dinámico */}
                   <input
                     type="text"
                     className="form-control form-control-sm mb-2 shadow-none"

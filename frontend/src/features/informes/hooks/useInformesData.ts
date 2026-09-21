@@ -31,20 +31,9 @@ export function useInformesData() {
   const [turnosRaw, setTurnosRaw] = useState<Turno[]>([]);
   const [averiasRaw, setAveriasRaw] = useState<any[]>([]);
   const [categoriasClienteRaw, setCategoriasClienteRaw] = useState<any[]>([]);
-  // CORREGIDO (GAP): antes un fallo en cualquiera de las fuentes de datos, o
-  // en la carga completa, quedaba solo en la consola (console.error) y el
-  // usuario veía el dashboard en cero sin ningún aviso -- indistinguible de
-  // "no hay datos en el rango". Ahora se expone este mensaje para mostrarlo
-  // en la UI.
+
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
 
-  // CORREGIDO (GAP detectado al agregar más casos de prueba): cargarDatos no
-  // tenía ninguna protección contra llamadas superpuestas (doble click en
-  // "Analizar", o cambiar de rango y volver a analizar antes de que termine
-  // la carga anterior). Si la respuesta de una carga vieja llegaba DESPUÉS
-  // que la de una carga más nueva, sus datos pisaban silenciosamente los del
-  // rango recién pedido. Este ref numera cada carga; solo la carga más
-  // reciente puede aplicar sus resultados al estado.
   const cargaIdRef = useRef(0);
 
   const cargarDatos = useCallback(async (
@@ -70,9 +59,6 @@ export function useInformesData() {
         informesService.obtenerCategoriasCliente(marcarFallo('categorias')),
       ]);
 
-      // Si mientras esperábamos esta respuesta se disparó una carga más
-      // nueva (otro click en "Analizar", u otro rango), esta respuesta ya
-      // está obsoleta: se descarta sin tocar el estado.
       if (cargaIdRef.current !== miId) return null;
 
       const pedidosValidos = pedidos || [];

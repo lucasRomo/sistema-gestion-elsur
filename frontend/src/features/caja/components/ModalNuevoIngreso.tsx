@@ -15,12 +15,9 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [idPedido, setIdPedido] = useState<string | null>(null);
   const [fechaPlaceholder, setFechaPlaceholder] = useState('');
-  // FIX: antes no había ninguna protección contra el doble clic -- un clic rápido
-  // repetido en "Guardar Movimiento" podía disparar dos guardarMovimiento() casi
-  // simultáneos antes de que el modal se cerrara.
+
   const [guardando, setGuardando] = useState(false);
   
-  // Estado para gestionar únicamente el archivo seleccionado
   const [archivoComprobante, setArchivoComprobante] = useState<File | null>(null);
   const [nombreArchivo, setNombreArchivo] = useState<string>('');
   
@@ -73,7 +70,6 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
 
     setGuardando(true);
     try {
-      // Se delega la responsabilidad de la subida a Supabase a `useCaja`
       await onGuardar({
         monto: Number(monto),
         concepto: concepto.trim(),
@@ -84,7 +80,6 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
         comprobanteImagen: metodoPago === 'TRANSFERENCIA' ? archivoComprobante : null
       });
 
-      // Resetear formulario (solo si onGuardar no rechazó la promesa)
       setMonto('');
       setConcepto('');
       setCategoria('INGRESO');
@@ -240,7 +235,6 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
                 />
               </div>
 
-              {/* Contenedor de Comprobante Adjuntado */}
               {metodoPago === 'TRANSFERENCIA' && archivoComprobante && (
                 <div className="mt-3">
                   <div 
@@ -273,7 +267,6 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
             </div>
           </div>
 
-          {/* Modal Footer */}
           <div className="modal-footer border-0 d-flex justify-content-between align-items-center pt-3 px-0">
             <button
               className="btn btn-sm px-3 py-2 fw-bold border-0 shadow-sm"

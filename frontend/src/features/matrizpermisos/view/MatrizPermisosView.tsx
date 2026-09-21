@@ -70,7 +70,6 @@ export const MatrizPermisosView: React.FC = () => {
         `}</style>
       )}
 
-      {/* HEADER Y SECTOR "ASIGNAR PERFIL A USUARIO" */}
       <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
         <div>
           <h3 className="fw-bold mb-0" style={{ fontSize: '1.6rem', color: isDark ? '#ffffff' : '#1e293b' }}>
@@ -101,13 +100,6 @@ export const MatrizPermisosView: React.FC = () => {
             </button>
           )}
 
-          {/*
-            GAP corregido: los perfiles "PERFIL_<usuario>" personalizados quedan
-            fuera del <select> de abajo a propósito (obtenerRoles() los
-            filtra), pero eso los dejaba invisibles para siempre una vez que el
-            usuario dueño pasaba a otro rol. Este botón es la única forma de
-            verlos y limpiarlos.
-          */}
           <button
             onClick={alternarPerfilesHuerfanos}
             className="btn btn-sm fw-bold d-flex align-items-center gap-1"
@@ -217,7 +209,6 @@ export const MatrizPermisosView: React.FC = () => {
       )}
 
       <div className="row g-3">
-        {/* PANEL IZQUIERDO */}
         <div className="col-md-3">
           <ListaUsuariosSidebar 
             usuarios={usuariosFiltrados}
@@ -229,7 +220,6 @@ export const MatrizPermisosView: React.FC = () => {
           />
         </div>
 
-        {/* PANEL DERECHO */}
         <div className="col-md-9">
           <div 
             className="p-3 rounded-4" 
@@ -272,7 +262,6 @@ export const MatrizPermisosView: React.FC = () => {
               </div>
             )}
 
-            {/* GRILLA DE CATEGORÍAS Y PERMISOS */}
             <GrillaPermisos 
               modulos={modulos}
               togglePermiso={togglePermiso}
@@ -280,7 +269,6 @@ export const MatrizPermisosView: React.FC = () => {
               isDark={isDark}
             />
 
-            {/* BOTONES DE ACCIÓN */}
             <div className="d-flex justify-content-between mt-3 pt-2 border-top border-secondary border-opacity-25">
               <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-3 py-1 fw-bold" style={{ borderRadius: '6px', fontSize: '0.85rem', color: '#ffffff' }}>
                 Volver
@@ -294,7 +282,6 @@ export const MatrizPermisosView: React.FC = () => {
         </div>
       </div>
 
-      {/* CONTENEDOR DE MODALES */}
       <ModalesMatrizPermisos 
         mostrarModalNuevoRol={mostrarModalNuevoRol}
         setMostrarModalNuevoRol={setMostrarModalNuevoRol}

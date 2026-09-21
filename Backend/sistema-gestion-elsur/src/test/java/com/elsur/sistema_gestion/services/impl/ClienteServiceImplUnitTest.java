@@ -30,27 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de ClienteServiceImpl (módulo Clientes).
- * Hasta este trabajo no existía NINGUNA suite de tests para este servicio.
- *
- * HALLAZGOS PRINCIPALES (CORREGIDOS en este pase):
- * 1) razonSocial no se validaba -- ni blanco, ni duplicado -- pese a ser
- *    nullable=false a nivel de base.
- * 2) limiteCredito / saldoDeudor negativos no se rechazaban.
- * 3) numeroDocumento de Persona (unique=true, compartida entre Usuario y
- *    Cliente) nunca se validaba antes de guardar -- el único freno existente
- *    era el chequeo del frontend (PersonaForm.tsx contra la lista de clientes
- *    ya cargada en memoria), que no corre en una llamada directa a la API y
- *    tampoco cubre un choque contra el DNI de un Usuario.
- * 4) Al editar, si no se mandaba idUsuario (o no existía), la auditoría se
- *    atribuía en silencio al "primer usuario de la base" -- mismo patrón
- *    transversal ya cerrado en Caja/Insumos/Productos/Compra de
- *    Insumos/Pedidos.
- * 5) eliminar() no atrapaba DataIntegrityViolationException (cliente con
- *    pedidos u otros registros asociados) y dejaba pasar el mensaje crudo de
- *    Hibernate/JDBC.
- */
+
 @ExtendWith(MockitoExtension.class)
 class ClienteServiceImplUnitTest {
 
@@ -90,7 +70,6 @@ class ClienteServiceImplUnitTest {
         return u;
     }
 
-    // ---------- buscarPorId ----------
 
     @Test
     @DisplayName("buscarPorId: cliente inexistente lanza RecursoNoEncontradoException")
@@ -108,7 +87,6 @@ class ClienteServiceImplUnitTest {
         assertEquals(c, clienteService.buscarPorId(5));
     }
 
-    // ---------- guardar: razonSocial ----------
 
     @Test
     @DisplayName("CORREGIDO: razonSocial nula se rechaza")
@@ -155,7 +133,6 @@ class ClienteServiceImplUnitTest {
         verify(clienteRepository).existsByRazonSocialIgnoreCaseAndIdClienteNot("Distribuidora El Sur", -1);
     }
 
-    // ---------- guardar: limiteCredito / saldoDeudor negativos ----------
 
     @Test
     @DisplayName("CORREGIDO: limiteCredito negativo se rechaza")
@@ -181,7 +158,6 @@ class ClienteServiceImplUnitTest {
         verify(clienteRepository, never()).save(any());
     }
 
-    // ---------- guardar: tipoDocumento / tipoPersona ----------
 
     @Test
     @DisplayName("CORREGIDO: tipoDocumento inexistente lanza RecursoNoEncontradoException (antes: RuntimeException -> 400)")
@@ -215,7 +191,6 @@ class ClienteServiceImplUnitTest {
         verify(clienteRepository, never()).save(any());
     }
 
-    // ---------- guardar: numeroDocumento duplicado (hallazgo central) ----------
 
     @Test
     @DisplayName("CORREGIDO -- HALLAZGO CENTRAL: numeroDocumento ya usado por OTRA persona (Cliente o Usuario) se rechaza")
@@ -249,7 +224,6 @@ class ClienteServiceImplUnitTest {
         verify(clienteRepository).save(c);
     }
 
-    // ---------- guardar: auditoría / obtenerUsuarioOperador ----------
 
     @Test
     @DisplayName("CORREGIDO: al editar sin idUsuario se rechaza en vez de atribuir en silencio al primer usuario de la base")
@@ -312,7 +286,6 @@ class ClienteServiceImplUnitTest {
         verify(usuarioRepository, never()).findById(any());
     }
 
-    // ---------- eliminar ----------
 
     @Test
     @DisplayName("eliminar: cliente inexistente lanza RecursoNoEncontradoException")

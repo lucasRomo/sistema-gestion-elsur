@@ -34,7 +34,6 @@ export const useCompraInsumosData = () => {
         const data = await response.json();
         const productosActivos = data.filter((p: any) => p.estado === 'Activo');
 
-        // Filtrar productos descartando aquellos que posean receta
         const productosSinReceta = await Promise.all(
           productosActivos.map(async (p: any) => {
             const idProducto = p.idProducto ?? p.id_producto ?? p.id;

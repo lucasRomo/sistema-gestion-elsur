@@ -7,12 +7,6 @@ interface ErrorModalProps {
   onCerrar: () => void;
 }
 
-// NUEVO (Bug 3): mismo estilo que ExitoModal.tsx, pero para errores. Antes
-// varios errores de este flujo (registro de usuario/empleado, contraseña
-// corta, etc.) se mostraban con alert() nativo del navegador -- una alerta
-// gris de Chrome que no tiene nada que ver con el resto de los modales de la
-// app. Este componente reemplaza esos alert() para que el usuario vea siempre
-// el mismo estilo, esté todo bien o haya un error.
 export const ErrorModal: React.FC<ErrorModalProps> = ({ message, titulo = 'Ocurrió un error', onCerrar }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';

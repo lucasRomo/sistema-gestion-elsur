@@ -68,12 +68,10 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
     ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
     : (ultimaAsignacion?.empleado?.nombre ?? 'Sin Asignar');
 
-  // HELPER REUTILIZABLE: Resta 3 horas incondicionalmente a cualquier fecha
   const aplicarDesfaseTresHoras = (fechaStr: string | null | undefined): Date | null => {
     if (!fechaStr) return null;
     const d = new Date(fechaStr);
     if (isNaN(d.getTime())) return null;
-    // Restamos 3 horas exactas (3 * 60 * 60 * 1000 ms)
     return new Date(d.getTime() - (3 * 60 * 60 * 1000));
   };
 
@@ -106,7 +104,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
     return `${dia}/${mes}/${anio}, ${hhFormat}:${mm} ${ampm}`;
   };
 
-  // Formateador dinámico y seguro que soporta la resta de 3hs
   const formatearHoraOCorta = (fechaIso: string | null | undefined, restar3hs = false) => {
     if (!fechaIso) return '';
     
@@ -141,7 +138,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
     primerHistorialFecha ||
     ultimaAsignacion?.fecha_asignacion;
 
-  // Aplicamos resta de 3 horas a la etiqueta de Fecha Creación general
   const fechaCreacionFormateada = formatearFechaString(fechaCreacionRaw, true, true);
   const fechaEntregaFormateada = formatearFechaString(p.fecha_entrega_estimada, true, false);
 
@@ -178,12 +174,10 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
     const primerHistorial = historiales.length > 0 ? historiales[0] : null;
     const estadoInicial = primerHistorial?.estado_anterior || primerHistorial?.estadoAnterior || 'PENDIENTE';
 
-    // 1. OBTENER PRIMER PAGO (Si existe)
     const pagos = p.comprobantes || [];
     const primerPago = pagos.length > 0 ? pagos[0] : null;
     const montoPrimerPago = primerPago ? Number(primerPago.montoPago ?? primerPago.monto_pago ?? 0).toFixed(2) : null;
 
-    // 2. NODO 1 ESTÁTICO: Creación + Pago Inicial Unificados (Con resta obligatoria de 3 horas)
     if (fechaCreacionRaw) {
       const subtituloEstatico = `Estado Inicial: ${estadoInicial}`;
       const tipoMetodo = primerPago?.tipoPago ? `\n(${primerPago.tipoPago})` : '';
@@ -191,7 +185,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
       items.push({
         id: 'ev-creacion-estatica',
         fechaRaw: fechaCreacionRaw,
-        // Pasamos `true` en el segundo argumento para forzar -3 horas
         fechaFormateada: formatearHoraOCorta(fechaCreacionRaw, true), 
         tipo: 'CREACION',
         titulo: 'Pedido Creado',
@@ -200,7 +193,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
       });
     }
 
-    // 3. HISTORIAL DE CAMBIOS DE ESTADO / ASIGNACIONES / UBICACIÓN
     historiales.forEach((h: any, idx: number) => {
       const f = h.fecha_cambio || h.fechaCambio || h.fecha;
       if (!f) return;
@@ -237,7 +229,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
       });
     });
 
-    // 4. PAGOS POSTERIORES
     const pagosPosteriores = pagos.slice(1);
     pagosPosteriores.forEach((pago: any, idx: number) => {
       const f = pago.fechaCarga || pago.fecha_carga || pago.fecha;
@@ -253,7 +244,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
       });
     });
 
-    // 5. MERMAS
     const mermas = p.mermas || [];
     mermas.forEach((merma: any, idx: number) => {
       const f = merma.fechaMerma || merma.fecha_merma || merma.fecha;
@@ -274,7 +264,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
       });
     });
 
-    // 6. ORDENAR EVENTOS
     const nodoCreacion = items.find(i => i.id === 'ev-creacion-estatica');
     const demasEventos = items.filter(i => i.id !== 'ev-creacion-estatica');
 
@@ -343,7 +332,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
           borderRadius: '12px'
         }}
       >
-        {/* FILA SUPERIOR COMPACTA */}
         <div className="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom border-secondary border-opacity-25">
           <div className="d-flex align-items-center gap-2">
             <span className="fw-bold text-info font-monospace fs-5 .text-info-custom">#{p.id_pedido}</span>
@@ -402,11 +390,9 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
           </div>
         </div>
 
-        {/* CONTENIDO EXPANDIBLE */}
         {expandido && (
           <div className="p-4 d-flex flex-column gap-4">
             
-            {/* LÍNEA DE TIEMPO (TIMELINE) */}
             <div 
               className="p-4 rounded-3 border" 
               style={{ 
@@ -511,7 +497,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
               </div>
             </div>
 
-            {/* DATOS SECUNDARIOS Y BOTONERA DE ACCIONES */}
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 pt-2">
               <div className="d-flex gap-4">
                 <div>
@@ -575,7 +560,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
 </div>
             </div>
 
-            {/* FORMULARIOS / CONTROLES DE EDICIÓN */}
             <div className="row g-3 pt-3 border-top border-secondary border-opacity-25">
               <div className="col-12 col-md-4">
                 <label className="text-muted small font-monospace mb-1">Modificar Estado Proceso</label>
@@ -652,7 +636,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
         )}
       </div>
 
-      {/* MODAL OBSERVACIONES */}
       {mostrarObsModal && (
         <div 
           className="modal d-block" 

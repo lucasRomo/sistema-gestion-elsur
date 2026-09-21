@@ -18,19 +18,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de InformesController.
- *
- * HALLAZGO PRINCIPAL (CORREGIDO en este pase): el único endpoint de este
- * controller (GET /api/informes/dashboard) envolvía TODA su lógica en un
- * catch (Exception e) que, ante cualquier falla -- fecha mal formada, error
- * de conexión a la base, etc. -- devolvía 200 OK con métricas en cero,
- * indistinguible de "no hay datos en el rango". Se detectó además que este
- * endpoint no es consumido por ningún lugar del frontend (el dashboard de
- * Informes calcula todo client-side vía informesUtils.procesarMetricas), por
- * lo que hasta ahora este bug pasaba inadvertido en la práctica. Se corrige
- * igual porque forma parte del API público del backend.
- */
 @ExtendWith(MockitoExtension.class)
 class InformesControllerUnitTest {
 

@@ -25,7 +25,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Paleta de colores adaptativa
   const bgModal = isDark ? '#18181b' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const subTextColor = isDark ? '#a1a1aa' : '#64748b';
@@ -39,7 +38,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
   const [cargandoHistorial, setCargandoHistorial] = useState<boolean>(false);
   const [guardando, setGuardando] = useState<boolean>(false);
 
-  // Modal de Alerta / Advertencia
   const [mostrarAlerta, setMostrarAlerta] = useState<boolean>(false);
   const [mensajeAlerta, setMensajeAlerta] = useState<string>('');
 
@@ -124,10 +122,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
       return;
     }
 
-    // Validamos que cada cantidad cargada sea un número positivo antes de armar el payload.
-    // Antes, `Number(cantidad) || 1` solo cubría el caso vacío/0 (falsy) y dejaba pasar
-    // cualquier valor negativo tal cual, lo que terminaba AUMENTANDO stock en vez de
-    // registrarlo como pérdida (ver MermaServiceImpl.registrarMermas).
     const cantidadInvalida = keys.some(k => {
       const cant = Number(selections[k].cantidad);
       return !Number.isFinite(cant) || cant <= 0;
@@ -177,7 +171,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
             color: textColor 
           }}
         >
-          {/* Header */}
           <div className="modal-header border-bottom border-secondary-subtle pb-3">
             <h5 className="modal-title fw-bold text-warning d-flex align-items-center">
               <i className="bi bi-exclamation-diamond-fill me-2 fs-4"></i>
@@ -190,7 +183,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
             ></button>
           </div>
 
-          {/* Navegación Pestañas */}
           <div className="px-3 pt-3">
             <div className="btn-group w-100">
               <button 
@@ -208,7 +200,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
             </div>
           </div>
 
-          {/* Cuerpo del Modal */}
           <div className="modal-body my-2" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             {tabActiva === 'registrar' ? (
               <div className="d-flex flex-column gap-3">
@@ -228,7 +219,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                         borderColor: cardBorder 
                       }}
                     >
-                      {/* Cabecera Producto */}
                       <div className="form-check d-flex align-items-center justify-content-between mb-2">
                         <div className="d-flex align-items-center gap-2">
                           <input 
@@ -257,7 +247,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                         </span>
                       </div>
 
-                      {/* Desplegable formulario Producto Seleccionado */}
                       {prodSelected && (
                         <div 
                           className="ms-4 mb-3 p-3 rounded border"
@@ -294,7 +283,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                         </div>
                       )}
 
-                      {/* Insumos del producto */}
                       {recetaInsumos.length > 0 && (
                         <div className="ms-4 ps-3 border-start border-warning border-2 mt-3">
                           <span className="small text-warning fw-bold d-block mb-2">
@@ -365,7 +353,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                 })}
               </div>
             ) : (
-              /* TAB HISTORIAL */
               <div>
                 {cargandoHistorial ? (
                   <div className="text-center py-4 text-muted">Cargando mermas...</div>
@@ -472,7 +459,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
             )}
           </div>
 
-          {/* Footer */}
           <div className="modal-footer border-top border-secondary-subtle pt-2">
             <button type="button" className="btn btn-secondary px-4 fw-bold" onClick={onClose}>
               Cerrar
@@ -492,7 +478,6 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
         </div>
       </div>
 
-      {/* Modal de Advertencia Personalizado */}
       {mostrarAlerta && (
         <div
           className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"

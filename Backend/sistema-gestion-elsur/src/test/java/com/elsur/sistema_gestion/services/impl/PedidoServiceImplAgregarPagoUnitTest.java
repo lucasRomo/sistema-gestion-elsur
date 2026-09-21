@@ -18,25 +18,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de PedidoServiceImpl.agregarPago() --
- * el método que usa el módulo "Pedidos Pendientes" del sidebar cuando el
- * operario registra un cobro parcial/total desde ModalRegistrarPago.tsx.
- *
- * ACTUALIZACIÓN: agregarPago() (y su hermano agregarPagoConArchivo(), el que
- * realmente invoca PedidoController vía /{id}/pagos multipart) antes NO
- * validaban el monto del pago en absoluto -- ni contra 0/negativo/NaN, ni
- * contra el saldo pendiente del pedido -- y ante un idUsuario ausente
- * caían en silencio al usuario ID 1 (mismo patrón transversal ya corregido
- * en Caja/Insumos/Productos/Compra de Insumos). Ambos métodos ahora:
- *   1) rechazan monto nulo/NaN/<=0 con SolicitudInvalidaException,
- *   2) rechazan monto que supere el saldo pendiente (monto_total - monto_pago_adelantado)
- *      con SolicitudInvalidaException,
- *   3) exigen idUsuario no nulo y existente (SolicitudInvalidaException si no),
- *   4) ya no atribuyen el movimiento de caja a un usuario "por defecto".
- * De paso, "pedido no encontrado" pasó de RuntimeException genérica a
- * RecursoNoEncontradoException (404), consistente con el resto del código.
- */
 @ExtendWith(MockitoExtension.class)
 class PedidoServiceImplAgregarPagoUnitTest {
 
@@ -45,7 +26,7 @@ class PedidoServiceImplAgregarPagoUnitTest {
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private MovimientoCajaRepository cajaRepository;
     @Mock private MovimientoCuentaCorrienteRepository movimientoCCRepository;
-    @Mock private TurnoRepository TurnoRepository; // mismo nombre de campo que en PedidoServiceImpl
+    @Mock private TurnoRepository TurnoRepository; 
 
     @InjectMocks
     private PedidoServiceImpl pedidoService;
@@ -89,7 +70,6 @@ class PedidoServiceImplAgregarPagoUnitTest {
         return p;
     }
 
-    // ==================== Validación de monto ====================
 
     @Test
     @DisplayName("TC_PP - Monto nulo -> SolicitudInvalidaException, no llega a tocar ningún repositorio")
@@ -138,7 +118,6 @@ class PedidoServiceImplAgregarPagoUnitTest {
         verify(pedidoRepository, never()).save(any());
     }
 
-    // ==================== Validación de usuario ====================
 
     @Test
     @DisplayName("TC_PP - idUsuario nulo -> SolicitudInvalidaException (antes caía en silencio al usuario ID 1)")
@@ -162,7 +141,6 @@ class PedidoServiceImplAgregarPagoUnitTest {
         verifyNoInteractions(pedidoRepository, TurnoRepository, cajaRepository);
     }
 
-    // ==================== Caja cerrada ====================
 
     @Test
     @DisplayName("TC_PP - Caja cerrada -> SolicitudInvalidaException, no llega a buscar el pedido")
@@ -177,7 +155,6 @@ class PedidoServiceImplAgregarPagoUnitTest {
         verify(pedidoRepository, never()).findById(any());
     }
 
-    // ==================== Pedido inexistente ====================
 
     @Test
     @DisplayName("TC_PP - Pedido inexistente -> RecursoNoEncontradoException")
@@ -192,7 +169,6 @@ class PedidoServiceImplAgregarPagoUnitTest {
         assertTrue(ex.getMessage().contains("No se encontró el pedido"));
     }
 
-    // ==================== Consumidor Final + Cuenta Corriente ====================
 
     @Test
     @DisplayName("TC_PP - Consumidor Final no puede pagar/abonar a Cuenta Corriente")
@@ -209,7 +185,6 @@ class PedidoServiceImplAgregarPagoUnitTest {
         verify(pedidoRepository, never()).save(any());
     }
 
-    // ==================== Camino feliz: efectivo ====================
 
     @Test
     @DisplayName("TC_PP - Pago en efectivo válido suma el monto y genera el MovimientoCaja")
@@ -227,7 +202,6 @@ class PedidoServiceImplAgregarPagoUnitTest {
         verify(movimientoCCRepository, never()).save(any());
     }
 
-    // ==================== Camino feliz: Cuenta Corriente con cliente real ====================
 
     @Test
     @DisplayName("TC_PP - Pago a Cuenta Corriente de un cliente real descuenta su saldo deudor y registra el movimiento de CC")

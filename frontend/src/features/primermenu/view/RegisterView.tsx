@@ -10,11 +10,7 @@ interface RegisterViewProps {
   onVolver: () => void;
 }
 
-// A propósito, esta pantalla NO restringe el registro al primer usuario del
-// sistema: el negocio necesita que se puedan autorregistrar varios empleados
-// con la clave de la puerta (portón). Cada alta que no es la primera queda
-// "Pendiente" hasta que un ADMIN la activa desde Gestión de Usuarios (ver
-// UsuarioServiceImpl.guardar y MatrizSeguridadValidator.evaluarPermisoPorton).
+
 export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';

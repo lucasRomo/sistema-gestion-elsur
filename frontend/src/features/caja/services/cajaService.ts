@@ -79,17 +79,15 @@ export const cajaService = {
   obtenerUrlComprobante: (url?: string | null): string => {
     if (!url) return '';
     if (url.startsWith('http') || url.startsWith('data:')) return url;
-    // Ya no es una ruta local /uploads/... sino un path de Supabase Storage
-    // servido por el backend detrás del login.
     return `${API_BASE_URL}/movimientos-caja/comprobante/${encodeURIComponent(url)}`;
   },
 
   obtenerBlobComprobante: async (url?: string | null): Promise<string> => {
   if (!url) throw new Error('Sin comprobante');
-  if (url.startsWith('data:')) return url; // ya es una preview local en base64
+  if (url.startsWith('data:')) return url; 
 
   const path = url.startsWith('http')
-    ? url.substring(url.lastIndexOf('/') + 1) // por si ya viniera como URL completa
+    ? url.substring(url.lastIndexOf('/') + 1) 
     : url;
 
   const response = await apiFetch(`/movimientos-caja/comprobante/${encodeURIComponent(path)}`);
@@ -113,10 +111,9 @@ export const cajaService = {
     }
 
     const data = await response.json();
-    return data.path; // este es el valor que se guarda en comprobanteImagen
+    return data.path;
   },
 
-  // --- MÉTODOS DE PEDIDOS ---
     obtenerPedidoPorId: async (idPedido: number): Promise<any | null> => {
     try {
       const response = await fetch(`${API_BASE_URL}/pedidos/${idPedido}`);
@@ -128,7 +125,7 @@ export const cajaService = {
     }
   },
 
-  // --- MÉTODOS DE CAJA Y MOVIMIENTOS ---
+
   obtenerTodos: async (): Promise<MovimientoCaja[]> => {
     try {
       const response = await apiFetch(`${API_BASE_URL}/movimientos-caja`);

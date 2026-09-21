@@ -32,7 +32,7 @@ public class IaController {
             return ResponseEntity.ok(Map.of("items", items));
 
         } catch (Exception e) {
-            e.printStackTrace(); // <--- Muestra en la consola de Spring Boot el error exacto
+            e.printStackTrace();
             return ResponseEntity.internalServerError().body(Map.of("error", "Error al procesar la imagen: " + e.getMessage()));
         }
     }

@@ -56,9 +56,6 @@ export const ModalCrearArea: React.FC<Props> = ({
       await onSubmit();
       setMostrarExito(true);
     } catch (err) {
-      // FIX: mismo problema que en ModalCrearInstitucion -- un rechazo del backend
-      // (nombre vacío, institución inexistente) solo se logueaba en consola, sin
-      // avisarle nada al usuario. Ahora se muestra el mensaje real del backend.
       console.error(err);
       alert((err as Error)?.message || 'No se pudo crear la cátedra/área.');
     } finally {
@@ -158,24 +155,36 @@ export const ModalCrearArea: React.FC<Props> = ({
         </div>
       )}
 
-      {mostrarExito && (
+       {mostrarExito && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1085 }}>
-          <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content shadow-lg font-monospace text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #267c34', borderRadius: '12px' }}>
-              <div className="modal-body text-center py-3">
-                <div className="d-flex justify-content-center mb-2">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', border: '2px solid #267c34' }}>
-                    <i className="bi bi-check-lg" style={{ fontSize: '2.2rem', color: '#267c34' }}></i>
-                  </div>
-                </div>
-                <h6 className="fw-bold my-2 text-white">Cátedra/Área creada con éxito</h6>
+          <div className="modal-dialog modal-sm modal-dialog-centered">
+            <div
+              className="modal-content p-4 text-center shadow font-monospace"
+              style={{
+                border: '2px solid #267c34',
+                backgroundColor: '#18181b',
+                color: '#ffffff',
+                borderRadius: '12px'
+              }}
+            >
+              <div
+                className="d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+                style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: '#267c34', color: '#ffffff' }}
+              >
+                <i className="bi bi-check-lg fs-2"></i>
+              </div>
+              <h4 className="fw-bold mb-2">¡Éxito!</h4>
+              <p className="small mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                Cátedra/Área creada con éxito
+              </p>
+              <div className="d-flex justify-content-center">
                 <button
                   type="button"
-                  className="btn btn-sm px-4 fw-bold mt-2 text-white"
-                  style={{ backgroundColor: '#267c34', borderRadius: '6px', border: 'none' }}
+                  className="btn px-4 text-white fw-bold"
+                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }}
                   onClick={handleCerrarTodo}
                 >
-                  Aceptar
+                  Cerrar
                 </button>
               </div>
             </div>

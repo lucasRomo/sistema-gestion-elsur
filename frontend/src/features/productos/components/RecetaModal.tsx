@@ -8,6 +8,7 @@ interface Props {
   show: boolean;
   producto: Producto;
   onClose: () => void;
+  onGuardado?: () => void;
 }
 
 interface InsumoItem {
@@ -17,7 +18,7 @@ interface InsumoItem {
   cantidadConsumo: number;
 }
 
-export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
+export const RecetaModal: React.FC<Props> = ({ show, producto, onClose, onGuardado }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -123,24 +124,28 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose }) => {
   };
 
   const handleGuardarReceta = async () => {
-    if (!producto.idProducto) return;
-    setLoading(true);
-    try {
-      const payload = recetaActual.map(item => ({
-        idProducto: producto.idProducto,
-        idInsumo: item.idInsumo,
-        cantidadConsumo: item.cantidadConsumo
-      }));
+  if (!producto.idProducto) return;
+  setLoading(true);
+  try {
+    const payload = recetaActual.map(item => ({
+      idProducto: producto.idProducto,
+      idInsumo: item.idInsumo,
+      cantidadConsumo: item.cantidadConsumo
+    }));
 
-      await guardarRecetaProducto(producto.idProducto, payload);
+    await guardarRecetaProducto(producto.idProducto, payload);
+
+    if (onGuardado) {
+      onGuardado();
+    } else {
       onClose();
-    } catch (e) {
-      console.error("Error guardando receta:", e);
-      alert('Ocurrió un error al guardar la receta.');
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (e) {
+    console.error("Error guardando receta:", e);
+    alert('Ocurrió un error al guardar la receta.');
+  } finally {
+    setLoading(false);
+  }};
 
   if (!show) return null;
 

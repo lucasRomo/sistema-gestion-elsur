@@ -2,9 +2,7 @@ import type { Pedido } from '../../general/types/Pedido';
 import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../../config/api';
 
 export const pedidoService = {
-  /**
-   * Obtiene un pedido completo por su ID con relaciones frescas de auditoría
-   */
+
   obtenerPorId: async (idPedido: number): Promise<any | null> => {
     const response = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}`);
     if (response.ok) {
@@ -26,9 +24,6 @@ export const pedidoService = {
     return text ? JSON.parse(text) : null; 
   },
 
-  /**
-   * Sube una captura o imagen física de comprobante al backend
-   */
   subirComprobanteFisico: async (idPedido: number, file: File): Promise<boolean> => {
     const formData = new FormData();
     formData.append('comprobante', file);
@@ -40,9 +35,6 @@ export const pedidoService = {
     return response.ok;
   },
 
-  /**
-   * Elimina el comprobante tanto del disco como del registro en la BD
-   */
   eliminarComprobanteFisico: async (idPedido: number): Promise<boolean> => {
     const response = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}/comprobante`, {
       method: 'DELETE',
@@ -109,9 +101,6 @@ export const pedidoService = {
     return true;
   },
 
-  /**
-   * Obtiene la carga de trabajo actual de los empleados contando sus pedidos pendientes
-   */
   obtenerCargaTrabajoEmpleados: async (): Promise<Record<number, number>> => {
     try {
       const response = await apiFetch(`${API_BASE_URL}/pedidos`);

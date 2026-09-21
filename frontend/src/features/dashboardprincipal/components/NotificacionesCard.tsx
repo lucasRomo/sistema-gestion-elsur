@@ -3,7 +3,6 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { ventaRapidaService } from '../services/ventaRapidaService';
 import type { PedidoNotificacion } from '../services/ventaRapidaService';
 
-// Definición de la interfaz del Pedido obtenida del Backend
 interface PedidoBackend {
   id_pedido: number;
   observaciones?: string;
@@ -37,14 +36,12 @@ export const NotificacionesCard: React.FC = () => {
 
   const fetchNotificaciones = async () => {
     try {
-      // 1. Obtener estado de caja usando el servicio
       const estadoCaja = await ventaRapidaService.getEstadoCajaNotificacion();
       setCajaAbierta(estadoCaja.cajaAbierta);
       setDatosTurno(estadoCaja.datosTurno);
       setIngresosTurno(estadoCaja.ingresosTurno);
       setEgresosTurno(estadoCaja.egresosTurno);
 
-      // 2. Obtener pedidos urgentes/demorados usando el servicio
       const urgentes = await ventaRapidaService.getPedidosUrgentesNotificacion();
       setPedidosUrgentes(urgentes);
     } catch (error) {
@@ -82,7 +79,6 @@ export const NotificacionesCard: React.FC = () => {
         boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.05)'
       }}
     >
-      {/* BOTONES LATERALES */}
       <button
         onClick={() => cambiarVista('prev')}
         className={`btn p-0 border-0 position-absolute opacity-75 opacity-100-hover ${isDark ? 'text-white' : 'text-secondary'}`}
@@ -113,9 +109,7 @@ export const NotificacionesCard: React.FC = () => {
         <i className="bi bi-chevron-right fs-5"></i>
       </button>
 
-      {/* CONTENEDOR INTERNO */}
       <div className="d-flex flex-column justify-content-between h-100" style={{ paddingLeft: '20px', paddingRight: '20px' }}>
-        {/* CABECERA */}
         <div className="d-flex align-items-center justify-content-between mb-1">
           <h6
             className="fw-bold m-0 d-flex align-items-center gap-2"
@@ -135,12 +129,9 @@ export const NotificacionesCard: React.FC = () => {
           )}
         </div>
 
-        {/* CONTENIDO PRINCIPAL */}
         <div className="flex-grow-1 d-flex flex-column justify-content-center">
-          {/* VISTA 0: CAJA */}
           {vistaActual === 0 && (
             <div className="d-flex flex-column justify-content-between h-100 py-1 gap-1">
-              {/* BLOQUE SUPERIOR: ESTADO CAJA */}
               <div
                 className="p-2 rounded d-flex align-items-center justify-content-between"
                 style={{
@@ -173,7 +164,6 @@ export const NotificacionesCard: React.FC = () => {
                 </span>
               </div>
 
-              {/* BLOQUE INTERMEDIO: INGRESOS Y EGRESOS DEL TURNO */}
               {cajaAbierta && (
                 <div className="d-flex gap-2">
                   <div
@@ -210,7 +200,6 @@ export const NotificacionesCard: React.FC = () => {
                 </div>
               )}
 
-              {/* BLOQUE INFERIOR */}
               {cajaAbierta ? (
                 <div
                   className={`p-1 px-2 rounded d-flex justify-content-between small align-items-center ${isDark ? 'text-white-50' : 'text-muted'}`}
@@ -244,7 +233,6 @@ export const NotificacionesCard: React.FC = () => {
             </div>
           )}
 
-          {/* VISTA 1: PEDIDOS DEMORADOS */}
           {vistaActual === 1 && (
             <div
               className="d-flex flex-column gap-2 pe-1 no-scrollbar h-100"
@@ -293,7 +281,6 @@ export const NotificacionesCard: React.FC = () => {
           )}
         </div>
 
-        {/* PIE CON INDICADORES */}
         <div className="d-flex justify-content-center align-items-center gap-1 mt-1">
           <span
             style={{

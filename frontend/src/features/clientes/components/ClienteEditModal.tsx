@@ -8,7 +8,6 @@ interface ClienteEditModalProps {
 }
 
 export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onCerrar, onConfirmar }) => {
-  // Lista dinámica traída desde el servicio
   const [tiposDocumento, setTiposDocumento] = useState<TipoDocumento[]>([]);
   const [showTipoDoc, setShowTipoDoc] = useState(false);
   
@@ -80,7 +79,6 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
 
   return (
     <>
-      {/* Contenedor del Modal Principal */}
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
         <div className="modal-dialog modal-lg modal-dialog-centered" style={{ maxWidth: '850px' }}>
           <div 
@@ -92,7 +90,6 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
             }}
           >
             
-            {/* Header */}
             <div className="d-flex justify-content-between align-items-center px-4 pt-4 pb-2">
               <h4 className="m-0 fw-bold text-info d-flex align-items-center">
                 <i className="bi bi-pencil-square me-2"></i>Modificar Cliente
@@ -100,13 +97,10 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
               <button type="button" className="btn-close btn-close-white" onClick={onCerrar}></button>
             </div>
 
-            {/* Formulario */}
             <form onSubmit={handleFormSubmit} className="px-4 pb-4">
               
-              {/* Contenedor con Scroll Y Limpio - Sin desborde X */}
               <div style={{ maxHeight: '68vh', overflowY: 'auto', overflowX: 'hidden', paddingRight: '8px' }}>
                 
-                {/* SECCIÓN 1: DATOS PERSONALES */}
                 <h5 className="border-bottom pb-2 mb-3 mt-2 font-monospace fw-bold text-dark-emphasis" style={{ fontSize: '1.05rem' }}>
                   1. Datos Personales
                 </h5>
@@ -148,7 +142,6 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                     />
                   </div>
 
-                  {/* Selector dinámico de tipo de documento */}
                   <div className="col-md-4 px-1">
                     <label className="form-label small fw-medium" style={{ color: '#a1a1aa' }}>Tipo de Doc.</label>
                     <div className="position-relative">
@@ -245,7 +238,6 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
                   </div>
                 </div>
 
-                {/* SECCIÓN 2: DATOS COMERCIALES */}
                 <h5 className="border-bottom pb-2 mb-3 font-monospace fw-bold text-dark-emphasis" style={{ fontSize: '1.05rem' }}>
                   2. Datos Comerciales
                 </h5>
@@ -290,7 +282,6 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
 
               </div>
 
-              {/* Botones de Acción Fijos Inferiores */}
               <div className="d-flex justify-content-end gap-2 mt-3 pt-3 border-top" style={{ borderColor: '#3f3f46 !important' }}>
                 <button type="button" className="btn btn-danger px-4 fw-semibold" style={{ borderRadius: '8px', color: '#ffffff' }} onClick={onCerrar}>
                   Cancelar
@@ -302,7 +293,6 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
         </div>
       </div>
 
-      {/* SUB-MODAL DE CONFIRMACIÓN */}
       {mostrarConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered" style={{ maxWidth: '400px' }}>

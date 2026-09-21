@@ -18,16 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de TipoProveedorServiceImpl (módulo
- * Proveedores, categorías de tipo de proveedor). Hasta este trabajo no
- * existía NINGUNA suite de tests para este servicio.
- *
- * HALLAZGO PRINCIPAL (CORREGIDO en este pase): guardar() no validaba
- * descripción blanca ni duplicada. El frontend (ProveedorModal.tsx) sí
- * revisa duplicados, pero solo contra la lista de tipos ya cargada en
- * memoria -- una llamada directa a la API lo salteaba por completo.
- */
+
 @ExtendWith(MockitoExtension.class)
 class TipoProveedorServiceImplUnitTest {
 

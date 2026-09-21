@@ -15,23 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de InstitucionServiceImpl (módulo
- * Repositorio Digital, modal "Nueva Institución"). Hasta este trabajo no
- * existía NINGUNA suite de tests para este servicio.
- *
- * HALLAZGO PRINCIPAL (CORREGIDO en este pase): save() guardaba cualquier cosa
- * que llegara sin validar nombre vacío ni duplicados -- un nombre repetido
- * violaba la restricción UNIQUE de la columna y explotaba como
- * DataIntegrityViolationException, una excepción no contemplada por ningún
- * @ExceptionHandler específico, cayendo en el handler genérico del
- * GlobalExceptionHandler (500 "Ocurrió un error inesperado", totalmente opaco
- * para el usuario). Ahora se pre-valida con un existsBy explícito, mismo
- * patrón ya usado en UsuarioServiceImpl para username/DNI/email duplicados.
- * También se recorta (trim) el nombre antes de guardar, para que dos
- * instituciones que difieren solo en espacios al inicio/final ("UTN FRSF" vs.
- * "UTN FRSF ") no terminen guardadas como si fueran distintas.
- */
 @ExtendWith(MockitoExtension.class)
 class InstitucionServiceImplUnitTest {
 
@@ -119,8 +102,6 @@ class InstitucionServiceImplUnitTest {
 
         Institucion resultado = institucionService.save(institucion);
 
-        // El chequeo de duplicados y el nombre finalmente persistido usan la
-        // versión YA recortada, no la original con espacios.
         verify(institucionRepository).existsByNombreInstitucionIgnoreCase("UTN FRSF");
         assertEquals("UTN FRSF", resultado.getNombreInstitucion());
     }

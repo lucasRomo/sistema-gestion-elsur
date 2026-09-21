@@ -13,13 +13,6 @@ import com.elsur.sistema_gestion.models.*;
 import com.elsur.sistema_gestion.repositories.*;
 import com.elsur.sistema_gestion.services.CifradoService;
 
-// @Profile("!test"): este inicializador corre SQL nativo específico de Postgres
-// (pg_get_serial_sequence, ON CONFLICT DO NOTHING) contra la base real. Los tests que
-// levantan el contexto completo (@SpringBootTest: SistemaGestionApplicationTests y
-// MatrizSeguridadValidatorIntegrationTest) ahora usan una base H2 en memoria (ver
-// src/test/resources/application.properties, perfil "test"), donde ese SQL no corre.
-// TestDataInitializer (src/test/java/.../config/TestDataInitializer.java) es el
-// reemplazo -- mismo propósito, pero con JPA puro -- que corre SOLO en ese perfil.
 @Component
 @Profile("!test")
 public class DataInitializer implements CommandLineRunner {
@@ -52,7 +45,6 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         System.out.println("[DataInitializer] Cargando datos maestros mediante SQL Nativo seguro...");
 
-        // 1. TIPOS DE DOCUMENTO
         if (tipoDocumentoRepository.count() == 0) {
             jdbcTemplate.execute("INSERT INTO tipo_documento (id_tipo_documento, nombre_tipo) VALUES (1, 'DNI')");
             jdbcTemplate.execute("INSERT INTO tipo_documento (id_tipo_documento, nombre_tipo) VALUES (2, 'CUIT')");
@@ -62,7 +54,6 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("[DataInitializer] -> Tipos de Documento insertados.");
         }
 
-        // 2. TIPOS DE PERSONA
         if (tipoPersonaRepository.count() == 0) {
             jdbcTemplate.execute("INSERT INTO tipo_persona (id_tipo_persona, nombre_tipo) VALUES (1, 'Física')");
             jdbcTemplate.execute("INSERT INTO tipo_persona (id_tipo_persona, nombre_tipo) VALUES (2, 'Jurídica')");
@@ -70,7 +61,6 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("[DataInitializer] -> Tipos de Persona insertados.");
         }
 
-        // 3. ROLES (ADMIN y OPERARIO)
         if (rolRepository.count() == 0) {
             jdbcTemplate.execute("INSERT INTO rol (id_rol, nombre_rol) VALUES (1, 'ADMIN')");
             jdbcTemplate.execute("INSERT INTO rol (id_rol, nombre_rol) VALUES (2, 'OPERARIO')");
@@ -80,7 +70,6 @@ public class DataInitializer implements CommandLineRunner {
             jdbcTemplate.execute("UPDATE rol SET nombre_rol = 'OPERARIO' WHERE id_rol = 2 AND nombre_rol = 'EMPLEADO'");
         }
 
-        // 4. CLIENTE CONSUMIDOR FINAL
         if (clienteRepository.count() == 0) {
             jdbcTemplate.execute("INSERT INTO persona (id_persona, nombre, apellido, numero_documento, id_tipo_documento, id_tipo_persona) " +
                     "VALUES (1, 'Consumidor', 'Final', '99999999', 1, 1)");
@@ -92,7 +81,6 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("[DataInitializer] -> Cliente 'Consumidor Final' insertado exitosamente.");
         }
 
-        // 5. PERMISOS Y MÓDULOS DEL SISTEMA
         jdbcTemplate.execute("UPDATE permiso SET nombre_permiso = 'Equipos / Máquinas' WHERE nombre_permiso = 'Inventario'");
 
         Long totalPermisos = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM permiso", Long.class);
@@ -117,13 +105,11 @@ public class DataInitializer implements CommandLineRunner {
             jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('permiso', 'id_permiso'), 17)");
             System.out.println("[DataInitializer] -> Permisos / Módulos insertados.");
         } else {
-            // Asegura que se inserte 'Compra de Insumos' si el sistema ya tenía permisos previos
             jdbcTemplate.execute("INSERT INTO permiso (id_permiso, nombre_permiso) " +
                     "SELECT 17, 'Compra de Insumos' WHERE NOT EXISTS (SELECT 1 FROM permiso WHERE nombre_permiso = 'Compra de Insumos')");
             jdbcTemplate.execute("SELECT setval(pg_get_serial_sequence('permiso', 'id_permiso'), (SELECT MAX(id_permiso) FROM permiso))");
         }
 
-        // 6. ASIGNACIÓN INICIAL DE PERMISOS A ROLES (ROL_PERMISO)
         Long totalRolPermiso = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM rol_permiso", Long.class);
         if (totalRolPermiso == null || totalRolPermiso == 0) {
             jdbcTemplate.execute("INSERT INTO rol_permiso (id_rol, id_permiso) SELECT 1, id_permiso FROM permiso ON CONFLICT DO NOTHING");
@@ -134,19 +120,10 @@ public class DataInitializer implements CommandLineRunner {
             }
             System.out.println("[DataInitializer] -> Relaciones Rol-Permiso inicializadas.");
         } else {
-            // Asigna el permiso 17 a los roles existentes ADMIN y OPERARIO
             jdbcTemplate.execute("INSERT INTO rol_permiso (id_rol, id_permiso) SELECT 1, 17 ON CONFLICT DO NOTHING");
             jdbcTemplate.execute("INSERT INTO rol_permiso (id_rol, id_permiso) SELECT 2, 17 ON CONFLICT DO NOTHING");
         }
 
-        // 7. ARREGLO AUTOMÁTICO DE CONTRASEÑAS SIN HASHEAR
-        // Cualquier fila de "usuario" cuya "contrasena" no arranca con "$2" (formato BCrypt)
-        // tiene ahí mismo, tal cual, la contraseña real en texto plano -- pasa cuando alguien
-        // se registra desde un backend desactualizado (sin el hasheo en el alta). En vez de
-        // arreglarlo a mano con SQL cada vez, cada arranque revisa y corrige solo, hasheando
-        // esa misma contraseña y guardando también su copia cifrada para "Ver contraseña".
-        // Una vez arreglada una fila deja de aparecer en el WHERE, así que esto no hace nada
-        // en los arranques siguientes (no re-hashea un hash ya hecho).
         List<Map<String, Object>> contrasenasSinHashear = jdbcTemplate.queryForList(
                 "SELECT id_usuario, contrasena FROM usuario WHERE contrasena NOT LIKE '$2%'");
 

@@ -6,7 +6,6 @@ export interface IncongruenciaEmpleado {
   cantidadIncongruencias: number;
 }
 
-// Genera un sparkline "tipo bolsa": variaciones chicas y acotadas
 export function generarPuntosSparkline(
   semilla: number,
   cantidadPuntos: number = 36,
@@ -32,7 +31,6 @@ export function generarPuntosSparkline(
   return puntos.join(' ');
 }
 
-// Agrupa una lista de ítems por período (Día, Semanas, Meses, Años)
 export function agruparPorPeriodo<T>(
   items: T[],
   desde: Date,
@@ -150,7 +148,6 @@ export function calcularIncongruenciasArqueo(
     .sort((a, b) => b.montoDiferencia - a.montoDiferencia);
 }
 
-// Procesa todas las métricas del sistema para un rango de fechas dado
 export function procesarMetricas(
   fDesde: string,
   fHasta: string,
@@ -223,7 +220,6 @@ export function procesarMetricas(
 
   const cantidadMovimientos = movimientosEnRango.length;
 
-  // --- AGRUPAMIENTO DE MOVIMIENTOS POR CATEGORÍA DE INGRESOS Y EGRESOS ---
   const mapaCategoriasIngreso: { [key: string]: { cantidad: number; total: number } } = {};
   const mapaCategoriasEgreso: { [key: string]: { cantidad: number; total: number } } = {};
 
@@ -279,7 +275,6 @@ export function procesarMetricas(
     color: COLORES_TORTA[(index + 2) % COLORES_TORTA.length]
   }));
 
-  // --- PRODUCTOS Y CATEGORÍAS MÁS VENDIDAS ---
   const mapaProductos: { [key: string]: { cantidad: number; nombre: string } } = {};
   const mapaCategorias: { [key: string]: number } = {};
   const mapaCategoriasCliente: { [key: string]: { cantidad: number; monto: number; ahorro: number } } = {};
@@ -288,7 +283,6 @@ export function procesarMetricas(
     const clienteObj = p.cliente;
     const catClienteObj = clienteObj?.categoriaCliente || clienteObj?.categoria || p.categoriaCliente;
 
-    // 1. Extraemos el nombre ya sea que venga como Objeto o como String directo
     let nombreCatRaw = '';
     if (typeof catClienteObj === 'string') {
       nombreCatRaw = catClienteObj;
@@ -302,17 +296,13 @@ export function procesarMetricas(
     const matchDescuento = obs.match(/\[Descuento aplicado:\s*([^\]]+)\]/i);
     const descTexto = matchDescuento && matchDescuento[1] ? matchDescuento[1] : '';
 
-    // 2. Unificamos todos los textos posibles donde puede estar la categoría para hacer una búsqueda segura
     const textoBusqueda = `${nombreCatRaw} ${descTexto} ${obs}`.toLowerCase();
 
-    // 3. Asignación estricta y dinámica
     let nombreCatCliente = 'Sin Categoría / General';
 
-    // Primero verificamos si el objeto pedido ya trae un nombre de categoría válido
     if (nombreCatRaw && !textoBusqueda.includes('sin categoría') && !textoBusqueda.includes('consumidor final')) {
       nombreCatCliente = nombreCatRaw;
     } else {
-      // Si no viene directo, buscamos dinámicamente en las categorías traídas de la base de datos
       const categoriaEncontrada = (categoriasClienteLista || []).find((cat: any) =>
         textoBusqueda.includes((cat.nombre || '').toLowerCase())
       );
@@ -322,7 +312,6 @@ export function procesarMetricas(
       }
     }
 
-    // Extraemos el porcentaje si no venía en el objeto pero sí en el texto
     if (porcentajeDescuento === 0) {
       const numMatch = descTexto.match(/(\d+(\.\d+)?)/);
       if (numMatch) {
@@ -333,9 +322,6 @@ export function procesarMetricas(
     const montoPedido = Number(p.monto_total || p.montoTotal || p.total || 0);
     let montoAhorrado = 0;
 
-    // CORREGIDO: con porcentajeDescuento === 100 el cálculo dividía por cero
-    // (1 - 100/100 = 0), generando Infinity y corrompiendo el acumulado de
-    // "monto ahorrado" de la categoría para siempre. Se acota a (0, 100).
     if (porcentajeDescuento > 0 && porcentajeDescuento < 100) {
       const montoOriginal = montoPedido / (1 - porcentajeDescuento / 100);
       montoAhorrado = montoOriginal - montoPedido;
@@ -398,7 +384,6 @@ export function procesarMetricas(
     montoAhorrado: mapaCategoriasCliente[nombreCat].ahorro
   }));
 
-  // --- RECAUDACIÓN, RENDIMIENTO Y TIEMPOS DE EMPLEADOS (OPERACIONES Y RRHH) ---
   const mapaEmpleados: {
     [key: string]: {
       ventas: number;
@@ -428,7 +413,6 @@ export function procesarMetricas(
     const idPed = p.idPedido || p.id_pedido || p.id;
     const estado = (p.estado || '').toUpperCase();
 
-    // Métrica de Pedidos Devueltos / Cancelados por Empleado
     const listaHistoriales = p.historiales || p.historialEstadoPedidos || [];
 
     const historialDevolucion = listaHistoriales.find((h: any) =>
@@ -453,7 +437,6 @@ export function procesarMetricas(
       mapaDevueltosPorEmpleado[nombreEmp] = (mapaDevueltosPorEmpleado[nombreEmp] || 0) + 1;
     }
 
-    // Cálculo de tiempos de resolución
     const fechaInicioStr = p.fecha_creacion || p.fechaCreacion || p.fecha;
     const fechaFinStr = p.fecha_finalizacion || p.fechaFinalizacion || p.fecha_entrega || p.fechaEntrega;
 
@@ -572,7 +555,6 @@ export function procesarMetricas(
     ? Math.round(sumaTiempoGeneralMinutos / cantidadPedidosConTiempo)
     : 0;
 
-  // --- AGRUPAMIENTO POR PERÍODO ---
   const diffTiempoMs = Math.abs(hasta.getTime() - desde.getTime());
   const diffDias = Math.ceil(diffTiempoMs / (1000 * 60 * 60 * 24));
   const diffMeses = (hasta.getFullYear() - desde.getFullYear()) * 12 + (hasta.getMonth() - desde.getMonth());
@@ -640,7 +622,6 @@ export function procesarMetricas(
     }));
   }
 
-  // --- DETALLE DE EGRESOS ---
   let detalleEgresos: { ejeX: string; monto: number; descripcion?: string }[] = [];
 
   if (esUnSoloDia) {
@@ -668,7 +649,6 @@ export function procesarMetricas(
     }));
   }
 
-  // --- MERMAS Y AVERÍAS ---
   const obtenerNombreUsuarioMerma = (usuarioObj: any) => {
     if (!usuarioObj) return 'Sin Asignar';
     return usuarioObj.persona
@@ -691,8 +671,8 @@ export function procesarMetricas(
       });
 
       return {
-        ejeX: `${horaLabel}#${idx}`,   // clave ÚNICA para el eje (evita colisiones de Recharts)
-        horaLabel,                      // texto real que se muestra
+        ejeX: `${horaLabel}#${idx}`, 
+        horaLabel,                    
         cantidad: Number(item.cantidad) || 0,
         insumo: item.insumo?.nombreInsumo || null,
         producto: item.producto?.nombreProducto || null,
@@ -741,7 +721,6 @@ export function procesarMetricas(
     averiasPorPeriodo = averiasAgrupadas.map((item) => ({ ejeX: item.name, cantidad: item.valor }));
   }
 
-  // --- CLIENTES CON MÁS INGRESOS ---
   const mapaClientes: { [key: string]: { nombre: string; totalGastado: number; cantidadPedidos: number } } = {};
 
   const obtenerNombreCliente = (clienteObj: any, fallbackStr?: string): string => {
@@ -881,7 +860,6 @@ export function procesarMetricas(
       color: COLORES_TORTA[index % COLORES_TORTA.length]
     }));
 
-  // --- TIPOS DE PAGO ---
   const mapaPagos: { [key: string]: number } = {};
   ingresosCaja.forEach((m: any) => {
     const montoAbs = Math.abs(Number(m.monto || 0));
@@ -908,7 +886,6 @@ export function procesarMetricas(
       color: COLORES_TORTA[index % COLORES_TORTA.length]
     }));
 
-  // --- DISTRIBUCIÓN POR ESTADOS ---
   const mapaEstados: { [key: string]: number } = {};
   pedidosEnRango.forEach((p) => {
     let estado = (p.estado || 'PENDIENTE').toUpperCase();

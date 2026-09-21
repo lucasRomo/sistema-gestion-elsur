@@ -3,8 +3,8 @@ export interface ItemCompraInsumo {
   idInsumo?: number;
   idProducto?: number;
   esNuevoInsumo?: boolean;
-  nombreInsumo: string; // Nombre del Insumo o Producto
-  cantidadEmpaquetada: number; // Cantidad comprada
+  nombreInsumo: string; 
+  cantidadEmpaquetada: number; 
   precioUnitario: number;
   subtotal: number;
   factorConversion?: number;

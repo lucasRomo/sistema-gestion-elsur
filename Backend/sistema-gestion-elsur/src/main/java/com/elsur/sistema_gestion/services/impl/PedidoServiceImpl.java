@@ -132,14 +132,6 @@ public class PedidoServiceImpl implements PedidoService {
                         .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
                     detalle.setProducto(prod);
                 } else {
-                    // Antes esto se dejaba pasar en silencio: un detalle sin producto (o con
-                    // un producto sin idProducto) llegaba así hasta procesarDescuentoStock,
-                    // que hace detalle.getProducto().getStockVinculado() sin chequear null ->
-                    // NullPointerException. En el alta normal esa excepción terminaba tragada
-                    // (ver más abajo), así que el pedido se guardaba igual con un detalle roto;
-                    // si más tarde alguien finalizaba ese pedido, la misma NPE volvía a saltar
-                    // pero esta vez sin nada que la atajara. Cortamos acá, con un mensaje claro,
-                    // antes de que el detalle llegue a guardarse.
                     throw new SolicitudInvalidaException(
                         "Cada detalle del pedido debe indicar un producto válido (falta el producto o su id).");
                 }
@@ -176,13 +168,6 @@ public class PedidoServiceImpl implements PedidoService {
 
         BigDecimal seña = p.getMonto_pago_adelantado();
 
-        // Validación que faltaba: el formulario de Crear Pedido manda este campo
-        // como <input type="number"> sin min="0" y nada del lado del cliente
-        // impedía tipear un monto negativo. Si eso llegaba hasta acá, quedaba
-        // persistido tal cual en Pedido.monto_pago_adelantado (un "pago negativo"
-        // sin sentido), sin siquiera generar el ComprobantePago/MovimientoCaja de
-        // abajo (que solo corre con seña > 0) -- el dato quedaba corrupto y en
-        // silencio.
         if (seña != null && seña.compareTo(BigDecimal.ZERO) < 0) {
             throw new SolicitudInvalidaException("El monto de seña/adelanto no puede ser negativo.");
         }
@@ -264,12 +249,25 @@ public class PedidoServiceImpl implements PedidoService {
             }
         }
 
-        if (p.isEs_cuenta_corriente() && idCliente != 1) {
+        // ===================== CAMBIO: inicio =====================
+        // Antes: solo entraba si el método de pago era Cuenta Corriente.
+        // Ahora también entra si el pedido nace ya ENTREGADO/FINALIZADO con saldo
+        // pendiente, sin importar el método de pago (Efectivo, Transferencia, etc.).
+        boolean nacioEnEstadoFinal = "ENTREGADO".equalsIgnoreCase(p.getEstado())
+                || "FINALIZADO".equalsIgnoreCase(p.getEstado());
+
+        if ((p.isEs_cuenta_corriente() || nacioEnEstadoFinal) && idCliente != 1) {
             BigDecimal total = p.getMonto_total() != null ? p.getMonto_total() : BigDecimal.ZERO;
             BigDecimal adelanto = seña != null ? seña : BigDecimal.ZERO;
             BigDecimal saldoPendienteGenerado = total.subtract(adelanto);
 
             if (saldoPendienteGenerado.compareTo(BigDecimal.ZERO) > 0) {
+                boolean eraCuentaCorrienteExplicita = p.isEs_cuenta_corriente();
+
+                // Se marca el pedido para que los cobros posteriores (registrarPago)
+                // descuenten correctamente del saldo deudor del cliente.
+                p.setEs_cuenta_corriente(true);
+
                 BigDecimal saldoActual = clienteActual.getSaldoDeudor() != null ? clienteActual.getSaldoDeudor() : BigDecimal.ZERO;
                 clienteActual.setSaldoDeudor(saldoActual.add(saldoPendienteGenerado));
                 clienteRepository.save(clienteActual);
@@ -279,7 +277,9 @@ public class PedidoServiceImpl implements PedidoService {
                     movCC.setCliente(clienteActual);
                     movCC.setTipo("COMPRA");
                     movCC.setMonto(saldoPendienteGenerado);
-                    movCC.setDescripcion("Compra a Cuenta Corriente - Pedido #" + p.getId_pedido());
+                    movCC.setDescripcion(eraCuentaCorrienteExplicita
+                            ? "Compra a Cuenta Corriente - Pedido #" + p.getId_pedido()
+                            : "Entrega con saldo pendiente - Pedido #" + p.getId_pedido());
                     movCC.setFecha(LocalDateTime.now());
                     movimientoCCRepository.save(movCC);
                 } catch (Exception e) {
@@ -287,32 +287,14 @@ public class PedidoServiceImpl implements PedidoService {
                 }
             }
         }
+        // ===================== CAMBIO: fin =====================
 
         boolean esVentaRapidaAlAlta = p.getObservaciones() != null && p.getObservaciones().contains("Venta Rápida");
 
-        // HALLAZGO de este trabajo: Crear Pedido (alta formal) permite elegir
-        // "Estado / Destino" = ENTREGADO directamente en el mismo formulario que
-        // arma el pedido (ver DetallesPedidoForm.tsx) -- no es exclusivo de
-        // "Cambiar estado" después. Antes, esta rama de guardar() solo disparaba
-        // procesarDescuentoStock() para Venta Rápida; un pedido formal creado ya
-        // en ENTREGADO se guardaba tal cual, SIN descontar stock, SIN validar
-        // insumos ni máquina -- quedaba marcado como entregado sin que el
-        // inventario se haya tocado nunca. Ahora cualquier pedido que nazca ya en
-        // un estado final corre la misma validación que Venta Rápida.
         boolean creadoDirectoEnEstadoFinal = "ENTREGADO".equalsIgnoreCase(p.getEstado())
                 || "FINALIZADO".equalsIgnoreCase(p.getEstado());
 
         if (esVentaRapidaAlAlta || creadoDirectoEnEstadoFinal) {
-            // Antes, cualquier falla acá (stock insuficiente, máquina fuera de servicio,
-            // un detalle sin producto válido) se tragaba en silencio: el pedido quedaba
-            // igual guardado con HTTP 200, con parte del stock ya descontado (lo que sí
-            // llegó a procesarse antes de la excepción) y sin descontar el resto. Un
-            // "Cambiar estado a FINALIZADO" posterior volvía a correr
-            // procesarDescuentoStock desde cero y descontaba una segunda vez lo que ya
-            // se había descontado acá (bug de doble descuento). Dejamos que la excepción
-            // se propague: @Transactional hace que TODO este guardar() se revierta (el
-            // pedido, sus detalles, el comprobante/movimiento de caja si ya se habían
-            // armado, el ajuste de cuenta corriente) en vez de dejar una venta a medias.
             this.procesarDescuentoStock(p.getId_pedido(), confirmarMaquinaNoDisponible);
             p = pedidoRepository.findById(p.getId_pedido()).orElse(p);
         }

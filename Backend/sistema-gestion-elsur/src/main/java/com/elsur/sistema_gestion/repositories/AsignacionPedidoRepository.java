@@ -7,6 +7,5 @@ import java.util.List;
 
 @Repository
 public interface AsignacionPedidoRepository extends JpaRepository<AsignacionPedido, Integer> {
-    // Para saber qué pedidos tiene un empleado puntual
     List<AsignacionPedido> findByEmpleadoIdEmpleado(Integer idEmpleado);
 }

@@ -11,14 +11,14 @@ const obtenerUsuarioLogueado = () => {
   }
 };
 
-const esViernes = (fecha: Date) => fecha.getDay() === 5; // 0=domingo, 5=viernes
+const esViernes = (fecha: Date) => fecha.getDay() === 5; 
 
 export const useBackupReminder = () => {
   const [mostrar, setMostrar] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    if (isMobile) return; // en celular no existe la función de respaldo, no se muestra
+    if (isMobile) return; 
 
     const usuario = obtenerUsuarioLogueado();
     const esAdmin = usuario?.rol?.nombreRol?.toUpperCase() === 'ADMIN';
@@ -27,9 +27,9 @@ export const useBackupReminder = () => {
     const hoy = new Date();
     if (!esViernes(hoy)) return;
 
-    const hoyStr = hoy.toISOString().split('T')[0]; // YYYY-MM-DD
+    const hoyStr = hoy.toISOString().split('T')[0]; 
     const ultimaVez = localStorage.getItem(CLAVE_ULTIMO_RECORDATORIO);
-    if (ultimaVez === hoyStr) return; // ya se mostró hoy
+    if (ultimaVez === hoyStr) return; 
 
     setMostrar(true);
   }, [isMobile]);

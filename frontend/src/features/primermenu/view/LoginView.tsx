@@ -32,7 +32,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
 
   return (
     <div className="container-fluid min-vh-100 p-0 m-0 d-flex flex-column flex-md-row overflow-x-hidden">
-      {/* IZQUIERDA: GESTAPRO */}
       <div 
         className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center p-4"
         style={{
@@ -49,7 +48,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
         <img src={logoGesta} alt="GestaPro" style={{ maxWidth: '280px', width: '100%', height: 'auto' }} />
       </div>
 
-      {/* DERECHA: LOGIN */}
       <div 
         className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center p-4 flex-grow-1"
         style={{ backgroundColor: bgDerecho, transition: 'background-color 0.3s ease', minHeight: '72vh' }}

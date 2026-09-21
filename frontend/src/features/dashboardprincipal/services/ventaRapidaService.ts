@@ -113,7 +113,6 @@ export const ventaRapidaService = {
 
     await new Promise((resolve) => setTimeout(resolve, 300));
 
-    // Cambiar estado a FINALIZADO
     const resEstado = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}/cambiar-estado`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -129,7 +128,6 @@ export const ventaRapidaService = {
     return pedidoGuardado;
   },
 
-  // --- MÉTODOS DE NOTIFICACIONES ---
 
   async getEstadoCajaNotificacion(): Promise<EstadoCajaNotificacion> {
     const resCaja = await apiFetch(`${API_BASE_URL}/turnos/estado-caja`);

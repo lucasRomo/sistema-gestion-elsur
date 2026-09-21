@@ -9,7 +9,6 @@ export const usePedidosPendientes = () => {
     try {
       const data = await PedidoPendienteService.obtenerTodos();
       
-      // Excluimos VENTA_RAPIDA, ENTREGADO, CANCELADO y DEVUELTO
       const pedidosFiltrados = data.filter((p: any) => 
         p.estado !== 'VENTA_RAPIDA' && 
         p.estado !== 'ENTREGADO' && 

@@ -18,20 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de PedidoServiceImpl.agregarPagoConArchivo()
- * -- el método REALMENTE invocado por el frontend: PedidoController expone
- * POST /api/pedidos/{id}/pagos (multipart) y llama exclusivamente a
- * agregarPagoConArchivo(...), nunca a agregarPago(...). Antes de este pase no
- * existía ninguna suite que cubriera este método específico -- toda la
- * cobertura de "cobro de pedido" apuntaba al método hermano agregarPago(),
- * que comparte la misma lógica de negocio pero no está conectado a ningún
- * endpoint.
- *
- * Comparte con agregarPago() los mismos hallazgos corregidos en este pase:
- * monto sin validar (nulo/NaN/<=0/mayor al saldo pendiente) e idUsuario sin
- * validar (caía en silencio al usuario ID 1 si no se mandaba).
- */
+
 @ExtendWith(MockitoExtension.class)
 class PedidoServiceImplAgregarPagoConArchivoUnitTest {
 
@@ -40,7 +27,7 @@ class PedidoServiceImplAgregarPagoConArchivoUnitTest {
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private MovimientoCajaRepository cajaRepository;
     @Mock private MovimientoCuentaCorrienteRepository movimientoCCRepository;
-    @Mock private TurnoRepository TurnoRepository; // mismo nombre de campo que en PedidoServiceImpl
+    @Mock private TurnoRepository TurnoRepository; 
 
     @InjectMocks
     private PedidoServiceImpl pedidoService;
@@ -75,7 +62,6 @@ class PedidoServiceImplAgregarPagoConArchivoUnitTest {
         return p;
     }
 
-    // ==================== Validación de monto ====================
 
     @Test
     @DisplayName("TC_PP - agregarPagoConArchivo: monto nulo -> SolicitudInvalidaException")
@@ -107,7 +93,6 @@ class PedidoServiceImplAgregarPagoConArchivoUnitTest {
         verify(pedidoRepository, never()).save(any());
     }
 
-    // ==================== Validación de usuario ====================
 
     @Test
     @DisplayName("TC_PP - agregarPagoConArchivo: idUsuario nulo -> SolicitudInvalidaException (antes caía en silencio al usuario ID 1)")
@@ -129,7 +114,6 @@ class PedidoServiceImplAgregarPagoConArchivoUnitTest {
         verifyNoInteractions(pedidoRepository, TurnoRepository, cajaRepository);
     }
 
-    // ==================== Caja cerrada / pedido inexistente ====================
 
     @Test
     @DisplayName("TC_PP - agregarPagoConArchivo: caja cerrada -> SolicitudInvalidaException")
@@ -153,7 +137,6 @@ class PedidoServiceImplAgregarPagoConArchivoUnitTest {
                 () -> pedidoService.agregarPagoConArchivo(501, 100.0, "EFECTIVO", 1, null));
     }
 
-    // ==================== Camino feliz ====================
 
     @Test
     @DisplayName("TC_PP - agregarPagoConArchivo: pago válido sin comprobante adjunto suma el monto, genera el " +

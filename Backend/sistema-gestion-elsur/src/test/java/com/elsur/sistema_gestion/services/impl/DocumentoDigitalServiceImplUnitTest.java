@@ -20,19 +20,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de DocumentoDigitalServiceImpl -- el
- * servicio detrás del módulo "Repositorio Digital". Hasta este trabajo no
- * existía NINGUNA suite de tests para este servicio.
- *
- * HALLAZGOS CORREGIDOS en este pase:
- * 1. guardarDocumento() no validaba título/autor en blanco ni precioBase negativo
- *    -- ahora rechaza con SolicitudInvalidaException.
- * 2. El área/cátedra inexistente y el documento inexistente en findById() lanzaban
- *    un RuntimeException genérico (el controller lo convertía en un 400/404 SIN
- *    CUERPO ni mensaje) -- ahora ambos lanzan RecursoNoEncontradoException, que el
- *    GlobalExceptionHandler traduce a 404 con mensaje real.
- */
 @ExtendWith(MockitoExtension.class)
 class DocumentoDigitalServiceImplUnitTest {
 
@@ -52,7 +39,6 @@ class DocumentoDigitalServiceImplUnitTest {
         return a;
     }
 
-    // ==================== guardarDocumento -- validaciones ====================
 
     @Test
     @DisplayName("guardarDocumento: archivo nulo se rechaza")
@@ -116,8 +102,6 @@ class DocumentoDigitalServiceImplUnitTest {
         when(archivo.isEmpty()).thenReturn(false);
         when(areaCursoRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // precioBase == null no debe disparar la validación de negativo -- el
-        // siguiente paso (área inexistente) es el que corta la ejecución.
         assertThrows(RecursoNoEncontradoException.class, () ->
                 documentoDigitalService.guardarDocumento("Guía TP1", "Prof. Pérez", null, 1L,
                         null, null, archivo));
@@ -136,7 +120,6 @@ class DocumentoDigitalServiceImplUnitTest {
         verifyNoInteractions(documentoDigitalRepository, productoRepository, supabaseStorageService);
     }
 
-    // ==================== guardarDocumento -- camino feliz ====================
 
     @Test
     @DisplayName("guardarDocumento: datos válidos (archivo no-PDF) crea el Producto asociado y persiste el documento")
@@ -173,7 +156,6 @@ class DocumentoDigitalServiceImplUnitTest {
         assertEquals(0, BigDecimal.valueOf(750).compareTo(productoCaptor.getValue().getPrecioBase()));
     }
 
-    // ==================== findById ====================
 
     @Test
     @DisplayName("CORREGIDO: findById con ID inexistente lanza RecursoNoEncontradoException (404 con mensaje), antes RuntimeException genérico")
@@ -185,7 +167,6 @@ class DocumentoDigitalServiceImplUnitTest {
         assertTrue(ex.getMessage().contains("9999"));
     }
 
-    // ==================== eliminarLogico ====================
 
     @Test
     @DisplayName("eliminarLogico: marca el documento como Inactivo (baja lógica, no borra la fila)")

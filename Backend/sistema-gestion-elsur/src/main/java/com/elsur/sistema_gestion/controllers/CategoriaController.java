@@ -14,7 +14,7 @@ import java.util.List;
 public class CategoriaController {
 
     @Autowired
-    private CategoriaService categoriaService; // Ahora inyectamos el Service
+    private CategoriaService categoriaService; 
 
     @GetMapping
     public List<CategoriaProducto> listar() {
@@ -26,7 +26,6 @@ public class CategoriaController {
         return categoriaService.guardar(categoria);
     }
 
-    // Dentro de CategoriaController.java
 @DeleteMapping("/{id}")
 public void eliminar(@PathVariable Integer id) {
     categoriaService.eliminar(id);

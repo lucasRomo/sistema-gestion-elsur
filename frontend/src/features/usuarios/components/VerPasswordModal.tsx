@@ -9,16 +9,6 @@ interface VerPasswordModalProps {
 
 type Modo = 'menu' | 'ver' | 'restablecer' | 'restablecerExito';
 
-// Reautenticación + gestión de contraseña de otro usuario en Gestión de Usuarios
-// (solo ADMIN, validado también en el backend). Las dos acciones piden primero
-// la contraseña de quien está logueado ahora mismo (NUNCA la del usuario
-// objetivo) para confirmar la operación:
-// - "Ver contraseña actual": el backend desencripta la copia reversible y la
-//   muestra en pantalla.
-// - "Restablecer contraseña": el backend le asigna al usuario objetivo la
-//   contraseña nueva que se ingrese acá, sin necesitar que él mismo la sepa.
-//   GAP corregido: hasta ahora esta acción no existía -- el campo "Contraseña"
-//   del modal de edición general no cambiaba nada de verdad.
 export const VerPasswordModal: React.FC<VerPasswordModalProps> = ({ usuario, onCerrar }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -70,8 +60,6 @@ export const VerPasswordModal: React.FC<VerPasswordModalProps> = ({ usuario, onC
       setError('Ingresá tu contraseña para confirmar.');
       return;
     }
-    // Mismo mínimo/máximo que exige el backend (RestablecerPasswordDTO /
-    // CambioPasswordDTO): avisamos antes de golpear la API.
     if (passwordNueva.length < 8 || passwordNueva.length > 72) {
       setError('La nueva contraseña debe tener entre 8 y 72 caracteres.');
       return;

@@ -19,24 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de PedidoServiceImpl.guardar() para el
- * alta FORMAL de un pedido -- el módulo "Crear Pedido" del menú (paso 1: elegir
- * productos, paso 2: DetallesPedidoForm con Cliente/Empleado/Estado/Método de
- * pago), a diferencia de la Venta Rápida del Dashboard que ya tiene su propia
- * suite (PedidoServiceImplGuardarVentaRapidaUnitTest).
- *
- * Cubre el HALLAZGO principal de esta ronda de trabajo: el formulario de Crear
- * Pedido deja elegir "Estado / Destino" = ENTREGADO en el mismo alta (no hace
- * falta un "Cambiar estado" posterior). Antes de este fix, guardar() solo
- * corría procesarDescuentoStock() cuando las observaciones contenían
- * "Venta Rápida" -- un pedido formal creado directamente en ENTREGADO se
- * guardaba igual, pero SIN descontar stock, SIN chequear insumos ni máquina.
- * También cubre la validación de seña/adelanto negativo que faltaba, y deja
- * una regresión del bloqueo Consumidor Final + Cuenta Corriente ahora que es
- * un camino realmente alcanzable desde este módulo (el modal de pago de
- * Venta Rápida ni siquiera ofrece esa opción).
- */
+
 @ExtendWith(MockitoExtension.class)
 class PedidoServiceImplGuardarPedidoFormalUnitTest {
 
@@ -46,7 +29,7 @@ class PedidoServiceImplGuardarPedidoFormalUnitTest {
     @Mock private DetallePedidoRepository detallePedidoRepository;
     @Mock private ProductoRepository productoRepository;
     @Mock private ClienteRepository clienteRepository;
-    @Mock private TurnoRepository TurnoRepository; // mismo nombre de campo que en PedidoServiceImpl
+    @Mock private TurnoRepository TurnoRepository;
 
     @InjectMocks
     private PedidoServiceImpl pedidoService;
@@ -80,7 +63,7 @@ class PedidoServiceImplGuardarPedidoFormalUnitTest {
     private DetallePedido detalle(int idProductoRef, int cantidad) {
         DetallePedido d = new DetallePedido();
         Producto ref = new Producto();
-        ref.setIdProducto(idProductoRef); // solo el id, como llega armado desde el frontend
+        ref.setIdProducto(idProductoRef); 
         d.setProducto(ref);
         d.setCantidad(cantidad);
         d.setPrecioUnitario(BigDecimal.TEN);
@@ -94,12 +77,11 @@ class PedidoServiceImplGuardarPedidoFormalUnitTest {
         pedido.setEstado(estado);
         pedido.setDetalles(detalles);
         pedido.setMonto_total(BigDecimal.valueOf(100));
-        pedido.setMonto_pago_adelantado(BigDecimal.ZERO); // sin seña: evita tocar Caja/Comprobantes en este set de tests
-        pedido.setObservaciones("Pedido de mostrador"); // deliberadamente SIN "Venta Rápida"
+        pedido.setMonto_pago_adelantado(BigDecimal.ZERO); 
+        pedido.setObservaciones("Pedido de mostrador");
         return pedido;
     }
 
-    // ==================== Estado no final: no toca stock ====================
 
     @Test
     @DisplayName("Crear Pedido con estado PENDIENTE -> se guarda, pero NO descuenta stock todavía")
@@ -121,7 +103,6 @@ class PedidoServiceImplGuardarPedidoFormalUnitTest {
         verify(productoRepository, never()).save(any());
     }
 
-    // ==================== HALLAZGO: ENTREGADO directo al crear ====================
 
     @Test
     @DisplayName("REGRESIÓN (hallazgo de este trabajo): Crear Pedido con estado ENTREGADO directo " +
@@ -153,7 +134,7 @@ class PedidoServiceImplGuardarPedidoFormalUnitTest {
         Producto producto = productoDirecto(52, "Lona Frontlight", 3);
         when(productoRepository.findById(52)).thenReturn(Optional.of(producto));
 
-        Pedido pedido = pedidoFormalBase(902, "ENTREGADO", List.of(detalle(52, 10))); // pide 10, hay 3
+        Pedido pedido = pedidoFormalBase(902, "ENTREGADO", List.of(detalle(52, 10))); 
         when(pedidoRepository.save(any(Pedido.class))).thenAnswer(inv -> inv.getArgument(0));
         when(pedidoRepository.findById(902)).thenReturn(Optional.of(pedido));
 
@@ -208,8 +189,6 @@ class PedidoServiceImplGuardarPedidoFormalUnitTest {
         assertEquals(49, producto.getStock());
     }
 
-    // ==================== Validación que faltaba: seña negativa ====================
-
     @Test
     @DisplayName("HALLAZGO: seña/adelanto negativo -> SolicitudInvalidaException (antes se guardaba tal cual)")
     void guardar_montoAdelantadoNegativo_lanzaSolicitudInvalida() {
@@ -226,8 +205,6 @@ class PedidoServiceImplGuardarPedidoFormalUnitTest {
         assertTrue(ex.getMessage().toLowerCase().contains("negativo"));
     }
 
-    // ==================== Regresión: Cuenta Corriente, ahora sí alcanzable ====================
-
     @Test
     @DisplayName("Consumidor Final no puede pagar a Cuenta Corriente -- alcanzable de verdad desde Crear Pedido " +
                  "(el modal de pago de Venta Rápida ni ofrece esta opción, ver TC_D24 de la planilla del Dashboard)")
@@ -235,7 +212,7 @@ class PedidoServiceImplGuardarPedidoFormalUnitTest {
         when(TurnoRepository.existsByEstado(EstadoTurno.ABIERTO)).thenReturn(true);
         when(clienteRepository.findById(1)).thenReturn(Optional.of(consumidorFinal()));
 
-        Pedido pedido = pedidoFormalBase(906, "PENDIENTE", null); // sin detalles: no hace falta mockear ProductoRepository
+        Pedido pedido = pedidoFormalBase(906, "PENDIENTE", null);
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> pedidoService.guardar(pedido, null, null, "Cuenta Corriente", null, false));

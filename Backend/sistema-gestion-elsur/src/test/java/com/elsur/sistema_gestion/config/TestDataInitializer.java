@@ -8,23 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-/**
- * Reemplazo de DataInitializer SOLO para el perfil "test" (activo automáticamente en
- * cualquier @SpringBootTest -- ver src/test/resources/application.properties). El
- * DataInitializer real corre SQL nativo de Postgres (pg_get_serial_sequence, ON
- * CONFLICT DO NOTHING) que no existe en la base H2 en memoria que usan los tests, así
- * que se excluye acá con @Profile("!test") sobre DataInitializer y este lo sustituye
- * con el mínimo portable (JPA puro, nada de SQL nativo) que necesitan los tests de
- * integración: la lista de Permiso por nombre.
- *
- * Ahora mismo el único consumidor es MatrizSeguridadValidatorIntegrationTest, que arma
- * roles de prueba buscando permisos existentes por nombre
- * (permisoRepository.findAll().stream().filter(...)) -- si esta lista está vacía, todos
- * esos tests fallarían (ningún rol de prueba tendría permisos para conceder acceso).
- * Los nombres tienen que coincidir EXACTO con los que siembra DataInitializer en
- * producción (incluida la corrección "Inventario" -> "Equipos / Máquinas"), para que
- * este entorno de test refleje el real.
- */
+
 @Component
 @Profile("test")
 public class TestDataInitializer implements CommandLineRunner {

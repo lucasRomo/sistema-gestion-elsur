@@ -27,7 +27,7 @@ export interface DocumentoDigital {
   urlArchivoLocal: string;
   cantidadPaginas: number;
   tamanoBytes: number;
-  tipoArchivo: string; // PDF, DOCX, JPG, PNG, etc.
+  tipoArchivo: string;
   estado: string;
   fechaSubida: string;
   area: AreaCurso;

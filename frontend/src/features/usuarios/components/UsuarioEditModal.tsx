@@ -12,7 +12,6 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
   const isDark = theme === 'dark';
   const [showEstado, setShowEstado] = useState(false);
 
-  // Variables adaptativas según el tema
   const modalBg = isDark ? '#1a1a1c' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const textColor = isDark ? '#ffffff' : '#0f172a';
@@ -82,7 +81,6 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
             <form onSubmit={handleFormSubmit} className="px-4 pb-4">
               <div style={{ maxHeight: '65vh', overflowY: 'auto', overflowX: 'hidden', paddingRight: '8px' }}>
                 
-                {/* SECCIÓN 1: DATOS DE ACCESO */}
                 <h5 className="border-bottom pb-2 mb-3 mt-2" style={{ color: sectionTitleColor, borderColor: inputBorder, fontSize: '1.05rem', fontWeight: '600' }}>
                   1. Credenciales de Acceso
                 </h5>
@@ -98,26 +96,8 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
                       required
                     />
                   </div>
-                  {/*
-                    Antes había acá un campo "Contraseña" (type="text", en texto plano, y
-                    required) precargado con usuario.password. Dos problemas reales:
-                    1) el backend nunca envía el campo password en las respuestas JSON
-                       (Usuario.password usa @JsonProperty WRITE_ONLY para no filtrar el
-                       hash), así que usuario.password siempre llegaba undefined acá y el
-                       campo arrancaba vacío pero marcado "required", obligando a
-                       escribir algo para poder guardar.
-                    2) lo que sea que se escribiera ahí se descartaba igual:
-                       UsuarioServiceImpl.guardar() siempre conserva el hash existente en
-                       una edición (usuario.getIdUsuario() != null), así que este campo
-                       nunca cambió una contraseña real -- solo confundía al administrador.
-                    El cambio de contraseña real tiene su propio flujo dedicado
-                    (PUT /api/usuarios/{id}/password, que exige la contraseña actual), y
-                    "Ver contraseña" ya cubre la consulta. Se saca el campo en vez de
-                    dejar algo que aparenta funcionar y no hace nada.
-                  */}
                 </div>
 
-                {/* SECCIÓN 2: DATOS DEL EMPLEADO */}
                 <h5 className="border-bottom pb-2 mb-3" style={{ color: sectionTitleColor, borderColor: inputBorder, fontSize: '1.05rem', fontWeight: '600' }}>
                   2. Perfil y Permisos
                 </h5>

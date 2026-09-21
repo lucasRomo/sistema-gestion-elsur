@@ -110,9 +110,6 @@ export function useComparacionInforme({
     setModalFechaHastaCompInput(antHastaStr);
     setErrorRangoComparacion(null);
 
-    // CORREGIDO: antes no se pasaban mermas/deudores/averías/categorías de
-    // cliente, por lo que la comparación de períodos siempre mostraba estos
-    // informes vacíos (en 0), sin importar los datos reales.
     const metricasActuales = procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
     const metricasAnteriores = procesarMetricas(antDesdeStr, antHastaStr, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
 
@@ -142,10 +139,6 @@ export function useComparacionInforme({
   const handleAnalizarComparacionModal = () => {
     if (!informeComparacion) return;
 
-    // CORREGIDO: se valida que en ambos períodos (actual y a comparar)
-    // la fecha "Desde" no sea posterior a la fecha "Hasta"; antes un rango
-    // invertido cargado a mano en el modal producía gráficos vacíos sin
-    // ningún aviso.
     if (modalFechaDesdeInput > modalFechaHastaInput || modalFechaDesdeCompInput > modalFechaHastaCompInput) {
       setErrorRangoComparacion('En ambos períodos, la fecha "Desde" no puede ser posterior a la fecha "Hasta".');
       return;

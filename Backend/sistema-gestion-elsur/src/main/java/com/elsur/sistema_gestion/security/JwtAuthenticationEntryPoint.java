@@ -12,15 +12,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
 
-// MOVIDO de config/ a security/ (agrupado con el resto de la infraestructura JWT).
-// Sin cambios de comportamiento.
-/**
- * Qué responde Spring Security cuando la petición NO trae un token válido
- * (falta el header, está vencido, la firma no verifica, etc.).
- * Sin este componente, Spring devuelve un 403 en blanco; acá se arma un
- * JSON 401 consistente con el resto de la API (ver ApiError / GlobalExceptionHandler).
- * Se conecta en SecurityConfig con .exceptionHandling(...).authenticationEntryPoint(...).
- */
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 

@@ -14,10 +14,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collections;
 
-// MOVIDO de config/ a security/ (agrupado con el resto de la infraestructura JWT).
-// Sin cambios de comportamiento. El import de JwtService que antes hacía falta
-// (com.elsur.sistema_gestion.services.JwtService) se saca porque ahora JwtService
-// vive en este mismo paquete.
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 

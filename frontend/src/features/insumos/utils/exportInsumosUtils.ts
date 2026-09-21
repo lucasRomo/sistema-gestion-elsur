@@ -7,7 +7,6 @@ export const exportarInsumosExcel = async (insumos: Insumo[]) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Stock de Insumos');
 
-  // 1. Definición de columnas
   worksheet.columns = [
     { header: 'ID', key: 'id' },
     { header: 'Nombre Insumo', key: 'nombre' },
@@ -19,7 +18,6 @@ export const exportarInsumosExcel = async (insumos: Insumo[]) => {
     { header: 'Estado', key: 'estado' },
   ];
 
-  // 2. Cargar las filas
   insumos.forEach((i) => {
     worksheet.addRow({
       id: i.idInsumo ?? '-',
@@ -33,7 +31,6 @@ export const exportarInsumosExcel = async (insumos: Insumo[]) => {
     });
   });
 
-  // 3. Estilo para el encabezado (Negrita y fondo gris claro)
   const headerRow = worksheet.getRow(1);
   headerRow.font = { bold: true, color: { argb: '000000' } };
   headerRow.fill = {
@@ -42,7 +39,6 @@ export const exportarInsumosExcel = async (insumos: Insumo[]) => {
     fgColor: { argb: 'E2E8F0' }
   };
 
-  // 4. Auto-ajuste dinámico del ancho de las columnas + padding
   worksheet.columns.forEach((column) => {
     let maxLength = 0;
     column.eachCell!({ includeEmpty: true }, (cell) => {
@@ -51,11 +47,9 @@ export const exportarInsumosExcel = async (insumos: Insumo[]) => {
         maxLength = columnValue.length;
       }
     });
-    // Se le agrega un margen extra (+4) para evitar que quede ajustado
     column.width = Math.max(maxLength + 4, 12);
   });
 
-  // 5. Descargar archivo
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = window.URL.createObjectURL(blob);
@@ -77,17 +71,14 @@ export const exportarInsumosPDF = (
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
 
-  // 1. Cabecera superior (Banner Oscuro)
   doc.setFillColor(24, 24, 27);
   doc.rect(0, 0, pageWidth, 28, 'F');
 
-  // Título principal
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   doc.text('INFORME DE STOCK DE INSUMOS', margin, 12);
 
-  // Subtítulos y metadatos
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(161, 161, 170);
@@ -99,7 +90,6 @@ export const exportarInsumosPDF = (
   doc.text(rangoTexto, margin, 20);
   doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, pageWidth - margin - 35, 20);
 
-  // 2. Construcción de la tabla
   const tableColumn = [
     'ID',
     'Insumo',

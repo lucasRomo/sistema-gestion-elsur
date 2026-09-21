@@ -33,5 +33,5 @@ export interface Producto {
   categoria: Categoria;
   maquinaNecesaria?: Maquina | null;
   estado: 'Activo' | 'Desactivado';
-  receta?: RecetaItem[]; // Relación con los insumos asignados al producto
+  receta?: RecetaItem[]; 
 }

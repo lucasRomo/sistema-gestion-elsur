@@ -13,14 +13,12 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onIrARegistro, onIrALo
   const { theme } = useTheme();
   const esOscuro = theme === 'dark';
 
-  // Variables dinámicas
   const bgDerecho = esOscuro ? '#1a1a1c' : '#ffffff';
   const textColor = esOscuro ? '#ffffff' : '#0f172a';
 
   return (
     <div className="container-fluid min-vh-100 p-0 m-0 d-flex flex-column flex-md-row overflow-x-hidden">
 
-      {/* SECCIÓN IZQUIERDA */}
       <div
         className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center p-4 text-center"
         style={{
@@ -39,7 +37,6 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onIrARegistro, onIrALo
         </div>
       </div>
 
-      {/* SECCIÓN DERECHA */}
       <div
         className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center p-4 flex-grow-1"
         style={{ backgroundColor: bgDerecho, transition: 'background-color 0.3s ease', minHeight: '72vh' }}
@@ -61,7 +58,6 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onIrARegistro, onIrALo
 
           <h2 className="text-center fw-bold mb-4 fs-4" style={{ color: textColor }}>Bienvenido</h2>
 
-          {/* Botones */}
           <div className="d-flex flex-column gap-3">
             <button
               className="btn w-100 py-2 fw-bold shadow-sm"
@@ -85,11 +81,6 @@ export const WelcomeView: React.FC<WelcomeViewProps> = ({ onIrARegistro, onIrALo
               Iniciar Sesión
             </button>
 
-            {/* Oculto en mobile (d-none), visible a partir de pantallas medianas (d-md-block).
-                A propósito SIEMPRE visible (no solo para el primer usuario): el sistema
-                permite que se autorregistren varios usuarios -- quedan "Pendiente" hasta
-                que un ADMIN los activa desde Gestión de Usuarios (ver
-                MatrizSeguridadValidator.evaluarPermisoPorton y UsuarioServiceImpl.guardar). */}
             <button
               className="btn w-100 py-2 fw-bold shadow-sm d-none d-md-block"
               onClick={onIrARegistro}

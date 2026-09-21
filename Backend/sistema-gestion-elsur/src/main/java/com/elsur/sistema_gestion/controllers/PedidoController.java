@@ -40,8 +40,6 @@ public class PedidoController {
         return procesarYGuardarPedido(payload, null);
     }
 
-    // Este método sí conserva su try/catch: envuelve mapper.readValue(...), que
-    // tira JsonProcessingException (checked), no una RuntimeException de negocio.
     @PostMapping(consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> crearMultipart(
         @RequestPart("payload") String payloadJson,
@@ -57,9 +55,6 @@ public class PedidoController {
         }
     }
 
-    // Antes tenía un try/catch (Exception e) -> 400. Ahora, si el comprobante
-    // no existe, PedidoServiceImpl tira RuntimeException("Comprobante no
-    // encontrado") y el GlobalExceptionHandler la resuelve (400).
     @PostMapping(value = "/comprobantes/{idComprobante}/archivo", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> vincularArchivoAComprobante(
         @PathVariable Integer idComprobante,
@@ -75,10 +70,6 @@ public class PedidoController {
         return ResponseEntity.ok(pedidoActualizado);
     }
 
-    // Antes tenía un try/catch (Exception e) con e.printStackTrace() -> 400.
-    // El stack trace completo ahora lo loguea el GlobalExceptionHandler
-    // (log.warn / log.error) de forma centralizada, sin repetirlo en cada
-    // controller.
     private ResponseEntity<?> procesarYGuardarPedido(Map<String, Object> payload, MultipartFile comprobante) {
         ObjectMapper mapper = crearObjectMapperConfigurado();
         Pedido pedido = mapper.convertValue(payload.get("pedido"), Pedido.class);
@@ -92,10 +83,6 @@ public class PedidoController {
         String tipoPago = payload.get("tipoPago") != null ?
                           payload.get("tipoPago").toString() : "Efectivo";
 
-        // true solo cuando el frontend manda esta confirmación explícita, es decir
-        // cuando el operario ya vio el aviso de "máquina fuera de servicio/falla/
-        // mantenimiento" y clickeó "Continuar de todos modos". Sin esto, el backend
-        // rechaza la venta por default si hace falta una máquina caída.
         boolean confirmarMaquinaNoDisponible = Boolean.TRUE.equals(payload.get("confirmarMaquinaNoDisponible"));
 
         Pedido guardado = pedidoService.guardar(pedido, idEmpleado, idUsuario, tipoPago, comprobante,
@@ -119,8 +106,6 @@ public class PedidoController {
             idUsuario = Double.valueOf(payload.get("idUsuario").toString()).intValue();
         }
 
-        // Mismo criterio que en el alta: solo true si el frontend confirma que el
-        // operario ya vio el aviso de máquina caída y decidió seguir igual.
         boolean confirmarMaquinaNoDisponible = Boolean.TRUE.equals(payload.get("confirmarMaquinaNoDisponible"));
 
         Pedido actualizado = pedidoService.cambiarEstadoPedido(id, nuevoEstado, observaciones, idUsuario,
@@ -168,18 +153,12 @@ public class PedidoController {
         return ResponseEntity.ok(pedidoActualizado);
     }
 
-    // Antes tenía un try/catch (Exception e) -> 400 y un chequeo `if (pedido !=
-    // null)` que nunca daba false: PedidoServiceImpl.buscarPorId ya tira
-    // RecursoNoEncontradoException (404) por orElseThrow si el pedido no
-    // existe, nunca devuelve null.
     @GetMapping("/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
         Pedido pedido = pedidoService.buscarPorId(id);
         return ResponseEntity.ok(pedido);
     }
 
-    // Este método sí conserva su try/catch: es servido de archivo (I/O legítimo),
-    // no el anti-patrón de negocio que se está limpiando en el resto del controller.
     @GetMapping("/comprobantes/archivo/{nombreArchivo:.+}")
     public ResponseEntity<byte[]> verArchivoComprobante(@PathVariable String nombreArchivo) {
     try {

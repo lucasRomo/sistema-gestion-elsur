@@ -14,9 +14,7 @@ export interface GuardarPedidoPayload {
 }
 
 export const crearPedidoService = {
-  /**
-   * Obtiene la lista de categorías de cliente normalizando los datos de la respuesta.
-   */
+
   obtenerCategoriasCliente: async (): Promise<CategoriaCliente[]> => {
     const response = await apiFetch(API_CATEGORIAS);
     if (!response.ok) {
@@ -31,9 +29,6 @@ export const crearPedidoService = {
     }));
   },
 
-  /**
-   * Obtiene la receta/insumos asociados a un producto específico.
-   */
   obtenerRecetaProducto: async (idProducto: number): Promise<any[]> => {
     try {
       const response = await apiFetch(`${API_PRODUCTO_INSUMO}/${idProducto}`);
@@ -45,9 +40,6 @@ export const crearPedidoService = {
     }
   },
 
-  /**
-   * Envía un pedido al backend. Admite envío con o sin comprobante físico (Multipart/JSON).
-   */
   guardarPedido: async (payloadData: GuardarPedidoPayload): Promise<any> => {
     let response: Response;
     const { fileComprobante, ...datosJSON } = payloadData;
@@ -55,7 +47,6 @@ export const crearPedidoService = {
     if (fileComprobante) {
       const formData = new FormData();
 
-      // Convertimos el objeto JSON sin el archivo a un Blob
       const jsonBlob = new Blob([JSON.stringify(datosJSON)], { type: 'application/json' });
       formData.append('payload', jsonBlob);
       formData.append('comprobante', fileComprobante);
@@ -65,7 +56,6 @@ export const crearPedidoService = {
         body: formData,
       });
     } else {
-      // Envío en formato JSON tradicional directo
       response = await apiFetch(API_PEDIDOS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -10,13 +10,11 @@ export const TurnoProvider = ({ children }: { children: React.ReactNode }) => {
   });
   const [turnoActivoId, setTurnoActivoId] = useState<number | null>(null);
 
-  // Función reutilizable para sincronizar el estado real con Spring Boot
   const verificarEstadoCaja = async () => {
     try {
       const res = await apiFetch(`${API_BASE_URL}/turnos/estado-caja`);
       if (res.ok) {
         const text = await res.text();
-        // Si el backend devuelve null o un string vacío, la caja está CERRADA
         if (!text || text === 'null') {
           setCajaAbierta(false);
           setTurnoActivoId(null);
@@ -26,7 +24,6 @@ export const TurnoProvider = ({ children }: { children: React.ReactNode }) => {
 
         const data = JSON.parse(text);
         
-        // Mapeo correcto de las propiedades que manda TurnoController.java
         const estaAbierta = data && data.estado === "ABIERTO";
         const idCorrecto = data ? (data.idTurno || data.id_turno) : null;
 

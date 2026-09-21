@@ -21,10 +21,6 @@ public class UnidadMedidaController {
         return unidadMedidaService.obtenerTodas();
     }
 
-    // Antes tenía un try/catch (IllegalArgumentException / Exception) que
-    // devolvía 400 o 500 a mano. Ahora UnidadMedidaServiceImpl tira
-    // SolicitudInvalidaException (400) o RecursoDuplicadoException (409)
-    // según corresponda, y el GlobalExceptionHandler arma la respuesta.
     @PostMapping
     public ResponseEntity<?> guardar(@RequestBody UnidadMedida unidadMedida) {
         UnidadMedida guardada = unidadMedidaService.guardar(unidadMedida);

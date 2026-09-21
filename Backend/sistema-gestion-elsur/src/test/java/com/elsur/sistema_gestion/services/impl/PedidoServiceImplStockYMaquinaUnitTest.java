@@ -21,28 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito, sin levantar Spring) de
- * PedidoServiceImpl.procesarDescuentoStock(): el único lugar del backend donde el
- * stock de una venta realmente se compromete/descuenta.
- *
- * Cubre los tres escenarios que se pidió probar a fondo para el módulo de Venta
- * Rápida del Dashboard:
- *   - "una máquina que no funciona"  -> sección MÁQUINA
- *   - "stock insuficiente"           -> sección STOCK INSUFICIENTE
- *   - idempotencia / doble descuento (encontrado al auditar el código; no estaba
- *     pedido explícitamente, pero es la otra cara de "stock insuficiente": un
- *     pedido con stock roto por descontarse dos veces) -> sección IDEMPOTENCIA
- *
- * No se testea acá "stock de respaldo" (el margen de 5 unidades / stockMinimo):
- * ese cálculo es enteramente del lado del frontend (useVentaRapida.ts,
- * MARGEN_MERMA_RESPALDO), es una advertencia descartable por el operario, y el
- * backend -- correctamente -- no la conoce ni la exige: solo le importa si el
- * stock físico alcanza o no (saldoFisico >= 0). Los tests de "ventaConRecetaOk_*"
- * de acá abajo confirman justamente eso: una venta con stock ajustado (pero
- * suficiente) se completa sin objeciones del backend, aunque el frontend la
- * hubiera marcado como "crítica".
- */
 @ExtendWith(MockitoExtension.class)
 class PedidoServiceImplStockYMaquinaUnitTest {
 
@@ -114,7 +92,6 @@ class PedidoServiceImplStockYMaquinaUnitTest {
         return m;
     }
 
-    // ==================== Casos base / guardas generales ====================
 
     @Test
     @DisplayName("Pedido inexistente -> RuntimeException, no toca ningún repositorio de stock")
@@ -154,7 +131,6 @@ class PedidoServiceImplStockYMaquinaUnitTest {
         assertTrue(ex.getMessage().contains("producto válido"));
     }
 
-    // ==================== IDEMPOTENCIA (doble descuento) ====================
 
     @Test
     @DisplayName("REGRESIÓN: pedido con stockDescontado=true no vuelve a tocar stock (no-op)")
@@ -169,7 +145,6 @@ class PedidoServiceImplStockYMaquinaUnitTest {
         verify(pedidoRepository, never()).save(any());
     }
 
-    // ==================== MÁQUINA ("una máquina que no funciona") ====================
 
     @Test
     @DisplayName("Máquina FUERA DE SERVICIO -> ConflictoDeIntegridadException, no descuenta nada")
@@ -277,7 +252,6 @@ class PedidoServiceImplStockYMaquinaUnitTest {
         assertDoesNotThrow(() -> pedidoService.procesarDescuentoStock(500));
     }
 
-    // ==================== STOCK INSUFICIENTE ====================
 
     @Test
     @DisplayName("Insumo de receta con stock insuficiente -> RuntimeException con el nombre del insumo")
@@ -301,19 +275,18 @@ class PedidoServiceImplStockYMaquinaUnitTest {
                  "(el rollback completo depende de que quien llama a esto no trague la excepción -- ver guardar())")
     void stockInsumoInsuficiente_conVariosInsumos_dejaElPrimeroYaDescontado() {
         Producto producto = productoConReceta("Cuadernillo Anillado Color");
-        Insumo papel = insumo(1, "Hoja A4", "50.00");   // alcanza de sobra
-        Insumo tinta = insumo(2, "Tinta Color", "1.00"); // no alcanza
+        Insumo papel = insumo(1, "Hoja A4", "50.00");   
+        Insumo tinta = insumo(2, "Tinta Color", "1.00");
         Pedido pedido = pedidoBase(List.of(detalle(producto, 10)));
         when(pedidoRepository.findById(500)).thenReturn(Optional.of(pedido));
         when(productoInsumoRepository.findByIdIdProducto(10)).thenReturn(List.of(
-                receta(producto, papel, "1"),   // se procesa primero: 50 - 10 = 40, se guarda
-                receta(producto, tinta, "1")    // se procesa segundo: 1 - 10 < 0, explota acá
+                receta(producto, papel, "1"),  
+                receta(producto, tinta, "1")    
         ));
 
         assertThrows(RuntimeException.class, () -> pedidoService.procesarDescuentoStock(500));
 
-        // Esto es exactamente el comportamiento que hace peligroso tragar la excepción
-        // más arriba en la pila: el insumo "Hoja A4" YA se guardó descontado.
+
         assertEquals(new BigDecimal("40.00"), papel.getStockActual());
         verify(insumoRepository).save(papel);
         verify(insumoRepository, never()).save(tinta);
@@ -323,7 +296,7 @@ class PedidoServiceImplStockYMaquinaUnitTest {
     @DisplayName("Producto de stock directo insuficiente -> RuntimeException, no queda en negativo")
     void stockProductoDirectoInsuficiente_lanzaExcepcion() {
         Producto producto = productoDirecto("Agenda 2026", 3);
-        Pedido pedido = pedidoBase(List.of(detalle(producto, 5))); // pide 5, hay 3
+        Pedido pedido = pedidoBase(List.of(detalle(producto, 5))); 
         when(pedidoRepository.findById(500)).thenReturn(Optional.of(pedido));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -334,14 +307,13 @@ class PedidoServiceImplStockYMaquinaUnitTest {
         verify(productoRepository, never()).save(any());
     }
 
-    // ==================== Camino feliz ====================
 
     @Test
     @DisplayName("Venta Rápida con receta: descuenta el insumo, marca VENTA_RAPIDA y stockDescontado=true")
     void ventaConRecetaOk_descuentaInsumosYMarcaVentaRapida() {
         Producto producto = productoConReceta("Fotocopia color A4");
         Insumo tonerColor = insumo(3, "Tóner Color", "8.00");
-        Pedido pedido = pedidoBase(List.of(detalle(producto, 5))); // consume 5, quedan 3 (crítico para el frontend, pero válido)
+        Pedido pedido = pedidoBase(List.of(detalle(producto, 5))); 
         when(pedidoRepository.findById(500)).thenReturn(Optional.of(pedido));
         when(productoInsumoRepository.findByIdIdProducto(10))
                 .thenReturn(List.of(receta(producto, tonerColor, "1")));

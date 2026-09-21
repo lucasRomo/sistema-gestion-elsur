@@ -37,7 +37,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
   const [comprobanteFile, setComprobanteFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Estado para mostrar el modal de vista previa del ticket
   const [mostrarPreviewTicket, setMostrarPreviewTicket] = useState(false);
 
   const empleadosActivos = empleados.filter((emp) => {
@@ -169,7 +168,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
         <h2 className="text-center mb-4 fw-bold">Configurar Parámetros del Comprobante</h2>
         
         <form onSubmit={handleSubmit} className="row g-3">
-          {/* Selector de Cliente */}
           <div className="col-12">
             <label className="form-label small text-secondary fw-bold">Cliente:</label>
             <select 
@@ -194,7 +192,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
             </select>
           </div>
 
-          {/* Selector de Empleado */}
           <div className="col-12">
             <label className="form-label small text-secondary fw-bold">Empleado que Confecciona:</label>
             <select 
@@ -226,7 +223,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
             </select>
           </div>
 
-          {/* Estado y Método Comercial */}
           <div className="col-md-6">
             <label className="form-label small text-secondary fw-bold">Tipo / Estado de Registro:</label>
             <select className="form-select" value={estado} onChange={(e) => setEstado(e.target.value)}>
@@ -251,7 +247,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
             </select>
           </div>
 
-          {/* Fecha y Hora de Entrega Estimada */}
           <div className="col-12">
             <label className="form-label small fw-bold">
               Fecha y Hora de Entrega Estimada: {estado === 'PRESUPUESTO' && <span className="text-muted fw-normal">(Opcional para presupuestos)</span>}
@@ -265,7 +260,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
             />
           </div>
 
-          {/* Montos */}
           <div className="col-md-6">
             <label className="form-label small text-body-secondary fw-bold d-flex justify-content-between">
               <span>Monto Total Cotizado:</span>
@@ -294,7 +288,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
             />
           </div>
 
-          {/* Notas Internas */}
           <div className="col-12">
             <label className="form-label small text-secondary fw-bold">Instrucciones / Notas Internas:</label>
             <textarea 
@@ -306,7 +299,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
             />
           </div>
 
-          {/* Botones Inferiores */}
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 w-100 pt-3">
             <button 
               type="button" 
@@ -353,7 +345,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
                 </>
               )}
 
-              {/* Botón para Ver Ticket */}
               <button 
                 type="button"
                 className="btn btn-outline-warning font-monospace d-flex align-items-center gap-2 px-3"
@@ -375,7 +366,6 @@ export const DetallesPedidoForm: React.FC<Props> = ({
         </form>
       </div>
 
-      {/* Modal de Vista Previa del Ticket */}
       {mostrarPreviewTicket && (
         <VistaTicketPagoModal 
           pedido={{

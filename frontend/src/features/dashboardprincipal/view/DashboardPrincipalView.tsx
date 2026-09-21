@@ -100,7 +100,6 @@ export const DashboardPrincipal: React.FC = () => {
         <div className="col-12 col-md-4"><FaltaStockCard /></div>
       </div>
 
-      {/* --- PANEL INFERIOR DE VENTA RÁPIDA --- */}
       <div 
         className="card p-4 flex-grow-1 d-flex flex-column justify-content-between" 
         style={{ 
@@ -144,7 +143,6 @@ export const DashboardPrincipal: React.FC = () => {
         />
       </div>
 
-      {/* MODAL VISTA PREVIA TICKET CLIENTE */}
       {verTicketPedido?.tipo === 'cliente' && (
         <VistaTicketModal 
           pedido={verTicketPedido.pedido}
@@ -153,7 +151,6 @@ export const DashboardPrincipal: React.FC = () => {
         />
       )}
 
-      {/* MODAL VISTA PREVIA TICKET PAGO */}
       {verTicketPedido?.tipo === 'pago' && (
         <VistaTicketPagoModal 
           pedido={verTicketPedido.pedido}
@@ -162,7 +159,6 @@ export const DashboardPrincipal: React.FC = () => {
         />
       )}
 
-      {/* MODAL DE ADVERTENCIA DE STOCK RESTANTE CRÍTICO */}
       {showModalStockCritico && (
         <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '480px' }}>
@@ -234,7 +230,6 @@ export const DashboardPrincipal: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL DE ADVERTENCIA DE MAQUINARIA */}
       {showModalMaquinas && (
         <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered">
@@ -301,7 +296,6 @@ export const DashboardPrincipal: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL SUCESO */}
       {suceso.show && (
         <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
@@ -352,7 +346,6 @@ export const DashboardPrincipal: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL CONFIRMAR CANCELACIÓN */}
       {confirmarCancelacion && (
         <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">

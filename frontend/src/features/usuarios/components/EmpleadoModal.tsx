@@ -66,13 +66,6 @@ export const EmpleadoModal: React.FC<EmpleadoModalProps> = ({ formData, setFormD
 
                 <div className="col-12">
                   <label className="form-label text-light small">Contraseña:</label>
-                  {/* CORREGIDO (Bug 3): antes esto no tenía minLength ni ningún aviso
-                      visual de que el backend exige entre 8 y 72 caracteres (ver
-                      UsuarioServiceImpl.guardar) -- el único indicio era el alert()
-                      nativo del navegador que aparecía recién DESPUÉS de intentar
-                      registrar. Ahora se avisa desde antes (texto de ayuda) y el
-                      propio input valida el largo mínimo, con el mismo patrón de
-                      setCustomValidity que ya usa el campo Cargo de acá abajo. */}
                   <input
                     type="password"
                     className="form-control bg-dark text-white border-secondary"

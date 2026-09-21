@@ -47,7 +47,6 @@ export const ResumenVenta: React.FC<Props> = ({
 
   return (
     <div className="mt-3">
-      {/* --- SELECTOR DE CATEGORÍA DE CLIENTE --- */}
       <div className="mb-3">
         <label className={`form-label small fw-bold d-flex align-items-center justify-content-between ${isDark ? 'text-light' : 'text-dark'}`}>
           <span><i className="bi bi-tags-fill text-info me-1"></i> Categoría de Cliente / Descuento:</span>
@@ -123,7 +122,6 @@ export const ResumenVenta: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* --- DESGLOSE VISUAL DE PRECIOS --- */}
       <div 
         className="p-3 rounded mb-3" 
         style={{ 
@@ -153,7 +151,6 @@ export const ResumenVenta: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* --- BOTONES DE ACCIÓN --- */}
       <div className="d-flex justify-content-between align-items-center gap-2 w-100 flex-wrap">
         <button 
           type="button"
@@ -164,7 +161,6 @@ export const ResumenVenta: React.FC<Props> = ({
           Cancelar
         </button>
 
-        {/* BOTÓN TICKET CLIENTE */}
         <button 
           type="button" 
           className="btn fw-bold py-2 font-monospace d-flex align-items-center justify-content-center gap-1"
@@ -176,7 +172,6 @@ export const ResumenVenta: React.FC<Props> = ({
           <span className="text-truncate">{ultimoPedido ? `T. Cliente #${idPedidoActual}` : 'T. Cliente'}</span>
         </button>
 
-        {/* BOTÓN TICKET PAGO */}
         <button 
           type="button" 
           className="btn fw-bold py-2 font-monospace d-flex align-items-center justify-content-center gap-1"

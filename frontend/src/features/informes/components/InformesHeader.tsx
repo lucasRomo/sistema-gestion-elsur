@@ -9,14 +9,6 @@ interface InformesHeaderProps {
   handleSeleccionarEstaSemana: () => void;
   handleSeleccionarEsteMes: () => void;
   handleAnalizar: () => void;
-  // CORREGIDO (GAP detectado al agregar más casos de prueba): el botón
-  // "Analizar" nunca se deshabilitaba mientras había una carga en curso, por
-  // lo que clickearlo varias veces seguidas (o cambiar de fecha y volver a
-  // clickear antes de que termine la carga anterior) disparaba pedidos
-  // superpuestos; si la respuesta más vieja llegaba después que la más
-  // nueva, sus datos (de un rango de fechas viejo) pisaban silenciosamente
-  // los del rango recién pedido. Ahora se recibe `cargando` para deshabilitar
-  // el botón mientras hay una carga en curso.
   cargando?: boolean;
 }
 
@@ -64,7 +56,6 @@ export const InformesHeader: React.FC<InformesHeaderProps> = ({
         }
       `}</style>
 
-      {/* 1. IZQUIERDA: Botones de Período (Día, Semana, Mes) */}
       <div className="btn-group btn-group-sm" role="group" aria-label="Selección rápida de período">
         <button
           type="button"
@@ -89,7 +80,6 @@ export const InformesHeader: React.FC<InformesHeaderProps> = ({
         </button>
       </div>
 
-      {/* 2. CENTRO: Título */}
       <h2
         className="h5 mb-0 text-white font-monospace fw-bold tracking-wide text-center position-relative"
         style={{ letterSpacing: '0.5px', fontSize: '2.5rem' }}
@@ -97,7 +87,6 @@ export const InformesHeader: React.FC<InformesHeaderProps> = ({
         Métricas e Informes
       </h2>
 
-      {/* 3. DERECHA: Fechas independientes + Botón Analizar */}
       <div className="d-flex flex-wrap align-items-center justify-content-center gap-2 im-fecha-analizar-wrap">
         <div className="d-flex flex-wrap align-items-center justify-content-center gap-2 im-fecha-row">
           <div className="d-flex align-items-center px-3 py-2 rounded-3 im-surface">

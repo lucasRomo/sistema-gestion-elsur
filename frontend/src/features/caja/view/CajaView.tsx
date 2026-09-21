@@ -45,17 +45,14 @@ export const CajaView: React.FC = () => {
   const [guardandoCierre, setGuardandoCierre] = useState(false);
   const [showModalArqueo, setShowModalArqueo] = useState(false);
 
-  // Estado para alertas/validaciones personalizadas
   const [avisoModal, setAvisoModal] = useState<string | null>(null);
 
-  // Estado para el modal de éxito personalizado
   const [exitoModal, setExitoModal] = useState<{ titulo: string; descripcion: string } | null>(null);
 
-  // Estados para tickets y comprobante
   const [ticketSeleccionado, setTicketSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [imagenComprobanteModal, setImagenComprobanteModal] = useState<string | null>(null);
 
-  // Estados para Ajuste / Corrección
+
   const [movimientoAjuste, setMovimientoAjuste] = useState<any | null>(null);
   const [montoAjuste, setMontoAjuste] = useState('');
   const [tipoAjuste, setTipoAjuste] = useState<'INGRESO' | 'EGRESO'>('EGRESO');
@@ -202,14 +199,12 @@ export const CajaView: React.FC = () => {
     }
   };
 
-  // Priorizando la consulta HTTP mediante apiFetch
   const handleVerTicket = async (m: any) => {
     const idPedidoRaw = m.pedido?.idPedido || m.pedido?.id_pedido || (m.descripcion?.includes('Pedido #') ? m.descripcion.split('#')[1]?.trim() : null);
 
     if (idPedidoRaw && !isNaN(Number(idPedidoRaw))) {
       const idPedido = Number(idPedidoRaw);
       
-      // 1° Prioridad: Intentar obtener el pedido directamente vía apiFetch
       try {
         const response = await apiFetch(`/pedidos/${idPedido}`);
         if (response.ok) {
@@ -221,7 +216,6 @@ export const CajaView: React.FC = () => {
         console.warn("Llamada directa con apiFetch fallida, intentando con cajaService:", errorApi);
       }
 
-      // 2° Fallback: Intentar obtener mediante cajaService
       try {
         const pedidoCompleto = await cajaService.obtenerPedidoPorId(idPedido);
         if (pedidoCompleto) {
@@ -233,7 +227,6 @@ export const CajaView: React.FC = () => {
       }
     }
 
-    // 3° Adaptación fallback en caso de no obtener datos del servidor
     const pedidoAdaptado = {
       id_pedido: idPedidoRaw || '-',
       cliente: {
@@ -467,13 +460,6 @@ export const CajaView: React.FC = () => {
                             
                             <td>
                               {(() => {
-                                // FIX: antes, si no se podía resolver el usuario del movimiento
-                                // (m.usuario), el código caía a leer el usuario ACTUALMENTE
-                                // logueado desde localStorage y mostrar SU nombre -- es decir,
-                                // el movimiento de otro operador podía mostrar el nombre de quien
-                                // está mirando la pantalla en ese momento, una atribución
-                                // incorrecta. Ahora, si no se puede resolver el usuario propio
-                                // del movimiento, se muestra un texto neutro en vez de adivinar.
                                 const u = m.usuario;
 
                                 if (u && typeof u === 'object') {
@@ -596,7 +582,6 @@ export const CajaView: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal Apertura */}
       {showModalApertura && (
         <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
@@ -639,7 +624,6 @@ export const CajaView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Ajuste / Corrección de Cobro */}
       {movimientoAjuste && (
         <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1070 }} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
@@ -771,7 +755,6 @@ export const CajaView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal de Validación / Aviso */}
       {avisoModal && (
         <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1100 }} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
@@ -795,7 +778,6 @@ export const CajaView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Éxito */}
       {exitoModal && (
         <div className="modal d-block show fade" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1100 }} role="dialog">
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>

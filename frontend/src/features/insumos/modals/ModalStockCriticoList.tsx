@@ -28,7 +28,6 @@ export const ModalStockCriticoList: React.FC<Props> = ({
 
   if (!show) return null;
 
-  // Filtrar ítems en estado crítico O a 5 unidades o menos de llegar al límite
   const itemsCriticos = items.filter(
     (item) => item.stockActual <= item.stockMinimoOTolerancia + 5
   );
@@ -57,7 +56,6 @@ export const ModalStockCriticoList: React.FC<Props> = ({
             color: textColor 
           }}
         >
-          {/* HEADER */}
           <div className="modal-header border-0 pb-2 pt-3 px-3 d-flex justify-content-between align-items-center">
             <h5 className="modal-title fw-bold d-flex align-items-center gap-2 fs-5 text-warning">
               <i className="bi bi-exclamation-triangle-fill fs-4"></i> {titulo}
@@ -70,7 +68,6 @@ export const ModalStockCriticoList: React.FC<Props> = ({
             ></button>
           </div>
 
-          {/* BODY */}
           <div className="modal-body px-3 py-2">
             <p className="small mb-3" style={{ color: subTextColor }}>
               A continuación se detallan los ítems en stock crítico o que se encuentran a 5 o menos unidades de alcanzar el límite permitido.
@@ -102,7 +99,6 @@ export const ModalStockCriticoList: React.FC<Props> = ({
                     {itemsCriticos.map((item) => {
                       const esAgotado = item.stockActual <= 0;
                       const esCritico = item.stockActual <= item.stockMinimoOTolerancia;
-                      // Si no está crítico pero está dentro de las 5 unidades
                       const esProximo = !esCritico && item.stockActual <= item.stockMinimoOTolerancia + 5;
 
                       let badgeText = 'SIN STOCK';
@@ -144,7 +140,6 @@ export const ModalStockCriticoList: React.FC<Props> = ({
             )}
           </div>
 
-          {/* FOOTER */}
           <div className="modal-footer border-0 px-3 pb-3 pt-2 d-flex justify-content-end">
             <button 
               type="button" 

@@ -13,7 +13,6 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables cromáticas adaptativas estandarizadas
   const tableBg = isDark ? '#1d1d1d' : '#ffffff';
   const tableText = isDark ? '#e4e4e7' : '#18181b';
   const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';
@@ -23,7 +22,6 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
   const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
 
-  // Ordenamos la lista por idInsumo de menor a mayor
   const insumosOrdenados = [...insumos].sort((a, b) => {
     const idA = a.idInsumo || (a as any).id || 0;
     const idB = b.idInsumo || (b as any).id || 0;
@@ -67,22 +65,18 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = rowHoverBg} 
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                {/* ID */}
                 <td className="py-3 px-3 text-center text-info-custom fw-bold">
                   #{i.idInsumo}
                 </td>
                 
-                {/* Nombre del Insumo */}
                 <td className="py-3 px-3 fw-bold text-start" style={{ color: tableText }}>
                   {i.nombreInsumo}
                 </td>
 
-                {/* Precio */}
                 <td className="py-3 px-3 text-center fw-semibold text-info-custom">
                   ${i.precio != null ? Number(i.precio).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
                 </td>
 
-                {/* Stock Empaquetado */}
                 <td className="py-3 px-3 text-center">
                   {tieneEmpaque ? (
                     <span style={{ color: tableText }}>
@@ -93,29 +87,24 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
                   )}
                 </td>
 
-                {/* Stock Suelto / Consumo */}
                 <td className={`py-3 px-3 text-center fw-bold ${tieneBajoStock ? 'text-danger' : 'text-success'}`}>
                   {i.stockActual} {uniSueltas} {tieneBajoStock && <i className="bi bi-exclamation-circle-fill text-danger ms-1" title="Stock por debajo del mínimo"></i>}
                 </td>
 
-                {/* Stock Mínimo */}
                 <td className="py-3 px-3 text-center text-warning fw-bold">
                   {i.stockMinimo} {uniSueltas}
                 </td>
 
-                {/* Proveedor */}
                 <td className="py-3 px-3 text-start" style={{ color: isDark ? '#e4e4e7' : '#334155' }}>
                   {i.proveedor?.nombreComercial || i.proveedor?.tipoProveedor?.descripcion || '-'}
                 </td>
                 
-                {/* Estado */}
                 <td className="py-3 px-3 text-center">
                   <span className={`badge rounded-pill px-3 py-2 ${i.estado === 'Activo' ? 'bg-success bg-opacity-75' : 'bg-danger bg-opacity-75'}`} style={{ color: '#ffffff' }}>
                     {i.estado}
                   </span>
                 </td>
-                
-                {/* Opciones / Acciones */}
+
                 <td className="py-3 px-3 text-center">
                   <div className="d-flex justify-content-center gap-2">
                     {tieneEmpaque && onConvertir && (

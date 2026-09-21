@@ -1,4 +1,3 @@
-// src/features/configuracion/components/RespaldoCard.tsx
 import React from 'react';
 import { useEffect } from 'react';
 import { useConfiguracion } from '../hooks/useConfiguracion';
@@ -36,7 +35,6 @@ export const RespaldoCard: React.FC<Props> = ({
     handleEliminarRespaldo
   } = config;
 
-  // Detección del rol ADMIN
   const rolNombre = typeof usuario?.rol === 'string' 
     ? usuario.rol 
     : usuario?.rol?.nombreRol || usuario?.rol?.nombre || '';
@@ -57,7 +55,6 @@ export const RespaldoCard: React.FC<Props> = ({
     <div className="col-12 col-lg-7">
       <div className="p-4 rounded-4 shadow h-100 position-relative overflow-hidden" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
         
-        {/* Capa de Bloqueo Exclusiva para la Tarjeta de Respaldos */}
         {!esAdmin && (
           <div 
             className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center text-center p-4"

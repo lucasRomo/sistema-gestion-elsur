@@ -1,19 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-// Componentes y hooks locales de 'crearpedidos'
 import { SelectorProductosForm } from '../components/SelectorProductosForm';
 import { DetallesPedidoForm } from '../components/DetallesPedidoForm';
 import { crearPedidoService } from '../service/crearPedidoService';
 
-// Hooks de 'pedidos/general'
 import { useRegistrarPedido } from '../../general/hooks/useRegistrarPedido';
 
-// Types
 import type { CartItem, Pedido, MovimientoCaja } from '../../general/types/Pedido';
 import type { CategoriaCliente } from '../../../clientes/types/CategoriaCliente';
 
-// Modales globales o compartidos
 import { VistaTicketPagoModal } from '../../../../components/modals/VistaTicketPagoModal';
 
 export const CrearPedidoView: React.FC = () => {
@@ -26,21 +22,15 @@ export const CrearPedidoView: React.FC = () => {
   const [carrito, setCarrito] = useState<CartItem[]>([]);
   const [categoriaSeleccionadaId, setCategoriaSeleccionadaId] = useState<string>('');
   const [categorias, setCategorias] = useState<CategoriaCliente[]>([]);
-  // true cuando en el paso 1 se vio el aviso de máquina caída y se clickeó
-  // "Continuar de todos modos" -- se manda al backend solo si el pedido termina
-  // naciendo ya en estado ENTREGADO (único caso en que Crear Pedido valida
-  // máquina al guardar). Se resetea si se vuelve al paso 1 a tocar el carrito.
   const [confirmarMaquinaNoDisponible, setConfirmarMaquinaNoDisponible] = useState(false);
   
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
   const [confirmarGuardado, setConfirmarGuardado] = useState(false);
   
-  // Estado para desplegar el ticket impreso/vista tras guardar
   const [ticketGenerado, setTicketGenerado] = useState<{ pedido: Pedido; movimiento?: MovimientoCaja } | null>(null);
 
   const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string } | null>(null);
   const [fileTemporal, setFileTemporal] = useState<File | null>(null);
-  // Evita que un doble clic en "Finalizar" dispare dos veces la petición de guardado.
   const [guardando, setGuardando] = useState(false);
   
   useEffect(() => {
@@ -72,7 +62,6 @@ export const CrearPedidoView: React.FC = () => {
     }
   }, [location.state, productos]);
 
-  // Carga inicial de categorías modularizada
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
@@ -146,7 +135,6 @@ export const CrearPedidoView: React.FC = () => {
     try {
       const resultado: any = await enviarPedido(payloadTemporal, fileTemporal);
 
-      // Si el backend devuelve el objeto pedido con sus movimientos (ticket)
       if (resultado) {
         const pedidoGuardado = (typeof resultado === 'object' && resultado.id_pedido) ? resultado : payloadTemporal.pedido;
         const movTicket = pedidoGuardado.movimientos && pedidoGuardado.movimientos.length > 0
@@ -225,7 +213,6 @@ export const CrearPedidoView: React.FC = () => {
         )}
       </div>
 
-      {/* Modal de Confirmación */}
 {confirmarGuardado && (
   <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
     <div className="modal-dialog modal-sm modal-dialog-centered">
@@ -241,7 +228,6 @@ export const CrearPedidoView: React.FC = () => {
             : '¿Está listo para finalizar el Pedido?'}
         </p>
         <div className="d-flex gap-2 justify-content-center mt-3">
-          {/* BOTÓN VOLVER (Texto Blanco) */}
           <button
             className="btn btn-sm px-3 fw-bold"
             style={{ borderRadius: '6px', backgroundColor: '#e22e2e', border: '1px solid #e22e2e', color: '#ffffff', opacity: guardando ? 0.6 : 1 }}
@@ -251,7 +237,6 @@ export const CrearPedidoView: React.FC = () => {
             Volver
           </button>
 
-          {/* BOTÓN FINALIZAR (Texto Blanco) */}
           <button
             className="btn btn-sm px-3 fw-bold"
             style={{ borderRadius: '6px', backgroundColor: '#288f47', border: '1px solid #2e9225', color: '#ffffff', opacity: guardando ? 0.6 : 1 }}
@@ -266,7 +251,6 @@ export const CrearPedidoView: React.FC = () => {
   </div>
 )}
 
-      {/* Modal de Ticket de Movimiento de Caja */}
       {ticketGenerado && (
       <VistaTicketPagoModal 
        pedido={ticketGenerado.pedido}
@@ -275,7 +259,6 @@ export const CrearPedidoView: React.FC = () => {
       />
       )}
 
-      {/* Modal de Resultado sin ticket */}
       {suceso.show && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">

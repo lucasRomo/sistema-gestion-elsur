@@ -27,7 +27,6 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
   const grayText = isDark ? '#a1a1aa' : '#64748b';
   const mutedBoxText = isDark ? 'rgba(255,255,255,0.5)' : '#2c3c52';
 
-  // Soportar múltiples nombres de array devueltos por la API (comprobantes, movimientos o cobros)
   const listaCobros = pedido.comprobantes || pedido.movimientos || pedido.cobros || [];
 
   return (
@@ -51,14 +50,12 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
 
           <div className="modal-body p-4">
             <div className="row g-4">
-              
-              {/* HISTORIAL DE COBROS */}
+
               <div className="col-md-5">
                 <h6 className="text-uppercase small mb-2 fw-semibold" style={{ color: '#248b05', letterSpacing: '1px' }}>
                   <i className="bi bi-cash-stack me-2"></i>Historial de Cobros
                 </h6>
 
-                {/* LEYENDA Y BOTÓN DE CUENTA CORRIENTE */}
                 {pedido.es_cuenta_corriente && (
                   <div className="d-flex justify-content-between align-items-center mb-2">
                     <div 
@@ -168,7 +165,6 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                                 </td>
                                 <td className="text-center py-3">
                                   <div className="d-flex justify-content-center align-items-center gap-1">
-                                    {/* BOTÓN IMPRIMIR TICKET DE ESTE COBRO */}
                                     <button 
                                       type="button"
                                       onClick={() => {
@@ -195,7 +191,6 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                                       <i className="bi bi-printer"></i>
                                     </button>
 
-                                    {/* VISUALIZADOR DE ARCHIVO / COMPROBANTE ADJUNTO */}
                                     {urlArchivo && (
                                       <button
                                         type="button"
@@ -253,7 +248,6 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                 </div>
               </div>
 
-              {/* ESTADOS Y MENSAJES DEL TALLER */}
               <div className="col-md-7">
                 <h6 className="text-warning fw-bold mb-3 d-flex align-items-center gap-2 font-monospace">
                   <i className="bi bi-journal-text"></i> ESTADOS Y MENSAJES DEL TALLER
@@ -303,7 +297,6 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                       
                       const esUltimo = index === arrayOriginal.length - 1;
 
-                      // LÓGICA DE FORMATEO DE OBSERVACIONES
                       const formatearObservacion = (obs: string) => {
                         if (!obs) return '';
                         
@@ -345,7 +338,6 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                             />
                           </div>
                           <div className="flex-grow-1">
-                            {/* Fecha y Hora */}
                             <div className="text-secondary font-monospace small mb-1 d-flex align-items-center gap-1" style={{ fontSize: '0.80rem' }}>
                               <i className="bi bi-clock"></i>
                               {new Date(hist.fecha_cambio || hist.fechaCambio).toLocaleString('es-AR', {

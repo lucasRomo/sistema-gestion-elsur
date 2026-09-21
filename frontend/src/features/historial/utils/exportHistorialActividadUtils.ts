@@ -15,17 +15,7 @@ const formatearDato = (dato: string | null) => {
   return dato.replace(/^"(.*)"$/, '$1');
 };
 
-// BUG corregido: HistorialActividadView.formatearFecha le agrega 'Z' a la fecha
-// cruda si no trae ya un sufijo de huso horario, para forzar que el navegador
-// la interprete como UTC (si no, un string ISO sin offset se interpreta como
-// hora LOCAL del navegador, no UTC). Estas funciones de exportación hacían
-// "new Date(act.fecha)" directo, sin esa misma normalización -- si alguna vez
-// 'fecha' llegara sin el offset (por ejemplo, un registro viejo serializado
-// antes de que Usuario.fecha tuviera el @JsonFormat con huso UTC), el Excel/PDF
-// exportado mostraría una hora distinta a la que se ve en la tabla en pantalla
-// para el mismo registro (diferencia de varias horas, según el huso del
-// navegador). Se duplica acá la misma normalización para que tabla y
-// exportación siempre muestren la misma hora para el mismo dato.
+
 const normalizarFechaUTC = (fechaRaw: string) => {
   const isoString = fechaRaw.endsWith('Z') || fechaRaw.includes('+') ? fechaRaw : `${fechaRaw}Z`;
   return new Date(isoString);
@@ -44,7 +34,6 @@ export const exportarHistorialActividadExcel = async (actividades: RegistroActiv
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Historial de Actividad');
 
-  // 1. Definición de columnas
   worksheet.columns = [
     { header: 'Fecha y Hora', key: 'fecha' },
     { header: 'Usuario Responsable', key: 'usuario' },
@@ -55,7 +44,6 @@ export const exportarHistorialActividadExcel = async (actividades: RegistroActiv
     { header: 'Dato Modif.', key: 'datoNuevo' },
   ];
 
-  // 2. Cargar filas
   actividades.forEach((act) => {
     worksheet.addRow({
       fecha: formatearFechaExport(act.fecha),
@@ -68,7 +56,6 @@ export const exportarHistorialActividadExcel = async (actividades: RegistroActiv
     });
   });
 
-  // 3. Estilo para el encabezado
   const headerRow = worksheet.getRow(1);
   headerRow.font = { bold: true };
   headerRow.fill = {
@@ -77,7 +64,6 @@ export const exportarHistorialActividadExcel = async (actividades: RegistroActiv
     fgColor: { argb: 'E2E8F0' },
   };
 
-  // 4. Auto-ajuste de ancho de columnas
   worksheet.columns.forEach((column) => {
     let maxLen = 0;
 
@@ -95,7 +81,6 @@ export const exportarHistorialActividadExcel = async (actividades: RegistroActiv
     column.width = Math.max(maxLen + 6, 15);
   });
 
-  // 5. Descarga del archivo
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = window.URL.createObjectURL(blob);
@@ -117,20 +102,17 @@ export const exportarHistorialActividadPDF = (
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
 
-  // 1. Cabecera superior (Banner Oscuro)
-  doc.setFillColor(24, 24, 27); // Fondo negro/gris oscuro
+  doc.setFillColor(24, 24, 27); 
   doc.rect(0, 0, pageWidth, 28, 'F');
 
-  // Título principal
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   doc.text('INFORME DE HISTORIAL DE ACTIVIDAD', margin, 12);
 
-  // Subtítulos y metadatos
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.setTextColor(161, 161, 170); // Texto secundario claro
+  doc.setTextColor(161, 161, 170); 
 
   const rangoTexto = fechaDesde && fechaHasta 
     ? `Rango de datos: ${fechaDesde} al ${fechaHasta}` 
@@ -139,7 +121,6 @@ export const exportarHistorialActividadPDF = (
   doc.text(rangoTexto, margin, 20);
   doc.text(`Generado: ${new Date().toLocaleDateString('es-AR')}`, pageWidth - margin - 35, 20);
 
-  // 2. Construcción de la tabla
   const tableColumn = [
     'Fecha y Hora',
     'Usuario Responsable',
@@ -163,7 +144,7 @@ export const exportarHistorialActividadPDF = (
   autoTable(doc, {
     head: [tableColumn],
     body: tableRows,
-    startY: 34, // Desplazado para no solapar la cabecera
+    startY: 34,
     styles: { fontSize: 8 },
     headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [245, 245, 245] },

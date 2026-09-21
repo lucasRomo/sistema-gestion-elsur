@@ -33,5 +33,4 @@ public class Proveedor {
     @JoinColumn(name = "id_tipo_proveedor")
     private TipoProveedor tipoProveedor;
 
-    // ... otros campos y relaciones ...
 }

@@ -15,7 +15,7 @@ import { CajaView } from '../../features/caja/view/CajaView';
 import { RepositorioDigitalView } from '../../features/repositorio/view/RepositorioDigitalView';
 import { SidebarLayout } from '../../components/layouts/SidebarLayout';
 import { ProtectedRoute } from '../../components/common/ProtectedRoute';
-import { PortonGate } from '../../components/common/PortonGate'; // NUEVO
+import { PortonGate } from '../../components/common/PortonGate'; 
 import { MatrizPermisosView } from '../../features/matrizpermisos/view/MatrizPermisosView';
 import { ConfiguracionView } from '../../features/configuracion/views/ConfiguracionView';
 import { InformesView } from '../../features/informes/views/InformesView';
@@ -135,7 +135,6 @@ function App() {
               </ProtectedRoute>
             } />
 
-            {/* RUTAS EXCLUSIVAS Y GERENCIA */}
             <Route path="/matriz-permisos" element={
               <ProtectedRoute permisoRequerido="Matriz de Permisos">
                 {renderLayout(<MatrizPermisosView />, "Matriz de Permisos")}

@@ -16,20 +16,17 @@ public class TipoProveedorController {
     @Autowired
     private TipoProveedorService tipoProveedorService;
 
-    // GET - http://localhost:8080/api/tipos-proveedor
     @GetMapping
     public List<TipoProveedor> listarTodos() {
         return tipoProveedorService.listarTodo();
     }
 
-    // POST - http://localhost:8080/api/tipos-proveedor
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TipoProveedor crear(@RequestBody TipoProveedor tipoProveedor) {
         return tipoProveedorService.guardar(tipoProveedor);
     }
 
-    // DELETE - http://localhost:8080/api/tipos-proveedor/{id}
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
         tipoProveedorService.eliminar(id);

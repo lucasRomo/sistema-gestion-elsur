@@ -25,10 +25,10 @@ public class MovimientoCaja {
     private BigDecimal monto;
 
     @Column(length = 20, nullable = false)
-    private String tipoMovimiento; // 'INGRESO', 'EGRESO'
+    private String tipoMovimiento; 
 
     @Column(length = 50)
-    private String categoria; // 'EGRESO_MANTENIMIENTO', 'INSUMOS', 'VENTA', 'VARIOS'
+    private String categoria;
 
     @Column(columnDefinition = "TEXT")
     private String descripcion;
@@ -59,7 +59,7 @@ public class MovimientoCaja {
     private Turno turno;
 
     @Column(length = 20, nullable = true) 
-    private String metodoPago; // 'EFECTIVO', 'TRANSFERENCIA', 'DEBITO', 'CREDITO'
+    private String metodoPago; 
 
     @Column(name = "comprobante_imagen", columnDefinition = "TEXT")
     private String comprobanteImagen;

@@ -86,7 +86,6 @@ export const RepositorioDigitalView: React.FC = () => {
       </div>
 
       <div className="row g-3 flex-grow-1 overflow-hidden" style={{ minHeight: 0 }}>
-        {/* PANEL IZQUIERDO */}
         <div className="col-lg-7" style={{ alignSelf: 'flex-start' }}>
   <div
     className="card p-3 rounded-3 d-flex flex-column overflow-hidden"
@@ -128,7 +127,6 @@ export const RepositorioDigitalView: React.FC = () => {
           </div>
         </div>
 
-        {/* PANEL DERECHO */}
         <div className="col-lg-5" style={{ alignSelf: 'flex-start' }}>
           <DetalleDocumento
             documento={documentoSeleccionado}
@@ -141,7 +139,6 @@ export const RepositorioDigitalView: React.FC = () => {
         </div>
       </div>
 
-      {/* MODALES */}
       <ModalAgregarDocumento 
         show={modalAgregar}
         areas={areas}
@@ -200,7 +197,6 @@ export const RepositorioDigitalView: React.FC = () => {
         />
       )}
 
-      {/* MODAL CONFIRMACIÓN DE ELIMINAR */}
       {mostrarConfirmarEliminar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
@@ -226,7 +222,6 @@ export const RepositorioDigitalView: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL ÉXITO DE ELIMINAR */}
       <SuccesModal
         show={mostrarExitoEliminar}
         title="¡Archivo Eliminado!"

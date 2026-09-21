@@ -38,19 +38,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Tests de caja blanca (Mockito, sin contexto de Spring) para la lógica de ALTA de
- * usuarios en UsuarioServiceImpl.guardar() -- el módulo "Registrarse" del sistema.
- *
- * Cubren exclusivamente el camino de creación (idUsuario == null), salvo el test de
- * "edita su propio DNI" que ejercita a propósito la rama de edición para probar un
- * caso borde del chequeo de DNI duplicado agregado más abajo.
- *
- * NOTA: se agregó @Mock CifradoService porque UsuarioServiceImpl.guardar() ahora
- * también cifra la contraseña real (feature "Ver contraseña" de Gestión de Usuarios)
- * antes de guardar -- sin este mock, los 4 tests originales de alta fallaban con
- * NullPointerException al llegar a esa línea.
- */
+
 @ExtendWith(MockitoExtension.class)
 class UsuarioServiceImplRegistroUnitTest {
 
@@ -87,7 +75,6 @@ class UsuarioServiceImplRegistroUnitTest {
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Usuario payload = nuevoUsuario("admin", "plano123");
-        // Alguien podría mandar un rol distinto en el payload; el bootstrap lo ignora.
         Rol rolQueMandaElCliente = new Rol();
         rolQueMandaElCliente.setIdRol(99);
         payload.setRol(rolQueMandaElCliente);
@@ -108,7 +95,7 @@ class UsuarioServiceImplRegistroUnitTest {
 
         Usuario payload = nuevoUsuario("nuevoOperario", "plano123");
         Rol rolAdminEnElPayload = new Rol();
-        rolAdminEnElPayload.setIdRol(1); // intento de escalar a ADMIN desde el alta
+        rolAdminEnElPayload.setIdRol(1);
         payload.setRol(rolAdminEnElPayload);
 
         Usuario resultado = usuarioService.guardar(payload, null);
@@ -154,11 +141,7 @@ class UsuarioServiceImplRegistroUnitTest {
 
     @Test
     void altaDeUsuario_passwordVacia_lanzaSolicitudInvalidaYNoGuardaNada() {
-        // GAP corregido: a diferencia de CambioPasswordDTO (@Size min=8, max=72),
-        // el alta (Usuario crudo, sin @Valid en el controller) no exigía ningún largo
-        // mínimo -- se podía crear una cuenta con contraseña vacía o de un solo
-        // carácter. Ahora guardar() valida el largo a mano (ver GU20) antes de
-        // llegar a la asignación de rol o al hasheo.
+
         when(usuarioRepository.findByNombreUsuario(anyString())).thenReturn(Optional.empty());
 
         Usuario payload = nuevoUsuario("juan", "");
@@ -188,8 +171,7 @@ class UsuarioServiceImplRegistroUnitTest {
 
     @Test
     void altaDeUsuario_passwordEnElLargoPermitido_seHasheaYGuardaNormalmente() {
-        // Caso borde del fix de arriba: el mínimo (8) y el máximo (72) tienen que
-        // seguir aceptándose -- este test cubre el límite inferior exacto.
+
         when(usuarioRepository.count()).thenReturn(3L);
         when(usuarioRepository.findByNombreUsuario(anyString())).thenReturn(Optional.empty());
         when(passwordEncoder.encode("ocho1234")).thenReturn("HASH_LARGO_MINIMO");
@@ -202,16 +184,6 @@ class UsuarioServiceImplRegistroUnitTest {
         assertEquals("HASH_LARGO_MINIMO", resultado.getPassword());
     }
 
-    // ------------------------------------------------------------------
-    // TC_22 (DNI duplicado) -- antes decía "A VERIFICAR EJECUTANDO EL CASO
-    // REAL" en la planilla. Se verificó con los tests de abajo que el gap era
-    // real (guardar() nunca llamaba a dniExiste(), y un DNI duplicado producía
-    // 400 con mensaje crudo de Postgres en vez de 409 con mensaje limpio). Se
-    // corrigió agregando un chequeo previo en guardar() (mismo patrón que el
-    // de nombreUsuario, unas líneas más arriba) más findByPersonaNumeroDocumento
-    // en UsuarioRepository. Estos tests prueban el fix Y documentan el gap
-    // residual que el fix no cierra del todo (ventana de carrera).
-    // ------------------------------------------------------------------
 
     @Test
     void altaDeUsuario_dniYaExiste_lanzaRecursoDuplicadoYNoGuardaNada() {
@@ -240,10 +212,7 @@ class UsuarioServiceImplRegistroUnitTest {
 
     @Test
     void altaDeUsuario_editaSuPropioDni_noSeConsideraDuplicado() {
-        // Caso borde del fix de arriba: si no se comparara el idUsuario, cualquier
-        // usuario que editara su propio perfil (sin cambiar el DNI) se vería a sí
-        // mismo como "duplicado" y no podría guardar nada más. Mismo razonamiento
-        // que ya existía para el chequeo de nombreUsuario.
+
         Usuario usuarioAEditar = new Usuario();
         usuarioAEditar.setIdUsuario(7);
         usuarioAEditar.setNombreUsuario("carla");
@@ -262,7 +231,7 @@ class UsuarioServiceImplRegistroUnitTest {
         payload.setIdUsuario(7);
         payload.setNombreUsuario("carla");
         Persona personaPayload = new Persona();
-        personaPayload.setNumeroDocumento("30999888"); // mismo DNI, sin cambios
+        personaPayload.setNumeroDocumento("30999888");
         payload.setPersona(personaPayload);
 
         assertDoesNotThrow(() -> usuarioService.guardar(payload, null));
@@ -270,28 +239,15 @@ class UsuarioServiceImplRegistroUnitTest {
 
     @Test
     void altaDeUsuario_siElUniqueDeLaBaseFrenaElInsert_seTraduceARecursoDuplicado() {
-        // GAP corregido: el chequeo previo (findByPersonaNumeroDocumento antes de
-        // guardar) cierra el caso normal de TC_22, pero seguía habiendo una ventana
-        // de carrera -- dos altas simultáneas con el mismo DNI podían pasar ambas el
-        // chequeo antes de que cualquiera de las dos llegara a guardar(). Antes,
-        // quien perdía la carrera chocaba contra el UNIQUE de la base con un
-        // DataIntegrityViolationException sin traducir, que terminaba como 400 con
-        // el mensaje crudo de Postgres. Ahora guardar() atrapa esa excepción puntual
-        // y la relanza como RecursoDuplicadoException (409): el resultado observable
-        // es siempre el mismo, sin importar el timing. La ventana de carrera en sí
-        // sigue existiendo (eso requeriría aislamiento de transacción a nivel de
-        // base, fuera de alcance acá), pero ya no se filtra como un error crudo de
-        // infraestructura.
+
         when(usuarioRepository.count()).thenReturn(5L);
         when(usuarioRepository.findByNombreUsuario(anyString())).thenReturn(Optional.empty());
-        // Simula la ventana de carrera: el chequeo previo no encuentra nada...
         when(usuarioRepository.findByPersonaNumeroDocumento("45768342")).thenReturn(Optional.empty());
         when(passwordEncoder.encode(anyString())).thenReturn("HASH");
 
         String mensajeCrudoDePostgres =
             "could not execute statement [ERROR: duplicate key value violates unique "
             + "constraint \"persona_numero_documento_key\"]";
-        // ...pero al guardar, la restricción UNIQUE de Postgres sí lo frena.
         when(usuarioRepository.save(any(Usuario.class)))
             .thenThrow(new DataIntegrityViolationException(mensajeCrudoDePostgres));
 
@@ -308,14 +264,7 @@ class UsuarioServiceImplRegistroUnitTest {
 
     @Test
     void handlerGlobal_anteUnaExcepcionSinTraducir_devuelve400ConMensajeCrudo() {
-        // Este test YA NO reproduce un caso alcanzable por TC_22 -- el fix de arriba
-        // (altaDeUsuario_siElUniqueDeLaBaseFrenaElInsert_seTraduceARecursoDuplicado)
-        // ahora atrapa ese mismo DataIntegrityViolationException dentro de guardar()
-        // y lo traduce a un 409 limpio antes de que llegue tan lejos. Lo que queda
-        // documentado acá es el comportamiento GENÉRICO de
-        // GlobalExceptionHandler.handleRuntimeException como red de contención para
-        // cualquier RuntimeException que ningún service traduzca todavía: sigue
-        // devolviendo 400 con el mensaje crudo tal cual, sin adivinar nada.
+
         GlobalExceptionHandler handler = new GlobalExceptionHandler();
         String mensajeCrudoDePostgres =
             "could not execute statement [ERROR: duplicate key value violates unique "
@@ -328,8 +277,8 @@ class UsuarioServiceImplRegistroUnitTest {
 
         ResponseEntity<ApiError> respuesta = handler.handleRuntimeException(ex, request);
 
-        assertEquals(HttpStatus.BAD_REQUEST, respuesta.getStatusCode()); // 400, no 409
+        assertEquals(HttpStatus.BAD_REQUEST, respuesta.getStatusCode());
         assertNotNull(respuesta.getBody());
-        assertEquals(mensajeCrudoDePostgres, respuesta.getBody().mensaje()); // mensaje crudo, no uno legible
+        assertEquals(mensajeCrudoDePostgres, respuesta.getBody().mensaje());
     }
 }

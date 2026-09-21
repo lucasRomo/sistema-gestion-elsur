@@ -13,7 +13,6 @@ export const MaquinaFallaModal: React.FC<Props> = ({ show, maquinas, onClose, on
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables de tema
   const modalBg = isDark ? '#1e1e24' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const textColor = isDark ? '#ffffff' : '#0f172a';

@@ -19,7 +19,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   const [colapsado, setColapsado] = useState<boolean>(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Colores dinámicos según el tema de Lisandro
   const mainBg = esOscuro ? '#1b1b1b' : '#e5e7eb'; 
   const sidebarBg = esOscuro ? '#222122' : '#ffffff';
   const sidebarBorder = esOscuro ? '#2d2d30' : '#cbd5e1';
@@ -47,7 +46,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
     const anio = hoy.getFullYear();
     setFechaActual(`${dia}/${mes}/${anio}`);
 
-    // Listeners en vivo de cambios de permisos / sesión (Funcionalidad de Lucas)
     const handleActualizacion = () => {
       cargarUsuarioDeSesion();
     };
@@ -78,7 +76,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
     const permisos: any[] = usuario?.permisos || usuario?.rol?.permisos || [];
 
-    // Evaluación estricta cuando existen permisos cargados en la sesión (Lógica de Lucas)
     if (Array.isArray(permisos) && permisos.length > 0) {
       return permisos.some((p: any) => {
         if (typeof p === 'string') {
@@ -92,7 +89,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
       });
     }
 
-    // Si no hay lista explícita aún en sesión, el admin ve todo por defecto
+
     return esAdmin;
   };
 
@@ -230,7 +227,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         ` : ''}
       `}</style>
 
-      {/* Sidebar */}
       <div 
         className="d-flex flex-column flex-shrink-0 justify-content-between d-print-none"
         style={{ 
@@ -246,7 +242,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           boxShadow: esOscuro ? 'none' : '2px 0 10px rgba(0,0,0,0.03)'
         }}
       >
-        {/* BLOQUE SUPERIOR */}
         <div>
           <div className="d-flex align-items-center mb-2 ps-1" style={{ minHeight: '34px' }}>
             <div 
@@ -339,7 +334,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           <hr className="mb-2 mt-2" style={{ borderColor: sidebarBorder, opacity: 0.5 }} />
         </div>
 
-        {/* LISTA NAVEGACIÓN */}
         <div 
           ref={scrollContainerRef} 
           className="flex-grow-1 d-flex flex-column py-1 no-scrollbar" 
@@ -427,7 +421,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           )}
         </div>
 
-        {/* CERRAR SESIÓN */}
         <div className="pt-2 mt-1" style={{ borderTop: `1px solid ${sidebarBorder}` }}>
           <button 
             onClick={handleCerrarSesion}
@@ -459,7 +452,6 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         </div> 
       </div>
       
-      {/* Contenido Principal */}
       <div 
         className="flex-grow-1" 
         style={{ 

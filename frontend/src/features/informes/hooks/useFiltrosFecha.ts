@@ -23,10 +23,6 @@ export function useFiltrosFecha(
     onRangoSeleccionado?.(desde, hasta);
   };
 
-  // CORREGIDO: antes no validaba que "Desde" no sea posterior a "Hasta"; un
-  // rango invertido cargado a mano generaba un dashboard vacío sin ningún
-  // aviso al usuario. Ahora se rechaza el rango inválido y se expone el
-  // mensaje de error para mostrarlo en la UI.
   const confirmarRangoActual = (): boolean => {
     if (!fechaDesdeInput || !fechaHastaInput) {
       setErrorRangoFechas('Debe indicar ambas fechas del rango.');

@@ -30,7 +30,6 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
 
   const idCliente = cliente.id_cliente || cliente.idCliente;
 
-  // Estado local para saldo deudor para actualización inmediata en UI
   const [saldoDeudorLocal, setSaldoDeudorLocal] = useState<number>(Number(cliente.saldoDeudor || 0));
   const [limite, setLimite] = useState<number | string>(cliente.limiteCredito ?? 0);
   const [movimientos, setMovimientos] = useState<any[]>([]);
@@ -45,7 +44,6 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   const [ticketData, setTicketData] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [imagenModalUrl, setImagenModalUrl] = useState<string | null>(null);
 
-  // Estados para el dropdown personalizado
   const [showDropdownMetodoPago, setShowDropdownMetodoPago] = useState<boolean>(false);
   
   const opcionesPago = [
@@ -101,9 +99,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
       });
       onActualizar();
     } catch (e) {
-      // CORREGIDO: antes se mostraba siempre "Error al actualizar el límite." sin
-      // importar la causa real del rechazo del backend -- ahora clienteService usa
-      // extraerMensajeError, así que e.message ya trae el motivo real.
+
       setSuceso({
         show: true,
         titulo: "Error",
@@ -187,10 +183,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
       });
 
     } catch (e) {
-      // CORREGIDO: antes se mostraba siempre "Error al registrar el pago." sin
-      // importar la causa real (ej. turno de caja cerrado) -- ahora clienteService
-      // usa extraerMensajeError, así que e.message ya trae el motivo real del
-      // backend (ver GlobalExceptionHandler).
+
       setSuceso({
         show: true,
         titulo: "Error",
@@ -313,7 +306,6 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                     />
                   </div>
 
-                  {/* Selector de Medio de Pago Personalizado */}
                   <div className="col-md-3">
                     <label className="form-label small fw-semibold" style={{ color: mutedText }}>Medio de Pago</label>
                     <div className="position-relative" tabIndex={0} onBlur={() => setTimeout(() => setShowDropdownMetodoPago(false), 200)}>

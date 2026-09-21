@@ -48,7 +48,6 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
 }) => {
   return (
     <>
-      {/* Modal Nuevo Rol */}
       {mostrarModalNuevoRol && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
@@ -72,8 +71,6 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
           </div>
         </div>
       )}
-
-      {/* Modal Confirmación */}
       {mostrarModalConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
@@ -96,7 +93,6 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Modal Éxito */}
       {mostrarModalExito && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
@@ -115,7 +111,6 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Modal Confirmar Eliminación de Perfil (antes era un window.confirm) */}
       {mostrarModalConfirmarEliminarRol && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
@@ -136,7 +131,6 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Modal Bloqueo / Advertencia */}
       {mostrarModalBloqueo && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '../../Context/ThemeContext';
 
 interface UbicacionViewModalProps {
-  cliente: any; // Pasamos el cliente completo para estructurar la petición al backend
+  cliente: any;
   onCerrar: () => void;
   onConfirmar: (clienteActualizado: any) => Promise<void>;
 }
@@ -11,25 +11,21 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Estilos dinámicos adaptativos según el tema
   const modalBg = isDark ? '#1a1a1c' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const titleColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#a1a1aa' : '#64748b';
   const borderDivider = isDark ? '#3f3f46' : '#e2e8f0';
 
-  // Inputs y contenedores de lectura (reemplaza el bg-black fijo)
   const boxBg = isDark ? '#121214' : '#f8fafc';
   const boxBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const boxTextColor = isDark ? '#ffffff' : '#0f172a';
 
   const direccionOriginal = cliente.persona?.direccion || {};
 
-  // Estado para controlar si estamos viendo o editando
   const [modoEdicion, setModoEdicion] = useState(false);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
-  // Estado local para los campos de la dirección
   const [dirData, setDirData] = useState({
     idDireccion: direccionOriginal.idDireccion,
     calle: direccionOriginal.calle || '',
@@ -86,7 +82,6 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
   }}
 >
             
-            {/* Encabezado */}
             <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style={{ borderColor: borderDivider }}>
               <h4 className="m-0 fw-bold d-flex align-items-center" style={{ color: '#f1ca18' }}>
                 <i className={`bi bi-house-door ${modoEdicion ? 'text-warning' : ''} me-2`}></i>
@@ -97,7 +92,6 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
 
             <form onSubmit={handleFormSubmit}>
               <div className="row g-3">
-                {/* Calle */}
                 <div className="col-md-8">
                   <label className="form-label small font-monospace fw-medium m-0" style={{ color: labelColor }}>Calle</label>
                   {modoEdicion ? (
@@ -121,8 +115,6 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                     </div>
                   )}
                 </div>
-
-                {/* Número */}
                 <div className="col-md-4">
                   <label className="form-label small font-monospace fw-medium m-0" style={{ color: labelColor }}>Número</label>
                   {modoEdicion ? (
@@ -147,7 +139,6 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   )}
                 </div>
 
-                {/* Piso */}
                 <div className="col-md-3">
                   <label className="form-label small font-monospace fw-medium m-0" style={{ color: labelColor }}>Piso</label>
                   {modoEdicion ? (
@@ -166,7 +157,6 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   )}
                 </div>
 
-                {/* Depto */}
                 <div className="col-md-3">
                   <label className="form-label small font-monospace fw-medium m-0" style={{ color: labelColor }}>Depto</label>
                   {modoEdicion ? (
@@ -185,7 +175,6 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   )}
                 </div>
 
-                {/* Cód Postal */}
                 <div className="col-md-6">
                   <label className="form-label small font-monospace fw-medium m-0" style={{ color: labelColor }}>Código Postal</label>
                   {modoEdicion ? (
@@ -210,7 +199,6 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   )}
                 </div>
 
-                {/* Ciudad */}
                 <div className="col-md-4">
                   <label className="form-label small font-monospace fw-medium m-0" style={{ color: labelColor }}>Ciudad</label>
                   {modoEdicion ? (
@@ -234,7 +222,6 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   )}
                 </div>
 
-                {/* Provincia */}
                 <div className="col-md-4">
                   <label className="form-label small font-monospace fw-medium m-0" style={{ color: labelColor }}>Provincia</label>
                   {modoEdicion ? (
@@ -258,7 +245,6 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                   )}
                 </div>
 
-                {/* País */}
                 <div className="col-md-4">
                   <label className="form-label small font-monospace fw-medium m-0" style={{ color: labelColor }}>País</label>
                   {modoEdicion ? (
@@ -283,7 +269,6 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
                 </div>
               </div>
 
-              {/* BARRA DE ACCIONES DINÁMICA */}
               <div className="d-flex justify-content-between gap-2 mt-4 pt-3 border-top" style={{ borderColor: borderDivider }}>
                 <div>
                   {!modoEdicion ? (
@@ -316,7 +301,6 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
         </div>
       </div>
 
-      {/* SUB-MODAL DE CONFIRMACIÓN DE UBICACIÓN */}
       {mostrarConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered" style={{ maxWidth: '400px' }}>

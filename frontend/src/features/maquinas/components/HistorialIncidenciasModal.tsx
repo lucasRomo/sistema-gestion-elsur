@@ -4,10 +4,6 @@ import type { Incidencia, Empleado } from '../types/Incidencia';
 import { useTheme } from '../../../Context/ThemeContext';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { incidenciaService } from '../service/incidenciaService';
-// CORREGIDO: se usa la misma getUsuarioActualId de maquinasService.ts en vez de
-// mantener una copia local duplicada. La copia local que existía acá seguía teniendo
-// el fallback silencioso "|| 1" (atribuía la acción a un usuario/empleado arbitrario
-// cuando no había sesión reconocible) que ya se había corregido en el original.
 import { getUsuarioActualId } from '../service/maquinasService';
 
 interface Props {
@@ -28,7 +24,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables de tema
   const modalBg = isDark ? '#1e1e24' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const textColor = isDark ? '#ffffff' : '#0f172a';
@@ -42,25 +37,21 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
   const [incidencias, setIncidencias] = useState<Incidencia[]>([]);
   const [cargando, setCargando] = useState(false);
 
-  // Formularios en línea
   const [idAccionActiva, setIdAccionActiva] = useState<number | null>(null);
   const [tipoAccion, setTipoAccion] = useState<'MANTENIMIENTO' | 'RESOLVER' | null>(null);
   const [textoNota, setTextoNota] = useState('');
   const [errorValidacion, setErrorValidacion] = useState('');
   const [procesandoAccion, setProcesandoAccion] = useState(false);
 
-  // Pago de Arreglo
   const [incidenciaAPagar, setIncidenciaAPagar] = useState<Incidencia | null>(null);
   const [montoPago, setMontoPago] = useState('');
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
   const [conceptoPago, setConceptoPago] = useState('');
   const [procesandoPago, setProcesandoPago] = useState(false);
 
-  // Ticket impresió/visualización
   const [ticketSeleccionado, setTicketSeleccionado] = useState<{ pedido: any; movimiento: any } | null>(null);
   const [errorPago, setErrorPago] = useState<string | null>(null);
 
-  // Advertencia saldo insuficiente
   const [showModalSaldoInsuficiente, setShowModalSaldoInsuficiente] = useState(false);
   const [mensajeErrorSaldo, setMensajeErrorSaldo] = useState('');
   const [showMetodoPago, setShowMetodoPago] = useState(false);
@@ -109,9 +100,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
       return;
     }
 
-    // CORREGIDO: antes se llamaba a getUsuarioActualId() confiando en su fallback
-    // silencioso a "1"; ahora que ese fallback no existe más, hay que validar
-    // explícitamente que haya un usuario detectable antes de llamar a la API.
     const idUsuarioActual = getUsuarioActualId();
     if (!idUsuarioActual) {
       setErrorValidacion('No se pudo determinar el usuario logueado. Vuelva a iniciar sesión e intente nuevamente.');
@@ -131,8 +119,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
       cargarHistorial();
       onIncidenciaResuelta();
     } catch (err) {
-      // CORREGIDO: antes el error solo se logueaba por consola sin ningún aviso
-      // visible -- el usuario no tenía forma de saber que la acción había fallado.
       console.error("Error al pasar a mantenimiento:", err);
       setErrorValidacion(err instanceof Error ? err.message : 'Error al pasar el equipo a mantenimiento.');
     } finally {
@@ -165,8 +151,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
       cargarHistorial();
       onIncidenciaResuelta();
     } catch (err) {
-      // CORREGIDO: mismo caso que handlePonerEnMantenimiento -- antes el error se
-      // perdía en la consola sin avisar al usuario.
+
       console.error("Error al resolver la incidencia:", err);
       setErrorValidacion(err instanceof Error ? err.message : 'Error al resolver la incidencia.');
     } finally {
@@ -182,12 +167,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
     return;
   }
 
-  // CORREGIDO: antes se llamaba a getUsuarioActualId() confiando en su fallback
-  // silencioso a "1"; sin ese fallback, un idUsuario undefined llegaba a
-  // payload.idUsuario.toString() dentro de incidenciaService y explotaba como un
-  // TypeError, que el catch de más abajo mostraba como el genérico "Error de
-  // conexión al registrar pago con el servidor." -- un mensaje engañoso para lo
-  // que en realidad era "no hay sesión detectable". Ahora se valida antes.
   const idUsuarioActual = getUsuarioActualId();
   if (!idUsuarioActual) {
     setErrorPago('No se pudo determinar el usuario logueado. Vuelva a iniciar sesión e intente nuevamente.');
@@ -243,13 +222,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
       setConceptoPago('');
       cargarHistorial();
     } else {
-      // NOTA: IncidenciaController.registrarPagoMantenimiento atrapa las excepciones
-      // a mano y arma su propia respuesta { code, message } en vez de dejar pasar el
-      // error al GlobalExceptionHandler (que usa el formato ApiError { mensaje }) --
-      // por eso este endpoint es distinto al resto de la API. Se deja data.mensaje
-      // como respaldo por si en el futuro algún caso (ver RecursoNoEncontradoException
-      // / SolicitudInvalidaException agregadas en este pase) terminara respondiendo
-      // con el formato ApiError en vez del { code, message } local.
+
       if (data.code === 'CAJA_CERRADA') {
         setErrorPago("Error: La caja se encuentra CERRADA. Inicie el turno de caja antes de realizar pagos.");
       } else if (data.code === 'SALDO_INSUFFICIENT') {
@@ -260,8 +233,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
       }
     }
   } catch (err) {
-    // CORREGIDO: antes se mostraba siempre el mismo mensaje genérico sin importar
-    // la causa real del error; ahora se usa el mensaje real cuando está disponible.
+
     console.error('Error al registrar pago de mantenimiento:', err);
     setErrorPago(err instanceof Error ? err.message : "Error de conexión al registrar pago con el servidor.");
   } finally {
@@ -293,8 +265,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-xl modal-dialog-centered">
         <div className="modal-content" style={{ backgroundColor: modalBg, color: textColor, borderRadius: '12px', border: '1.5px solid #07aadb' }}>
-          
-          {/* Header */}
+
 <div 
   className="modal-header d-flex justify-content-between align-items-start flex-wrap" 
   style={{ borderBottom: `2px solid ${modalBorder}`, padding: '16px 24px', rowGap: '10px' }}
@@ -329,7 +300,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
   <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onClose}></button>
 </div>
 
-          {/* Body */}
           <div className="modal-body p-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
             {cargando ? (
               <div className="text-center py-5 font-monospace" style={{ color: textSubtle }}>
@@ -355,7 +325,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                       className="p-3 rounded-3 shadow" 
                       style={{ backgroundColor: cardBg, border: `1px solid ${modalBorder}` }}
                     >
-                      {/* Cabecera Tarjeta */}
                       <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom hist-card-header" style={{ borderColor: modalBorder, rowGap: '8px' }}>
                         <div className="d-flex flex-wrap align-items-center gap-2">
                           <span className="fw-bold font-monospace" style={{ color: textSubtle }}>Incidencia #{inc.idIncidencia}</span>
@@ -426,10 +395,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                         </div>
                       </div>
 
-                      {/* TRES COLUMNAS PARA CADA ETAPA */}
                       <div className="row g-2 align-items-stretch">
                         
-                        {/* ETAPA 1: REPORTADO / FALLA */}
                         <div className="col-md-4">
                           <div className="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style={{ 
                             backgroundColor: cardSectionBg, 
@@ -455,7 +422,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                           </div>
                         </div>
 
-                        {/* ETAPA 2: NOTA DE MANTENIMIENTO */}
                         <div className="col-md-4">
                           <div className="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style={{ 
                             backgroundColor: cardSectionBg, 
@@ -527,7 +493,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                           </div>
                         </div>
 
-                        {/* ETAPA 3: RESOLUCIÓN / ALTA */}
                         <div className="col-md-4">
                           <div className="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style={{ 
                             backgroundColor: cardSectionBg, 
@@ -612,7 +577,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* --- MODAL REGISTRO DE PAGO --- */}
       {incidenciaAPagar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1100 }}>
           <div className="modal-dialog modal-dialog-centered">
@@ -635,7 +599,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                   </div>
                 )}
 
-                {/* VINCULAR COMPROBANTE (SOLO PARA TRANSFERENCIA) */}
 {metodoPago === 'TRANSFERENCIA' && (
   <div className="mb-3">
     <label className="form-label fw-bold small mb-1" style={{ color: textColor }}>
@@ -770,7 +733,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
         </div>
       )}
 
-      {/* --- MODAL CONFIRMACIÓN: SALDO INSUFICIENTE --- */}
       {showModalSaldoInsuficiente && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1200 }}>
           <div className="modal-dialog modal-dialog-centered">
@@ -800,7 +762,6 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
         </div>
       )}
 
-      {/* --- TICKET DE IMPRESIÓN PAGO TÉCNICO --- */}
       {ticketSeleccionado && (
         <VistaTicketPagoModal
           pedido={ticketSeleccionado.pedido}

@@ -15,8 +15,6 @@ const obtenerIdUsuarioLogueado = (): number | null => {
   }
 };
 
-// --- INSUMOS ---
-
 export const getInsumos = async (): Promise<Insumo[]> => {
   const res = await apiFetch(API_URL);
   if (!res.ok) throw new Error("Error al obtener insumos");
@@ -104,7 +102,6 @@ export const actualizarInsumosMasivo = async (payload: ActualizarInsumosPayload)
   return res.text();
 };
 
-// --- MERMAS ---
 
 export const getMermas = async (): Promise<any[]> => {
   const res = await apiFetch(`${API_BASE_URL}/mermas`);
@@ -112,7 +109,6 @@ export const getMermas = async (): Promise<any[]> => {
   return res.json();
 };
 
-// --- PROVEEDORES ---
 
 export const getProveedores = async (): Promise<Proveedor[]> => {
   const res = await apiFetch(`${API_BASE_URL}/proveedores`);
@@ -120,7 +116,6 @@ export const getProveedores = async (): Promise<Proveedor[]> => {
   return res.json();
 };
 
-// --- UNIDADES DE MEDIDA ---
 
 export const getUnidadesMedida = async (): Promise<UnidadMedida[]> => {
   const res = await apiFetch(`${API_BASE_URL}/unidades-medida`);

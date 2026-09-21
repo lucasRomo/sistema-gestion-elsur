@@ -1,15 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
-// Modal Registros de Arqueo y Comparación
 import { ModalRegistrosArqueo } from '../components/ModalRegistrosArqueos';
 import { ModalComparacion } from '../components/ModalComparacion';
 
-// Componentes del Menú y Header
 import { InformesHeader } from '../components/InformesHeader';
 import { KpiCardsGrid } from '../components/KpiCardsGrid';
 import { ModuloMenuCards } from '../components/ModuloMenuCards';
 
-// Componentes de Gráficos / Secciones
 import { FinanzasCharts } from '../charts/FinanzasCharts';
 import { VentasCharts } from '../charts/VentasCharts';
 import { OperacionesCharts } from '../charts/OperacionesCharts';
@@ -18,13 +15,11 @@ import { ControlCharts } from '../charts/ControlCharts';
 import { InformeChartRenderer } from '../charts/InformeChartRenderer';
 import { exportarInformePDF } from '../utils/exportarPdfUtils';
 
-// Hooks
 import { useFiltrosFecha } from '../hooks/useFiltrosFecha';
 import { useInformesData } from '../hooks/useInformesData';
 import { useMetricasInforme } from '../hooks/useMetricasInformes';
 import { useComparacionInforme } from '../hooks/useComparacionInforme';
 
-// Tipos y Utilidades
 import type { SeccionInforme } from '../types/informeTypes';
 import { generarPuntosSparkline } from '../utils/informesUtils';
 
@@ -34,7 +29,6 @@ export const InformesView: React.FC = () => {
   const [seccionActiva, setSeccionActiva] = useState<SeccionInforme>('MENU');
   const [showModalRegistrosArqueo, setShowModalRegistrosArqueo] = useState(false);
 
-  // Hook centralizado que maneja la carga con apiFetch
   const datos = useInformesData();
   const { metricas, topClientes, incongruenciasArqueo, procesarMetricas } = useMetricasInforme();
 
@@ -89,7 +83,6 @@ export const InformesView: React.FC = () => {
   }, []);
   const esAdmin = usuarioLogueado?.rol?.nombreRol?.toUpperCase() === 'ADMIN';
 
-  // Carga inicial: delegada a datos.cargarDatos que utiliza apiFetch internamente
   useEffect(() => {
     datos.cargarDatos(true, 'Error al cargar los informes iniciales').then((resultado) => {
       if (!resultado) return;
@@ -106,7 +99,6 @@ export const InformesView: React.FC = () => {
         resultado.categoriasClienteRaw
       );
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAnalizar = async () => {
@@ -231,7 +223,6 @@ export const InformesView: React.FC = () => {
         }
       `}</style>
 
-      {/* HEADER DE CONTROL */}
       <InformesHeader
         fechaDesdeInput={fechaDesdeInput}
         fechaHastaInput={fechaHastaInput}
@@ -258,7 +249,6 @@ export const InformesView: React.FC = () => {
         </div>
       )}
 
-      {/* BARRA SUPERIOR DE SECCIÓN ACTIVA: BOTÓN VOLVER Y EXPORTAR PDF */}
       {seccionActiva !== 'MENU' && (
         <div className="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
           <div className="d-flex align-items-center gap-2">
@@ -292,9 +282,7 @@ export const InformesView: React.FC = () => {
         </div>
       )}
 
-      {/* CONTENEDOR DE CAPTURA PDF */}
       <div id="area-informe-exportar" className="d-block w-100">
-        {/* MENÚ PRINCIPAL Y KPIs */}
         {seccionActiva === 'MENU' && (
           <>
             <KpiCardsGrid kpiCards={kpiCards} />
@@ -308,7 +296,6 @@ export const InformesView: React.FC = () => {
           </>
         )}
 
-        {/* SECCIONES Y GRÁFICOS */}
         {seccionActiva === 'finanzas' && (
           <FinanzasCharts
             metricas={metricas}
@@ -349,7 +336,6 @@ export const InformesView: React.FC = () => {
         )}
       </div>
 
-      {/* MODALES */}
       {showModalRegistrosArqueo && (
         <ModalRegistrosArqueo
           isOpen={showModalRegistrosArqueo}

@@ -13,7 +13,6 @@ export const HistorialActividadView: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Variables de estilo adaptativas
   const mainCardBg = isDark ? '#1d1d1d' : '#ffffff';
   const cardBorder = isDark ? '#27272a' : '#cbd5e1';
   const titleColor = isDark ? '#ffffff' : '#0f172a';
@@ -83,14 +82,12 @@ export const HistorialActividadView: React.FC = () => {
   return (
     <div className="container-fluid px-0 h-100 d-flex flex-column font-sans">
       
-      {/* Título Superior */}
       <div className="d-flex justify-content-center align-items-center mb-4">
         <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
           Historial de Actividad
         </h2>
       </div>
 
-      {/* Contenedor de Filtros */}
       <div 
         className="row g-3 align-items-center mb-4 p-3 rounded-3 shadow-sm font-monospace" 
         style={{ 
@@ -139,7 +136,6 @@ export const HistorialActividadView: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabla con Scroll Interno y Tamaño Fijo */}
       <div 
         className="table-responsive rounded-3 border mb-3 font-monospace" 
         style={{ 
@@ -206,7 +202,6 @@ export const HistorialActividadView: React.FC = () => {
         </table>
       </div>
 
-      {/* Barra Inferior Estandarizada: Botón Volver y Exportaciones */}
       <div className="d-flex align-items-stretch justify-content-between mt-3 mb-4 font-monospace">
         <button
           className="btn btn-secondary px-4 py-2 fw-semibold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center"

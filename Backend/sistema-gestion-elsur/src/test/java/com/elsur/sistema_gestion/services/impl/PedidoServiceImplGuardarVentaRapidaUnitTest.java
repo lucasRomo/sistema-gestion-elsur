@@ -18,22 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests UNITARIOS (caja blanca, Mockito) de PedidoServiceImpl.guardar(): el
- * alta de un pedido desde POST /pedidos, con foco puntual en las dos correcciones
- * de este mismo trabajo:
- *
- *  1) Un detalle sin producto válido corta el alta ahí mismo con un mensaje claro
- *     (SolicitudInvalidaException), en vez de guardarse igual y explotar más tarde
- *     con un NullPointerException cuando alguien finaliza el pedido.
- *  2) Si el pedido es de "Venta Rápida" y procesarDescuentoStock() falla (stock
- *     insuficiente, máquina rota, lo que sea), esa excepción YA NO se traga: se
- *     deja propagar para que @Transactional revierta TODO el alta (antes: el
- *     pedido quedaba guardado con HTTP 200 igual, con el stock a medio descontar).
- *
- * Se agrega también una regresión rápida del chequeo de caja abierta, que no
- * cambió pero es la primera guarda del método y conviene dejar cubierta.
- */
+
 @ExtendWith(MockitoExtension.class)
 class PedidoServiceImplGuardarVentaRapidaUnitTest {
 
@@ -43,7 +28,7 @@ class PedidoServiceImplGuardarVentaRapidaUnitTest {
     @Mock private DetallePedidoRepository detallePedidoRepository;
     @Mock private ProductoRepository productoRepository;
     @Mock private ClienteRepository clienteRepository;
-    @Mock private TurnoRepository TurnoRepository; // mismo nombre de campo que en PedidoServiceImpl
+    @Mock private TurnoRepository TurnoRepository; 
 
     @InjectMocks
     private PedidoServiceImpl pedidoService;
