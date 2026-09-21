@@ -29,7 +29,6 @@ public class UnidadMedidaServiceImpl implements UnidadMedidaService {
 
         String nombreFormateado = unidadMedida.getNombre().trim();
 
-        // Validar si existe una unidad con el mismo nombre (insensible a mayúsculas/minúsculas)
         boolean existe = unidadMedidaRepository.findAll().stream()
                 .anyMatch(u -> u.getNombre() != null && u.getNombre().trim().equalsIgnoreCase(nombreFormateado));
 

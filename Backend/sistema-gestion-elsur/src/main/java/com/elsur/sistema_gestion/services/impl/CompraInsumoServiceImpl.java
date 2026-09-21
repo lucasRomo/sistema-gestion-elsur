@@ -38,14 +38,8 @@ public class CompraInsumoServiceImpl implements CompraInsumoService {
             throw new SolicitudInvalidaException("El monto total de la compra debe ser mayor a 0.");
         }
 
-        // CORREGIDO: antes, si no se detectaba un usuario logueado válido, el
-        // movimiento de caja generado por la compra quedaba sin autoría
-        // (usuarioRepository...orElse(null) dejaba el campo usuario en null sin
-        // avisar a nadie). Se unifica con el mismo criterio ya aplicado en
-        // Caja/Insumos/Productos: se exige un usuario logueado real.
         Usuario usuarioOperador = obtenerUsuarioOperador(dto.getIdUsuario());
 
-        // 1. Cabecera de la Compra
         CompraProveedor compra = new CompraProveedor();
         compra.setFecha(LocalDateTime.now());
         compra.setMontoTotal(dto.getMontoTotal());
@@ -54,8 +48,7 @@ public class CompraInsumoServiceImpl implements CompraInsumoService {
 
         Proveedor proveedorObj = null;
         if (dto.getIdProveedor() != null) {
-            // CORREGIDO: antes un idProveedor inválido se ignoraba en silencio
-            // (.orElse(null)), guardando la compra sin proveedor sin informar el error.
+
             proveedorObj = proveedorRepository.findById(dto.getIdProveedor().intValue())
                     .orElseThrow(() -> new RecursoNoEncontradoException("Proveedor no encontrado ID: " + dto.getIdProveedor()));
             compra.setProveedor(proveedorObj);
@@ -63,12 +56,8 @@ public class CompraInsumoServiceImpl implements CompraInsumoService {
 
         compra = compraProveedorRepository.save(compra);
 
-        // 2. Procesamiento de Ítems (Insumos o Productos)
         for (CompraInsumoDTO.DetalleItemCompraDTO item : dto.getItems()) {
-            // CORREGIDO: antes no se validaba cantidad/precio a nivel backend (el
-            // formulario ya lo hacía, pero el endpoint quedaba expuesto a que
-            // cualquier llamada directa a la API cargara stock con cantidades
-            // nulas/negativas o precios negativos).
+
             BigDecimal cantidadComprada = item.getCantidadEmpaquetada();
             if (cantidadComprada == null || cantidadComprada.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new SolicitudInvalidaException("La cantidad comprada debe ser mayor a 0.");
@@ -88,7 +77,6 @@ public class CompraInsumoServiceImpl implements CompraInsumoService {
                     throw new SolicitudInvalidaException("El ID del producto no puede ser nulo.");
                 }
 
-                // Conversión de Long a Integer para el repository
                 Producto producto = productoRepository.findById(item.getIdProducto().intValue())
                         .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado ID: " + item.getIdProducto()));
 
@@ -110,13 +98,6 @@ public class CompraInsumoServiceImpl implements CompraInsumoService {
                         ? item.getFactorConversion() : BigDecimal.ONE;
 
                 if (Boolean.TRUE.equals(item.getEsNuevoInsumo())) {
-                    // CORREGIDO: este alta de insumo guardaba directo por
-                    // insumoRepository.save(), sin pasar por ninguna de las
-                    // validaciones agregadas en InsumoServiceImpl.guardar() (nombre
-                    // obligatorio, y sobre todo el chequeo de nombre duplicado). Eso
-                    // permitía crear un insumo con el mismo nombre que uno ya
-                    // existente directo desde la pantalla de "Compra de Insumos",
-                    // sorteando la validación que sí se exige en el módulo Insumos.
                     if (item.getNombreInsumo() == null || item.getNombreInsumo().trim().isEmpty()) {
                         throw new SolicitudInvalidaException("Debe indicar el nombre del nuevo insumo.");
                     }
@@ -143,8 +124,6 @@ public class CompraInsumoServiceImpl implements CompraInsumoService {
                         insumo.setProveedor(proveedorObj);
                     }
 
-                    // CORREGIDO: unidades inexistentes se ignoraban en silencio
-                    // (.orElse(null)), dejando el insumo nuevo sin unidad de medida.
                     UnidadMedida um = unidadMedidaRepository.findById(item.getIdUnidad().intValue())
                             .orElseThrow(() -> new RecursoNoEncontradoException("Unidad de medida (suelta) no encontrada ID: " + item.getIdUnidad()));
                     insumo.setUnidadMedida(um);
@@ -159,7 +138,6 @@ public class CompraInsumoServiceImpl implements CompraInsumoService {
                         throw new SolicitudInvalidaException("El ID del insumo existente no puede ser nulo.");
                     }
 
-                    // Conversión de Long a Integer para el repository
                     insumo = insumoRepository.findById(item.getIdInsumo().intValue())
                             .orElseThrow(() -> new RecursoNoEncontradoException("Insumo no encontrado ID: " + item.getIdInsumo()));
 
@@ -185,7 +163,6 @@ public class CompraInsumoServiceImpl implements CompraInsumoService {
             detalleCompraInsumoRepository.save(detalle);
         }
 
-        // 3. Movimiento de Egreso en Caja
         MovimientoCaja movimiento = new MovimientoCaja();
         movimiento.setMonto(dto.getMontoTotal());
         movimiento.setTipoMovimiento("EGRESO");

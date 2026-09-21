@@ -10,7 +10,6 @@ public interface RegistroActividadService {
     RegistroActividad buscarPorId(Integer id);
     RegistroActividad guardar(RegistroActividad registro);
     
-    // Método helper para registrar auditorías de forma sencilla
     void registrarCambio(Usuario usuario, String accion, String tabla, String columna, 
                          Integer idRegistro, String valorViejo, String valorNuevo);
 }

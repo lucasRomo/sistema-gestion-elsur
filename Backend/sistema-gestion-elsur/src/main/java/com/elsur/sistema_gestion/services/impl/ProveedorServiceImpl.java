@@ -45,9 +45,6 @@ public class ProveedorServiceImpl implements ProveedorService {
             proveedor.setEstado("Activo");
         }
 
-        // CORREGIDO: el nombre comercial no se validaba -- ni blanco, ni duplicado --
-        // pese a ser nullable=false. Mismo patrón ya cerrado en Insumo/Producto/
-        // Institución/Cliente.
         if (proveedor.getNombreComercial() == null || proveedor.getNombreComercial().trim().isEmpty()) {
             throw new SolicitudInvalidaException("El nombre comercial del proveedor es obligatorio.");
         }
@@ -58,18 +55,14 @@ public class ProveedorServiceImpl implements ProveedorService {
         }
         proveedor.setNombreComercial(nombreNormalizado);
 
-        // --- LÓGICA DE AUDITORÍA EN EDICIÓN ---
         if (proveedor.getIdProveedor() != null && proveedorRepository.existsById(proveedor.getIdProveedor())) {
 
             Proveedor proveedorViejo = proveedorRepository.findById(proveedor.getIdProveedor()).orElse(null);
 
             if (proveedorViejo != null) {
-                // CORREGIDO: fallback en silencio al "primer usuario de la base" cuando
-                // faltaba idUsuario -- mismo patrón transversal cerrado en el resto del
-                // sistema. Ahora se exige un usuario real y válido.
+
                 Usuario usuarioActual = obtenerUsuarioOperador(idUsuario);
 
-                // 1. Auditoría de campos directos de Proveedor
                 compararYRegistrar(usuarioActual, "Proveedor", "nombreComercial", proveedor.getIdProveedor(),
                         proveedorViejo.getNombreComercial(), proveedor.getNombreComercial());
 
@@ -82,7 +75,6 @@ public class ProveedorServiceImpl implements ProveedorService {
                 compararYRegistrar(usuarioActual, "Proveedor", "estado", proveedor.getIdProveedor(),
                         proveedorViejo.getEstado(), proveedor.getEstado());
 
-                // 2. Auditoría de Dirección asociada al Proveedor
                 if (proveedorViejo.getDireccion() != null && proveedor.getDireccion() != null) {
                     Direccion dVieja = proveedorViejo.getDireccion();
                     Direccion dNueva = proveedor.getDireccion();
@@ -127,9 +119,6 @@ public class ProveedorServiceImpl implements ProveedorService {
             proveedorRepository.deleteById(id);
             proveedorRepository.flush();
         } catch (DataIntegrityViolationException e) {
-            // CORREGIDO: antes esta excepción (proveedor referenciado por compras de
-            // insumos, por ejemplo) no se atrapaba y devolvía el mensaje crudo de
-            // Hibernate/JDBC.
             throw new ConflictoDeIntegridadException(
                 "No se puede eliminar el proveedor porque tiene compras u otros registros asociados.");
         }

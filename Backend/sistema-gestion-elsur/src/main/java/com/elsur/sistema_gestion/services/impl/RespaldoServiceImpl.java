@@ -66,8 +66,6 @@ public class RespaldoServiceImpl implements RespaldoService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    // Cache de "tabla -> (columna -> tipo SQL)" para detectar columnas json/jsonb
-    // sin tener que consultar el catálogo de Postgres en cada INSERT.
     private final Map<String, Map<String, String>> tiposColumnaCache = new HashMap<>();
 
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -216,13 +214,6 @@ public class RespaldoServiceImpl implements RespaldoService {
         entityManager.createNativeQuery(bloque).executeUpdate();
     }
 
-    /**
-     * Restaura una lista de registros de una entidad leyendo los valores
-     * directamente del Map genérico ya parseado (nunca reconstruye la
-     * entidad Java completa con Jackson). Esto evita por completo el bug de
-     * Jackson al resolver grafos de objetos con referencias circulares
-     * (ej: DetallePedido -> Pedido -> movimientos -> ... -> Pedido).
-     */
     @SuppressWarnings("unchecked")
     private void restaurarListaEntidadConId(Object listaRegistros, EntityType<?> entity) {
         if (!(listaRegistros instanceof List)) return;
@@ -265,7 +256,7 @@ public class RespaldoServiceImpl implements RespaldoService {
 
             for (String prop : persister.getPropertyNames()) {
                 org.hibernate.type.Type tipo = persister.getPropertyType(prop);
-                if (tipo.isCollectionType()) continue; // @OneToMany/@ManyToMany: no son columna propia
+                if (tipo.isCollectionType()) continue; 
 
                 String[] cols = persister.getPropertyColumnNames(prop);
                 if (cols == null || cols.length != 1) continue;
@@ -274,10 +265,6 @@ public class RespaldoServiceImpl implements RespaldoService {
                 Object valorJson = mapaReg.get(claveJson);
                 Object valor;
 
-                // Se pregunta al propio mapeo de Hibernate si esta propiedad es
-                // una relación hacia otra entidad (en vez de adivinarlo por el
-                // objeto en tiempo de ejecución) — así cubre TODAS las
-                // relaciones sin depender de heurísticas frágiles.
                 if (tipo.isEntityType()) {
                     valor = obtenerIdDeAsociacionDesdeMapa(sfi, valorJson, tipo);
                 } else {
@@ -295,14 +282,6 @@ public class RespaldoServiceImpl implements RespaldoService {
         }
     }
 
-    /**
-     * Devuelve la clave real que usó Jackson para esta propiedad en el JSON.
-     * Por defecto es el mismo nombre que usa Hibernate/JPA, PERO si el campo
-     * tiene @JsonProperty("otro_nombre") (como Cliente.idCliente, que se
-     * serializa como "id_cliente"), Jackson usó ESE nombre como clave del
-     * Map, no el nombre del campo Java. Sin este ajuste, mapaReg.get(...)
-     * busca una clave que no existe y devuelve null silenciosamente.
-     */
     private String resolverClaveJson(Class<?> claseEntidad, String propiedadHibernate) {
         Field campo = buscarCampo(claseEntidad, propiedadHibernate);
         if (campo != null) {
@@ -326,15 +305,6 @@ public class RespaldoServiceImpl implements RespaldoService {
         return null;
     }
 
-    /**
-     * Resuelve el ID de una relación ManyToOne/OneToOne a partir del valor
-     * que haya quedado en el JSON para esa propiedad. Contempla dos formas
-     * posibles en las que puede venir:
-     *  - Como objeto anidado completo (Map): se extrae el ID de ese mapa,
-     *    usando también la clave JSON real (@JsonProperty) del ID de la
-     *    entidad asociada, no solo el nombre de Hibernate.
-     *  - Como valor plano (Integer/Long/String): ya es el ID directamente.
-     */
     @SuppressWarnings("unchecked")
     private Object obtenerIdDeAsociacionDesdeMapa(SessionFactoryImplementor sfi, Object valorJson, org.hibernate.type.Type tipoAsociacion) {
         if (valorJson == null) return null;
@@ -351,18 +321,9 @@ public class RespaldoServiceImpl implements RespaldoService {
             return normalizarValorEscalar(idValor, claseId);
         }
 
-        // Ya viene como valor plano (referencia por ID)
         return normalizarValorEscalar(valorJson, claseId);
     }
 
-    /**
-     * Convierte un valor tal cual quedó tras el parseo genérico a Map/List
-     * (Strings, Numbers, Booleans) al tipo Java que espera la columna, para
-     * que el driver de PostgreSQL pueda inferir el tipo SQL correcto en
-     * setObject(). Sin esto, fechas y enums (que en JSON son solo texto)
-     * llegarían como String crudo y Postgres podría rechazarlos o
-     * interpretarlos mal según la columna de destino.
-     */
     private Object normalizarValorEscalar(Object valor, Class<?> claseDestino) {
         if (valor == null || claseDestino == null) return valor;
 
@@ -372,22 +333,12 @@ public class RespaldoServiceImpl implements RespaldoService {
             if (claseDestino == LocalDate.class) return LocalDate.parse(texto);
             if (claseDestino == LocalTime.class) return LocalTime.parse(texto);
             if (claseDestino == Timestamp.class) {
-                // Campos mapeados como java.sql.Timestamp (en vez de
-                // LocalDateTime) pueden haberse serializado con offset/"Z"
-                // (ej: @JsonFormat con timezone UTC -> "...SSSXXX"). Postgres
-                // no castea implícitamente ese formato a
-                // "timestamp without time zone", así que lo parseamos acá
-                // antes de mandarlo al driver.
                 try {
                     return Timestamp.from(Instant.parse(texto));
                 } catch (DateTimeParseException ex) {
-                    // Por si en algún backup viejo/otro campo llega sin
-                    // offset (formato "yyyy-MM-ddTHH:mm:ss[.SSS]").
                     return Timestamp.valueOf(LocalDateTime.parse(texto));
                 }
             }
-            // Enums (@Enumerated(EnumType.STRING)) y el resto de los Strings
-            // ya vienen en el formato que espera la columna VARCHAR/TEXT.
             return texto;
         }
 
@@ -403,21 +354,11 @@ public class RespaldoServiceImpl implements RespaldoService {
         }
 
         if (valor instanceof Enum<?>) {
-            // Por si en algún punto llega un enum "real" (no debería, ya que
-            // todo pasa por Map/JSON), se guarda igual como texto.
             return ((Enum<?>) valor).name();
         }
-
-        // Boolean u otros tipos ya vienen en un formato que el driver entiende
         return valor;
     }
 
-    /**
-     * Consulta (con cache) el tipo SQL real de una columna de Postgres, para
-     * poder detectar columnas json/jsonb. Sin esto, un String plano viaja al
-     * driver como VARCHAR y Postgres rechaza el INSERT porque no castea
-     * automáticamente texto a json/jsonb en parámetros de PreparedStatement.
-     */
     @SuppressWarnings("unchecked")
     private String obtenerTipoColumna(String tabla, String columna) {
         Map<String, String> columnasTabla = tiposColumnaCache.computeIfAbsent(tabla.toLowerCase(), t -> {

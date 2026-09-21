@@ -45,7 +45,7 @@ export const PedidosPendientesView: React.FC = () => {
 
   const [suceso, setSuceso] = useState({ show: false, titulo: "", mensaje: "", tipo: "exito" });
   const [ticketPagoSel, setTicketPagoSel] = useState<{ pedido: any; movimiento?: any } | null>(null);
-  const [sucesoError, setSucesoError] = useState<{ show: boolean; mensaje: string }>({ show: false, mensaje: '' });
+  const [sucesoError, setSucesoError] = useState<{ show: boolean; mensaje: string; titulo?: string }>({ show: false, mensaje: '' });
   const [modalNotif, setModalNotif] = useState<{ show: boolean; msg: string }>({ show: false, msg: '' });
   const [confirmarDesvincular, setConfirmarDesvincular] = useState<{ show: boolean; idComprobante: number | null }>({
     show: false,
@@ -137,6 +137,7 @@ export const PedidosPendientesView: React.FC = () => {
     if (!pedidoEstadoSel) return;
 
     const cliente = pedidoEstadoSel.cliente || {};
+    const idClientePedido = Number(cliente.idCliente ?? cliente.id_cliente ?? 0);
     const totalPedido = Number(pedidoEstadoSel.monto_total ?? pedidoEstadoSel.montoTotal ?? pedidoEstadoSel.total ?? 0);
     const pagadoPedido = Number(pedidoEstadoSel.monto_pago_adelantado ?? pedidoEstadoSel.montoPagoAdelantado ?? pedidoEstadoSel.monto_abonado ?? pedidoEstadoSel.montoAbonado ?? pedidoEstadoSel.pagoAdelantado ?? 0);
 
@@ -148,6 +149,24 @@ export const PedidosPendientesView: React.FC = () => {
     const estadoNormalizado = (nuevoEstadoPendiente || '').toUpperCase().trim();
     const esEntregaOFinalizacion = ['ENTREGADO', 'FINALIZADO', 'COMPLETADO', 'TERMINADO', 'LISTO PARA ENTREGAR'].includes(estadoNormalizado);
     const superaLimite = limiteCredito > 0 ? deudaTotalProyectada > limiteCredito : saldoPendientePedido > 0;
+
+    // NUEVO (consulta: "¿qué pasa si el Consumidor Final tiene saldo
+    // pendiente?"): Consumidor Final (id 1) no opera con Cuenta Corriente, así
+    // que no tiene sentido mostrarle el modal de "Autorizar Solo Esta Vez" /
+    // "Actualizar Límite y Entregar" -- ese modal sugiere que la deuda queda
+    // registrada, y para este cliente el backend la rechaza directamente (ver
+    // PedidoServiceImpl.cambiarEstadoPedido). Se corta acá con un aviso claro,
+    // en vez de abrir un modal cuyas dos opciones van a terminar en el mismo
+    // error del backend.
+    if (esEntregaOFinalizacion && superaLimite && idClientePedido === 1) {
+      setSucesoError({
+        show: true,
+        titulo: 'No se puede entregar',
+        mensaje: `El Consumidor Final tiene un saldo pendiente de $${saldoPendientePedido.toFixed(2)}. Cobre el total antes de continuar -- el Consumidor Final no opera con Cuenta Corriente.`
+      });
+      setPedidoEstadoSel(null);
+      return;
+    }
 
     if (esEntregaOFinalizacion && superaLimite) {
       setModalAdvertenciaDeuda({
@@ -472,6 +491,7 @@ export const PedidosPendientesView: React.FC = () => {
       <ModalErrorStock 
         show={sucesoError.show}
         mensaje={sucesoError.mensaje}
+        titulo={sucesoError.titulo}
         onClose={() => {
           setSucesoError({ show: false, mensaje: '' });
           refrescar();

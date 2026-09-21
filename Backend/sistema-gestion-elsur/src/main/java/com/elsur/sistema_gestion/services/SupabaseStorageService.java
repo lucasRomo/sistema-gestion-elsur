@@ -14,13 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 
-/**
- * Única puerta de entrada/salida a Supabase Storage. Corre exclusivamente
- * en el backend: usa la Service Role Key, que nunca debe viajar al navegador.
- * Los buckets ('comprobantes', 'archivos-pedidos') deben quedar PRIVADOS en
- * el dashboard de Supabase — el acceso pasa siempre por acá, protegido por
- * el JWT + MatrizSeguridadValidator de cada endpoint que la use.
- */
 @Service
 public class SupabaseStorageService {
 
@@ -34,7 +27,6 @@ public class SupabaseStorageService {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
-    /** Sube un archivo y devuelve el path único con el que quedó guardado en el bucket. */
     public String subirArchivo(MultipartFile archivo, String bucket) {
         if (archivo == null || archivo.isEmpty()) {
             throw new IllegalArgumentException("El archivo está vacío");
@@ -67,7 +59,6 @@ public class SupabaseStorageService {
         }
     }
 
-    /** Descarga los bytes de un archivo. Es la única forma de leerlo, ya que el bucket es privado. */
     public byte[] descargarArchivo(String bucket, String path) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -91,7 +82,6 @@ public class SupabaseStorageService {
         }
     }
 
-    /** Borra un archivo. Se usa al reemplazar o eliminar un comprobante, para no dejar huérfanos en el bucket. */
     public void eliminarArchivo(String bucket, String path) {
         if (path == null || path.isBlank()) return;
         try {
@@ -152,13 +142,6 @@ public class SupabaseStorageService {
     }
     }
 
-    /**
-     * Genera el mismo esquema de nombre único ("timestamp_uuid.ext") que ya
-     * usaba subirArchivo(), pero como método público independiente, para
-     * poder generarlo ANTES de subir bytes ya procesados en el backend
-     * (ej: un PDF recomprimido) y mantener el mismo formato de nombre en
-     * el bucket que el resto de los archivos.
-     */
     public String generarNombreUnico(String nombreOriginal) {
         String extension = "";
         if (nombreOriginal != null && nombreOriginal.contains(".")) {

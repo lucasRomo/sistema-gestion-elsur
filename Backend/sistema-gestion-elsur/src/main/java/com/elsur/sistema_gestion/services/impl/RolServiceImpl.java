@@ -31,13 +31,6 @@ public class RolServiceImpl implements RolService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Rol no encontrado con ID: " + id));
     }
 
-    // Antes no se validaba nada acá: se podían crear dos perfiles con el mismo
-    // nombre (por ejemplo "CAJERO" dos veces), ambos con ID distinto pero
-    // indistinguibles en el <select> de perfiles -- ver hallazgo documentado en
-    // Matriz de Permisos. La comparación es case-insensitive porque
-    // matrizPermisosService.crearRol ya normaliza a mayúsculas antes de mandar
-    // el nombre, pero conviene no confiar solo en eso (alguien podría llamar a
-    // este mismo service desde otro lado sin pasar por esa normalización).
     @Override
     @Transactional
     public Rol guardar(Rol rol) {
@@ -59,18 +52,13 @@ public class RolServiceImpl implements RolService {
     @Override
     @Transactional
     public void eliminar(Integer id) {
-        // Antes esta regla vivía en el controller (PermisoController), como un
-        // if suelto antes de llamar acá. La movemos al service para que valga
-        // para cualquier lugar que borre un rol, no solo para ese endpoint.
+
         if (id == 1 || id == 2) {
             throw new SolicitudInvalidaException("No se pueden eliminar los roles del sistema por defecto.");
         }
 
         try {
             rolRepository.deleteById(id);
-            // flush() fuerza el DELETE ahora mismo: si no, Hibernate puede
-            // postergarlo hasta el commit de la transacción, y el catch de acá
-            // nunca vería la violación de integridad.
             rolRepository.flush();
         } catch (DataIntegrityViolationException e) {
             throw new ConflictoDeIntegridadException(

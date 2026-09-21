@@ -61,22 +61,11 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional
     public Cliente guardar(Cliente cliente, Integer idUsuario) {
-        // CORREGIDO: la razón social no se validaba en absoluto -- ni blanco, ni
-        // duplicada -- pese a ser nullable=false y sin restricción de unicidad a
-        // nivel de base. Antes de este pase, dos clientes podían quedar con la
-        // misma razón social, o guardarse con el campo vacío.
         if (cliente.getRazonSocial() == null || cliente.getRazonSocial().trim().isEmpty()) {
             throw new SolicitudInvalidaException("La razón social del cliente es obligatoria.");
         }
         String razonSocialNormalizada = cliente.getRazonSocial().trim();
 
-        // CORREGIDO (Bug 4, según aclaración del usuario -- el problema real no
-        // era el número de documento, que ya funcionaba bien, sino la razón
-        // social): "Ninguna" se usa como razón social genérica para clientes
-        // ocasionales/sin datos comerciales propios (ej. consumidor final), y a
-        // propósito se va a repetir en más de un cliente -- no es un nombre real
-        // de negocio, así que no tiene sentido exigirle unicidad. El resto de
-        // las razones sociales (nombres reales) sigue validándose como antes.
         boolean esRazonSocialGenerica = "NINGUNA".equalsIgnoreCase(razonSocialNormalizada);
 
         Integer idClienteExcluido = cliente.getIdCliente() != null ? cliente.getIdCliente() : -1;
@@ -86,8 +75,6 @@ public class ClienteServiceImpl implements ClienteService {
         }
         cliente.setRazonSocial(razonSocialNormalizada);
 
-        // CORREGIDO: límite de crédito y saldo deudor negativos no se rechazaban
-        // (mismo patrón de "negativo sin validar" ya cerrado en Insumos/Productos).
         if (cliente.getLimiteCredito() != null && cliente.getLimiteCredito().signum() < 0) {
             throw new SolicitudInvalidaException("El límite de crédito no puede ser negativo.");
         }
@@ -110,15 +97,6 @@ public class ClienteServiceImpl implements ClienteService {
                 persona.setTipoPersona(tipoPer);
             }
 
-            // CORREGIDO -- HALLAZGO CENTRAL: numero_documento es unique=true a nivel de
-            // Persona (compartida entre Usuario y Cliente), pero acá nunca se validaba
-            // antes de guardar. El único freno existente era el chequeo del frontend
-            // (PersonaForm.tsx, contra la lista de clientes ya cargada en memoria), que
-            // no corre si se llama a la API directamente y tampoco cubre un choque
-            // contra el DNI de un Usuario. Sin este chequeo, el alta terminaba
-            // reventando con un DataIntegrityViolationException crudo (constraint de
-            // unicidad) en vez de un mensaje entendible. Mismo criterio que ya se usa
-            // para el DNI duplicado al registrar un Usuario (UsuarioServiceImpl.guardar).
             if (persona.getNumeroDocumento() != null && !persona.getNumeroDocumento().trim().isEmpty()) {
                 String documentoNormalizado = persona.getNumeroDocumento().trim();
                 persona.setNumeroDocumento(documentoNormalizado);
@@ -135,10 +113,6 @@ public class ClienteServiceImpl implements ClienteService {
             Cliente clienteViejo = clienteRepository.findById(cliente.getIdCliente()).orElse(null);
 
             if (clienteViejo != null) {
-                // CORREGIDO: antes, si no se mandaba idUsuario (o no existía), la
-                // auditoría se atribuía en silencio al "primer usuario de la base" --
-                // mismo patrón transversal ya cerrado en Caja/Insumos/Productos/Compra
-                // de Insumos/Pedidos. Ahora se exige un usuario real y válido.
                 Usuario usuarioActual = obtenerUsuarioOperador(idUsuario);
 
                 compararYRegistrar(usuarioActual, "Cliente", "razonSocial", cliente.getIdCliente(),
@@ -220,18 +194,12 @@ public class ClienteServiceImpl implements ClienteService {
             clienteRepository.delete(cliente);
             clienteRepository.flush();
         } catch (DataIntegrityViolationException e) {
-            // CORREGIDO: antes esta excepción (violación de FK -- el cliente tiene
-            // pedidos, movimientos de cuenta corriente, etc.) no se atrapaba acá y
-            // caía en el manejador genérico de RuntimeException, mostrando el mensaje
-            // crudo de Hibernate/JDBC en vez de una respuesta entendible.
+
             throw new ConflictoDeIntegridadException(
                 "No se puede eliminar el cliente porque tiene pedidos u otros registros asociados.");
         }
     }
 
-    // Mismo criterio que obtenerUsuarioOperador() en CompraInsumoServiceImpl /
-    // PedidoServiceImpl: rechaza en vez de atribuir en silencio a un usuario
-    // arbitrario cuando idUsuario falta o no existe.
     private Usuario obtenerUsuarioOperador(Integer idUsuario) {
         if (idUsuario == null) {
             throw new SolicitudInvalidaException("Debe indicar el usuario que realiza la modificación.");

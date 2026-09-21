@@ -43,11 +43,7 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
     @Override
     @Transactional
     public MovimientoCaja guardar(MovimientoCaja movimientoCaja) {
-        // 1. Asignación de Turno
-        // FIX: antes, si no había ningún turno ABIERTO, el movimiento se guardaba igual
-        // con turno=null (huérfano, invisible en los totales/arqueo por turno), a
-        // diferencia de PedidoServiceImpl.agregarPago() que sí exige la caja abierta.
-        // Ahora se exige lo mismo acá para no permitir movimientos con la caja cerrada.
+
         if (movimientoCaja.getTurno() == null) {
             Turno turnoAbierto = turnoRepository.findFirstByEstado(EstadoTurno.ABIERTO)
                     .orElseThrow(() -> new SolicitudInvalidaException(
@@ -55,15 +51,13 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
             movimientoCaja.setTurno(turnoAbierto);
         }
 
-        // 2. Solución al error de Pedido Transient
         if (movimientoCaja.getPedido() != null) {
-            Integer idPedido = movimientoCaja.getPedido().getId_pedido(); // Ajustá al nombre exacto del getter del ID
+            Integer idPedido = movimientoCaja.getPedido().getId_pedido(); 
             if (idPedido != null) {
                 Pedido pedidoPersistido = pedidoRepository.findById(idPedido)
                     .orElseThrow(() -> new RuntimeException("El pedido indicado no existe: " + idPedido));
                 movimientoCaja.setPedido(pedidoPersistido);
             } else {
-                // Si vino un objeto pedido vacío desde el frontend, lo seteamos en null
                 movimientoCaja.setPedido(null);
             }
         }
@@ -93,9 +87,6 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
         return movimientoCajaRepository.findAll();
     }
 
-    // ==========================================================
-    // TOTALES (Ingresos / Egresos / Saldo)
-    // ==========================================================
 
     @Override
     public Map<String, Double> calcularTotalesDelDia() {
@@ -127,9 +118,6 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
         return totales;
     }
 
-    // ==========================================================
-    // DESGLOSE DE ARQUEO (Efectivo / Transferencias)
-    // ==========================================================
 
     @Override
     public Map<String, Double> obtenerDesgloseArqueo() {
@@ -149,11 +137,6 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
 
         for (MovimientoCaja m : movimientos) {
             String metodo = (m.getMetodoPago() != null) ? m.getMetodoPago().toUpperCase() : "EFECTIVO";
-            // FIX: antes solo "TRANSFERENCIA" se consideraba dinero digital -- DEBITO y
-            // CREDITO (ambos ofrecidos como opciones reales en los formularios de Caja)
-            // caían en el balde de "efectivo", inflando el monto que se le pide al cajero
-            // que cuente físicamente en el cajón. Ahora cualquier método que no sea
-            // EFECTIVO se trata como no-físico ("transferencia"/digital).
             boolean esDigital = !"EFECTIVO".equals(metodo);
 
             if ("INGRESO".equalsIgnoreCase(m.getTipoMovimiento())) {

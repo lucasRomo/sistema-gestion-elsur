@@ -24,7 +24,6 @@ public class PermisoServiceImpl implements PermisoService {
     @Autowired
     private RolRepository rolRepository;
 
-    // Nombres de los permisos vitales protegidos para el perfil ADMIN
     private static final List<String> PERMISOS_PROTEGIDOS_ADMIN = Arrays.asList(
             "Matriz de Permisos",
             "Gestión de Usuarios",
@@ -59,7 +58,6 @@ public class PermisoServiceImpl implements PermisoService {
 
         List<Integer> idsFinales = new ArrayList<>(permisosIds);
 
-        // PROTECCIÓN EN BACKEND: Si es el rol ADMIN (idRol = 1), asegurar que no pierda módulos críticos
         if (idRol == 1) {
             List<Permiso> todosLosPermisos = permisoRepository.findAll();
             List<Integer> idsProtegidos = todosLosPermisos.stream()

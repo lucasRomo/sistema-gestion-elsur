@@ -37,9 +37,6 @@ public class MermaServiceImpl implements MermaService {
         List<Merma> guardadas = new ArrayList<>();
  
         for (Merma merma : mermas) {
-            // FIX: antes no se validaba la cantidad -- un valor negativo hacía que
-            // "stock - cantidad" (Producto) o "stockActual.subtract(cantidad)" (Insumo)
-            // SUMARA stock en vez de restarlo. Una merma nunca puede ser <= 0.
             if (merma.getCantidad() == null || merma.getCantidad() <= 0) {
                 throw new SolicitudInvalidaException(
                         "La cantidad de la merma debe ser un número mayor a 0.");
@@ -49,7 +46,6 @@ public class MermaServiceImpl implements MermaService {
                 merma.setFechaMerma(LocalDateTime.now());
             }
 
-            // Asignar el Pedido persistido en la BD (ya existía)
             if (merma.getPedido() != null) {
                 Integer idPed = merma.getPedido().getId_pedido();
                 if (idPed != null) {
@@ -60,14 +56,12 @@ public class MermaServiceImpl implements MermaService {
                 }
             }
  
-            // 👇 AGREGAR ESTE BLOQUE — resolver el Usuario real
             if (merma.getUsuario() != null && merma.getUsuario().getIdUsuario() != null) {
     Integer idUsr = merma.getUsuario().getIdUsuario();
     Usuario usuarioDb = usuarioRepository.findById(idUsr).orElse(null);
     merma.setUsuario(usuarioDb);
 }
  
-            // 1. Descuento de stock en Producto (ya existía, sin cambios)
             if (merma.getProducto() != null && merma.getProducto().getIdProducto() != null) {
                 Producto prod = productoRepository.findById(merma.getProducto().getIdProducto()).orElse(null);
                 if (prod != null && prod.getStock() != null) {
@@ -77,7 +71,6 @@ public class MermaServiceImpl implements MermaService {
                 }
             }
  
-            // 2. Descuento de stock en Insumo (ya existía, sin cambios)
             if (merma.getInsumo() != null && merma.getInsumo().getIdInsumo() != null) {
                 Insumo ins = insumoRepository.findById(merma.getInsumo().getIdInsumo()).orElse(null);
                 if (ins != null && ins.getStockActual() != null) {

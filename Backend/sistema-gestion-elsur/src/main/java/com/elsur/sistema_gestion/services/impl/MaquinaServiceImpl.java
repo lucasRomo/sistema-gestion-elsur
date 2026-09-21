@@ -22,10 +22,6 @@ import java.util.Set;
 @Service
 public class MaquinaServiceImpl implements MaquinaService {
 
-    // Estados operativos reconocidos por el resto del sistema (ver
-    // PedidoServiceImpl.evaluarMaquinasYAvanzar, que normaliza a mayúsculas y
-    // reemplaza '_' por ' ' antes de comparar). Se aceptan ambas grafías (con guión
-    // bajo o con espacio) porque el frontend (MaquinaModal.tsx) usa espacios.
     private static final Set<String> ESTADOS_VALIDOS = Set.of(
             "OPERATIVA", "FUERA DE SERVICIO", "FALLA", "MANTENIMIENTO"
     );
@@ -53,9 +49,7 @@ public class MaquinaServiceImpl implements MaquinaService {
     @Override
     @Transactional
     public Maquina guardar(Maquina maquina, Integer idUsuarioOperador) {
-        // CORREGIDO: el nombre no se validaba -- ni blanco, ni duplicado. Además,
-        // MaquinaRepository.existsByNombreIgnoreCase ya existía pero nunca se llamaba
-        // desde acá, así que la validación de duplicados nunca corría en la práctica.
+
         if (maquina.getNombre() == null || maquina.getNombre().trim().isEmpty()) {
             throw new SolicitudInvalidaException("El nombre del equipo/máquina es obligatorio.");
         }
@@ -72,13 +66,10 @@ public class MaquinaServiceImpl implements MaquinaService {
             validarEstado(maquina.getEstado());
         }
 
-        // Auditoría en modificación
         if (maquina.getIdMaquina() != null && maquinaRepository.existsById(maquina.getIdMaquina())) {
             Maquina vieja = maquinaRepository.findById(maquina.getIdMaquina()).orElse(null);
             if (vieja != null) {
-                // CORREGIDO: fallback en silencio al "primer usuario de la base" -- el
-                // frontend (maquinasService.ts) nunca mandaba idUsuario, así que el
-                // 100% de las ediciones quedaban mal atribuidas en el historial.
+
                 Usuario operador = obtenerOperador(idUsuarioOperador);
                 compararYRegistrar(operador, "Maquina", "nombre", maquina.getIdMaquina(), vieja.getNombre(), maquina.getNombre());
                 compararYRegistrar(operador, "Maquina", "estado", maquina.getIdMaquina(), vieja.getEstado(), maquina.getEstado());
@@ -94,9 +85,7 @@ public class MaquinaServiceImpl implements MaquinaService {
         validarEstado(nuevoEstado);
         Maquina m = buscarPorId(id);
         String estadoAnterior = m.getEstado();
-        // Normalizado a la misma grafía que usa el frontend (mayúsculas, separado
-        // por espacios) para que las comparaciones exactas (MaquinaModal.tsx,
-        // MaquinaFallaModal.tsx) sigan funcionando sin importar cómo llegó el string.
+
         m.setEstado(nuevoEstado.trim().toUpperCase().replace('_', ' '));
 
         Usuario operador = obtenerOperador(idUsuarioOperador);
@@ -115,18 +104,12 @@ public class MaquinaServiceImpl implements MaquinaService {
             maquinaRepository.deleteById(id);
             maquinaRepository.flush();
         } catch (DataIntegrityViolationException e) {
-            // CORREGIDO: antes esta excepción (máquina referenciada por un Producto a
-            // través de maquinaNecesaria) no se atrapaba y devolvía el mensaje crudo de
-            // Hibernate/JDBC.
+
             throw new ConflictoDeIntegridadException(
                 "No se puede eliminar el equipo porque está asociado a uno o más productos.");
         }
     }
 
-    // CORREGIDO: cambiarEstado() aceptaba cualquier string como nuevo estado (sin
-    // whitelist), lo que podía dejar la máquina en un estado que el resto del
-    // sistema (chequeo de máquina caída en Crear Pedido/Dashboard) no reconoce como
-    // "fuera de servicio" ni como "operativa".
     private void validarEstado(String estado) {
         if (estado == null || estado.trim().isEmpty()) {
             throw new SolicitudInvalidaException("El estado del equipo es obligatorio.");

@@ -205,7 +205,6 @@ public class PedidoServiceImpl implements PedidoService {
             p.getComprobantes().add(nuevoCobro);
 
             try {
-                // GENERACIÓN DEL TICKET MEDIANTE MOVIMIENTO DE CAJA
                 MovimientoCaja movimiento = new MovimientoCaja();
                 movimiento.setTipoMovimiento("INGRESO");
                 movimiento.setCategoria("VENTA");
@@ -249,10 +248,6 @@ public class PedidoServiceImpl implements PedidoService {
             }
         }
 
-        // ===================== CAMBIO: inicio =====================
-        // Antes: solo entraba si el método de pago era Cuenta Corriente.
-        // Ahora también entra si el pedido nace ya ENTREGADO/FINALIZADO con saldo
-        // pendiente, sin importar el método de pago (Efectivo, Transferencia, etc.).
         boolean nacioEnEstadoFinal = "ENTREGADO".equalsIgnoreCase(p.getEstado())
                 || "FINALIZADO".equalsIgnoreCase(p.getEstado());
 
@@ -264,8 +259,6 @@ public class PedidoServiceImpl implements PedidoService {
             if (saldoPendienteGenerado.compareTo(BigDecimal.ZERO) > 0) {
                 boolean eraCuentaCorrienteExplicita = p.isEs_cuenta_corriente();
 
-                // Se marca el pedido para que los cobros posteriores (registrarPago)
-                // descuenten correctamente del saldo deudor del cliente.
                 p.setEs_cuenta_corriente(true);
 
                 BigDecimal saldoActual = clienteActual.getSaldoDeudor() != null ? clienteActual.getSaldoDeudor() : BigDecimal.ZERO;
@@ -287,7 +280,6 @@ public class PedidoServiceImpl implements PedidoService {
                 }
             }
         }
-        // ===================== CAMBIO: fin =====================
 
         boolean esVentaRapidaAlAlta = p.getObservaciones() != null && p.getObservaciones().contains("Venta Rápida");
 
@@ -358,9 +350,6 @@ public class PedidoServiceImpl implements PedidoService {
 
         String urlArchivo = comprobante.getUrlArchivoComprobante();
 
-        // Buscamos ANTES de tocar nada el MovimientoCaja que quedó con la
-        // misma imagen guardada (Caja guarda una copia propia de la url,
-        // no una referencia viva al comprobante).
         MovimientoCaja movimientoAsociado = buscarMovimientoAsociado(comprobante, urlArchivo);
 
         if (urlArchivo != null && !urlArchivo.isEmpty()) {
@@ -370,9 +359,7 @@ public class PedidoServiceImpl implements PedidoService {
         comprobante.setUrlArchivoComprobante(null);
         comprobantePagoRepository.saveAndFlush(comprobante);
 
-        // Sincronizamos Caja: si no la actualizamos acá, el movimiento
-        // se queda apuntando a un archivo que ya borramos del disco
-        // (por eso "se bugea" en la vista de Caja).
+
         if (movimientoAsociado != null) {
             movimientoAsociado.setComprobanteImagen(null);
             cajaRepository.save(movimientoAsociado);
@@ -381,14 +368,6 @@ public class PedidoServiceImpl implements PedidoService {
         return comprobante.getPedido();
     }
 
-    /**
-     * Caja (MovimientoCaja) guarda su propia copia de la url del comprobante
-     * en lugar de referenciar al ComprobantePago, así que no hay una forma
-     * directa de saber qué movimiento corresponde a qué comprobante.
-     * La correlacionamos por pedido + monto + método de pago + la url que
-     * tenía guardada, que es lo mismo que se usó al crear ambos registros
-     * juntos (ver agregarPagoConArchivo / procesarYGuardarPedido).
-     */
     private MovimientoCaja buscarMovimientoAsociado(ComprobantePago comprobante, String urlEsperada) {
         if (comprobante.getPedido() == null || comprobante.getPedido().getId_pedido() == null) {
             return null;
@@ -408,9 +387,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional
     public void procesarDescuentoStock(Integer idPedido) {
-        // Variante estricta: nunca deja pasar una máquina caída sin confirmación
-        // explícita. La usa PATCH /{id}/finalizar, que hoy no tiene ningún flujo
-        // de aviso/confirmación del lado del frontend.
+
         procesarDescuentoStock(idPedido, false);
     }
 
@@ -420,13 +397,6 @@ public class PedidoServiceImpl implements PedidoService {
     Pedido pedido = pedidoRepository.findById(idPedido)
         .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
-    // Guarda de idempotencia (ver Pedido.stockDescontado): si este pedido ya
-    // descontó su stock una vez -- ya sea porque el alta de Venta Rápida lo hizo
-    // al vuelo, o porque ya se había finalizado antes -- correrlo de nuevo (por
-    // ejemplo, un cambio de estado FINALIZADO -> PENDIENTE -> FINALIZADO) no debe
-    // volver a tocar ni Insumo.stockActual ni Producto.stock. Antes la única
-    // guarda vivía en cambiarEstadoPedido() comparando strings de estado, y no
-    // cubría todos los caminos que llegan acá (por ejemplo, PATCH /finalizar).
     if (pedido.isStockDescontado()) {
         return;
     }
@@ -447,17 +417,7 @@ public class PedidoServiceImpl implements PedidoService {
                 "El pedido tiene un detalle sin producto válido; no se puede procesar el stock.");
         }
 
-        // Validación de máquina: es una decisión de negocio que las máquinas NO
-        // son un bloqueo duro -- el operario puede ver el aviso en el frontend y
-        // elegir "Continuar de todos modos" igual. Por default (sin confirmación
-        // explícita) el backend rechaza la venta si el producto necesita una
-        // máquina puntual y esa máquina está FUERA DE SERVICIO / con FALLA / en
-        // MANTENIMIENTO -- así una llamada directa a la API (sin pasar por el
-        // aviso del frontend) no puede saltearse el chequeo. Si
-        // confirmarMaquinaNoDisponible llega en true (el operario ya vio el aviso
-        // y decidió seguir igual), dejamos pasar la venta. "no aplica" (o sin
-        // nombre cargado) se sigue tratando como "no hace falta ninguna máquina en
-        // particular", igual que en el frontend.
+
         Maquina maquinaNecesaria = producto.getMaquinaNecesaria();
         if (maquinaNecesaria != null) {
             String nombreMaquina = maquinaNecesaria.getNombre() != null ? maquinaNecesaria.getNombre().trim() : "";
@@ -480,7 +440,6 @@ public class PedidoServiceImpl implements PedidoService {
             }
         }
 
-        // SI EL PRODUCTO ES "AUTO" / VINCULADO A INSUMOS (Receta)
         if (Boolean.TRUE.equals(producto.getStockVinculado())) {
             List<ProductoInsumo> receta = productoInsumoRepository.findByIdIdProducto(producto.getIdProducto());
 
@@ -498,7 +457,6 @@ public class PedidoServiceImpl implements PedidoService {
                 insumoRepository.save(insumo);
             }
         }
-        // SI ES UN PRODUCTO INDEPENDIENTE (Controla su propio stock directo)
         else {
             if (producto.getStock() != null) {
                 int nuevoStock = producto.getStock() - detalle.getCantidad();
@@ -559,12 +517,20 @@ public class PedidoServiceImpl implements PedidoService {
         boolean yaEstabaFinalizado = "FINALIZADO".equalsIgnoreCase(estadoAnterior) || "ENTREGADO".equalsIgnoreCase(estadoAnterior) || "VENTA_RAPIDA".equalsIgnoreCase(estadoAnterior);
 
         if (esEstadoFinal && !yaEstabaFinalizado) {
-            // Antes acá había un try/catch que envolvía cualquier excepción
-            // (incluida una simple "stock insuficiente") en un RuntimeException
-            // nuevo con mensaje genérico "Error al procesar stock: ...". Eso
-            // tapaba el tipo real de la excepción sin aportar nada: la dejamos
-            // propagarse tal cual la tira procesarDescuentoStock y la resuelve
-            // el GlobalExceptionHandler.
+            Cliente clienteAntesDeEntregar = pedido.getCliente();
+            if (clienteAntesDeEntregar != null && clienteAntesDeEntregar.getIdCliente() == 1) {
+                BigDecimal totalAntesDeEntregar = pedido.getMonto_total() != null ? pedido.getMonto_total() : BigDecimal.ZERO;
+                BigDecimal pagadoAntesDeEntregar = pedido.getMonto_pago_adelantado() != null ? pedido.getMonto_pago_adelantado() : BigDecimal.ZERO;
+                BigDecimal saldoPendienteAntesDeEntregar = totalAntesDeEntregar.subtract(pagadoAntesDeEntregar);
+
+                if (saldoPendienteAntesDeEntregar.compareTo(BigDecimal.ZERO) > 0) {
+                    throw new SolicitudInvalidaException(
+                        "No se puede entregar/finalizar este pedido: el Consumidor Final tiene un saldo pendiente de $"
+                            + saldoPendienteAntesDeEntregar
+                            + ". Cobre el total antes de continuar -- el Consumidor Final no opera con Cuenta Corriente.");
+                }
+            }
+
             this.procesarDescuentoStock(idPedido, confirmarMaquinaNoDisponible);
             pedido = buscarPorId(idPedido);
 
@@ -575,22 +541,6 @@ public class PedidoServiceImpl implements PedidoService {
 
             pedidoRepository.save(pedido);
 
-            // NUEVO (bug reportado: "no se descontó el saldo corriente al crear un
-            // pedido con límite de saldo = 0 al usar el botón Autorizar solo esta
-            // vez. No aparece en el historial de ese cliente tampoco"): este método
-            // es al que llegan TANTO "Actualizar Límite y Entregar" COMO "Autorizar
-            // Solo Esta Vez" (ver ModalAdvertenciaDeuda / PedidosPendientesView --
-            // los dos terminan llamando a este mismo cambiarEstadoPedido con los
-            // mismos parámetros), y ninguno de los dos ajustaba la cuenta corriente:
-            // acá nunca se tocaba Cliente.saldoDeudor ni se generaba un
-            // MovimientoCuentaCorriente al entregar. La única vez que el proyecto sí
-            // hacía este ajuste era al CREAR un pedido ya en un estado final (ver
-            // procesarYGuardarPedido, más arriba en esta clase) -- pero un pedido que
-            // se crea PENDIENTE y se entrega después, pasando por acá, no quedaba
-            // nunca reflejado. Se replica el mismo patrón: si al entregar/finalizar
-            // queda saldo pendiente, se suma a la cuenta corriente del cliente (salvo
-            // Consumidor Final, id 1, que no opera con cuenta corriente) y se deja
-            // asentado el movimiento, igual que en el alta.
             Cliente clienteDelPedido = pedido.getCliente();
             if (clienteDelPedido != null && clienteDelPedido.getIdCliente() != 1) {
                 BigDecimal totalPedido = pedido.getMonto_total() != null ? pedido.getMonto_total() : BigDecimal.ZERO;
@@ -759,17 +709,13 @@ public class PedidoServiceImpl implements PedidoService {
             .orElseThrow(() -> new RuntimeException("Comprobante no encontrado"));
 
         if (comprobante != null && !comprobante.isEmpty()) {
-            // Guardamos la url "vieja" para poder encontrar el MovimientoCaja
-            // asociado ANTES de pisarla con la nueva.
+
             String urlAnterior = comprobantePago.getUrlArchivoComprobante();
 
             String urlArchivo = guardarArchivoFisico(comprobante);
             comprobantePago.setUrlArchivoComprobante(urlArchivo);
             comprobantePagoRepository.save(comprobantePago);
 
-            // Sincronizamos Caja con el nuevo archivo vinculado; si no,
-            // el movimiento en Caja se queda sin comprobante aunque en
-            // Gestión de Comprobantes ya aparezca vinculado.
             MovimientoCaja movimientoAsociado = buscarMovimientoAsociado(comprobantePago, urlAnterior);
             if (movimientoAsociado != null) {
                 movimientoAsociado.setComprobanteImagen(urlArchivo);

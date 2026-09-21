@@ -25,9 +25,6 @@ public class TipoProveedorServiceImpl implements TipoProveedorService {
 
     @Override
     public TipoProveedor guardar(TipoProveedor tipoProveedor) {
-        // CORREGIDO: no se validaba descripción blanca ni duplicada (el frontend,
-        // ProveedorModal.tsx, sí revisa duplicados pero solo contra la lista ya
-        // cargada en memoria -- una llamada directa a la API lo saltea por completo).
         if (tipoProveedor.getDescripcion() == null || tipoProveedor.getDescripcion().trim().isEmpty()) {
             throw new SolicitudInvalidaException("La descripción del tipo de proveedor es obligatoria.");
         }

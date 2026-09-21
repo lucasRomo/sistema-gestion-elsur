@@ -11,16 +11,6 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-/**
- * Cifrado SIMÉTRICO (reversible) de la contraseña en texto plano, guardado en paralelo
- * al hash BCrypt de Usuario.password (que sigue siendo lo único que valida el login).
- * Existe ÚNICAMENTE para la función "Ver contraseña" de Gestión de Usuarios, pedida
- * explícitamente para que un ADMIN pueda verificarla -- a diferencia de un hash, esto
- * SÍ se puede revertir: quien tenga la base de datos Y app.crypto.secret puede recuperar
- * la contraseña real de cualquier usuario. Es una decisión consciente (documentada y
- * aceptada) para poder mostrarla; el endpoint que la usa exige reautenticarse con la
- * contraseña del admin logueado antes de desencriptar nada (ver UsuarioController).
- */
 @Service
 public class CifradoService {
 
@@ -49,9 +39,6 @@ public class CifradoService {
             cipher.init(Cipher.ENCRYPT_MODE, obtenerClave(), new GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv));
             byte[] cifrado = cipher.doFinal(textoPlano.getBytes(StandardCharsets.UTF_8));
 
-            // Guardamos el IV pegado adelante del texto cifrado: hace falta el mismo IV
-            // para desencriptar y es seguro viajar junto al resultado (lo que nunca debe
-            // viajar ni guardarse junto es la clave, que vive solo en application.properties).
             byte[] resultado = new byte[iv.length + cifrado.length];
             System.arraycopy(iv, 0, resultado, 0, iv.length);
             System.arraycopy(cifrado, 0, resultado, iv.length, cifrado.length);

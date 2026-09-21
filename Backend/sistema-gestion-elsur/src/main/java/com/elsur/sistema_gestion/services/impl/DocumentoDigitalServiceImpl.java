@@ -36,18 +36,10 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
 
     private final Path directorioMateriales = Paths.get("materiales").toAbsolutePath().normalize();
 
-    // --- Parámetros de compresión de PDF ---
-    // Calidad de recompresión JPEG para las imágenes embebidas (0.0 a 1.0).
-    // 0.5 da una reducción de tamaño notable manteniendo una lectura
-    // perfectamente legible para apuntes/documentos escaneados.
     private static final float CALIDAD_JPEG_COMPRESION = 0.5f;
-    // Lado máximo (en píxeles) al que se reescala una imagen antes de
-    // recomprimirla. La mayoría de los escaneos vienen a una resolución
-    // mucho más alta de la necesaria para verse bien en pantalla o imprimirse.
+
     private static final int DIMENSION_MAXIMA_PX = 1600;
-    // Debajo de este tamaño no vale la pena recomprimir (íconos, logos,
-    // firmas escaneadas chicas): el ahorro es insignificante y solo se
-    // arriesgan artefactos visuales.
+
     private static final int DIMENSION_MINIMA_PARA_COMPRIMIR = 300;
 
     @Autowired
@@ -117,10 +109,7 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
         int paginasDetectadas = (cantidadPaginas != null && cantidadPaginas > 0) ? cantidadPaginas : 1;
 
         if ("PDF".equalsIgnoreCase(extension)) {
-            // 1a. Comprimimos el PDF EN MEMORIA antes de subirlo, y de paso
-            // contamos las páginas sobre el mismo documento ya cargado —
-            // evita el viaje extra de re-descargarlo desde Supabase solo
-            // para contarlas, como hacía la versión anterior.
+
             ResultadoCompresionPdf resultado = comprimirPdf(archivo.getBytes());
             paginasDetectadas = resultado.paginas > 0 ? resultado.paginas : paginasDetectadas;
 
@@ -128,13 +117,11 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
             supabaseStorageService.subirBytes(resultado.bytes, nombreGuardado, "application/pdf", "archivos-pedidos");
             tamanoFinal = resultado.bytes.length;
         } else {
-            // Otros formatos (imágenes, etc.) se suben tal cual, sin tocar
-            // el flujo existente.
+
             nombreGuardado = supabaseStorageService.subirArchivo(archivo, "archivos-pedidos");
             tamanoFinal = archivo.getSize();
         }
 
-        // 3. Crear y registrar automáticamente el Producto
         Producto productoAsociado = new Producto();
         productoAsociado.setNombreProducto("Apunte: " + titulo);
         productoAsociado.setPrecioBase(precioBase != null ? precioBase : BigDecimal.ZERO);
@@ -142,7 +129,6 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
         productoAsociado.setEstado("Activo");
         productoAsociado = productoRepository.save(productoAsociado);
 
-        // 4. Registrar Documento Digital en BD
         DocumentoDigital doc = new DocumentoDigital();
         doc.setTitulo(titulo);
         doc.setAutor(autor);
@@ -175,7 +161,6 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
         return supabaseStorageService.descargarArchivo("archivos-pedidos", nombreArchivo);
     }
 
-    // ==================== COMPRESIÓN DE PDF ====================
 
     private static class ResultadoCompresionPdf {
         final byte[] bytes;
@@ -186,14 +171,6 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
         }
     }
 
-    /**
-     * Recomprime las imágenes embebidas de un PDF (reescalado + JPEG de
-     * menor calidad) y devuelve el resultado. Si la compresión falla por
-     * cualquier motivo, o si el PDF resultante termina pesando igual o más
-     * que el original (típico en PDFs de solo texto, ya optimizados, o
-     * protegidos/encriptados), se devuelve el ORIGINAL sin tocar — nunca se
-     * sacrifica calidad ni se arriesga un archivo corrupto a cambio de nada.
-     */
     private ResultadoCompresionPdf comprimirPdf(byte[] original) {
         try (PDDocument document = PDDocument.load(original)) {
             int totalPaginas = document.getNumberOfPages();
@@ -215,11 +192,6 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
         }
     }
 
-    /**
-     * Recorre los XObjects de una página (y de los formularios anidados
-     * dentro de ella) y reemplaza cada imagen suficientemente grande por su
-     * versión reescalada + recomprimida en JPEG, en el mismo lugar del PDF.
-     */
     private void recomprimirImagenesDeRecursos(PDDocument document, PDResources recursos) throws Exception {
         if (recursos == null) return;
 
@@ -242,8 +214,6 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
                 recursos.put(nombre, imagenComprimida);
 
             } else if (xObject instanceof PDFormXObject) {
-                // Los "form XObjects" pueden traer sus propias imágenes
-                // anidadas (ej: sellos, membretes reutilizados).
                 recomprimirImagenesDeRecursos(document, ((PDFormXObject) xObject).getResources());
             }
         }

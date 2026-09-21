@@ -28,7 +28,6 @@ public class ComprobantePagoServiceImpl implements ComprobantePagoService {
 
     @Override
     public ComprobantePago guardar(ComprobantePago comprobantePago) {
-        // Dejamos que solo guarde el comprobante sin intentar buscar un usuario inexistente en Pedido
         return comprobantePagoRepository.save(comprobantePago);
     }
 

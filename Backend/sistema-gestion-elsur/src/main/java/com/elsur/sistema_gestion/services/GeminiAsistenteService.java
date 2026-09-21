@@ -18,19 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Asistente conversacional de ayuda para el usuario final.
- *
- * Reutiliza la misma API Key / URL de Gemini que ya usa {@link GeminiIaService}
- * para analizar comprobantes (mismas propiedades google.gemini.api.key /
- * google.gemini.api.url), pero acá el uso es simple texto-a-texto: no procesa
- * imágenes ni pide un formato JSON de salida.
- *
- * El "manual de usuario" del sistema vive directamente en {@link #MANUAL_SISTEMA},
- * como contexto fijo (systemInstruction) que se le manda a Gemini en cada
- * consulta. No hace falta un PDF aparte: este texto ES el manual, y se puede
- * ampliar acá mismo a medida que el sistema crezca.
- */
 @Service
 public class GeminiAsistenteService {
 
@@ -57,10 +44,6 @@ public class GeminiAsistenteService {
         return factory;
     }
 
-    // ------------------------------------------------------------------
-    // "Manual de usuario" del sistema, en texto plano. Esto es lo primero
-    // que hay que tocar cuando se agregue o cambie un módulo.
-    // ------------------------------------------------------------------
     private static final String MANUAL_SISTEMA = """
             Sos el Asistente Virtual del sistema de gestión "El Sur" (imprenta/gráfica).
             Tu trabajo es guiar al usuario que está usando el sistema en este momento,

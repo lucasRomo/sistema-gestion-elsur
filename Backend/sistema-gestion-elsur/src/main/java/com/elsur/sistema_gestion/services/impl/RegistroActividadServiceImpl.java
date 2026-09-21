@@ -26,7 +26,6 @@ public class RegistroActividadServiceImpl implements RegistroActividadService {
     if ("Sin Filtro".equalsIgnoreCase(tabla) || (tabla != null && tabla.trim().isEmpty())) {
         tabla = null;
     } else if (tabla != null) {
-        // Concatenamos los comodines '%' aquí para no usar CONCAT() en SQL
         tabla = "%" + tabla.trim().toLowerCase() + "%";
     }
     
@@ -42,7 +41,6 @@ public class RegistroActividadServiceImpl implements RegistroActividadService {
     public void registrarCambio(Usuario usuario, String accion, String tabla, String columna, 
                                 Integer idRegistro, String valorViejo, String valorNuevo) {
         
-        // Si los datos son iguales, no guardamos auditoría
         if (valorViejo != null && valorViejo.equals(valorNuevo)) return;
 
         RegistroActividad reg = new RegistroActividad();
@@ -53,7 +51,6 @@ public class RegistroActividadServiceImpl implements RegistroActividadService {
         reg.setColumnaAfectada(columna);
         reg.setIdRegistroMod(idRegistro);
         
-        // Guardamos comillas dobles si es string/json para el frontend
         reg.setDatosAnteriores(valorViejo != null ? "\"" + valorViejo + "\"" : null);
         reg.setDatosNuevos(valorNuevo != null ? "\"" + valorNuevo + "\"" : null);
 

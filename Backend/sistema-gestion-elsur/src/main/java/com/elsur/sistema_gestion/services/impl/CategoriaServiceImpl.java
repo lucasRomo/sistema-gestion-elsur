@@ -26,9 +26,6 @@ public class CategoriaServiceImpl implements CategoriaService {
     @Override
     @Transactional
     public CategoriaProducto guardar(CategoriaProducto categoria) {
-        // CORREGIDO: nombre obligatorio (antes no se validaba) + excepciones tipadas
-        // (antes RuntimeException genérico -> 400; ahora 400/409 según corresponda,
-        // igual que el resto de los módulos con nombre único: Insumo, Institución).
         if (categoria.getNombre() == null || categoria.getNombre().trim().isEmpty()) {
             throw new SolicitudInvalidaException("El nombre de la categoría es obligatorio");
         }

@@ -16,7 +16,6 @@ public class DetallePedidoServiceImpl implements DetallePedidoService {
 
     @Override
     public DetallePedido guardar(DetallePedido detalle) {
-        // Lógica de negocio: Calcular subtotal antes de guardar
         BigDecimal sub = detalle.getProducto().getPrecioBase().multiply(new BigDecimal(detalle.getCantidad()));
         detalle.setSubtotal(sub);
         detalle.setPrecioUnitario(detalle.getProducto().getPrecioBase());
@@ -26,7 +25,6 @@ public class DetallePedidoServiceImpl implements DetallePedidoService {
 
     @Override
     public List<DetallePedido> listarPorPedido(Integer idPedido) {
-        // Aquí podrías filtrar detalles por un pedido específico
         return detalleRepository.findAll(); 
     }
 }
