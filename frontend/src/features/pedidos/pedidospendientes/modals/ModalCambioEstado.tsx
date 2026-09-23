@@ -32,7 +32,7 @@ export const ModalCambioEstado: React.FC<ModalCambioEstadoProps> = ({ pedido, nu
             </div>
           </div>
           <div className="modal-footer border-secondary">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+            <button type="button" className="btn btn-danger" onClick={onClose}>Cancelar</button>
             <button type="button" className="btn btn-success" onClick={() => onConfirm(obs)}>Guardar Historial</button>
           </div>
         </div>

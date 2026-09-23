@@ -550,7 +550,7 @@ export const PedidosPendientesView: React.FC = () => {
               <h5 className="fw-bold">{suceso.titulo}</h5>
               <p className="small" style={{ color: '#a1a1aa' }}>{suceso.mensaje}</p>
               <button 
-                className={`btn ${suceso.tipo === 'exito' ? 'btn-success' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold`}
+                className={`btn ${suceso.tipo === 'exito' ? 'btn-secondary' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold`}
                 onClick={() => {
                   setSuceso({ ...suceso, show: false });
                   if (suceso.tipo === 'exito') {

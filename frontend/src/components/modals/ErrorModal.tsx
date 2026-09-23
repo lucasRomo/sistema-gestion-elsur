@@ -45,8 +45,8 @@ export const ErrorModal: React.FC<ErrorModalProps> = ({ message, titulo = 'Ocurr
               type="button"
               className="btn px-4 fw-semibold"
               style={{
-                backgroundColor: '#dc3545',
-                borderColor: '#dc3545',
+                backgroundColor: '#6c757d',
+                borderColor: '#6c757d',
                 borderRadius: '8px',
                 color: '#ffffff'
               }}

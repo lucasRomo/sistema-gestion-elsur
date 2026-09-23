@@ -671,7 +671,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
                 )}
               </div>
               <div className="modal-footer border-top border-secondary">
-                <button type="button" className="btn btn-outline-warning font-monospace" onClick={() => setMostrarObsModal(false)}>
+                <button type="button" className="btn btn-secondary font-monospace" onClick={() => setMostrarObsModal(false)}>
                   Cerrar
                 </button>
               </div>

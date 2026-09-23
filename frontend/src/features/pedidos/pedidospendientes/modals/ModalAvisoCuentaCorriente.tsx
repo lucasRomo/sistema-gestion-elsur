@@ -67,7 +67,7 @@ export const ModalAvisoCuentaCorriente: React.FC<Props> = ({
             <button 
               type="button" 
               className="btn py-2 fw-bold"
-              style={{ backgroundColor: '#dc2626', color:'#ffffff', border: 'none', borderRadius: '6px' }}
+              style={{ backgroundColor: '#6c757d', color:'#ffffff', border: 'none', borderRadius: '6px' }}
               onClick={onClose}
             >
               Cerrar ventana

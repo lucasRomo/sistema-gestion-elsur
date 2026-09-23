@@ -28,7 +28,7 @@ export const ModalErrorStock: React.FC<Props> = ({ show, mensaje, titulo = 'Erro
           <h5 className="fw-bold">{titulo}</h5>
           <p className="small" style={{ color: '#a1a1aa' }}>{mensaje}</p>
           <button 
-            className="btn btn-danger btn-sm px-4 mt-3 fw-bold"
+            className="btn btn-secondary btn-sm px-4 mt-3 fw-bold"
             style={{ borderRadius: '6px' }}
             onClick={onClose}
           >

@@ -169,7 +169,7 @@ export const ResumenVenta: React.FC<Props> = ({
           onClick={onImprimirTicketCliente}
         >
           <i className="bi bi-printer-fill fs-6"></i>
-          <span className="text-truncate">{ultimoPedido ? `T. Cliente #${idPedidoActual}` : 'T. Cliente'}</span>
+          <span className="text-truncate">{ultimoPedido ? ` Ticket del Pedido #${idPedidoActual}` : 'Ticket. Cliente'}</span>
         </button>
 
         <button 
@@ -180,7 +180,7 @@ export const ResumenVenta: React.FC<Props> = ({
           onClick={onImprimirTicketPago}
         >
           <i className="bi bi-receipt fs-6"></i>
-          <span className="text-truncate">{ultimoPedido ? `T. Pago #${idPedidoActual}` : 'T. Pago'}</span>
+          <span className="text-truncate">{ultimoPedido ? ` Ticket del Pago #${idPedidoActual}` : 'Ticket. Pago'}</span>
         </button>
 
         <button 

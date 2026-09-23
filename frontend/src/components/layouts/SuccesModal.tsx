@@ -46,7 +46,7 @@ export const SuccesModal: React.FC<SuccesModalProps> = ({
             
             <button
               className="btn mt-3 px-4 fw-bold"
-              style={{ backgroundColor: '#e22e2e', borderColor: '#e62020', color: '#ffffff' }}
+              style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#ffffff' }}
               onClick={onClose}
             >
               Cerrar
