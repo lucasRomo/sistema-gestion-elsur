@@ -479,7 +479,7 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
 
           <div className="modal-footer border-top border-secondary-subtle pt-2">
             <button type="button" className="btn btn-secondary px-4 fw-bold" onClick={onClose}>
-              Volver
+              Cerrar
             </button>
             {tabActiva === 'registrar' && (
               <button 

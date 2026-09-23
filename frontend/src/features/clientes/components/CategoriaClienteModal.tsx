@@ -315,7 +315,7 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
       {mostrarModalEditar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content shadow-lg font-monospace" style={{ backgroundColor: modalBg, border: `1px solid ${modalBorder}`, color: titleColor }}>
+            <div className="modal-content shadow-lg font-monospace" style={{ backgroundColor: modalBg, border: '1.5px solid #f0d90d', color: titleColor }}>
               <div className={`modal-header border-bottom ${borderDivider} py-2`}>
                 <h6 className="modal-title font-monospace fw-bold" style={{ color: titleColor }}>
                   <i className="bi bi-pencil-square text-warning me-2"></i> Editar Categoría
@@ -366,7 +366,7 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
                 </div>
 
                 <div className={`modal-footer border-top ${borderDivider} p-2 d-flex justify-content-between`}>
-                  <button type="button" className="btn btn-sm btn-secondary fw-semibold" onClick={() => setMostrarModalEditar(false)} disabled={guardandoEditar}>
+                  <button type="button" className="btn btn-sm btn-danger fw-semibold" onClick={() => setMostrarModalEditar(false)} disabled={guardandoEditar}>
                     Cancelar
                   </button>
                   <button type="submit" className="btn btn-sm btn-success text-white fw-bold" disabled={guardandoEditar}>

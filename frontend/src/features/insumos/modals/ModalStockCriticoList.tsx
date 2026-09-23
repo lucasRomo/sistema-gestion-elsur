@@ -147,7 +147,7 @@ export const ModalStockCriticoList: React.FC<Props> = ({
               onClick={onClose}
               style={{ borderRadius: '8px' }}
             >
-              Volver
+              Cerrar
             </button>
           </div>
         </div>

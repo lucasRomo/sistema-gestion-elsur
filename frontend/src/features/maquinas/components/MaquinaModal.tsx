@@ -257,7 +257,7 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
               </div>
 
               <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
-                <button type="button" className={`btn ${isDark ? 'btn-secondary' : 'btn-secondary'}`} onClick={onClose} disabled={cargando}>
+                <button type="button" className={`btn ${isDark ? 'btn-danger' : 'btn-danger'}`} onClick={onClose} disabled={cargando}>
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn-warning fw-bold px-4 text-white" style={{ color: '#ffffff' }} disabled={cargando}>

@@ -417,11 +417,11 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({
       <div className="d-flex justify-content-between mt-4 border-top pt-3 mx-1" style={{ borderColor: inputBorder }}>
         <button 
           type="button" 
-          className="btn btn-secondary px-5 fw-semibold" 
+          className="btn btn-danger px-5 fw-semibold" 
           onClick={onVolver} 
           style={{ borderRadius: '8px', color: '#ffffff' }}
         >
-          Volver
+          Cancelar
         </button>
         <button 
           type="submit" 
