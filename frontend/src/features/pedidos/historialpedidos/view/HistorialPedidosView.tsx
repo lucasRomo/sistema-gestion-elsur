@@ -72,33 +72,6 @@ export const HistorialPedidosPage: React.FC = () => {
     }
   };
 
-  const handleSubirArchivoFisico = async (idPedido: number, file: File) => {
-    try {
-      const ok = await historialPedidoService.subirComprobanteFisico(idPedido, file);
-      if (ok) {
-        alert('¡Archivo adjuntado con éxito en el histórico!');
-        recargarHistorial();
-      } else {
-        alert('Error al subir el comprobante.');
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleEliminarComprobanteFisico = async (idPedido: number) => {
-    if (!window.confirm('¿Deseas eliminar permanentemente el comprobante de este pedido histórico?')) return;
-    try {
-      const ok = await historialPedidoService.eliminarComprobanteFisico(idPedido);
-      if (ok) {
-        alert('Comprobante eliminado con éxito.');
-        recargarHistorial();
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const handleProcesarDevolucion = async (accion: 'REINICIAR' | 'DEVUELTO', descripcionEntrante?: string) => {
     const textoDescripcion = descripcionEntrante || '';
 
@@ -256,8 +229,6 @@ export const HistorialPedidosPage: React.FC = () => {
                     pedido={pedido}
                     onAbrirAuditoria={handleAbrirAuditoria}
                     onSelectTicket={setVerTicketPedido}
-                    onSubirArchivo={handleSubirArchivoFisico}
-                    onEliminarComprobante={handleEliminarComprobanteFisico}
                     onAbrirDevolucion={(p) => setPedidoDevolucion(p)}
                     onAbrirMermas={handleAbrirMermas}
                   />

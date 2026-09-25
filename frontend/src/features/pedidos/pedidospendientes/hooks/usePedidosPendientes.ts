@@ -28,11 +28,6 @@ export const usePedidosPendientes = () => {
     cargarPedidos();
   }, []);
 
-  const subirArchivo = async (idPedido: number, file: File) => {
-    await PedidoPendienteService.subirComprobanteFisico(idPedido, file);
-    await cargarPedidos(); 
-  };
-
   const actualizarEstado = async (
     idPedido: number, 
     nuevoEstado: string, 
@@ -87,9 +82,8 @@ export const usePedidosPendientes = () => {
   return { 
     pedidos, 
     cargando, 
-    actualizarEstado, 
-    registrarPago, 
-    subirArchivo,
-    refrescar: cargarPedidos 
+    actualizarEstado,
+    registrarPago,
+    refrescar: cargarPedidos
   };
 };

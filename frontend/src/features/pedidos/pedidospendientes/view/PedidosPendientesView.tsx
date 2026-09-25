@@ -260,37 +260,6 @@ export const PedidosPendientesView: React.FC = () => {
     }
   };
 
-  const handleSubirArchivoFisico = async (idPedido: number, file: File) => {
-    try {
-      const ok = await PedidoPendienteService.subirComprobanteFisico(idPedido, file);
-      if (ok) {
-        alert('¡Comprobante guardado en el servidor con éxito!');
-        await refrescar();
-      } else {
-        alert('Error al intentar subir el archivo al servidor.');
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Error de conexión con el servidor.');
-    }
-  };
-
-  const handleEliminarComprobanteFisico = async (idPedido: number) => {
-    if (!window.confirm('¿Estás seguro de que querés eliminar el comprobante físico de este pedido?')) return;
-    try {
-      const ok = await PedidoPendienteService.eliminarComprobanteFisico(idPedido);
-      if (ok) {
-        alert('Comprobante eliminado con éxito.');
-        await refrescar();
-      } else {
-        alert('No se pudo eliminar el archivo.');
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Error de comunicación con el backend.');
-    }
-  };
-
   const handleAbrirPago = (pedido: any) => {
     if (pedido.es_cuenta_corriente) {
       setModalAvisoCuentaCorriente({ show: true, pedido });
@@ -375,8 +344,6 @@ export const PedidosPendientesView: React.FC = () => {
             onCambioUbicacion={handleCambioUbicacion}
             onSelectPago={handleAbrirPago}
             onSelectTicket={setVerTicketPedido}
-            onSubirArchivo={handleSubirArchivoFisico}
-            onEliminarComprobante={handleEliminarComprobanteFisico}
             onCambioEmpleado={handleCambioEmpleado}
             onSelectComprobantes={(p) => setPedidoGestionComprobanteSel(p)}
             onGestionarMermas={(p) => setPedidoMermaSel(p)}

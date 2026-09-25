@@ -10,8 +10,6 @@ interface TarjetaPedidoProps {
   onCambioUbicacion?: (idPedido: number, nuevaUbicacion: string) => void;
   onSelectPago: (pedido: any) => void;
   onSelectTicket: (pedido: any) => void;
-  onSubirArchivo: (idPedido: number, file: File) => void;
-  onEliminarComprobante: (idPedido: number) => void;
   onCambioEmpleado: (idPedido: number, idEmpleado: string) => void;
   onSelectComprobantes: (pedido: any) => void;
   onGestionarMermas?: (pedido: any) => void;

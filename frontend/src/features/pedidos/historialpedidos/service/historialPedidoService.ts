@@ -32,25 +32,5 @@ export const historialPedidoService = {
     }
 
     return await response.json();
-  },
-
-  subirComprobanteFisico: async (idPedido: number, archivo: File): Promise<boolean> => {
-    const formData = new FormData();
-    formData.append('comprobante', archivo);
-
-    const response = await apiFetch(`${API_URL}/${idPedido}/comprobante`, {
-      method: 'POST',
-      body: formData
-    });
-
-    return response.ok;
-  },
-
-  eliminarComprobanteFisico: async (idPedido: number): Promise<boolean> => {
-    const response = await apiFetch(`${API_URL}/${idPedido}/comprobante`, {
-      method: 'DELETE'
-    });
-
-    return response.ok;
   }
 };

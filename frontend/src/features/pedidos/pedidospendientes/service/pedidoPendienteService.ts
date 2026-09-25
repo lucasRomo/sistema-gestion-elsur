@@ -148,26 +148,6 @@ export const PedidoPendienteService = {
     return text ? JSON.parse(text) : null;
   },
 
-  subirComprobanteFisico: async (idPedido: number, archivo: File): Promise<boolean> => {
-    const formData = new FormData();
-    formData.append('archivo', archivo);
-
-    const response = await apiFetch(`${API_URL}/${idPedido}/comprobante-fisico`, {
-      method: 'POST',
-      body: formData
-    });
-
-    return response.ok;
-  },
-
-  eliminarComprobanteFisico: async (idPedido: number): Promise<boolean> => {
-    const response = await apiFetch(`${API_URL}/${idPedido}/comprobante-fisico`, {
-      method: 'DELETE'
-    });
-
-    return response.ok;
-  },
-
   actualizarLimiteCredito: async (idCliente: number, nuevoLimite: number): Promise<any> => {
     const response = await apiFetch(`${API_BASE_URL}/clientes/${idCliente}/limite-credito`, {
       method: 'PUT',

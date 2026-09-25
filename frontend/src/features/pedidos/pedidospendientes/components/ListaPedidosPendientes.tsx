@@ -9,8 +9,6 @@ interface ListaPedidosPendientesProps {
   onCambioUbicacion: (idPedido: number, nuevaUbicacion: string) => void;
   onSelectPago: (pedido: any) => void;
   onSelectTicket: (pedido: any) => void;
-  onSubirArchivo: (idPedido: number, file: File) => void;
-  onEliminarComprobante: (idPedido: number) => void;
   onCambioEmpleado: (idPedido: number, idEmpleado: string) => void;
   onSelectComprobantes: (pedido: any) => void;
   onGestionarMermas: (pedido: any) => void;
@@ -24,8 +22,6 @@ export const ListaPedidosPendientes: React.FC<ListaPedidosPendientesProps> = ({
   onCambioUbicacion,
   onSelectPago,
   onSelectTicket,
-  onSubirArchivo,
-  onEliminarComprobante,
   onCambioEmpleado,
   onSelectComprobantes,
   onGestionarMermas
@@ -48,8 +44,6 @@ export const ListaPedidosPendientes: React.FC<ListaPedidosPendientesProps> = ({
             onCambioUbicacion={onCambioUbicacion}
             onSelectPago={onSelectPago}
             onSelectTicket={onSelectTicket}
-            onSubirArchivo={onSubirArchivo}
-            onEliminarComprobante={onEliminarComprobante}
             empleados={empleados}
             onCambioEmpleado={onCambioEmpleado}
             onSelectComprobantes={onSelectComprobantes}

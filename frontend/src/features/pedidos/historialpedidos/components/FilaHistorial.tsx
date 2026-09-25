@@ -6,8 +6,6 @@ interface FilaHistorialProps {
   pedido: any;
   onAbrirAuditoria: (idPedido: number) => void;
   onSelectTicket: (pedido: any) => void;
-  onSubirArchivo: (idPedido: number, file: File) => void;
-  onEliminarComprobante: (idPedido: number) => void;
   onAbrirDevolucion: (pedido: any) => void;
   onAbrirMermas: (pedido: any) => void;
 }
