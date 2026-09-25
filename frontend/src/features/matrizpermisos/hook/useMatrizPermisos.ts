@@ -2,10 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { matrizPermisosService } from '../service/matrizPermisosService';
 import type { ModuloPermiso, Usuario } from '../service/matrizPermisosService';
 
+// Tiempo mínimo que se mantiene visible el spinner de carga, para que no
+// desaparezca en un parpadeo cuando la consulta responde muy rápido.
+const DURACION_MINIMA_SPINNER_MS = 400;
+
 export const useMatrizPermisos = () => {
   const [roles, setRoles] = useState<any[]>([]);
   const [rolSeleccionado, setRolSeleccionado] = useState<number>(1);
   const [modulos, setModulos] = useState<ModuloPermiso[]>([]);
+  const [cargando, setCargando] = useState<boolean>(true);
 
   const [rolSeleccionadoEnUsuario, setRolSeleccionadoEnUsuario] = useState<number | null>(null);
 
@@ -30,12 +35,14 @@ export const useMatrizPermisos = () => {
   const [cargandoPerfilesHuerfanos, setCargandoPerfilesHuerfanos] = useState<boolean>(false);
 
   const fetchInicial = useCallback(async () => {
+    setCargando(true);
+    const inicio = Date.now();
     try {
       const [rolesData, permisosData, usuariosData, idsActivosAdmin] = await Promise.all([
         matrizPermisosService.obtenerRoles(),
         matrizPermisosService.obtenerPermisos(),
         matrizPermisosService.obtenerUsuarios(),
-        matrizPermisosService.obtenerPermisosPorRol(1) 
+        matrizPermisosService.obtenerPermisosPorRol(1)
       ]);
 
       setRoles(rolesData);
@@ -43,7 +50,7 @@ export const useMatrizPermisos = () => {
 
       const permisosBase = permisosData.map((p: any) => {
         const esProtegido = ['Matriz de Permisos', 'Configuración', 'Gestión de Usuarios'].includes(p.nombrePermiso);
-        
+
         return {
           idPermiso: p.idPermiso,
           nombrePermiso: p.nombrePermiso,
@@ -54,6 +61,12 @@ export const useMatrizPermisos = () => {
       setModulos(permisosBase);
     } catch (error) {
       console.error('Error trayendo datos iniciales', error);
+    } finally {
+      const transcurrido = Date.now() - inicio;
+      if (transcurrido < DURACION_MINIMA_SPINNER_MS) {
+        await new Promise(resolve => setTimeout(resolve, DURACION_MINIMA_SPINNER_MS - transcurrido));
+      }
+      setCargando(false);
     }
   }, []);
 
@@ -175,7 +188,7 @@ export const useMatrizPermisos = () => {
           };
           setUsuarioEditar(usuarioActualizado);
           setMensajeExitoTexto(`¡Se asignó el perfil "${rolObjeto?.nombreRol || 'ADMIN'}" a ${usuarioEditar.nombreUsuario}!`);
-        } 
+        }
         else {
           let idRolDestino = usuarioEditar.rol?.idRol;
 
@@ -209,8 +222,8 @@ export const useMatrizPermisos = () => {
       const usuarioSesionString = localStorage.getItem('usuario_logueado') || localStorage.getItem('usuario');
       if (usuarioSesionString) {
         const usuarioSesion = JSON.parse(usuarioSesionString);
-        
-        const esMismoUsuario = usuarioEditar 
+
+        const esMismoUsuario = usuarioEditar
           ? (usuarioEditar.idUsuario === usuarioSesion.idUsuario)
           : (usuarioSesion.rol?.idRol === rolSeleccionado);
 
@@ -331,7 +344,7 @@ export const useMatrizPermisos = () => {
 
   const rolUsuarioEsPersonalizado = usuarioEditar?.rol?.nombreRol.startsWith('PERFIL_') || usuarioEditar?.tienePermisosPersonalizados;
 
-  const valorSelectRol = usuarioEditar 
+  const valorSelectRol = usuarioEditar
     ? (rolSeleccionadoEnUsuario !== null ? rolSeleccionadoEnUsuario : (usuarioEditar.rol?.idRol || ''))
     : rolSeleccionado;
 
@@ -339,6 +352,7 @@ export const useMatrizPermisos = () => {
     roles,
     rolSeleccionado,
     modulos,
+    cargando,
     usuariosFiltrados,
     usuarioEditar,
     busquedaUsuario,

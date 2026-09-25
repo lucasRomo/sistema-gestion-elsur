@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { cajaService } from '../services/cajaService';
 import type { MovimientoCaja, DatosArqueo, NuevoMovimientoDTO, Turno } from '../services/cajaService';
 import { pad } from '../../../utils/formato';
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 
 export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
   const [saldoCaja, setSaldoCaja] = useState<number>(0);
@@ -40,15 +41,20 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
   }, [setCajaAbierta, fetchMovimientos, fetchTotales]);
 
   const abrirCaja = async (montoInicial: number) => {
-    const nuevoTurno = await cajaService.abrirTurno(montoInicial);
-    setTurnoActual(nuevoTurno);
-    setCajaAbierta(true);
-    setSaldoCaja(montoInicial);
-    setIngresosTurno(0);
-    setEgresosTurno(0);
-    setMovimientos([]);
-    await fetchMovimientos(nuevoTurno.idTurno);
-    await fetchTotales(nuevoTurno.idTurno, nuevoTurno.montoInicial || montoInicial);
+    showLoading('Abriendo caja...');
+    try {
+      const nuevoTurno = await cajaService.abrirTurno(montoInicial);
+      setTurnoActual(nuevoTurno);
+      setCajaAbierta(true);
+      setSaldoCaja(montoInicial);
+      setIngresosTurno(0);
+      setEgresosTurno(0);
+      setMovimientos([]);
+      await fetchMovimientos(nuevoTurno.idTurno);
+      await fetchTotales(nuevoTurno.idTurno, nuevoTurno.montoInicial || montoInicial);
+    } finally {
+      hideLoading();
+    }
   };
 
   const consultarArqueo = async () => {
@@ -59,48 +65,53 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
   };
 
   const guardarMovimiento = async (data: NuevoMovimientoDTO) => {
-    const usuarioGuardado = localStorage.getItem('usuario_logueado');
-    const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
-    const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario;
+    showLoading('Guardando movimiento...');
+    try {
+      const usuarioGuardado = localStorage.getItem('usuario_logueado');
+      const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
+      const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario;
 
-    if (!idUsuario) {
-      throw new Error('No se detectó un usuario logueado activo.');
+      if (!idUsuario) {
+        throw new Error('No se detectó un usuario logueado activo.');
+      }
+
+      let urlComprobante: string | null = null;
+
+      if (data.comprobanteImagen instanceof File) {
+        urlComprobante = await cajaService.subirComprobante(data.comprobanteImagen);
+      } else if (typeof data.comprobanteImagen === 'string') {
+        urlComprobante = data.comprobanteImagen;
+      }
+
+      const ahora = new Date();
+      const fechaMomento = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`;
+
+      const nuevoMovimiento = {
+        monto: Number(data.monto),
+        tipoMovimiento: data.tipoMovimiento,
+        categoria: data.categoria || (data.tipoMovimiento === 'EGRESO' ? 'VARIOS' : 'VENTA'),
+        descripcion: data.concepto,
+        metodoPago: data.metodoPago,
+        comprobanteImagen: urlComprobante,
+        usuario: { idUsuario },
+        pedido: data.idPedido ? { idPedido: Number(data.idPedido) } : null,
+        fecha: fechaMomento
+      };
+
+      await cajaService.guardarMovimiento(nuevoMovimiento);
+
+      const montoNum = Number(data.monto);
+      if (data.tipoMovimiento === 'INGRESO') {
+        setSaldoCaja((prev) => prev + montoNum);
+        setIngresosTurno((prev) => prev + montoNum);
+      } else {
+        setSaldoCaja((prev) => prev - montoNum);
+        setEgresosTurno((prev) => prev + montoNum);
+      }
+      if (turnoActual) await fetchMovimientos(turnoActual.idTurno);
+    } finally {
+      hideLoading();
     }
-
-    let urlComprobante: string | null = null;
-
-    if (data.comprobanteImagen instanceof File) {
-      urlComprobante = await cajaService.subirComprobante(data.comprobanteImagen);
-    } else if (typeof data.comprobanteImagen === 'string') {
-      urlComprobante = data.comprobanteImagen;
-    }
-
-    const ahora = new Date();
-    const fechaMomento = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`;
-
-    const nuevoMovimiento = {
-      monto: Number(data.monto),
-      tipoMovimiento: data.tipoMovimiento,
-      categoria: data.categoria || (data.tipoMovimiento === 'EGRESO' ? 'VARIOS' : 'VENTA'), 
-      descripcion: data.concepto,
-      metodoPago: data.metodoPago, 
-      comprobanteImagen: urlComprobante,
-      usuario: { idUsuario },
-      pedido: data.idPedido ? { idPedido: Number(data.idPedido) } : null,
-      fecha: fechaMomento
-    };
-
-    await cajaService.guardarMovimiento(nuevoMovimiento);
-
-    const montoNum = Number(data.monto);
-    if (data.tipoMovimiento === 'INGRESO') {
-      setSaldoCaja((prev) => prev + montoNum);
-      setIngresosTurno((prev) => prev + montoNum);
-    } else {
-      setSaldoCaja((prev) => prev - montoNum);
-      setEgresosTurno((prev) => prev + montoNum);
-    }
-    if (turnoActual) await fetchMovimientos(turnoActual.idTurno);
   };
 
   const ajustarMovimiento = async (
@@ -119,44 +130,49 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
       throw new Error('No se detectó un usuario logueado activo.');
     }
 
-    const idMovOriginal = movimientoOriginal.id_movimiento || movimientoOriginal.idMovimiento;
+    showLoading('Procesando corrección...');
+    try {
+      const idMovOriginal = movimientoOriginal.id_movimiento || movimientoOriginal.idMovimiento;
 
-    let urlComprobante: string | null = null;
-    if (comprobanteImagen instanceof File) {
-      urlComprobante = await cajaService.subirComprobante(comprobanteImagen);
-    } else if (typeof comprobanteImagen === 'string') {
-      urlComprobante = comprobanteImagen;
+      let urlComprobante: string | null = null;
+      if (comprobanteImagen instanceof File) {
+        urlComprobante = await cajaService.subirComprobante(comprobanteImagen);
+      } else if (typeof comprobanteImagen === 'string') {
+        urlComprobante = comprobanteImagen;
+      }
+
+      const ahora = new Date();
+      const fechaMomento = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`;
+
+      const idPedidoRelacionado = movimientoOriginal.pedido?.idPedido || movimientoOriginal.pedido?.id_pedido;
+
+      const contraMovimiento = {
+        monto: Number(montoAjuste),
+        tipoMovimiento: tipoAjuste,
+        categoria: 'AJUSTE',
+        descripcion: `[CORRECCIÓN Mov #${idMovOriginal || '-'}] ${motivo}`,
+        metodoPago: metodoPago,
+        comprobanteImagen: urlComprobante,
+        usuario: { idUsuario },
+        pedido: idPedidoRelacionado ? { idPedido: Number(idPedidoRelacionado) } : null,
+        fecha: fechaMomento
+      };
+
+      await cajaService.guardarMovimiento(contraMovimiento);
+
+      const montoNum = Number(montoAjuste);
+      if (tipoAjuste === 'INGRESO') {
+        setSaldoCaja((prev) => prev + montoNum);
+        setIngresosTurno((prev) => prev + montoNum);
+      } else {
+        setSaldoCaja((prev) => prev - montoNum);
+        setEgresosTurno((prev) => prev + montoNum);
+      }
+
+      if (turnoActual) await fetchMovimientos(turnoActual.idTurno);
+    } finally {
+      hideLoading();
     }
-
-    const ahora = new Date();
-    const fechaMomento = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`;
-
-    const idPedidoRelacionado = movimientoOriginal.pedido?.idPedido || movimientoOriginal.pedido?.id_pedido;
-
-    const contraMovimiento = {
-      monto: Number(montoAjuste),
-      tipoMovimiento: tipoAjuste,
-      categoria: 'AJUSTE',
-      descripcion: `[CORRECCIÓN Mov #${idMovOriginal || '-'}] ${motivo}`,
-      metodoPago: metodoPago,
-      comprobanteImagen: urlComprobante,
-      usuario: { idUsuario },
-      pedido: idPedidoRelacionado ? { idPedido: Number(idPedidoRelacionado) } : null,
-      fecha: fechaMomento
-    };
-
-    await cajaService.guardarMovimiento(contraMovimiento);
-
-    const montoNum = Number(montoAjuste);
-    if (tipoAjuste === 'INGRESO') {
-      setSaldoCaja((prev) => prev + montoNum);
-      setIngresosTurno((prev) => prev + montoNum);
-    } else {
-      setSaldoCaja((prev) => prev - montoNum);
-      setEgresosTurno((prev) => prev + montoNum);
-    }
-
-    if (turnoActual) await fetchMovimientos(turnoActual.idTurno);
   };
 
   const cerrarCaja = async (montoReal: number, observaciones?: string) => {
@@ -166,14 +182,19 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     const usuarioObj = usuarioGuardado ? JSON.parse(usuarioGuardado) : null;
     const idUsuario = usuarioObj?.idUsuario || usuarioObj?.id_usuario;
 
-    await cajaService.cerrarTurno(turnoActual.idTurno, montoReal, observaciones, idUsuario);
-    setCajaAbierta(false);
-    setTurnoActual(null);
-    setMovimientos([]);
-    setSaldoCaja(0);
-    setIngresosTurno(0);
-    setEgresosTurno(0);
-    return true;
+    showLoading('Cerrando turno...');
+    try {
+      await cajaService.cerrarTurno(turnoActual.idTurno, montoReal, observaciones, idUsuario);
+      setCajaAbierta(false);
+      setTurnoActual(null);
+      setMovimientos([]);
+      setSaldoCaja(0);
+      setIngresosTurno(0);
+      setEgresosTurno(0);
+      return true;
+    } finally {
+      hideLoading();
+    }
   };
 
   return {

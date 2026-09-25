@@ -211,8 +211,8 @@ export const HistorialPedidosPage: React.FC = () => {
               {cargando ? (
                 <tr>
                   <td colSpan={11} className="text-center py-5 border-0" style={{ color: textColor }}>
-                    <i className="bi bi-arrow-repeat spin display-6 d-block mb-2"></i>
-                    Cargando historial de pedidos...
+                    <div className="spinner-border mb-2" role="status"></div>
+                    <div>Cargando historial de pedidos...</div>
                   </td>
                 </tr>
               ) : pedidosOrdenados.length === 0 ? (

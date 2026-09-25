@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Maquina } from '../types/Maquina';
 import { useTheme } from '../../../Context/ThemeContext';
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 
 interface Props {
   show: boolean;
@@ -53,6 +54,7 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
   const procesarGuardado = async () => {
     setCargando(true);
     setErrorValidacion('');
+    showLoading('Guardando cambios...');
     try {
       await onGuardar({
         idMaquina: maquinaEditar?.idMaquina,
@@ -68,6 +70,7 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
       setErrorValidacion("Error al guardar: " + (error.message || "Respuesta no válida del servidor."));
     } finally {
       setCargando(false);
+      hideLoading();
     }
   };
 

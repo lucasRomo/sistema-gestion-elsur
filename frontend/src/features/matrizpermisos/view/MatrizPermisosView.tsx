@@ -15,6 +15,7 @@ export const MatrizPermisosView: React.FC = () => {
     roles,
     rolSeleccionado,
     modulos,
+    cargando,
     usuariosFiltrados,
     usuarioEditar,
     busquedaUsuario,
@@ -208,79 +209,86 @@ export const MatrizPermisosView: React.FC = () => {
         </div>
       )}
 
-      <div className="row g-3">
-        <div className="col-md-3">
-          <ListaUsuariosSidebar 
-            usuarios={usuariosFiltrados}
-            busquedaUsuario={busquedaUsuario}
-            setBusquedaUsuario={setBusquedaUsuario}
-            usuarioEditar={usuarioEditar}
-            seleccionarUsuarioParaPermisos={seleccionarUsuarioParaPermisos}
-            isDark={isDark}
-          />
+      {cargando ? (
+        <div className="text-center py-5 font-monospace text-muted">
+          <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+          Cargando Matriz de Permisos...
         </div>
-
-        <div className="col-md-9">
-          <div 
-            className="p-3 rounded-4" 
-            style={{ 
-              backgroundColor: isDark ? '#18181b' : '#ffffff', 
-              border: isDark ? '1px solid #3f3f46' : '1px solid #cbd5e1' 
-            }}
-          >
-            {usuarioEditar ? (
-              <div 
-                className="p-2 px-3 mb-3 rounded d-flex justify-content-between align-items-center" 
-                style={{ 
-                  backgroundColor: isDark ? '#132e27' : '#d1fae5', 
-                  border: '1px solid #20c997' 
-                }}
-              >
-                <div>
-                  <span className="badge bg-success mb-0 me-2" style={{ fontSize: '0.7rem' }}>EMPLEADO SELECCIONADO</span>
-                  <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>
-                    Permisos de: <span style={{ color: '#059669' }}>"{usuarioEditar.persona ? `${usuarioEditar.persona.nombre} ${usuarioEditar.persona.apellido}` : usuarioEditar.nombreUsuario}"</span>
-                  </span>
-                  {usuarioEditar.idUsuario === 1 && <span className="badge bg-warning text-dark ms-2" style={{ fontSize: '0.7rem' }}>ADMIN PRINCIPAL</span>}
-                </div>
-                <button onClick={volverAModoGlobal} className="btn btn-sm btn-outline-secondary py-1 px-2" style={{ fontSize: '0.75rem' }}>
-                  <i className="bi bi-x-circle me-1"></i> Volver a Perfiles Globales
-                </button>
-              </div>
-            ) : (
-              <div 
-                className="p-2 px-3 mb-3 rounded d-flex align-items-center" 
-                style={{ 
-                  backgroundColor: isDark ? '#222122' : '#f3e8ff', 
-                  border: '1px solid #8e45e0' 
-                }}
-              >
-                <span className="badge me-2" style={{ backgroundColor: '#8e45e0', fontSize: '0.7rem' }}>PERFIL GLOBAL</span>
-                <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>
-                  Permisos del perfil: <span style={{ color: '#8e45e0' }}>{roles.find(r => r.idRol === rolSeleccionado)?.nombreRol}</span>
-                </span>
-              </div>
-            )}
-
-            <GrillaPermisos 
-              modulos={modulos}
-              togglePermiso={togglePermiso}
-              esPermisoProtegido={esPermisoProtegido}
+      ) : (
+        <div className="row g-3">
+          <div className="col-md-3">
+            <ListaUsuariosSidebar
+              usuarios={usuariosFiltrados}
+              busquedaUsuario={busquedaUsuario}
+              setBusquedaUsuario={setBusquedaUsuario}
+              usuarioEditar={usuarioEditar}
+              seleccionarUsuarioParaPermisos={seleccionarUsuarioParaPermisos}
               isDark={isDark}
             />
+          </div>
 
-            <div className="d-flex justify-content-between mt-3 pt-2 border-top border-secondary border-opacity-25">
-              <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-3 py-1 fw-bold" style={{ borderRadius: '6px', fontSize: '0.85rem', color: '#ffffff' }}>
-                Volver
-              </button>
-              <button onClick={() => setMostrarModalConfirmacion(true)} className="btn btn-sm px-4 py-1 fw-bold shadow" style={{ backgroundColor: '#2b7a3e', borderRadius: '6px', fontSize: '0.85rem', color: '#ffffff' }}>
-                Guardar Cambios
-              </button>
+          <div className="col-md-9">
+            <div
+              className="p-3 rounded-4"
+              style={{
+                backgroundColor: isDark ? '#18181b' : '#ffffff',
+                border: isDark ? '1px solid #3f3f46' : '1px solid #cbd5e1'
+              }}
+            >
+              {usuarioEditar ? (
+                <div
+                  className="p-2 px-3 mb-3 rounded d-flex justify-content-between align-items-center"
+                  style={{
+                    backgroundColor: isDark ? '#132e27' : '#d1fae5',
+                    border: '1px solid #20c997'
+                  }}
+                >
+                  <div>
+                    <span className="badge bg-success mb-0 me-2" style={{ fontSize: '0.7rem' }}>EMPLEADO SELECCIONADO</span>
+                    <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>
+                      Permisos de: <span style={{ color: '#059669' }}>"{usuarioEditar.persona ? `${usuarioEditar.persona.nombre} ${usuarioEditar.persona.apellido}` : usuarioEditar.nombreUsuario}"</span>
+                    </span>
+                    {usuarioEditar.idUsuario === 1 && <span className="badge bg-warning text-dark ms-2" style={{ fontSize: '0.7rem' }}>ADMIN PRINCIPAL</span>}
+                  </div>
+                  <button onClick={volverAModoGlobal} className="btn btn-sm btn-outline-secondary py-1 px-2" style={{ fontSize: '0.75rem' }}>
+                    <i className="bi bi-x-circle me-1"></i> Volver a Perfiles Globales
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className="p-2 px-3 mb-3 rounded d-flex align-items-center"
+                  style={{
+                    backgroundColor: isDark ? '#222122' : '#f3e8ff',
+                    border: '1px solid #8e45e0'
+                  }}
+                >
+                  <span className="badge me-2" style={{ backgroundColor: '#8e45e0', fontSize: '0.7rem' }}>PERFIL GLOBAL</span>
+                  <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>
+                    Permisos del perfil: <span style={{ color: '#8e45e0' }}>{roles.find(r => r.idRol === rolSeleccionado)?.nombreRol}</span>
+                  </span>
+                </div>
+              )}
+
+              <GrillaPermisos
+                modulos={modulos}
+                togglePermiso={togglePermiso}
+                esPermisoProtegido={esPermisoProtegido}
+                isDark={isDark}
+              />
+
+              <div className="d-flex justify-content-between mt-3 pt-2 border-top border-secondary border-opacity-25">
+                <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-3 py-1 fw-bold" style={{ borderRadius: '6px', fontSize: '0.85rem', color: '#ffffff' }}>
+                  Volver
+                </button>
+                <button onClick={() => setMostrarModalConfirmacion(true)} className="btn btn-sm px-4 py-1 fw-bold shadow" style={{ backgroundColor: '#2b7a3e', borderRadius: '6px', fontSize: '0.85rem', color: '#ffffff' }}>
+                  Guardar Cambios
+                </button>
+              </div>
+
             </div>
-
           </div>
         </div>
-      </div>
+      )}
 
       <ModalesMatrizPermisos 
         mostrarModalNuevoRol={mostrarModalNuevoRol}

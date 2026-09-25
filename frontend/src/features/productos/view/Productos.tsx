@@ -22,6 +22,7 @@ import { ModalStockCriticoList, type ItemStockCritico } from '../../insumos/moda
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
 import { apiFetch } from '../../../config/api';
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useIsMobile } from '../../../hook/useIsMobile';
 
 export const Productos: React.FC = () => {
@@ -396,6 +397,7 @@ export const Productos: React.FC = () => {
                   onClick={async () => {
                     if (guardandoEdicion || !productoEditando) return;
                     setGuardandoEdicion(true);
+                    showLoading('Guardando cambios...');
                     try {
                       await guardar(productoEditando);
                       setMostrarConfirmacion(false);
@@ -406,6 +408,7 @@ export const Productos: React.FC = () => {
                       alert(err?.message || 'Error al modificar el producto.');
                     } finally {
                       setGuardandoEdicion(false);
+                      hideLoading();
                     }
                   }}
                 >

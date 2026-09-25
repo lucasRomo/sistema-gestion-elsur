@@ -156,15 +156,27 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
                               )}
 
                               {tieneArchivo && (
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-outline-info"
-                                  style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
-                                  title="Ver Comprobante Adjunto"
-                                  onClick={() => verComprobantePedido(urlArchivo)}
-                                >
-                                  <i className="bi bi-eye"></i>
-                                </button>
+                                <>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-info"
+                                    style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
+                                    title="Ver Comprobante Adjunto"
+                                    onClick={() => verComprobantePedido(urlArchivo)}
+                                  >
+                                    <i className="bi bi-eye"></i>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-danger"
+                                    style={{ '--bs-btn-hover-color': '#ffffff', '--bs-btn-active-color': '#ffffff' } as React.CSSProperties}
+                                    title="Eliminar Comprobante Adjunto (para poder cargar otro)"
+                                    onClick={() => onEliminarComprobante(idCobro)}
+                                  >
+                                    <i className="bi bi-trash3"></i>
+                                  </button>
+                                </>
                               )}
                             </div>
                           </td>

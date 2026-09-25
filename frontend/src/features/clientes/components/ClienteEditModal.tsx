@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { clienteService, type TipoDocumento } from '../services/clienteService';
 import type { Cliente } from '../types/Cliente';
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 
 interface ClienteEditModalProps {
   cliente: Cliente;
@@ -70,11 +71,13 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
   const handleGuardarDefinitivo = async () => {
     if (guardando) return;
     setGuardando(true);
+    showLoading('Guardando cambios...');
     try {
       await onConfirmar(editData);
       setMostrarConfirmacion(false);
     } finally {
       setGuardando(false);
+      hideLoading();
     }
   };
 

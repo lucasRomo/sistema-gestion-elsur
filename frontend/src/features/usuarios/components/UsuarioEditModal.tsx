@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 
 interface UsuarioEditModalProps {
   usuario: any;
@@ -26,12 +27,12 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
     nombreUsuario: usuario.nombreUsuario || '',
     salario: usuario.salario || 0,
     estado: usuario.estado || 'Activo',
-    cargo: usuario.cargo || '', 
-    rol: { 
-      idRol: usuario.rol?.idRol || 2 
+    cargo: usuario.cargo || '',
+    rol: {
+      idRol: usuario.rol?.idRol || 2
     },
     persona: {
-      ...usuario.persona, 
+      ...usuario.persona,
       nombre: usuario.persona?.nombre || '',
       apellido: usuario.persona?.apellido || '',
       documento: usuario.persona?.numeroDocumento || '',
@@ -39,6 +40,7 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
   });
 
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [guardando, setGuardando] = useState(false);
 
   const handlePersonaChange = (field: string, value: string) => {
     setEditData((prev: any) => ({
@@ -53,24 +55,32 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
   };
 
   const handleGuardarDefinitivo = async () => {
-    await onConfirmar(editData);
-    setMostrarConfirmacion(false);
+    if (guardando) return;
+    setGuardando(true);
+    showLoading('Guardando cambios...');
+    try {
+      await onConfirmar(editData);
+      setMostrarConfirmacion(false);
+    } finally {
+      setGuardando(false);
+      hideLoading();
+    }
   };
 
   return (
     <>
       <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
         <div className="modal-dialog modal-lg modal-dialog-centered" style={{ maxWidth: '800px' }}>
-          <div 
-  className="modal-content shadow-lg" 
-  style={{ 
-    backgroundColor: modalBg, 
-    color: textColor, 
+          <div
+  className="modal-content shadow-lg"
+  style={{
+    backgroundColor: modalBg,
+    color: textColor,
     borderRadius: '14px',
     border: '1.5px solid #0dcaf0'
   }}
 >
-            
+
             <div className="d-flex justify-content-between align-items-center px-4 pt-4 pb-2">
               <h4 className="m-0 fw-bold text-info d-flex align-items-center">
                 <i className="bi bi-person-lines-fill me-2"></i>Modificar Usuario
@@ -80,7 +90,7 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
 
             <form onSubmit={handleFormSubmit} className="px-4 pb-4">
               <div style={{ maxHeight: '65vh', overflowY: 'auto', overflowX: 'hidden', paddingRight: '8px' }}>
-                
+
                 <h5 className="border-bottom pb-2 mb-3 mt-2" style={{ color: sectionTitleColor, borderColor: inputBorder, fontSize: '1.05rem', fontWeight: '600' }}>
                   1. Credenciales de Acceso
                 </h5>
@@ -105,12 +115,12 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
                 <div className="row g-3 mb-2 mx-0">
                   <div className="col-md-6 px-1">
                     <label className="form-label small fw-medium" style={{ color: labelColor }}>Nombre</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
-                      value={editData.persona.nombre} 
-                      onChange={e => handlePersonaChange('nombre', e.target.value)} 
+                    <input
+                      type="text"
+                      className="form-control"
+                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }}
+                      value={editData.persona.nombre}
+                      onChange={e => handlePersonaChange('nombre', e.target.value)}
                       required pattern="[A-Za-zÁ-Úá-ú\s]+"
                       onInvalid={(e: any) => {
                         if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Nombre No puede Estar Vacío");
@@ -122,12 +132,12 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
 
                   <div className="col-md-6 px-1">
                     <label className="form-label small fw-medium" style={{ color: labelColor }}>Apellido</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
-                      value={editData.persona.apellido} 
-                      onChange={e => handlePersonaChange('apellido', e.target.value)} 
+                    <input
+                      type="text"
+                      className="form-control"
+                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }}
+                      value={editData.persona.apellido}
+                      onChange={e => handlePersonaChange('apellido', e.target.value)}
                       required pattern="[A-Za-zÁ-Úá-ú\s]+"
                       onInvalid={(e: any) => {
                         if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Apellido No puede Estar Vacío");
@@ -139,30 +149,30 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
 
                   <div className="col-md-6 px-1 mt-3">
                     <label className="form-label small fw-medium" style={{ color: labelColor }}>Número de Documento</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
-                      value={editData.persona.numeroDocumento} 
-                      onChange={e => handlePersonaChange('documento', e.target.value)} 
-                      required 
+                    <input
+                      type="text"
+                      className="form-control"
+                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }}
+                      value={editData.persona.numeroDocumento}
+                      onChange={e => handlePersonaChange('documento', e.target.value)}
+                      required
                     />
                   </div>
 
                   <div className="col-md-3 px-1">
                     <label className="form-label small fw-medium" style={{ color: labelColor }}>Cargo</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
+                    <input
+                      type="text"
+                      className="form-control"
+                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }}
                       placeholder="Ej: Programador"
-                      value={editData.cargo} 
-                      onChange={e => setEditData({ ...editData, cargo: e.target.value })} 
+                      value={editData.cargo}
+                      onChange={e => setEditData({ ...editData, cargo: e.target.value })}
                       required pattern="[A-Za-z\s]+"
                       onInvalid={(e: any) => {
                         if (e.target.validity.valueMissing) e.target.setCustomValidity("El Campo de Cargo No puede Estar Vacío");
                         else if (e.target.validity.patternMismatch) e.target.setCustomValidity("El Campo de Cargo solo debe contener letras");
-                      }} 
+                      }}
                       onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
@@ -194,10 +204,10 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
 
                  <div className="col-md-12 px-1">
                     <label className="form-label small fw-medium" style={{ color: labelColor }}>Estado</label>
-                    <select 
-                      className="form-select" 
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
-                      value={editData.estado} 
+                    <select
+                      className="form-select"
+                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }}
+                      value={editData.estado}
                       onChange={e => setEditData({ ...editData, estado: e.target.value })}
                     >
                       <option value="Activo" style={{ backgroundColor: inputBg, color: inputTextColor }}>Activo</option>
@@ -209,17 +219,17 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
               </div>
 
               <div className="d-flex justify-content-end gap-2 mt-3 pt-3 border-top" style={{ borderColor: inputBorder }}>
-                <button 
-                  type="button" 
-                  className="btn btn-danger px-4 fw-semibold" 
-                  style={{ borderRadius: '8px', color: '#ffffff' }} 
+                <button
+                  type="button"
+                  className="btn btn-danger px-4 fw-semibold"
+                  style={{ borderRadius: '8px', color: '#ffffff' }}
                   onClick={onCerrar}
                 >
                   Cancelar
                 </button>
-                <button 
-  type="submit" 
-  className="btn btn-info px-4 fw-semibold" 
+                <button
+  type="submit"
+  className="btn btn-info px-4 fw-semibold"
   style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: "#149bdf", borderColor: "#149bdf", }}
 >
   Guardar Cambios
@@ -237,21 +247,23 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
               <i className="bi bi-shield-lock fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">¿Actualizar Perfil?</h5>
               <p className="small" style={{ color: labelColor }}>Se modificarán las credenciales y permisos de acceso para este usuario.</p>
-              
+
               <div className="d-flex justify-content-center gap-2 mt-3">
-                <button 
-                  className="btn btn-outline-light btn-sm px-3" 
-                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020', color: '#ffffff' }} 
+                <button
+                  className="btn btn-outline-light btn-sm px-3"
+                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020', color: '#ffffff' }}
                   onClick={() => setMostrarConfirmacion(false)}
+                  disabled={guardando}
                 >
                   Volver
                 </button>
-                <button 
-                  className="btn btn-sm px-3 text-white fw-bold" 
-                  style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} 
+                <button
+                  className="btn btn-sm px-3 text-white fw-bold"
+                  style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }}
                   onClick={handleGuardarDefinitivo}
+                  disabled={guardando}
                 >
-                  Confirmar
+                  {guardando ? 'Guardando...' : 'Confirmar'}
                 </button>
               </div>
             </div>

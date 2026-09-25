@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import type { Proveedor } from '../types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
 import { apiFetch } from '../../../config/api';
-import { 
-  getTiposProveedor, 
-  crearTipoProveedor, 
-  eliminarTipoProveedor 
+import { showLoading, hideLoading } from '../../../config/loadingStore';
+import {
+  getTiposProveedor,
+  crearTipoProveedor,
+  eliminarTipoProveedor
 } from '../services/proveedorService';
 
 interface ProveedorModalProps {
@@ -173,11 +174,13 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     const datosNormalizados = obtenerFormStateNormalizado();
     if (!datosNormalizados) return;
     setGuardando(true);
+    showLoading('Guardando cambios...');
     try {
       await onSave(datosNormalizados);
       setMostrarConfirmacion(false);
     } finally {
       setGuardando(false);
+      hideLoading();
     }
   };
 
