@@ -2,6 +2,8 @@ package com.elsur.sistema_gestion.models;
 
 import java.math.BigDecimal;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 
 @Entity
@@ -18,12 +20,18 @@ public class Insumo {
     private String nombreInsumo;
 
     @Column(nullable = false, precision = 10, scale = 2)
+    @NotNull(message = "El precio es obligatorio.")
+    @PositiveOrZero(message = "El precio no puede ser negativo.")
     private BigDecimal precio = BigDecimal.ZERO;
 
     @Column(nullable = false, precision = 10, scale = 2)
+    @NotNull(message = "El stock actual es obligatorio.")
+    @PositiveOrZero(message = "El stock actual no puede ser negativo.")
     private BigDecimal stockActual = BigDecimal.ZERO;
 
     @Column(nullable = false, precision = 10, scale = 2)
+    @NotNull(message = "El stock mínimo es obligatorio.")
+    @PositiveOrZero(message = "El stock mínimo no puede ser negativo.")
     private BigDecimal stockMinimo = BigDecimal.ZERO;
 
     @ManyToOne

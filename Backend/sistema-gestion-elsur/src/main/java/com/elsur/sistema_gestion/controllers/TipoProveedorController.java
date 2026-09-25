@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.controllers;
 
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.TipoProveedor;
 import com.elsur.sistema_gestion.services.TipoProveedorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ public class TipoProveedorController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TipoProveedor crear(@RequestBody TipoProveedor tipoProveedor) {
+        if (tipoProveedor.getDescripcion() == null || tipoProveedor.getDescripcion().trim().isEmpty()) {
+            throw new SolicitudInvalidaException("La descripción del tipo de proveedor no puede estar vacía.");
+        }
         return tipoProveedorService.guardar(tipoProveedor);
     }
 

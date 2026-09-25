@@ -190,11 +190,21 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
       return;
     }
 
+    const cantidadInvalida = keys.some((k) => {
+      const cant = Number(selections[k].cantidad);
+      return !Number.isFinite(cant) || cant <= 0;
+    });
+    if (cantidadInvalida) {
+      setMensajeAlerta('Todas las cantidades de merma deben ser números mayores a 0.');
+      setMostrarAlerta(true);
+      return;
+    }
+
     const payload: MermaEntity[] = keys.map((k) => {
       const item = selections[k];
       return {
         usuario: { idUsuario },
-        cantidad: Number(item.cantidad) || 1,
+        cantidad: Number(item.cantidad),
         descripcion: item.descripcion || 'Merma de producto/insumo en stock',
         producto: item.idProducto ? { idProducto: item.idProducto, id_producto: item.idProducto } : undefined,
         insumo: item.idInsumo ? { idInsumo: item.idInsumo, id_insumo: item.idInsumo } : undefined,

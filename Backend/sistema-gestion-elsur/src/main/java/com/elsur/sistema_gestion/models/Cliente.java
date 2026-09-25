@@ -1,6 +1,8 @@
 package com.elsur.sistema_gestion.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -22,9 +24,13 @@ public class Cliente {
     private String razonSocial;
 
     @Column(name = "saldo_deudor", nullable = false, precision = 10, scale = 2)
+    @NotNull(message = "El saldo deudor es obligatorio.")
+    @PositiveOrZero(message = "El saldo deudor no puede ser negativo.")
     private BigDecimal saldoDeudor;
 
     @Column(name = "limite_credito", nullable = false, precision = 10, scale = 2)
+    @NotNull(message = "El límite de crédito es obligatorio.")
+    @PositiveOrZero(message = "El límite de crédito no puede ser negativo.")
     private BigDecimal limiteCredito;
 
     @Column(name = "estado", nullable = false, length = 20)

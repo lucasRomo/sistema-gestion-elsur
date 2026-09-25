@@ -11,4 +11,5 @@ export interface Usuario {
     estado?: string;
     cargo?: string;
     fechaContratacion?: string;
+    tienePermisosPersonalizados?: boolean;
 }

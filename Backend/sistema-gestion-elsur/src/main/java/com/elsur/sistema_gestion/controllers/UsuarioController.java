@@ -58,6 +58,12 @@ public class UsuarioController {
     public ResponseEntity<?> crear(
             @RequestBody Usuario usuario,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuarioOperador) {
+        // El body es un Usuario completo sin restricciones de binding: si no forzáramos el id acá,
+        // alguien podría mandar un "idUsuario" de un usuario YA EXISTENTE en el JSON de un POST y
+        // usuarioService.guardar() lo tomaría como una actualización (JPA hace upsert por id),
+        // pisando los datos (incluido el rol) de ese usuario sin pasar por el chequeo de permisos
+        // que sí tiene el PUT de actualizar(). Un alta siempre debe crear un registro nuevo.
+        usuario.setIdUsuario(null);
         return ResponseEntity.ok(usuarioService.guardar(usuario, idUsuarioOperador));
     }
 

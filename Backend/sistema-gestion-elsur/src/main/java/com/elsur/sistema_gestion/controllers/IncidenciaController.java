@@ -30,6 +30,12 @@ public class IncidenciaController {
 
     @PostMapping("/reportar")
     public ResponseEntity<Incidencia> reportarFalla(@RequestBody Map<String, Object> payload) {
+        if (payload.get("idMaquina") == null) {
+            throw new SolicitudInvalidaException("Debe indicar la máquina.");
+        }
+        if (payload.get("descripcion") == null) {
+            throw new SolicitudInvalidaException("Debe indicar la descripción de la falla.");
+        }
         Integer idMaquina = Integer.parseInt(payload.get("idMaquina").toString());
         String descripcion = payload.get("descripcion").toString();
         String prioridad = payload.get("prioridad") != null ? payload.get("prioridad").toString() : "MEDIA";
@@ -56,6 +62,9 @@ public class IncidenciaController {
     public ResponseEntity<Incidencia> resolverIncidencia(
             @PathVariable Integer idIncidencia,
             @RequestBody Map<String, Object> payload) {
+        if (payload.get("resolucion") == null) {
+            throw new SolicitudInvalidaException("Debe indicar la resolución de la incidencia.");
+        }
         String resolucion = payload.get("resolucion").toString();
         Integer idEmpleadoResuelve = payload.get("idEmpleadoResuelve") != null ? 
                 Integer.parseInt(payload.get("idEmpleadoResuelve").toString()) : null;

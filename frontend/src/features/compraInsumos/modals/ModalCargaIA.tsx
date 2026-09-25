@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import type { ItemCompraInsumo } from '../types/compraInsumos';
-import { API_BASE_URL, apiFetch } from '../../../config/api';
-
-const API_IA_ANALIZAR = `${API_BASE_URL}/ia/analizar-comprobante`;
+import { compraInsumosService } from '../services/compraInsumosService';
 
 interface ModalCargaIAProps {
   isOpen: boolean;
@@ -73,23 +71,10 @@ export const ModalCargaIA: React.FC<ModalCargaIAProps> = ({
   }))
 };
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('catalogos', JSON.stringify(catalogos));
-
     try {
-      const res = await apiFetch(API_IA_ANALIZAR, {
-        method: 'POST',
-        body: formData
-      });
+      const items = await compraInsumosService.analizarComprobanteConIA(file, catalogos);
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Error al procesar la imagen en el servidor');
-      }
-
-      const { items: itemsCorregidos, avisos } = validarYCorregirItems(data.items || []);
+      const { items: itemsCorregidos, avisos } = validarYCorregirItems(items);
 
       const itemsConPrecioRedondeado = itemsCorregidos.map((item: any) => ({
         ...item,

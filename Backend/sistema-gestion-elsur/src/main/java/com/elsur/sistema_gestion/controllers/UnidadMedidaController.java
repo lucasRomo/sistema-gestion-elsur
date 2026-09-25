@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.controllers;
 
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.UnidadMedida;
 import com.elsur.sistema_gestion.services.UnidadMedidaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class UnidadMedidaController {
 
     @PostMapping
     public ResponseEntity<?> guardar(@RequestBody UnidadMedida unidadMedida) {
+        if (unidadMedida.getNombre() == null || unidadMedida.getNombre().trim().isEmpty()) {
+            throw new SolicitudInvalidaException("El nombre de la unidad de medida no puede estar vacío.");
+        }
         UnidadMedida guardada = unidadMedidaService.guardar(unidadMedida);
         return ResponseEntity.status(HttpStatus.CREATED).body(guardada);
     }

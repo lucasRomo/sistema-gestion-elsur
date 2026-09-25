@@ -3,6 +3,7 @@ package com.elsur.sistema_gestion.controllers;
 import com.elsur.sistema_gestion.models.MovimientoCaja;
 import com.elsur.sistema_gestion.services.MovimientoCajaService;
 import com.elsur.sistema_gestion.services.SupabaseStorageService;
+import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,7 @@ public class MovimientoCajaController {
     }
 
     @PostMapping
-    public ResponseEntity<MovimientoCaja> crear(@RequestBody MovimientoCaja movimientoCaja) {
+    public ResponseEntity<MovimientoCaja> crear(@Valid @RequestBody MovimientoCaja movimientoCaja) {
         return ResponseEntity.ok(movimientoCajaService.guardar(movimientoCaja));
     }
 

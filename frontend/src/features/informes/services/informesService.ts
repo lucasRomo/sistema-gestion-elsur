@@ -1,56 +1,7 @@
 import { API_BASE_URL, apiFetch } from '../../../config/api';
+import type { Turno, MovimientoCaja, TotalesCaja, DatosArqueo } from '../../caja/types/caja';
 
-export interface Turno {
-  idTurno: number;
-  usuario?: any;
-  fechaApertura: string;
-  fechaCierre?: string | null;
-  montoInicial: number;
-  montoEsperadoSistema?: number;
-  montoRealContado?: number;
-  diferenciaArqueo?: number;
-  observaciones?: string;
-  estado: 'ABIERTO' | 'CERRADO';
-}
-
-export interface MovimientoCaja {
-  id_movimiento?: number;
-  idMovimiento?: number;
-  monto: number;
-  tipoMovimiento: 'INGRESO' | 'EGRESO';
-  categoria?: string;
-  descripcion: string;
-  metodoPago?: string;
-  comprobanteImagen?: string;
-  comprobante?: string;
-  imagenComprobante?: string;
-  comprobante_imagen?: string;
-  imagen_comprobante?: string;
-  urlComprobante?: string;
-  url_comprobante?: string;
-  fecha: string;
-  usuario?: any;
-  pedido?: {
-    idPedido?: number;
-    id_pedido?: number;
-  } | null;
-}
-
-export interface TotalesCaja {
-  totalIngresos: number;
-  totalEgresos: number;
-  saldoActual: number;
-}
-
-export interface DatosArqueo {
-  totalEfectivo: number;
-  totalTransferencias: number;
-  efectivoIngresos: number;
-  efectivoEgresos: number;
-  transferenciaIngresos: number;
-  transferenciaEgresos: number;
-  saldoTotal: number;
-}
+export type { Turno, MovimientoCaja, TotalesCaja, DatosArqueo };
 
 async function obtenerJsonSiOk<T>(endpoint: string, valorPorDefecto: T, onFallo?: () => void): Promise<T> {
   try {

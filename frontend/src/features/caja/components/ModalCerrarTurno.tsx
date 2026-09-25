@@ -74,6 +74,10 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
   const handleValidarYSiguiente = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isNaN(Number(efectivoContado))) {
+      alert('El efectivo contado ingresado no es un valor numérico válido.');
+      return;
+    }
     if (valorContado < 0) {
       alert('El efectivo contado no puede ser un valor negativo.');
       return;

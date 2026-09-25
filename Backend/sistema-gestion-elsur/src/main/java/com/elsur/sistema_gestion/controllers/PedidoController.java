@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.controllers;
 
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Pedido;
 import com.elsur.sistema_gestion.services.PedidoService;
 import com.elsur.sistema_gestion.services.SupabaseStorageService;
@@ -101,10 +102,13 @@ public class PedidoController {
         String nuevoEstado = payload.get("nuevoEstado") != null ? payload.get("nuevoEstado").toString() : null;
         String observaciones = payload.get("observaciones") != null ? payload.get("observaciones").toString() : "";
 
-        Integer idUsuario = 1;
-        if (payload.get("idUsuario") != null) {
-            idUsuario = Double.valueOf(payload.get("idUsuario").toString()).intValue();
+        // El frontend siempre envía idUsuario (lo toma del usuario logueado) para poder
+        // auditar quién hizo el cambio de estado. Se exige acá en vez de defaultear a un
+        // usuario fijo, para no atribuirle cambios a un usuario incorrecto.
+        if (payload.get("idUsuario") == null) {
+            throw new SolicitudInvalidaException("Debe indicar el usuario que realiza el cambio de estado.");
         }
+        Integer idUsuario = Double.valueOf(payload.get("idUsuario").toString()).intValue();
 
         boolean confirmarMaquinaNoDisponible = Boolean.TRUE.equals(payload.get("confirmarMaquinaNoDisponible"));
 
@@ -142,6 +146,12 @@ public class PedidoController {
                     .body("Error al parsear el JSON del pago: " + e.getMessage());
         }
 
+        if (payload.get("monto") == null) {
+            throw new SolicitudInvalidaException("Debe indicar el monto del pago.");
+        }
+        if (payload.get("tipoPago") == null) {
+            throw new SolicitudInvalidaException("Debe indicar el tipo de pago.");
+        }
         Double monto = Double.valueOf(payload.get("monto").toString());
         String tipoPago = payload.get("tipoPago").toString();
         Integer idUsuario = null;
@@ -176,6 +186,9 @@ public class PedidoController {
 
     @PutMapping("/{idPedido}/asignar-empleado")
     public ResponseEntity<?> asignarEmpleado(@PathVariable Integer idPedido, @RequestBody Map<String, String> request) {
+        if (request.get("idEmpleado") == null) {
+            throw new SolicitudInvalidaException("Debe indicar el empleado a asignar.");
+        }
         Integer idEmpleado = Integer.parseInt(request.get("idEmpleado"));
         pedidoService.asignarEmpleado(idPedido, idEmpleado);
         return ResponseEntity.ok().build();

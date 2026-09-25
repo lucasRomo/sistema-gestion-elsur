@@ -1,15 +1,13 @@
 import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
+import type { TipoDocumento } from '../../../types/TipoDocumento';
+import type { Cliente } from '../types/Cliente';
+
+export type { TipoDocumento };
 
 const BASE_URL = API_BASE_URL || 'http://localhost:8080/api';
 
-export interface TipoDocumento {
-  idTipoDocumento: number;
-  nombreTipo?: string;
-  nombre?: string;
-}
-
 export const clienteService = {
-  getClientes: async () => {
+  getClientes: async (): Promise<Cliente[]> => {
     const res = await apiFetch(`${BASE_URL}/clientes`);
     if (!res.ok) throw new Error("Error al obtener clientes");
     return res.json();

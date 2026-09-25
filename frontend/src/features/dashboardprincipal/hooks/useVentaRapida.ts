@@ -470,13 +470,15 @@ export const useVentaRapida = () => {
 
         resCrear = await apiFetch(`${API_BASE_URL}/pedidos`, {
           method: 'POST',
-          body: formData
+          body: formData,
+          skipLoading: true
         });
       } else {
         resCrear = await apiFetch(`${API_BASE_URL}/pedidos`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payloadParaBackend)
+          body: JSON.stringify(payloadParaBackend),
+          skipLoading: true
         });
       }
 
@@ -495,7 +497,8 @@ export const useVentaRapida = () => {
           observaciones: `Venta Rápida ${porcentajeDescuento > 0 ? `(Categoría: ${categoriaActual?.nombreCategoria} - ${porcentajeDescuento}% Desc.)` : ''}`,
           idUsuario: idUsuario,
           confirmarMaquinaNoDisponible
-        })
+        }),
+        skipLoading: true
       });
 
       if (!resEstado.ok) {

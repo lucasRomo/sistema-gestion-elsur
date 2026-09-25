@@ -1,7 +1,9 @@
 package com.elsur.sistema_gestion.controllers;
 
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Producto;
 import com.elsur.sistema_gestion.services.ProductoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +25,7 @@ public class ProductoController {
 
     @PostMapping
     public ResponseEntity<Producto> crear(
-            @RequestBody Producto producto,
+            @Valid @RequestBody Producto producto,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
         return ResponseEntity.ok(productoService.guardar(producto, idUsuario));
     }
@@ -31,7 +33,7 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ResponseEntity<Producto> actualizar(
             @PathVariable Integer id,
-            @RequestBody Producto producto,
+            @Valid @RequestBody Producto producto,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
         producto.setIdProducto(id);
         return ResponseEntity.ok(productoService.guardar(producto, idUsuario));
@@ -43,6 +45,12 @@ public class ProductoController {
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
         
         double porcentaje = payload.get("porcentaje") != null ? Double.parseDouble(payload.get("porcentaje").toString()) : 0.0;
+        if (porcentaje <= -100) {
+            throw new SolicitudInvalidaException("El porcentaje de aumento no puede ser menor o igual a -100%.");
+        }
+        if (porcentaje > 1000) {
+            throw new SolicitudInvalidaException("El porcentaje de aumento no puede ser mayor a 1000%.");
+        }
         Integer idCategoria = payload.get("idCategoria") != null ? Integer.parseInt(payload.get("idCategoria").toString()) : null;
         Integer idProveedor = payload.get("idProveedor") != null ? Integer.parseInt(payload.get("idProveedor").toString()) : null;
         String criterio = payload.get("criterio") != null ? payload.get("criterio").toString() : "TODOS";

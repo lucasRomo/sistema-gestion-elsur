@@ -164,8 +164,16 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
       return;
     }
 
+    if (formData.factorConversion) {
+      const factor = parseFloat(formData.factorConversion);
+      if (!Number.isFinite(factor) || factor <= 0) {
+        setErrorUnidad('El factor de conversión debe ser un número mayor a 0.');
+        return;
+      }
+    }
+
     setErrorUnidad('');
-    
+
     const unidadEncontrada = unidadesMedida.find(
       u => u.nombre?.toLowerCase() === formData.nombreUnidad.trim().toLowerCase()
     );

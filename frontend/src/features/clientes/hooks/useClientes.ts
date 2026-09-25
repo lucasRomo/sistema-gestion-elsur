@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { clienteService } from '../services/clienteService';
+import type { Cliente } from '../types/Cliente';
 
 export const useClientes = () => {
-  const [clientes, setClientes] = useState<any[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 

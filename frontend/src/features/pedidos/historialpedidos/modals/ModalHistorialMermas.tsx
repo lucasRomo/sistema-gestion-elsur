@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { mermaService, type MermaEntity } from '../../../../services/mermaService';
 import { useTheme } from '../../../../Context/ThemeContext';
+import { formatearFechaHora } from '../../../../utils/formato';
 
 interface ModalHistorialMermasProps {
   pedido: any;
@@ -31,18 +32,6 @@ export const ModalHistorialMermas: React.FC<ModalHistorialMermasProps> = ({ pedi
         .finally(() => setCargando(false));
     }
   }, [idPedido]);
-
-  const formatearFecha = (fechaIso?: string) => {
-    if (!fechaIso) return '-';
-    const date = new Date(fechaIso);
-    return date.toLocaleString('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   return (
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1050 }}>
@@ -107,7 +96,7 @@ export const ModalHistorialMermas: React.FC<ModalHistorialMermasProps> = ({ pedi
                     return (
                       <tr key={m.idMerma || Math.random()} style={{ borderColor }}>
                         <td className="text-nowrap" style={{ color: textColor }}>
-                          {formatearFecha(m.fechaMerma)}
+                          {formatearFechaHora(m.fechaMerma)}
                         </td>
                         
                         <td className="py-2">

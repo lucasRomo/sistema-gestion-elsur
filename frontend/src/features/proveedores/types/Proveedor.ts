@@ -1,3 +1,5 @@
+import type { TipoProveedor } from './TipoProveedor';
+
 export interface Direccion {
   idDireccion?: number;
   calle: string;
@@ -8,11 +10,6 @@ export interface Direccion {
   ciudad: string;
   provincia: string;
   pais?: string;
-}
-
-export interface TipoProveedor {
-  idTipoProveedor: number;
-  descripcion: string;
 }
 
 export interface Proveedor {

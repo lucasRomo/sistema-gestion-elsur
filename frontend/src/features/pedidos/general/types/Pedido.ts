@@ -1,18 +1,7 @@
 import type { Producto } from '../../../productos/types/Producto';
+import type { MovimientoCaja } from '../../../caja/types/caja';
 
-export interface MovimientoCaja {
-  id_movimiento?: number;
-  fecha?: string;
-  monto: number;
-  tipoMovimiento: string;
-  categoria?: string;
-  descripcion?: string;
-  metodoPago?: string;
-  usuario?: {
-    id_usuario: number;
-    nombre_usuario?: string;
-  };
-}
+export type { MovimientoCaja };
 
 export interface DetallePedido {
   id_detalle?: number;

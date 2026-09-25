@@ -2,6 +2,7 @@ package com.elsur.sistema_gestion.controllers;
 
 import com.elsur.sistema_gestion.models.Cliente;
 import com.elsur.sistema_gestion.services.ClienteService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -21,7 +22,7 @@ public class ClienteController {
 
     @PostMapping
     public Cliente crear(
-            @RequestBody Cliente cliente,
+            @Valid @RequestBody Cliente cliente,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
         return clienteService.guardar(cliente, idUsuario);
     }

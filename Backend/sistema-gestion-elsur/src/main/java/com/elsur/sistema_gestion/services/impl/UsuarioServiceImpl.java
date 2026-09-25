@@ -372,15 +372,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    @Transactional
-    public void eliminar(Integer id) {
-        if (ID_USUARIO_ADMIN_PRINCIPAL.equals(id)) {
-            throw new SolicitudInvalidaException("No se puede eliminar al usuario administrador principal del sistema.");
-        }
-        usuarioRepository.deleteById(id);
-    }
-
-    @Override
     public boolean emailExiste(String email) {
         return usuarioRepository.existsByPersonaEmail(email);
     }

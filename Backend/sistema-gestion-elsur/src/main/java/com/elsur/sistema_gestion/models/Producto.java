@@ -1,6 +1,8 @@
 package com.elsur.sistema_gestion.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 import java.math.BigDecimal;
 
@@ -18,6 +20,8 @@ public class Producto {
     private String nombreProducto;
 
     @Column(nullable = false, precision = 10, scale = 2)
+    @NotNull(message = "El precio base es obligatorio.")
+    @PositiveOrZero(message = "El precio base no puede ser negativo.")
     private BigDecimal precioBase;
 
     @ManyToOne

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { resolverEmpleadoGestion } from '../../../../utils/formato';
 
 interface Props {
   pedido: any;
@@ -19,13 +20,7 @@ export const VistaTicketModal: React.FC<Props> = ({
     ? `${pedido.cliente.persona.nombre} ${pedido.cliente.persona.apellido}`
     : (pedido.cliente?.razon_social || pedido.cliente?.nombre || 'Consumidor Final');
 
-  const ultimaAsignacion = pedido.asignaciones && pedido.asignaciones.length > 0 
-    ? pedido.asignaciones[pedido.asignaciones.length - 1] 
-    : null;
-
-  const nombreEmpleado = ultimaAsignacion?.empleado?.persona
-    ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
-    : (ultimaAsignacion?.empleado?.nombre ?? 'Sin Asignar');
+  const nombreEmpleado = resolverEmpleadoGestion(pedido);
 
   const montoTotal = Number(pedido.monto_total) || 0;
   

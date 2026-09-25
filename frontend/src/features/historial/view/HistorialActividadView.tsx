@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useHistorialActividad } from '../hooks/useHistorialActividad';
 import type { RegistroActividad } from '../types/RegistroActividad';
+import { formatearFechaHora, resolverNombreUsuario } from '../../../utils/formato';
 
 import {
   exportarHistorialActividadExcel,
@@ -32,12 +33,8 @@ export const HistorialActividadView: React.FC = () => {
   const [filtroEmpleado, setFiltroEmpleado] = useState<string>('Sin Filtro');
   const [busquedaTabla, setBusquedaTabla] = useState<string>('');
 
-  const obtenerNombreUsuario = (reg: RegistroActividad) => {
-    if (reg.usuario?.persona) {
-      return `${reg.usuario.persona.nombre} ${reg.usuario.persona.apellido}`;
-    }
-    return reg.usuario?.nombreUsuario || 'Sistema';
-  };
+  const obtenerNombreUsuario = (reg: RegistroActividad) =>
+    resolverNombreUsuario(reg.usuario, { nombreCompleto: true, fallback: 'Sistema' });
 
   const formatearDato = (dato: string | null) => {
     if (!dato) return '-';
@@ -61,22 +58,11 @@ export const HistorialActividadView: React.FC = () => {
 
   const formatearFecha = (fechaRaw?: string | null) => {
     if (!fechaRaw) return '-';
-    const isoString = fechaRaw.endsWith('Z') || fechaRaw.includes('+') 
-      ? fechaRaw 
+    const isoString = fechaRaw.endsWith('Z') || fechaRaw.includes('+')
+      ? fechaRaw
       : `${fechaRaw}Z`;
 
-    const fechaObj = new Date(isoString);
-    if (isNaN(fechaObj.getTime())) return '-';
-
-    return fechaObj.toLocaleString('es-AR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true
-    });
+    return formatearFechaHora(isoString);
   };
 
   return (

@@ -13,6 +13,8 @@ import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useIsMobile } from '../../../hook/useIsMobile';
 import { exportarClientesExcel, exportarClientesPDF } from '../utils/exportClientesUtils';
+import { colorPorSaldo } from '../../../utils/formato';
+import type { Cliente } from '../types/Cliente';
 
 export const ClienteView = () => {
   const { theme } = useTheme();
@@ -35,9 +37,9 @@ export const ClienteView = () => {
 
   const { clientes, loading, registrarCliente, cargarClientes } = useClientes();
   const [paso, setPaso] = useState(0); 
-  const [clienteConUbicacionSeleccionada, setClienteConUbicacionSeleccionada] = useState<any | null>(null);
-  const [clienteAEditar, setClienteAEditar] = useState<any | null>(null);
-  const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<any | null>(null);
+  const [clienteConUbicacionSeleccionada, setClienteConUbicacionSeleccionada] = useState<Cliente | null>(null);
+  const [clienteAEditar, setClienteAEditar] = useState<Cliente | null>(null);
+  const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<Cliente | null>(null);
   const [verCategoriasModal, setVerCategoriasModal] = useState<boolean>(false);
   const [verResumenCuentasModal, setVerResumenCuentasModal] = useState<boolean>(false);
 
@@ -132,7 +134,7 @@ export const ClienteView = () => {
     }
   };
 
-  const clientesFiltrados = clientes.filter((c: any) => {
+  const clientesFiltrados = clientes.filter((c: Cliente) => {
     if (c.id_cliente === 1) return false;
     if (filtroEstado !== 'Sin Filtro' && c.estado !== filtroEstado) return false;
     
@@ -152,23 +154,6 @@ export const ClienteView = () => {
     const idB = b.id_cliente || b.idCliente || 0;
     return idA - idB;
   });
-
-  const obtenerColorSaldo = (saldoDeudor: number, limiteCredito: number) => {
-    const saldo = Math.abs(Number(saldoDeudor || 0));
-    const limite = Number(limiteCredito || 0);
-    if (saldo === 0) return 'text-success';
-    if (limite <= 0) return 'text-danger';
-
-    const porcentaje = (saldo / limite) * 100;
-
-    if (porcentaje >= 100) {
-      return 'text-danger'; 
-    } else if (porcentaje >= 75) { 
-      return 'text-warning'; 
-    } else {
-      return 'text-success'; 
-    }
-  };
 
   return (
     <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
@@ -233,7 +218,7 @@ export const ClienteView = () => {
                 </td>
               </tr>
             ) : clientesOrdenados && clientesOrdenados.length > 0 ? (
-              clientesOrdenados.map((c: any) => {
+              clientesOrdenados.map((c: Cliente) => {
                 const tieneCtaCte = Number(c.limiteCredito || 0) > 0;
                 const idClienteVal = c.id_cliente || c.idCliente;
 
@@ -264,7 +249,7 @@ export const ClienteView = () => {
                     </td>
 
                     <td className="px-3 py-3 text-end">
-                      <span className={`fw-bold ${obtenerColorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
+                      <span className={`fw-bold ${colorPorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
                         ${Number(c.saldoDeudor || 0).toFixed(2)}
                       </span>
                     </td>

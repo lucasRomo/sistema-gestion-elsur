@@ -2,32 +2,20 @@ import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { RegistroActividad } from '../types/RegistroActividad';
+import { formatearFechaHora, resolverNombreUsuario } from '../../../utils/formato';
 
-const obtenerNombreUsuario = (reg: RegistroActividad) => {
-  if (reg.usuario?.persona) {
-    return `${reg.usuario.persona.nombre} ${reg.usuario.persona.apellido}`;
-  }
-  return reg.usuario?.nombreUsuario || 'Sistema';
-};
+const obtenerNombreUsuario = (reg: RegistroActividad) =>
+  resolverNombreUsuario(reg.usuario, { nombreCompleto: true, fallback: 'Sistema' });
 
 const formatearDato = (dato: string | null) => {
   if (!dato) return '-';
   return dato.replace(/^"(.*)"$/, '$1');
 };
 
-
-const normalizarFechaUTC = (fechaRaw: string) => {
-  const isoString = fechaRaw.endsWith('Z') || fechaRaw.includes('+') ? fechaRaw : `${fechaRaw}Z`;
-  return new Date(isoString);
-};
-
 const formatearFechaExport = (fechaRaw: string) => {
-  const fechaObj = normalizarFechaUTC(fechaRaw);
-  if (isNaN(fechaObj.getTime())) return '-';
-  return fechaObj.toLocaleString('es-AR', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit'
-  });
+  if (!fechaRaw) return '-';
+  const isoString = fechaRaw.endsWith('Z') || fechaRaw.includes('+') ? fechaRaw : `${fechaRaw}Z`;
+  return formatearFechaHora(isoString);
 };
 
 export const exportarHistorialActividadExcel = async (actividades: RegistroActividad[]) => {

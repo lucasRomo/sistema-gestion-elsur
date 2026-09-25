@@ -2,6 +2,8 @@ package com.elsur.sistema_gestion.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 import com.elsur.sistema_gestion.models.Usuario;
 
@@ -33,6 +35,8 @@ public class Merma {
     @JoinColumn(name = "id_insumo", nullable = true)
     private Insumo insumo;
 
+    @NotNull(message = "La cantidad de la merma es obligatoria")
+    @Positive(message = "La cantidad de la merma debe ser mayor a 0")
     @Column(nullable = false)
     private Double cantidad;
 

@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 import { clienteService } from '../services/clienteService';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
+import { colorPorSaldo } from '../../../utils/formato';
+import type { Cliente } from '../types/Cliente';
 
 interface Props {
-  cliente: any;
+  cliente: Cliente;
   onCerrar: () => void;
   onActualizar: () => void;
 }
@@ -114,11 +116,11 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   const handleRegistrarPago = async (e: React.FormEvent) => {
     e.preventDefault();
     if (guardandoPago) return;
-    if (montoPago <= 0) {
+    if (isNaN(montoPago) || montoPago <= 0) {
       setSuceso({
         show: true,
         titulo: "Atención",
-        mensaje: "El monto ingresado debe ser mayor a 0",
+        mensaje: "El monto ingresado debe ser un número válido mayor a 0",
         tipo: "error"
       });
       return;
@@ -239,23 +241,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                   <div className="p-3 rounded border" style={{ backgroundColor: cardBg, borderColor: inputBorder }}>
                     <small className="font-monospace fw-semibold" style={{ color: mutedText }}>Saldo Deudor Actual</small>
                     {(() => {
-                      const saldo = Math.abs(saldoDeudorLocal);
-                      const limiteVal = Number(limite || 0);
-                      let colorClase = 'text-success';
-                      if (saldoDeudorLocal > 0) {
-                        if (limiteVal > 0) {
-                          const porcentaje = (saldo / limiteVal) * 100;
-                          if (porcentaje >= 100) {
-                            colorClase = 'text-danger'; 
-                          } else if (porcentaje >= 75) {
-                            colorClase = 'text-warning'; 
-                          } else {
-                            colorClase = 'text-success';
-                          }
-                        } else {
-                          colorClase = 'text-danger';
-                        }
-                      }
+                      const colorClase = colorPorSaldo(saldoDeudorLocal, Number(limite || 0));
                       return (
                         <h3 className={`fw-bold mb-0 ${colorClase}`}>
                           ${saldoDeudorLocal.toFixed(2)}

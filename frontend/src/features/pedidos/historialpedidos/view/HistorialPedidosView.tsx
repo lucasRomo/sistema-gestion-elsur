@@ -19,6 +19,7 @@ import { ModalDevolucionPedido } from '../modals/ModalDevolucionPedido';
 
 import { VistaTicketPagoModal } from '../../../../components/modals/VistaTicketPagoModal';
 import { CuentaCorrienteModal } from '../../../clientes/components/CuentaCorrienteModal';
+import { formatearFechaHora, resolverEmpleadoGestion } from '../../../../utils/formato';
 
 export const HistorialPedidosPage: React.FC = () => {
   const { theme } = useTheme();
@@ -158,27 +159,10 @@ export const HistorialPedidosPage: React.FC = () => {
       ? p.asignaciones[p.asignaciones.length - 1] 
       : null;
 
-    const nombreEmpleado = ultimaAsignacion?.empleado?.persona
-      ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
-      : 'Sistema';
-
-    const formatearFechaString = (fechaIso: string | null | undefined) => {
-      if (!fechaIso) return '';
-      const [fecha, horaCompleta] = fechaIso.split('T');
-      if (!fecha) return fechaIso;
-      const [anio, mes, dia] = fecha.split('-');
-      if (!horaCompleta) return `${dia}/${mes}/${anio}`;
-      const partesHora = horaCompleta.split('.')[0].split(':');
-      let horas = parseInt(partesHora[0], 10);
-      const minutos = partesHora[1];
-      const ampm = horas >= 12 ? 'p. m.' : 'a. m.';
-      horas = horas % 12 || 12;
-      const horasStr = horas < 10 ? `0${horas}` : `${horas}`;
-      return `${dia}/${mes}/${anio} ${horasStr}:${minutos} ${ampm}`;
-    };
+    const nombreEmpleado = resolverEmpleadoGestion(p, 'Sistema');
 
     const fechaCierre = p.fecha_finalizacion || p.fecha_modificacion || ultimaAsignacion?.fecha_asignacion;
-    const fechaFormateadaParaBuscar = formatearFechaString(fechaCierre);
+    const fechaFormateadaParaBuscar = fechaCierre ? formatearFechaHora(fechaCierre) : '';
 
     const cumpleBusquedaGeneral = 
       nombreCliente.toLowerCase().includes(busquedaTermino) ||

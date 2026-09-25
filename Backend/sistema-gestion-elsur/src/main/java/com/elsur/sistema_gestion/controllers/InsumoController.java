@@ -3,6 +3,7 @@ package com.elsur.sistema_gestion.controllers;
 import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Insumo;
 import com.elsur.sistema_gestion.services.InsumoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class InsumoController {
 
     @PostMapping
     public ResponseEntity<?> crear(
-            @RequestBody Insumo insumo,
+            @Valid @RequestBody Insumo insumo,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
         return ResponseEntity.ok(insumoService.guardar(insumo, idUsuario));
     }
@@ -38,7 +39,7 @@ public class InsumoController {
     @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(
             @PathVariable Integer id,
-            @RequestBody Insumo insumo,
+            @Valid @RequestBody Insumo insumo,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
         insumo.setIdInsumo(id);
         return ResponseEntity.ok(insumoService.guardar(insumo, idUsuario));
@@ -63,6 +64,12 @@ public class InsumoController {
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
 
         double porcentaje = payload.get("porcentaje") != null ? Double.parseDouble(payload.get("porcentaje").toString()) : 0.0;
+        if (porcentaje <= -100) {
+            throw new SolicitudInvalidaException("El porcentaje de aumento no puede ser menor o igual a -100%.");
+        }
+        if (porcentaje > 1000) {
+            throw new SolicitudInvalidaException("El porcentaje de aumento no puede ser mayor a 1000%.");
+        }
         Integer idProveedor = payload.get("idProveedor") != null ? Integer.parseInt(payload.get("idProveedor").toString()) : null;
         String criterio = payload.get("criterio") != null ? payload.get("criterio").toString() : "TODOS";
 

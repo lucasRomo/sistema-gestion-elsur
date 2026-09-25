@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
+import type { Cliente } from '../types/Cliente';
 
 interface Props {
-  clientes: any[];
+  clientes: Cliente[];
   onCerrar: () => void;
-  onSeleccionarCliente: (cliente: any) => void;
+  onSeleccionarCliente: (cliente: Cliente) => void;
 }
 
 export const CuentasCorrientesResumenModal: React.FC<Props> = ({

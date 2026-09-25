@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 import { SidebarLayout } from '../../../components/layouts/SidebarLayout';
 import { useTurno } from '../../../Context/TurnoContext';
@@ -13,8 +12,11 @@ import { ModalConsultarArqueo } from '../components/ModalConsultarArqueo';
 import { ModalCerrarTurno } from '../components/ModalCerrarTurno';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { cajaService, type NuevoMovimientoDTO } from '../services/cajaService';
-import { renderBadgeCategoria } from '../components/RenderBadgeCategoria';
-import { apiFetch } from '../../../config/api';
+import { ResumenTurnoCard } from '../components/ResumenTurnoCard';
+import { GraficoFlujoCajaCard } from '../components/GraficoFlujoCajaCard';
+import { TablaMovimientosCaja } from '../components/TablaMovimientosCaja';
+import { AccionesRapidasCaja } from '../components/AccionesRapidasCaja';
+import { BarraAccionesTurno } from '../components/BarraAccionesTurno';
 
 export const CajaView: React.FC = () => {
   const navigate = useNavigate();
@@ -204,17 +206,6 @@ export const CajaView: React.FC = () => {
 
     if (idPedidoRaw && !isNaN(Number(idPedidoRaw))) {
       const idPedido = Number(idPedidoRaw);
-      
-      try {
-        const response = await apiFetch(`/pedidos/${idPedido}`);
-        if (response.ok) {
-          const pedidoCompleto = await response.json();
-          setTicketSeleccionado({ pedido: pedidoCompleto, movimiento: m });
-          return;
-        }
-      } catch (errorApi) {
-        console.warn("Llamada directa con apiFetch fallida, intentando con cajaService:", errorApi);
-      }
 
       try {
         const pedidoCompleto = await cajaService.obtenerPedidoPorId(idPedido);
@@ -265,35 +256,6 @@ export const CajaView: React.FC = () => {
   };
   }, [imagenComprobanteModal]);
 
-  const CustomCajaAreaTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      const esEgreso = data.esEgreso;
-      return (
-        <div
-          className="p-2 rounded-3 shadow-lg im-surface"
-          style={{ border: `1px solid ${esEgreso ? '#e22e2e' : '#8e45e0'}`, fontSize: '0.85rem' }}
-        >
-          <div className="d-flex align-items-center justify-content-between gap-3 mb-2 pb-1 border-bottom border-secondary border-opacity-25">
-            <span className="fw-bold text-body-secondary">{label}</span>
-            <span className={`fw-bold badge ${esEgreso ? 'bg-danger' : 'bg-success'}`}>
-              {esEgreso
-                ? `- $${Math.abs(data.montoMovimiento).toLocaleString('es-AR')}`
-                : `+ $${Math.abs(data.montoMovimiento).toLocaleString('es-AR')}`}
-            </span>
-          </div>
-          <div className="d-flex align-items-center justify-content-between gap-2">
-            <span className="text-body-secondary">Estado Caja:</span>
-            <span className="fw-bold" style={{ color: '#20c997' }}>
-              ${data.monto.toLocaleString('es-AR')}
-            </span>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <SidebarLayout activeItem="Caja">
       <div className={`container-fluid p-3 font-monospace ${textColor}`}>
@@ -303,283 +265,71 @@ export const CajaView: React.FC = () => {
         </div>
 
         <div className="row g-4 mb-4">
-          <div className="col-md-6">
-            <div className="p-4 rounded-3 h-100" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <span className="opacity-75 fw-medium">
-                  Flujo de Caja Actual: {' '}
-                  <span className={cajaAbierta ? 'text-success fw-bold' : 'text-danger fw-bold'}>
-                    {cajaAbierta ? 'Abierta' : 'Cerrado'}
-                  </span>
-                </span>
-              </div>
-              
-              <div className="small font-monospace opacity-50 mb-1">Saldo de Caja Actual</div>
-              
-              <h1 className="fw-bold mb-3" style={{ fontSize: '2.6rem' }}>
-                ${cajaAbierta ? saldoCaja.toLocaleString('es-AR') : '0'}
-              </h1>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <span>Inicio de Caja:</span>
-                <span className="fw-bold text-info fs-6 text-info-custom">
-                  ${cajaAbierta ? (turnoActual?.montoInicial || 0).toLocaleString('es-AR') : '0'}
-                </span>
-              </div>
-              <div className="border-top border-secondary pt-3">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <span>Total de Ingresos de Turno:</span>
-                  <span className="text-success fw-semibold font-monospace">
-                    ${cajaAbierta ? ingresosTurno.toLocaleString('es-AR') : '0'}
-                  </span>
-                </div>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span>Total de Egresos de Turno:</span>
-                  <span className="text-danger fw-semibold font-monospace">
-                    ${cajaAbierta ? egresosTurno.toLocaleString('es-AR') : '0'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ResumenTurnoCard
+            cajaAbierta={cajaAbierta}
+            saldoCaja={saldoCaja}
+            turnoActual={turnoActual}
+            ingresosTurno={ingresosTurno}
+            egresosTurno={egresosTurno}
+            cardBg={cardBg}
+            cardBorder={cardBorder}
+          />
 
-          <div className="col-md-6">
-            <div className="p-4 rounded-3 h-100" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle }}>
-              <div className="p-3 rounded" style={{ backgroundColor: graphInnerBg, border: `1px solid ${cardBorder}`, minHeight: '180px', overflowX: 'auto' }}>
-                <div className="text-center small opacity-50 mb-2 font-monospace">
-                  {new Date().toLocaleDateString('es-AR')}
-                </div>
-                
-                <div style={{ width: movimientos.length > 5 ? `${movimientos.length * 80}px` : '100%', height: '140px', minWidth: '100%' }}>
-                  {cajaAbierta && movimientos.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={[...movimientos].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-                        .map(m => {
-                          const esEgreso = m.tipoMovimiento === 'EGRESO';
-                          return {
-                            hora: new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }),
-                            monto: esEgreso ? -Math.abs(m.monto) : m.monto,
-                            esEgreso,
-                            montoMovimiento: m.monto
-                          };
-                        })}
-                        margin={{ top: 10, right: 15, left: -15, bottom: 5 }}
-                      >
-                        <defs>
-                          <linearGradient id="colorSaldoCaja" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#8e45e0" stopOpacity={0.8} />
-                            <stop offset="95%" stopColor="#8e45e0" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
-                        <XAxis dataKey="hora" tick={{ fill: chartTick, fontSize: 11, dy: 15 }} axisLine={{ stroke: chartGrid }} tickLine={false} />
-                        <YAxis domain={['auto', 'auto']} tick={{ fill: chartTick, fontSize: 11 }} axisLine={false} tickLine={false} />
-                        <RechartsTooltip content={<CustomCajaAreaTooltip />} />
-                        <Area
-                          type="monotone"
-                          dataKey="monto"
-                          stroke="#8e45e0"
-                          strokeWidth={3}
-                          fillOpacity={1}
-                          fill="url(#colorSaldoCaja)"
-                          dot={{ fill: dotColor, stroke: dotColor, strokeWidth: 2, r: 4 }}
-                          activeDot={{ r: 6 }}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="d-flex align-items-center justify-content-center h-100 text-muted small opacity-50" style={{ minHeight: '140px' }}>
-                      <i className="bi bi-graph-up-arrow me-2"></i> No hay datos disponibles para graficar
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+          <GraficoFlujoCajaCard
+            cajaAbierta={cajaAbierta}
+            movimientos={movimientos}
+            cardBg={cardBg}
+            cardBorder={cardBorder}
+            shadowStyle={shadowStyle}
+            graphInnerBg={graphInnerBg}
+            chartGrid={chartGrid}
+            chartTick={chartTick}
+            dotColor={dotColor}
+          />
         </div>
 
         <div className="row g-4 align-items-stretch mb-4">
-          <div className="col-lg-9 d-flex flex-column">
-            <h5 className="mb-3 fw-semibold">Registro de Movimientos de Caja</h5>
-            
-            <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: tableWrapBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle, height: '315px' }}>
-              <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapBg, height: '100%', overflowY: 'auto' }}>
-                <table className="table table-hover m-0 align-middle text-center" style={{ '--bs-table-bg': tableWrapBg, '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.075)', color: isDark ? '#fff' : 'inherit' } as React.CSSProperties}>
-                  <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
-                    <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
-                      <th style={{ width: '60px' }}>ID</th>
-                      <th style={{ width: '140px' }}>Fecha/Hora</th>
-                      <th style={{ width: '90px' }}>Monto</th>
-                      <th style={{ width: '110px' }}>Método</th>
-                      <th style={{ width: '120px' }}>Categoría</th>
-                      <th className="text-start">Descripción</th>
-                      <th style={{ width: '60px' }}>Usu.</th>
-                      <th style={{ width: '60px' }}>Ped.</th>
-                      <th style={{ width: '120px' }}>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {movimientos.length === 0 ? (
-                      <tr><td colSpan={9} className="py-5 opacity-50">No hay movimientos registrados hoy</td></tr>
-                    ) : (
-                      [...movimientos].reverse().map((m, idx) => {
-                        const imagenAdjunta = 
-                          m.comprobanteImagen || 
-                          m.comprobante || 
-                          m.imagenComprobante || 
-                          m.comprobante_imagen || 
-                          m.imagen_comprobante ||
-                          m.urlComprobante ||
-                          m.url_comprobante;
+          <TablaMovimientosCaja
+            movimientos={movimientos}
+            isDark={isDark}
+            tableWrapBg={tableWrapBg}
+            cardBorder={cardBorder}
+            shadowStyle={shadowStyle}
+            theadBg={theadBg}
+            onVerComprobante={(url) => setImagenComprobanteModal(url)}
+            onVerTicket={handleVerTicket}
+          />
 
-                        return (
-                          <tr key={m.id_movimiento || m.idMovimiento || idx} className="border-secondary" style={{ fontSize: '0.95rem' }}>
-                            <td className="fw-bold opacity-75">
-                              #{m.id_movimiento || m.idMovimiento || '-'}
-                            </td>
-                            <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
-                            <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
-                              {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
-                            </td>
-                            <td>
-                              <span className="badge bg-secondary font-monospace">
-                                {m.metodoPago || 'EFECTIVO'}
-                              </span>
-                            </td>
-                            <td>{renderBadgeCategoria(m, isDark)}</td>
-                            
-                            <td>
-                              <div 
-                                className="text-start" 
-                                style={{ wordBreak: 'break-word', minWidth: '180px' }}
-                                title={m.descripcion || 'Sin descripción'}
-                              >
-                                {m.descripcion || '-'}
-                              </div>
-                            </td>
-                            
-                            <td>
-                              {(() => {
-                                const u = m.usuario;
-
-                                if (u && typeof u === 'object') {
-                                  const nombreCompleto = `${u.nombre || u.first_name || ''} ${u.apellido || u.last_name || ''}`.trim();
-                                  if (nombreCompleto) return nombreCompleto;
-
-                                  if (u.nombreUsuario) return u.nombreUsuario;
-                                  if (u.username) return u.username;
-                                  if (u.nombre_usuario) return u.nombre_usuario;
-                                }
-
-                                if (typeof u === 'string' && isNaN(Number(u))) {
-                                  return u;
-                                }
-
-                                return 'Usuario no disponible';
-                              })()}
-                            </td>
-                            <td>
-                              {m.pedido?.idPedido || m.pedido?.id_pedido 
-                                ? `#${m.pedido?.idPedido || m.pedido?.id_pedido}` 
-                                : (m.descripcion?.includes('Pedido #') ? `#${m.descripcion.split('#')[1]?.trim()}` : '-')}
-                            </td>
-                            <td style={{ backgroundColor: 'transparent' }}>
-                              <div className="d-flex justify-content-center gap-1">
-                                {imagenAdjunta && (
-                                  <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-info border-0 p-1"
-                                    title="Ver Comprobante de Transferencia"
-                                    onClick={() => setImagenComprobanteModal(imagenAdjunta)}
-                                  >
-                                    <i className="bi bi-eye fs-5"></i>
-                                  </button>
-                                )}
-
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-outline-info border-0 p-1"
-                                  title="Ver Ticket de Comprobante"
-                                  onClick={() => handleVerTicket(m)}
-                                >
-                                  <i className="bi bi-receipt fs-5"></i>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-lg-3 d-flex flex-column justify-content-start align-items-stretch gap-4 pt-0">
-            <h5 className="mb-5 fw-semibold align-self-start" style={{ visibility: 'hidden' }}>Acciones</h5>
-
-            <button
-              className="btn btn-success py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
-              style={{ fontSize: '0.95rem', borderRadius: '8px' }}
-              disabled={!cajaAbierta}
-              onClick={() => setIsModalOpen(true)}
-            >
-              <span>Crear Nuevo Movimiento</span>
-              <i className="bi bi-plus-lg fs-5 ms-2"></i>
-            </button>
-
-            <button
-              className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
-              style={{ backgroundColor: '#0c500c', color: '#ffffff', fontSize: '0.95rem', border: '#0c500c' }}
-              disabled={!cajaAbierta || movimientos.length === 0}
-              onClick={() =>
-                exportarCajaExcel(movimientos, {
-                  montoInicial: turnoActual?.montoInicial || 0,
-                  saldoCaja,
-                  ingresosTurno,
-                  egresosTurno,
-                })
-              }
-            >
-              <span>Descargar Excel de Caja</span>
-              <i className="bi bi-file-earmark-excel-fill fs-5 ms-2"></i>
-            </button>
-
-            <button
-              className="btn py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"
-              style={{ backgroundColor: '#c0392b', color: '#ffffff', fontSize: '0.95rem', border: '#c0392b' }}
-              disabled={!cajaAbierta || movimientos.length === 0}
-              onClick={() =>
-                exportarCajaPDF(movimientos, {
-                  montoInicial: turnoActual?.montoInicial || 0,
-                  saldoCaja,
-                  ingresosTurno,
-                  egresosTurno,
-                })
-              }
-            >
-              <span>Descargar PDF Caja</span>
-              <i className="bi bi-file-earmark-pdf-fill fs-5 ms-2"></i>
-            </button>
-          </div>
+          <AccionesRapidasCaja
+            cajaAbierta={cajaAbierta}
+            hayMovimientos={movimientos.length > 0}
+            onNuevoMovimiento={() => setIsModalOpen(true)}
+            onExportarExcel={() =>
+              exportarCajaExcel(movimientos, {
+                montoInicial: turnoActual?.montoInicial || 0,
+                saldoCaja,
+                ingresosTurno,
+                egresosTurno,
+              })
+            }
+            onExportarPDF={() =>
+              exportarCajaPDF(movimientos, {
+                montoInicial: turnoActual?.montoInicial || 0,
+                saldoCaja,
+                ingresosTurno,
+                egresosTurno,
+              })
+            }
+          />
         </div>
 
-        <div className="d-flex flex-wrap gap-3 justify-content-center w-100 mt-5 pt-2 px-2 m-0 pb-3">
-          <button onClick={() => navigate('/dashboard')} className="btn btn-secondary px-4 py-2">Volver</button>
-
-          <button className="btn btn-success d-flex align-items-center justify-content-center fw-semibold text-center text-white" style={{ height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }} disabled={cajaAbierta} onClick={handleAbrirAperturaModal}>
-            <span>Iniciar Caja del Día</span>
-          </button>
-          
-          <button className="btn d-flex align-items-center justify-content-center fw-semibold text-center" style={{ backgroundColor: '#149bdf', color: '#ffffff', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }} disabled={!cajaAbierta} onClick={handleConsultarArqueo}>
-            <span>Consultar Arqueo</span>
-          </button>
-          
-          <button className="btn btn-danger d-flex align-items-center justify-content-center fw-semibold text-center text-white" style={{ backgroundColor: '#daa32d', height: '42px', width: '220px', borderRadius: '8px', fontSize: '0.9rem', whiteSpace: 'nowrap', border: 'none' }} disabled={!cajaAbierta} onClick={handleAbrirCierreModal}>
-            <span>Cerrar Turno y Arqueo</span>
-          </button>
-        </div>
+        <BarraAccionesTurno
+          cajaAbierta={cajaAbierta}
+          onVolver={() => navigate('/dashboard')}
+          onIniciarCaja={handleAbrirAperturaModal}
+          onConsultarArqueo={handleConsultarArqueo}
+          onCerrarTurno={handleAbrirCierreModal}
+        />
       </div>
 
       {showModalApertura && (

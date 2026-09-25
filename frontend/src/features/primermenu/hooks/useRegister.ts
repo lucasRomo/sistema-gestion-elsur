@@ -33,12 +33,18 @@ export const useRegister = () => {
   const handleRegistrarTodo = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const salarioNumerico = parseFloat(empleadoData.salario);
+    if (isNaN(salarioNumerico)) {
+      mostrarError('Por favor ingresá un salario numérico válido.');
+      return;
+    }
+
     const nuevoUsuario: Usuario = {
       nombreUsuario: empleadoData.nombreUsuario,
       password: empleadoData.password,
       rol: { idRol: 2 },
       cargo: empleadoData.cargo || undefined,
-      salario: parseFloat(empleadoData.salario) || 0,
+      salario: salarioNumerico,
       fechaContratacion: empleadoData.fechaContratacion || new Date().toISOString().split('T')[0],
       persona: {
         nombre: personaData.nombre,

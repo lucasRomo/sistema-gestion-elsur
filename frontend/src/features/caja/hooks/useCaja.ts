@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { cajaService } from '../services/cajaService';
 import type { MovimientoCaja, DatosArqueo, NuevoMovimientoDTO, Turno } from '../services/cajaService';
+import { pad } from '../../../utils/formato';
 
 export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
   const [saldoCaja, setSaldoCaja] = useState<number>(0);
@@ -74,7 +75,6 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
       urlComprobante = data.comprobanteImagen;
     }
 
-    const pad = (num: number) => String(num).padStart(2, '0');
     const ahora = new Date();
     const fechaMomento = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`;
 
@@ -128,7 +128,6 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
       urlComprobante = comprobanteImagen;
     }
 
-    const pad = (num: number) => String(num).padStart(2, '0');
     const ahora = new Date();
     const fechaMomento = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}:${pad(ahora.getSeconds())}`;
 

@@ -3,6 +3,10 @@ export interface UsuarioCaja {
   id_usuario?: number;
   nombre?: string;
   apellido?: string;
+  first_name?: string;
+  last_name?: string;
+  nombreUsuario?: string;
+  nombre_usuario?: string;
   username?: string;
 }
 
@@ -12,15 +16,20 @@ export interface MovimientoCaja {
   monto: number;
   tipoMovimiento: 'INGRESO' | 'EGRESO';
   categoria?: string;
-  descripcion: string;
+  descripcion?: string;
   metodoPago?: string;
   comprobanteImagen?: string;
   comprobante?: string;
   imagenComprobante?: string;
+  comprobante_imagen?: string;
+  imagen_comprobante?: string;
+  urlComprobante?: string;
+  url_comprobante?: string;
   fecha: string;
   usuario?: UsuarioCaja | string;
   pedido?: {
     idPedido?: number;
+    id_pedido?: number;
   } | null;
 }
 
@@ -47,11 +56,12 @@ export interface NuevoMovimientoDTO {
   categoria?: string;
   idPedido?: string | null;
   metodoPago?: string;
+  comprobanteImagen?: string | File | null;
 }
 
 export interface Turno {
   idTurno: number;
-  usuario?: UsuarioCaja | string;
+  usuario?: any;
   fechaApertura: string;
   fechaCierre?: string | null;
   montoInicial: number;

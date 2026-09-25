@@ -2,6 +2,7 @@ package com.elsur.sistema_gestion.controllers;
 
 import com.elsur.sistema_gestion.services.CompraProveedorService;
 import com.elsur.sistema_gestion.models.CompraProveedor;
+import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class CompraProveedorController {
     }
 
     @PostMapping
-    public CompraProveedor create(@RequestBody CompraProveedor compraProveedor) {
+    public CompraProveedor create(@Valid @RequestBody CompraProveedor compraProveedor) {
         return compraProveedorService.save(compraProveedor);
     }
 }

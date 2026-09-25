@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../../../../Context/ThemeContext';
+import { formatearFechaHora, resolverEmpleadoGestion } from '../../../../utils/formato';
 
 interface FilaHistorialProps {
   pedido: any;
@@ -36,33 +37,14 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
     ? p.asignaciones[p.asignaciones.length - 1] 
     : null;
 
-  const nombreEmpleado = ultimaAsignacion?.empleado?.persona
-    ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
-    : 'Sistema';
-
-  const formatearFechaString = (fechaIso: string | null | undefined) => {
-    if (!fechaIso) return '-';
-    const [fecha, horaCompleta] = fechaIso.split('T');
-    if (!fecha) return fechaIso;
-
-    const [anio, mes, dia] = fecha.split('-');
-    if (!horaCompleta) return `${dia}/${mes}/${anio}`;
-
-    const [hhStr, mm] = horaCompleta.split('.')[0].split(':');
-    let hh = parseInt(hhStr, 10);
-    const ampm = hh >= 12 ? 'p. m.' : 'a. m.';
-    hh = hh % 12 || 12; 
-    const hhFormat = hh < 10 ? `0${hh}` : `${hh}`;
-
-    return `${dia}/${mes}/${anio}, ${hhFormat}:${mm} ${ampm}`;
-  };
+  const nombreEmpleado = resolverEmpleadoGestion(p, 'Sistema');
 
   const fechaAsignacionRaw = p.fecha_creacion || ultimaAsignacion?.fecha_asignacion;
-  const fechaAsignacionFormateada = formatearFechaString(fechaAsignacionRaw);
-  const fechaEntregaEstimadaFormateada = formatearFechaString(p.fecha_entrega_estimada);
-  
+  const fechaAsignacionFormateada = formatearFechaHora(fechaAsignacionRaw);
+  const fechaEntregaEstimadaFormateada = formatearFechaHora(p.fecha_entrega_estimada);
+
   const fechaEntregaFinalRaw = p.fecha_finalizacion || p.fecha_modificacion || ultimaAsignacion?.fecha_asignacion;
-  const fechaEntregaFinalFormateada = formatearFechaString(fechaEntregaFinalRaw);
+  const fechaEntregaFinalFormateada = formatearFechaHora(fechaEntregaFinalRaw);
 
   return (
     <tr 

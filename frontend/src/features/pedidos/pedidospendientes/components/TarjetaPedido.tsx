@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ContadorTiempo } from './ContadorTiempo';
 import { useTheme } from '../../../../Context/ThemeContext';
+import { pad, formatearFechaHora, resolverEmpleadoGestion } from '../../../../utils/formato';
 
 interface TarjetaPedidoProps {
   pedido: any;
@@ -64,9 +65,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
     ? p.asignaciones[p.asignaciones.length - 1]
     : null;
 
-  const nombreEmpleado = ultimaAsignacion?.empleado?.persona
-    ? `${ultimaAsignacion.empleado.persona.nombre} ${ultimaAsignacion.empleado.persona.apellido}`
-    : (ultimaAsignacion?.empleado?.nombre ?? 'Sin Asignar');
+  const nombreEmpleado = resolverEmpleadoGestion(p);
 
   const aplicarDesfaseTresHoras = (fechaStr: string | null | undefined): Date | null => {
     if (!fechaStr) return null;
@@ -88,20 +87,11 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
 
     if (!dateObj) return fechaIso;
 
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const dia = pad(dateObj.getDate());
-    const mes = pad(dateObj.getMonth() + 1);
-    const anio = dateObj.getFullYear();
+    if (!incluirHora) {
+      return `${pad(dateObj.getDate())}/${pad(dateObj.getMonth() + 1)}/${dateObj.getFullYear()}`;
+    }
 
-    if (!incluirHora) return `${dia}/${mes}/${anio}`;
-
-    let hh = dateObj.getHours();
-    const mm = pad(dateObj.getMinutes());
-    const ampm = hh >= 12 ? 'p. m.' : 'a. m.';
-    hh = hh % 12 || 12;
-    const hhFormat = pad(hh);
-
-    return `${dia}/${mes}/${anio}, ${hhFormat}:${mm} ${ampm}`;
+    return formatearFechaHora(dateObj);
   };
 
   const formatearHoraOCorta = (fechaIso: string | null | undefined, restar3hs = false) => {
@@ -117,7 +107,6 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
 
     if (!dateObj) return fechaIso;
 
-    const pad = (n: number) => String(n).padStart(2, '0');
     const dia = pad(dateObj.getDate());
     const mes = pad(dateObj.getMonth() + 1);
     const anio = String(dateObj.getFullYear()).slice(-2);

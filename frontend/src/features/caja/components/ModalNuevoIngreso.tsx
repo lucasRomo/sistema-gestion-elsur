@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 import type { NuevoMovimientoDTO } from '../services/cajaService';
+import { pad } from '../../../utils/formato';
 
 interface ModalProps {
   isOpen: boolean;
@@ -36,7 +37,7 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
   useEffect(() => {
     if (isOpen) {
       const hoy = new Date();
-      const fechaFormato = `${hoy.getDate().toString().padStart(2, '0')}/${(hoy.getMonth() + 1).toString().padStart(2, '0')}/${hoy.getFullYear().toString().substring(2)} - ${hoy.toLocaleTimeString()}`;
+      const fechaFormato = `${pad(hoy.getDate())}/${pad(hoy.getMonth() + 1)}/${hoy.getFullYear().toString().substring(2)} - ${hoy.toLocaleTimeString()}`;
       setFechaPlaceholder(fechaFormato);
       setGuardando(false);
     }

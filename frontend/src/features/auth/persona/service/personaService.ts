@@ -1,10 +1,5 @@
 import { API_BASE_URL, apiFetch } from '../../../../config/api';
-
-export interface TipoDocumento {
-  idTipoDocumento: number;
-  nombreTipo?: string;
-  nombre?: string;
-}
+import type { TipoDocumento } from '../../../../types/TipoDocumento';
 
 export const personaService = {
   obtenerTiposDocumento: async (): Promise<TipoDocumento[]> => {

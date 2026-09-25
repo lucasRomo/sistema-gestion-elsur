@@ -161,14 +161,6 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
                 }
             }
 
-            if (permisosUsuario.contains(normalizar("REPOSITORIO DIGITAL"))) {
-                if (pathMatcher.match("/api/productos/**", path) ||
-                    pathMatcher.match("/api/producto-insumo/**", path) ||
-                    pathMatcher.match("/api/insumos/**", path)) {
-                    return true;
-                }
-            }
-
             if (permisosUsuario.contains(normalizar("PRODUCTOS"))) {
                 if (pathMatcher.match("/api/insumos/**", path) ||
                     pathMatcher.match("/api/unidades-medida/**", path) ||
@@ -305,7 +297,8 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
         }
 
         if (pathMatcher.match("/api/usuarios/**", path) ||
-            pathMatcher.match("/api/tipos-documento/**", path)) {
+            pathMatcher.match("/api/tipos-documento/**", path) ||
+            pathMatcher.match("/api/empleados/**", path)) {
             return "Gestión de Usuarios";
         }
 

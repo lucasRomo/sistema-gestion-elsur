@@ -1,6 +1,8 @@
 package com.elsur.sistema_gestion.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -23,6 +25,8 @@ public class CompraProveedor {
     private LocalDateTime fecha;
 
     @Column(nullable = false, precision = 10, scale = 2)
+    @NotNull(message = "El monto total es obligatorio.")
+    @Positive(message = "El monto total debe ser mayor a 0.")
     private BigDecimal montoTotal;
 
     @Column(length = 50)

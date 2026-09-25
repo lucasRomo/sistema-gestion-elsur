@@ -77,7 +77,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiError> handleRuntimeException(RuntimeException ex, HttpServletRequest request) {
         log.warn("RuntimeException no tipada en {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
-        return construirRespuesta(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+        // No devolvemos ex.getMessage() al cliente: para excepciones no controladas explícitamente
+        // (NumberFormatException, NullPointerException, violaciones de integridad, etc.) ese texto
+        // es un detalle interno de Java/JPA, no un mensaje pensado para mostrarse. El detalle real
+        // queda en el log del servidor (línea de arriba); el cliente recibe un mensaje genérico y seguro.
+        return construirRespuesta(HttpStatus.BAD_REQUEST, "La solicitud no pudo procesarse. Verificá los datos ingresados.", request);
     }
 
     @ExceptionHandler(Exception.class)

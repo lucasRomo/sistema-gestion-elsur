@@ -2,6 +2,8 @@ package com.elsur.sistema_gestion.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,6 +24,8 @@ public class MovimientoCaja {
     private LocalDateTime fecha = LocalDateTime.now();
 
     @Column(precision = 10, scale = 2, nullable = false)
+    @NotNull(message = "El monto es obligatorio.")
+    @Positive(message = "El monto debe ser mayor a 0.")
     private BigDecimal monto;
 
     @Column(length = 20, nullable = false)

@@ -4,6 +4,7 @@ import { informesService } from '../services/informesService';
 import { renderBadgeCategoria } from '../../../features/caja/components/RenderBadgeCategoria';
 import { useTheme } from '../../../Context/ThemeContext';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
+import { pad, formatearFechaHora } from '../../../utils/formato';
 
 interface ModalRegistrosArqueoProps {
   isOpen: boolean;
@@ -182,7 +183,7 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
 
   const formatFecha = (fecha?: string | null) => {
     if (!fecha) return '—';
-    return new Date(fecha).toLocaleString('es-AR');
+    return formatearFechaHora(fecha);
   };
 
   const formatMonto = (monto?: number) => `$${Number(monto || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
@@ -190,7 +191,6 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
   const fechaLocalISO = (fecha?: string | null) => {
     if (!fecha) return '';
     const d = new Date(fecha);
-    const pad = (n: number) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   };
 
@@ -216,7 +216,6 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
   const horaLocalHHmm = (fecha?: string | null) => {
     if (!fecha) return '';
     const d = new Date(fecha);
-    const pad = (n: number) => String(n).padStart(2, '0');
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 

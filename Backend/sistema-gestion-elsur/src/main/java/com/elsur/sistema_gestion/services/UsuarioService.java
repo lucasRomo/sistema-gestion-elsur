@@ -9,7 +9,6 @@ public interface UsuarioService {
     Usuario guardar(Usuario usuario, Integer idUsuarioOperador);
     Usuario buscarPorId(Integer id);
     Optional<Usuario> buscarPorNombreUsuario(String nombreUsuario);
-    void eliminar(Integer id);
 
     void cambiarPassword(Integer idUsuario, String passwordActual, String nuevaPassword);
     void cambiarNombreUsuario(Integer idUsuario, String usuarioActual, String usuarioNuevo);

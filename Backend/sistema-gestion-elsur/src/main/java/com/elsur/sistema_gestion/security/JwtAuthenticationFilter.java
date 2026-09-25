@@ -42,6 +42,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String username = jwtService.obtenerUsername(token);
             String rol = jwtService.obtenerRol(token);
 
+            // Un token válido siempre debería traer el claim "rol" (generarToken() lo pone),
+            // pero si llegara uno sin ese claim, rol.toUpperCase() tiraría una NullPointerException
+            // que este filtro corre ANTES del GlobalExceptionHandler, así que saldría como un
+            // error crudo del servlet en vez de una respuesta JSON prolija. Tratamos "sin rol"
+            // como token inválido: seguimos la cadena sin autenticar, en vez de romper.
+            if (rol == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             // Creamos la autoridad basada en el rol guardado en el JWT
             SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + rol.toUpperCase());
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import logoSur from '../../assets/logo-elsur.png';
 import { useTheme } from '../../Context/ThemeContext';
 import { AsistenteWidget } from '../../features/asistente/components/AsistenteWidget';
+import { pad, resolverNombreUsuario } from '../../utils/formato';
 
 interface SidebarLayoutProps {
   activeItem: string;
@@ -17,6 +18,14 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   const [usuario, setUsuario] = useState<any>(null);
   const [fechaActual, setFechaActual] = useState<string>('');
   const [colapsado, setColapsado] = useState<boolean>(false);
+  const [seccionesAbiertas, setSeccionesAbiertas] = useState<Record<string, boolean>>(() => {
+    try {
+      const guardado = localStorage.getItem('sidebar_secciones_abiertas');
+      return guardado ? JSON.parse(guardado) : {};
+    } catch {
+      return {};
+    }
+  });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const mainBg = esOscuro ? '#1b1b1b' : '#e5e7eb'; 
@@ -41,8 +50,8 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
     cargarUsuarioDeSesion();
 
     const hoy = new Date();
-    const dia = String(hoy.getDate()).padStart(2, '0');
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dia = pad(hoy.getDate());
+    const mes = pad(hoy.getMonth() + 1);
     const anio = hoy.getFullYear();
     setFechaActual(`${dia}/${mes}/${anio}`);
 
@@ -66,7 +75,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
     }
   }, [activeItem]);
 
-  const nombrePersona = usuario?.persona?.nombre || usuario?.nombreUsuario || 'Usuario';
+  const nombrePersona = resolverNombreUsuario(usuario);
   const rolUsuario = usuario?.rol?.nombreRol || usuario?.rol?.nombre || 'Empleado';
 
   const esAdmin = rolUsuario.toUpperCase().includes('ADMIN') || rolUsuario.toUpperCase().includes('GERENTE');
@@ -135,6 +144,20 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
     navigate('/login');
   };
 
+  const seccionAbierta = (nombreSeccion: string) => seccionesAbiertas[nombreSeccion] !== false;
+
+  const toggleSeccion = (nombreSeccion: string) => {
+    setSeccionesAbiertas(prev => {
+      const nuevo = { ...prev, [nombreSeccion]: !seccionAbierta(nombreSeccion) };
+      try {
+        localStorage.setItem('sidebar_secciones_abiertas', JSON.stringify(nuevo));
+      } catch {
+        // localStorage puede fallar (modo privado, cuota llena); no es crítico para la navegación
+      }
+      return nuevo;
+    });
+  };
+
   const handleNavegacion = (path: string) => {
     if (colapsado) {
       setColapsado(false);
@@ -197,6 +220,39 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           </span>
         )}
       </button>
+    );
+  };
+
+  const renderizarSeccion = (nombreSeccion: string, items: { name: string; icon: string; path: string }[]) => {
+    if (items.length === 0) return null;
+    // La sección que contiene la página activa siempre se muestra abierta,
+    // aunque el usuario la haya colapsado antes, para no "perder" la pantalla actual.
+    const contieneActiva = items.some(item => item.name === activeItem);
+    const abierta = seccionAbierta(nombreSeccion) || contieneActiva;
+
+    return (
+      <React.Fragment key={nombreSeccion}>
+        {colapsado && <hr className="w-100 my-0" style={{ borderColor: sidebarBorder, opacity: 0.3 }} />}
+        <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
+          {!colapsado && (
+            <button
+              onClick={() => toggleSeccion(nombreSeccion)}
+              className="btn d-flex align-items-center justify-content-between w-100 mt-1.5 mb-1 px-1 py-0 border-0"
+              style={{ backgroundColor: 'transparent' }}
+              title={abierta ? 'Contraer sección' : 'Expandir sección'}
+            >
+              <span className="small fw-bold font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: mutedText }}>
+                — {nombreSeccion}
+              </span>
+              <i
+                className={`bi bi-chevron-${abierta ? 'up' : 'down'}`}
+                style={{ fontSize: '0.6rem', color: mutedText, transition: 'transform 0.2s' }}
+              ></i>
+            </button>
+          )}
+          {(colapsado || abierta) && items.map(renderizarBotonMenu)}
+        </div>
+      </React.Fragment>
     );
   };
 
@@ -350,75 +406,11 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
             </div>
           )}
 
-          {menuProduccion.length > 0 && (
-            <>
-              {colapsado && <hr className="w-100 my-0" style={{ borderColor: sidebarBorder, opacity: 0.3 }} />}
-              <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
-                {!colapsado && (
-                  <div className="small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: mutedText }}>
-                    — PRODUCCIÓN
-                  </div>
-                )}
-                {menuProduccion.map(renderizarBotonMenu)}
-              </div>
-            </>
-          )}
-
-          {menuStock.length > 0 && (
-            <>
-              {colapsado && <hr className="w-100 my-0" style={{ borderColor: sidebarBorder, opacity: 0.3 }} />}
-              <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
-                {!colapsado && (
-                  <div className="small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: mutedText }}>
-                    — STOCK
-                  </div>
-                )}
-                {menuStock.map(renderizarBotonMenu)}
-              </div>
-            </>
-          )}
-
-          {menuEntidades.length > 0 && (
-            <>
-              {colapsado && <hr className="w-100 my-0" style={{ borderColor: sidebarBorder, opacity: 0.3 }} />}
-              <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
-                {!colapsado && (
-                  <div className="small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: mutedText }}>
-                    — ADMINISTRACIÓN / ENTIDADES
-                  </div>
-                )}
-                {menuEntidades.map(renderizarBotonMenu)}
-              </div>
-            </>
-          )}
-
-          {menuGerente.length > 0 && (
-            <>
-              {colapsado && <hr className="w-100 my-0" style={{ borderColor: sidebarBorder, opacity: 0.3 }} />}
-              <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
-                {!colapsado && (
-                  <div className="small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: mutedText }}>
-                    — OPCIONES DE GERENTE
-                  </div>
-                )}
-                {menuGerente.map(renderizarBotonMenu)}
-              </div>
-            </>
-          )}
-
-          {menuConfiguracion.length > 0 && (
-            <>
-              {colapsado && <hr className="w-100 my-0" style={{ borderColor: sidebarBorder, opacity: 0.3 }} />}
-              <div className={colapsado ? 'd-flex flex-column gap-1 w-100' : ''}>
-                {!colapsado && (
-                  <div className="small fw-bold mt-1.5 mb-1 ps-1 font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: mutedText }}>
-                    — MI CUENTA
-                  </div>
-                )}
-                {menuConfiguracion.map(renderizarBotonMenu)}
-              </div>
-            </>
-          )}
+          {renderizarSeccion('PRODUCCIÓN', menuProduccion)}
+          {renderizarSeccion('STOCK', menuStock)}
+          {renderizarSeccion('ADMINISTRACIÓN / ENTIDADES', menuEntidades)}
+          {renderizarSeccion('OPCIONES DE GERENTE', menuGerente)}
+          {renderizarSeccion('MI CUENTA', menuConfiguracion)}
         </div>
 
         <div className="pt-2 mt-1" style={{ borderTop: `1px solid ${sidebarBorder}` }}>

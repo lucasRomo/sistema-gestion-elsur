@@ -1,14 +1,4 @@
-export interface Persona {
-  idPersona?: number;
-  nombre: string;
-  apellido: string;
-}
-
-export interface Empleado {
-  idEmpleado: number;
-  persona?: Persona;
-  cargo?: string;
-}
+import type { Empleado } from '../../../types/Empleado';
 
 export interface Incidencia {
   idIncidencia?: number;

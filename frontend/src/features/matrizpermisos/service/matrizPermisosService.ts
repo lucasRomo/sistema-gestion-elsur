@@ -1,4 +1,6 @@
 import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
+import type { Usuario as UsuarioCanonico } from '../../../types/Usuario';
+
 const BASE_URL = API_BASE_URL;
 
 export interface ModuloPermiso {
@@ -7,20 +9,14 @@ export interface ModuloPermiso {
   activo: boolean;
 }
 
-export interface Usuario {
+// El idUsuario y el nombreRol del tipo canónico son opcionales (contemplan usuarios/roles
+// aún no persistidos), pero este módulo siempre trabaja con usuarios y roles ya existentes
+// (vienen del backend y se usan como identificadores en llamadas al service), por eso se
+// redeclaran como obligatorios.
+export type Usuario = Omit<UsuarioCanonico, 'idUsuario' | 'rol'> & {
   idUsuario: number;
-  nombreUsuario: string;
-  persona?: {
-    nombre: string;
-    apellido: string;
-    email?: string;
-  };
-  rol?: {
-    idRol: number;
-    nombreRol: string;
-  };
-  tienePermisosPersonalizados?: boolean;
-}
+  rol: { idRol: number; nombreRol: string };
+};
 
 export const matrizPermisosService = {
   obtenerRoles: async () => {

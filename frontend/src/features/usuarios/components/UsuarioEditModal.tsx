@@ -169,23 +169,26 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
 
                   <div className="col-md-3 px-1">
                     <label className="form-label small fw-medium" style={{ color: labelColor }}>Salario ($)</label>
-                    <input 
-                      type="text" 
-                      className="form-control font-monospace" 
-                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }} 
+                    <input
+                      type="text"
+                      className="form-control font-monospace"
+                      style={{ backgroundColor: inputBg, borderColor: inputBorder, color: inputTextColor }}
                       placeholder="0"
-                      value={editData.salario === 0 ? '' : editData.salario} 
+                      value={editData.salario === 0 ? '' : editData.salario}
+                      required
                       onChange={e => {
                         const valor = e.target.value;
                         if (valor === '') {
                           setEditData({ ...editData, salario: '' });
                         } else {
                           const numero = Number(valor);
-                          if (!isNaN(numero)) {
+                          if (!isNaN(numero) && numero >= 0) {
                             setEditData({ ...editData, salario: numero });
                           }
                         }
                       }}
+                      onInvalid={(e: any) => e.target.setCustomValidity("El salario no puede quedar vacío")}
+                      onInput={(e: any) => e.target.setCustomValidity("")}
                     />
                   </div>
 

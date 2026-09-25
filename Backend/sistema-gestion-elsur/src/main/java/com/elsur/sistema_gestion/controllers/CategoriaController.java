@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.controllers;
 
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.CategoriaProducto;
 import com.elsur.sistema_gestion.repositories.CategoriaRepository;
 import com.elsur.sistema_gestion.services.CategoriaService;
@@ -23,6 +24,9 @@ public class CategoriaController {
 
     @PostMapping
     public CategoriaProducto registrar(@RequestBody CategoriaProducto categoria) {
+        if (categoria.getNombre() == null || categoria.getNombre().trim().isEmpty()) {
+            throw new SolicitudInvalidaException("El nombre de la categoría no puede estar vacío.");
+        }
         return categoriaService.guardar(categoria);
     }
 

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { verComprobantePedido } from '../../../../services/descargarArchivoProtegido';
+import { formatearFechaHora } from '../../../../utils/formato';
 
 interface ModalGestionarComprobantesProps {
   pedido: any;
@@ -8,21 +9,6 @@ interface ModalGestionarComprobantesProps {
   onEliminarComprobante: (idComprobante: number) => Promise<void>;
   onVerTicket?: (pedido: any, cobro?: any) => void;
 }
-
-const formatearFechaYHora = (fechaStr: string) => {
-  if (!fechaStr) return "-";
-  const fecha = new Date(fechaStr);
-  if (isNaN(fecha.getTime())) return fechaStr;
-  
-  const dia = String(fecha.getDate()).padStart(2, '0');
-  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-  const anio = fecha.getFullYear();
-  
-  const horas = String(fecha.getHours()).padStart(2, '0');
-  const minutos = String(fecha.getMinutes()).padStart(2, '0');
-  
-  return `${dia}/${mes}/${anio} - ${horas}:${minutos} hs`;
-};
 
 export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProps> = ({
   pedido,
@@ -115,7 +101,7 @@ export const ModalGestionarComprobantes: React.FC<ModalGestionarComprobantesProp
                           <td className="fw-bold text-success">
                             ${Number(montoCobro).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                           </td>
-                          <td>{formatearFechaYHora(fechaCobro)}</td>
+                          <td>{formatearFechaHora(fechaCobro)}</td>
                           <td>
                             <span 
                               className="d-inline-block px-2 py-1 rounded font-monospace" 

@@ -24,24 +24,6 @@ export const pedidoService = {
     return text ? JSON.parse(text) : null; 
   },
 
-  subirComprobanteFisico: async (idPedido: number, file: File): Promise<boolean> => {
-    const formData = new FormData();
-    formData.append('comprobante', file);
-
-    const response = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}/comprobante`, {
-      method: 'POST',
-      body: formData,
-    });
-    return response.ok;
-  },
-
-  eliminarComprobanteFisico: async (idPedido: number): Promise<boolean> => {
-    const response = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}/comprobante`, {
-      method: 'DELETE',
-    });
-    return response.ok;
-  },
-
   obtenerTodos: async (): Promise<Pedido[]> => {
     const response = await apiFetch(`${API_BASE_URL}/pedidos`);
     if (!response.ok) throw new Error('Error al obtener la lista de pedidos');

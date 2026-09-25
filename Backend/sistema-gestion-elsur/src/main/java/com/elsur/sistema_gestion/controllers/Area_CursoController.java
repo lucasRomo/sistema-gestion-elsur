@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.controllers;
 
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Area_Curso;
 import com.elsur.sistema_gestion.services.Area_CursoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class Area_CursoController {
 
     @PostMapping
     public Area_Curso create(@RequestBody Area_Curso areaCurso) {
+        if (areaCurso.getNombreArea() == null || areaCurso.getNombreArea().trim().isEmpty()) {
+            throw new SolicitudInvalidaException("El nombre del área no puede estar vacío.");
+        }
         return areaCursoService.save(areaCurso);
     }
 }

@@ -16,6 +16,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.util.StringUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,9 +35,16 @@ public class ComprobantePagoController {
 
     private final Path rootFolder = Paths.get("uploads/comprobantes");
 
+    // En local (sin configurar nada) sigue apuntando a localhost:8080 como antes.
+    // En Render, hay que setear la variable de entorno APP_BASE_URL (o app.base-url en
+    // application.properties) con la URL pública real del backend para que este link funcione
+    // para cualquier cliente que no sea el propio servidor.
+    @Value("${app.base-url:http://localhost:8080}")
+    private String baseUrl;
+
     @Autowired
     private PedidoRepository pedidoRepository;
-    
+
     @Autowired
     private ComprobantePagoRepository comprobanteRepository;
 
@@ -50,9 +58,9 @@ public class ComprobantePagoController {
         }
     }
 
-    @PostMapping("/{id}/comprobante")
+    @PostMapping("/{id}/comprobante-fisico")
     @Transactional
-    public ResponseEntity<?> subirComprobante(@PathVariable Integer id, @RequestParam("comprobante") MultipartFile file) {
+    public ResponseEntity<?> subirComprobante(@PathVariable Integer id, @RequestParam("archivo") MultipartFile file) {
         try {
             Pedido pedido = pedidoRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
@@ -63,10 +71,10 @@ public class ComprobantePagoController {
 
             String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
             String filename = "comprobante-pedido-" + id + "-" + System.currentTimeMillis() + "." + extension;
-            
+
             Files.copy(file.getInputStream(), this.rootFolder.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
 
-            String urlServidor = "http://localhost:8080/api/pedidos/comprobantes/files/" + filename;
+            String urlServidor = baseUrl + "/api/pedidos/comprobantes/files/" + filename;
 
             ComprobantePago nuevoComprobante = new ComprobantePago();
             nuevoComprobante.setPedido(pedido);
@@ -104,7 +112,7 @@ public class ComprobantePagoController {
         }
     }
 
-    @DeleteMapping("/{id}/comprobante")
+    @DeleteMapping("/{id}/comprobante-fisico")
     @Transactional
     public ResponseEntity<?> eliminarComprobante(@PathVariable Integer id) {
         try {

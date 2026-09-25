@@ -1,8 +1,9 @@
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import type { Cliente } from '../types/Cliente';
 
-export const exportarClientesExcel = async (clientes: any[]) => {
+export const exportarClientesExcel = async (clientes: Cliente[]) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Gestión de Clientes');
 
@@ -67,7 +68,7 @@ export const exportarClientesExcel = async (clientes: any[]) => {
 };
 
 export const exportarClientesPDF = (
-  clientes: any[],
+  clientes: Cliente[],
   fechaDesde?: string,
   fechaHasta?: string
 ) => {

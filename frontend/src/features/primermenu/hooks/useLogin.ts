@@ -33,11 +33,21 @@ export const useLogin = ({ onLoginExitoso }: UseLoginProps) => {
 
       if (response.ok) {
         const data = await response.json();
-        const token = data.token || "token_simulado_el_sur_2026";
-        const usuario = data.usuario || data; 
-        
+        const token = data.token;
+
+        if (!token) {
+          setModalFeedback({
+            mostrar: true,
+            tipo: 'error',
+            mensaje: 'No se pudo completar el inicio de sesión (respuesta inválida del servidor).'
+          });
+          return;
+        }
+
+        const usuario = data.usuario || data;
+
         localStorage.setItem('usuario_logueado', JSON.stringify(usuario));
-        localStorage.setItem('token_sesion', token); 
+        localStorage.setItem('token_sesion', token);
         setUsuarioTemporal(usuario);
 
         setModalFeedback({

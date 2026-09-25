@@ -2,6 +2,7 @@ import type { DatosCompraInsumo } from '../types/compraInsumos';
 import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
 const API_COMPRAS_INSUMOS = `${API_BASE_URL}/compras-insumos`;
+const API_IA_ANALIZAR = `${API_BASE_URL}/ia/analizar-comprobante`;
 
 export const compraInsumosService = {
 
@@ -34,5 +35,27 @@ export const compraInsumosService = {
     } catch {
       return null;
     }
+  },
+
+  analizarComprobanteConIA: async (
+    file: File,
+    catalogos: { insumos: any[]; productos: any[] }
+  ): Promise<any[]> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('catalogos', JSON.stringify(catalogos));
+
+    const response = await apiFetch(API_IA_ANALIZAR, {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Error al procesar la imagen en el servidor');
+    }
+
+    return data.items || [];
   }
 };

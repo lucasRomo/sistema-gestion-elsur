@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { clienteService, type TipoDocumento } from '../services/clienteService';
+import type { Cliente } from '../types/Cliente';
 
 interface ClienteEditModalProps {
-  cliente: any;
+  cliente: Cliente;
   onCerrar: () => void;
   onConfirmar: (clienteActualizado: any) => Promise<void>;
 }

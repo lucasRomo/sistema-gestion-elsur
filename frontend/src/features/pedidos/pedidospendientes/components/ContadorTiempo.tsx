@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { pad } from '../../../../utils/formato';
 
 interface Props {
   fechaEstimadaIso: string | null | undefined;
@@ -33,7 +34,7 @@ export const ContadorTiempo: React.FC<Props> = ({ fechaEstimadaIso }) => {
 
       let stringTiempo = '';
       if (dias > 0) stringTiempo += `${dias}d `;
-      stringTiempo += `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+      stringTiempo += `${pad(horas)}:${pad(minutos)}:${pad(segundos)}`;
 
       if (difMs < 0) {
         setEsVencido(true);

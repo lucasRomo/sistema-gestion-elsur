@@ -2,27 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { SidebarLayout } from '../../../../components/layouts/SidebarLayout';
-import { SuccesModal } from '../../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../../Context/ThemeContext';
 
 import { empleadoService } from '../../../../services/empleadoService';
-import { CuentaCorrienteModal } from '../../../clientes/components/CuentaCorrienteModal';
-import { VistaTicketPagoModal } from '../../../../components/modals/VistaTicketPagoModal';
 
 import { usePedidosPendientes } from '../hooks/usePedidosPendientes';
 import { PedidoPendienteService } from '../service/pedidoPendienteService';
 
 import { FiltrosPedidos } from '../components/FiltrosPedidos';
-import { TarjetaPedido } from '../components/TarjetaPedido'; 
-import { ModalCambioEstado } from '../modals/ModalCambioEstado';
-import { ModalRegistrarPago } from '../modals/ModalRegistrarPago';
-import { ModalGestionarComprobantes } from '../modals/ModalGestionarComprobantes';
-import { ModalAdvertenciaDeuda } from '../modals/ModalAdvertenciaDeuda';
-import { VistaTicketModal } from '../../general/modals/VistaTicketModal';
-import { ModalGestionMermas } from '../modals/ModalGestionMermas';
-import { ModalErrorStock } from '../../general/modals/ModalErrorStock';
-import { ModalConfirmarDesvincular } from '../modals/ModalConfirmarDesvincular';
-import { ModalAvisoCuentaCorriente } from '../modals/ModalAvisoCuentaCorriente';
+import { ListaPedidosPendientes } from '../components/ListaPedidosPendientes';
+import { PedidosModales } from '../components/PedidosModales';
 
 export const PedidosPendientesView: React.FC = () => {
   const { pedidos, cargando, actualizarEstado, refrescar } = usePedidosPendientes();
@@ -378,31 +367,20 @@ export const PedidosPendientesView: React.FC = () => {
         </div>
 
         <div className="flex-grow-1 overflow-y-auto mb-2 pe-1" style={{ height: 'calc(100vh - 210px)' }}>
-          {cargando ? (
-            <div className="text-center py-5 font-monospace text-muted">Cargando Pedidos Pendientes...</div>
-          ) : pedidosOrdenados.length === 0 ? (
-            <div className="text-center py-5 font-monospace text-muted">No se encontraron registros bajo este filtro.</div>
-          ) : (
-            <div className="d-flex flex-column gap-2">
-              {pedidosOrdenados.map((pedido) => (
-                <div key={`pedido-card-${pedido.id_pedido}`} className="w-100">
-                  <TarjetaPedido 
-                    pedido={pedido}
-                    onCambioEstado={handleCambioEstadoCombo}
-                    onCambioUbicacion={handleCambioUbicacion}
-                    onSelectPago={handleAbrirPago}
-                    onSelectTicket={setVerTicketPedido}
-                    onSubirArchivo={handleSubirArchivoFisico}
-                    onEliminarComprobante={handleEliminarComprobanteFisico}
-                    empleados={empleados}
-                    onCambioEmpleado={handleCambioEmpleado}
-                    onSelectComprobantes={(p) => setPedidoGestionComprobanteSel(p)}
-                    onGestionarMermas={(p) => setPedidoMermaSel(p)}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+          <ListaPedidosPendientes
+            cargando={cargando}
+            pedidos={pedidosOrdenados}
+            empleados={empleados}
+            onCambioEstado={handleCambioEstadoCombo}
+            onCambioUbicacion={handleCambioUbicacion}
+            onSelectPago={handleAbrirPago}
+            onSelectTicket={setVerTicketPedido}
+            onSubirArchivo={handleSubirArchivoFisico}
+            onEliminarComprobante={handleEliminarComprobanteFisico}
+            onCambioEmpleado={handleCambioEmpleado}
+            onSelectComprobantes={(p) => setPedidoGestionComprobanteSel(p)}
+            onGestionarMermas={(p) => setPedidoMermaSel(p)}
+          />
         </div>
 
         <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-2 border-secondary pb-1 mt-auto">
@@ -421,149 +399,75 @@ export const PedidosPendientesView: React.FC = () => {
         </div>
       </div>
 
-      {pedidoEstadoSel && (
-        <ModalCambioEstado 
-          pedido={pedidoEstadoSel}
-          nuevoEstado={nuevoEstadoPendiente}
-          onClose={() => { setPedidoEstadoSel(null); setNuevoEstadoPendiente(''); }}
-          onConfirm={confirmarCambioEstado}
-        />
-      )}
-
-      <ModalAdvertenciaDeuda 
-        data={modalAdvertenciaDeuda}
-        onClose={() => setModalAdvertenciaDeuda(prev => ({ ...prev, show: false }))}
+      <PedidosModales
+        pedidoEstadoSel={pedidoEstadoSel}
+        nuevoEstadoPendiente={nuevoEstadoPendiente}
+        onCerrarCambioEstado={() => { setPedidoEstadoSel(null); setNuevoEstadoPendiente(''); }}
+        onConfirmarCambioEstado={confirmarCambioEstado}
+        modalAdvertenciaDeuda={modalAdvertenciaDeuda}
+        onCerrarAdvertenciaDeuda={() => setModalAdvertenciaDeuda(prev => ({ ...prev, show: false }))}
         onActualizarYEntregar={handleActualizarLimiteYEntregar}
         onAutorizarUnaVez={() => ejecutarCambioEstado(modalAdvertenciaDeuda.pedido.id_pedido, modalAdvertenciaDeuda.nuevoEstado, modalAdvertenciaDeuda.pedido.estado, modalAdvertenciaDeuda.observaciones)}
         onRegistrarCobro={(pedido) => {
           setModalAdvertenciaDeuda(prev => ({ ...prev, show: false }));
           setPedidoPagoSel(pedido);
         }}
-      />
-
-      {pedidoPagoSel && (
-        <ModalRegistrarPago 
-          show={true}
-          pedido={pedidoPagoSel}
-          onClose={() => setPedidoPagoSel(null)}
-          onConfirm={confirmarPago}
-        />
-      )}
-
-      {verTicketPedido && (
-        <VistaTicketModal 
-          pedido={verTicketPedido}
-          onClose={() => setVerTicketPedido(null)}
-        />
-      )}
-
-      {ticketPagoSel && (
-        <VistaTicketPagoModal 
-          pedido={ticketPagoSel.pedido}
-          movimiento={ticketPagoSel.movimiento}
-          onClose={() => setTicketPagoSel(null)}
-        />
-      )}
-
-      {pedidoGestionComprobanteSel && (
-        <ModalGestionarComprobantes
-          pedido={pedidoGestionComprobanteSel}
-          onClose={() => setPedidoGestionComprobanteSel(null)}
-          onVincularComprobante={handleVincularComprobante}
-          onEliminarComprobante={async (idComp) => setConfirmarDesvincular({ show: true, idComprobante: idComp })} 
-          onVerTicket={(pedido, cobro) => {
-            setTicketPagoSel({ pedido, movimiento: cobro });
-          }}
-        />
-      )}
-
-      {pedidoMermaSel && (
-        <ModalGestionMermas
-          pedido={pedidoMermaSel}
-          onClose={() => setPedidoMermaSel(null)}
-          onConfirm={() => {
-            setPedidoMermaSel(null);
-            refrescar();
-          }}
-        />
-      )}
-
-      <ModalErrorStock 
-        show={sucesoError.show}
-        mensaje={sucesoError.mensaje}
-        titulo={sucesoError.titulo}
-        onClose={() => {
+        pedidoPagoSel={pedidoPagoSel}
+        onCerrarPago={() => setPedidoPagoSel(null)}
+        onConfirmarPago={confirmarPago}
+        verTicketPedido={verTicketPedido}
+        onCerrarTicket={() => setVerTicketPedido(null)}
+        ticketPagoSel={ticketPagoSel}
+        onCerrarTicketPago={() => setTicketPagoSel(null)}
+        pedidoGestionComprobanteSel={pedidoGestionComprobanteSel}
+        onCerrarGestionComprobantes={() => setPedidoGestionComprobanteSel(null)}
+        onVincularComprobante={handleVincularComprobante}
+        onEliminarComprobanteDigital={async (idComp) => setConfirmarDesvincular({ show: true, idComprobante: idComp })}
+        onVerTicketDesdeComprobante={(pedido, cobro) => {
+          setTicketPagoSel({ pedido, movimiento: cobro });
+        }}
+        pedidoMermaSel={pedidoMermaSel}
+        onCerrarMerma={() => setPedidoMermaSel(null)}
+        onConfirmarMerma={() => {
+          setPedidoMermaSel(null);
+          refrescar();
+        }}
+        sucesoError={sucesoError}
+        onCerrarError={() => {
           setSucesoError({ show: false, mensaje: '' });
           refrescar();
         }}
-      />
-
-      <ModalConfirmarDesvincular 
-        show={confirmarDesvincular.show}
-        onClose={() => setConfirmarDesvincular({ show: false, idComprobante: null })}
-        onConfirm={ejecutarEliminarComprobante}
-      />
-
-      <ModalAvisoCuentaCorriente 
-        show={modalAvisoCuentaCorriente.show}
+        confirmarDesvincular={confirmarDesvincular}
+        onCerrarConfirmarDesvincular={() => setConfirmarDesvincular({ show: false, idComprobante: null })}
+        onConfirmarEliminarComprobante={ejecutarEliminarComprobante}
+        modalAvisoCuentaCorriente={modalAvisoCuentaCorriente}
         isDarkMode={isDarkMode}
         onRevisarCuenta={() => {
           const clienteAsociado = modalAvisoCuentaCorriente.pedido?.cliente;
           setModalAvisoCuentaCorriente({ show: false, pedido: null });
-          setClienteCuentaCorriente(clienteAsociado); 
+          setClienteCuentaCorriente(clienteAsociado);
         }}
         onAbonarPedido={() => {
           const pedidoAbonar = modalAvisoCuentaCorriente.pedido;
           setModalAvisoCuentaCorriente({ show: false, pedido: null });
           setPedidoPagoSel(pedidoAbonar);
         }}
-        onClose={() => setModalAvisoCuentaCorriente({ show: false, pedido: null })}
-      />
-
-      {clienteCuentaCorriente && (
-        <CuentaCorrienteModal 
-          cliente={clienteCuentaCorriente}
-          onCerrar={() => setClienteCuentaCorriente(null)}
-          onActualizar={() => {}}
-        />
-      )}
-
-      {modalNotif.show && (
-        <SuccesModal 
-          show={modalNotif.show} 
-          message={modalNotif.msg} 
-          onClose={() => {
-            setModalNotif({ show: false, msg: '' });
+        onCerrarAvisoCuentaCorriente={() => setModalAvisoCuentaCorriente({ show: false, pedido: null })}
+        clienteCuentaCorriente={clienteCuentaCorriente}
+        onCerrarCuentaCorriente={() => setClienteCuentaCorriente(null)}
+        modalNotif={modalNotif}
+        onCerrarModalNotif={() => {
+          setModalNotif({ show: false, msg: '' });
+          refrescar();
+        }}
+        suceso={suceso}
+        onCerrarSuceso={() => {
+          setSuceso({ ...suceso, show: false });
+          if (suceso.tipo === 'exito') {
             refrescar();
-          }} 
-        />
-      )}
-
-      {suceso.show && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
-          <div className="modal-dialog modal-sm modal-dialog-centered">
-            <div 
-              className="modal-content p-4 text-white text-center" 
-              style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}
-            >
-              <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-x-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
-              <h5 className="fw-bold">{suceso.titulo}</h5>
-              <p className="small" style={{ color: '#a1a1aa' }}>{suceso.mensaje}</p>
-              <button 
-                className={`btn ${suceso.tipo === 'exito' ? 'btn-secondary' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold`}
-                onClick={() => {
-                  setSuceso({ ...suceso, show: false });
-                  if (suceso.tipo === 'exito') {
-                    refrescar();
-                  }
-                }}
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          }
+        }}
+      />
     </SidebarLayout>
   );
 };

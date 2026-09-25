@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.controllers;
 
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Turno;
 import com.elsur.sistema_gestion.services.TurnoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,9 @@ public class TurnoController {
     @RequestParam Double montoReal,
     @RequestParam(required = false) String observaciones,
     @RequestParam(required = false) Integer idUsuario) {
+        if (montoReal == null || montoReal < 0) {
+            throw new SolicitudInvalidaException("El monto real contado no puede ser negativo.");
+        }
         Turno turnoCerrado = turnoService.cerrarTurno(id, montoReal, observaciones, idUsuario);
         return ResponseEntity.ok(turnoCerrado);
     }

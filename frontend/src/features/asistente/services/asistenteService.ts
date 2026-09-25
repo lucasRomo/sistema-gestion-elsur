@@ -1,5 +1,4 @@
-import { apiFetch } from '../../../config/api';
-const API_URL = 'http://localhost:8080/api';
+import { apiFetch, API_BASE_URL } from '../../../config/api';
 
 export interface MensajeChat {
   rol: 'usuario' | 'asistente';
@@ -10,7 +9,7 @@ export const asistenteService = {
   async preguntar(mensaje: string, modulo: string | null, historial: MensajeChat[]): Promise<string> {
     const token = localStorage.getItem('token_sesion');
 
-    const res = await apiFetch(`${API_URL}/asistente/preguntar`, {
+    const res = await apiFetch(`${API_BASE_URL}/asistente/preguntar`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

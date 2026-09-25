@@ -68,7 +68,12 @@ public class CuentaCorrienteController {
         if (payload.get("monto") == null) {
             throw new SolicitudInvalidaException("Debe indicar el monto del pago.");
         }
-        BigDecimal monto = new BigDecimal(payload.get("monto").toString());
+        BigDecimal monto;
+        try {
+            monto = new BigDecimal(payload.get("monto").toString());
+        } catch (NumberFormatException e) {
+            throw new SolicitudInvalidaException("El monto del pago no es un número válido.");
+        }
         if (monto.compareTo(BigDecimal.ZERO) <= 0) {
             throw new SolicitudInvalidaException("El monto del pago debe ser mayor a 0.");
         }
@@ -79,7 +84,12 @@ public class CuentaCorrienteController {
         if (payload.get("idUsuario") == null) {
             throw new SolicitudInvalidaException("Debe indicar el usuario que registra el pago.");
         }
-        Integer idUsuario = Integer.parseInt(payload.get("idUsuario").toString());
+        Integer idUsuario;
+        try {
+            idUsuario = Integer.parseInt(payload.get("idUsuario").toString());
+        } catch (NumberFormatException e) {
+            throw new SolicitudInvalidaException("El usuario indicado no es válido.");
+        }
 
         Cliente cliente = clienteRepository.findById(idCliente)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró el cliente con id: " + idCliente));
