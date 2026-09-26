@@ -92,11 +92,16 @@ export const Productos: React.FC = () => {
   ).length;
 
   const handleAplicarAumentoMasivo = async (data: ActualizarPreciosPayload) => {
-    await actualizarPreciosMasivo(data);
-    await cargar();
-    const accion = data.porcentaje >= 0 ? 'Aumento' : 'Descuento';
-    setMensajeExito(`${accion} de ${Math.abs(data.porcentaje)}% aplicado a los productos seleccionados`);
-    setMostrarExito(true);
+    showLoading('Aplicando cambios de precio...');
+    try {
+      await actualizarPreciosMasivo(data);
+      await cargar();
+      const accion = data.porcentaje >= 0 ? 'Aumento' : 'Descuento';
+      setMensajeExito(`${accion} de ${Math.abs(data.porcentaje)}% aplicado a los productos seleccionados`);
+      setMostrarExito(true);
+    } finally {
+      hideLoading();
+    }
   };
 
   const handleToggleVinculo = async (producto: Producto) => {
@@ -113,8 +118,9 @@ export const Productos: React.FC = () => {
         console.error("Error al verificar la receta del producto:", err);
       }
     }
+    showLoading('Actualizando vínculo de stock...');
     try {
-     const estabaVinculado = !!producto.stockVinculado; 
+     const estabaVinculado = !!producto.stockVinculado;
      await toggleStockVinculado(producto.idProducto);
      await cargar();
      setMensajeExito(
@@ -125,14 +131,21 @@ export const Productos: React.FC = () => {
      setMostrarExito(true);
      } catch (err: any) {
      alert(err?.message || 'Error al cambiar el vínculo de stock del producto.');
+    } finally {
+      hideLoading();
     }};
 
   const handleRecetaGuardada = async () => {
-  setShowRecetaModal(false);
-  setProductoSeleccionadoReceta(null);
-  await cargar();
-  setMensajeExito('Receta guardada exitosamente');
-  setMostrarExito(true);
+  showLoading('Guardando receta...');
+  try {
+    setShowRecetaModal(false);
+    setProductoSeleccionadoReceta(null);
+    await cargar();
+    setMensajeExito('Receta guardada exitosamente');
+    setMostrarExito(true);
+  } finally {
+    hideLoading();
+  }
   };
 
   return (
@@ -276,13 +289,18 @@ export const Productos: React.FC = () => {
         onClose={() => setShowModal(false)}
         onGuardar={async (data) => {
           if (productoEditando) {
-            setProductoEditando(data); 
+            setProductoEditando(data);
             setMostrarConfirmacion(true);
           } else {
-            await guardar(data);
-            setShowModal(false);
-            setMensajeExito('Producto Guardado Exitosamente');
-            setMostrarExito(true);
+            showLoading('Guardando producto...');
+            try {
+              await guardar(data);
+              setShowModal(false);
+              setMensajeExito('Producto Guardado Exitosamente');
+              setMostrarExito(true);
+            } finally {
+              hideLoading();
+            }
           }
         }}
       />

@@ -74,11 +74,16 @@ export const Insumos: React.FC = () => {
     idProveedor?: number | null;
     idsInsumos?: number[];
   }) => {
-    await actualizarInsumosMasivo(data);
-    await cargar();
-    const accion = data.porcentaje >= 0 ? 'Aumento' : 'Descuento';
-    setMensajeExito(`${accion} de ${Math.abs(data.porcentaje)}% aplicado correctamente`);
-    setMostrarExito(true);
+    showLoading('Aplicando cambios de precio...');
+    try {
+      await actualizarInsumosMasivo(data);
+      await cargar();
+      const accion = data.porcentaje >= 0 ? 'Aumento' : 'Descuento';
+      setMensajeExito(`${accion} de ${Math.abs(data.porcentaje)}% aplicado correctamente`);
+      setMostrarExito(true);
+    } finally {
+      hideLoading();
+    }
   };
 
   return (
@@ -255,10 +260,15 @@ export const Insumos: React.FC = () => {
         insumos={insumos}
         onClose={() => setShowMermasModal(false)}
         onExito={async () => {
-          await cargar();
-          setShowMermasModal(false);
-          setMensajeExito('Merma de insumo registrada exitosamente');
-          setMostrarExito(true);
+          showLoading('Registrando merma...');
+          try {
+            await cargar();
+            setShowMermasModal(false);
+            setMensajeExito('Merma de insumo registrada exitosamente');
+            setMostrarExito(true);
+          } finally {
+            hideLoading();
+          }
         }}
       />
 
@@ -278,10 +288,15 @@ export const Insumos: React.FC = () => {
             setInsumoEditando(data);
             setMostrarConfirmacion(true);
           } else {
-            await guardar(data);
-            setShowModalForm(false);
-            setMensajeExito('Insumo Creado Correctamente');
-            setMostrarExito(true);
+            showLoading('Guardando insumo...');
+            try {
+              await guardar(data);
+              setShowModalForm(false);
+              setMensajeExito('Insumo Creado Correctamente');
+              setMostrarExito(true);
+            } finally {
+              hideLoading();
+            }
           }
         }}
       />
@@ -294,9 +309,14 @@ export const Insumos: React.FC = () => {
           setInsumoConvertirSeleccionado(null);
         }}
         onExito={async (msg) => {
-          await cargar();
-          setMensajeExito(msg);
-          setMostrarExito(true);
+          showLoading('Procesando...');
+          try {
+            await cargar();
+            setMensajeExito(msg);
+            setMostrarExito(true);
+          } finally {
+            hideLoading();
+          }
         }}
       />
 

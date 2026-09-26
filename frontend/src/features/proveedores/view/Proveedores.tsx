@@ -11,6 +11,7 @@ import { exportarProveedoresExcel, exportarProveedoresPDF } from '../utils/expor
 
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useIsMobile } from '../../../hook/useIsMobile';
 
 export const Proveedores: React.FC = () => {
@@ -157,6 +158,7 @@ export const Proveedores: React.FC = () => {
         onClose={() => setShowModal(false)}
         onSave={async (proveedorNormalizado) => {
           const aGuardar = proveedorNormalizado || proveedorSeleccionado!;
+          showLoading('Guardando proveedor...');
           try {
             await guardar(aGuardar);
             setShowModal(false);
@@ -164,6 +166,8 @@ export const Proveedores: React.FC = () => {
             setShowSuccess(true);
           } catch (e: any) {
             alert("Error: " + e.message);
+          } finally {
+            hideLoading();
           }
         }}
       />
@@ -176,6 +180,7 @@ export const Proveedores: React.FC = () => {
           setShowUbicacionModal(false);
         }}
         onSaveUbicacion={async (prov) => {
+          showLoading('Guardando ubicación...');
           try {
             await guardar(prov);
             setProveedorSeleccionado(null);
@@ -184,6 +189,8 @@ export const Proveedores: React.FC = () => {
             setShowSuccess(true);
           } catch (e: any) {
             alert("Error: " + e.message);
+          } finally {
+            hideLoading();
           }
         }}
       />

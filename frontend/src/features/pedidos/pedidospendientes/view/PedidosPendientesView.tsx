@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { SidebarLayout } from '../../../../components/layouts/SidebarLayout';
 import { useTheme } from '../../../../Context/ThemeContext';
+import { showLoading, hideLoading } from '../../../../config/loadingStore';
 
 import { empleadoService } from '../../../../services/empleadoService';
 
@@ -83,16 +84,19 @@ export const PedidosPendientesView: React.FC = () => {
   };
 
   const handleCambioEmpleado = async (idPedido: number, idEmpleado: string) => {
+    showLoading('Asignando empleado...');
     try {
       const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
       const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
-      
+
       await PedidoPendienteService.asignarEmpleado(idPedido, idEmpleado, idUsuarioActivo);
       await refrescar();
       setModalNotif({ show: true, msg: "El empleado ha sido asignado correctamente." });
     } catch (error) {
       console.error("Error al asignar:", error);
       alert("Error al asignar el empleado.");
+    } finally {
+      hideLoading();
     }
   };
 
@@ -100,12 +104,13 @@ export const PedidosPendientesView: React.FC = () => {
     const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
     const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
 
+    showLoading('Actualizando estado del pedido...');
     try {
       await actualizarEstado(idPedido, nuevoEst, estadoAnt, observaciones, idUsuarioActivo);
       await refrescar();
-      setModalNotif({ 
-        show: true, 
-        msg: `El estado del pedido #${idPedido} cambió a "${nuevoEst}" correctamente.` 
+      setModalNotif({
+        show: true,
+        msg: `El estado del pedido #${idPedido} cambió a "${nuevoEst}" correctamente.`
       });
     } catch (error: any) {
       console.error("Error al cambiar estado:", error);
@@ -119,6 +124,7 @@ export const PedidosPendientesView: React.FC = () => {
       setPedidoEstadoSel(null);
       setNuevoEstadoPendiente('');
       setModalAdvertenciaDeuda(prev => ({ ...prev, show: false }));
+      hideLoading();
     }
   };
 
@@ -250,6 +256,7 @@ export const PedidosPendientesView: React.FC = () => {
   };
 
   const handleCambioUbicacion = async (idPedido: number, nuevaUbicacion: string) => {
+    showLoading('Actualizando ubicación...');
     try {
       await PedidoPendienteService.actualizarUbicacion(idPedido, nuevaUbicacion);
       await refrescar();
@@ -257,6 +264,8 @@ export const PedidosPendientesView: React.FC = () => {
     } catch (error) {
       console.error("Error al actualizar la ubicación:", error);
       setSucesoError({ show: true, mensaje: "No se pudo actualizar la ubicación del pedido en el servidor." });
+    } finally {
+      hideLoading();
     }
   };
 

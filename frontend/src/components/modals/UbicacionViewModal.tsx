@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../Context/ThemeContext';
+import { showLoading, hideLoading } from '../../config/loadingStore';
 
 interface UbicacionViewModalProps {
   cliente: any;
@@ -25,6 +26,7 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
 
   const [modoEdicion, setModoEdicion] = useState(false);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [guardando, setGuardando] = useState(false);
 
   const [dirData, setDirData] = useState({
     idDireccion: direccionOriginal.idDireccion,
@@ -48,6 +50,7 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
   };
 
   const handleGuardarDefinitivo = async () => {
+  if (guardando) return;
   const clienteActualizado = {
     ...cliente,
     persona: {
@@ -56,16 +59,23 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
         ...dirData,
         piso: dirData.piso || '',
         departamento: dirData.departamento || '',
-        ciudad: dirData.ciudad || '',       
-        provincia: dirData.provincia || '', 
-        pais: dirData.pais || ''            
+        ciudad: dirData.ciudad || '',
+        provincia: dirData.provincia || '',
+        pais: dirData.pais || ''
       }
     }
   };
 
-  await onConfirmar(clienteActualizado);
-  setMostrarConfirmacion(false);
-  setModoEdicion(false);
+  setGuardando(true);
+  showLoading('Guardando ubicación...');
+  try {
+    await onConfirmar(clienteActualizado);
+    setMostrarConfirmacion(false);
+    setModoEdicion(false);
+  } finally {
+    setGuardando(false);
+    hideLoading();
+  }
 };
 
   return (
@@ -309,11 +319,11 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
               <h5 className="fw-bold">¿Modificar Ubicación?</h5>
               <p className="small" style={{ color: '#a1a1aa' }}>Se actualizará la dirección asociada de forma permanente.</p>
               <div className="d-flex justify-content-center gap-2 mt-3">
-                <button className="btn btn-outline-light btn-sm px-3" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#8d1414', color: '#ffffff'}} onClick={() => setMostrarConfirmacion(false)}>
+                <button className="btn btn-outline-light btn-sm px-3" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#8d1414', color: '#ffffff'}} onClick={() => setMostrarConfirmacion(false)} disabled={guardando}>
                   Volver
                 </button>
-                <button className="btn text-white btn-sm px-3 fw-bold" style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e', color: '#ffffff' }} onClick={handleGuardarDefinitivo}>
-                  Guardar
+                <button className="btn text-white btn-sm px-3 fw-bold" style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e', color: '#ffffff' }} onClick={handleGuardarDefinitivo} disabled={guardando}>
+                  {guardando ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
             </div>

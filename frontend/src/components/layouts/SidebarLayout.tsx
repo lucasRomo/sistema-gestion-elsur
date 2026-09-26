@@ -401,8 +401,8 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           style={{
             overflowY: 'auto',
             overflowX: 'hidden',
-            justifyContent: colapsado ? 'space-evenly' : 'flex-start',
-            gap: colapsado ? '0px' : '0.25rem'
+            justifyContent: colapsado ? 'center' : 'flex-start',
+            gap: colapsado ? '0.4rem' : '0.25rem'
           }}
         >
           {menuPrincipales.length > 0 && (

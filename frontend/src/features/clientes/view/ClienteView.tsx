@@ -11,6 +11,7 @@ import { useClientes } from '../hooks/useClientes';
 import { UbicacionViewModal } from '../../../components/modals/UbicacionViewModal';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useIsMobile } from '../../../hook/useIsMobile';
 import { exportarClientesExcel, exportarClientesPDF } from '../utils/exportClientesUtils';
 import { colorPorSaldo } from '../../../utils/formato';
@@ -93,10 +94,11 @@ export const ClienteView = () => {
       }
     };
 
-    try { 
-      await registrarCliente(payload); 
+    showLoading('Registrando cliente...');
+    try {
+      await registrarCliente(payload);
       setMsgSuccess("El Cliente ha sido registrado con éxito");
-      setShowSuccess(true); 
+      setShowSuccess(true);
 
       setFormData({
         nombre: '', apellido: '', tipoDocumento: '', numeroDocumento: '',
@@ -105,19 +107,21 @@ export const ClienteView = () => {
         razonSocial: '', personaDeContacto: '', limiteCredito: '0'
       });
 
-      setPaso(0); 
-    } 
+      setPaso(0);
+    }
     catch (e: any) {
       alert("Error: " + e.message);
     }
     finally {
       setGuardando(false);
+      hideLoading();
     }
   };
 
   const handleConfirmarEdicion = async (data: any) => {
     if (guardando) return;
     setGuardando(true);
+    showLoading('Guardando cambios...');
     try {
       await registrarCliente(data);
       setMsgSuccess("Cambios guardados correctamente");
@@ -131,6 +135,7 @@ export const ClienteView = () => {
     }
     finally {
       setGuardando(false);
+      hideLoading();
     }
   };
 

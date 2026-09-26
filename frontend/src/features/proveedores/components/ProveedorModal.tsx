@@ -161,10 +161,12 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     } else {
 
       setGuardando(true);
+      showLoading('Guardando proveedor...');
       try {
         await onSave(datosNormalizados);
       } finally {
         setGuardando(false);
+        hideLoading();
       }
     }
   };

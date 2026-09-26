@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Usuario } from '../../../types/Usuario';
 import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api'; // Ajustá la profundidad si tus carpetas difieren
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 
 export const useRegister = () => {
   const [personaData, setPersonaData] = useState({
@@ -67,6 +68,7 @@ export const useRegister = () => {
       }
     };
 
+    showLoading('Registrando usuario...');
     try {
       const responseUsuario = await apiFetch('/usuarios', {
         method: 'POST',
@@ -97,6 +99,8 @@ export const useRegister = () => {
     } catch (error) {
       console.error(error);
       mostrarError('Error de red al conectar con el servidor.');
+    } finally {
+      hideLoading();
     }
   };
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { mermaService, type MermaEntity } from '../../../../services/mermaService';
 import { useTheme } from '../../../../Context/ThemeContext';
 import { apiFetch } from '../../../../config/api';
+import { showLoading, hideLoading } from '../../../../config/loadingStore';
 import { PedidoPendienteService } from '../service/pedidoPendienteService';
 
 interface ModalGestionMermasProps {
@@ -145,6 +146,7 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
     }));
 
     setGuardando(true);
+    showLoading('Registrando merma...');
     try {
       await mermaService.registrarMermas(mermasPayload);
       setSelections({});
@@ -156,6 +158,7 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
       setMostrarAlerta(true);
     } finally {
       setGuardando(false);
+      hideLoading();
     }
   };
 

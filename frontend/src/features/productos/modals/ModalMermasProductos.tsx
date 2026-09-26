@@ -4,6 +4,7 @@ import { mermaService, type MermaEntity } from '../../../services/mermaService';
 import { useTheme } from '../../../Context/ThemeContext';
 import { getHistorialMermas, getRecetaPorProducto } from '../services/productoService';
 import { apiFetch } from '../../../config/api';
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 
 interface ModalMermasProductosProps {
   show: boolean;
@@ -213,6 +214,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
     });
 
     setGuardando(true);
+    showLoading('Registrando merma...');
     try {
       await mermaService.registrarMermas(payload);
       setSelections({});
@@ -225,6 +227,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
       setMostrarAlerta(true);
     } finally {
       setGuardando(false);
+      hideLoading();
     }
   };
 

@@ -7,6 +7,7 @@ import { HistorialIncidenciasModal } from '../components/HistorialIncidenciasMod
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useMaquinas } from '../hook/useMaquinas';
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useIsMobile } from '../../../hook/useIsMobile';
 
 export const MaquinasView: React.FC = () => {
@@ -77,14 +78,19 @@ export const MaquinasView: React.FC = () => {
   };
 
   const onReportarFallaConFeedback = async (idMaquina: number, descripcion: string, prioridad: string) => {
-    await handleReportarFalla(idMaquina, descripcion, prioridad);
+    showLoading('Registrando falla...');
+    try {
+      await handleReportarFalla(idMaquina, descripcion, prioridad);
 
-    setSuccessState({
-      show: true,
-      title: '¡Falla Reportada!',
-      message: 'La incidencia se registró correctamente y el equipo cambió a "Fuera de Servicio".',
-      icon: 'bi-exclamation-triangle-fill'
-    });
+      setSuccessState({
+        show: true,
+        title: '¡Falla Reportada!',
+        message: 'La incidencia se registró correctamente y el equipo cambió a "Fuera de Servicio".',
+        icon: 'bi-exclamation-triangle-fill'
+      });
+    } finally {
+      hideLoading();
+    }
   };
 
   return (
