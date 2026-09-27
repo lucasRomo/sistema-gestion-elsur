@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.*;
 import com.elsur.sistema_gestion.repositories.RespaldoLogRepository;
 import com.elsur.sistema_gestion.services.RespaldoService;
@@ -66,10 +67,35 @@ public class RespaldoServiceImpl implements RespaldoService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    private final Map<String, Map<String, String>> tiposColumnaCache = new HashMap<>();
+    private final Map<String, Map<String, ColumnaInfo>> infoColumnasCache = new HashMap<>();
+
+    private static final class ColumnaInfo {
+        final String tipoDato;
+        final boolean nullable;
+        final boolean tieneDefault;
+
+        ColumnaInfo(String tipoDato, boolean nullable, boolean tieneDefault) {
+            this.tipoDato = tipoDato;
+            this.nullable = nullable;
+            this.tieneDefault = tieneDefault;
+        }
+    }
 
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private abstract static class HibernateProxyMixIn {}
+
+    // Usuario.password está anotado como WRITE_ONLY (y contrasenaVisible como @JsonIgnore) para que
+    // nunca se expongan por la API normal. Pero eso mismo hacía que el respaldo de contingencia
+    // generara un JSON sin esos valores, y al restaurar, la columna "contrasena" (NOT NULL) llegaba
+    // en null y la restauración completa fallaba. Este mixin se usa solo para el respaldo, para que
+    // esos dos campos sí se incluyan en el JSON exportado.
+    private abstract static class UsuarioBackupMixIn {
+        @JsonProperty
+        String password;
+
+        @JsonProperty
+        String contrasenaVisible;
+    }
 
     @Override
     public byte[] generarRespaldoContingente(String usuarioOperador) {
@@ -107,6 +133,7 @@ public class RespaldoServiceImpl implements RespaldoService {
             objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
             objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
             objectMapper.addMixIn(Object.class, HibernateProxyMixIn.class);
+            objectMapper.addMixIn(Usuario.class, UsuarioBackupMixIn.class);
 
             String jsonOutput = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(backupData);
             byte[] bytes = jsonOutput.getBytes(StandardCharsets.UTF_8);
@@ -199,6 +226,8 @@ public class RespaldoServiceImpl implements RespaldoService {
                 }
             }
 
+        } catch (SolicitudInvalidaException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Error al restaurar los datos: " + e.getMessage(), e);
         }
@@ -232,7 +261,7 @@ public class RespaldoServiceImpl implements RespaldoService {
                 LinkedHashMap<String, Object> columnas = new LinkedHashMap<>();
                 columnas.put("id_rol", normalizarValorEscalar(idMap.get("idRol"), Integer.class));
                 columnas.put("id_permiso", normalizarValorEscalar(idMap.get("idPermiso"), Integer.class));
-                ejecutarInsert("rol_permiso", columnas);
+                ejecutarInsert("RolPermiso", null, "rol_permiso", columnas);
             }
             return;
         }
@@ -247,11 +276,13 @@ public class RespaldoServiceImpl implements RespaldoService {
             Map<String, Object> mapaReg = (Map<String, Object>) reg;
 
             LinkedHashMap<String, Object> columnas = new LinkedHashMap<>();
+            Object idRegistro = null;
 
             if (idPropiedad != null && idColumnas.length == 1) {
                 Class<?> claseId = persister.getIdentifierType().getReturnedClass();
                 String claveIdJson = resolverClaveJson(claseEntidad, idPropiedad);
-                columnas.put(idColumnas[0], normalizarValorEscalar(mapaReg.get(claveIdJson), claseId));
+                idRegistro = normalizarValorEscalar(mapaReg.get(claveIdJson), claseId);
+                columnas.put(idColumnas[0], idRegistro);
             }
 
             for (String prop : persister.getPropertyNames()) {
@@ -274,7 +305,7 @@ public class RespaldoServiceImpl implements RespaldoService {
                 columnas.put(cols[0], valor);
             }
 
-            ejecutarInsert(tabla, columnas);
+            ejecutarInsert(nombreEntidad, idRegistro, tabla, columnas);
         }
 
         if (idColumnas.length == 1) {
@@ -360,32 +391,67 @@ public class RespaldoServiceImpl implements RespaldoService {
     }
 
     @SuppressWarnings("unchecked")
-    private String obtenerTipoColumna(String tabla, String columna) {
-        Map<String, String> columnasTabla = tiposColumnaCache.computeIfAbsent(tabla.toLowerCase(), t -> {
-            Map<String, String> resultado = new HashMap<>();
+    private Map<String, ColumnaInfo> obtenerInfoColumnas(String tabla) {
+        return infoColumnasCache.computeIfAbsent(tabla.toLowerCase(), t -> {
+            Map<String, ColumnaInfo> resultado = new HashMap<>();
             List<Object[]> filas = entityManager.createNativeQuery(
-                "SELECT column_name, data_type FROM information_schema.columns " +
+                "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns " +
                 "WHERE table_schema = 'public' AND lower(table_name) = ?1"
             ).setParameter(1, t).getResultList();
             for (Object[] fila : filas) {
-                resultado.put(((String) fila[0]).toLowerCase(), (String) fila[1]);
+                String columna = ((String) fila[0]).toLowerCase();
+                String tipoDato = (String) fila[1];
+                boolean nullable = "YES".equalsIgnoreCase((String) fila[2]);
+                boolean tieneDefault = fila[3] != null;
+                resultado.put(columna, new ColumnaInfo(tipoDato, nullable, tieneDefault));
             }
             return resultado;
         });
-        return columnasTabla.get(columna.toLowerCase());
     }
 
-    private void ejecutarInsert(String tabla, LinkedHashMap<String, Object> columnas) {
+    private void ejecutarInsert(String nombreEntidad, Object idRegistro, String tabla, LinkedHashMap<String, Object> columnas) {
         if (columnas.isEmpty()) return;
-        String cols = String.join(", ", columnas.keySet());
-        String placeholders = columnas.keySet().stream().map(c -> "?").collect(Collectors.joining(", "));
+
+        Map<String, ColumnaInfo> infoColumnas = obtenerInfoColumnas(tabla);
+
+        // Si el respaldo no trae un valor para una columna obligatoria (por ejemplo, por haberse
+        // generado con una versión anterior del sistema), evitamos que Postgres reviente con un
+        // error críptico de "not-null constraint": si la columna tiene un valor por defecto en la
+        // base de datos, la omitimos del INSERT para que se aplique ese default; si no tiene
+        // default, cortamos acá con un mensaje claro en vez de dejar pasar un registro corrupto.
+        LinkedHashMap<String, Object> columnasAInsertar = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> entry : columnas.entrySet()) {
+            String columna = entry.getKey();
+            Object valor = entry.getValue();
+            ColumnaInfo info = infoColumnas.get(columna.toLowerCase());
+
+            if (valor == null && info != null && !info.nullable) {
+                if (info.tieneDefault) {
+                    continue;
+                }
+                String referencia = idRegistro != null ? " (registro con id " + idRegistro + ")" : "";
+                throw new SolicitudInvalidaException(
+                    "No se pudo restaurar el respaldo: el campo obligatorio '" + columna + "' de '" +
+                    nombreEntidad + "'" + referencia + " llegó vacío en el archivo. " +
+                    "Es posible que el respaldo se haya generado con una versión anterior del sistema. " +
+                    "Generá un respaldo nuevo e intentá restaurar de nuevo."
+                );
+            }
+
+            columnasAInsertar.put(columna, valor);
+        }
+
+        if (columnasAInsertar.isEmpty()) return;
+
+        String cols = String.join(", ", columnasAInsertar.keySet());
+        String placeholders = columnasAInsertar.keySet().stream().map(c -> "?").collect(Collectors.joining(", "));
         String sql = "INSERT INTO " + tabla + " (" + cols + ") VALUES (" + placeholders + ")";
 
         Session session = entityManager.unwrap(Session.class);
         session.doWork(connection -> {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 int i = 1;
-                for (Map.Entry<String, Object> entry : columnas.entrySet()) {
+                for (Map.Entry<String, Object> entry : columnasAInsertar.entrySet()) {
                     String columna = entry.getKey();
                     Object valor = entry.getValue();
 
@@ -394,7 +460,8 @@ public class RespaldoServiceImpl implements RespaldoService {
                         continue;
                     }
 
-                    String tipoSql = obtenerTipoColumna(tabla, columna);
+                    ColumnaInfo info = infoColumnas.get(columna.toLowerCase());
+                    String tipoSql = info != null ? info.tipoDato : null;
                     if (valor instanceof String && ("json".equalsIgnoreCase(tipoSql) || "jsonb".equalsIgnoreCase(tipoSql))) {
                         PGobject pgObject = new PGobject();
                         pgObject.setType(tipoSql.toLowerCase());
