@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../../Context/ThemeContext';
-import { personaService, type TipoDocumento } from '../service/personaService';
+import { personaService } from '../service/personaService';
+import type { TipoDocumento } from '../../../../types/TipoDocumento';
 import { apiFetch } from '../../../../config/api';
 
 interface PersonaFormProps {

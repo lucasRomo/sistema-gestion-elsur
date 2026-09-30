@@ -306,15 +306,14 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
           <div className="modal-footer border-0 justify-content-between pt-3">
             {pasoJustificacion ? (
               <>
-                <button 
-                  type="button" 
-                  className="btn px-4 fw-bold border-0 shadow-sm" 
-                  style={{ backgroundColor: '#ce1515', color: '#ffffff' }} 
-                  onClick={() => setPasoJustificacion(false)} 
-                  disabled={guardando}
-                >
-                  Volver a corregir monto
-                </button>
+                <button
+  type="button"
+  className="btn btn-secondary px-4 fw-bold border-0 shadow-sm"
+  onClick={() => setPasoJustificacion(false)}
+  disabled={guardando}
+>
+  Volver a corregir monto
+</button>
                 <button
                   type="button"
                   className="btn px-4 fw-bold border-0 shadow-sm"

@@ -196,7 +196,7 @@ export const DetalleDocumento: React.FC<Props> = ({
                 onClick={handleVerDetallesProducto}
                 style={{ backgroundColor: '#d3ba2f', border: 'none', color: '#fdfdfa' }}
               >
-                Ver Detalles Producto
+                Modificar Detalles Producto
               </button>
             )}
           </div>

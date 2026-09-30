@@ -362,7 +362,7 @@ export const DashboardPrincipal: React.FC = () => {
               <h5 className="fw-bold">¿Cancelar venta?</h5>
               <p className="small" style={{ color: isDark ? '#a1a1aa' : '#64748b' }}>Esta acción vaciará el carrito. ¿Estás seguro?</p>
               <div className="d-flex gap-2 justify-content-center mt-3">
-                <button className="btn btn-secondary btn-sm px-3" onClick={() => setConfirmarCancelacion(false)}>Volver</button>
+                <button className="btn btn-secondary btn-sm px-3" onClick={() => setConfirmarCancelacion(false)}>Cerrar</button>
                 <button className="btn btn-danger btn-sm px-3" onClick={ejecutarCancelacion}>Sí, cancelar</button>
               </div>
             </div>

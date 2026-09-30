@@ -77,6 +77,11 @@ export const CajaView: React.FC = () => {
   const chartTick = isDark ? '#aaa' : '#64748b';
   const dotColor = isDark ? '#ffffff' : '#1e1e1f';
 
+  const movimientosExport = movimientos.map(m => ({
+    ...m,
+    descripcion: m.descripcion ?? '',
+  }));
+
   useEffect(() => {
     inicializarCaja();
   }, [inicializarCaja]);
@@ -301,26 +306,26 @@ export const CajaView: React.FC = () => {
           />
 
           <AccionesRapidasCaja
-            cajaAbierta={cajaAbierta}
-            hayMovimientos={movimientos.length > 0}
-            onNuevoMovimiento={() => setIsModalOpen(true)}
-            onExportarExcel={() =>
-              exportarCajaExcel(movimientos, {
-                montoInicial: turnoActual?.montoInicial || 0,
-                saldoCaja,
-                ingresosTurno,
-                egresosTurno,
-              })
-            }
-            onExportarPDF={() =>
-              exportarCajaPDF(movimientos, {
-                montoInicial: turnoActual?.montoInicial || 0,
-                saldoCaja,
-                ingresosTurno,
-                egresosTurno,
-              })
-            }
-          />
+  cajaAbierta={cajaAbierta}
+  hayMovimientos={movimientos.length > 0}
+  onNuevoMovimiento={() => setIsModalOpen(true)}
+  onExportarExcel={() =>
+    exportarCajaExcel(movimientosExport, {
+      montoInicial: turnoActual?.montoInicial || 0,
+      saldoCaja,
+      ingresosTurno,
+      egresosTurno,
+    })
+  }
+  onExportarPDF={() =>
+    exportarCajaPDF(movimientosExport, {
+      montoInicial: turnoActual?.montoInicial || 0,
+      saldoCaja,
+      ingresosTurno,
+      egresosTurno,
+    })
+  }
+/>
         </div>
 
         <BarraAccionesTurno

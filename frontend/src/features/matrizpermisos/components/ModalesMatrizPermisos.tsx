@@ -104,7 +104,13 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
                   </div>
                 </div>
                 <h6 className="fw-bold my-2 text-white">{mensajeExitoTexto}</h6>
-                <button className="btn btn-sm px-4 fw-bold mt-2" style={{ backgroundColor: '#a52a2a', color: '#ffffff', borderRadius: '6px', border: 'none' }} onClick={() => setMostrarModalExito(false)}>Cerrar</button>
+                <button
+  className="btn btn-secondary btn-sm px-4 fw-bold mt-2"
+  style={{ borderRadius: '6px' }}
+  onClick={() => setMostrarModalExito(false)}
+>
+  Cerrar
+</button>
               </div>
             </div>
           </div>

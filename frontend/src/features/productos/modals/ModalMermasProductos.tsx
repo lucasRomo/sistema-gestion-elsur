@@ -690,7 +690,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
               className="btn btn-secondary px-4 fw-bold"
               onClick={onClose}
             >
-              Volver
+              Cerrar
             </button>
             {tabActiva === 'registrar' && (
               <button

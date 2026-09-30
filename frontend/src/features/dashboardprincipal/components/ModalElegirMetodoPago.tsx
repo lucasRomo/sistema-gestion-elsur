@@ -136,14 +136,14 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
             </div>
 
             <div className="modal-footer border-0 px-4 pb-4 pt-2 d-flex justify-content-end gap-2">
-              <button 
-                type="button" 
-                className="btn fw-bold px-4" 
-                style={{ backgroundColor: '#ef4444', color: '#ffff', borderRadius: '8px', border: 'none' }}
-                onClick={onClose}
-              >
-                Cancelar
-              </button>
+            <button
+            type="button"
+            className="btn btn-secondary fw-bold px-4"
+            style={{ borderRadius: '8px' }}
+            onClick={onClose}
+            >
+             Volver
+            </button>
               <button 
                 type="submit" 
                 className="btn fw-bold px-4" 

@@ -252,7 +252,14 @@ export const Productos: React.FC = () => {
 
           <button 
             className={`btn px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`} 
-            style={{ backgroundColor: '#149bdf', borderColor: '#149bdf', color: '#ffffff' }} 
+            style={{ 
+              backgroundColor: '#c27a0d', 
+              borderColor: '#c27a0d', 
+              color: '#ffffff',
+              padding: '11px 24px',
+              fontSize: '1rem',
+              minWidth: '90px'
+            }} 
             onClick={() => setShowAumentoModal(true)}
           >
             Modificar Varios Precios

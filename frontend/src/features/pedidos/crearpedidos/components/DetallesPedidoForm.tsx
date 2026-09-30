@@ -268,8 +268,8 @@ export const DetallesPedidoForm: React.FC<Props> = ({
           </div>
 
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4 w-100 pt-3 border-top border-secondary">
-            <button type="button" className="btn btn-danger px-4 fw-semibold" onClick={onVolver}>
-              Volver al Carrito
+            <button type="button" className="btn btn-secondary fw-bold px-4" onClick={onVolver}>
+             Volver al Carrito
             </button>
 
             <div className="d-flex align-items-center gap-2 flex-wrap">

@@ -61,8 +61,9 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   }, [cliente]);  
 
   const cargarMovimientos = async () => {
-    try {
-      const data = await clienteService.getMovimientos(idCliente);
+  if (!idCliente) return;
+  try {
+    const data = await clienteService.getMovimientos(idCliente);
       setMovimientos(data);
     } catch (e) {
       console.error("Error al cargar movimientos:", e);
@@ -87,12 +88,12 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   };
 
   const handleActualizarLimite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (guardandoLimite) return;
-    setGuardandoLimite(true);
-    try {
-      const limiteNumerico = limite === '' ? 0 : Number(limite);
-      await clienteService.actualizarLimiteCredito(idCliente, limiteNumerico);
+  e.preventDefault();
+  if (guardandoLimite || !idCliente) return;
+  setGuardandoLimite(true);
+  try {
+    const limiteNumerico = limite === '' ? 0 : Number(limite);
+    await clienteService.actualizarLimiteCredito(idCliente, limiteNumerico);
       setSuceso({
         show: true,
         titulo: "¡Éxito!",
@@ -114,9 +115,9 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   };
 
   const handleRegistrarPago = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (guardandoPago) return;
-    if (isNaN(montoPago) || montoPago <= 0) {
+  e.preventDefault();
+  if (guardandoPago || !idCliente) return;
+  if (isNaN(montoPago) || montoPago <= 0) {
       setSuceso({
         show: true,
         titulo: "Atención",
@@ -510,7 +511,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
             </div>
             <div className={`modal-footer border-top ${borderDivider}`}>
               <button className="btn btn-secondary px-4 fw-semibold" style={{ color: '#ffffff' }} onClick={onCerrar}>
-                Volver
+                Cerrar
               </button>
             </div>
           </div>

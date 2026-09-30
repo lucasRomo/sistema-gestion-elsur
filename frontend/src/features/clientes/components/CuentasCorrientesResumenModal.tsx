@@ -210,7 +210,7 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
 
           <div className={`modal-footer border-top ${borderDivider}`}>
             <button className="btn btn-secondary px-4 fw-semibold" style={{ color: '#ffffff' }} onClick={onCerrar}>
-              Volver
+              Cerrar
             </button>
           </div>
         </div>

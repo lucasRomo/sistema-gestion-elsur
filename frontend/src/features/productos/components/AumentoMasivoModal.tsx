@@ -24,7 +24,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
   const isDark = theme === 'dark';
 
   const modalBg = isDark ? '#1a1a1c' : '#ffffff';
-  const modalBorder = isDark ? '#17a2b8' : '#0dcaf0';
+  const modalBorder = isDark ? '#c27a0d' : '#c27a0d';
   const headerBorder = isDark ? '#27272a' : '#e2e8f0';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#a1a1aa' : '#475569';
@@ -129,7 +129,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
         >
           
           <div className="modal-header" style={{ borderColor: headerBorder }}>
-            <h5 className="modal-title fw-bold text-info-custom">
+            <h5 className="modal-title fw-bold" style={{ color: '#c27a0d' }}>
               <i className="bi bi-currency-exchange me-2"></i>Modificación Masiva de Precios de Productos
             </h5>
             <button 
@@ -143,7 +143,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
             <div className="modal-body">
               
               <div className="mb-3">
-                <label className="form-label text-warning fw-bold">Tipo de Acción:</label>
+                <label className="form-label fw-bold" style={{ color: '#c27a0d' }}>Tipo de Acción:</label>
                 <div className="d-flex gap-4">
                   <div className="form-check">
                     <input
@@ -357,9 +357,9 @@ export const AumentoMasivoModal: React.FC<Props> = ({
               </button>
               <button 
                 type="submit" 
-                className={`btn fw-bold px-4 ${tipoOperacion === 'AUMENTO' ? 'btn-info' : 'btn-warning'}`} 
+                className="btn fw-bold px-4" 
                 disabled={cargando}
-                style={{ color: '#ffffff' }}
+                style={{ backgroundColor: '#c27a0d', borderColor: '#c27a0d', color: '#ffffff' }}
               >
                 {cargando ? 'Procesando...' : (tipoOperacion === 'AUMENTO' ? 'Aplicar Aumento' : 'Aplicar Descuento')}
               </button>

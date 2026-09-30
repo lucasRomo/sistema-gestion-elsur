@@ -584,7 +584,7 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
             </div>
 
             <button type="button" className="btn btn-secondary px-4 fw-bold" onClick={handleClose}>
-              Cerrar Ventana
+              Cerrar
             </button>
           </div>
         </div>

@@ -634,8 +634,8 @@ const textoProveedor = provSeleccionado
         </div>
 
         <div className="d-flex justify-content-end gap-3">
-          <button type="button" className="btn btn-secondary px-4 py-2 fw-bold" onClick={() => navigate('/caja')}>
-            Volver a Caja
+          <button type="button" className="btn btn-danger px-4 py-2 fw-bold" onClick={() => navigate('/dashboard')}>
+            Cancelar
           </button>
           <button
             type="submit"
