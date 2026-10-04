@@ -19,8 +19,8 @@ import { ModalDevolucionPedido } from '../modals/ModalDevolucionPedido';
 
 import { VistaTicketPagoModal } from '../../../../components/modals/VistaTicketPagoModal';
 import { CuentaCorrienteModal } from '../../../clientes/components/CuentaCorrienteModal';
-import { formatearFechaHora, resolverEmpleadoGestion } from '../../../../utils/formato';
 import { mostrarError } from '../../../../config/dialogStore';
+import { SkeletonFilasTabla } from '../../../../components/common/SkeletonCarga';
 
 export const HistorialPedidosPage: React.FC = () => {
   const { theme } = useTheme();
@@ -33,10 +33,9 @@ export const HistorialPedidosPage: React.FC = () => {
   const cardBorder = isDark ? '#27272a' : '#cbd5e1';
   const grayText = isDark ? '#a1a1aa' : '#64748b';
   const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
-  
-  const { pedidos, cargando, recargarHistorial } = useHistorialPedidos();
+
   const navigate = useNavigate();
-  
+
   const [pedidoAuditoria, setPedidoAuditoria] = useState<any>(null);
   const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<any>(null);
   const [verTicketPedido, setVerTicketPedido] = useState<any>(null);
@@ -53,12 +52,14 @@ export const HistorialPedidosPage: React.FC = () => {
 
   const [filtroTexto, setFiltroTexto] = useState('');
   const [filtroEstadoHistorial, setFiltroEstadoHistorial] = useState('TODOS');
+  const { pedidos, cargando, cargandoMas, hayMas, total, cargarMas, recargarHistorial } =
+    useHistorialPedidos(filtroTexto, filtroEstadoHistorial);
 
-  const [suceso, setSuceso] = useState<{ show: boolean; titulo: string; mensaje: string; tipo: string }>({ 
-    show: false, 
-    titulo: '', 
-    mensaje: '', 
-    tipo: 'exito' 
+  const [suceso, setSuceso] = useState<{ show: boolean; titulo: string; mensaje: string; tipo: string }>({
+    show: false,
+    titulo: '',
+    mensaje: '',
+    tipo: 'exito'
   });
 
   const handleAbrirMermas = async (pedido: any) => {
@@ -132,8 +133,8 @@ export const HistorialPedidosPage: React.FC = () => {
       setSuceso({
         show: true,
         titulo: 'Éxito',
-        mensaje: accion === 'REINICIAR' 
-          ? 'El pedido ha vuelto a ingresar a la cola de pedidos pendientes.' 
+        mensaje: accion === 'REINICIAR'
+          ? 'El pedido ha vuelto a ingresar a la cola de pedidos pendientes.'
           : 'Pedido finalizado y marcado como Devuelto correctamente.',
         tipo: 'exito'
       });
@@ -151,62 +152,30 @@ export const HistorialPedidosPage: React.FC = () => {
     }
   };
 
-  const pedidosFiltrados = pedidos.filter(p => {
-    const busquedaTermino = filtroTexto.toLowerCase().trim();
-
-    const nombreCliente = p.cliente?.persona 
-      ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
-      : (p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
-
-    const ultimaAsignacion = p.asignaciones && p.asignaciones.length > 0 
-      ? p.asignaciones[p.asignaciones.length - 1] 
-      : null;
-
-    const nombreEmpleado = resolverEmpleadoGestion(p, 'Sistema');
-
-    const fechaCierre = p.fecha_finalizacion || p.fecha_modificacion || ultimaAsignacion?.fecha_asignacion;
-    const fechaFormateadaParaBuscar = fechaCierre ? formatearFechaHora(fechaCierre) : '';
-
-    const cumpleBusquedaGeneral = 
-      nombreCliente.toLowerCase().includes(busquedaTermino) ||
-      nombreEmpleado.toLowerCase().includes(busquedaTermino) ||
-      fechaFormateadaParaBuscar.toLowerCase().includes(busquedaTermino);
-    
-    let cumpleEstado = true;
-    if (filtroEstadoHistorial === 'ENTREGADO') {
-      cumpleEstado = p.estado === 'ENTREGADO';
-    } else if (filtroEstadoHistorial === 'CANCELADO') {
-      cumpleEstado = p.estado === 'CANCELADO';
-    } else {
-      cumpleEstado = ['ENTREGADO', 'CANCELADO', 'FINALIZADO', 'DEVUELTO'].includes(p.estado);
-    }
-
-    return cumpleBusquedaGeneral && cumpleEstado;
-  });
-
-  const pedidosOrdenados = [...pedidosFiltrados].sort((a, b) => (a.id_pedido ?? 0) - (b.id_pedido ?? 0)); 
+  // Ya vienen filtrados y ordenados (más recientes primero) desde el backend.
+  const pedidosOrdenados = pedidos;
 
   return (
     <SidebarLayout activeItem="Historial de Pedidos">
       <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
-        
+
         <div className="d-flex justify-content-center align-items-center mb-4 position-relative d-print-none">
           <h2 className="fw-bold fs-2 m-0 text-center font-monospace" style={{ color: titleColor }}>
             Historial de Pedidos
           </h2>
         </div>
 
-        <FiltrosHistorial 
+        <FiltrosHistorial
           filtroTexto={filtroTexto}
           setFiltroTexto={setFiltroTexto}
           filtroEstadoHistorial={filtroEstadoHistorial}
           setFiltroEstadoHistorial={setFiltroEstadoHistorial}
         />
 
-        <div 
-          className="rounded-3 border mb-3 font-monospace" 
-          style={{ 
-            backgroundColor: mainCardBg, 
+        <div
+          className="rounded-3 border mb-3 font-monospace"
+          style={{
+            backgroundColor: mainCardBg,
             borderColor: cardBorder,
             height: '65.3vh',
             overflowY: 'auto',
@@ -214,12 +183,12 @@ export const HistorialPedidosPage: React.FC = () => {
             display: 'block'
           }}
         >
-          <table 
+          <table
             className="table-hover m-0 align-middle w-100"
-            style={{ 
-              borderCollapse: 'collapse', 
-              color: textColor, 
-              backgroundColor: mainCardBg 
+            style={{
+              borderCollapse: 'collapse',
+              color: textColor,
+              backgroundColor: mainCardBg
             }}
           >
             <thead style={{ position: 'sticky', top: 0, backgroundColor: mainCardBg, zIndex: 1 }}>
@@ -227,10 +196,10 @@ export const HistorialPedidosPage: React.FC = () => {
                 <th className="py-3 px-3 text-center" style={{ width: '6%' }}>ID</th>
                 <th className="py-3 px-3 text-start" style={{ width: '16%' }}>Cliente</th>
                 <th className="py-3 px-3 text-center" style={{ width: '8%' }}>Contacto</th>
-                <th className="py-3 px-3 text-start" style={{ width: '14%' }}>Operador Cierre</th> 
+                <th className="py-3 px-3 text-start" style={{ width: '14%' }}>Operador Cierre</th>
                 <th className="py-3 px-3 text-center" style={{ width: '10%' }}>Fecha Creación</th>
                 <th className="py-3 px-3 text-center" style={{ width: '10%' }}>Entrega Estimada</th>
-                <th className="py-3 px-3 text-center" style={{ width: '10%' }}>Entrega Final</th>  
+                <th className="py-3 px-3 text-center" style={{ width: '10%' }}>Entrega Final</th>
                 <th className="py-3 px-3 text-center" style={{ width: '8%' }}>Estado Final</th>
                 <th className="py-3 px-3 text-center" style={{ width: '8%' }}>Total</th>
                 <th className="py-3 px-3 text-center" style={{ width: '8%' }}>Cobrado</th>
@@ -239,12 +208,7 @@ export const HistorialPedidosPage: React.FC = () => {
             </thead>
             <tbody style={{ fontSize: '0.9rem' }}>
               {cargando ? (
-                <tr>
-                  <td colSpan={11} className="text-center py-5 border-0" style={{ color: textColor }}>
-                    <div className="spinner-border mb-2" role="status"></div>
-                    <div>Cargando historial de pedidos...</div>
-                  </td>
-                </tr>
+                <SkeletonFilasTabla columnas={11} filas={8} />
               ) : pedidosOrdenados.length === 0 ? (
                 <tr>
                   <td colSpan={11} className="text-center py-5 border-0" style={{ color: textColor }}>
@@ -254,7 +218,7 @@ export const HistorialPedidosPage: React.FC = () => {
                 </tr>
               ) : (
                 pedidosOrdenados.map((pedido) => (
-                  <FilaHistorial 
+                  <FilaHistorial
                     key={`historial-row-${pedido.id_pedido}`}
                     pedido={pedido}
                     onAbrirAuditoria={handleAbrirAuditoria}
@@ -266,13 +230,23 @@ export const HistorialPedidosPage: React.FC = () => {
               )}
             </tbody>
           </table>
+          {!cargando && pedidosOrdenados.length > 0 && (
+            <div className="d-flex flex-column align-items-center gap-2 py-3 font-monospace" style={{ color: grayText, fontSize: '0.8rem' }}>
+              <span>Mostrando {pedidosOrdenados.length} de {total} pedidos</span>
+              {hayMas && (
+                <button className="btn btn-sm fw-bold px-4" style={{ backgroundColor: '#8e45e0', color: '#ffffff' }} onClick={cargarMas} disabled={cargandoMas}>
+                  {cargandoMas ? 'Cargando...' : 'Cargar más'}
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className={`d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
-          <button 
-            onClick={() => navigate('/dashboard')} 
-            className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center" 
-            style={{ 
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center"
+            style={{
               color: '#ffffff',
               padding: '11px 24px',
               fontSize: '1rem',
@@ -292,8 +266,8 @@ export const HistorialPedidosPage: React.FC = () => {
       )}
 
       {pedidoAuditoria && (
-        <ModalAuditoriaPedido 
-          pedido={pedidoAuditoria} 
+        <ModalAuditoriaPedido
+          pedido={pedidoAuditoria}
           onClose={() => setPedidoAuditoria(null)}
           onAbrirCuentaCorriente={(cliente) => setClienteCuentaCorriente(cliente)}
           onVerTicket={(pedido, cobro) => setTicketPagoSeleccionado({ pedido, movimiento: cobro })}
@@ -301,7 +275,7 @@ export const HistorialPedidosPage: React.FC = () => {
       )}
 
       {ticketPagoSeleccionado && (
-        <VistaTicketPagoModal 
+        <VistaTicketPagoModal
           pedido={ticketPagoSeleccionado.pedido}
           movimiento={ticketPagoSeleccionado.movimiento}
           onClose={() => setTicketPagoSeleccionado(null)}
@@ -309,7 +283,7 @@ export const HistorialPedidosPage: React.FC = () => {
       )}
 
       {clienteCuentaCorriente && (
-        <CuentaCorrienteModal 
+        <CuentaCorrienteModal
           cliente={clienteCuentaCorriente}
           onCerrar={() => setClienteCuentaCorriente(null)}
           onActualizar={() => {}}
@@ -317,14 +291,14 @@ export const HistorialPedidosPage: React.FC = () => {
       )}
 
       {verTicketPedido && (
-        <VistaTicketModal 
+        <VistaTicketModal
           pedido={verTicketPedido}
           onClose={() => setVerTicketPedido(null)}
         />
       )}
 
       {pedidoDevolucion && (
-        <ModalDevolucionPedido 
+        <ModalDevolucionPedido
           pedido={pedidoDevolucion}
           isDark={isDark}
           mutedText={mutedText}
@@ -374,19 +348,19 @@ export const HistorialPedidosPage: React.FC = () => {
       {suceso.show && (
         <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
-            <div 
-              className="modal-content p-4 text-center shadow-lg" 
-              style={{ 
-                border: `2px solid ${isDark ? '#8e45e0' : '#a855f7'}`, 
-                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+            <div
+              className="modal-content p-4 text-center shadow-lg"
+              style={{
+                border: `2px solid ${isDark ? '#8e45e0' : '#a855f7'}`,
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
                 color: isDark ? '#ffffff' : '#0f172a',
-                borderRadius: '12px' 
+                borderRadius: '12px'
               }}
             >
               <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-exclamation-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">{suceso.titulo}</h5>
               <p className="small m-0" style={{ color: grayText }}>{suceso.mensaje}</p>
-              <button 
+              <button
                 className={`btn ${suceso.tipo === 'exito' ? 'btn-success' : 'btn-danger'} btn-sm px-4 mt-3 fw-bold text-white`}
                 style={{ borderRadius: '6px' }}
                 onClick={() => {

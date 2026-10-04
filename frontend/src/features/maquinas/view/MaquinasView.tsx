@@ -9,6 +9,7 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { useMaquinas } from '../hook/useMaquinas';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useIsMobile } from '../../../hook/useIsMobile';
+import { SkeletonTabla } from '../../../components/common/SkeletonCarga';
 
 export const MaquinasView: React.FC = () => {
   const navigate = useNavigate();
@@ -21,7 +22,6 @@ export const MaquinasView: React.FC = () => {
   const filterBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const cardBorder = isDark ? '#27272a' : '#cbd5e1';
   const textColor = isDark ? '#ffffff' : '#0f172a';
-  const textSubtle = isDark ? '#a1a1aa' : '#64748b';
   const inputTextColor = isDark ? 'text-white' : 'text-dark';
   const titleColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
@@ -139,10 +139,7 @@ export const MaquinasView: React.FC = () => {
         }}
       >
         {cargando ? (
-          <div className="text-center py-5" style={{ color: textSubtle }}>
-            <div className="spinner-border spinner-border-sm me-2" role="status"></div>
-            Cargando equipos...
-          </div>
+          <SkeletonTabla />
         ) : (
           <MaquinaTabla
             maquinas={maquinasFiltradas}

@@ -11,6 +11,7 @@ import { ThemeProvider } from '../../Context/ThemeContext';
 import { useIsMobile } from "../../hook/useIsMobile";
 import { LoadingOverlay } from '../../components/common/LoadingOverlay';
 import { DialogHost } from '../../components/common/DialogHost';
+import { ToastHost } from '../../components/common/ToastHost';
 import { BackupReminderModal } from '../../components/common/BackupReminderModal';
 
 // Cada pantalla se descarga recién cuando se entra a ella: antes el login bajaba todo el
@@ -196,6 +197,7 @@ function App() {
           </Suspense>
           <LoadingOverlay />
           <DialogHost />
+          <ToastHost />
           <BackupReminderModal />
         </BrowserRouter>
       </TurnoProvider>

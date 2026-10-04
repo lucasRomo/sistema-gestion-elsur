@@ -132,11 +132,11 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
       {mostrarConfirmar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content shadow-lg font-monospace p-3" style={{ backgroundColor: isDarkMode ? '#18181b' : '#ffffff', color: isDarkMode ? '#ffffff' : '#0f172a', border: '1px solid #0dcaf0', borderRadius: '12px' }}>
+            <div className="modal-content shadow-lg font-monospace p-3" style={{ backgroundColor: isDarkMode ? '#18181b' : '#ffffff', color: isDarkMode ? '#ffffff' : '#0f172a', border: '1px solid #8e45e0', borderRadius: '12px' }}>
               <div className="modal-body text-center py-3">
                 <div className="d-flex justify-content-center mb-3">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', border: '2px solid #0dcaf0' }}>
-                    <i className="bi bi-question-lg text-info" style={{ fontSize: '2rem' }}></i>
+                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', border: '2px solid #8e45e0' }}>
+                    <i className="bi bi-question-lg" style={{ fontSize: '2rem', color: '#8e45e0' }}></i>
                   </div>
                 </div>
                 <h6 className="fw-bold my-2">¿Deseas guardar esta institución?</h6>

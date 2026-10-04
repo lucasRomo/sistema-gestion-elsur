@@ -207,10 +207,10 @@ export const RepositorioDigitalView: React.FC = () => {
       {mostrarConfirmarEliminar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content shadow-lg font-monospace text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #e22e2e', borderRadius: '12px' }}>
+            <div className="modal-content shadow-lg font-monospace text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #dc3545', borderRadius: '12px' }}>
               <div className="modal-body text-center py-3">
                 <div className="d-flex justify-content-center mb-3">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', border: '2px solid #e22e2e' }}>
+                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', border: '2px solid #dc3545' }}>
                     <i className="bi bi-trash-fill text-danger" style={{ fontSize: '1.8rem' }}></i>
                   </div>
                 </div>

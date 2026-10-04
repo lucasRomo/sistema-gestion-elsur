@@ -17,6 +17,7 @@ import { exportarClientesExcel, exportarClientesPDF } from '../utils/exportClien
 import { colorPorSaldo } from '../../../utils/formato';
 import type { Cliente } from '../types/Cliente';
 import { confirmarAccion, mostrarError } from '../../../config/dialogStore';
+import { SkeletonFilasTabla } from '../../../components/common/SkeletonCarga';
 
 export const ClienteView = () => {
   const { theme } = useTheme();
@@ -218,12 +219,7 @@ export const ClienteView = () => {
           </thead>
           <tbody style={{ fontSize: '0.9rem' }}>
             {loading ? (
-              <tr>
-                <td colSpan={9} className="text-center py-5 border-0" style={{ color: tableText }}>
-                  <div className="spinner-border spinner-border-sm me-2" role="status"></div>
-                  Cargando clientes...
-                </td>
-              </tr>
+              <SkeletonFilasTabla columnas={9} />
             ) : clientesOrdenados && clientesOrdenados.length > 0 ? (
               clientesOrdenados.map((c: Cliente) => {
                 const tieneCtaCte = Number(c.limiteCredito || 0) > 0;

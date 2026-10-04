@@ -70,6 +70,45 @@ public class PedidoServiceImpl implements PedidoService {
         return pedidoRepository.findByEstadoIn(ESTADOS_HISTORIAL);
     }
 
+    private static final java.util.regex.Pattern FECHA_DD_MM_AAAA =
+            java.util.regex.Pattern.compile("^([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})$");
+
+    @Override
+    public java.util.Map<String, Object> listarHistorialPaginado(String estado, String busqueda, int pagina, int tamano) {
+        // Antes el historial traía TODOS los pedidos cerrados con todas sus relaciones en cada
+        // carga: con meses de uso se volvía lento. Ahora se piden de a una página.
+        List<String> estados = (estado == null || estado.isBlank() || "TODOS".equalsIgnoreCase(estado))
+                ? ESTADOS_HISTORIAL
+                : List.of(estado.toUpperCase());
+        int tamanoSeguro = Math.max(1, Math.min(tamano, 100));
+        org.springframework.data.domain.Pageable pageable =
+                org.springframework.data.domain.PageRequest.of(Math.max(0, pagina), tamanoSeguro);
+
+        String texto = busqueda == null ? "" : busqueda.trim().toLowerCase();
+        java.util.regex.Matcher fecha = FECHA_DD_MM_AAAA.matcher(texto);
+
+        org.springframework.data.domain.Page<Pedido> resultado;
+        if (fecha.matches()) {
+            java.time.LocalDate dia;
+            try {
+                dia = java.time.LocalDate.of(Integer.parseInt(fecha.group(3)),
+                        Integer.parseInt(fecha.group(2)), Integer.parseInt(fecha.group(1)));
+            } catch (java.time.DateTimeException e) {
+                throw new SolicitudInvalidaException("La fecha buscada no es válida. Usá el formato dd/mm/aaaa.");
+            }
+            resultado = pedidoRepository.buscarHistorialPorFecha(estados, dia.atStartOfDay(), dia.plusDays(1).atStartOfDay(), pageable);
+        } else {
+            resultado = pedidoRepository.buscarHistorial(estados, texto, "%" + texto + "%", pageable);
+        }
+
+        java.util.Map<String, Object> respuesta = new java.util.LinkedHashMap<>();
+        respuesta.put("contenido", resultado.getContent());
+        respuesta.put("pagina", resultado.getNumber());
+        respuesta.put("totalElementos", resultado.getTotalElements());
+        respuesta.put("ultima", resultado.isLast());
+        return respuesta;
+    }
+
     @Override
     public Pedido buscarPorId(Integer id) {
         Pedido pedido = pedidoRepository.findById(id)

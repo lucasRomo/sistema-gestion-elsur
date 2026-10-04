@@ -562,3 +562,22 @@ html, body {
     z-index: 1000;
   }
 }
+/* Avisos breves (ToastHost) */
+@keyframes toast-entrada {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.toast-entrada { animation: toast-entrada 0.2s ease-out; }
+
+/* Esqueletos de carga (SkeletonFilas) */
+@keyframes skeleton-pulso {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+.skeleton-linea {
+  display: block;
+  border-radius: 6px;
+  background-color: #27272a;
+  animation: skeleton-pulso 1.4s ease-in-out infinite;
+}
+html[data-bs-theme="light"] .skeleton-linea { background-color: #e2e8f0; }

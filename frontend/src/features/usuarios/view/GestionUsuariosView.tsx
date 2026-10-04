@@ -10,6 +10,7 @@ import { UsuariosFiltros } from '../components/UsuariosFiltros';
 import { RegisterView } from '../../primermenu/view/RegisterView';
 import { useTheme } from '../../../Context/ThemeContext';
 import { mostrarError } from '../../../config/dialogStore';
+import { SkeletonFilasTabla } from '../../../components/common/SkeletonCarga';
 
 export const GestionUsuariosView: React.FC = () => {
   const { theme } = useTheme();
@@ -111,12 +112,7 @@ export const GestionUsuariosView: React.FC = () => {
               </thead>
               <tbody style={{ fontSize: '0.9rem' }}>
                 {cargando ? (
-                  <tr>
-                    <td colSpan={10} className="text-center py-5 border-0" style={{ color: tableText }}>
-                      <div className="spinner-border spinner-border-sm me-2" role="status"></div>
-                      Cargando usuarios...
-                    </td>
-                  </tr>
+                  <SkeletonFilasTabla columnas={10} />
                 ) : usuariosOrdenados && usuariosOrdenados.length > 0 ? (
                   usuariosOrdenados.map((u, index) => (
                     <tr 

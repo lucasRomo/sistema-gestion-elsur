@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../../../../Context/ThemeContext';
 import { formatearFechaHora, resolverEmpleadoGestion } from '../../../../utils/formato';
+import { EstadoBadge } from '../../../../components/common/EstadoBadge';
 
 interface FilaHistorialProps {
   pedido: any;
@@ -96,17 +97,7 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
       </td>
 
       <td className="py-3 px-3 text-center">
-        <span className={`badge rounded-pill px-3 py-2 ${
-          p.estado === 'CANCELADO' 
-            ? 'bg-danger bg-opacity-75' 
-            : p.estado === 'DEVUELTO' 
-            ? 'bg-warning bg-opacity-75 text-dark' 
-            : p.estado === 'ENTREGADO' 
-            ? 'bg-success bg-opacity-75' 
-            : 'bg-secondary bg-opacity-75'
-        }`} style={{ color: p.estado === 'DEVUELTO' ? '#000000' : '#ffffff' }}>
-          {p.estado}
-        </span>
+        <EstadoBadge estado={p.estado} tamano="sm" />
       </td>
 
       <td className="py-3 px-3 text-center fw-bold" style={{ color: tableText }}>

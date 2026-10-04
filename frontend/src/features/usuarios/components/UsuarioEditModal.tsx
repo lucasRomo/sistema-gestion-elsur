@@ -75,7 +75,7 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
     backgroundColor: modalBg,
     color: textColor,
     borderRadius: '14px',
-    border: '1.5px solid #0dcaf0'
+    border: '1.5px solid #8e45e0'
   }}
 >
 

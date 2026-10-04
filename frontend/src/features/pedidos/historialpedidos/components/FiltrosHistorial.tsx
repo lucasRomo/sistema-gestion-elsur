@@ -41,7 +41,7 @@ export const FiltrosHistorial: React.FC<FiltrosHistorialProps> = ({
           type="text" 
           className={`form-control ${inputTextColor} py-2 font-monospace shadow-none`}
           style={{ backgroundColor: inputBg, borderColor: inputBorder }}
-          placeholder="Escribí cliente, empleado o fecha (ej: 'Juan', 'Martina' o '14/07/2026')..." 
+          placeholder="Cliente, empleado, N° de pedido o fecha (ej: 'Juan', '125' o '14/07/2026')..." 
           value={filtroTexto}
           onChange={(e) => setFiltroTexto(e.target.value)}
         />

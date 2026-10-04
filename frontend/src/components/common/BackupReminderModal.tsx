@@ -62,7 +62,7 @@ export const BackupReminderModal: React.FC = () => {
         </div>
 
         <p className="text-body-secondary mb-4" style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>
-          Ya han pasado 7 Dias desde el Ultimo Aviso de Generación de Respaldo de Datos. Recuerde Generar Respaldos de emergencia para guardarlos en la base de datos o localmente en la Computadora.
+          No se generó ningún respaldo en los últimos 7 días (ni manual ni automático). Te recomendamos generar uno ahora desde Configuración y descargar una copia a la computadora.
         </p>
 
         <div className="d-flex justify-content-end gap-2">

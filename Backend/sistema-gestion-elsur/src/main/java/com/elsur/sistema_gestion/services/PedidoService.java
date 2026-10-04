@@ -14,6 +14,12 @@ public interface PedidoService {
     /** Pedidos cerrados que se muestran en el Historial de Pedidos. */
     List<Pedido> listarCerrados();
 
+    /**
+     * Historial paginado (más recientes primero). estado: TODOS, ENTREGADO o CANCELADO.
+     * busqueda: cliente, empleado, número de pedido o una fecha dd/mm/aaaa.
+     */
+    java.util.Map<String, Object> listarHistorialPaginado(String estado, String busqueda, int pagina, int tamano);
+
     Pedido guardar(Pedido pedido, Integer idEmpleado, Integer idUsuario, String tipoDePago,
                    MultipartFile comprobante, boolean confirmarMaquinaNoDisponible);
 

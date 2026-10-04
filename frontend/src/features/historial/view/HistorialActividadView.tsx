@@ -5,6 +5,7 @@ import { useHistorialActividad } from '../hooks/useHistorialActividad';
 import type { RegistroActividad } from '../types/RegistroActividad';
 import { formatearFechaHora, resolverNombreUsuario } from '../../../utils/formato';
 
+import { SkeletonFilasTabla } from '../../../components/common/SkeletonCarga';
 import {
   exportarHistorialActividadExcel,
   exportarHistorialActividadPDF,
@@ -149,12 +150,7 @@ export const HistorialActividadView: React.FC = () => {
           </thead>
           <tbody style={{ fontSize: '0.88rem' }}>
             {cargando ? (
-              <tr>
-                <td colSpan={7} className="py-5 text-center border-0" style={{ color: mutedText }}>
-                  <div className="spinner-border spinner-border-sm me-2" role="status" style={{ color: mutedText }} />
-                  Cargando movimientos...
-                </td>
-              </tr>
+              <SkeletonFilasTabla columnas={7} />
             ) : actividadesFiltradas.length > 0 ? (
               actividadesFiltradas.map((act, index) => (
                 <tr 

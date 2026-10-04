@@ -3,6 +3,7 @@ import { confirmarAccion } from '../../../../config/dialogStore';
 import { ContadorTiempo } from './ContadorTiempo';
 import { useTheme } from '../../../../Context/ThemeContext';
 import { pad, formatearFechaHora, resolverEmpleadoGestion } from '../../../../utils/formato';
+import { EstadoBadge } from '../../../../components/common/EstadoBadge';
 
 interface TarjetaPedidoProps {
   pedido: any;
@@ -381,9 +382,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
           <div className="d-flex align-items-center gap-3">
             <div>
               <span className="text-muted small me-2">Estado</span>
-              <span className="badge bg-secondary font-monospace text-uppercase px-2 py-1">
-                {p.estado}
-              </span>
+              <EstadoBadge estado={p.estado} />
             </div>
 
             <button 

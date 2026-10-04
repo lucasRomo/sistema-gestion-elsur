@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FaltaStockCard } from '../components/FaltaStockCard';
 import { SelectorProducto } from '../components/SelectorProducto';
 import { CarritoLista } from '../components/CarritoLista';
@@ -33,8 +33,8 @@ export const DashboardPrincipal: React.FC = () => {
     suceso,
     setSuceso,
     showModalMaquinas,
-    showModalMetodoPago,    
-    setShowModalMetodoPago, 
+    showModalMetodoPago,
+    setShowModalMetodoPago,
     setShowModalMaquinas,
     showModalStockCritico,
     setShowModalStockCritico,
@@ -52,14 +52,30 @@ export const DashboardPrincipal: React.FC = () => {
     ejecutarCancelacion
   } = useVentaRapida();
 
+  // Atajos globales de Venta Rápida (solo si no hay un modal abierto, para no interferir).
+  useEffect(() => {
+    const manejarTecla = (e: KeyboardEvent) => {
+      if (document.querySelector('.modal.d-block')) return;
+      if (e.key === 'F2' && carrito.length > 0) {
+        e.preventDefault();
+        handleValidarYCompletarVenta();
+      } else if (e.key === 'Escape' && carrito.length > 0) {
+        e.preventDefault();
+        setConfirmarCancelacion(true);
+      }
+    };
+    window.addEventListener('keydown', manejarTecla);
+    return () => window.removeEventListener('keydown', manejarTecla);
+  }, [carrito.length, handleValidarYCompletarVenta, setConfirmarCancelacion]);
+
   return (
-    <div 
+    <div
       className={`container-fluid font-monospace d-flex flex-column justify-content-between ${isDark ? 'text-white' : 'text-dark'}`}
       style={{ minHeight: 'calc(100vh - 40px)', paddingBottom: '10px' }}
     >
       {!isDark && (
         <style>{`
-          select.form-select, 
+          select.form-select,
           input.form-control {
             background-color: #ffffff !important;
             color: #0f172a !important;
@@ -100,17 +116,17 @@ export const DashboardPrincipal: React.FC = () => {
         <div className="col-12 col-md-4"><FaltaStockCard /></div>
       </div>
 
-      <div 
-        className="card p-4 flex-grow-1 d-flex flex-column justify-content-between" 
-        style={{ 
-          backgroundColor: isDark ? '#1E1E1F' : '#ffffff', 
-          border: isDark ? '1px solid #3f3f46' : '1px solid #cbd5e1', 
+      <div
+        className="card p-4 flex-grow-1 d-flex flex-column justify-content-between"
+        style={{
+          backgroundColor: isDark ? '#1E1E1F' : '#ffffff',
+          border: isDark ? '1px solid #3f3f46' : '1px solid #cbd5e1',
           borderRadius: '14px',
           boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05)'
         }}
       >
         <div>
-          <SelectorProducto 
+          <SelectorProducto
             productos={productosDisponibles}
             productoId={productoSeleccionado}
             setProductoId={setProductoSeleccionado}
@@ -127,16 +143,16 @@ export const DashboardPrincipal: React.FC = () => {
           total={totalFinal}
           onConfirmarPago={(datosPago) => ejecutarCompletarVenta(datosPago)}
         />
-        
-        <ResumenVenta 
+
+        <ResumenVenta
           subtotal={subtotalVenta}
           montoDescuento={montoDescuento}
           total={totalFinal}
           categorias={categorias}
           categoriaSeleccionadaId={categoriaSeleccionadaId}
           onSeleccionarCategoria={setCategoriaSeleccionadaId}
-          onCancelar={() => setConfirmarCancelacion(true)} 
-          onCompletar={handleValidarYCompletarVenta} 
+          onCancelar={() => setConfirmarCancelacion(true)}
+          onCompletar={handleValidarYCompletarVenta}
           ultimoPedido={ultimoPedidoRealizado}
           onImprimirTicketCliente={() => setVerTicketPedido({ pedido: ultimoPedidoRealizado, tipo: 'cliente' })}
           onImprimirTicketPago={() => setVerTicketPedido({ pedido: ultimoPedidoRealizado, tipo: 'pago' })}
@@ -144,7 +160,7 @@ export const DashboardPrincipal: React.FC = () => {
       </div>
 
       {verTicketPedido?.tipo === 'cliente' && (
-        <VistaTicketModal 
+        <VistaTicketModal
           pedido={verTicketPedido.pedido}
           onClose={() => setVerTicketPedido(null)}
           esVentaRapida={true}
@@ -152,7 +168,7 @@ export const DashboardPrincipal: React.FC = () => {
       )}
 
       {verTicketPedido?.tipo === 'pago' && (
-        <VistaTicketPagoModal 
+        <VistaTicketPagoModal
           pedido={verTicketPedido.pedido}
           tipo="pago"
           onClose={() => setVerTicketPedido(null)}
@@ -162,11 +178,11 @@ export const DashboardPrincipal: React.FC = () => {
       {showModalStockCritico && (
         <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '480px' }}>
-            <div 
-              className="modal-content p-4 shadow-lg" 
-              style={{ 
-                border: '2px solid #ffc107', 
-                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+            <div
+              className="modal-content p-4 shadow-lg"
+              style={{
+                border: '2px solid #ffc107',
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
                 borderRadius: '16px',
                 color: isDark ? '#ffffff' : '#0f172a'
               }}
@@ -182,19 +198,19 @@ export const DashboardPrincipal: React.FC = () => {
 
               <div className="d-flex flex-column gap-2 mb-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                 {conflictosStockCritico.map((item, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className="p-3 rounded-3 d-flex justify-content-between align-items-center"
-                    style={{ 
-                      backgroundColor: isDark ? '#262629' : '#f8fafc', 
-                      border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}` 
+                    style={{
+                      backgroundColor: isDark ? '#262629' : '#f8fafc',
+                      border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`
                     }}
                   >
                     <div>
                       <div className="fw-bold small" style={{ color: isDark ? '#ffffff' : '#0f172a' }}>{item.nombre}</div>
                       <small style={{ color: isDark ? '#a1a1aa' : '#64748b', fontSize: '0.75rem' }}>{item.tipo}</small>
                     </div>
-                    <span 
+                    <span
                       className="badge text-dark fw-bold px-2 py-1"
                       style={{ backgroundColor: '#ffc107', fontSize: '0.75rem' }}
                     >
@@ -209,16 +225,16 @@ export const DashboardPrincipal: React.FC = () => {
               </p>
 
               <div className="d-flex gap-2 justify-content-center">
-                <button 
+                <button
                   type="button"
-                  className="btn btn-danger btn-sm flex-fill py-2 font-monospace fw-bold" 
+                  className="btn btn-danger btn-sm flex-fill py-2 font-monospace fw-bold"
                   onClick={() => setShowModalStockCritico(false)}
                 >
                   Cancelar y revisar
                 </button>
-                <button 
+                <button
                   type="button"
-                  className="btn btn-sm flex-fill py-2 font-monospace fw-bold" 
+                  className="btn btn-sm flex-fill py-2 font-monospace fw-bold"
                   style={{ backgroundColor: '#ffc107', color: '#ffff', border: 'none' }}
                   onClick={continuarFlujoPostStock}
                 >
@@ -233,33 +249,33 @@ export const DashboardPrincipal: React.FC = () => {
       {showModalMaquinas && (
         <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-dialog-centered">
-            <div 
-              className="modal-content p-4 shadow-lg" 
-              style={{ 
-                border: '2px solid #ffc107', 
-                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+            <div
+              className="modal-content p-4 shadow-lg"
+              style={{
+                border: '2px solid #ffc107',
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
                 borderRadius: '16px',
-                color: isDark ? '#ffffff' : '#0f172a' 
+                color: isDark ? '#ffffff' : '#0f172a'
               }}
             >
               <div className="text-center mb-3">
                 <i className="bi bi-exclamation-triangle-fill fs-1 text-warning"></i>
                 <h5 className="fw-bold mt-2 text-warning">¡Atención! Maquinaria Fuera de Servicio</h5>
               </div>
-              
+
               <p className="small" style={{ color: isDark ? '#f4f4f5' : '#334155' }}>
                 Los siguientes productos seleccionados requieren maquinaria que actualmente no está operativa:
               </p>
 
               <div className="list-group mb-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                 {conflictosMaquinas.map((conf, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className="list-group-item d-flex justify-content-between align-items-center"
-                    style={{ 
-                      backgroundColor: isDark ? '#262629' : '#f8fafc', 
+                    style={{
+                      backgroundColor: isDark ? '#262629' : '#f8fafc',
                       color: isDark ? '#ffffff' : '#0f172a',
-                      borderColor: isDark ? '#3f3f46' : '#cbd5e1' 
+                      borderColor: isDark ? '#3f3f46' : '#cbd5e1'
                     }}
                   >
                     <div>
@@ -272,15 +288,15 @@ export const DashboardPrincipal: React.FC = () => {
               </div>
 
               <div className="d-flex gap-2 justify-content-center">
-                <button 
-                  className="btn btn-sm px-3 text-white" 
+                <button
+                  className="btn btn-sm px-3 text-white"
                   style={{ backgroundColor: '#e22e2e', border: '1px solid #e22e2e', borderRadius: '6px' }}
                   onClick={() => setShowModalMaquinas(false)}
                 >
                   Cancelar / Volver
                 </button>
-                <button 
-                  className="btn btn-sm px-3 font-weight-bold" 
+                <button
+                  className="btn btn-sm px-3 font-weight-bold"
                   style={{ backgroundColor: '#ffc107', color: '#ffff', border: '1px solid #ffc107', borderRadius: '6px', fontWeight: 'bold' }}
                   onClick={() => {
                     setShowModalMaquinas(false);
@@ -299,11 +315,11 @@ export const DashboardPrincipal: React.FC = () => {
       {suceso.show && (
         <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
-            <div 
-              className="modal-content p-4 text-center shadow-lg" 
-              style={{ 
-                border: '2px solid #8e45e0', 
-                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+            <div
+              className="modal-content p-4 text-center shadow-lg"
+              style={{
+                border: '2px solid #8e45e0',
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
                 borderRadius: '16px',
                 color: isDark ? '#ffffff' : '#0f172a'
               }}
@@ -311,12 +327,12 @@ export const DashboardPrincipal: React.FC = () => {
               <i className={`bi ${suceso.tipo === 'exito' ? 'bi-check-circle' : 'bi-x-circle'} fs-1 mb-2`} style={{ color: '#8e45e0' }}></i>
               <h5 className="fw-bold">{suceso.titulo}</h5>
               <p className="small" style={{ color: isDark ? '#a1a1aa' : '#64748b' }}>{suceso.mensaje}</p>
-              
+
               <div className="d-flex flex-column gap-2 mt-3">
                 {suceso.tipo === 'exito' && suceso.titulo === '¡Éxito!' && ultimoPedidoRealizado && (
                   <div className="d-flex gap-2 justify-content-center">
-                    <button 
-                      className="btn fw-bold text-dark btn-sm flex-fill py-2" 
+                    <button
+                      className="btn fw-bold text-dark btn-sm flex-fill py-2"
                       style={{ backgroundColor: '#eab308' }}
                       onClick={() => {
                         setSuceso({ ...suceso, show: false });
@@ -325,8 +341,8 @@ export const DashboardPrincipal: React.FC = () => {
                     >
                       <i className="bi bi-printer-fill me-1"></i> T. Cliente
                     </button>
-                    <button 
-                      className="btn fw-bold text-dark btn-sm flex-fill py-2" 
+                    <button
+                      className="btn fw-bold text-dark btn-sm flex-fill py-2"
                       style={{ backgroundColor: '#38bdf8' }}
                       onClick={() => {
                         setSuceso({ ...suceso, show: false });
@@ -349,11 +365,11 @@ export const DashboardPrincipal: React.FC = () => {
       {confirmarCancelacion && (
         <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered">
-            <div 
-              className="modal-content p-4 text-center shadow-lg" 
-              style={{ 
-                border: '2px solid #8e45e0', 
-                backgroundColor: isDark ? '#1a1a1c' : '#ffffff', 
+            <div
+              className="modal-content p-4 text-center shadow-lg"
+              style={{
+                border: '2px solid #8e45e0',
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
                 borderRadius: '16px',
                 color: isDark ? '#ffffff' : '#0f172a'
               }}

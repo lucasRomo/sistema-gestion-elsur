@@ -65,7 +65,6 @@ export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
           style={{ backgroundColor: inputBg, borderColor: inputBorder }}
         >
           <option value="">Todos los activos (Taller)</option>
-          <option value="PRESUPUESTO">PRESUPUESTOS</option>
           <option value="PENDIENTE">PENDIENTE</option>
           <option value="EN PROCESO">EN PROCESO</option>
           <option value="PAUSADO">PAUSADO</option>

@@ -14,6 +14,8 @@ import { FiltrosPedidos } from '../components/FiltrosPedidos';
 import { ListaPedidosPendientes } from '../components/ListaPedidosPendientes';
 import { PedidosModales } from '../components/PedidosModales';
 import { confirmarAccion } from '../../../../config/dialogStore';
+import { mostrarToast } from '../../../../config/toastStore';
+import { TableroPedidos } from '../components/TableroPedidos';
 
 export const PedidosPendientesView: React.FC = () => {
   const { pedidos, cargando, pedidosActualizando, actualizarEstado, refrescar, refrescarPedido } = usePedidosPendientes();
@@ -26,6 +28,16 @@ export const PedidosPendientesView: React.FC = () => {
   const [filtroEstado, setFiltroEstado] = useState('');
   const [pedidoMermaSel, setPedidoMermaSel] = useState<any | null>(null);
   const [filtroEmpleado, setFiltroEmpleado] = useState('');
+  // Pestañas con contador: antes los presupuestos solo se veían eligiendo una opción escondida
+  // del filtro de estado, y parecía que habían desaparecido.
+  const [pestana, setPestana] = useState<'TALLER' | 'PRESUPUESTOS' | 'ATRASADOS'>('TALLER');
+  const [modoVista, setModoVista] = useState<'LISTA' | 'TABLERO'>(() => {
+    try { return localStorage.getItem('pedidos_modo_vista') === 'TABLERO' ? 'TABLERO' : 'LISTA'; } catch { return 'LISTA'; }
+  });
+  const cambiarModoVista = (modo: 'LISTA' | 'TABLERO') => {
+    setModoVista(modo);
+    try { localStorage.setItem('pedidos_modo_vista', modo); } catch { /* sin almacenamiento: solo esta sesión */ }
+  };
 
   const [pedidoEstadoSel, setPedidoEstadoSel] = useState<any>(null);
   const [nuevoEstadoPendiente, setNuevoEstadoPendiente] = useState<string>('');
@@ -90,6 +102,12 @@ export const PedidosPendientesView: React.FC = () => {
       ? `${empleadoElegido.persona.nombre} ${empleadoElegido.persona.apellido}`
       : 'el empleado seleccionado';
     if (!(await confirmarAccion(`¿Asignar el pedido #${idPedido} a ${nombreElegido}?`, { titulo: 'Reasignar empleado', textoConfirmar: 'Asignar' }))) return;
+
+    const pedidoActual = pedidos.find(p => p.id_pedido === idPedido);
+    const asignaciones = pedidoActual?.asignaciones || [];
+    const ultimaAsignacion = asignaciones.length > 0 ? asignaciones[asignaciones.length - 1] : null;
+    const idEmpleadoAnterior = ultimaAsignacion?.empleado?.idEmpleado ?? ultimaAsignacion?.empleado?.id_empleado;
+
     showLoading('Asignando empleado...');
     try {
       const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
@@ -97,7 +115,21 @@ export const PedidosPendientesView: React.FC = () => {
 
       await PedidoPendienteService.asignarEmpleado(idPedido, idEmpleado, idUsuarioActivo);
       hideLoading();
-      setModalNotif({ show: true, msg: "El empleado ha sido asignado correctamente." });
+      // Acción chica y reversible: aviso breve con "Deshacer" en vez de un modal que hay que cerrar.
+      mostrarToast(`Pedido #${idPedido} asignado a ${nombreElegido}`, {
+        accion: idEmpleadoAnterior ? {
+          texto: 'Deshacer',
+          onClick: async () => {
+            try {
+              await PedidoPendienteService.asignarEmpleado(idPedido, String(idEmpleadoAnterior), idUsuarioActivo);
+              mostrarToast(`Se restauró el empleado anterior del pedido #${idPedido}`, { tipo: 'info' });
+              refrescarPedido(idPedido);
+            } catch (err: any) {
+              mostrarToast(err?.message || 'No se pudo deshacer la asignación.', { tipo: 'error' });
+            }
+          }
+        } : undefined
+      });
       refrescarPedido(idPedido);
     } catch (error: any) {
       console.error("Error al asignar:", error);
@@ -265,11 +297,25 @@ export const PedidosPendientesView: React.FC = () => {
   };
 
   const handleCambioUbicacion = async (idPedido: number, nuevaUbicacion: string) => {
+    const ubicacionAnterior = pedidos.find(p => p.id_pedido === idPedido)?.ubicacion_estante || 'Taller';
     showLoading('Actualizando ubicación...');
     try {
       await PedidoPendienteService.actualizarUbicacion(idPedido, nuevaUbicacion);
       hideLoading();
-      setSuceso({ show: true, titulo: "Éxito", mensaje: `Ubicación actualizada a "${nuevaUbicacion}"`, tipo: "exito" });
+      mostrarToast(`Pedido #${idPedido}: ubicación "${nuevaUbicacion}"`, {
+        accion: {
+          texto: 'Deshacer',
+          onClick: async () => {
+            try {
+              await PedidoPendienteService.actualizarUbicacion(idPedido, ubicacionAnterior);
+              mostrarToast(`Pedido #${idPedido}: ubicación restaurada a "${ubicacionAnterior}"`, { tipo: 'info' });
+              refrescarPedido(idPedido);
+            } catch (err: any) {
+              mostrarToast(err?.message || 'No se pudo deshacer el cambio de ubicación.', { tipo: 'error' });
+            }
+          }
+        }
+      });
       refrescarPedido(idPedido);
     } catch (error: any) {
       console.error("Error al actualizar la ubicación:", error);
@@ -286,13 +332,33 @@ export const PedidosPendientesView: React.FC = () => {
     }
   };
 
-  const pedidosFiltrados = pedidos.filter(p => {
-    const esVentaRapida = (p.observaciones?.toLowerCase().includes('venta rápida') || 
-                         p.observacion?.toLowerCase().includes('venta rápida') || 
-                         p.estante === 'Venta Rápida') && p.estado !== 'PENDIENTE';
-    if (esVentaRapida) return false;
+  const esVentaRapidaCerrada = (p: any) =>
+    (p.observaciones?.toLowerCase().includes('venta rápida') ||
+     p.observacion?.toLowerCase().includes('venta rápida') ||
+     p.estante === 'Venta Rápida') && p.estado !== 'PENDIENTE';
 
-    const nombreCliente = p.cliente?.persona 
+  const estaAtrasado = (p: any) => {
+    if (!p.fecha_entrega_estimada || p.estado === 'FINALIZADO' || p.estado === 'PRESUPUESTO') return false;
+    const entrega = new Date(p.fecha_entrega_estimada).getTime();
+    return !isNaN(entrega) && entrega < Date.now();
+  };
+
+  const pedidosVisibles = pedidos.filter(p => !esVentaRapidaCerrada(p));
+  const contadores = {
+    TALLER: pedidosVisibles.filter(p => p.estado !== 'PRESUPUESTO').length,
+    PRESUPUESTOS: pedidosVisibles.filter(p => p.estado === 'PRESUPUESTO').length,
+    ATRASADOS: pedidosVisibles.filter(estaAtrasado).length,
+  };
+
+  const pedidosFiltrados = pedidosVisibles.filter(p => {
+    if (pestana === 'PRESUPUESTOS') {
+      if (p.estado !== 'PRESUPUESTO') return false;
+    } else {
+      if (p.estado === 'PRESUPUESTO') return false;
+      if (pestana === 'ATRASADOS' && !estaAtrasado(p)) return false;
+    }
+
+    const nombreCliente = p.cliente?.persona
       ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
       : (p.cliente?.razonSocial || p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
 
@@ -304,18 +370,15 @@ export const PedidosPendientesView: React.FC = () => {
         p.observaciones?.toLowerCase().includes('devolución') ||
         p.observacion?.toLowerCase().includes('devolución') ||
         Boolean(p.observacion_devolucion || p.motivo_devolucion) ||
-        listaHistoriales.some((h: any) => 
+        listaHistoriales.some((h: any) =>
           (h.observaciones && h.observaciones.toLowerCase().includes('devolución')) ||
           (h.observacion && h.observacion.toLowerCase().includes('devolución')) ||
-          h.estado_anterior === 'DEVUELTO' || 
+          h.estado_anterior === 'DEVUELTO' ||
           h.estadoAnterior === 'DEVUELTO'
         );
       if (!esDevolucion) return false;
-    } else if (filtroEstado === 'PRESUPUESTO') {
-      if (p.estado !== 'PRESUPUESTO') return false;
-    } else {
-      if (p.estado === 'PRESUPUESTO') return false;
-      if (filtroEstado !== '' && p.estado !== filtroEstado) return false;
+    } else if (filtroEstado !== '' && pestana !== 'PRESUPUESTOS' && p.estado !== filtroEstado) {
+      return false;
     }
 
     if (filtroEmpleado !== '') {
@@ -337,11 +400,64 @@ export const PedidosPendientesView: React.FC = () => {
       <div className="container-fluid px-2 d-flex flex-column pt-3" style={{ height: 'calc(100vh - 45px)', overflow: 'hidden' }}>
         <div className="d-flex justify-content-center align-items-center mb-2 position-relative d-print-none">
           <h1 className="fw-bold tracking-tight text-white m-0 text-center" style={{ fontSize: '1.85rem' }}>
-            {filtroEstado === 'PRESUPUESTO' ? 'Presupuestos / Cotizaciones' : 'Cola de Producción Taller'}
+            {pestana === 'PRESUPUESTOS' ? 'Presupuestos / Cotizaciones' : 'Cola de Producción Taller'}
           </h1>
         </div>
 
-        <div className="mt-3 mb-3">
+        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2 d-print-none font-monospace">
+          <div className="d-flex gap-1 flex-wrap" role="tablist">
+            {([
+              { clave: 'TALLER', texto: 'Taller', icono: 'bi-tools', color: '#8e45e0' },
+              { clave: 'PRESUPUESTOS', texto: 'Presupuestos', icono: 'bi-file-earmark-text', color: '#a855f7' },
+              { clave: 'ATRASADOS', texto: 'Atrasados', icono: 'bi-alarm', color: '#dc3545' },
+            ] as const).map(t => {
+              const activa = pestana === t.clave;
+              return (
+                <button
+                  key={t.clave}
+                  role="tab"
+                  aria-selected={activa}
+                  className="btn btn-sm fw-bold d-flex align-items-center gap-2"
+                  style={{
+                    backgroundColor: activa ? t.color : 'transparent',
+                    color: activa ? '#ffffff' : (isDarkMode ? '#d4d4d8' : '#334155'),
+                    border: `1px solid ${activa ? t.color : (isDarkMode ? '#3f3f46' : '#cbd5e1')}`,
+                    borderRadius: '8px'
+                  }}
+                  onClick={() => setPestana(t.clave)}
+                >
+                  <i className={`bi ${t.icono}`} aria-hidden="true"></i>
+                  {t.texto}
+                  <span className="badge rounded-pill" style={{ backgroundColor: activa ? 'rgba(255,255,255,0.25)' : t.color, color: '#ffffff' }}>
+                    {contadores[t.clave]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {pestana !== 'PRESUPUESTOS' && (
+            <div className="btn-group btn-group-sm" role="group" aria-label="Modo de vista">
+              {(['LISTA', 'TABLERO'] as const).map(m => (
+                <button
+                  key={m}
+                  className="btn fw-bold"
+                  style={{
+                    backgroundColor: modoVista === m ? '#8e45e0' : 'transparent',
+                    color: modoVista === m ? '#ffffff' : (isDarkMode ? '#d4d4d8' : '#334155'),
+                    border: `1px solid ${modoVista === m ? '#8e45e0' : (isDarkMode ? '#3f3f46' : '#cbd5e1')}`
+                  }}
+                  onClick={() => cambiarModoVista(m)}
+                >
+                  <i className={`bi ${m === 'LISTA' ? 'bi-list-ul' : 'bi-kanban'} me-1`} aria-hidden="true"></i>
+                  {m === 'LISTA' ? 'Lista' : 'Tablero'}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-2 mb-2">
           <FiltrosPedidos
             filtroCliente={filtroCliente}
             setFiltroCliente={setFiltroCliente}
@@ -354,6 +470,9 @@ export const PedidosPendientesView: React.FC = () => {
         </div>
 
         <div className="flex-grow-1 overflow-y-auto mb-2 pe-1" style={{ height: 'calc(100vh - 210px)' }}>
+          {modoVista === 'TABLERO' && pestana !== 'PRESUPUESTOS' && !cargando ? (
+            <TableroPedidos pedidos={pedidosOrdenados} onMover={handleCambioEstadoCombo} />
+          ) : (
           <ListaPedidosPendientes
             cargando={cargando}
             pedidos={pedidosOrdenados}
@@ -367,13 +486,14 @@ export const PedidosPendientesView: React.FC = () => {
             onSelectComprobantes={(p) => setPedidoGestionComprobanteSel(p)}
             onGestionarMermas={(p) => setPedidoMermaSel(p)}
           />
+          )}
         </div>
 
         <div className="d-flex flex-wrap gap-3 justify-content-between align-items-center pt-2 border-secondary pb-1 mt-auto">
           <button
             onClick={() => navigate('/dashboard')}
             className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center"
-            style={{ 
+            style={{
               color: '#ffffff',
               padding: '11px 24px',
               fontSize: '1rem',

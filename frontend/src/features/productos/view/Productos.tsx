@@ -24,6 +24,7 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useIsMobile } from '../../../hook/useIsMobile';
 import { confirmarAccion, mostrarError } from '../../../config/dialogStore';
+import { SkeletonTabla } from '../../../components/common/SkeletonCarga';
 
 export const Productos: React.FC = () => {
   const { theme } = useTheme();
@@ -179,10 +180,7 @@ export const Productos: React.FC = () => {
         }}
       >
         {cargando ? (
-          <div className="text-center py-5" style={{ color: textColor }}>
-            <div className="spinner-border spinner-border-sm me-2" role="status"></div>
-            Cargando productos...
-          </div>
+          <SkeletonTabla />
         ) : (
           <ProductoTabla
             productos={productosFiltrados}

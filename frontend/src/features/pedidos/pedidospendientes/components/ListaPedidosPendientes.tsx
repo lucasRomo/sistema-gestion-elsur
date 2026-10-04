@@ -1,5 +1,6 @@
 import React from 'react';
 import { TarjetaPedido } from './TarjetaPedido';
+import { SkeletonTarjetas } from '../../../../components/common/SkeletonCarga';
 
 interface ListaPedidosPendientesProps {
   cargando: boolean;
@@ -29,12 +30,7 @@ export const ListaPedidosPendientes: React.FC<ListaPedidosPendientesProps> = ({
   onGestionarMermas
 }) => {
   if (cargando) {
-    return (
-      <div className="text-center py-5 font-monospace text-muted">
-        <div className="spinner-border spinner-border-sm me-2" role="status"></div>
-        Cargando Pedidos Pendientes...
-      </div>
-    );
+    return <SkeletonTarjetas cantidad={5} />;
   }
 
   if (pedidos.length === 0) {

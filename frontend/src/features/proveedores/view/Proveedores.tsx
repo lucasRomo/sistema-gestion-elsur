@@ -14,6 +14,7 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useIsMobile } from '../../../hook/useIsMobile';
 import { mostrarError } from '../../../config/dialogStore';
+import { SkeletonTabla } from '../../../components/common/SkeletonCarga';
 
 export const Proveedores: React.FC = () => {
   const navigate = useNavigate();
@@ -77,10 +78,7 @@ export const Proveedores: React.FC = () => {
         }}
       >
         {cargando ? (
-          <div className="text-center py-5" style={{ color: textColor }}>
-            <div className="spinner-border spinner-border-sm me-2" role="status"></div>
-            Cargando proveedores...
-          </div>
+          <SkeletonTabla />
         ) : (
           <ProveedorTabla
             proveedores={proveedoresFiltrados}

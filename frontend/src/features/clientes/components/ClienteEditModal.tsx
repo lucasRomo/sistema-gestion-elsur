@@ -88,7 +88,7 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
           <div 
             className="modal-content text-white" 
             style={{ 
-              border: '1.5px solid #0dcaf0', 
+              border: '1.5px solid #8e45e0', 
               backgroundColor: '#1a1a1c', 
               borderRadius: '14px' 
             }}

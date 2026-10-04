@@ -46,6 +46,15 @@ public class PedidoController {
         return pedidoService.listarCerrados();
     }
 
+    @GetMapping("/cerrados/paginado")
+    public Map<String, Object> listarHistorialPaginado(
+            @RequestParam(defaultValue = "TODOS") String estado,
+            @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "50") int tamano) {
+        return pedidoService.listarHistorialPaginado(estado, q, pagina, tamano);
+    }
+
     @PostMapping(consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> crearJson(@RequestBody Map<String, Object> payload) {
         return procesarYGuardarPedido(payload, null);
