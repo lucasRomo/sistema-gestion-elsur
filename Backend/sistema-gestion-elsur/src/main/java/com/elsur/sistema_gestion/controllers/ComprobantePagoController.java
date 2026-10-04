@@ -1,5 +1,7 @@
 package com.elsur.sistema_gestion.controllers;
 
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -49,7 +51,7 @@ public class ComprobantePagoController {
     public ResponseEntity<?> subirComprobante(@PathVariable Integer id, @RequestParam("archivo") MultipartFile file) {
         try {
             Pedido pedido = pedidoRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Pedido no encontrado"));
 
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body("El archivo está vacío");

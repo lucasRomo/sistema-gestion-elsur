@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface Area_CursoRepository extends JpaRepository<Area_Curso, Long> {
+    boolean existsByNombreAreaIgnoreCaseAndInstitucion_IdInstitucion(String nombreArea, Long idInstitucion);
 }

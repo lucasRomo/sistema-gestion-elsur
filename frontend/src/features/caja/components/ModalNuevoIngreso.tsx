@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 import type { NuevoMovimientoDTO } from '../services/cajaService';
 import { pad } from '../../../utils/formato';
+import { confirmarAccion, mostrarAviso } from '../../../config/dialogStore';
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onGuardar: (data: NuevoMovimientoDTO) => void | Promise<void>;
+  onGuardar: (data: NuevoMovimientoDTO) => boolean | void | Promise<boolean | void>;
 }
 
 export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGuardar }) => {
@@ -14,7 +15,7 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
   const [concepto, setConcepto] = useState('');
   const [categoria, setCategoria] = useState('INGRESO');
   const [metodoPago, setMetodoPago] = useState('EFECTIVO');
-  const [idPedido, setIdPedido] = useState<string | null>(null);
+  const [idPedido] = useState<string | null>(null);
   const [fechaPlaceholder, setFechaPlaceholder] = useState('');
 
   const [guardando, setGuardando] = useState(false);
@@ -61,17 +62,24 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
     if (guardando) return;
 
     if (!monto || Number(monto) <= 0) {
-      alert("Por favor ingrese un monto válido mayor a 0.");
+      mostrarAviso("Por favor ingrese un monto válido mayor a 0.");
       return;
     }
     if (!concepto.trim()) {
-      alert("Por favor ingrese la descripción o concepto del movimiento.");
+      mostrarAviso("Por favor ingrese la descripción o concepto del movimiento.");
       return;
     }
 
+    const tipo = esEgreso(categoria) ? 'egreso' : 'ingreso';
+    const confirmado = await confirmarAccion(
+      `¿Registrar un ${tipo} de $${Number(monto).toFixed(2)} en concepto de "${concepto.trim()}"?`,
+      { titulo: 'Confirmar movimiento', textoConfirmar: 'Registrar' }
+    );
+    if (!confirmado) return;
+
     setGuardando(true);
     try {
-      await onGuardar({
+      const guardado = await onGuardar({
         monto: Number(monto),
         concepto: concepto.trim(),
         tipoMovimiento: esEgreso(categoria) ? 'EGRESO' : 'INGRESO',
@@ -80,6 +88,8 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
         idPedido: idPedido === "no-pedido" ? null : idPedido,
         comprobanteImagen: metodoPago === 'TRANSFERENCIA' ? archivoComprobante : null
       });
+      // Si falló, se conservan los datos cargados para poder corregir y reintentar.
+      if (guardado === false) return;
 
       setMonto('');
       setConcepto('');

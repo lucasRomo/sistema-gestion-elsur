@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import { SelectorProductosForm } from '../components/SelectorProductosForm';
@@ -29,7 +29,7 @@ export const CrearPedidoView: React.FC = () => {
   
   const [ticketGenerado, setTicketGenerado] = useState<{ pedido: Pedido; movimiento?: MovimientoCaja } | null>(null);
 
-  const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string } | null>(null);
+  const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string; idCategoriaCliente?: number | null } | null>(null);
   const [fileTemporal, setFileTemporal] = useState<File | null>(null);
   const [guardando, setGuardando] = useState(false);
   
@@ -119,7 +119,9 @@ export const CrearPedidoView: React.FC = () => {
       idEmpleado: payloadEstructurado.idEmpleado,
       idUsuario: idUsuarioLogueado,
       tipoPago: payloadEstructurado.tipoPago,
-      confirmarMaquinaNoDisponible
+      confirmarMaquinaNoDisponible,
+      // El backend recalcula el total con el descuento de esta categoría.
+      idCategoriaCliente: categoriaSeleccionadaId ? Number(categoriaSeleccionadaId) : null
     };
 
     setPayloadTemporal(payloadConUsuario); 
@@ -229,8 +231,8 @@ export const CrearPedidoView: React.FC = () => {
         </p>
         <div className="d-flex gap-2 justify-content-center mt-3">
           <button
-            className="btn btn-sm px-3 fw-bold"
-            style={{ borderRadius: '6px', backgroundColor: '#e22e2e', border: '1px solid #e22e2e', color: '#ffffff', opacity: guardando ? 0.6 : 1 }}
+            className="btn btn-secondary btn-sm px-3 fw-bold"
+            style={{ borderRadius: '6px', backgroundColor: '#6c757d', border: '1px solid #6c757d', color: '#ffffff', opacity: guardando ? 0.6 : 1 }}
             onClick={() => setConfirmarGuardado(false)}
             disabled={guardando}
           >

@@ -30,7 +30,8 @@ public class CategoriaServiceImpl implements CategoriaService {
             throw new SolicitudInvalidaException("El nombre de la categoría es obligatorio");
         }
         String nombreNormalizado = categoria.getNombre().trim();
-        if (categoria.getIdCategoria() == null && categoriaRepository.existsByNombreIgnoreCase(nombreNormalizado)) {
+        Integer idExcluido = categoria.getIdCategoria() != null ? categoria.getIdCategoria() : -1;
+        if (categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot(nombreNormalizado, idExcluido)) {
             throw new RecursoDuplicadoException("La categoría '" + nombreNormalizado + "' ya existe.");
         }
         categoria.setNombre(nombreNormalizado);

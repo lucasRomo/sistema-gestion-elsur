@@ -3,6 +3,7 @@ import type { Producto } from '../../../productos/types/Producto';
 import type { Pedido } from '../../general/types/Pedido';
 import type { Maquina } from '../../../maquinas/types/Maquina';
 import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../../config/api';
+import { showLoading, hideLoading } from '../../../../config/loadingStore';
 
 export const useRegistrarPedido = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -14,6 +15,9 @@ export const useRegistrarPedido = () => {
 
   useEffect(() => {
     const cargarDatosIniciales = async () => {
+      // Pantalla de carga mientras llegan productos, recetas y clientes: antes la vista quedaba
+      // vacía unos segundos (ej. al venir desde "Crear pedido de impresión" del Repositorio).
+      showLoading('Cargando productos e insumos...');
       try {
         const [
           resProductos, 
@@ -28,7 +32,7 @@ export const useRegistrarPedido = () => {
           apiFetch(`${API_BASE_URL}/empleados`),
           apiFetch(`${API_BASE_URL}/maquinas`),
           apiFetch(`${API_BASE_URL}/producto-insumo`),
-          apiFetch(`${API_BASE_URL}/pedidos`)
+          apiFetch(`${API_BASE_URL}/pedidos/activos`)
         ]);
 
         const rawProductos = resProductos.ok ? await resProductos.json() : [];
@@ -62,6 +66,8 @@ export const useRegistrarPedido = () => {
         setPedidosPendientes(pendientes);
       } catch (error) {
         console.error("Error al cargar datos iniciales:", error);
+      } finally {
+        hideLoading();
       }
     };
 
@@ -76,6 +82,7 @@ export const useRegistrarPedido = () => {
       tipoPago: string;
       idSucursal?: number;
       confirmarMaquinaNoDisponible?: boolean;
+      idCategoriaCliente?: number | null;
     },
     fileComprobante?: File | null
   ): Promise<any> => {

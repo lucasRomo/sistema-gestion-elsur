@@ -13,9 +13,10 @@ import { PedidoPendienteService } from '../service/pedidoPendienteService';
 import { FiltrosPedidos } from '../components/FiltrosPedidos';
 import { ListaPedidosPendientes } from '../components/ListaPedidosPendientes';
 import { PedidosModales } from '../components/PedidosModales';
+import { confirmarAccion } from '../../../../config/dialogStore';
 
 export const PedidosPendientesView: React.FC = () => {
-  const { pedidos, cargando, actualizarEstado, refrescar } = usePedidosPendientes();
+  const { pedidos, cargando, pedidosActualizando, actualizarEstado, refrescar, refrescarPedido } = usePedidosPendientes();
   const navigate = useNavigate();
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
@@ -84,19 +85,24 @@ export const PedidosPendientesView: React.FC = () => {
   };
 
   const handleCambioEmpleado = async (idPedido: number, idEmpleado: string) => {
+    const empleadoElegido = empleados.find(e => String(e.idEmpleado ?? e.id_empleado) === String(idEmpleado));
+    const nombreElegido = empleadoElegido?.persona
+      ? `${empleadoElegido.persona.nombre} ${empleadoElegido.persona.apellido}`
+      : 'el empleado seleccionado';
+    if (!(await confirmarAccion(`¿Asignar el pedido #${idPedido} a ${nombreElegido}?`, { titulo: 'Reasignar empleado', textoConfirmar: 'Asignar' }))) return;
     showLoading('Asignando empleado...');
     try {
       const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
       const idUsuarioActivo = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
 
       await PedidoPendienteService.asignarEmpleado(idPedido, idEmpleado, idUsuarioActivo);
-      await refrescar();
-      setModalNotif({ show: true, msg: "El empleado ha sido asignado correctamente." });
-    } catch (error) {
-      console.error("Error al asignar:", error);
-      alert("Error al asignar el empleado.");
-    } finally {
       hideLoading();
+      setModalNotif({ show: true, msg: "El empleado ha sido asignado correctamente." });
+      refrescarPedido(idPedido);
+    } catch (error: any) {
+      console.error("Error al asignar:", error);
+      hideLoading();
+      setSucesoError({ show: true, titulo: 'Error al asignar', mensaje: error?.message || "No se pudo asignar el empleado al pedido." });
     }
   };
 
@@ -107,7 +113,8 @@ export const PedidosPendientesView: React.FC = () => {
     showLoading('Actualizando estado del pedido...');
     try {
       await actualizarEstado(idPedido, nuevoEst, estadoAnt, observaciones, idUsuarioActivo);
-      await refrescar();
+      hideLoading();
+      refrescarPedido(idPedido);
       setModalNotif({
         show: true,
         msg: `El estado del pedido #${idPedido} cambió a "${nuevoEst}" correctamente.`
@@ -119,12 +126,12 @@ export const PedidosPendientesView: React.FC = () => {
         ? "No hay Suficiente Stock para Completar o Entregar el Pedido, Por Favor Modifique el stock en la Ventana Productos para Continuar"
         : mensajeOriginal;
 
+      hideLoading();
       setSucesoError({ show: true, mensaje: mensajeAmigable });
     } finally {
       setPedidoEstadoSel(null);
       setNuevoEstadoPendiente('');
       setModalAdvertenciaDeuda(prev => ({ ...prev, show: false }));
-      hideLoading();
     }
   };
 
@@ -186,7 +193,7 @@ export const PedidosPendientesView: React.FC = () => {
     const idCliente = cliente.idCliente ?? cliente.id_cliente;
 
     if (!idCliente) {
-      alert("No se pudo identificar el ID del cliente para actualizar su límite.");
+      setSucesoError({ show: true, titulo: 'Error', mensaje: "No se pudo identificar el cliente para actualizar su límite de crédito." });
       return;
     }
 
@@ -200,7 +207,7 @@ export const PedidosPendientesView: React.FC = () => {
       );
     } catch (error: any) {
       console.error("Error actualizando límite de crédito:", error);
-      alert(`Error: ${error.message || "No se pudo actualizar el límite de crédito."}`);
+      setSucesoError({ show: true, titulo: 'Error', mensaje: error.message || "No se pudo actualizar el límite de crédito." });
     }
   };
 
@@ -223,7 +230,7 @@ export const PedidosPendientesView: React.FC = () => {
         pedido: pedidoActualizado || pedidoPagoSel,
         movimiento: { metodoPago: tipoPago, fecha: new Date(), monto }
       });
-      await refrescar();
+      refrescarPedido(pedidoPagoSel.id_pedido);
     } catch (error: any) {
       console.error(error);
       setSuceso({ show: true, titulo: "Error", mensaje: error.message || "Error al registrar el pago", tipo: "error" });
@@ -234,6 +241,7 @@ export const PedidosPendientesView: React.FC = () => {
     try {
       const pedidoActualizado = await PedidoPendienteService.vincularComprobanteDigital(idComprobante, archivo);
       setPedidoGestionComprobanteSel(pedidoActualizado);
+      if (pedidoActualizado?.id_pedido) refrescarPedido(pedidoActualizado.id_pedido);
       setSuceso({ show: true, titulo: "Éxito", mensaje: "Comprobante vinculado", tipo: "exito" });
     } catch (error: any) {
       setSuceso({ show: true, titulo: "Error", mensaje: error.message, tipo: "error" });
@@ -249,6 +257,7 @@ export const PedidosPendientesView: React.FC = () => {
     try {
       const pedidoActualizado = await PedidoPendienteService.eliminarComprobanteDigital(idComprobante);
       setPedidoGestionComprobanteSel(pedidoActualizado);
+      if (pedidoActualizado?.id_pedido) refrescarPedido(pedidoActualizado.id_pedido);
       setSuceso({ show: true, titulo: "Éxito", mensaje: "Comprobante desvinculado correctamente", tipo: "exito" });
     } catch (error: any) {
       setSuceso({ show: true, titulo: "Error", mensaje: error.message, tipo: "error" });
@@ -259,13 +268,13 @@ export const PedidosPendientesView: React.FC = () => {
     showLoading('Actualizando ubicación...');
     try {
       await PedidoPendienteService.actualizarUbicacion(idPedido, nuevaUbicacion);
-      await refrescar();
-      setSuceso({ show: true, titulo: "Éxito", mensaje: `Ubicación actualizada a "${nuevaUbicacion}"`, tipo: "exito" });
-    } catch (error) {
-      console.error("Error al actualizar la ubicación:", error);
-      setSucesoError({ show: true, mensaje: "No se pudo actualizar la ubicación del pedido en el servidor." });
-    } finally {
       hideLoading();
+      setSuceso({ show: true, titulo: "Éxito", mensaje: `Ubicación actualizada a "${nuevaUbicacion}"`, tipo: "exito" });
+      refrescarPedido(idPedido);
+    } catch (error: any) {
+      console.error("Error al actualizar la ubicación:", error);
+      hideLoading();
+      setSucesoError({ show: true, titulo: 'Error', mensaje: error?.message || "No se pudo actualizar la ubicación del pedido en el servidor." });
     }
   };
 
@@ -348,6 +357,7 @@ export const PedidosPendientesView: React.FC = () => {
           <ListaPedidosPendientes
             cargando={cargando}
             pedidos={pedidosOrdenados}
+            pedidosActualizando={pedidosActualizando}
             empleados={empleados}
             onCambioEstado={handleCambioEstadoCombo}
             onCambioUbicacion={handleCambioUbicacion}
@@ -405,8 +415,9 @@ export const PedidosPendientesView: React.FC = () => {
         pedidoMermaSel={pedidoMermaSel}
         onCerrarMerma={() => setPedidoMermaSel(null)}
         onConfirmarMerma={() => {
-          setPedidoMermaSel(null);
-          refrescar();
+          const idPedidoMerma = pedidoMermaSel?.id_pedido;
+          setSuceso({ show: true, titulo: "Éxito", mensaje: "Merma registrada correctamente.", tipo: "exito" });
+          if (idPedidoMerma) refrescarPedido(idPedidoMerma);
         }}
         sucesoError={sucesoError}
         onCerrarError={() => {
@@ -432,17 +443,9 @@ export const PedidosPendientesView: React.FC = () => {
         clienteCuentaCorriente={clienteCuentaCorriente}
         onCerrarCuentaCorriente={() => setClienteCuentaCorriente(null)}
         modalNotif={modalNotif}
-        onCerrarModalNotif={() => {
-          setModalNotif({ show: false, msg: '' });
-          refrescar();
-        }}
+        onCerrarModalNotif={() => setModalNotif({ show: false, msg: '' })}
         suceso={suceso}
-        onCerrarSuceso={() => {
-          setSuceso({ ...suceso, show: false });
-          if (suceso.tipo === 'exito') {
-            refrescar();
-          }
-        }}
+        onCerrarSuceso={() => setSuceso({ ...suceso, show: false })}
       />
     </SidebarLayout>
   );

@@ -1,5 +1,7 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+
 import com.elsur.sistema_gestion.models.RegistroActividad;
 import com.elsur.sistema_gestion.models.Usuario;
 import com.elsur.sistema_gestion.repositories.RegistroActividadRepository;
@@ -60,7 +62,7 @@ public class RegistroActividadServiceImpl implements RegistroActividadService {
     @Override
     public RegistroActividad buscarPorId(Integer id) {
     return registroActividadRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Registro de actividad no encontrado con ID: " + id));
+            .orElseThrow(() -> new RecursoNoEncontradoException("Registro de actividad no encontrado con ID: " + id));
 }
 
 }

@@ -13,6 +13,7 @@ import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useIsMobile } from '../../../hook/useIsMobile';
+import { mostrarError } from '../../../config/dialogStore';
 
 export const Proveedores: React.FC = () => {
   const navigate = useNavigate();
@@ -165,7 +166,7 @@ export const Proveedores: React.FC = () => {
             setSuccessMessage(isEditing ? "Proveedor modificado correctamente" : "Proveedor registrado correctamente");
             setShowSuccess(true);
           } catch (e: any) {
-            alert("Error: " + e.message);
+            mostrarError("Error: " + e.message);
           } finally {
             hideLoading();
           }
@@ -188,7 +189,7 @@ export const Proveedores: React.FC = () => {
             setSuccessMessage("Ubicación actualizada correctamente");
             setShowSuccess(true);
           } catch (e: any) {
-            alert("Error: " + e.message);
+            mostrarError("Error: " + e.message);
           } finally {
             hideLoading();
           }

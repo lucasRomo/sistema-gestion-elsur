@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import type { Insumo } from '../types/Insumo';
 import type { Proveedor } from '../../proveedores/types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
-import { apiFetch } from '../../../config/api';
 import { getProveedores } from '../services/insumoService';
 
 interface InsumoProveedoresModalProps {

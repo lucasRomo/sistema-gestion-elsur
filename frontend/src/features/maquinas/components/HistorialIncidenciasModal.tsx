@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import type { Maquina } from '../types/Maquina';
-import type { Incidencia, Empleado } from '../types/Incidencia';
+import type { Incidencia } from '../types/Incidencia';
+import type { Empleado } from '../../../types/Empleado';
 import { useTheme } from '../../../Context/ThemeContext';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { incidenciaService } from '../service/incidenciaService';
 import { getUsuarioActualId } from '../service/maquinasService';
+import { confirmarAccion } from '../../../config/dialogStore';
 
 interface Props {
   show: boolean;
@@ -106,6 +108,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
       return;
     }
 
+    if (!(await confirmarAccion('¿Pasar este equipo a mantenimiento con la nota ingresada?', { titulo: 'Mantenimiento', textoConfirmar: 'Confirmar' }))) return;
     setProcesandoAccion(true);
     try {
       await incidenciaService.ponerEnMantenimiento(
@@ -138,6 +141,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
       return;
     }
 
+    if (!(await confirmarAccion('¿Dar de alta el equipo y marcar la incidencia como resuelta?', { titulo: 'Dar de alta', textoConfirmar: 'Dar alta' }))) return;
     setProcesandoAccion(true);
     try {
       await incidenciaService.resolver(
@@ -214,6 +218,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
           metodoPago
         }
       });
+
+      onPagoExitoso?.(`Se registró el egreso de $${Number(montoPago).toFixed(2)} por el servicio técnico de ${maquina.nombre}.`);
 
       setIncidenciaAPagar(null);
       setComprobanteFile(null);
@@ -452,7 +458,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                                   />
                                   {errorValidacion && <small className="text-danger d-block mb-1">{errorValidacion}</small>}
                                   <div className="d-flex gap-1 justify-content-end">
-                                    <button className={`btn btn-xs ${isDark ? 'btn-secondary' : 'btn-secondary'} py-0 px-2`} onClick={limpiarFormulario} disabled={procesandoAccion}>Cancelar</button>
+                                    <button className="btn btn-xs btn-danger py-0 px-2" onClick={limpiarFormulario} disabled={procesandoAccion}>Cancelar</button>
                                     <button className="btn btn-xs btn-warning fw-bold py-0 px-2" onClick={() => handlePonerEnMantenimiento(inc.idIncidencia!)} disabled={procesandoAccion}>
                                       {procesandoAccion ? 'Guardando...' : 'Guardar'}
                                     </button>
@@ -525,7 +531,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                                   />
                                   {errorValidacion && <small className="text-danger d-block mb-1">{errorValidacion}</small>}
                                   <div className="d-flex gap-1 justify-content-end">
-                                    <button className={`btn btn-xs ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'} py-0 px-2`} onClick={limpiarFormulario} disabled={procesandoAccion}>Cancelar</button>
+                                    <button className="btn btn-xs btn-danger py-0 px-2" onClick={limpiarFormulario} disabled={procesandoAccion}>Cancelar</button>
                                     <button className="btn btn-xs btn-success fw-bold py-0 px-2" onClick={() => handleResolver(inc.idIncidencia!)} disabled={procesandoAccion}>
                                       {procesandoAccion ? 'Guardando...' : 'Dar Alta'}
                                     </button>
@@ -721,7 +727,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
               </div>
 
               <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
-                <button type="button" className={`btn ${isDark ? 'btn-secondary' : 'btn-secondary'}`} onClick={() => setIncidenciaAPagar(null)} disabled={procesandoPago}>
+                <button type="button" className="btn btn-danger" onClick={() => setIncidenciaAPagar(null)} disabled={procesandoPago}>
                   Cancelar
                 </button>
                 <button type="button" className="btn btn-danger fw-bold px-4" onClick={() => ejecutarPagoMantenimiento(false)} disabled={procesandoPago}>

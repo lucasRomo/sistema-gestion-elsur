@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { configuracionService } from '../services/configuracionService';
 import type { RespaldoLog } from '../services/configuracionService';
 import { extraerMensajeError } from '../../../config/api';
+import { confirmarAccion, mostrarError } from '../../../config/dialogStore';
 
 export const useConfiguracion = () => {
   const [opcionPerfil, setOpcionPerfil] = useState<'usuario' | 'password' | 'email'>('password');
@@ -181,6 +182,7 @@ export const useConfiguracion = () => {
   };
 
   const handleGenerarRespaldo = async () => {
+    if (!(await confirmarAccion('¿Generar un respaldo completo de la base de datos ahora?', { titulo: 'Generar respaldo', textoConfirmar: 'Generar' }))) return;
     setCargandoRespaldo(true);
     setMensajeRespaldo(null);
     try {
@@ -207,12 +209,12 @@ export const useConfiguracion = () => {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch {
-      alert("No se pudo descargar el archivo seleccionado.");
+      mostrarError("No se pudo descargar el archivo seleccionado.");
     }
   };
 
   const handleEliminarRespaldo = async (idRespaldo: number) => {
-    if (!window.confirm("¿Deseas eliminar este respaldo?")) return;
+    if (!(await confirmarAccion("¿Deseas eliminar este respaldo? Esta acción no se puede deshacer.", { titulo: 'Eliminar respaldo', textoConfirmar: 'Eliminar' }))) return;
     try {
       const response = await configuracionService.eliminarRespaldo(idRespaldo, token);
       if (response.ok) {

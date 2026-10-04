@@ -226,7 +226,6 @@ class MatrizSeguridadValidatorUnitTest {
     @DisplayName("Portón en bootstrap (tabla usuario vacía) puede crear el primer usuario")
     void porton_bootstrap_creaPrimerUsuario() {
         validator = validador();
-        when(usuarioRepository.count()).thenReturn(0L);
 
         Authentication auth = autenticadoComo("porton", "ROLE_PORTON");
         AuthorizationDecision decision = validator.authorize(() -> auth, contextoPara("POST", "/api/usuarios"));
@@ -235,22 +234,21 @@ class MatrizSeguridadValidatorUnitTest {
     }
 
     @Test
-    @DisplayName("REGRESIÓN: portón ya NO puede crear usuarios una vez que existe al menos uno")
-    void porton_fueraDeBootstrap_noPuedeCrearUsuarios() {
+    @DisplayName("El portón puede registrar usuarios en cualquier momento (autoregistro): la cuenta queda Pendiente " +
+                 "hasta que un administrador la active -- eso lo fuerza UsuarioController, no la matriz")
+    void porton_fueraDeBootstrap_puedeRegistrarUsuarioPendiente() {
         validator = validador();
-        when(usuarioRepository.count()).thenReturn(5L);
 
         Authentication auth = autenticadoComo("porton", "ROLE_PORTON");
         AuthorizationDecision decision = validator.authorize(() -> auth, contextoPara("POST", "/api/usuarios"));
 
-        assertFalse(decision.isGranted());
+        assertTrue(decision.isGranted());
     }
 
     @Test
     @DisplayName("El portón nunca pudo crear nada fuera de /api/usuarios y /api/empleados, ni en bootstrap")
     void porton_noAccedeAOtrasRutasNiEnBootstrap() {
         validator = validador();
-        when(usuarioRepository.count()).thenReturn(0L);
 
         Authentication auth = autenticadoComo("porton", "ROLE_PORTON");
         AuthorizationDecision decision = validator.authorize(() -> auth, contextoPara("POST", "/api/productos"));

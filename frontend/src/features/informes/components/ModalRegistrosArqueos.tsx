@@ -574,8 +574,8 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
               {vista === 'detalle' && (
                 <button 
                   type="button" 
-                  className="btn px-4 fw-bold border-0 shadow-sm" 
-                  style={{ backgroundColor: '#4076a5', color: '#ffffff' }}
+                  className="btn btn-secondary px-4 fw-bold border-0 shadow-sm" 
+                  style={{ backgroundColor: '#6c757d', color: '#ffffff' }}
                   onClick={handleVolverALista}
                 >
                   <i className="bi bi-arrow-left me-1"></i> Volver al listado

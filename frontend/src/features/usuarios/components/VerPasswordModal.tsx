@@ -115,7 +115,7 @@ export const VerPasswordModal: React.FC<VerPasswordModalProps> = ({ usuario, onC
                   </button>
                 </div>
                 <div className="d-flex justify-content-center mt-4">
-                  <button className="btn fw-bold px-4" style={{ backgroundColor: 'transparent', border: `1px solid ${modalBorder}`, color: modalText }} onClick={onCerrar}>
+                  <button className="btn btn-secondary fw-bold px-4" style={{ backgroundColor: '#6c757d', border: '1px solid #6c757d', color: '#ffffff' }} onClick={onCerrar}>
                     Cerrar
                   </button>
                 </div>
@@ -172,8 +172,8 @@ export const VerPasswordModal: React.FC<VerPasswordModalProps> = ({ usuario, onC
                   {passwordRevelada}
                 </div>
                 <button
-                  className="btn mt-4 px-4 fw-bold"
-                  style={{ backgroundColor: '#e22e2e', borderColor: '#e62020', color: '#ffffff' }}
+                  className="btn btn-secondary mt-4 px-4 fw-bold"
+                  style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#ffffff' }}
                   onClick={onCerrar}
                 >
                   Cerrar
@@ -242,8 +242,8 @@ export const VerPasswordModal: React.FC<VerPasswordModalProps> = ({ usuario, onC
                   {usuario?.nombreUsuario} ya puede iniciar sesión con la contraseña nueva.
                 </p>
                 <button
-                  className="btn mt-4 px-4 fw-bold"
-                  style={{ backgroundColor: '#2b7a3e', borderColor: '#20c997', color: '#ffffff' }}
+                  className="btn btn-secondary mt-4 px-4 fw-bold"
+                  style={{ backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#ffffff' }}
                   onClick={onCerrar}
                 >
                   Cerrar

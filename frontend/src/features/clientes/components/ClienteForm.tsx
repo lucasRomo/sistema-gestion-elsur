@@ -18,7 +18,6 @@ export const UsuariosFiltros: React.FC<UsuariosFiltrosProps> = ({
   const isDark = theme === 'dark';
 
   const containerBg = isDark ? '#1d1d1d' : '#ffffff';
-  const containerBorder = isDark ? '#2d2d30' : '#e2e8f0';
   const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
   const inputBg = isDark ? '#121214' : '#ffffff';
   const inputTextColor = isDark ? '#ffffff' : '#0f172a';

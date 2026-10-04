@@ -1,5 +1,5 @@
 import React from 'react';
-import type { TipoComparacion, InformeComparacion, PeriodoRango, ComparacionDataState } from '../types/informeTypes';
+import type { TipoComparacion, InformeComparacion, ComparacionDataState } from '../types/informeTypes';
 
 interface ModalComparacionProps {
   modalComparacionAbierto: boolean;
@@ -41,7 +41,6 @@ export const ModalComparacion: React.FC<ModalComparacionProps> = ({
   handleAnalizarComparacionModal,
   cerrarModalComparacion,
   obtenerNombreInforme,
-  esMismoDia,
   renderGraficoEspecifico,
 }) => {
   if (!modalComparacionAbierto || !informeComparacion) return null;

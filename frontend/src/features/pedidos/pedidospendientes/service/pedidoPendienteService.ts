@@ -4,10 +4,20 @@ const API_URL = `${API_BASE_URL}/pedidos`;
 
 export const PedidoPendienteService = {
 
-  obtenerTodos: async (): Promise<any[]> => {
-    const response = await apiFetch(API_URL);
+  // Solo los pedidos que siguen en la cola del taller (el backend ya excluye
+  // entregados, cancelados, devueltos y ventas rápidas).
+  obtenerActivos: async (): Promise<any[]> => {
+    const response = await apiFetch(`${API_URL}/activos`);
     if (!response.ok) {
       throw new Error("Error al obtener la lista de pedidos.");
+    }
+    return await response.json();
+  },
+
+  obtenerPorId: async (idPedido: number): Promise<any> => {
+    const response = await apiFetch(`${API_URL}/${idPedido}`, { skipLoading: true });
+    if (!response.ok) {
+      throw new Error("Error al obtener el pedido actualizado.");
     }
     return await response.json();
   },
@@ -86,7 +96,7 @@ export const PedidoPendienteService = {
     });
 
     if (!response.ok) {
-      throw new Error("No se pudo subir el archivo del comprobante.");
+      throw new Error(await extraerMensajeError(response, 'No se pudo subir el archivo del comprobante.'));
     }
 
     return await response.json();
@@ -106,7 +116,7 @@ export const PedidoPendienteService = {
     });
 
     if (!response.ok) {
-      throw new Error("No se pudo eliminar el archivo del comprobante.");
+      throw new Error(await extraerMensajeError(response, 'No se pudo eliminar el archivo del comprobante.'));
     }
 
     return await response.json();
@@ -123,7 +133,7 @@ export const PedidoPendienteService = {
     });
 
     if (!response.ok) {
-      throw new Error("No se pudo asignar el empleado al pedido.");
+      throw new Error(await extraerMensajeError(response, 'No se pudo asignar el empleado al pedido.'));
     }
     const text = await response.text();
     return text ? JSON.parse(text) : { success: true };
@@ -156,7 +166,7 @@ export const PedidoPendienteService = {
     });
 
     if (!response.ok) {
-      throw new Error("No se pudo actualizar el límite de crédito del cliente.");
+      throw new Error(await extraerMensajeError(response, 'No se pudo actualizar el límite de crédito del cliente.'));
     }
 
     return await response.json();

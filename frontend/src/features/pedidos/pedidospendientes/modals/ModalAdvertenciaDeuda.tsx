@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { mostrarAviso } from '../../../../config/dialogStore';
 
 interface Props {
   data: {
@@ -31,7 +32,7 @@ export const ModalAdvertenciaDeuda: React.FC<Props> = ({
 
   const handleGuardar = async () => {
     const num = Number(nuevoLimiteInput);
-    if (isNaN(num) || num < 0) return alert("Ingrese un monto válido.");
+    if (isNaN(num) || num < 0) return mostrarAviso("Ingrese un monto válido.");
     setCargando(true);
     await onActualizarYEntregar(num);
     setCargando(false);
@@ -85,7 +86,7 @@ export const ModalAdvertenciaDeuda: React.FC<Props> = ({
             <button className="btn btn-success fw-bold" onClick={() => onRegistrarCobro(data.pedido)}>
               Registrar Cobro Ahora
             </button>
-            <button className="btn btn-outline-secondary" onClick={onClose}>
+            <button className="btn btn-danger" onClick={onClose}>
               Cancelar
             </button>
           </div>

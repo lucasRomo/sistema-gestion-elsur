@@ -28,7 +28,7 @@ export const PedidosPendientesCard: React.FC = () => {
           nombreUsuarioLogueado = (uObj.nombreUsuario || uObj.nombre || '').toLowerCase().trim();
         }
 
-        const lista: any[] = await pedidoService.obtenerTodos();
+        const lista: any[] = await pedidoService.obtenerActivos();
 
         const estadosInactivos = ['FINALIZADO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO', 'PRESUPUESTO'];
         

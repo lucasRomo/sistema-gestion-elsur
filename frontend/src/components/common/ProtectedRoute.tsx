@@ -70,8 +70,8 @@ const AccesoRestringidoUI = () => (
         No tienes los permisos necesarios para acceder a este módulo del sistema.
       </p>
       <button 
-        className="btn mt-4 px-4 py-2 fw-bold text-white" 
-        style={{ backgroundColor: '#8e45e0', borderRadius: '8px' }}
+        className="btn btn-secondary mt-4 px-4 py-2 fw-bold text-white" 
+        style={{ backgroundColor: '#6c757d', borderRadius: '8px' }}
         onClick={() => window.history.back()}
       >
         <i className="bi bi-arrow-left me-2"></i>Volver

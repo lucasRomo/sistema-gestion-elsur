@@ -43,6 +43,7 @@ html[data-bs-theme="light"] .text-light {
 
 html[data-bs-theme="light"] .btn-primary,
 html[data-bs-theme="light"] .btn-danger,
+html[data-bs-theme="light"] .btn-secondary,
 html[data-bs-theme="light"] .btn-success,
 html[data-bs-theme="light"] .btn-purple,
 html[data-bs-theme="light"] .badge {

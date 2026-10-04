@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { Insumo } from '../types/Insumo';
 import { convertirInsumo } from '../services/insumoService';
 import { useTheme } from '../../../Context/ThemeContext';
+import { confirmarAccion } from '../../../config/dialogStore';
 
 interface ConvertirInsumoModalProps {
   show: boolean;
@@ -58,6 +59,7 @@ export const ConvertirInsumoModal: React.FC<ConvertirInsumoModalProps> = ({ show
       return;
     }
 
+    if (!(await confirmarAccion(`¿Abrir ${cantidadBultos} bulto(s) de "${insumo.nombreInsumo}" y pasarlos a unidades sueltas?`, { titulo: 'Convertir stock', textoConfirmar: 'Convertir' }))) return;
     try {
       setCargando(true);
       await convertirInsumo(insumo.idInsumo!, cantidadBultos);

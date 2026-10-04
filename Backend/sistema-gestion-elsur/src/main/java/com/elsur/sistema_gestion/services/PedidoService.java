@@ -8,8 +8,21 @@ import org.springframework.web.multipart.MultipartFile;
 public interface PedidoService {
     List<Pedido> listarTodos();
 
+    /** Pedidos que siguen en la cola del taller (incluye presupuestos). */
+    List<Pedido> listarActivos();
+
+    /** Pedidos cerrados que se muestran en el Historial de Pedidos. */
+    List<Pedido> listarCerrados();
+
     Pedido guardar(Pedido pedido, Integer idEmpleado, Integer idUsuario, String tipoDePago,
                    MultipartFile comprobante, boolean confirmarMaquinaNoDisponible);
+
+    /**
+     * Igual que {@link #guardar}, pero recalculando el total en el servidor con los precios
+     * actuales y el descuento de la categoría de cliente indicada (null = sin descuento).
+     */
+    Pedido guardar(Pedido pedido, Integer idEmpleado, Integer idUsuario, String tipoDePago,
+                   MultipartFile comprobante, boolean confirmarMaquinaNoDisponible, Integer idCategoriaCliente);
     Pedido buscarPorId(Integer id);
 
     void procesarDescuentoStock(Integer idPedido);

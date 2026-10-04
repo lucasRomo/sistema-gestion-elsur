@@ -17,6 +17,7 @@ import { GraficoFlujoCajaCard } from '../components/GraficoFlujoCajaCard';
 import { TablaMovimientosCaja } from '../components/TablaMovimientosCaja';
 import { AccionesRapidasCaja } from '../components/AccionesRapidasCaja';
 import { BarraAccionesTurno } from '../components/BarraAccionesTurno';
+import { confirmarAccion } from '../../../config/dialogStore';
 
 export const CajaView: React.FC = () => {
   const navigate = useNavigate();
@@ -110,6 +111,7 @@ export const CajaView: React.FC = () => {
       return;
     }
 
+    if (!(await confirmarAccion(`¿Abrir la caja con un monto inicial de $${monto.toFixed(2)}?`, { titulo: 'Abrir caja', textoConfirmar: 'Abrir' }))) return;
     setGuardandoApertura(true);
     try {
       await abrirCaja(monto);
@@ -134,12 +136,18 @@ export const CajaView: React.FC = () => {
     }
   };
 
-  const handleGuardarMovimiento = async (data: NuevoMovimientoDTO) => {
+  const handleGuardarMovimiento = async (data: NuevoMovimientoDTO): Promise<boolean> => {
     try {
       await guardarMovimiento(data);
       setIsModalOpen(false);
+      setExitoModal({
+        titulo: data.tipoMovimiento === 'EGRESO' ? 'Egreso registrado' : 'Ingreso registrado',
+        descripcion: `Se registró el movimiento "${data.concepto}" por $${Number(data.monto).toFixed(2)} correctamente.`
+      });
+      return true;
     } catch (error: any) {
       setAvisoModal("No se pudo guardar el movimiento: " + error.message);
+      return false;
     }
   };
 
@@ -158,6 +166,7 @@ export const CajaView: React.FC = () => {
       return;
     }
 
+    if (!(await confirmarAccion(`¿Registrar un ajuste de ${tipoAjuste === 'INGRESO' ? 'ingreso' : 'egreso'} por $${montoNum.toFixed(2)}?`, { titulo: 'Ajuste de movimiento', textoConfirmar: 'Registrar' }))) return;
     setGuardandoAjuste(true);
     try {
       await ajustarMovimiento(
@@ -490,7 +499,7 @@ export const CajaView: React.FC = () => {
                 <div className="modal-footer border-top border-secondary">
                   <button 
                     type="button" 
-                    className="btn btn-secondary px-4" 
+                    className="btn btn-danger px-4" 
                     onClick={() => {
                       setMovimientoAjuste(null);
                       setMetodoPagoAjuste('EFECTIVO');
@@ -560,8 +569,8 @@ export const CajaView: React.FC = () => {
 
                 <button 
                   type="button" 
-                  className="btn btn-danger fw-bold px-4 py-2 border-0" 
-                  style={{ backgroundColor: '#ef4444', borderRadius: '8px', minWidth: '100px' }}
+                  className="btn btn-secondary fw-bold px-4 py-2 border-0" 
+                  style={{ backgroundColor: '#6c757d', borderRadius: '8px', minWidth: '100px' }}
                   onClick={() => setExitoModal(null)}
                 >
                   Cerrar

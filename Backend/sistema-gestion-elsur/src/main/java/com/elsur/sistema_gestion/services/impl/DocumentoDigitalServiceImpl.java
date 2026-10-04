@@ -34,7 +34,6 @@ import java.util.List;
 @Service
 public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
 
-    private final Path directorioMateriales = Paths.get("materiales").toAbsolutePath().normalize();
 
     private static final float CALIDAD_JPEG_COMPRESION = 0.5f;
 
@@ -52,14 +51,6 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
     private ProductoRepository productoRepository;
 
     @Autowired private SupabaseStorageService supabaseStorageService;
-
-    public DocumentoDigitalServiceImpl() {
-        try {
-            Files.createDirectories(this.directorioMateriales);
-        } catch (Exception e) {
-            throw new RuntimeException("No se pudo crear el directorio 'materiales'", e);
-        }
-    }
 
     @Override
     public List<DocumentoDigital> findAllActivos() {

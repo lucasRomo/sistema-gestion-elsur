@@ -8,7 +8,7 @@ export const useHistorialPedidos = () => {
   const cargarHistorial = async () => {
     setCargando(true);
     try {
-      const response = await apiFetch(`${API_BASE_URL}/pedidos`);
+      const response = await apiFetch(`${API_BASE_URL}/pedidos/cerrados`);
       if (response.ok) {
         const data = await response.json();
         const ordenados = data.sort((a: any, b: any) => 

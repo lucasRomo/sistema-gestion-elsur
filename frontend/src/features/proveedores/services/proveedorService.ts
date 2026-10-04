@@ -46,7 +46,7 @@ export const crearTipoProveedor = async (descripcion: string): Promise<any> => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ descripcion })
   });
-  if (!res.ok) throw new Error("Error al crear tipo de proveedor");
+  if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al crear tipo de proveedor'));
   return res.json();
 };
 
@@ -54,5 +54,5 @@ export const eliminarTipoProveedor = async (id: number): Promise<void> => {
   const res = await apiFetch(`${API_TIPOS_URL}/${id}`, {
     method: 'DELETE'
   });
-  if (!res.ok) throw new Error("Error al eliminar tipo de proveedor");
+  if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al eliminar tipo de proveedor'));
 };

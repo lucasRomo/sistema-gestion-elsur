@@ -76,7 +76,7 @@ export const matrizPermisosService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payloadUsuario)
     });
-    if (!res.ok) throw new Error('Error al actualizar el usuario');
+    if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al actualizar el usuario'));
     return res.ok;
   },
 
@@ -86,7 +86,7 @@ export const matrizPermisosService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(permisosIds)
     });
-    if (!res.ok) throw new Error('Error al actualizar los permisos del rol');
+    if (!res.ok) throw new Error(await extraerMensajeError(res, 'Error al actualizar los permisos del rol'));
     return res.ok;
   }
 };

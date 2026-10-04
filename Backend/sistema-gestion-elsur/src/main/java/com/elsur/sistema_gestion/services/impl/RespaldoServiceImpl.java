@@ -1,5 +1,7 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+
 import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.*;
 import com.elsur.sistema_gestion.repositories.RespaldoLogRepository;
@@ -167,7 +169,7 @@ public class RespaldoServiceImpl implements RespaldoService {
     @Override
     public void eliminarRespaldo(Integer idRespaldo) {
         RespaldoLog log = respaldoLogRepository.findById(idRespaldo)
-                .orElseThrow(() -> new RuntimeException("Respaldo no encontrado con ID: " + idRespaldo));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Respaldo no encontrado con ID: " + idRespaldo));
 
         try {
             supabaseStorageService.eliminarArchivo(BUCKET, log.getNombreArchivo());
@@ -181,7 +183,7 @@ public class RespaldoServiceImpl implements RespaldoService {
     @Override
     public byte[] descargarRespaldoPorId(Integer idRespaldo) {
         RespaldoLog log = respaldoLogRepository.findById(idRespaldo)
-                .orElseThrow(() -> new RuntimeException("Respaldo no encontrado con ID: " + idRespaldo));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Respaldo no encontrado con ID: " + idRespaldo));
 
         try {
             return supabaseStorageService.descargarArchivo(BUCKET, log.getNombreArchivo());
@@ -203,7 +205,7 @@ public class RespaldoServiceImpl implements RespaldoService {
             Map<String, Object> datos = (Map<String, Object>) root.get("datos");
 
             if (datos == null) {
-                throw new RuntimeException("Formato de respaldo inválido: no se encontró el nodo 'datos'.");
+                throw new SolicitudInvalidaException("Formato de respaldo inválido: no se encontró el nodo 'datos'.");
             }
 
             Map<String, EntityType<?>> metamodelMap = entityManager.getMetamodel().getEntities().stream()

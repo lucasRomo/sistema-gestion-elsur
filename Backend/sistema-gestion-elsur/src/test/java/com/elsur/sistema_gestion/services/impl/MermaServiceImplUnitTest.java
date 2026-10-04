@@ -204,11 +204,9 @@ class MermaServiceImplUnitTest {
     }
 
     @Test
-    @DisplayName("Una merma puede afectar Producto e Insumo al mismo tiempo si ambos vienen cargados en el mismo registro")
-    void registrarMermas_conProductoEInsumoSimultaneos_descuentaAmbosStocks() {
-        Producto prod = producto(85, 20);
+    @DisplayName("FIX: la merma de un insumo dentro de un producto descuenta SOLO el insumo (el producto es referencia)")
+    void registrarMermas_insumoDeUnProducto_soloDescuentaElInsumo() {
         Insumo ins = insumo(32, BigDecimal.valueOf(10));
-        when(productoRepository.findById(85)).thenReturn(Optional.of(prod));
         when(insumoRepository.findById(32)).thenReturn(Optional.of(ins));
         when(mermaRepository.save(any(Merma.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -219,7 +217,23 @@ class MermaServiceImplUnitTest {
 
         mermaService.registrarMermas(List.of(entrada));
 
-        assertEquals(17, prod.getStock());
         assertEquals(0, BigDecimal.valueOf(7).compareTo(ins.getStockActual()));
+        verify(productoRepository, never()).save(any());
+        assertEquals(85, entrada.getProducto().getIdProducto(), "el producto queda como referencia en la merma");
+    }
+
+    @Test
+    @DisplayName("Producto con stock vinculado: la merma del producto se registra pero no toca su stock guardado (se descuentan los insumos)")
+    void registrarMermas_productoVinculado_noDescuentaStockDelProducto() {
+        Producto prod = producto(86, 20);
+        prod.setStockVinculado(true);
+        when(productoRepository.findById(86)).thenReturn(Optional.of(prod));
+        when(mermaRepository.save(any(Merma.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        List<Merma> guardadas = mermaService.registrarMermas(List.of(mermaDeProducto(86, 2.0)));
+
+        assertEquals(1, guardadas.size());
+        assertEquals(20, prod.getStock());
+        verify(productoRepository, never()).save(any());
     }
 }

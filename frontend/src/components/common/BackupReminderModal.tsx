@@ -1,10 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBackupReminder } from '../../hook/useBackupReminder';
+import { useTheme } from '../../Context/ThemeContext';
 
 export const BackupReminderModal: React.FC = () => {
   const navigate = useNavigate();
   const { mostrar, marcarComoVisto } = useBackupReminder();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   if (!mostrar) return null;
 
@@ -30,13 +33,13 @@ export const BackupReminderModal: React.FC = () => {
       <div
         className="font-monospace"
         style={{
-          backgroundColor: '#18181b',
-          border: '1px solid #3f3f46',
+          backgroundColor: isDark ? '#18181b' : '#ffffff',
+          border: `1px solid ${isDark ? '#3f3f46' : '#cbd5e1'}`,
           borderRadius: '16px',
           maxWidth: '460px',
           width: '90%',
           padding: '2rem',
-          color: '#fff',
+          color: isDark ? '#fff' : '#0f172a',
           boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
         }}
       >
@@ -66,7 +69,7 @@ export const BackupReminderModal: React.FC = () => {
           <button
             type="button"
             className="btn btn-sm px-3 py-2 fw-semibold"
-            style={{ backgroundColor: '#343335', color: '#fff', border: 'none' }}
+            style={{ backgroundColor: '#6c757d', color: '#fff', border: 'none' }}
             onClick={marcarComoVisto}
           >
             Hacerlo en otro Momento

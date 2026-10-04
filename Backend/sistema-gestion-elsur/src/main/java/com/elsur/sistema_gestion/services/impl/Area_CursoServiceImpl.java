@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoDuplicadoException;
 import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
 import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Area_Curso;
@@ -36,7 +37,12 @@ public class Area_CursoServiceImpl implements Area_CursoService {
         }
         Institucion institucion = institucionRepository.findById(areaCurso.getInstitucion().getIdInstitucion())
                 .orElseThrow(() -> new RecursoNoEncontradoException("La institución indicada no existe"));
-        areaCurso.setNombreArea(areaCurso.getNombreArea().trim());
+        String nombreNormalizado = areaCurso.getNombreArea().trim();
+        if (areaCurso.getIdArea() == null && areaCursoRepository
+                .existsByNombreAreaIgnoreCaseAndInstitucion_IdInstitucion(nombreNormalizado, institucion.getIdInstitucion())) {
+            throw new RecursoDuplicadoException("Ya existe una cátedra/área con ese nombre en la institución seleccionada");
+        }
+        areaCurso.setNombreArea(nombreNormalizado);
         areaCurso.setInstitucion(institucion);
         return areaCursoRepository.save(areaCurso);
     }

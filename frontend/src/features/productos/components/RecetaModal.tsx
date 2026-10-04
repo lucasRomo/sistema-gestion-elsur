@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
-import { apiFetch } from '../../../config/api';
 import { getInsumos, getRecetaPorProducto, guardarRecetaProducto } from '../services/productoService';
+import { confirmarAccion, mostrarAviso, mostrarError } from '../../../config/dialogStore';
 
 interface Props {
   show: boolean;
@@ -90,7 +90,7 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose, onGuarda
     });
 
     if (!insumoObj) {
-      alert("Por favor selecciona un insumo válido de la lista.");
+      mostrarAviso("Por favor selecciona un insumo válido de la lista.");
       return;
     }
 
@@ -125,6 +125,13 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose, onGuarda
 
   const handleGuardarReceta = async () => {
   if (!producto.idProducto) return;
+  const confirmado = await confirmarAccion(
+    recetaActual.length === 0
+      ? `La receta de "${producto.nombreProducto}" va a quedar vacía (sin insumos). ¿Guardar igual?`
+      : `¿Guardar la receta de "${producto.nombreProducto}" con ${recetaActual.length} insumo(s)?`,
+    { titulo: 'Guardar receta', textoConfirmar: 'Guardar' }
+  );
+  if (!confirmado) return;
   setLoading(true);
   try {
     const payload = recetaActual.map(item => ({
@@ -142,7 +149,7 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose, onGuarda
     }
   } catch (e) {
     console.error("Error guardando receta:", e);
-    alert('Ocurrió un error al guardar la receta.');
+    mostrarError((e as Error)?.message || 'Ocurrió un error al guardar la receta.');
   } finally {
     setLoading(false);
   }};

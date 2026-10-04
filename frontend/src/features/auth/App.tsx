@@ -1,33 +1,46 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { WelcomeView } from '../primermenu/view/WelcomeView';
 import { RegisterView } from '../primermenu/view/RegisterView';
 import { LoginView } from '../primermenu/view/LoginView';
-import { ClienteView } from '../../features/clientes/view/ClienteView';
-import { Proveedores } from '../../features/proveedores/view/Proveedores';
-import { Insumos } from '../../features/insumos/view/Insumos';
-import { Productos } from '../../features/productos/view/Productos';
-import { DashboardPrincipal } from '../dashboardprincipal/view/DashboardPrincipalView';
-import { CrearPedidoView } from '../pedidos/crearpedidos/view/CrearPedidoView'; 
-import { PedidosPendientesView } from '../../features/pedidos/pedidospendientes/view/PedidosPendientesView'; 
-import { HistorialPedidosPage } from '../../features/pedidos/historialpedidos/view/HistorialPedidosView'; 
-import { GestionUsuariosView } from '../../features/usuarios/view/GestionUsuariosView'; 
-import { CajaView } from '../../features/caja/view/CajaView';
-import { RepositorioDigitalView } from '../../features/repositorio/view/RepositorioDigitalView';
 import { SidebarLayout } from '../../components/layouts/SidebarLayout';
 import { ProtectedRoute } from '../../components/common/ProtectedRoute';
 import { PortonGate } from '../../components/common/PortonGate'; 
-import { MatrizPermisosView } from '../../features/matrizpermisos/view/MatrizPermisosView';
-import { ConfiguracionView } from '../../features/configuracion/views/ConfiguracionView';
-import { InformesView } from '../../features/informes/views/InformesView';
 import { TurnoProvider } from '../../Context/TurnoContext';
-import { HistorialActividadView } from '../../features/historial/view/HistorialActividadView';
-import { MaquinasView } from '../../features/maquinas/view/MaquinasView';
 import { ThemeProvider } from '../../Context/ThemeContext';
-import { MobileLayout } from '../../components/layouts/MobileLayout';
 import { useIsMobile } from "../../hook/useIsMobile";
-import { CompraInsumosView } from '../compraInsumos/views/CompraInsumosView';
 import { LoadingOverlay } from '../../components/common/LoadingOverlay';
+import { DialogHost } from '../../components/common/DialogHost';
 import { BackupReminderModal } from '../../components/common/BackupReminderModal';
+
+// Cada pantalla se descarga recién cuando se entra a ella: antes el login bajaba todo el
+// sistema (~4 MB de JS con ExcelJS, jsPDF, gráficos y el visor de PDF).
+const ClienteView = lazy(() => import('../../features/clientes/view/ClienteView').then(m => ({ default: m.ClienteView })));
+const Proveedores = lazy(() => import('../../features/proveedores/view/Proveedores').then(m => ({ default: m.Proveedores })));
+const Insumos = lazy(() => import('../../features/insumos/view/Insumos').then(m => ({ default: m.Insumos })));
+const Productos = lazy(() => import('../../features/productos/view/Productos').then(m => ({ default: m.Productos })));
+const DashboardPrincipal = lazy(() => import('../dashboardprincipal/view/DashboardPrincipalView').then(m => ({ default: m.DashboardPrincipal })));
+const CrearPedidoView = lazy(() => import('../pedidos/crearpedidos/view/CrearPedidoView').then(m => ({ default: m.CrearPedidoView })));
+const PedidosPendientesView = lazy(() => import('../../features/pedidos/pedidospendientes/view/PedidosPendientesView').then(m => ({ default: m.PedidosPendientesView })));
+const HistorialPedidosPage = lazy(() => import('../../features/pedidos/historialpedidos/view/HistorialPedidosView').then(m => ({ default: m.HistorialPedidosPage })));
+const GestionUsuariosView = lazy(() => import('../../features/usuarios/view/GestionUsuariosView').then(m => ({ default: m.GestionUsuariosView })));
+const CajaView = lazy(() => import('../../features/caja/view/CajaView').then(m => ({ default: m.CajaView })));
+const RepositorioDigitalView = lazy(() => import('../../features/repositorio/view/RepositorioDigitalView').then(m => ({ default: m.RepositorioDigitalView })));
+const MatrizPermisosView = lazy(() => import('../../features/matrizpermisos/view/MatrizPermisosView').then(m => ({ default: m.MatrizPermisosView })));
+const ConfiguracionView = lazy(() => import('../../features/configuracion/views/ConfiguracionView').then(m => ({ default: m.ConfiguracionView })));
+const InformesView = lazy(() => import('../../features/informes/views/InformesView').then(m => ({ default: m.InformesView })));
+const HistorialActividadView = lazy(() => import('../../features/historial/view/HistorialActividadView').then(m => ({ default: m.HistorialActividadView })));
+const MaquinasView = lazy(() => import('../../features/maquinas/view/MaquinasView').then(m => ({ default: m.MaquinasView })));
+// El layout móvil importa Informes (gráficos + jsPDF): también se carga a demanda.
+const MobileLayout = lazy(() => import('../../components/layouts/MobileLayout').then(m => ({ default: m.MobileLayout })));
+const CompraInsumosView = lazy(() => import('../compraInsumos/views/CompraInsumosView').then(m => ({ default: m.CompraInsumosView })));
+
+const CargandoPantalla = () => (
+  <div className="d-flex flex-column align-items-center justify-content-center font-monospace" style={{ minHeight: '100vh' }}>
+    <div className="spinner-border mb-3" role="status" style={{ color: '#8e45e0', width: '3rem', height: '3rem' }} />
+    <span className="fw-bold" style={{ color: '#8e45e0' }}>Cargando...</span>
+  </div>
+);
 
 function App() {
   const isMobile = useIsMobile();
@@ -43,6 +56,7 @@ function App() {
     <ThemeProvider>
       <TurnoProvider>
         <BrowserRouter>
+          <Suspense fallback={<CargandoPantalla />}>
           <Routes>
             <Route path="/" element={
               <PortonGate>
@@ -179,7 +193,9 @@ function App() {
 
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
+          </Suspense>
           <LoadingOverlay />
+          <DialogHost />
           <BackupReminderModal />
         </BrowserRouter>
       </TurnoProvider>

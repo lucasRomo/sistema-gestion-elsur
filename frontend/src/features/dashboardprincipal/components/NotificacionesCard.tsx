@@ -3,24 +3,6 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { ventaRapidaService } from '../services/ventaRapidaService';
 import type { PedidoNotificacion } from '../services/ventaRapidaService';
 
-interface PedidoBackend {
-  id_pedido: number;
-  observaciones?: string;
-  observacion?: string;
-  estante?: string;
-  estado?: string;
-  fecha_entrega_estimada?: string;
-  cliente?: {
-    nombre?: string;
-    razonSocial?: string;
-    razon_social?: string;
-    persona?: {
-      nombre?: string;
-      apellido?: string;
-    };
-  };
-}
-
 export const NotificacionesCard: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';

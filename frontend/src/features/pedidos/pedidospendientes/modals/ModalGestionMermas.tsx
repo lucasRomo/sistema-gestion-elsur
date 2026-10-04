@@ -1,25 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { mermaService, type MermaEntity } from '../../../../services/mermaService';
 import { useTheme } from '../../../../Context/ThemeContext';
-import { apiFetch } from '../../../../config/api';
 import { showLoading, hideLoading } from '../../../../config/loadingStore';
 import { PedidoPendienteService } from '../service/pedidoPendienteService';
+import { useSeleccionMermas, validarSeleccionMermas, insumosDeReceta } from '../../../../hook/useSeleccionMermas';
+import { confirmarAccion } from '../../../../config/dialogStore';
 
 interface ModalGestionMermasProps {
   pedido: any;
   onClose: () => void;
   onExito?: () => void;
   onConfirm?: () => void;
-}
-
-interface SelectionState {
-  [key: string]: {
-    selected: boolean;
-    cantidad: number;
-    descripcion: string;
-    idProducto?: number;
-    idInsumo?: number;
-  };
 }
 
 export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, onClose, onExito }) => {
@@ -43,7 +34,7 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
   const [mensajeAlerta, setMensajeAlerta] = useState<string>('');
 
   const [recetasMap, setRecetasMap] = useState<{ [idProducto: number]: any[] }>({});
-  const [selections, setSelections] = useState<SelectionState>({});
+  const { selections, toggleProducto, toggleInsumo, actualizarCampo, limpiar } = useSeleccionMermas();
   const idPedido = pedido.id_pedido || pedido.idPedido;
 
   const cargarHistorialMermas = async () => {
@@ -84,72 +75,35 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
     cargarRecetas();
   }, [idPedido]);
 
-  const toggleSelection = (key: string, defaultData: { idProducto?: number; idInsumo?: number }) => {
-    setSelections(prev => {
-      const current = prev[key];
-      if (current?.selected) {
-        const updated = { ...prev };
-        delete updated[key];
-        return updated;
-      } else {
-        return {
-          ...prev,
-          [key]: {
-            selected: true,
-            cantidad: 1,
-            descripcion: '',
-            ...defaultData
-          }
-        };
-      }
-    });
-  };
-
-  const updateSelectionData = (key: string, field: 'cantidad' | 'descripcion', value: any) => {
-    setSelections(prev => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        [field]: value
-      }
-    }));
-  };
-
   const handleGuardarMerma = async () => {
     const keys = Object.keys(selections);
-    if (keys.length === 0) {
-      setMensajeAlerta('Por favor, selecciona al menos un producto o insumo afectado.');
-      setMostrarAlerta(true);
-      return;
-    }
-
-    const cantidadInvalida = keys.some(k => {
-      const cant = Number(selections[k].cantidad);
-      return !Number.isFinite(cant) || cant <= 0;
-    });
-    if (cantidadInvalida) {
-      setMensajeAlerta('La cantidad de cada ítem de merma debe ser un número mayor a 0.');
+    const errorValidacion = validarSeleccionMermas(selections);
+    if (errorValidacion) {
+      setMensajeAlerta(errorValidacion);
       setMostrarAlerta(true);
       return;
     }
 
     const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
-    const idUsuario = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id ?? 1;
+    const idUsuario = userLogueado.idUsuario ?? userLogueado.id_usuario ?? userLogueado.id;
 
     const mermasPayload: any[] = keys.map(k => ({
       pedido: { id_pedido: idPedido, idPedido: idPedido },
-      idUsuario,
+      usuario: idUsuario ? { idUsuario } : null,
       cantidad: Number(selections[k].cantidad),
-      descripcion: selections[k].descripcion || 'Merma registrada en el pedido',
+      descripcion: selections[k].descripcion
+        || (selections[k].productoKey ? selections[selections[k].productoKey!]?.descripcion : '')
+        || 'Merma registrada en el pedido',
       producto: selections[k].idProducto ? { idProducto: selections[k].idProducto, id_producto: selections[k].idProducto } : null,
       insumo: selections[k].idInsumo ? { idInsumo: selections[k].idInsumo, id_insumo: selections[k].idInsumo } : null
     }));
 
+    if (!(await confirmarAccion(`¿Registrar ${keys.length} merma(s) en el pedido #${idPedido}? Se descontará el stock correspondiente.`, { titulo: 'Registrar mermas', textoConfirmar: 'Registrar' }))) return;
     setGuardando(true);
     showLoading('Registrando merma...');
     try {
       await mermaService.registrarMermas(mermasPayload);
-      setSelections({});
+      limpiar();
       await cargarHistorialMermas();
       setTabActiva('historial');
       if (onExito) onExito();
@@ -211,7 +165,8 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                   const idProd = prod.idProducto || prod.id_producto;
                   const keyProd = `prod-${idProd}-${idx}`;
                   const prodSelected = !!selections[keyProd]?.selected;
-                  const recetaInsumos = recetasMap[idProd] || [];
+                  const recetaInsumos = insumosDeReceta(recetasMap[idProd] || [], keyProd);
+                  const esVinculado = Boolean(prod.stockVinculado ?? prod.stock_vinculado);
 
                   return (
                     <div 
@@ -230,7 +185,7 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                             style={{ cursor: 'pointer', transform: 'scale(1.2)' }}
                             id={keyProd}
                             checked={prodSelected}
-                            onChange={() => toggleSelection(keyProd, { idProducto: idProd })}
+                            onChange={() => toggleProducto(keyProd, idProd, recetaInsumos, esVinculado)}
                           />
                           <label className="form-check-label fw-bold fs-6 m-0 cursor-pointer" style={{ color: textColor }} htmlFor={keyProd}>
                             <i className="bi bi-box-seam me-2 text-warning"></i>
@@ -263,12 +218,12 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                               <label className="form-label small text-warning m-0 fw-bold">Cantidad Rota / Falla:</label>
                               <input
                                 type="number"
-                                step="0.01"
-                                min="0.01"
+                                step="1"
+                                min="1"
                                 className={`form-control form-control-sm ${inputInnerBgClass}`}
                                 style={{ color: textColor }}
-                                value={selections[keyProd]?.cantidad || 1}
-                                onChange={(e) => updateSelectionData(keyProd, 'cantidad', e.target.value)}
+                                value={selections[keyProd]?.cantidad ?? ''}
+                                onChange={(e) => actualizarCampo(keyProd, 'cantidad', e.target.value)}
                               />
                             </div>
                             <div className="col-8">
@@ -279,9 +234,15 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                                 style={{ color: textColor }}
                                 placeholder="Ej: Mal cortado / Impresión manchada"
                                 value={selections[keyProd]?.descripcion || ''}
-                                onChange={(e) => updateSelectionData(keyProd, 'descripcion', e.target.value)}
+                                onChange={(e) => actualizarCampo(keyProd, 'descripcion', e.target.value)}
                               />
                             </div>
+                          </div>
+                          <div className="small mt-2" style={{ color: subTextColor, fontSize: '0.75rem' }}>
+                            <i className="bi bi-info-circle me-1"></i>
+                            {esVinculado
+                              ? 'Stock vinculado a insumos: se descuentan los insumos marcados abajo. Desmarcá los que se puedan reutilizar.'
+                              : 'Stock manual: se descuenta del stock del producto. Marcá un insumo solo si se perdió por separado.'}
                           </div>
                         </div>
                       )}
@@ -291,10 +252,8 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                           <span className="small text-warning fw-bold d-block mb-2">
                             <i className="bi bi-diagram-3 me-1"></i> Insumos que componen este producto:
                           </span>
-                          {recetaInsumos.map((itemInsumo: any, iIdx: number) => {
-                            const ins = itemInsumo.insumo || {};
-                            const idIns = ins.idInsumo || ins.id_insumo;
-                            const keyIns = `ins-${idProd}-${idIns}-${iIdx}`;
+                          {recetaInsumos.map((ins) => {
+                            const keyIns = ins.key;
                             const insSelected = !!selections[keyIns]?.selected;
 
                             return (
@@ -312,12 +271,15 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                                     type="checkbox"
                                     id={keyIns}
                                     checked={insSelected}
-                                    onChange={() => toggleSelection(keyIns, { idInsumo: idIns, idProducto: idProd })}
+                                    onChange={() => toggleInsumo(keyIns, ins.idInsumo, idProd, keyProd, ins.consumoUnitario)}
                                   />
                                   <label className="form-check-label small cursor-pointer m-0 fw-semibold" style={{ color: textColor }} htmlFor={keyIns}>
                                     <i className="bi bi-layers me-1" style={{ color: isDark ? '#38bdf8' : '#0284c7' }}></i>
-                                    {ins.nombreInsumo || ins.nombre || 'Insumo'}
+                                    {ins.nombre}
                                   </label>
+                                  <span className="ms-auto small" style={{ color: subTextColor, fontSize: '0.72rem' }}>
+                                    {ins.consumoUnitario} {ins.unidad} por unidad
+                                  </span>
                                 </div>
 
                                 {insSelected && (
@@ -330,8 +292,8 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                                         className={`form-control form-control-sm ${inputInnerBgClass}`}
                                         style={{ color: textColor }}
                                         placeholder="Cant."
-                                        value={selections[keyIns]?.cantidad || 1}
-                                        onChange={(e) => updateSelectionData(keyIns, 'cantidad', e.target.value)}
+                                        value={selections[keyIns]?.cantidad ?? ''}
+                                        onChange={(e) => actualizarCampo(keyIns, 'cantidad', e.target.value)}
                                       />
                                     </div>
                                     <div className="col-8">
@@ -341,7 +303,7 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
                                         style={{ color: textColor }}
                                         placeholder={`Motivo fallo insumo en ${prod.nombreProducto || 'producto'}`}
                                         value={selections[keyIns]?.descripcion || ''}
-                                        onChange={(e) => updateSelectionData(keyIns, 'descripcion', e.target.value)}
+                                        onChange={(e) => actualizarCampo(keyIns, 'descripcion', e.target.value)}
                                       />
                                     </div>
                                   </div>
@@ -524,7 +486,7 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
             </p>
             <button
               type="button"
-              className="btn btn-danger fw-bold px-4 py-2"
+              className="btn btn-secondary fw-bold px-4 py-2"
               style={{ borderRadius: '8px', minWidth: '120px' }}
               onClick={() => setMostrarAlerta(false)}
             >

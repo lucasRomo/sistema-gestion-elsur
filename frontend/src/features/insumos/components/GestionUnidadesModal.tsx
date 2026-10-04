@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import type { UnidadMedida } from '../types/Insumo';
 import { useTheme } from '../../../Context/ThemeContext';
-import { apiFetch } from '../../../config/api';
 import { crearUnidadMedida, eliminarUnidadMedida } from '../services/insumoService';
+import { confirmarAccion } from '../../../config/dialogStore';
 
 interface GestionUnidadesModalProps {
   show: boolean;
@@ -64,6 +64,7 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
     return;
   }
 
+  if (!(await confirmarAccion(`¿Crear la unidad de medida "${nombreLimpio}"?`, { titulo: 'Nueva unidad', textoConfirmar: 'Crear' }))) return;
   try {
     setCargando(true);
     setError(null);
@@ -266,7 +267,7 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
                 <div className="d-flex justify-content-center gap-2">
                   <button 
                     type="button"
-                    className="btn btn-sm btn-secondary px-3 fw-semibold" 
+                    className="btn btn-danger btn-sm px-3 fw-semibold" 
                     onClick={() => {
                       setMostrarModalConfirmar(false);
                       setIdEliminar(null);

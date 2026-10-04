@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { confirmarAccion } from '../../../../config/dialogStore';
 import { ContadorTiempo } from './ContadorTiempo';
 import { useTheme } from '../../../../Context/ThemeContext';
 import { pad, formatearFechaHora, resolverEmpleadoGestion } from '../../../../utils/formato';
 
 interface TarjetaPedidoProps {
   pedido: any;
+  actualizando?: boolean;
   empleados: any[];
   onCambioEstado: (pedido: any, estadoDestino: string) => void;
   onCambioUbicacion?: (idPedido: number, nuevaUbicacion: string) => void;
@@ -27,6 +29,7 @@ interface TimelineItem {
 
 export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
   pedido: p,
+  actualizando = false,
   empleados: e,
   onCambioEstado,
   onCambioUbicacion,
@@ -300,12 +303,29 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
     setUbicacionInput(p.ubicacion_estante || 'Taller');
   }, [p.ubicacion_estante]);
 
-  const confirmarUbicacion = () => {
+  // Enter y blur disparan esta función: el ref evita que se abran dos confirmaciones seguidas.
+  const confirmandoUbicacionRef = useRef(false);
+
+  const confirmarUbicacion = async () => {
     const valor = ubicacionInput.trim();
-    if (valor && valor !== p.ubicacion_estante && onCambioUbicacion) {
+    const actual = p.ubicacion_estante || 'Taller';
+    if (!valor) {
+      setUbicacionInput(actual);
+      return;
+    }
+    if (valor === actual || !onCambioUbicacion || confirmandoUbicacionRef.current) return;
+
+    confirmandoUbicacionRef.current = true;
+    const confirmado = await confirmarAccion(
+      `¿Cambiar la ubicación del pedido #${p.id_pedido} de "${actual}" a "${valor}"?`,
+      { titulo: 'Cambiar ubicación', textoConfirmar: 'Cambiar' }
+    );
+    confirmandoUbicacionRef.current = false;
+
+    if (confirmado) {
       onCambioUbicacion(p.id_pedido, valor);
-    } else if (!valor) {
-      setUbicacionInput(p.ubicacion_estante || 'Taller'); 
+    } else {
+      setUbicacionInput(actual);
     }
   };
 
@@ -381,13 +401,30 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
           <div className="p-4 d-flex flex-column gap-4">
             
             <div 
-              className="p-4 rounded-3 border" 
+              className="p-4 rounded-3 border position-relative" 
               style={{ 
                 backgroundColor: timelineContainerBg, 
                 borderColor: timelineContainerBorder,
                 boxShadow: isDark ? 'inset 0 0 20px rgba(0,0,0,0.5)' : 'none'
               }}
+              aria-busy={actualizando}
             >
+              {actualizando && (
+                <div
+                  className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center rounded-3"
+                  style={{
+                    zIndex: 5,
+                    backgroundColor: isDark ? 'rgba(9, 9, 11, 0.75)' : 'rgba(228, 228, 228, 0.8)',
+                    backdropFilter: 'blur(3px)',
+                    WebkitBackdropFilter: 'blur(3px)'
+                  }}
+                >
+                  <div className="spinner-border mb-2" role="status" style={{ color: '#8e45e0', width: '2.2rem', height: '2.2rem' }} />
+                  <span className={`font-monospace fw-bold small ${isDark ? 'text-white' : 'text-dark'}`}>
+                    Actualizando historial...
+                  </span>
+                </div>
+              )}
               <div className="d-flex align-items-center justify-content-between mb-4">
                 <span className="text-muted small font-monospace text-uppercase tracking-wider">
                   <i className="bi bi-activity text-purple me-2" style={{ color: '#a855f7' }}></i>

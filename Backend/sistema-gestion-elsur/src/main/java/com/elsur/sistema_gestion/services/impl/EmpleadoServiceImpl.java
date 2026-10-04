@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoDuplicadoException;
 import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
 import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Empleado;
@@ -45,6 +46,12 @@ public Empleado guardar(Empleado empleado) {
 
         Persona personaExistente = personaRepository.findById(empleado.getPersona().getIdPersona())
                 .orElseThrow(() -> new RecursoNoEncontradoException("La persona con ID " + empleado.getPersona().getIdPersona() + " no existe."));
+
+        empleadoRepository.findByPersona_IdPersona(personaExistente.getIdPersona())
+                .filter(existente -> !existente.getIdEmpleado().equals(empleado.getIdEmpleado()))
+                .ifPresent(existente -> {
+                    throw new RecursoDuplicadoException("Esta persona ya está registrada como empleado.");
+                });
 
         empleado.setPersona(personaExistente);
     } else {

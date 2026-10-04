@@ -16,7 +16,6 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const tableWrapperBg = isDark ? '#1d1d1d' : '#f8fafc';
   const tableBg = isDark ? '#1d1d1d' : '#ffffff';
   const tableText = isDark ? '#e4e4e7' : '#18181b';
   const theadBg = isDark ? '#1d1d1d' : '#f6f9fc';

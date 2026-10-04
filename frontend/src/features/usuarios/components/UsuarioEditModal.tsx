@@ -11,10 +11,8 @@ interface UsuarioEditModalProps {
 export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onCerrar, onConfirmar }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const [showEstado, setShowEstado] = useState(false);
 
   const modalBg = isDark ? '#1a1a1c' : '#ffffff';
-  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const sectionTitleColor = isDark ? '#e4e4e7' : '#1e293b';
   const labelColor = isDark ? '#a1a1aa' : '#475569';
@@ -250,8 +248,8 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
 
               <div className="d-flex justify-content-center gap-2 mt-3">
                 <button
-                  className="btn btn-outline-light btn-sm px-3"
-                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020', color: '#ffffff' }}
+                  className="btn btn-secondary btn-sm px-3"
+                  style={{ borderRadius: '6px', backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#ffffff' }}
                   onClick={() => setMostrarConfirmacion(false)}
                   disabled={guardando}
                 >

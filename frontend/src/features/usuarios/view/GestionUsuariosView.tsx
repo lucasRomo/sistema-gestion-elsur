@@ -9,6 +9,7 @@ import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { UsuariosFiltros } from '../components/UsuariosFiltros';
 import { RegisterView } from '../../primermenu/view/RegisterView';
 import { useTheme } from '../../../Context/ThemeContext';
+import { mostrarError } from '../../../config/dialogStore';
 
 export const GestionUsuariosView: React.FC = () => {
   const { theme } = useTheme();
@@ -253,8 +254,8 @@ export const GestionUsuariosView: React.FC = () => {
               cargar();
               setMensajeExito(u.idUsuario ? 'Usuario modificado correctamente' : 'Usuario creado correctamente');
               setMostrarExito(true); 
-            } catch (error) {
-              alert("Error al guardar el usuario. Verificá los datos o los roles en el backend.");
+            } catch (error: any) {
+              mostrarError(error?.message || "Error al guardar el usuario. Verificá los datos ingresados.");
               console.error(error);
             }
           }} 
@@ -272,8 +273,8 @@ export const GestionUsuariosView: React.FC = () => {
               cargar(); 
               setMensajeExito('Usuario modificado correctamente');
               setMostrarExito(true);
-            } catch (error) {
-              alert("Error al actualizar la ubicación en el servidor.");
+            } catch (error: any) {
+              mostrarError(error?.message || "Error al actualizar la ubicación en el servidor.");
               console.error(error);
             }
           }}

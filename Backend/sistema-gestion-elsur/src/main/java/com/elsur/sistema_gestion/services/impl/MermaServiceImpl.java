@@ -62,9 +62,19 @@ public class MermaServiceImpl implements MermaService {
     merma.setUsuario(usuarioDb);
 }
  
-            if (merma.getProducto() != null && merma.getProducto().getIdProducto() != null) {
+            // Si la merma es de un insumo, el producto viene solo como referencia ("insumo X
+            // del producto Y"): se descuenta únicamente el insumo. Antes también se restaba el
+            // stock del producto, descontando dos veces (y mezclando unidades: 2 hojas -> 2 productos).
+            boolean esMermaDeInsumo = merma.getInsumo() != null && merma.getInsumo().getIdInsumo() != null;
+
+            if (!esMermaDeInsumo && merma.getProducto() != null && merma.getProducto().getIdProducto() != null) {
                 Producto prod = productoRepository.findById(merma.getProducto().getIdProducto()).orElse(null);
-                if (prod != null && prod.getStock() != null) {
+                // Producto con stock vinculado: su stock se calcula desde los insumos, así que la
+                // pérdida se descuenta con las mermas de insumo que manda el modal (los insumos de
+                // la receta vienen pre-marcados y el usuario desmarca los reutilizables). Restar acá
+                // también el stock guardado del producto lo descontaría por duplicado.
+                boolean stockVinculado = prod != null && Boolean.TRUE.equals(prod.getStockVinculado());
+                if (prod != null && prod.getStock() != null && !stockVinculado) {
                     int cantidad = merma.getCantidad() != null ? merma.getCantidad().intValue() : 0;
                     prod.setStock(Math.max(0, prod.getStock() - cantidad));
                     productoRepository.save(prod);

@@ -9,6 +9,7 @@ import {
   crearCategoria,
   eliminarCategoria
 } from '../services/productoService';
+import { confirmarAccion, mostrarAviso, mostrarError } from '../../../config/dialogStore';
 
 interface Props {
   show: boolean;
@@ -161,7 +162,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
     );
 
     if (yaExiste) {
-      alert(`La categoría "${nombreLimpio}" ya existe.`);
+      mostrarAviso(`La categoría "${nombreLimpio}" ya existe.`);
       return;
     }
 
@@ -172,12 +173,12 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
       setMensajeExitoCategoria('Categoría creada correctamente');
       setMostrarExitoCategoria(true);
     } catch (error: any) {
-      alert(error?.message || "Error al crear categoría o conectar con el servidor.");
+      mostrarError(error?.message || "Error al crear categoría o conectar con el servidor.");
     }
   };
 
   const handleEliminarCategoria = async (id: number) => {
-    if (!confirm("¿Seguro que querés eliminar esta categoría?")) return;
+    if (!(await confirmarAccion("¿Seguro que querés eliminar esta categoría?", { titulo: 'Eliminar categoría', textoConfirmar: 'Eliminar' }))) return;
     try {
       await eliminarCategoria(id);
       const catEliminada = categorias.find(c => c.idCategoria === id);
@@ -188,7 +189,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
       setMensajeExitoCategoria('Categoría eliminada correctamente');
       setMostrarExitoCategoria(true);
     } catch (error: any) {
-      alert(error?.message || "No se pudo eliminar, es posible que tenga productos asociados.");
+      mostrarError(error?.message || "No se pudo eliminar, es posible que tenga productos asociados.");
     }
   };
 
@@ -586,8 +587,8 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
               <div className="d-flex justify-content-center">
                 <button
                   type="button"
-                  className="btn px-4 text-white fw-bold"
-                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }}
+                  className="btn btn-secondary px-4 text-white fw-bold"
+                  style={{ borderRadius: '6px', backgroundColor: '#6c757d', borderColor: '#6c757d' }}
                   onClick={() => setMostrarExitoCategoria(false)}
                 >
                   Cerrar

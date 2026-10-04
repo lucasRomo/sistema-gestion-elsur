@@ -17,7 +17,6 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
   const isDark = theme === 'dark';
 
   const modalBg = isDark ? '#1b1b1b' : '#ffffff';
-  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const titleColor = isDark ? '#ffffff' : '#0f172a';
   const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
   const borderDivider = isDark ? 'border-secondary' : 'border-light-subtle';

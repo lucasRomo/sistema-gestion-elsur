@@ -5,7 +5,6 @@ import type { Proveedor } from '../../proveedores/types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
 import { GestionUnidadesModal } from './GestionUnidadesModal';
 import { RelacionesModal } from './RelacionesModal';
-import { apiFetch } from '../../../config/api';
 
 interface InsumoModalProps {
   show: boolean;

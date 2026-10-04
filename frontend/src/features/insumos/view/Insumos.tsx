@@ -19,6 +19,7 @@ import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useIsMobile } from '../../../hook/useIsMobile';
+import { confirmarAccion, mostrarError } from '../../../config/dialogStore';
 
 export const Insumos: React.FC = () => {
   const { theme } = useTheme();
@@ -288,12 +289,15 @@ export const Insumos: React.FC = () => {
             setInsumoEditando(data);
             setMostrarConfirmacion(true);
           } else {
+            if (!(await confirmarAccion(`¿Registrar el insumo "${(data as any).nombreInsumo ?? ''}"?`, { titulo: 'Nuevo insumo', textoConfirmar: 'Registrar' }))) return;
             showLoading('Guardando insumo...');
             try {
               await guardar(data);
               setShowModalForm(false);
               setMensajeExito('Insumo Creado Correctamente');
               setMostrarExito(true);
+            } catch (err: any) {
+              mostrarError(err?.message || 'No se pudo registrar el insumo.');
             } finally {
               hideLoading();
             }
@@ -336,7 +340,7 @@ export const Insumos: React.FC = () => {
               <p className="small m-0" style={{ color: mutedText }}>Se sobreescribirán los datos del insumo.</p>
               
               <div className="d-flex justify-content-center gap-2 mt-4">
-                <button className="btn btn-danger btn-sm px-3 fw-semibold" disabled={guardandoEdicion} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
+                <button className="btn btn-secondary btn-sm px-3 fw-semibold" disabled={guardandoEdicion} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
                 <button
                   className="btn btn-success btn-sm px-3 fw-semibold text-white"
                   disabled={guardandoEdicion}
@@ -351,7 +355,7 @@ export const Insumos: React.FC = () => {
                       setMensajeExito('Modificación hecha exitosamente');
                       setMostrarExito(true);
                     } catch (err: any) {
-                      alert(err?.message || 'Error al modificar el insumo.');
+                      mostrarError(err?.message || 'Error al modificar el insumo.');
                     } finally {
                       setGuardandoEdicion(false);
                       hideLoading();

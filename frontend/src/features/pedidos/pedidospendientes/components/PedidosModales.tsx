@@ -62,13 +62,13 @@ interface PedidosModalesProps {
 
   modalAdvertenciaDeuda: ModalAdvertenciaDeudaData;
   onCerrarAdvertenciaDeuda: () => void;
-  onActualizarYEntregar: (nuevoLimite: number) => void;
+  onActualizarYEntregar: (nuevoLimite: number) => Promise<void>;
   onAutorizarUnaVez: () => void;
   onRegistrarCobro: (pedido: any) => void;
 
   pedidoPagoSel: any;
   onCerrarPago: () => void;
-  onConfirmarPago: (tipoPago: string, monto: number, archivo: File | null) => void;
+  onConfirmarPago: (tipoPago: string, monto: number, archivo: File | null) => Promise<void>;
 
   verTicketPedido: any;
   onCerrarTicket: () => void;
@@ -78,7 +78,7 @@ interface PedidosModalesProps {
 
   pedidoGestionComprobanteSel: any;
   onCerrarGestionComprobantes: () => void;
-  onVincularComprobante: (idComprobante: number, archivo: File) => void;
+  onVincularComprobante: (idComprobante: number, archivo: File) => Promise<void>;
   onEliminarComprobanteDigital: (idComprobante: number) => Promise<void>;
   onVerTicketDesdeComprobante: (pedido: any, cobro: any) => void;
 
@@ -208,7 +208,7 @@ export const PedidosModales: React.FC<PedidosModalesProps> = ({
         <ModalGestionMermas
           pedido={pedidoMermaSel}
           onClose={onCerrarMerma}
-          onConfirm={onConfirmarMerma}
+          onExito={onConfirmarMerma}
         />
       )}
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 import { clienteService } from '../services/clienteService';
 import type { CategoriaCliente } from '../types/CategoriaCliente';
+import { confirmarAccion } from '../../../config/dialogStore';
 
 const extraerMensaje = (err: unknown, mensajePorDefecto: string): string =>
   err instanceof Error && err.message ? err.message : mensajePorDefecto;
@@ -15,7 +16,6 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   const isDark = theme === 'dark';
 
   const modalBg = isDark ? '#1b1b1b' : '#ffffff';
-  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const titleColor = isDark ? '#ffffff' : '#0f172a';
   const mutedText = isDark ? 'rgba(255,255,255,0.6)' : '#64748b';
   const borderDivider = isDark ? 'border-secondary' : 'border-light-subtle';
@@ -69,6 +69,7 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   const handleCrear = async (e: React.FormEvent) => {
   e.preventDefault();
   if (guardandoCrear) return;
+  if (!(await confirmarAccion(`¿Crear la categoría "${nombre.trim()}" con ${descuento === '' ? 0 : Number(descuento)}% de descuento?`, { titulo: 'Nueva categoría', textoConfirmar: 'Crear' }))) return;
 
   setErrorCrear('');
   setGuardandoCrear(true);
@@ -100,6 +101,7 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   const handleGuardarEdicion = async (e: React.FormEvent) => {
   e.preventDefault();
   if (!categoriaEditar?.idCategoria || guardandoEditar) return;
+  if (!(await confirmarAccion(`¿Guardar los cambios de la categoría "${editNombre.trim()}"?`, { titulo: 'Editar categoría', textoConfirmar: 'Guardar' }))) return;
 
   setErrorEditar('');
   setGuardandoEditar(true);
@@ -398,7 +400,7 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
 
                 <div className="d-flex justify-content-center gap-2">
                   <button
-                    className="btn btn-sm btn-secondary px-3 fw-semibold"
+                    className="btn btn-danger btn-sm px-3 fw-semibold"
                     onClick={() => {
                       setMostrarModalConfirmar(false);
                       setIdEliminar(null);

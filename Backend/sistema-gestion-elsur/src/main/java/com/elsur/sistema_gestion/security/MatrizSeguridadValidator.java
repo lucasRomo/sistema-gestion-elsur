@@ -2,7 +2,9 @@ package com.elsur.sistema_gestion.security;
 
 
 import com.elsur.sistema_gestion.models.Usuario;
+import com.elsur.sistema_gestion.repositories.EmpleadoRepository;
 import com.elsur.sistema_gestion.repositories.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationManager;
@@ -14,19 +16,77 @@ import org.springframework.util.AntPathMatcher;
 
 import java.text.Normalizer;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Component
 public class MatrizSeguridadValidator implements AuthorizationManager<RequestAuthorizationContext> {
 
+    // Perfil de acceso cacheado unos segundos: antes cada request (incluso cada GET de una
+    // pantalla que hace 5 llamadas en paralelo) consultaba usuario + rol + permisos en Supabase.
+    // Un cambio de permisos o una desactivación tarda como máximo TTL_PERFIL_MS en aplicarse.
+    private static final long TTL_PERFIL_MS = 15_000;
+
+    private record PerfilAcceso(Integer idUsuario, boolean admin, boolean habilitado,
+                                Set<String> permisos, long expiraEn) {}
+
     private final UsuarioRepository usuarioRepository;
+    private final EmpleadoRepository empleadoRepository;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
+    private final Map<String, PerfilAcceso> cachePerfiles = new ConcurrentHashMap<>();
 
     public MatrizSeguridadValidator(UsuarioRepository usuarioRepository) {
+        this(usuarioRepository, null);
+    }
+
+    @Autowired
+    public MatrizSeguridadValidator(UsuarioRepository usuarioRepository, EmpleadoRepository empleadoRepository) {
         this.usuarioRepository = usuarioRepository;
+        this.empleadoRepository = empleadoRepository;
+    }
+
+    private PerfilAcceso obtenerPerfil(String username) {
+        long ahora = System.currentTimeMillis();
+        PerfilAcceso cacheado = cachePerfiles.get(username);
+        if (cacheado != null && cacheado.expiraEn() > ahora) {
+            return cacheado;
+        }
+
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByNombreUsuario(username);
+        if (usuarioOpt.isEmpty() || usuarioOpt.get().getRol() == null) {
+            cachePerfiles.remove(username);
+            return null;
+        }
+        Usuario usuario = usuarioOpt.get();
+
+        Set<String> permisos = usuario.getRol().getPermisos() != null
+                ? usuario.getRol().getPermisos().stream()
+                    .map(p -> normalizar(p.getNombrePermiso()))
+                    .collect(Collectors.toUnmodifiableSet())
+                : Collections.emptySet();
+
+        // Mismo criterio que el login: un empleado "Pendiente" o "Desactivado" no opera,
+        // aunque todavía tenga un token sin vencer.
+        boolean habilitado = true;
+        if (empleadoRepository != null && usuario.getPersona() != null && usuario.getPersona().getIdPersona() != null) {
+            habilitado = empleadoRepository.findByPersona_IdPersona(usuario.getPersona().getIdPersona())
+                    .map(emp -> !"Pendiente".equalsIgnoreCase(emp.getEstado())
+                             && !"Desactivado".equalsIgnoreCase(emp.getEstado()))
+                    .orElse(true);
+        }
+
+        PerfilAcceso perfil = new PerfilAcceso(
+                usuario.getIdUsuario(),
+                "ADMIN".equalsIgnoreCase(usuario.getRol().getNombreRol()),
+                habilitado,
+                permisos,
+                ahora + TTL_PERFIL_MS);
+        cachePerfiles.put(username, perfil);
+        return perfil;
     }
 
     @Override
@@ -75,14 +135,12 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
 }
 
     private boolean evaluarPermisoEnBaseDeDatos(String username, String path, String metodo) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByNombreUsuario(username);
-        if (usuarioOpt.isEmpty() || usuarioOpt.get().getRol() == null) {
+        PerfilAcceso perfil = obtenerPerfil(username);
+        if (perfil == null || !perfil.habilitado()) {
             return false;
         }
 
-        Usuario usuario = usuarioOpt.get();
-
-        if ("ADMIN".equalsIgnoreCase(usuario.getRol().getNombreRol())) {
+        if (perfil.admin()) {
             return true;
         }
 
@@ -90,11 +148,7 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             return true;
         }
 
-        Set<String> permisosUsuario = usuario.getRol().getPermisos() != null
-                ? usuario.getRol().getPermisos().stream()
-                    .map(p -> normalizar(p.getNombrePermiso()))
-                    .collect(Collectors.toSet())
-                : Collections.emptySet();
+        Set<String> permisosUsuario = perfil.permisos();
 
         if (pathMatcher.match("/api/mermas/**", path)) {
             if (tieneAlgunPermiso(permisosUsuario, "INSUMOS", "PRODUCTOS", "PEDIDOS PENDIENTES", "HISTORIAL DE PEDIDOS", "CAJA", "INFORMES")) {
@@ -189,7 +243,7 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
                     "/api/usuarios/{id}/password", "/api/usuarios/{id}/username", "/api/usuarios/{id}/email"}) {
                 if (pathMatcher.match(patronPropio, path)) {
                     String idDelPath = pathMatcher.extractUriTemplateVariables(patronPropio, path).get("id");
-                    return usuario.getIdUsuario() != null && usuario.getIdUsuario().toString().equals(idDelPath);
+                    return perfil.idUsuario() != null && perfil.idUsuario().toString().equals(idDelPath);
                 }
             }
         }

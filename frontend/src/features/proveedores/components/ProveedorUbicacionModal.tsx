@@ -20,7 +20,6 @@ export const ProveedorUbicacionModal: React.FC<ProveedorUbicacionModalProps> = (
 
   const modalBg = isDark ? '#1e1e24' : '#ffffff';
   const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
-  const titleColor = isDark ? '#f0e111' : '#f0e111';
   const textColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#a1a1aa' : '#475569';
   const inputBg = isDark ? '#121214' : '#ffffff';
@@ -197,7 +196,7 @@ export const ProveedorUbicacionModal: React.FC<ProveedorUbicacionModalProps> = (
               <h5 className="fw-bold">¿Modificar Ubicación?</h5>
               <p className="small" style={{ color: labelColor }}>Se actualizará la dirección asociada de forma permanente.</p>
               <div className="d-flex justify-content-center gap-2 mt-3">
-                <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
+                <button className="btn btn-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#6c757d', borderColor: '#6c757d'}} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
                 <button 
                   className="btn btn-sm px-3 text-white fw-bold" 
                   style={{ backgroundColor: '#2e9225', borderRadius: '6px' }} 

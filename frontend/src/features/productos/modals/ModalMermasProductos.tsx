@@ -3,26 +3,15 @@ import type { Producto } from '../types/Producto';
 import { mermaService, type MermaEntity } from '../../../services/mermaService';
 import { useTheme } from '../../../Context/ThemeContext';
 import { getHistorialMermas, getRecetaPorProducto } from '../services/productoService';
-import { apiFetch } from '../../../config/api';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
+import { useSeleccionMermas, validarSeleccionMermas, insumosDeReceta } from '../../../hook/useSeleccionMermas';
+import { confirmarAccion } from '../../../config/dialogStore';
 
 interface ModalMermasProductosProps {
   show: boolean;
   productos: Producto[];
   onClose: () => void;
   onExito: () => void;
-}
-
-interface SelectionItem {
-  selected: boolean;
-  cantidad: string | number;
-  descripcion: string;
-  idProducto?: number;
-  idInsumo?: number;
-}
-
-interface SelectionState {
-  [key: string]: SelectionItem;
 }
 
 interface InsumoReceta {
@@ -74,7 +63,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
 
   const [tabActiva, setTabActiva] = useState<'registrar' | 'historial'>('registrar');
   const [busqueda, setBusqueda] = useState<string>('');
-  const [selections, setSelections] = useState<SelectionState>({});
+  const { selections, toggleProducto, toggleInsumo, actualizarCampo, limpiar } = useSeleccionMermas();
   const [historial, setHistorial] = useState<MermaConRelaciones[]>([]);
   const [cargandoHistorial, setCargandoHistorial] = useState<boolean>(false);
   const [guardando, setGuardando] = useState<boolean>(false);
@@ -141,43 +130,11 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
     p.nombreProducto.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  const toggleSelection = (key: string, defaultData: { idProducto?: number; idInsumo?: number }) => {
-    setSelections((prev) => {
-      if (prev[key]?.selected) {
-        const copy = { ...prev };
-        delete copy[key];
-        return copy;
-      }
-      return {
-        ...prev,
-        [key]: {
-          selected: true,
-          cantidad: 1,
-          descripcion: '',
-          ...defaultData
-        }
-      };
-    });
-  };
-
-  const updateSelection = (
-    key: string,
-    field: 'cantidad' | 'descripcion',
-    value: string | number
-  ) => {
-    setSelections((prev) => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        [field]: value
-      }
-    }));
-  };
-
   const handleGuardarMermas = async () => {
     const keys = Object.keys(selections);
-    if (keys.length === 0) {
-      setMensajeAlerta('Por favor, selecciona al menos un producto o insumo para registrar la merma.');
+    const errorValidacion = validarSeleccionMermas(selections);
+    if (errorValidacion) {
+      setMensajeAlerta(errorValidacion);
       setMostrarAlerta(true);
       return;
     }
@@ -191,33 +148,26 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
       return;
     }
 
-    const cantidadInvalida = keys.some((k) => {
-      const cant = Number(selections[k].cantidad);
-      return !Number.isFinite(cant) || cant <= 0;
-    });
-    if (cantidadInvalida) {
-      setMensajeAlerta('Todas las cantidades de merma deben ser números mayores a 0.');
-      setMostrarAlerta(true);
-      return;
-    }
-
     const payload: MermaEntity[] = keys.map((k) => {
       const item = selections[k];
       return {
         usuario: { idUsuario },
         cantidad: Number(item.cantidad),
-        descripcion: item.descripcion || 'Merma de producto/insumo en stock',
+        descripcion: item.descripcion
+          || (item.productoKey ? selections[item.productoKey]?.descripcion : '')
+          || 'Merma de producto/insumo en stock',
         producto: item.idProducto ? { idProducto: item.idProducto, id_producto: item.idProducto } : undefined,
         insumo: item.idInsumo ? { idInsumo: item.idInsumo, id_insumo: item.idInsumo } : undefined,
         pedido: undefined
       } as unknown as MermaEntity;
     });
 
+    if (!(await confirmarAccion(`¿Registrar ${keys.length} merma(s)? Se descontará el stock correspondiente.`, { titulo: 'Registrar mermas', textoConfirmar: 'Registrar' }))) return;
     setGuardando(true);
     showLoading('Registrando merma...');
     try {
       await mermaService.registrarMermas(payload);
-      setSelections({});
+      limpiar();
       setBusqueda('');
       await cargarHistorial();
       onExito();
@@ -327,7 +277,8 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                       const idProd = prod.idProducto;
                       const keyProd = `prod-${idProd}`;
                       const prodSelected = !!selections[keyProd]?.selected;
-                      const recetaInsumos = recetasMap[idProd] || [];
+                      const recetaInsumos = insumosDeReceta(recetasMap[idProd] || [], keyProd);
+                      const esVinculado = Boolean(prod.stockVinculado);
 
                       return (
                         <div
@@ -346,7 +297,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                 style={{ transform: 'scale(1.2)', cursor: 'pointer' }}
                                 id={keyProd}
                                 checked={prodSelected}
-                                onChange={() => toggleSelection(keyProd, { idProducto: idProd })}
+                                onChange={() => toggleProducto(keyProd, idProd, recetaInsumos, esVinculado)}
                               />
                               <label
                                 className="form-check-label fw-bold cursor-pointer m-0"
@@ -396,12 +347,12 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                 </label>
                                 <input
                                   type="number"
-                                  step="0.01"
-                                  min="0.01"
+                                  step="1"
+                                  min="1"
                                   className={`form-control form-control-sm ${inputInnerBgClass}`}
                                   style={{ color: textColor }}
                                   value={selections[keyProd]?.cantidad ?? ''}
-                                  onChange={(e) => updateSelection(keyProd, 'cantidad', e.target.value)}
+                                  onChange={(e) => actualizarCampo(keyProd, 'cantidad', e.target.value)}
                                 />
                               </div>
                               <div className="col-md-8">
@@ -414,8 +365,14 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                   style={{ color: textColor }}
                                   placeholder="Ej: Fallo de impresión, corte desfasado..."
                                   value={selections[keyProd]?.descripcion || ''}
-                                  onChange={(e) => updateSelection(keyProd, 'descripcion', e.target.value)}
+                                  onChange={(e) => actualizarCampo(keyProd, 'descripcion', e.target.value)}
                                 />
+                              </div>
+                              <div className="col-12 small" style={{ color: subTextColor, fontSize: '0.75rem' }}>
+                                <i className="bi bi-info-circle me-1"></i>
+                                {esVinculado
+                                  ? 'Stock vinculado a insumos: se descuentan los insumos marcados abajo. Desmarcá los que se puedan reutilizar.'
+                                  : 'Stock manual: se descuenta del stock del producto. Marcá un insumo solo si se perdió por separado.'}
                               </div>
                             </div>
                           )}
@@ -425,11 +382,8 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                               <span className="small fw-bold text-warning d-block mb-2">
                                 <i className="bi bi-diagram-3-fill me-1"></i> Insumos de la Receta:
                               </span>
-                              {recetaInsumos.map((rec, rIdx) => {
-                                const ins = rec.insumo || {};
-                                const idIns = ins.idInsumo || ins.id_insumo;
-                                if (!idIns) return null;
-                                const keyIns = `ins-${idProd}-${idIns}-${rIdx}`;
+                              {recetaInsumos.map((ins) => {
+                                const keyIns = ins.key;
                                 const insSelected = !!selections[keyIns]?.selected;
 
                                 return (
@@ -448,7 +402,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                           type="checkbox"
                                           id={keyIns}
                                           checked={insSelected}
-                                          onChange={() => toggleSelection(keyIns, { idInsumo: idIns, idProducto: idProd })} 
+                                          onChange={() => toggleInsumo(keyIns, ins.idInsumo, idProd, keyProd, ins.consumoUnitario)}
                                         />
                                         <label
                                           className="form-check-label small cursor-pointer m-0"
@@ -456,7 +410,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                           htmlFor={keyIns}
                                         >
                                           <i className="bi bi-layers me-1 text-info"></i>
-                                          {ins.nombreInsumo}
+                                          {ins.nombre}
                                         </label>
                                       </div>
                                       <span
@@ -468,7 +422,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                           border: `1px solid ${isDark ? '#0284c7' : '#7dd3fc'}`
                                         }}
                                       >
-                                        Consumo por unidad: {rec.cantidadConsumo} {ins.unidadMedida?.nombre || ''}
+                                        Consumo por unidad: {ins.consumoUnitario} {ins.unidad}
                                       </span>
                                     </div>
 
@@ -482,7 +436,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                             style={{ color: textColor }}
                                             placeholder="Cant. perdida"
                                             value={selections[keyIns]?.cantidad ?? ''}
-                                            onChange={(e) => updateSelection(keyIns, 'cantidad', e.target.value)}
+                                            onChange={(e) => actualizarCampo(keyIns, 'cantidad', e.target.value)}
                                           />
                                         </div>
                                         <div className="col-md-8">
@@ -493,7 +447,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
                                             placeholder={`Motivo falla insumo en ${prod.nombreProducto}`}
                                             value={selections[keyIns]?.descripcion || ''}
                                             onChange={(e) =>
-                                              updateSelection(keyIns, 'descripcion', e.target.value)
+                                              actualizarCampo(keyIns, 'descripcion', e.target.value)
                                             }
                                           />
                                         </div>
@@ -749,7 +703,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
             </p>
             <button
               type="button"
-              className="btn btn-danger fw-bold px-4 py-2"
+              className="btn btn-secondary fw-bold px-4 py-2"
               style={{ borderRadius: '8px', minWidth: '120px' }}
               onClick={() => setMostrarAlerta(false)}
             >

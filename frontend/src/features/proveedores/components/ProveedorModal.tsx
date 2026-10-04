@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import type { Proveedor } from '../types/Proveedor';
 import { useTheme } from '../../../Context/ThemeContext';
-import { apiFetch } from '../../../config/api';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
 import {
   getTiposProveedor,
   crearTipoProveedor,
   eliminarTipoProveedor
 } from '../services/proveedorService';
+import { confirmarAccion, mostrarError } from '../../../config/dialogStore';
 
 interface ProveedorModalProps {
   show: boolean;
@@ -102,9 +102,9 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
 
       setMensajeExitoCategoria('Categoría creada correctamente');
       setMostrarExitoCategoria(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Error al guardar la nueva categoría");
+      mostrarError(error?.message || "Error al guardar la nueva categoría");
     }
   };
 
@@ -125,9 +125,9 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
       setIdCategoriaAEliminar(null);
       setMensajeExitoCategoria('Categoría eliminada correctamente');
       setMostrarExitoCategoria(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("No se pudo eliminar la categoría (puede que esté en uso por otra entidad).");
+      mostrarError(error?.message || "No se pudo eliminar la categoría (puede que esté en uso por otra entidad).");
       setIdCategoriaAEliminar(null);
     }
   };
@@ -159,6 +159,7 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
     if (isEditing) {
       setMostrarConfirmacion(true);
     } else {
+      if (!(await confirmarAccion(`¿Registrar el proveedor "${(datosNormalizados as any).nombreComercial ?? ''}"?`, { titulo: 'Nuevo proveedor', textoConfirmar: 'Registrar' }))) return;
 
       setGuardando(true);
       showLoading('Guardando proveedor...');
@@ -599,8 +600,8 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
               <p className="small" style={{ color: labelColor }}>Se sobreescribirán de forma permanente los datos del proveedor.</p>
               <div className="d-flex justify-content-center gap-2 mt-3">
                 <button
-                  className="btn btn-outline-secondary btn-sm px-3 text-white"
-                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}}
+                  className="btn btn-secondary btn-sm px-3 text-white"
+                  style={{ borderRadius: '6px', backgroundColor: '#6c757d', borderColor: '#6c757d'}}
                   onClick={() => setMostrarConfirmacion(false)}
                   disabled={guardando}
                 >
@@ -640,8 +641,8 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
               <div className="d-flex justify-content-center gap-2 mt-3">
                 <button 
                   type="button"
-                  className="btn btn-sm px-3 text-white fw-bold" 
-                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }} 
+                  className="btn btn-secondary btn-sm px-3 text-white fw-bold" 
+                  style={{ borderRadius: '6px', backgroundColor: '#6c757d', borderColor: '#6c757d' }} 
                   onClick={() => setIdCategoriaAEliminar(null)}
                 >
                   Volver
@@ -691,8 +692,8 @@ export const ProveedorModal: React.FC<ProveedorModalProps> = ({
               <div className="d-flex justify-content-center">
                 <button
                   type="button"
-                  className="btn px-4 text-white fw-bold"
-                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }}
+                  className="btn btn-secondary px-4 text-white fw-bold"
+                  style={{ borderRadius: '6px', backgroundColor: '#6c757d', borderColor: '#6c757d' }}
                   onClick={() => setMostrarExitoCategoria(false)}
                 >
                   Cerrar

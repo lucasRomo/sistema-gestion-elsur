@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.Optional;
@@ -45,27 +46,40 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     public List<Producto> listarTodos() {
-    List<Producto> productos = productoRepository.findAll();
-    for (Producto p : productos) {
-        if (Boolean.TRUE.equals(p.getStockVinculado())) {
-            p.setStock(calcularStockDesdeInsumos(p.getIdProducto()));
+        List<Producto> productos = productoRepository.findAll();
+
+        // Antes se hacían 2 consultas POR PRODUCTO (receta + documento del repositorio): con
+        // Supabase eran cientos de viajes a la base y Crear Pedido tardaba ~8 segundos en cargar.
+        // Ahora se traen todas las recetas y todos los documentos de una vez.
+        Map<Integer, List<ProductoInsumo>> recetasPorProducto = productoInsumoRepository.findAllConInsumo().stream()
+                .collect(Collectors.groupingBy(pi -> pi.getId().getIdProducto()));
+        Map<Integer, DocumentoDigital> documentoPorProducto = documentoDigitalRepository.findAll().stream()
+                .filter(d -> d.getProducto() != null && d.getProducto().getIdProducto() != null)
+                .collect(Collectors.toMap(d -> d.getProducto().getIdProducto(), d -> d, (a, b) -> a));
+
+        for (Producto p : productos) {
+            if (Boolean.TRUE.equals(p.getStockVinculado())) {
+                p.setStock(calcularStock(recetasPorProducto.getOrDefault(p.getIdProducto(), List.of())));
+            }
+            sincronizarEstadoConRepositorioDigital(p, Optional.ofNullable(documentoPorProducto.get(p.getIdProducto())));
         }
-        sincronizarEstadoConRepositorioDigital(p);
-    }
-    return productos;
+        return productos;
     }
 
-    private void sincronizarEstadoConRepositorioDigital(Producto p) {
-    if (!"Activo".equalsIgnoreCase(p.getEstado())) return; 
+    private void sincronizarEstadoConRepositorioDigital(Producto p, Optional<DocumentoDigital> doc) {
+        if (!"Activo".equalsIgnoreCase(p.getEstado())) return;
 
-    Optional<DocumentoDigital> doc = documentoDigitalRepository.findByProducto_IdProducto(p.getIdProducto());
-    if (doc.isPresent() && !"Activo".equalsIgnoreCase(doc.get().getEstado())) {
-        p.setEstado("Inactivo");
-        productoRepository.save(p);
-    }}
+        if (doc.isPresent() && !"Activo".equalsIgnoreCase(doc.get().getEstado())) {
+            p.setEstado("Inactivo");
+            productoRepository.save(p);
+        }
+    }
 
     private Integer calcularStockDesdeInsumos(Integer idProducto) {
-        List<ProductoInsumo> receta = productoInsumoRepository.findByIdIdProducto(idProducto);
+        return calcularStock(productoInsumoRepository.findByIdIdProducto(idProducto));
+    }
+
+    private Integer calcularStock(List<ProductoInsumo> receta) {
         if (receta.isEmpty()) return 0;
 
         int minStockCalculado = Integer.MAX_VALUE;

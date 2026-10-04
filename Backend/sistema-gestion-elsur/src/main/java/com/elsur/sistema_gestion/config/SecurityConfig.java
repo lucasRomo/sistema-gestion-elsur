@@ -61,7 +61,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/usuarios/login", "/error", "/api/acceso/validar").permitAll()
+                .requestMatchers("/api/usuarios/login", "/error", "/api/acceso/validar", "/actuator/health").permitAll()
                 .anyRequest().access(matrizSeguridadValidator)
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

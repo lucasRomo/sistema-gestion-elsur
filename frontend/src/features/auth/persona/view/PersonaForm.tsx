@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../../Context/ThemeContext';
 import { personaService } from '../service/personaService';
 import type { TipoDocumento } from '../../../../types/TipoDocumento';
-import { apiFetch } from '../../../../config/api';
+import { mostrarAviso, mostrarError } from '../../../../config/dialogStore';
 
 interface PersonaFormProps {
   formData: any;
@@ -109,14 +109,14 @@ export const PersonaForm: React.FC<PersonaFormProps> = ({
       }
 
       if (!formData.tipoDocumento) {
-        alert("Por favor seleccione un Tipo de Documento");
+        mostrarAviso("Por favor seleccione un Tipo de Documento");
         return;
       }
 
       onSiguiente(e);
     } catch (error) {
       console.error("Error validando duplicados:", error);
-      alert("Error al validar los datos del cliente.");
+      mostrarError("Error al validar los datos del cliente.");
     }
   };
 

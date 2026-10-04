@@ -254,7 +254,7 @@ export const InformesView: React.FC = () => {
           <div className="d-flex align-items-center gap-2">
             <button
               onClick={() => setSeccionActiva('MENU')}
-              className="btn btn-volver btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-2 rounded-3"
+              className="btn btn-secondary btn-sm px-3 py-2 fw-bold d-flex align-items-center gap-2 rounded-3"
             >
               <i className="bi bi-arrow-left"></i> Volver al Menú Principal
             </button>

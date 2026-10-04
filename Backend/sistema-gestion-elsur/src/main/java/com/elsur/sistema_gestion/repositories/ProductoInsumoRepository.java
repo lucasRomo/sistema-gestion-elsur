@@ -14,4 +14,8 @@ public interface ProductoInsumoRepository extends JpaRepository<ProductoInsumo, 
     List<ProductoInsumo> findByProducto(Producto producto);
     
     List<ProductoInsumo> findByIdIdProducto(Integer idProducto);
+
+    // Todas las recetas con su insumo en una sola consulta (para listar productos sin N+1).
+    @org.springframework.data.jpa.repository.Query("SELECT pi FROM ProductoInsumo pi JOIN FETCH pi.insumo")
+    List<ProductoInsumo> findAllConInsumo();
 }

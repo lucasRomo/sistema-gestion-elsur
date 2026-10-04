@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../../../../Context/ThemeContext';
 
 interface Props {
   show: boolean;
@@ -15,18 +16,21 @@ interface Props {
 // Se agrega "titulo" opcional, con el texto de siempre como valor por
 // defecto, para no romper ningún uso existente del modal.
 export const ModalErrorStock: React.FC<Props> = ({ show, mensaje, titulo = 'Error por Falta de Stock', onClose }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   if (!show) return null;
 
   return (
-    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
+    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1060 }}>
       <div className="modal-dialog modal-sm modal-dialog-centered">
         <div 
-          className="modal-content p-4 text-white text-center" 
-          style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px', fontFamily: 'monospace' }}
+          className="modal-content p-4 text-center" 
+          style={{ border: '2px solid #8e45e0', backgroundColor: isDark ? '#1a1a1c' : '#ffffff', color: isDark ? '#ffffff' : '#0f172a', borderRadius: '12px', fontFamily: 'monospace' }}
         >
           <i className="bi bi-x-circle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
           <h5 className="fw-bold">{titulo}</h5>
-          <p className="small" style={{ color: '#a1a1aa' }}>{mensaje}</p>
+          <p className="small" style={{ color: isDark ? '#a1a1aa' : '#475569' }}>{mensaje}</p>
           <button 
             className="btn btn-secondary btn-sm px-4 mt-3 fw-bold"
             style={{ borderRadius: '6px' }}

@@ -1,4 +1,3 @@
-import React from 'react';
 
 export const ClienteExtraForm = ({ formData, setFormData, onRegistrar, onCerrar, guardando = false }: any) => {
   const handleChange = (field: string, value: string) => {

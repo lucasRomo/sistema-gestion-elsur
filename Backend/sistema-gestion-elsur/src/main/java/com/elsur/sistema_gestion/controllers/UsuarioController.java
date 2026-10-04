@@ -57,13 +57,26 @@ public class UsuarioController {
     @PostMapping
     public ResponseEntity<?> crear(
             @RequestBody Usuario usuario,
-            @RequestParam(value = "idUsuario", required = false) Integer idUsuarioOperador) {
+            @RequestParam(value = "idUsuario", required = false) Integer idUsuarioOperador,
+            Authentication authentication) {
         // El body es un Usuario completo sin restricciones de binding: si no forzáramos el id acá,
         // alguien podría mandar un "idUsuario" de un usuario YA EXISTENTE en el JSON de un POST y
         // usuarioService.guardar() lo tomaría como una actualización (JPA hace upsert por id),
         // pisando los datos (incluido el rol) de ese usuario sin pasar por el chequeo de permisos
         // que sí tiene el PUT de actualizar(). Un alta siempre debe crear un registro nuevo.
         usuario.setIdUsuario(null);
+
+        // El portón (registro público con la clave de acceso) no puede elegir el estado de la
+        // cuenta: antes alcanzaba con mandar "estado": "Activo" (o no mandar salario, y así no se
+        // creaba el Empleado que el login revisa) para saltearse la activación del administrador.
+        boolean esPorton = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_PORTON".equals(a.getAuthority()));
+        if (esPorton) {
+            usuario.setEstado(null);
+            if (usuario.getSalario() == null) {
+                usuario.setSalario(java.math.BigDecimal.ZERO);
+            }
+        }
         return ResponseEntity.ok(usuarioService.guardar(usuario, idUsuarioOperador));
     }
 
@@ -197,8 +210,22 @@ public class UsuarioController {
                 "Restablecele la contraseña para poder verla de acá en adelante.");
         }
 
+        String passwordReal;
+        try {
+            passwordReal = cifradoService.desencriptar(objetivo.getContrasenaVisible());
+        } catch (RuntimeException e) {
+            // Pasa cuando la contraseña se cifró con otra CRYPTO_SECRET (ej. en otra PC conectada a
+            // la misma base, o antes de un cambio de clave). Restablecerla la vuelve a cifrar con
+            // la clave actual. Antes salía como el error genérico y parecía que la contraseña del
+            // administrador era incorrecta.
+            throw new SolicitudInvalidaException(
+                "Tu contraseña es correcta, pero la contraseña guardada de este usuario fue cifrada con otra " +
+                "clave del sistema (CRYPTO_SECRET distinta) y no se puede leer. Restablecela para poder verla " +
+                "de acá en adelante.");
+        }
+
         Map<String, String> respuesta = new HashMap<>();
-        respuesta.put("passwordReal", cifradoService.desencriptar(objetivo.getContrasenaVisible()));
+        respuesta.put("passwordReal", passwordReal);
         return ResponseEntity.ok(respuesta);
     }
 

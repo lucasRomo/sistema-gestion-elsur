@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import type { Insumo } from '../types/Insumo';
 import { mermaService, type MermaEntity } from '../../../services/mermaService';
+import { confirmarAccion } from '../../../config/dialogStore';
 import { useTheme } from '../../../Context/ThemeContext';
-import { apiFetch } from '../../../config/api';
 import { getMermas } from '../services/insumoService';
 
 interface ModalMermasInsumosProps {
@@ -125,6 +125,7 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
       pedido: null
     }));
     
+    if (!(await confirmarAccion(`¿Registrar ${payload.length} merma(s) de insumos? Se descontará el stock correspondiente.`, { titulo: 'Registrar mermas', textoConfirmar: 'Registrar' }))) return;
     setGuardando(true);
     try {
       await mermaService.registrarMermas(payload);
@@ -537,7 +538,7 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
             </p>
             <button
               type="button"
-              className="btn btn-danger fw-bold px-4 py-2"
+              className="btn btn-secondary fw-bold px-4 py-2"
               style={{ borderRadius: '8px', minWidth: '120px' }}
               onClick={() => setMostrarAlerta(false)}
             >

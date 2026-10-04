@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { Pedido, CartItem } from '../../general/types/Pedido';
 import { VistaTicketPagoModal } from '../../../../components/modals/VistaTicketPagoModal';
 import { PedidoPendienteService } from '../../pedidospendientes/service/pedidoPendienteService';
+import { mostrarAviso } from '../../../../config/dialogStore';
 
 interface Props {
   clientes: any[];
@@ -59,7 +60,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
   useEffect(() => {
     const fetchPedidosPendientes = async () => {
       try {
-        const data = await PedidoPendienteService.obtenerTodos();
+        const data = await PedidoPendienteService.obtenerActivos();
         const conteo: Record<number, number> = {};
 
         data.forEach((ped: any) => {
@@ -115,30 +116,30 @@ export const DetallesPedidoForm: React.FC<Props> = ({
     e.preventDefault();
     
     if (!clienteId || clienteId === '0') {
-      alert("Por favor, seleccione un cliente válido.");
+      mostrarAviso("Por favor, seleccione un cliente válido.");
       return;
     }
 
     if (!empleadoId || empleadoId === '0') {
-      alert("Por favor, seleccione un empleado válido.");
+      mostrarAviso("Por favor, seleccione un empleado válido.");
       return;
     }
 
     if (isNaN(Number(montoEntregado)) || Number(montoEntregado) < 0) {
-      alert("El monto de seña/adelanto no puede ser negativo.");
+      mostrarAviso("El monto de seña/adelanto no puede ser negativo.");
       return;
     }
 
     if (estado !== 'PRESUPUESTO') {
       if (!fechaEntrega) {
-        alert("Por favor, seleccione una fecha y hora estimada de entrega.");
+        mostrarAviso("Por favor, seleccione una fecha y hora estimada de entrega.");
         return;
       }
 
       const fechaEntregaMs = new Date(fechaEntrega).getTime();
       const margenMs = 60 * 1000;
       if (fechaEntregaMs < Date.now() - margenMs) {
-        alert("La fecha y hora de entrega estimada no puede ser anterior al momento actual.");
+        mostrarAviso("La fecha y hora de entrega estimada no puede ser anterior al momento actual.");
         return;
       }
     }

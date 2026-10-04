@@ -144,7 +144,7 @@ export const exportarCajaExcel = async (
 
   worksheet.columns.forEach((column) => {
     let maxLength = 0;
-    column.eachCell!({ includeEmpty: true }, (cell) => {
+    (column as ExcelJS.Column & ExcelJS.ColumnExtension).eachCell({ includeEmpty: true }, (cell: ExcelJS.Cell) => {
       const columnValue = cell.value ? cell.value.toString() : '';
       if (columnValue.length > maxLength) {
         maxLength = columnValue.length;

@@ -1,0 +1,10 @@
+target/
+uploads/
+backups/
+materiales/
+*.zip
+*.txt
+modeloerd
+.env*
+.idea/
+.vscode/

@@ -20,6 +20,7 @@ import { ModalDevolucionPedido } from '../modals/ModalDevolucionPedido';
 import { VistaTicketPagoModal } from '../../../../components/modals/VistaTicketPagoModal';
 import { CuentaCorrienteModal } from '../../../clientes/components/CuentaCorrienteModal';
 import { formatearFechaHora, resolverEmpleadoGestion } from '../../../../utils/formato';
+import { mostrarError } from '../../../../config/dialogStore';
 
 export const HistorialPedidosPage: React.FC = () => {
   const { theme } = useTheme();
@@ -43,6 +44,12 @@ export const HistorialPedidosPage: React.FC = () => {
   const [pedidoMermas, setPedidoMermas] = useState<any>(null);
 
   const [pedidoDevolucion, setPedidoDevolucion] = useState<any>(null);
+  const [avisoDevolucion, setAvisoDevolucion] = useState<{ show: boolean; titulo: string; mensaje: string; irACrear: boolean }>({
+    show: false,
+    titulo: '',
+    mensaje: '',
+    irACrear: false
+  });
 
   const [filtroTexto, setFiltroTexto] = useState('');
   const [filtroEstadoHistorial, setFiltroEstadoHistorial] = useState('TODOS');
@@ -64,12 +71,35 @@ export const HistorialPedidosPage: React.FC = () => {
       if (pedidoCompleto) {
         setPedidoAuditoria(pedidoCompleto);
       } else {
-        alert('No se pudo obtener el historial detallado de este pedido.');
+        mostrarError('No se pudo obtener el historial detallado de este pedido.');
       }
     } catch (error) {
       console.error('Error al conectar con la API de auditoría:', error);
-      alert('Error de red al intentar buscar el historial.');
+      mostrarError('Error de red al intentar buscar el historial.');
     }
+  };
+
+  const handleAbrirDevolucion = (pedido: any) => {
+    const estado = (pedido?.estado || '').toUpperCase();
+    if (estado === 'CANCELADO') {
+      setAvisoDevolucion({
+        show: true,
+        titulo: 'Pedido Cancelado',
+        mensaje: `El pedido #${pedido.id_pedido} fue cancelado y no puede ser devuelto. Por favor, registre uno nuevo en Crear Pedido.`,
+        irACrear: true
+      });
+      return;
+    }
+    if (estado === 'DEVUELTO') {
+      setAvisoDevolucion({
+        show: true,
+        titulo: 'Pedido ya Devuelto',
+        mensaje: `El pedido #${pedido.id_pedido} ya fue marcado como devuelto y no puede procesarse nuevamente.`,
+        irACrear: false
+      });
+      return;
+    }
+    setPedidoDevolucion(pedido);
   };
 
   const handleProcesarDevolucion = async (accion: 'REINICIAR' | 'DEVUELTO', descripcionEntrante?: string) => {
@@ -229,7 +259,7 @@ export const HistorialPedidosPage: React.FC = () => {
                     pedido={pedido}
                     onAbrirAuditoria={handleAbrirAuditoria}
                     onSelectTicket={setVerTicketPedido}
-                    onAbrirDevolucion={(p) => setPedidoDevolucion(p)}
+                    onAbrirDevolucion={handleAbrirDevolucion}
                     onAbrirMermas={handleAbrirMermas}
                   />
                 ))
@@ -301,6 +331,44 @@ export const HistorialPedidosPage: React.FC = () => {
           onClose={() => setPedidoDevolucion(null)}
           onProcesar={handleProcesarDevolucion}
         />
+      )}
+
+      {avisoDevolucion.show && (
+        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '420px' }}>
+            <div
+              className="modal-content p-4 text-center shadow-lg"
+              style={{
+                border: `2px solid ${isDark ? '#8e45e0' : '#a855f7'}`,
+                backgroundColor: isDark ? '#1a1a1c' : '#ffffff',
+                color: isDark ? '#ffffff' : '#0f172a',
+                borderRadius: '12px'
+              }}
+            >
+              <i className="bi bi-x-octagon fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
+              <h5 className="fw-bold">{avisoDevolucion.titulo}</h5>
+              <p className="small m-0" style={{ color: grayText }}>{avisoDevolucion.mensaje}</p>
+              <div className="d-flex justify-content-center gap-2 mt-3">
+                <button
+                  className="btn btn-secondary btn-sm px-4 fw-bold text-white"
+                  style={{ borderRadius: '6px' }}
+                  onClick={() => setAvisoDevolucion({ show: false, titulo: '', mensaje: '', irACrear: false })}
+                >
+                  Cerrar
+                </button>
+                {avisoDevolucion.irACrear && (
+                  <button
+                    className="btn btn-success btn-sm px-4 fw-bold text-white"
+                    style={{ borderRadius: '6px' }}
+                    onClick={() => navigate('/crear-pedido')}
+                  >
+                    Ir a Crear Pedido
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {suceso.show && (

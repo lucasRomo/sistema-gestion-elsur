@@ -36,6 +36,16 @@ public class PedidoController {
         return pedidoService.listarTodos();
     }
 
+    @GetMapping("/activos")
+    public List<Pedido> listarActivos() {
+        return pedidoService.listarActivos();
+    }
+
+    @GetMapping("/cerrados")
+    public List<Pedido> listarCerrados() {
+        return pedidoService.listarCerrados();
+    }
+
     @PostMapping(consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> crearJson(@RequestBody Map<String, Object> payload) {
         return procesarYGuardarPedido(payload, null);
@@ -86,8 +96,14 @@ public class PedidoController {
 
         boolean confirmarMaquinaNoDisponible = Boolean.TRUE.equals(payload.get("confirmarMaquinaNoDisponible"));
 
+        // Categoría de cliente elegida al armar el pedido: el backend recalcula el total con su
+        // descuento en vez de confiar en el monto que manda el navegador.
+        Integer idCategoriaCliente = payload.get("idCategoriaCliente") != null
+                && !payload.get("idCategoriaCliente").toString().isBlank()
+                ? Integer.valueOf(payload.get("idCategoriaCliente").toString()) : null;
+
         Pedido guardado = pedidoService.guardar(pedido, idEmpleado, idUsuario, tipoPago, comprobante,
-                confirmarMaquinaNoDisponible);
+                confirmarMaquinaNoDisponible, idCategoriaCliente);
         return ResponseEntity.ok(guardado);
     }
 

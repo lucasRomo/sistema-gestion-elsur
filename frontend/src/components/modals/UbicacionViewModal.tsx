@@ -13,7 +13,6 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
   const isDark = theme === 'dark';
 
   const modalBg = isDark ? '#1a1a1c' : '#ffffff';
-  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const titleColor = isDark ? '#ffffff' : '#0f172a';
   const labelColor = isDark ? '#a1a1aa' : '#64748b';
   const borderDivider = isDark ? '#3f3f46' : '#e2e8f0';
@@ -319,7 +318,7 @@ export const UbicacionViewModal: React.FC<UbicacionViewModalProps> = ({ cliente,
               <h5 className="fw-bold">¿Modificar Ubicación?</h5>
               <p className="small" style={{ color: '#a1a1aa' }}>Se actualizará la dirección asociada de forma permanente.</p>
               <div className="d-flex justify-content-center gap-2 mt-3">
-                <button className="btn btn-outline-light btn-sm px-3" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#8d1414', color: '#ffffff'}} onClick={() => setMostrarConfirmacion(false)} disabled={guardando}>
+                <button className="btn btn-secondary btn-sm px-3" style={{ borderRadius: '6px', backgroundColor: '#6c757d', borderColor: '#6c757d', color: '#ffffff'}} onClick={() => setMostrarConfirmacion(false)} disabled={guardando}>
                   Volver
                 </button>
                 <button className="btn text-white btn-sm px-3 fw-bold" style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e', color: '#ffffff' }} onClick={handleGuardarDefinitivo} disabled={guardando}>

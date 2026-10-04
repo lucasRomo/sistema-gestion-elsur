@@ -1,4 +1,3 @@
-import React from 'react';
 
 const RADIAN = Math.PI / 180;
 const RADIO_QUIEBRE = 8;    

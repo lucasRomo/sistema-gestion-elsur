@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { Insumo } from '../types/Insumo';
 import { useTheme } from '../../../Context/ThemeContext';
-import { apiFetch } from '../../../config/api';
 import { getInsumos } from '../services/insumoService';
 
 interface RelacionesModalProps {

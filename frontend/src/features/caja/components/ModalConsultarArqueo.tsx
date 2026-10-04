@@ -177,7 +177,7 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
                 </div>
               </div>
 
-              <div className="table-responsive rounded-3" style={{ maxHeight: '150px', overflowY: 'auto', border: `1px solid ${cardBorder}` }}>
+              <div className="table-responsive rounded-3" style={{ maxHeight: '320px', minHeight: '180px', overflowY: 'auto', border: `1px solid ${cardBorder}` }}>
                 <table
                   className="table table-sm table-hover m-0 text-center align-middle"
                   style={{

@@ -8,9 +8,10 @@ import com.elsur.sistema_gestion.repositories.*;
 import com.elsur.sistema_gestion.services.PedidoService;
 import com.elsur.sistema_gestion.services.SupabaseStorageService;
 
-import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,9 +48,26 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Autowired private MovimientoCuentaCorrienteRepository movimientoCCRepository;
 
+    @Autowired private categoriaClienteRepository categoriaClienteRepository;
+
+    // Estados que ya salieron de la cola del taller. Filtrar en la base evita traer (y
+    // serializar con todas sus relaciones) cada pedido histórico en cada recarga.
+    private static final List<String> ESTADOS_FUERA_DE_COLA = List.of("VENTA_RAPIDA", "ENTREGADO", "CANCELADO", "DEVUELTO");
+    private static final List<String> ESTADOS_HISTORIAL = List.of("ENTREGADO", "CANCELADO", "FINALIZADO", "DEVUELTO");
+
     @Override
     public List<Pedido> listarTodos() {
         return pedidoRepository.findAll();
+    }
+
+    @Override
+    public List<Pedido> listarActivos() {
+        return pedidoRepository.findByEstadoNotIn(ESTADOS_FUERA_DE_COLA);
+    }
+
+    @Override
+    public List<Pedido> listarCerrados() {
+        return pedidoRepository.findByEstadoIn(ESTADOS_HISTORIAL);
     }
 
     @Override
@@ -76,7 +94,15 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional
     public void actualizarUbicacion(Integer idPedido, String nuevaUbicacion) {
         Pedido pedido = pedidoRepository.findById(idPedido)
-                .orElseThrow(() -> new EntityNotFoundException("Pedido no encontrado con ID: " + idPedido));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Pedido no encontrado con ID: " + idPedido));
+
+        if (nuevaUbicacion == null || nuevaUbicacion.isBlank()) {
+            throw new SolicitudInvalidaException("Debe indicar la nueva ubicación del pedido.");
+        }
+        nuevaUbicacion = nuevaUbicacion.trim();
+        if (nuevaUbicacion.length() > 20) {
+            throw new SolicitudInvalidaException("La ubicación no puede superar los 20 caracteres.");
+        }
 
         String ubicacionAnterior = pedido.getUbicacion_estante() != null ? pedido.getUbicacion_estante() : "Taller";
 
@@ -93,11 +119,7 @@ public class PedidoServiceImpl implements PedidoService {
         historial.setEstado_anterior("UBICACION: " + ubicacionAnterior);
         historial.setEstado_nuevo("UBICACION: " + nuevaUbicacion);
         historial.setObservaciones("Cambio de ubicación del pedido en el local");
-
-        Usuario usuario = usuarioRepository.findAll().stream()
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Error: No existe ningún usuario para registrar el historial."));
-        historial.setUsuarioResponsable(usuario);
+        historial.setUsuarioResponsable(resolverUsuarioResponsable(null));
 
         historialRepository.save(historial);
     }
@@ -106,9 +128,70 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional
     public Pedido guardar(Pedido pedido, Integer idEmpleado, Integer idUsuario, String tipoPago, MultipartFile comprobante,
                            boolean confirmarMaquinaNoDisponible) {
+        return guardar(pedido, idEmpleado, idUsuario, tipoPago, comprobante, confirmarMaquinaNoDisponible, null, false);
+    }
+
+    @Override
+    @Transactional
+    public Pedido guardar(Pedido pedido, Integer idEmpleado, Integer idUsuario, String tipoPago, MultipartFile comprobante,
+                           boolean confirmarMaquinaNoDisponible, Integer idCategoriaCliente) {
+        return guardar(pedido, idEmpleado, idUsuario, tipoPago, comprobante, confirmarMaquinaNoDisponible, idCategoriaCliente, true);
+    }
+
+    /**
+     * El total que manda el navegador no es confiable (se puede alterar la petición). Se recalcula
+     * con el precio base actual de cada producto y el descuento de la categoría de cliente. Si no
+     * coincide con lo que se le mostró al usuario se rechaza en vez de corregirlo en silencio:
+     * así nunca se cobra un monto distinto al que vio (ej. si alguien cambió un precio mientras
+     * el pedido se estaba armando).
+     */
+    private void validarYRecalcularTotal(Pedido pedido, Integer idCategoriaCliente) {
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (DetallePedido detalle : pedido.getDetalles()) {
+            BigDecimal precio = detalle.getProducto().getPrecioBase() != null
+                    ? detalle.getProducto().getPrecioBase() : BigDecimal.ZERO;
+            BigDecimal subtotalDetalle = precio.multiply(BigDecimal.valueOf(detalle.getCantidad()));
+            detalle.setPrecioUnitario(precio);
+            detalle.setSubtotal(subtotalDetalle);
+            subtotal = subtotal.add(subtotalDetalle);
+        }
+
+        BigDecimal porcentaje = BigDecimal.ZERO;
+        if (idCategoriaCliente != null) {
+            porcentaje = categoriaClienteRepository.findById(idCategoriaCliente)
+                    .map(c -> c.getDescuentoAutomatico() != null ? c.getDescuentoAutomatico() : BigDecimal.ZERO)
+                    .orElseThrow(() -> new SolicitudInvalidaException("La categoría de cliente indicada no existe."));
+        }
+
+        BigDecimal totalEsperado = subtotal
+                .subtract(subtotal.multiply(porcentaje).divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_UP))
+                .setScale(2, java.math.RoundingMode.HALF_UP);
+
+        BigDecimal totalRecibido = pedido.getMonto_total() != null ? pedido.getMonto_total() : BigDecimal.ZERO;
+        if (totalEsperado.subtract(totalRecibido).abs().compareTo(new BigDecimal("0.05")) > 0) {
+            throw new SolicitudInvalidaException(
+                "El total del pedido ($" + totalRecibido.setScale(2, java.math.RoundingMode.HALF_UP) +
+                ") no coincide con los precios actuales ($" + totalEsperado +
+                "). Es posible que algún precio se haya modificado: volvé a cargar la pantalla e intentá de nuevo.");
+        }
+        pedido.setMonto_total(totalEsperado);
+
+        BigDecimal adelanto = pedido.getMonto_pago_adelantado() != null ? pedido.getMonto_pago_adelantado() : BigDecimal.ZERO;
+        if (adelanto.compareTo(totalEsperado.add(new BigDecimal("0.05"))) > 0) {
+            throw new SolicitudInvalidaException(
+                "La seña/adelanto ($" + adelanto + ") no puede superar el total del pedido ($" + totalEsperado + ").");
+        }
+        if (adelanto.compareTo(totalEsperado) > 0) {
+            // Diferencia de redondeo (ej. venta rápida paga 333.333 y el total queda en 333.33).
+            pedido.setMonto_pago_adelantado(totalEsperado);
+        }
+    }
+
+    private Pedido guardar(Pedido pedido, Integer idEmpleado, Integer idUsuario, String tipoPago, MultipartFile comprobante,
+                           boolean confirmarMaquinaNoDisponible, Integer idCategoriaCliente, boolean recalcularTotal) {
         boolean existeCajaAbierta = TurnoRepository.existsByEstado(EstadoTurno.ABIERTO);
         if (!existeCajaAbierta) {
-            throw new RuntimeException("La Caja No está Abierta. Por favor, inicie turno antes de continuar.");
+            throw new SolicitudInvalidaException("La Caja No está Abierta. Por favor, inicie turno antes de continuar.");
         }
         LocalDateTime ahora = LocalDateTime.now();
         if (pedido.getFecha_creacion() == null) {
@@ -121,21 +204,35 @@ public class PedidoServiceImpl implements PedidoService {
         Integer idCliente = (pedido.getCliente() != null && pedido.getCliente().getIdCliente() != null)
                             ? pedido.getCliente().getIdCliente() : 1;
         Cliente clienteActual = clienteRepository.findById(idCliente)
-            .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+            .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado"));
         pedido.setCliente(clienteActual);
+
+        if (pedido.getDetalles() == null || pedido.getDetalles().isEmpty()) {
+            throw new SolicitudInvalidaException("El pedido debe tener al menos un producto.");
+        }
+        if (pedido.getMonto_total() == null || pedido.getMonto_total().compareTo(BigDecimal.ZERO) < 0) {
+            throw new SolicitudInvalidaException("El monto total del pedido no es válido.");
+        }
 
         if (pedido.getDetalles() != null) {
             for (DetallePedido detalle : pedido.getDetalles()) {
+                if (detalle.getCantidad() == null || detalle.getCantidad() <= 0) {
+                    throw new SolicitudInvalidaException("La cantidad de cada producto del pedido debe ser mayor a 0.");
+                }
                 detalle.setPedido(pedido);
                 if (detalle.getProducto() != null && detalle.getProducto().getIdProducto() != null) {
                     Producto prod = productoRepository.findById(detalle.getProducto().getIdProducto())
-                        .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                        .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado"));
                     detalle.setProducto(prod);
                 } else {
                     throw new SolicitudInvalidaException(
                         "Cada detalle del pedido debe indicar un producto válido (falta el producto o su id).");
                 }
             }
+        }
+
+        if (recalcularTotal) {
+            validarYRecalcularTotal(pedido, idCategoriaCliente);
         }
 
         if ("PRESUPUESTO".equalsIgnoreCase(pedido.getEstado())) {
@@ -146,7 +243,7 @@ public class PedidoServiceImpl implements PedidoService {
                                     || (pedido.isEs_cuenta_corriente());
 
         if (idCliente == 1 && esCuentaCorriente) {
-            throw new RuntimeException("El Consumidor Final no puede realizar compras a Cuenta Corriente.");
+            throw new SolicitudInvalidaException("El Consumidor Final no puede realizar compras a Cuenta Corriente.");
         }
 
         if (esCuentaCorriente) {
@@ -158,7 +255,7 @@ public class PedidoServiceImpl implements PedidoService {
 
         if (idEmpleado != null) {
             Empleado emp = empleadoRepository.findById(idEmpleado)
-                .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado no encontrado"));
             AsignacionPedido asignacion = new AsignacionPedido();
             asignacion.setPedido(p);
             asignacion.setEmpleado(emp);
@@ -298,14 +395,17 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional
     public void asignarEmpleado(Integer idPedido, Integer idEmpleado) {
         Pedido pedido = pedidoRepository.findById(idPedido)
-            .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+            .orElseThrow(() -> new RecursoNoEncontradoException("Pedido no encontrado"));
 
         Empleado empleadoNuevo = empleadoRepository.findById(idEmpleado)
-            .orElseThrow(() -> new RuntimeException("Empleado no encontrado"));
+            .orElseThrow(() -> new RecursoNoEncontradoException("Empleado no encontrado"));
 
         String nombreEmpleadoAnterior = "Sin Asignar";
         if (pedido.getAsignaciones() != null && !pedido.getAsignaciones().isEmpty()) {
             AsignacionPedido ultima = pedido.getAsignaciones().get(pedido.getAsignaciones().size() - 1);
+            if (ultima.getEmpleado() != null && idEmpleado.equals(ultima.getEmpleado().getIdEmpleado())) {
+                return;
+            }
             if (ultima.getEmpleado() != null && ultima.getEmpleado().getPersona() != null) {
                 nombreEmpleadoAnterior = ultima.getEmpleado().getPersona().getNombre() + " " +
                                          ultima.getEmpleado().getPersona().getApellido();
@@ -332,11 +432,7 @@ public class PedidoServiceImpl implements PedidoService {
         historial.setEstado_anterior("ASIGNADO: " + nombreEmpleadoAnterior);
         historial.setEstado_nuevo("ASIGNADO: " + nombreEmpleadoNuevo);
         historial.setObservaciones("Reasignación de operario de taller");
-
-        Usuario usuario = usuarioRepository.findAll().stream()
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Error: No existe ningún usuario para registrar el historial."));
-        historial.setUsuarioResponsable(usuario);
+        historial.setUsuarioResponsable(resolverUsuarioResponsable(null));
 
         historialRepository.save(historial);
         pedidoRepository.save(pedido);
@@ -346,7 +442,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional
     public Pedido eliminarArchivoDeComprobante(Integer idComprobante) {
         ComprobantePago comprobante = comprobantePagoRepository.findById(idComprobante)
-            .orElseThrow(() -> new RuntimeException("Comprobante no encontrado"));
+            .orElseThrow(() -> new RecursoNoEncontradoException("Comprobante no encontrado"));
 
         String urlArchivo = comprobante.getUrlArchivoComprobante();
 
@@ -395,7 +491,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional
     public void procesarDescuentoStock(Integer idPedido, boolean confirmarMaquinaNoDisponible) {
     Pedido pedido = pedidoRepository.findById(idPedido)
-        .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+        .orElseThrow(() -> new RecursoNoEncontradoException("Pedido no encontrado"));
 
     if (pedido.isStockDescontado()) {
         return;
@@ -407,7 +503,7 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     if (pedido.getDetalles().isEmpty()) {
-        throw new RuntimeException("El pedido no tiene detalles registrados");
+        throw new SolicitudInvalidaException("El pedido no tiene detalles registrados");
     }
 
     for (DetallePedido detalle : pedido.getDetalles()) {
@@ -449,7 +545,7 @@ public class PedidoServiceImpl implements PedidoService {
                         .multiply(BigDecimal.valueOf(detalle.getCantidad()));
 
                 if (insumo.getStockActual().compareTo(consumoTotal) < 0) {
-                    throw new RuntimeException("Stock insuficiente del insumo '" + insumo.getNombreInsumo() +
+                    throw new SolicitudInvalidaException("Stock insuficiente del insumo '" + insumo.getNombreInsumo() +
                             "' para producir el producto " + producto.getNombreProducto());
                 }
 
@@ -461,7 +557,7 @@ public class PedidoServiceImpl implements PedidoService {
             if (producto.getStock() != null) {
                 int nuevoStock = producto.getStock() - detalle.getCantidad();
                 if (nuevoStock < 0) {
-                    throw new RuntimeException("Stock insuficiente para el producto: " + producto.getNombreProducto());
+                    throw new SolicitudInvalidaException("Stock insuficiente para el producto: " + producto.getNombreProducto());
                 }
                 producto.setStock(nuevoStock);
                 productoRepository.save(producto);
@@ -498,22 +594,57 @@ public class PedidoServiceImpl implements PedidoService {
         historial.setEstado_nuevo(nuevo);
         historial.setFecha_cambio(LocalDateTime.now());
 
-        Usuario usuario = usuarioRepository.findAll().stream()
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Error: No existe ningún usuario en la base de datos para registrar el historial."));
-
-        historial.setUsuarioResponsable(usuario);
+        historial.setUsuarioResponsable(resolverUsuarioResponsable(null));
         historialRepository.save(historial);
+    }
+
+    /**
+     * Usuario a registrar en el historial: primero el autenticado por JWT (no se puede
+     * falsificar desde el cliente), después el idUsuario enviado y, solo si no hay
+     * ninguno (ej. procesos internos/tests), el primer usuario de la base.
+     */
+    private Usuario resolverUsuarioResponsable(Integer idUsuario) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && auth.getName() != null
+                && !"anonymousUser".equals(auth.getName())) {
+            java.util.Optional<Usuario> autenticado = usuarioRepository.findByNombreUsuario(auth.getName());
+            if (autenticado.isPresent()) {
+                return autenticado.get();
+            }
+        }
+        if (idUsuario != null) {
+            java.util.Optional<Usuario> indicado = usuarioRepository.findById(idUsuario);
+            if (indicado.isPresent()) {
+                return indicado.get();
+            }
+        }
+        return usuarioRepository.findAll().stream().findFirst()
+                .orElseThrow(() -> new RuntimeException("No hay usuarios cargados en el sistema"));
     }
 
     @Override
     @Transactional
     public Pedido cambiarEstadoPedido(Integer idPedido, String nuevoEstado, String observaciones, Integer idUsuario,
                                        boolean confirmarMaquinaNoDisponible) {
+        if (nuevoEstado == null || nuevoEstado.isBlank()) {
+            throw new SolicitudInvalidaException("Debe indicar el nuevo estado del pedido.");
+        }
+
         Pedido pedido = buscarPorId(idPedido);
         String estadoAnterior = pedido.getEstado();
 
-        boolean esEstadoFinal = "FINALIZADO".equalsIgnoreCase(nuevoEstado) || "ENTREGADO".equalsIgnoreCase(nuevoEstado);
+        if ("CANCELADO".equalsIgnoreCase(estadoAnterior)) {
+            throw new SolicitudInvalidaException(
+                "Este pedido fue cancelado y no puede ser modificado ni devuelto. Por favor, registre uno nuevo en Crear Pedido.");
+        }
+        if ("DEVUELTO".equalsIgnoreCase(estadoAnterior)) {
+            throw new SolicitudInvalidaException("Este pedido ya fue devuelto y no puede volver a modificarse.");
+        }
+        if (nuevoEstado.equalsIgnoreCase(estadoAnterior)) {
+            throw new SolicitudInvalidaException("El pedido ya se encuentra en estado " + estadoAnterior + ".");
+        }
+
+        boolean esEstadoFinal ="FINALIZADO".equalsIgnoreCase(nuevoEstado) || "ENTREGADO".equalsIgnoreCase(nuevoEstado);
         boolean yaEstabaFinalizado = "FINALIZADO".equalsIgnoreCase(estadoAnterior) || "ENTREGADO".equalsIgnoreCase(estadoAnterior) || "VENTA_RAPIDA".equalsIgnoreCase(estadoAnterior);
 
         if (esEstadoFinal && !yaEstabaFinalizado) {
@@ -585,11 +716,7 @@ public class PedidoServiceImpl implements PedidoService {
         historial.setFecha_cambio(LocalDateTime.now());
         historial.setObservaciones(observaciones);
 
-        Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseGet(() -> usuarioRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new RuntimeException("No hay usuarios cargados en el sistema")));
-
-        historial.setUsuarioResponsable(usuario);
+        historial.setUsuarioResponsable(resolverUsuarioResponsable(idUsuario));
         historialRepository.save(historial);
 
         return pedido;
@@ -626,7 +753,7 @@ public class PedidoServiceImpl implements PedidoService {
 
         if ("CUENTA_CORRIENTE".equalsIgnoreCase(tipoPago) || "Cuenta Corriente".equalsIgnoreCase(tipoPago)) {
             if (pedido.getCliente() != null && pedido.getCliente().getIdCliente() == 1) {
-                throw new RuntimeException("El Consumidor Final no puede usar Cuenta Corriente.");
+                throw new SolicitudInvalidaException("El Consumidor Final no puede usar Cuenta Corriente.");
             }
             pedido.setEs_cuenta_corriente(true);
         }
@@ -706,7 +833,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional
     public Pedido asociarArchivoAComprobanteExistente(Integer idComprobante, MultipartFile comprobante) {
         ComprobantePago comprobantePago = comprobantePagoRepository.findById(idComprobante)
-            .orElseThrow(() -> new RuntimeException("Comprobante no encontrado"));
+            .orElseThrow(() -> new RecursoNoEncontradoException("Comprobante no encontrado"));
 
         if (comprobante != null && !comprobante.isEmpty()) {
 
@@ -757,7 +884,7 @@ public class PedidoServiceImpl implements PedidoService {
 
         if ("CUENTA_CORRIENTE".equalsIgnoreCase(tipoPago) || "Cuenta Corriente".equalsIgnoreCase(tipoPago)) {
             if (pedido.getCliente() != null && pedido.getCliente().getIdCliente() == 1) {
-                throw new RuntimeException("El Consumidor Final no puede usar Cuenta Corriente.");
+                throw new SolicitudInvalidaException("El Consumidor Final no puede usar Cuenta Corriente.");
             }
             pedido.setEs_cuenta_corriente(true);
         }

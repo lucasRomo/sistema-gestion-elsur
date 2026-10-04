@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UnidadMedidaRepository extends JpaRepository<UnidadMedida, Integer> {
+    boolean existsByNombreIgnoreCaseAndIdUnidadNot(String nombre, Integer idUnidad);
 }

@@ -4,6 +4,7 @@ import { TarjetaPedido } from './TarjetaPedido';
 interface ListaPedidosPendientesProps {
   cargando: boolean;
   pedidos: any[];
+  pedidosActualizando?: Set<number>;
   empleados: any[];
   onCambioEstado: (pedido: any, estadoDestino: string) => void;
   onCambioUbicacion: (idPedido: number, nuevaUbicacion: string) => void;
@@ -17,6 +18,7 @@ interface ListaPedidosPendientesProps {
 export const ListaPedidosPendientes: React.FC<ListaPedidosPendientesProps> = ({
   cargando,
   pedidos,
+  pedidosActualizando,
   empleados,
   onCambioEstado,
   onCambioUbicacion,
@@ -45,6 +47,7 @@ export const ListaPedidosPendientes: React.FC<ListaPedidosPendientesProps> = ({
         <div key={`pedido-card-${pedido.id_pedido}`} className="w-100">
           <TarjetaPedido
             pedido={pedido}
+            actualizando={pedidosActualizando?.has(pedido.id_pedido) ?? false}
             onCambioEstado={onCambioEstado}
             onCambioUbicacion={onCambioUbicacion}
             onSelectPago={onSelectPago}

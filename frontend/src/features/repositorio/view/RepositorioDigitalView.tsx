@@ -10,6 +10,7 @@ import { ModalCrearArea } from '../modals/ModalCrearArea';
 import { ModalPrevisualizar } from '../modals/ModalPrevisualizar';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { RecetaModal } from '../../productos/components/RecetaModal';
+import { mostrarAviso } from '../../../config/dialogStore';
 
 export const RepositorioDigitalView: React.FC = () => {
   const { theme } = useTheme();
@@ -153,6 +154,7 @@ export const RepositorioDigitalView: React.FC = () => {
         show={modalNuevaInst}
         onClose={cerrarModalNuevaInst}
         onSubmit={handleCrearInstitucionRapida}
+        instituciones={instituciones}
         nombre={nombreInstNueva}
         setNombre={setNombreInstNueva}
         tipo={tipoInstNueva}
@@ -169,6 +171,7 @@ export const RepositorioDigitalView: React.FC = () => {
         onClose={cerrarModalNuevaArea}
         onSubmit={handleCrearAreaRapida}
         instituciones={instituciones}
+        areas={areas}
         idInst={idInstParaArea}
         setIdInst={setIdInstParaArea}
         nombre={nombreAreaNueva}
@@ -194,6 +197,10 @@ export const RepositorioDigitalView: React.FC = () => {
           show={showRecetaModal}
           producto={productoParaReceta}
           onClose={handleCerrarReceta}
+          onGuardado={() => {
+            handleCerrarReceta();
+            mostrarAviso(`La receta de "${productoParaReceta?.nombreProducto ?? 'el producto'}" se guardó correctamente.`, { tipo: 'exito', titulo: '¡Receta guardada!' });
+          }}
         />
       )}
 
@@ -209,7 +216,7 @@ export const RepositorioDigitalView: React.FC = () => {
                 </div>
                 <h6 className="fw-bold my-2 text-white">¿Deseas eliminar este archivo del repositorio?</h6>
                 <div className="d-flex justify-content-center gap-2 mt-4">
-                  <button type="button" className="btn btn-sm btn-secondary px-3 fw-semibold" onClick={() => setMostrarConfirmarEliminar(false)}>
+                  <button type="button" className="btn btn-danger btn-sm px-3 fw-semibold" onClick={() => setMostrarConfirmarEliminar(false)}>
                     Cancelar
                   </button>
                   <button type="button" className="btn btn-sm btn-danger text-white px-3 fw-bold" onClick={confirmarEliminar}>

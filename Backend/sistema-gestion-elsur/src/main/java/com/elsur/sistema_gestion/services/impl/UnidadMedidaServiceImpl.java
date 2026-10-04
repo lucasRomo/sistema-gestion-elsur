@@ -29,8 +29,8 @@ public class UnidadMedidaServiceImpl implements UnidadMedidaService {
 
         String nombreFormateado = unidadMedida.getNombre().trim();
 
-        boolean existe = unidadMedidaRepository.findAll().stream()
-                .anyMatch(u -> u.getNombre() != null && u.getNombre().trim().equalsIgnoreCase(nombreFormateado));
+        Integer idExcluido = unidadMedida.getIdUnidad() != null ? unidadMedida.getIdUnidad() : -1;
+        boolean existe = unidadMedidaRepository.existsByNombreIgnoreCaseAndIdUnidadNot(nombreFormateado, idExcluido);
 
         if (existe) {
             throw new RecursoDuplicadoException("Ya existe una unidad de medida registrada con el nombre '" + nombreFormateado + "'.");

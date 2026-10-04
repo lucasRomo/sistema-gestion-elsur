@@ -17,7 +17,7 @@ export const useNotificaciones = () => {
     setCargando(true);
     try {
       const [pedidos, insumosBajoStock, movimientosDia, maquinas] = await Promise.all([
-        pedidoService.obtenerTodos().catch(() => []),
+        pedidoService.obtenerActivos().catch(() => []),
         getInsumosBajoStock().catch(() => []),
         cajaService.obtenerMovimientosDia().catch(() => []),
         fetchMaquinas().catch(() => [] as Maquina[]),

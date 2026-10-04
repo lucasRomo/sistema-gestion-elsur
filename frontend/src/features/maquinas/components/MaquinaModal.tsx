@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Maquina } from '../types/Maquina';
 import { useTheme } from '../../../Context/ThemeContext';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
+import { confirmarAccion } from '../../../config/dialogStore';
 
 interface Props {
   show: boolean;
@@ -98,6 +99,7 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
       return;
     }
 
+    if (!(await confirmarAccion(maquinaEditar ? `¿Guardar los cambios del equipo "${nombre.trim()}"?` : `¿Registrar el equipo "${nombre.trim()}"?`, { titulo: 'Equipos', textoConfirmar: 'Confirmar' }))) return;
     await procesarGuardado();
   };
 
@@ -292,7 +294,7 @@ export const MaquinaModal: React.FC<Props> = ({ show, maquinaEditar, onClose, on
                 </p>
               </div>
               <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
-                <button type="button" className={`btn ${isDark ? 'btn-outline-light' : 'btn-outline-secondary'}`} onClick={() => setConfirmarSinMantenimiento(false)} disabled={cargando}>
+                <button type="button" className="btn btn-danger" onClick={() => setConfirmarSinMantenimiento(false)} disabled={cargando}>
                   Cancelar
                 </button>
                 <button type="button" className="btn btn-warning fw-bold text-white px-4" style={{ color: '#ffffff' }} onClick={procesarGuardado} disabled={cargando}>

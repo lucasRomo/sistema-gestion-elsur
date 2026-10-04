@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Usuario } from '../service/matrizPermisosService';
+import { useTheme } from '../../../Context/ThemeContext';
 
 interface Props {
   mostrarModalNuevoRol: boolean;
@@ -12,6 +13,7 @@ interface Props {
   setMostrarModalConfirmacion: (val: boolean) => void;
   confirmarGuardado: () => void;
   usuarioEditar: Usuario | null;
+  avisoConversionPerfil: string | null;
 
   mostrarModalExito: boolean;
   setMostrarModalExito: (val: boolean) => void;
@@ -36,6 +38,7 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
   setMostrarModalConfirmacion,
   confirmarGuardado,
   usuarioEditar,
+  avisoConversionPerfil,
   mostrarModalExito,
   setMostrarModalExito,
   mensajeExitoTexto,
@@ -46,46 +49,61 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
   setMostrarModalConfirmarEliminarRol,
   confirmarEliminarRol
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const modalBg = isDark ? '#18181b' : '#ffffff';
+  const textColor = isDark ? '#ffffff' : '#0f172a';
+  const mutedColor = isDark ? '#a1a1aa' : '#64748b';
+  const inputClass = isDark ? 'bg-dark text-white border-secondary' : 'bg-white text-dark border-secondary-subtle';
+  const caja = (borde: string): React.CSSProperties => ({ backgroundColor: modalBg, color: textColor, border: `1px solid ${borde}`, borderRadius: '12px' });
+  const btnRojo: React.CSSProperties = { backgroundColor: '#dc3545', color: '#ffffff', border: 'none' };
+  const btnVerde: React.CSSProperties = { backgroundColor: '#2b7a3e', color: '#ffffff', border: 'none' };
   return (
     <>
       {mostrarModalNuevoRol && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
+        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #8e45e0', borderRadius: '12px' }}>
+            <div className="modal-content p-3" style={caja('#8e45e0')}>
               <h5 className="fw-bold mb-3 text-center" style={{ color: '#8e45e0', fontSize: '1rem' }}>Crear Nuevo Perfil Global</h5>
               <div className="mb-3">
-                <label className="text-secondary mb-1 small" style={{ fontSize: '0.75rem' }}>Nombre del Perfil (Ej: CAJERO)</label>
-                <input 
-                  type="text" 
-                  className="form-control form-control-sm bg-dark text-white border-secondary" 
+                <label className="mb-1 small" style={{ fontSize: '0.75rem', color: mutedColor }}>Nombre del Perfil (Ej: CAJERO)</label>
+                <input
+                  type="text"
+                  className={`form-control form-control-sm ${inputClass}`}
                   value={nuevoRolNombre}
                   onChange={(e) => setNuevoRolNombre(e.target.value)}
                   placeholder="Escriba aquí..."
                 />
               </div>
               <div className="d-flex justify-content-between gap-2">
-                <button className="btn btn-sm w-50 fw-bold" style={{ backgroundColor: '#a52a2a', color: '#ffffff', border: 'none' }} onClick={() => setMostrarModalNuevoRol(false)}>Cancelar</button>
-                <button className="btn btn-sm w-50 fw-bold" style={{ backgroundColor: '#2b7a3e', color: '#ffffff', border: 'none' }} onClick={handleCrearRol}>Crear</button>
+                <button className="btn btn-sm w-50 fw-bold" style={btnRojo} onClick={() => setMostrarModalNuevoRol(false)}>Cancelar</button>
+                <button className="btn btn-sm w-50 fw-bold" style={btnVerde} onClick={handleCrearRol}>Crear</button>
               </div>
             </div>
           </div>
         </div>
       )}
+
       {mostrarModalConfirmacion && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
-          <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #8e45e0', borderRadius: '12px' }}>
+        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '380px' }}>
+            <div className="modal-content p-3" style={caja('#8e45e0')}>
               <div className="modal-body text-center py-2">
                 <i className="bi bi-exclamation-triangle-fill text-warning" style={{ fontSize: '2.5rem' }}></i>
-                <h5 className="mt-2 fw-bold">¡Atención!</h5>
-                <p className="text-secondary mt-1 small" style={{ fontSize: '0.75rem' }}>
-                  {usuarioEditar 
+                <h5 className="mt-2 fw-bold">¿Guardar los cambios?</h5>
+                <p className="mt-1 small" style={{ fontSize: '0.8rem', color: mutedColor }}>
+                  {usuarioEditar
                     ? `Estás modificando la configuración de permisos para ${usuarioEditar.nombreUsuario}.`
                     : `Estás modificando la plantilla del Perfil Global.`}
                 </p>
+                {avisoConversionPerfil && (
+                  <p className="small fw-bold rounded p-2 mb-0" style={{ fontSize: '0.78rem', color: isDark ? '#fde047' : '#92400e', backgroundColor: isDark ? 'rgba(234,179,8,0.12)' : '#fef3c7' }}>
+                    {avisoConversionPerfil}
+                  </p>
+                )}
                 <div className="d-flex justify-content-center gap-2 mt-3">
-                  <button className="btn btn-sm px-3 fw-bold w-50" style={{ backgroundColor: '#a52a2a', color: '#ffffff', border: 'none' }} onClick={() => setMostrarModalConfirmacion(false)}>Cancelar</button>
-                  <button className="btn btn-sm px-3 fw-bold w-50" style={{ backgroundColor: '#2b7a3e', color: '#ffffff', border: 'none' }} onClick={confirmarGuardado}>Confirmar</button>
+                  <button className="btn btn-sm px-3 fw-bold w-50" style={btnRojo} onClick={() => setMostrarModalConfirmacion(false)}>Cancelar</button>
+                  <button className="btn btn-sm px-3 fw-bold w-50" style={btnVerde} onClick={confirmarGuardado}>Confirmar</button>
                 </div>
               </div>
             </div>
@@ -94,23 +112,15 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
       )}
 
       {mostrarModalExito && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
+        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #20c997', borderRadius: '12px' }}>
+            <div className="modal-content p-3" style={caja(isDark ? '#8e45e0' : '#cbd5e1')}>
               <div className="modal-body text-center py-3">
-                <div className="d-flex justify-content-center mb-2">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', backgroundColor: 'transparent', border: '2px solid #20c997' }}>
-                    <i className="bi bi-check-lg text-success" style={{ fontSize: '2rem' }}></i>
-                  </div>
-                </div>
-                <h6 className="fw-bold my-2 text-white">{mensajeExitoTexto}</h6>
-                <button
-  className="btn btn-secondary btn-sm px-4 fw-bold mt-2"
-  style={{ borderRadius: '6px' }}
-  onClick={() => setMostrarModalExito(false)}
->
-  Cerrar
-</button>
+                <i className="bi bi-check-circle-fill" style={{ fontSize: '3rem', color: '#8e45e0' }}></i>
+                <h6 className="fw-bold my-2" style={{ color: textColor }}>{mensajeExitoTexto}</h6>
+                <button className="btn btn-secondary btn-sm px-4 fw-bold mt-2" style={{ borderRadius: '6px' }} onClick={() => setMostrarModalExito(false)}>
+                  Cerrar
+                </button>
               </div>
             </div>
           </div>
@@ -118,18 +128,18 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
       )}
 
       {mostrarModalConfirmarEliminarRol && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
+        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #dc3545', borderRadius: '12px' }}>
+            <div className="modal-content p-3" style={caja('#dc3545')}>
               <div className="modal-body text-center py-2">
                 <i className="bi bi-trash-fill text-danger" style={{ fontSize: '2.5rem' }}></i>
                 <h5 className="mt-2 fw-bold">¿Eliminar perfil?</h5>
-                <p className="text-secondary mt-1 small" style={{ fontSize: '0.75rem' }}>
+                <p className="mt-1 small" style={{ fontSize: '0.75rem', color: mutedColor }}>
                   Esta acción no se puede deshacer.
                 </p>
                 <div className="d-flex justify-content-center gap-2 mt-3">
-                  <button className="btn btn-sm px-3 fw-bold w-50" style={{ backgroundColor: '#3f3f46', color: '#ffffff', border: 'none' }} onClick={() => setMostrarModalConfirmarEliminarRol(false)}>Cancelar</button>
-                  <button className="btn btn-sm px-3 fw-bold w-50" style={{ backgroundColor: '#a52a2a', color: '#ffffff', border: 'none' }} onClick={confirmarEliminarRol}>Eliminar</button>
+                  <button className="btn btn-sm px-3 fw-bold w-50" style={btnRojo} onClick={() => setMostrarModalConfirmarEliminarRol(false)}>Cancelar</button>
+                  <button className="btn btn-sm px-3 fw-bold w-50" style={btnVerde} onClick={confirmarEliminarRol}>Eliminar</button>
                 </div>
               </div>
             </div>
@@ -138,17 +148,13 @@ export const ModalesMatrizPermisos: React.FC<Props> = ({
       )}
 
       {mostrarModalBloqueo && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
+        <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #ffc107', borderRadius: '12px' }}>
+            <div className="modal-content p-3" style={caja('#ffc107')}>
               <div className="modal-body text-center py-2">
-                <div className="d-flex justify-content-center mb-2">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', backgroundColor: 'rgba(255, 193, 7, 0.1)', border: '2px solid #ffc107' }}>
-                    <i className="bi bi-lock-fill text-warning" style={{ fontSize: '1.8rem' }}></i>
-                  </div>
-                </div>
-                <p className="fw-bold mb-2 text-white px-1 small" style={{ fontSize: '0.8rem' }}>{mensajeBloqueoTexto}</p>
-                <button className="btn btn-sm px-4 fw-bold text-white mt-1" style={{ backgroundColor: '#a52a2a', borderRadius: '6px' }} onClick={() => setMostrarModalBloqueo(false)}>Cerrar</button>
+                <i className="bi bi-lock-fill text-warning" style={{ fontSize: '2.2rem' }}></i>
+                <p className="fw-bold my-2 px-1 small" style={{ fontSize: '0.8rem', color: textColor }}>{mensajeBloqueoTexto}</p>
+                <button className="btn btn-secondary btn-sm px-4 fw-bold mt-1" style={{ borderRadius: '6px' }} onClick={() => setMostrarModalBloqueo(false)}>Cerrar</button>
               </div>
             </div>
           </div>

@@ -44,6 +44,7 @@ export const MatrizPermisosView: React.FC = () => {
     eliminarPerfilHuerfano,
     togglePermiso,
     esPermisoProtegido,
+    avisoConversionPerfil,
     handleCambioPerfilSelect,
     seleccionarUsuarioParaPermisos,
     volverAModoGlobal,
@@ -300,6 +301,7 @@ export const MatrizPermisosView: React.FC = () => {
         setMostrarModalConfirmacion={setMostrarModalConfirmacion}
         confirmarGuardado={confirmarGuardado}
         usuarioEditar={usuarioEditar}
+        avisoConversionPerfil={avisoConversionPerfil}
         mostrarModalExito={mostrarModalExito}
         setMostrarModalExito={setMostrarModalExito}
         mensajeExitoTexto={mensajeExitoTexto}

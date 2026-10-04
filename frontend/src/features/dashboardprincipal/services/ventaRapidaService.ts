@@ -164,7 +164,7 @@ export const ventaRapidaService = {
   },
 
   async getPedidosUrgentesNotificacion(): Promise<PedidoNotificacion[]> {
-    const resPedidos = await apiFetch(`${API_BASE_URL}/pedidos`);
+    const resPedidos = await apiFetch(`${API_BASE_URL}/pedidos/activos`);
     if (!resPedidos.ok) throw new Error("Error al consultar pedidos");
 
     const dataPedidos: PedidoBackend[] = await resPedidos.json();

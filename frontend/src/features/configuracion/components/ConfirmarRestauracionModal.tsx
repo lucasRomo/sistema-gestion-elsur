@@ -22,7 +22,7 @@ export const ConfirmarRestauracionModal: React.FC<Props> = ({
           ¡ATENCIÓN! La restauración sobrescribirá los datos existentes. ¿Deseas continuar?
         </p>
         <div className="d-flex justify-content-center gap-3">
-          <button type="button" className="btn px-4 fw-semibold text-white" style={{ backgroundColor: '#168616', borderRadius: '8px' }} onClick={onClose}>
+          <button type="button" className="btn btn-secondary px-4 fw-semibold text-white" style={{ backgroundColor: '#6c757d', borderRadius: '8px' }} onClick={onClose}>
             Volver
           </button>
           <button type="button" className="btn px-4 fw-semibold text-white" style={{ backgroundColor: '#e61111', borderRadius: '8px' }} onClick={onConfirm}>

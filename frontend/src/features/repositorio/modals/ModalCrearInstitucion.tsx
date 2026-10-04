@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { mostrarAviso, mostrarError } from '../../../config/dialogStore';
+import type { Institucion } from '../types/Repositorio';
 
 interface Props {
   show: boolean;
@@ -13,6 +15,7 @@ interface Props {
   inputBg: string;
   cardBorder: string;
   isDarkMode: boolean;
+  instituciones?: Institucion[];
 }
 
 export const ModalCrearInstitucion: React.FC<Props> = ({
@@ -28,6 +31,7 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
   inputBg,
   cardBorder,
   isDarkMode,
+  instituciones = [],
 }) => {
   const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
   const [mostrarExito, setMostrarExito] = useState(false);
@@ -43,6 +47,12 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
 
   const handlePreSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const nombreLimpio = nombre.trim().toLowerCase();
+    const repetida = instituciones.find(i => i.nombreInstitucion?.trim().toLowerCase() === nombreLimpio);
+    if (repetida) {
+      mostrarAviso(`Ya existe una institución llamada "${repetida.nombreInstitucion}".`, { titulo: 'Institución existente' });
+      return;
+    }
     setMostrarConfirmar(true);
   };
 
@@ -54,7 +64,7 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
       setMostrarExito(true);
     } catch (err) {
       console.error(err);
-      alert((err as Error)?.message || 'No se pudo crear la institución.');
+      mostrarError((err as Error)?.message || 'No se pudo crear la institución.');
     } finally {
       setGuardando(false);
     }
@@ -122,16 +132,16 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
       {mostrarConfirmar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content shadow-lg font-monospace text-white p-3" style={{ backgroundColor: '#18181b', border: '1px solid #0dcaf0', borderRadius: '12px' }}>
+            <div className="modal-content shadow-lg font-monospace p-3" style={{ backgroundColor: isDarkMode ? '#18181b' : '#ffffff', color: isDarkMode ? '#ffffff' : '#0f172a', border: '1px solid #0dcaf0', borderRadius: '12px' }}>
               <div className="modal-body text-center py-3">
                 <div className="d-flex justify-content-center mb-3">
                   <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', border: '2px solid #0dcaf0' }}>
                     <i className="bi bi-question-lg text-info" style={{ fontSize: '2rem' }}></i>
                   </div>
                 </div>
-                <h6 className="fw-bold my-2 text-white">¿Deseas guardar esta institución?</h6>
+                <h6 className="fw-bold my-2">¿Deseas guardar esta institución?</h6>
                 <div className="d-flex justify-content-center gap-2 mt-4">
-                  <button type="button" className="btn btn-sm btn-secondary px-3 fw-semibold" onClick={() => setMostrarConfirmar(false)}>
+                  <button type="button" className="btn btn-danger btn-sm px-3 fw-semibold" onClick={() => setMostrarConfirmar(false)}>
                     Cancelar
                   </button>
                   <button type="button" className="btn btn-sm btn-info text-white px-3 fw-bold" onClick={handleConfirmarGuardar}>
@@ -151,8 +161,8 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
               className="modal-content p-4 text-center shadow font-monospace"
               style={{
                 border: '2px solid #267c34',
-                backgroundColor: '#18181b',
-                color: '#ffffff',
+                backgroundColor: isDarkMode ? '#18181b' : '#ffffff',
+                color: isDarkMode ? '#ffffff' : '#0f172a',
                 borderRadius: '12px'
               }}
             >
@@ -169,8 +179,8 @@ export const ModalCrearInstitucion: React.FC<Props> = ({
               <div className="d-flex justify-content-center">
                 <button
                   type="button"
-                  className="btn px-4 text-white fw-bold"
-                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }}
+                  className="btn btn-secondary px-4 text-white fw-bold"
+                  style={{ borderRadius: '6px', backgroundColor: '#6c757d', borderColor: '#6c757d' }}
                   onClick={handleCerrarTodo}
                 >
                   Cerrar

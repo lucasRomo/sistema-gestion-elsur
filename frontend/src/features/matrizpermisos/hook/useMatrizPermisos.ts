@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { matrizPermisosService } from '../service/matrizPermisosService';
 import type { ModuloPermiso, Usuario } from '../service/matrizPermisosService';
+import { confirmarAccion } from '../../../config/dialogStore';
 
 // Tiempo mínimo que se mantiene visible el spinner de carga, para que no
 // desaparezca en un parpadeo cuando la consulta responde muy rápido.
@@ -115,8 +116,12 @@ export const useMatrizPermisos = () => {
     const permisosProtegidos = ['Matriz de Permisos', 'Configuración', 'Gestión de Usuarios'];
     if (!permisosProtegidos.includes(nombrePermiso)) return false;
 
+    // Solo se protege al administrador principal (ID 1) y al perfil ADMIN global: a otro usuario
+    // con rol ADMIN sí se le pueden quitar módulos (al guardar pasa a un perfil personalizado).
+    // Antes se protegía a cualquier usuario ADMIN, pero como al guardar dejaba de serlo, la
+    // segunda vez sí se podía: parecía que daba error y después lo hacía igual.
     if (usuarioEditar) {
-      return usuarioEditar.idUsuario === 1 || usuarioEditar.rol?.idRol === 1 || rolSeleccionadoEnUsuario === 1;
+      return usuarioEditar.idUsuario === 1 || rolSeleccionadoEnUsuario === 1;
     }
 
     return rolSeleccionado === 1;
@@ -151,8 +156,21 @@ export const useMatrizPermisos = () => {
     setRolSeleccionadoEnUsuario(null);
   };
 
+  // Aviso para el modal de confirmación: personalizar los módulos de un usuario con un perfil
+  // compartido (ej. ADMIN) lo pasa a un perfil propio con solo los módulos marcados.
+  const avisoConversionPerfil: string | null =
+    usuarioEditar && rolSeleccionadoEnUsuario === null && !usuarioEditar.rol?.nombreRol?.startsWith('PERFIL_')
+      ? `${usuarioEditar.nombreUsuario} dejará de tener el perfil "${usuarioEditar.rol?.nombreRol || 'sin perfil'}" y pasará a un perfil personalizado con solo los módulos marcados.`
+      : null;
+
   const confirmarGuardado = async () => {
     setMostrarModalConfirmacion(false);
+
+    if (usuarioEditar?.idUsuario === 1 && rolSeleccionadoEnUsuario === null) {
+      setMensajeBloqueoTexto('El administrador principal siempre tiene acceso total al sistema: sus módulos no se pueden personalizar.');
+      setMostrarModalBloqueo(true);
+      return;
+    }
 
     const modulosAsegurados = modulos.map(mod => {
       if (esPermisoProtegido(mod.nombrePermiso)) {
@@ -190,22 +208,28 @@ export const useMatrizPermisos = () => {
           setMensajeExitoTexto(`¡Se asignó el perfil "${rolObjeto?.nombreRol || 'ADMIN'}" a ${usuarioEditar.nombreUsuario}!`);
         }
         else {
-          let idRolDestino = usuarioEditar.rol?.idRol;
+          const idRolDestino = usuarioEditar.rol?.idRol;
 
-          if (!usuarioEditar.rol?.nombreRol.startsWith('PERFIL_')) {
+          if (!usuarioEditar.rol?.nombreRol?.startsWith('PERFIL_')) {
             const nombreNuevoPerfil = `PERFIL_${usuarioEditar.nombreUsuario.toUpperCase()}`;
-            const rolCreado = await matrizPermisosService.crearRol(nombreNuevoPerfil);
-            idRolDestino = rolCreado.idRol;
+            // Si quedó un perfil con ese nombre de un intento anterior, se reutiliza en vez de
+            // fallar con "Ya existe un perfil con ese nombre".
+            const perfilExistente = roles.find(r => r.nombreRol?.toUpperCase() === nombreNuevoPerfil);
+            const idPerfil = perfilExistente
+              ? perfilExistente.idRol
+              : (await matrizPermisosService.crearRol(nombreNuevoPerfil)).idRol;
 
+            // Primero los permisos y DESPUÉS mover al usuario: si se hacía al revés y el segundo
+            // paso fallaba, el usuario quedaba en un perfil vacío, sin acceso a ningún módulo.
+            await matrizPermisosService.actualizarPermisosRol(idPerfil, permisosActivosIds);
             await matrizPermisosService.actualizarUsuarioRol(usuarioEditar.idUsuario, {
               ...usuarioEditar,
-              rol: { idRol: idRolDestino, nombreRol: nombreNuevoPerfil }
+              rol: { idRol: idPerfil, nombreRol: nombreNuevoPerfil }
             });
 
-            setUsuarioEditar(prev => prev ? { ...prev, rol: { idRol: idRolDestino!, nombreRol: nombreNuevoPerfil }, tienePermisosPersonalizados: true } : null);
-          }
-
-          if (idRolDestino) {
+            idRolFinalAsignado = idPerfil;
+            setUsuarioEditar(prev => prev ? { ...prev, rol: { idRol: idPerfil, nombreRol: nombreNuevoPerfil }, tienePermisosPersonalizados: true } : null);
+          } else if (idRolDestino) {
             await matrizPermisosService.actualizarPermisosRol(idRolDestino, permisosActivosIds);
             idRolFinalAsignado = idRolDestino;
           }
@@ -249,9 +273,9 @@ export const useMatrizPermisos = () => {
       setRolSeleccionadoEnUsuario(null);
       setMostrarModalExito(true);
       await fetchInicial();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setMensajeBloqueoTexto('Error de conexión al guardar los datos');
+      setMensajeBloqueoTexto(error?.message || 'Error de conexión al guardar los datos');
       setMostrarModalBloqueo(true);
     }
   };
@@ -301,6 +325,8 @@ export const useMatrizPermisos = () => {
   };
 
   const eliminarPerfilHuerfano = async (idRol: number) => {
+    const perfil = perfilesHuerfanos.find(r => r.idRol === idRol);
+    if (!(await confirmarAccion(`¿Eliminar el perfil "${perfil?.nombreRol ?? idRol}"? Esta acción no se puede deshacer.`, { titulo: 'Eliminar perfil', textoConfirmar: 'Eliminar' }))) return;
     try {
       await matrizPermisosService.eliminarRol(idRol);
       await cargarPerfilesHuerfanos();
@@ -381,6 +407,7 @@ export const useMatrizPermisos = () => {
     eliminarPerfilHuerfano,
     togglePermiso,
     esPermisoProtegido,
+    avisoConversionPerfil,
     handleCambioPerfilSelect,
     seleccionarUsuarioParaPermisos,
     volverAModoGlobal,

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
+import { confirmarAccion, mostrarAviso, mostrarError } from '../../../config/dialogStore';
 
 interface Props {
   show: boolean;
@@ -83,21 +84,22 @@ export const AumentoMasivoModal: React.FC<Props> = ({
     e.preventDefault();
 
     if (!porcentaje || porcentaje <= 0) {
-      alert("Ingrese un porcentaje válido mayor a 0");
+      mostrarAviso("Ingrese un porcentaje válido mayor a 0");
       return;
     }
 
     if (criterio === 'CATEGORIA' && !categoriaSeleccionada) {
-      alert("Por favor seleccione una categoría de la lista");
+      mostrarAviso("Por favor seleccione una categoría de la lista");
       return;
     }
 
     if (criterio === 'SELECCION' && productosSeleccionados.length === 0) {
-      alert("Por favor seleccione al menos un producto de la lista");
+      mostrarAviso("Por favor seleccione al menos un producto de la lista");
       return;
     }
 
     const porcentajeFinal = tipoOperacion === 'DESCUENTO' ? -Math.abs(porcentaje) : Math.abs(porcentaje);
+    if (!(await confirmarAccion(`¿Aplicar un ${tipoOperacion === 'DESCUENTO' ? 'descuento' : 'aumento'} del ${Math.abs(porcentaje)}% al precio de los productos seleccionados?`, { titulo: 'Modificación de precios', textoConfirmar: 'Aplicar' }))) return;
 
     setCargando(true);
     try {
@@ -109,7 +111,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
       });
       onClose();
     } catch (err: any) {
-      alert("Error al aplicar modificaciones de precio: " + err.message);
+      mostrarError("Error al aplicar modificaciones de precio: " + err.message);
     } finally {
       setCargando(false);
     }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import type { DatosArqueo, MovimientoCaja } from '../types/caja';
+import { mostrarAviso } from '../../../config/dialogStore';
 
 interface ModalCerrarTurnoProps {
   isOpen: boolean;
@@ -75,11 +76,11 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
     e.preventDefault();
 
     if (isNaN(Number(efectivoContado))) {
-      alert('El efectivo contado ingresado no es un valor numérico válido.');
+      mostrarAviso('El efectivo contado ingresado no es un valor numérico válido.');
       return;
     }
     if (valorContado < 0) {
-      alert('El efectivo contado no puede ser un valor negativo.');
+      mostrarAviso('El efectivo contado no puede ser un valor negativo.');
       return;
     }
     if (hayDiferencia && !pasoJustificacion) {

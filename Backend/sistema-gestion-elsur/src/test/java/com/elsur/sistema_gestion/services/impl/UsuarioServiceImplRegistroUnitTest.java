@@ -28,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -263,7 +264,7 @@ class UsuarioServiceImplRegistroUnitTest {
     }
 
     @Test
-    void handlerGlobal_anteUnaExcepcionSinTraducir_devuelve400ConMensajeCrudo() {
+    void handlerGlobal_anteUnaExcepcionSinTraducir_devuelve400SinFiltrarDetallesInternos() {
 
         GlobalExceptionHandler handler = new GlobalExceptionHandler();
         String mensajeCrudoDePostgres =
@@ -279,6 +280,8 @@ class UsuarioServiceImplRegistroUnitTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, respuesta.getStatusCode());
         assertNotNull(respuesta.getBody());
-        assertEquals(mensajeCrudoDePostgres, respuesta.getBody().mensaje());
+        // El texto crudo de Postgres (nombres de constraints/columnas) queda solo en el log del servidor.
+        assertEquals("La solicitud no pudo procesarse. Verificá los datos ingresados.", respuesta.getBody().mensaje());
+        assertFalse(respuesta.getBody().mensaje().contains("constraint"));
     }
 }

@@ -1,5 +1,7 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+
 import com.elsur.sistema_gestion.models.EstadoTurno;
 import com.elsur.sistema_gestion.models.MovimientoCaja;
 import com.elsur.sistema_gestion.models.Pedido;
@@ -55,7 +57,7 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
             Integer idPedido = movimientoCaja.getPedido().getId_pedido(); 
             if (idPedido != null) {
                 Pedido pedidoPersistido = pedidoRepository.findById(idPedido)
-                    .orElseThrow(() -> new RuntimeException("El pedido indicado no existe: " + idPedido));
+                    .orElseThrow(() -> new RecursoNoEncontradoException("El pedido indicado no existe: " + idPedido));
                 movimientoCaja.setPedido(pedidoPersistido);
             } else {
                 movimientoCaja.setPedido(null);

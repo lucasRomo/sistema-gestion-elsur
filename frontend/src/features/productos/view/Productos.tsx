@@ -21,9 +21,9 @@ import { ModalStockCriticoList, type ItemStockCritico } from '../../insumos/moda
 
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../Context/ThemeContext';
-import { apiFetch } from '../../../config/api';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useIsMobile } from '../../../hook/useIsMobile';
+import { confirmarAccion, mostrarError } from '../../../config/dialogStore';
 
 export const Productos: React.FC = () => {
   const { theme } = useTheme();
@@ -118,6 +118,9 @@ export const Productos: React.FC = () => {
         console.error("Error al verificar la receta del producto:", err);
       }
     }
+    if (!(await confirmarAccion(producto.stockVinculado
+      ? `¿Desvincular el stock de "${producto.nombreProducto}"? Su stock pasará a cargarse manualmente.`
+      : `¿Vincular el stock de "${producto.nombreProducto}" a sus insumos? Su stock se calculará según la receta.`, { titulo: 'Vínculo de stock', textoConfirmar: 'Confirmar' }))) return;
     showLoading('Actualizando vínculo de stock...');
     try {
      const estabaVinculado = !!producto.stockVinculado;
@@ -130,7 +133,7 @@ export const Productos: React.FC = () => {
       );
      setMostrarExito(true);
      } catch (err: any) {
-     alert(err?.message || 'Error al cambiar el vínculo de stock del producto.');
+     mostrarError(err?.message || 'Error al cambiar el vínculo de stock del producto.');
     } finally {
       hideLoading();
     }};
@@ -299,12 +302,15 @@ export const Productos: React.FC = () => {
             setProductoEditando(data);
             setMostrarConfirmacion(true);
           } else {
+            if (!(await confirmarAccion(`¿Registrar el producto "${(data as any).nombreProducto ?? ''}"?`, { titulo: 'Nuevo producto', textoConfirmar: 'Registrar' }))) return;
             showLoading('Guardando producto...');
             try {
               await guardar(data);
               setShowModal(false);
               setMensajeExito('Producto Guardado Exitosamente');
               setMostrarExito(true);
+            } catch (err: any) {
+              mostrarError(err?.message || 'No se pudo registrar el producto.');
             } finally {
               hideLoading();
             }
@@ -415,7 +421,7 @@ export const Productos: React.FC = () => {
               <p className="small m-0" style={{ color: mutedText }}>Se sobreescribirán los datos del producto.</p>
               
               <div className="d-flex justify-content-center gap-2 mt-4">
-                <button className="btn btn-danger btn-sm px-3 fw-semibold" disabled={guardandoEdicion} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
+                <button className="btn btn-secondary btn-sm px-3 fw-semibold" disabled={guardandoEdicion} onClick={() => setMostrarConfirmacion(false)}>Volver</button>
                 <button
                   className="btn btn-success btn-sm px-3 fw-semibold text-white"
                   disabled={guardandoEdicion}
@@ -430,7 +436,7 @@ export const Productos: React.FC = () => {
                       setMensajeExito('Modificación hecha exitosamente');
                       setMostrarExito(true);
                     } catch (err: any) {
-                      alert(err?.message || 'Error al modificar el producto.');
+                      mostrarError(err?.message || 'Error al modificar el producto.');
                     } finally {
                       setGuardandoEdicion(false);
                       hideLoading();

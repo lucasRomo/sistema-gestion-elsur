@@ -18,7 +18,7 @@ export const pedidoService = {
       body: JSON.stringify({ idEmpleado })
     });
 
-    if (!response.ok) throw new Error('Error al asignar el empleado');
+    if (!response.ok) throw new Error(await extraerMensajeError(response, 'Error al asignar el empleado'));
 
     const text = await response.text();
     return text ? JSON.parse(text) : null; 
@@ -26,6 +26,13 @@ export const pedidoService = {
 
   obtenerTodos: async (): Promise<Pedido[]> => {
     const response = await apiFetch(`${API_BASE_URL}/pedidos`);
+    if (!response.ok) throw new Error('Error al obtener la lista de pedidos');
+    return await response.json();
+  },
+
+  // Solo pedidos en cola (sin entregados, cancelados, devueltos ni ventas rápidas).
+  obtenerActivos: async (): Promise<Pedido[]> => {
+    const response = await apiFetch(`${API_BASE_URL}/pedidos/activos`);
     if (!response.ok) throw new Error('Error al obtener la lista de pedidos');
     return await response.json();
   },
@@ -38,7 +45,7 @@ export const pedidoService = {
     });
 
     if (!response.ok) {
-      throw new Error('Error al actualizar la ubicación del pedido');
+      throw new Error(await extraerMensajeError(response, 'Error al actualizar la ubicación del pedido'));
     }
 
     const text = await response.text();
@@ -85,7 +92,7 @@ export const pedidoService = {
 
   obtenerCargaTrabajoEmpleados: async (): Promise<Record<number, number>> => {
     try {
-      const response = await apiFetch(`${API_BASE_URL}/pedidos`);
+      const response = await apiFetch(`${API_BASE_URL}/pedidos/activos`);
       if (!response.ok) return {};
 
       const data = await response.json();

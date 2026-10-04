@@ -305,7 +305,7 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
               <h5 className="fw-bold">¿Confirmar Modificaciones?</h5>
               <p className="small" style={{ color: '#a1a1aa' }}>Se sobreescribirán de forma permanente los datos del cliente en la base de datos de El Sur.</p>
               <div className="d-flex justify-content-center gap-2 mt-3">
-                <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020'}} onClick={() => setMostrarConfirmacion(false)} disabled={guardando}>Volver</button>
+                <button className="btn btn-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#6c757d', borderColor: '#6c757d'}} onClick={() => setMostrarConfirmacion(false)} disabled={guardando}>Volver</button>
                 <button className="btn btn-outline-secondary btn-sm px-3 text-white" style={{ borderRadius: '6px', backgroundColor: '#2e9225', borderColor: '#25741e' }} onClick={handleGuardarDefinitivo} disabled={guardando}>
                   {guardando ? 'Guardando...' : 'Confirmar'}
                 </button>

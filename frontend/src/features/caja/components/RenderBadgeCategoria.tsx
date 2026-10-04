@@ -1,4 +1,3 @@
-import React from 'react';
 import type { MovimientoCaja } from '../services/cajaService';
 
 export const renderBadgeCategoria = (m: MovimientoCaja, isDark: boolean) => {

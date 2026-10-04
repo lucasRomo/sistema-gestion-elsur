@@ -67,7 +67,6 @@ class ProductoInsumoControllerUnitTest {
     @DisplayName("CORREGIDO: una cantidadConsumo nula se rechaza en vez de reventar como un 500 opaco por la restricción NOT NULL")
     void actualizarReceta_cantidadConsumoNula_seRechaza() {
         when(productoRepository.findById(1)).thenReturn(Optional.of(producto(1)));
-        when(productoInsumoRepository.findByIdIdProducto(1)).thenReturn(Collections.emptyList());
 
         SolicitudInvalidaException ex = assertThrows(SolicitudInvalidaException.class,
                 () -> controller.actualizarReceta(1, List.of(item(10, null))));
@@ -79,7 +78,6 @@ class ProductoInsumoControllerUnitTest {
     @DisplayName("CORREGIDO: una cantidadConsumo <= 0 se rechaza")
     void actualizarReceta_cantidadConsumoCero_seRechaza() {
         when(productoRepository.findById(1)).thenReturn(Optional.of(producto(1)));
-        when(productoInsumoRepository.findByIdIdProducto(1)).thenReturn(Collections.emptyList());
 
         assertThrows(SolicitudInvalidaException.class,
                 () -> controller.actualizarReceta(1, List.of(item(10, BigDecimal.ZERO))));
@@ -90,7 +88,6 @@ class ProductoInsumoControllerUnitTest {
     @DisplayName("CORREGIDO: un insumo repetido en el mismo envío se rechaza en vez de chocar contra la clave primaria compuesta")
     void actualizarReceta_insumoRepetido_seRechaza() {
         when(productoRepository.findById(1)).thenReturn(Optional.of(producto(1)));
-        when(productoInsumoRepository.findByIdIdProducto(1)).thenReturn(Collections.emptyList());
 
         SolicitudInvalidaException ex = assertThrows(SolicitudInvalidaException.class,
                 () -> controller.actualizarReceta(1, List.of(

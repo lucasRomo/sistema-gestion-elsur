@@ -29,7 +29,7 @@ export const ModalConfirmarDesvincular: React.FC<Props> = ({ show, onClose, onCo
 
           <div className="d-flex gap-2 justify-content-center mt-3">
             <button 
-              className="btn btn-sm btn-secondary fw-bold px-3"
+              className="btn btn-danger btn-sm fw-bold px-3"
               style={{ borderRadius: '6px' }}
               onClick={onClose}
             >

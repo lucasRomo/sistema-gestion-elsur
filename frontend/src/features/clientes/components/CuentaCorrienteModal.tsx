@@ -4,6 +4,7 @@ import { clienteService } from '../services/clienteService';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { colorPorSaldo } from '../../../utils/formato';
 import type { Cliente } from '../types/Cliente';
+import { confirmarAccion } from '../../../config/dialogStore';
 
 interface Props {
   cliente: Cliente;
@@ -16,7 +17,6 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   const isDark = theme === 'dark';
 
   const modalBg = isDark ? '#1b1b1b' : '#ffffff';
-  const modalBorder = isDark ? '#3f3f46' : '#cbd5e1';
   const textColor = isDark ? 'text-white' : 'text-dark';
   const textColorHex = isDark ? '#ffffff' : '#000000';
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
@@ -90,6 +90,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   const handleActualizarLimite = async (e: React.FormEvent) => {
   e.preventDefault();
   if (guardandoLimite || !idCliente) return;
+  if (!(await confirmarAccion(`¿Actualizar el límite de crédito a $${Number(limite || 0).toFixed(2)}?`, { titulo: 'Límite de crédito', textoConfirmar: 'Actualizar' }))) return;
   setGuardandoLimite(true);
   try {
     const limiteNumerico = limite === '' ? 0 : Number(limite);
@@ -137,6 +138,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
       return;
     }
 
+    if (!(await confirmarAccion(`¿Registrar un pago de $${Number(montoPago).toFixed(2)} a la cuenta corriente?`, { titulo: 'Registrar pago', textoConfirmar: 'Registrar' }))) return;
     setGuardandoPago(true);
     try {
       const resPago = await clienteService.registrarPago(

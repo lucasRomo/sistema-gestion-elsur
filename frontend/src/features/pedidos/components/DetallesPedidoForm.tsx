@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { Pedido, CartItem } from '../general/types/Pedido';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { pedidoService } from '../general/service/pedidoService';
+import { mostrarAviso } from '../../../config/dialogStore';
 
 interface Props {
   clientes: any[];
@@ -102,12 +103,12 @@ export const DetallesPedidoForm: React.FC<Props> = ({
     e.preventDefault();
     
     if (!clienteId || clienteId === '0') {
-      alert("Por favor, seleccione un cliente válido de la lista.");
+      mostrarAviso("Por favor, seleccione un cliente válido de la lista.");
       return;
     }
 
     if (!empleadoId || empleadoId === '0') {
-      alert("Por favor, seleccione un empleado válido para asignar el pedido.");
+      mostrarAviso("Por favor, seleccione un empleado válido para asignar el pedido.");
       return;
     }
 

@@ -4,7 +4,6 @@ import type { CartItem } from '../../general/types/Pedido';
 import type { CategoriaCliente } from '../../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../../maquinas/types/Maquina';
 import { useTheme } from '../../../../Context/ThemeContext';
-import { apiFetch } from '../../../../config/api';
 import { crearPedidoService } from '../service/crearPedidoService';
 
 interface Props {
@@ -591,7 +590,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
                 Faltan <b>{insumoFaltante.faltante} {insumoFaltante.unidad}</b> para cubrir la cantidad requerida.
               </p>
               <div className="d-flex justify-content-center mt-3">
-                <button className="btn btn-sm btn-danger px-4 fw-bold" onClick={() => setShowModalStockError(false)}>
+                <button className="btn btn-secondary btn-sm px-4 fw-bold" onClick={() => setShowModalStockError(false)}>
                   Entendido / Volver
                 </button>
               </div>
@@ -623,7 +622,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
                 ))}
               </div>
               <div className="d-flex gap-2 justify-content-center">
-                <button className="btn btn-sm btn-secondary px-3" onClick={() => setShowModalStockMinimo(false)}>Cancelar</button>
+                <button className="btn btn-danger btn-sm px-3" onClick={() => setShowModalStockMinimo(false)}>Cancelar</button>
                 <button className="btn btn-sm btn-warning px-3 fw-bold text-dark" onClick={() => { setShowModalStockMinimo(false); evaluarMaquinasYAvanzar(); }}>
                   Continuar
                 </button>

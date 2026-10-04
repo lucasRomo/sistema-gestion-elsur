@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
-import { apiFetch } from '../../../config/api';
 import { getTodasLasRecetas } from '../services/productoService';
 
 interface Props {

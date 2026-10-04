@@ -1,4 +1,5 @@
 import { showLoading, hideLoading } from './loadingStore';
+import { mostrarAviso } from './dialogStore';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -7,6 +8,20 @@ interface ApiFetchOptions extends RequestInit {
   forceLoading?: boolean;
   loadingMessage?: string;
 }
+
+let avisoSesionMostrado = false;
+
+// Token vencido (dura 10 hs) o inválido: el backend responde 401 a todo. Antes las pantallas
+// quedaban vacías sin explicación; ahora se cierra la sesión y se vuelve al login.
+const manejarSesionExpirada = () => {
+  if (avisoSesionMostrado) return;
+  avisoSesionMostrado = true;
+  localStorage.removeItem('token_sesion');
+  localStorage.removeItem('usuario_logueado');
+  localStorage.removeItem('usuario');
+  mostrarAviso('Tu sesión expiró. Por favor, iniciá sesión nuevamente.', { titulo: 'Sesión expirada' })
+    .then(() => { window.location.href = '/login'; });
+};
 
 export const apiFetch = async (
   input: string,
@@ -28,7 +43,13 @@ export const apiFetch = async (
 
   if (debeCargar) showLoading(loadingMessage);
   try {
-    return await fetch(url, { ...restInit, headers });
+    const response = await fetch(url, { ...restInit, headers });
+    // Solo con una sesión de usuario real: el login devuelve 401 por credenciales inválidas
+    // y el token del portón (registro) tiene su propio flujo.
+    if (response.status === 401 && token && localStorage.getItem('usuario_logueado')) {
+      manejarSesionExpirada();
+    }
+    return response;
   } finally {
     if (debeCargar) hideLoading();
   }

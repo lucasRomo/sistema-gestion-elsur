@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Insumo } from '../types/Insumo';
 import { useTheme } from '../../../Context/ThemeContext';
+import { confirmarAccion, mostrarAviso, mostrarError } from '../../../config/dialogStore';
 
 interface Props {
   show: boolean;
@@ -86,21 +87,22 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
     e.preventDefault();
 
     if (!porcentaje || porcentaje <= 0) {
-      alert("Ingrese un porcentaje válido mayor a 0");
+      mostrarAviso("Ingrese un porcentaje válido mayor a 0");
       return;
     }
 
     if (criterio === 'PROVEEDOR' && !proveedorSeleccionado) {
-      alert("Por favor seleccione un proveedor de la lista");
+      mostrarAviso("Por favor seleccione un proveedor de la lista");
       return;
     }
 
     if (criterio === 'SELECCION' && insumosSeleccionados.length === 0) {
-      alert("Por favor seleccione al menos un insumo de la lista");
+      mostrarAviso("Por favor seleccione al menos un insumo de la lista");
       return;
     }
 
     const porcentajeFinal = tipoOperacion === 'DESCUENTO' ? -Math.abs(porcentaje) : Math.abs(porcentaje);
+    if (!(await confirmarAccion(`¿Aplicar un ${tipoOperacion === 'DESCUENTO' ? 'descuento' : 'aumento'} del ${Math.abs(porcentaje)}% al precio de los insumos seleccionados?`, { titulo: 'Modificación de precios', textoConfirmar: 'Aplicar' }))) return;
 
     setCargando(true);
     try {
@@ -112,7 +114,7 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
       });
       onClose();
     } catch (err: any) {
-      alert("Error al procesar: " + err.message);
+      mostrarError("Error al procesar: " + err.message);
     } finally {
       setCargando(false);
     }
@@ -269,11 +271,11 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
                         className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
                         style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
                       >
-                        {proveedores.filter(([id, nombre]) => nombre.toLowerCase().includes(textoProveedor.toLowerCase())).length === 0 ? (
+                        {proveedores.filter(([, nombre]) => nombre.toLowerCase().includes(textoProveedor.toLowerCase())).length === 0 ? (
                           <div className="p-2 small text-muted text-center">Sin coincidencias</div>
                         ) : (
                           proveedores
-                            .filter(([id, nombre]) => nombre.toLowerCase().includes(textoProveedor.toLowerCase()))
+                            .filter(([, nombre]) => nombre.toLowerCase().includes(textoProveedor.toLowerCase()))
                             .map(([id, nombre]) => {
                               const isSelected = id === proveedorSeleccionado;
                               return (

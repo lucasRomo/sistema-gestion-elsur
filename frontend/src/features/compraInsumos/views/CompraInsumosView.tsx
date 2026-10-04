@@ -12,6 +12,7 @@ import { ModalCargaIA } from '../modals/ModalCargaIA';
 
 import { compraInsumosService } from '../services/compraInsumosService';
 import type { ItemCompraInsumo, DatosCompraInsumo } from '../types/compraInsumos';
+import { confirmarAccion } from '../../../config/dialogStore';
 
 export const CompraInsumosView: React.FC = () => {
   const navigate = useNavigate();
@@ -95,6 +96,9 @@ export const CompraInsumosView: React.FC = () => {
     }
   };
 
+  // Los campos de "Agregar ítem" están dentro del mismo <form> que "Registrar compra": no deben
+  // tener min/required, porque el navegador bloqueaba la compra cuando quedaban vacíos o en 0
+  // después de agregar los ítems. Se validan acá, en JavaScript.
   const handleAgregarItem = () => {
     const cantNum = Number(cantidad);
     const precioNum = Number(precioUnitario);
@@ -198,6 +202,7 @@ export const CompraInsumosView: React.FC = () => {
       return setAvisoModal('La lista contiene ítems con un precio menor o igual a 0. Ajuste sus precios antes de continuar.');
     }
 
+    if (!(await confirmarAccion(`¿Registrar la compra de ${itemsCompra.length} ítem(s) por $${montoTotalNum.toFixed(2)}? Se descontará de la caja y se sumará al stock.`, { titulo: 'Registrar compra', textoConfirmar: 'Registrar' }))) return;
     setLoading(true);
     try {
       const resumenItems = itemsCompra.map(i => `${i.nombreInsumo} (${i.tipoItem}) x${i.cantidadEmpaquetada}`).join(', ');
@@ -439,8 +444,7 @@ const textoProveedor = provSeleccionado
                       <label className="form-label small fw-semibold">Factor Conversión</label>
                       <input
                         type="number"
-                        step="0.01"
-                        min="0.01"
+                        step="any"
                         className="form-control font-monospace"
                         style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                         placeholder="Ej. 500"
@@ -473,8 +477,7 @@ const textoProveedor = provSeleccionado
               </label>
               <input
                 type="number"
-                min="1"
-                step="1"
+                step="any"
                 className="form-control font-monospace"
                 style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                 value={cantidad}
@@ -487,8 +490,7 @@ const textoProveedor = provSeleccionado
               <label className="form-label small fw-semibold">Precio Unit. ($)</label>
               <input
                 type="number"
-                step="0.01"
-                min="0.01"
+                step="any"
                 className="form-control font-monospace"
                 style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
                 value={precioUnitario}

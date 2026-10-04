@@ -16,6 +16,7 @@ import { useIsMobile } from '../../../hook/useIsMobile';
 import { exportarClientesExcel, exportarClientesPDF } from '../utils/exportClientesUtils';
 import { colorPorSaldo } from '../../../utils/formato';
 import type { Cliente } from '../types/Cliente';
+import { confirmarAccion, mostrarError } from '../../../config/dialogStore';
 
 export const ClienteView = () => {
   const { theme } = useTheme();
@@ -60,6 +61,7 @@ export const ClienteView = () => {
   const handleRegistrarFinal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (guardando) return;
+    if (!(await confirmarAccion(`¿Registrar al cliente "${formData.razonSocial || `${formData.nombre} ${formData.apellido}`.trim()}"?`, { titulo: 'Nuevo cliente', textoConfirmar: 'Registrar' }))) return;
     setGuardando(true);
 
     const payload = {
@@ -110,7 +112,7 @@ export const ClienteView = () => {
       setPaso(0);
     }
     catch (e: any) {
-      alert("Error: " + e.message);
+      mostrarError("Error: " + e.message);
     }
     finally {
       setGuardando(false);
@@ -131,7 +133,7 @@ export const ClienteView = () => {
       await cargarClientes();
     }
     catch (e: any) {
-      alert("Error: " + e.message);
+      mostrarError("Error: " + e.message);
     }
     finally {
       setGuardando(false);

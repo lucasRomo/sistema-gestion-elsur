@@ -122,7 +122,7 @@ export const useVentaRapida = () => {
 
   const fetchPedidosPendientes = async () => {
     try {
-      const response = await apiFetch(`${API_BASE_URL}/pedidos`);
+      const response = await apiFetch(`${API_BASE_URL}/pedidos/activos`);
       if (response.ok) {
         const data = await response.json();
         const ESTADOS_INACTIVOS = ['FINALIZADO', 'ENTREGADO', 'CANCELADO', 'COMPLETADO', 'RECHAZADO'];
@@ -456,7 +456,8 @@ export const useVentaRapida = () => {
       idEmpleado: idUsuario,
       idUsuario: idUsuario,
       tipoPago: tipoPagoElegido,
-      confirmarMaquinaNoDisponible
+      confirmarMaquinaNoDisponible,
+      idCategoriaCliente: categoriaSeleccionadaId ? Number(categoriaSeleccionadaId) : null
     };
 
     showLoading('Procesando venta...');

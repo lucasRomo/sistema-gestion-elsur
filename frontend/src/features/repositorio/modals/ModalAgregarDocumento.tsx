@@ -354,16 +354,16 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
       {mostrarConfirmar && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1080 }}>
           <div className="modal-dialog modal-dialog-centered modal-sm">
-            <div className="modal-content shadow-lg font-monospace text-white p-3" style={{ backgroundColor: '#18181b', border: `1px solid ${greenAccent}`, borderRadius: '12px' }}>
+            <div className="modal-content shadow-lg font-monospace p-3" style={{ backgroundColor: isDarkMode ? '#18181b' : '#ffffff', color: isDarkMode ? '#ffffff' : '#0f172a', border: `1px solid ${greenAccent}`, borderRadius: '12px' }}>
               <div className="modal-body text-center py-3">
                 <div className="d-flex justify-content-center mb-3">
                   <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px', border: `2px solid ${greenAccent}` }}>
                     <i className="bi bi-question-lg" style={{ fontSize: '2rem', color: greenAccent }}></i>
                   </div>
                 </div>
-                <h6 className="fw-bold my-2 text-white">¿Deseas guardar este documento en el repositorio?</h6>
+                <h6 className="fw-bold my-2">¿Deseas guardar este documento en el repositorio?</h6>
                 <div className="d-flex justify-content-center gap-2 mt-4">
-                  <button type="button" className="btn btn-sm btn-secondary px-3 fw-semibold" onClick={() => setMostrarConfirmar(false)}>
+                  <button type="button" className="btn btn-danger btn-sm px-3 fw-semibold" onClick={() => setMostrarConfirmar(false)}>
                     Cancelar
                   </button>
                   <button type="button" className="btn btn-sm text-white px-3 fw-bold" style={{ backgroundColor: greenAccent }} onClick={handleConfirmarGuardar}>
@@ -383,8 +383,8 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
               className="modal-content p-4 text-center shadow"
               style={{
                 border: '2px solid #267c34',
-                backgroundColor: '#18181b',
-                color: '#ffffff',
+                backgroundColor: isDarkMode ? '#18181b' : '#ffffff',
+                color: isDarkMode ? '#ffffff' : '#0f172a',
                 borderRadius: '12px'
               }}
             >
@@ -401,8 +401,8 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
               <div className="d-flex justify-content-center">
                 <button
                   type="button"
-                  className="btn px-4 text-white fw-bold"
-                  style={{ borderRadius: '6px', backgroundColor: '#e22e2e', borderColor: '#e62020' }}
+                  className="btn btn-secondary px-4 text-white fw-bold"
+                  style={{ borderRadius: '6px', backgroundColor: '#6c757d', borderColor: '#6c757d' }}
                   onClick={handleCerrarTodo}
                 >
                   Cerrar

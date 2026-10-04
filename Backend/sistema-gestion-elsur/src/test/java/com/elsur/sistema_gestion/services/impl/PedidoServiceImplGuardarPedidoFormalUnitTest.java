@@ -195,7 +195,8 @@ class PedidoServiceImplGuardarPedidoFormalUnitTest {
         when(TurnoRepository.existsByEstado(EstadoTurno.ABIERTO)).thenReturn(true);
         when(clienteRepository.findById(1)).thenReturn(Optional.of(consumidorFinal()));
 
-        Pedido pedido = pedidoFormalBase(905, "PENDIENTE", null);
+        when(productoRepository.findById(50)).thenReturn(Optional.of(productoDirecto(50, "Tarjetas Personales x100", 20)));
+        Pedido pedido = pedidoFormalBase(905, "PENDIENTE", List.of(detalle(50, 1)));
         pedido.setMonto_pago_adelantado(BigDecimal.valueOf(-500));
         when(pedidoRepository.save(any(Pedido.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -212,7 +213,8 @@ class PedidoServiceImplGuardarPedidoFormalUnitTest {
         when(TurnoRepository.existsByEstado(EstadoTurno.ABIERTO)).thenReturn(true);
         when(clienteRepository.findById(1)).thenReturn(Optional.of(consumidorFinal()));
 
-        Pedido pedido = pedidoFormalBase(906, "PENDIENTE", null);
+        when(productoRepository.findById(50)).thenReturn(Optional.of(productoDirecto(50, "Tarjetas Personales x100", 20)));
+        Pedido pedido = pedidoFormalBase(906, "PENDIENTE", List.of(detalle(50, 1)));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> pedidoService.guardar(pedido, null, null, "Cuenta Corriente", null, false));

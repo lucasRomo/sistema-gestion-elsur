@@ -19,7 +19,6 @@ export const RegisterView: React.FC<RegisterViewProps> = ({ onVolver }) => {
     ? 'linear-gradient(145deg, #240f47 20%, #0c0c0e 80%)'
     : 'linear-gradient(145deg, #e2e8f0 20%, #f1f5f9 80%)';
   const containerBg = isDark ? '#1a1a1c' : '#ffffff';
-  const containerBorder = isDark ? '#3f3f46' : '#cbd5e1';
 
   const {
     personaData,

@@ -120,8 +120,9 @@ class PedidoServiceImplGuardarValidacionesReferenciaUnitTest {
         when(clienteRepository.findById(1)).thenReturn(Optional.of(consumidorFinal()));
         when(pedidoRepository.save(any(Pedido.class))).thenAnswer(inv -> inv.getArgument(0));
         when(empleadoRepository.findById(888)).thenReturn(Optional.empty());
+        when(productoRepository.findById(50)).thenReturn(Optional.of(productoDirecto(50, "Tarjetas Personales x100", 20)));
 
-        Pedido pedido = pedidoFormalBase(912, "PENDIENTE", null);
+        Pedido pedido = pedidoFormalBase(912, "PENDIENTE", List.of(detalle(50, 1)));
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> pedidoService.guardar(pedido, 888, null, "Efectivo", null, false));

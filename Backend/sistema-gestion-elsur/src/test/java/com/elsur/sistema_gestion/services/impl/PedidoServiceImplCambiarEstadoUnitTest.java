@@ -148,4 +148,35 @@ class PedidoServiceImplCambiarEstadoUnitTest {
 
         assertEquals("DEVUELTO", resultado.getEstado());
     }
+
+    @Test
+    @DisplayName("TC_HP - Un pedido CANCELADO no puede devolverse ni volver a la cola: hay que crear uno nuevo")
+    void cambiarEstadoPedido_pedidoCancelado_seRechaza() {
+        Pedido pedido = new Pedido();
+        pedido.setId_pedido(705);
+        pedido.setEstado("CANCELADO");
+        when(pedidoRepository.findById(705)).thenReturn(Optional.of(pedido));
+
+        for (String destino : List.of("DEVUELTO", "PENDIENTE")) {
+            com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException ex = assertThrows(
+                    com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException.class,
+                    () -> pedidoService.cambiarEstadoPedido(705, destino, "obs", 1, false));
+            assertTrue(ex.getMessage().contains("Crear Pedido"));
+        }
+        assertEquals("CANCELADO", pedido.getEstado());
+        verifyNoInteractions(historialRepository);
+    }
+
+    @Test
+    @DisplayName("TC_HP - Un pedido ya DEVUELTO no puede volver a procesarse")
+    void cambiarEstadoPedido_pedidoYaDevuelto_seRechaza() {
+        Pedido pedido = new Pedido();
+        pedido.setId_pedido(706);
+        pedido.setEstado("DEVUELTO");
+        when(pedidoRepository.findById(706)).thenReturn(Optional.of(pedido));
+
+        assertThrows(com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException.class,
+                () -> pedidoService.cambiarEstadoPedido(706, "PENDIENTE", "obs", 1, false));
+        verifyNoInteractions(historialRepository);
+    }
 }

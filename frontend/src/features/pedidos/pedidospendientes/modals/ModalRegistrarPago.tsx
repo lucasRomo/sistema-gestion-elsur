@@ -296,8 +296,8 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
               <div className="d-flex gap-2">
                 <button
                   type="button"
-                  className="btn w-50 py-2 text-white fw-bold"
-                  style={{ backgroundColor: '#dc2626', border: 'none', borderRadius: '6px', fontSize: '0.95rem', opacity: procesando ? 0.6 : 1 }}
+                  className="btn btn-secondary w-50 py-2 text-white fw-bold"
+                  style={{ backgroundColor: '#6c757d', border: 'none', borderRadius: '6px', fontSize: '0.95rem', opacity: procesando ? 0.6 : 1 }}
                   onClick={() => setShowConfirm(false)}
                   disabled={procesando}
                 >

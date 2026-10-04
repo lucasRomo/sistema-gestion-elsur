@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Maquina } from '../types/Maquina';
 import { useTheme } from '../../../Context/ThemeContext';
+import { confirmarAccion, mostrarAviso, mostrarError } from '../../../config/dialogStore';
 
 interface Props {
   show: boolean;
@@ -34,9 +35,10 @@ export const MaquinaFallaModal: React.FC<Props> = ({ show, maquinas, onClose, on
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedId || !descripcion.trim()) {
-      alert("Por favor complete todos los campos.");
+      mostrarAviso("Por favor complete todos los campos.");
       return;
     }
+    if (!(await confirmarAccion(`¿Reportar la falla con prioridad ${prioridad}? El equipo quedará marcado como no operativo.`, { titulo: 'Reportar falla', textoConfirmar: 'Reportar' }))) return;
 
     setCargando(true);
     try {
@@ -46,7 +48,7 @@ export const MaquinaFallaModal: React.FC<Props> = ({ show, maquinas, onClose, on
       setPrioridad('MEDIA');
       onClose();
     } catch (err: any) {
-      alert("Error al reportar la falla: " + err.message);
+      mostrarError("Error al reportar la falla: " + err.message);
     } finally {
       setCargando(false);
     }
@@ -191,7 +193,7 @@ export const MaquinaFallaModal: React.FC<Props> = ({ show, maquinas, onClose, on
             </div>
 
             <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
-              <button type="button" className={`btn ${isDark ? 'btn-secondary' : 'btn-secondary'}`} onClick={onClose} disabled={cargando}>
+              <button type="button" className="btn btn-danger" onClick={onClose} disabled={cargando}>
                 Cancelar
               </button>
               <button type="submit" className="btn btn-danger fw-bold px-4" disabled={cargando || maquinasOperativas.length === 0}>
