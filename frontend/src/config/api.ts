@@ -1,5 +1,6 @@
 import { showLoading, hideLoading } from './loadingStore';
-import { mostrarAviso } from './dialogStore';
+import { mostrarAviso, mostrarError } from './dialogStore';
+import { mostrarToast } from './toastStore';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -21,6 +22,29 @@ const manejarSesionExpirada = () => {
   localStorage.removeItem('usuario');
   mostrarAviso('Tu sesión expiró. Por favor, iniciá sesión nuevamente.', { titulo: 'Sesión expirada' })
     .then(() => { window.location.href = '/login'; });
+};
+
+export const MENSAJE_SIN_CONEXION =
+  'No se pudo conectar con el servidor. Revisá la conexión a internet e intentá de nuevo.';
+const MENSAJE_SIN_CONEXION_GUARDADO =
+  'No se pudo conectar con el servidor, así que no hay confirmación de que se haya guardado. ' +
+  'Cuando vuelva la conexión, revisá en el listado si quedó registrado antes de volver a intentarlo ' +
+  '(así no se duplica).';
+
+let ultimoAvisoConexion = 0;
+
+// fetch() solo "falla" (TypeError) cuando no llega al servidor: sin internet, servidor caído o
+// bloqueado. Antes la mayoría de las pantallas solo lo escribía en la consola y el usuario no se
+// enteraba de que su acción no se había guardado.
+const avisarSinConexion = (esMutacion: boolean) => {
+  if (esMutacion) {
+    mostrarError(MENSAJE_SIN_CONEXION_GUARDADO, 'Sin conexión');
+    return;
+  }
+  // Las lecturas pueden fallar varias juntas (cada pantalla pide varias cosas): un solo aviso.
+  if (Date.now() - ultimoAvisoConexion < 10000) return;
+  ultimoAvisoConexion = Date.now();
+  mostrarToast(MENSAJE_SIN_CONEXION, { tipo: 'error' });
 };
 
 export const apiFetch = async (
@@ -50,6 +74,13 @@ export const apiFetch = async (
       manejarSesionExpirada();
     }
     return response;
+  } catch (error) {
+    // Un AbortError (navegación/cancelación) no es un problema de conexión.
+    if (error instanceof TypeError && !restInit.signal?.aborted) {
+      avisarSinConexion(esMutacion);
+      throw new Error(esMutacion ? MENSAJE_SIN_CONEXION_GUARDADO : MENSAJE_SIN_CONEXION, { cause: error });
+    }
+    throw error;
   } finally {
     if (debeCargar) hideLoading();
   }
@@ -59,7 +90,7 @@ export const extraerMensajeError = async (
   response: Response,
   mensajePorDefecto = 'Ocurrió un error inesperado. Intentalo de nuevo.'
 ): Promise<string> => {
-  let texto = '';
+  let texto: string;
   try {
     texto = await response.text();
   } catch {

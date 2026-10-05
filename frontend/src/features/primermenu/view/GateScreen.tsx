@@ -38,7 +38,7 @@ export const GateScreen: React.FC<GateScreenProps> = ({ onAutorizado }) => {
         localStorage.setItem('token_sesion', data.token);
         onAutorizado();
       } else {
-        setError('Clave incorrecta.');
+        setError(res.status === 429 ? 'Demasiados intentos. Esperá unos minutos.' : 'Clave incorrecta.');
       }
     } catch {
       setError('Error de red al conectar con el servidor.');

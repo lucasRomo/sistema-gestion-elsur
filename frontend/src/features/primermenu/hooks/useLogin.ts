@@ -57,7 +57,9 @@ export const useLogin = ({ onLoginExitoso }: UseLoginProps) => {
         });
       } else {
         let mensajeError = 'El usuario o la contraseña ingresados son incorrectos. Por favor, verifique los datos.';
-        if (response.status === 403) {
+        if (response.status === 429) {
+          mensajeError = 'Demasiados intentos fallidos. Por seguridad, esperá unos minutos antes de volver a intentar.';
+        } else if (response.status === 403) {
           mensajeError = 'La cuenta que usted ingresó está en estado de Pendiente y/o Desactivado y necesita ser Activada para continuar, por favor contáctese con el administrador.';
         }
         setModalFeedback({ mostrar: true, tipo: 'error', mensaje: mensajeError });

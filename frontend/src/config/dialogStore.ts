@@ -42,6 +42,12 @@ const emitir = () => listeners.forEach((l) => l());
 
 const encolar = (dialogo: Omit<Dialogo, 'id' | 'resolver'>): Promise<boolean> =>
   new Promise((resolve) => {
+    // Si el mismo aviso ya está en pantalla o en espera (ej. el aviso global de "sin conexión"
+    // y la pantalla que muestra el mismo mensaje del error), no se repite.
+    if (dialogo.tipo !== 'confirmar' && cola.some((d) => d.tipo !== 'confirmar' && d.mensaje === dialogo.mensaje)) {
+      resolve(true);
+      return;
+    }
     cola = [...cola, { ...dialogo, id: siguienteId++, resolver: resolve }];
     emitir();
   });

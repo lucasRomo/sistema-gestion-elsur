@@ -20,6 +20,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.elsur.sistema_gestion.security.JwtService;
+import com.elsur.sistema_gestion.security.LimitadorIntentos;
 import com.elsur.sistema_gestion.repositories.EmpleadoRepository;
 
 import java.util.HashMap;
@@ -48,6 +49,9 @@ public class UsuarioController {
 
     @Autowired
     private CifradoService cifradoService;
+
+    @Autowired
+    private LimitadorIntentos limitadorIntentos;
 
     @GetMapping
     public List<Usuario> listar() {
@@ -150,14 +154,20 @@ public class UsuarioController {
             throw new CredencialesInvalidasException("Credenciales incorrectas");
         }
 
+        // Se cuenta por nombre de usuario: así nadie puede probar contraseñas sin límite sobre una
+        // cuenta (y el mensaje es el mismo exista o no el usuario).
+        limitadorIntentos.verificar("login:" + credenciales.getNombreUsuario());
+
         Usuario usuario;
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(credenciales.getNombreUsuario(), credenciales.getPassword())
             );
         } catch (AuthenticationException e) {
+            limitadorIntentos.registrarFallo("login:" + credenciales.getNombreUsuario());
             throw new CredencialesInvalidasException("Credenciales incorrectas");
         }
+        limitadorIntentos.registrarExito("login:" + credenciales.getNombreUsuario());
 
         usuario = usuarioService.buscarPorNombreUsuario(credenciales.getNombreUsuario())
                 .orElseThrow(() -> new CredencialesInvalidasException("Credenciales incorrectas"));

@@ -39,6 +39,11 @@ public class GlobalExceptionHandler {
         return construirRespuesta(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 
+    @ExceptionHandler(DemasiadosIntentosException.class)
+    public ResponseEntity<ApiError> handleDemasiadosIntentos(DemasiadosIntentosException ex, HttpServletRequest request) {
+        return construirRespuesta(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request);
+    }
+
     @ExceptionHandler(CuentaNoHabilitadaException.class)
     public ResponseEntity<ApiError> handleCuentaNoHabilitada(CuentaNoHabilitadaException ex, HttpServletRequest request) {
         return construirRespuesta(HttpStatus.FORBIDDEN, ex.getMessage(), request);
