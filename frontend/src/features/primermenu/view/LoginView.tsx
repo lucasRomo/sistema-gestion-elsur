@@ -127,11 +127,20 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginExitoso, onVolver }
 
           <button 
             type="button" 
-            className="btn btn-secondary w-100 fw-semibold py-2" 
-            style={{ 
-              backgroundColor: '#6c757d',
-              border: '1px solid #6c757d',
-              color: '#ffffff'
+            className="btn w-100 fw-semibold py-2"
+            style={{
+              backgroundColor: 'transparent',
+              border: '1px solid #8e45e0',
+              color: esOscuro ? '#ffffff' : '#8e45e0',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#8e45e0';
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = esOscuro ? '#ffffff' : '#8e45e0';
             }}
             onClick={onVolver}
           >
