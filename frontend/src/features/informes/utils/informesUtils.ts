@@ -1,5 +1,6 @@
 import { COLORES_TORTA } from '../charts/Colores';
 
+import { formatearMonto } from '../../../utils/formato';
 export interface IncongruenciaEmpleado {
   empleado: string;
   montoDiferencia: number;
@@ -216,7 +217,7 @@ export function procesarMetricas(
 
   const ticketsFinales = ticketsGenerados > 0 ? ticketsGenerados : pedidosEnRango.length;
 
-  const ticketPromedio = ticketsFinales > 0 ? (totalIngresosBrutos / ticketsFinales).toFixed(2) : '0.00';
+  const ticketPromedio = ticketsFinales > 0 ? formatearMonto((totalIngresosBrutos / ticketsFinales)) : '0,00';
 
   const cantidadMovimientos = movimientosEnRango.length;
 

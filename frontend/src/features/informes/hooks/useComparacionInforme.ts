@@ -58,6 +58,7 @@ interface UseComparacionInformeParams {
   averiasRaw?: any[];
   categoriasClienteRaw?: any[];
   procesarMetricas: ProcesarMetricasFn;
+  asegurarDesde?: (desde: string) => Promise<{ pedidosRaw: any[]; movimientosCaja: any[] } | null>;
 }
 
 export function useComparacionInforme({
@@ -71,7 +72,15 @@ export function useComparacionInforme({
   averiasRaw = [],
   categoriasClienteRaw = [],
   procesarMetricas,
+  asegurarDesde,
 }: UseComparacionInformeParams) {
+  // Los períodos a comparar pueden ser más viejos que lo cargado: se piden antes de calcular.
+  const datosDesde = async (...desdes: string[]) => {
+    const minimo = desdes.reduce((a, b) => (b < a ? b : a));
+    const d = asegurarDesde ? await asegurarDesde(minimo) : null;
+    return d ?? { pedidosRaw, movimientosCaja };
+  };
+
   const [modalComparacionAbierto, setModalComparacionAbierto] = useState(false);
   const [informeComparacion, setInformeComparacion] = useState<InformeComparacion | null>(null);
   const [tipoComparacion, setTipoComparacion] = useState<TipoComparacion | null>(null);
@@ -88,7 +97,7 @@ export function useComparacionInforme({
     return NOMBRES_INFORME[informe] || '';
   };
 
-  const abrirModalComparacion = (informe: InformeComparacion) => {
+  const abrirModalComparacion = async (informe: InformeComparacion) => {
     setInformeComparacion(informe);
     setModalFechaDesdeInput(fechaDesdeInput);
     setModalFechaHastaInput(fechaHastaInput);
@@ -110,8 +119,9 @@ export function useComparacionInforme({
     setModalFechaHastaCompInput(antHastaStr);
     setErrorRangoComparacion(null);
 
-    const metricasActuales = procesarMetricas(fechaDesdeInput, fechaHastaInput, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
-    const metricasAnteriores = procesarMetricas(antDesdeStr, antHastaStr, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
+    const d = await datosDesde(fechaDesdeInput, antDesdeStr);
+    const metricasActuales = procesarMetricas(fechaDesdeInput, fechaHastaInput, d.pedidosRaw, d.movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
+    const metricasAnteriores = procesarMetricas(antDesdeStr, antHastaStr, d.pedidosRaw, d.movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
 
     setComparacionData({
       actual: {
@@ -136,7 +146,7 @@ export function useComparacionInforme({
     setComparacionData(null);
   };
 
-  const handleAnalizarComparacionModal = () => {
+  const handleAnalizarComparacionModal = async () => {
     if (!informeComparacion) return;
 
     if (modalFechaDesdeInput > modalFechaHastaInput || modalFechaDesdeCompInput > modalFechaHastaCompInput) {
@@ -145,8 +155,9 @@ export function useComparacionInforme({
     }
     setErrorRangoComparacion(null);
 
-    const metricasActuales = procesarMetricas(modalFechaDesdeInput, modalFechaHastaInput, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
-    const metricasAnteriores = procesarMetricas(modalFechaDesdeCompInput, modalFechaHastaCompInput, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
+    const d = await datosDesde(modalFechaDesdeInput, modalFechaDesdeCompInput);
+    const metricasActuales = procesarMetricas(modalFechaDesdeInput, modalFechaHastaInput, d.pedidosRaw, d.movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
+    const metricasAnteriores = procesarMetricas(modalFechaDesdeCompInput, modalFechaHastaCompInput, d.pedidosRaw, d.movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
 
     setComparacionData({
       actual: {
@@ -162,7 +173,7 @@ export function useComparacionInforme({
     });
   };
 
-  const seleccionarTipoComparacion = (tipo: TipoComparacion) => {
+  const seleccionarTipoComparacion = async (tipo: TipoComparacion) => {
     if (!informeComparacion) return;
     setTipoComparacion(tipo);
 
@@ -209,8 +220,9 @@ export function useComparacionInforme({
     setModalFechaHastaCompInput(pAnterior.hasta);
     setErrorRangoComparacion(null);
 
-    const metricasActuales = procesarMetricas(pActual.desde, pActual.hasta, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
-    const metricasAnteriores = procesarMetricas(pAnterior.desde, pAnterior.hasta, pedidosRaw, movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
+    const d = await datosDesde(pActual.desde, pAnterior.desde);
+    const metricasActuales = procesarMetricas(pActual.desde, pActual.hasta, d.pedidosRaw, d.movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
+    const metricasAnteriores = procesarMetricas(pAnterior.desde, pAnterior.hasta, d.pedidosRaw, d.movimientosCaja, false, mermasRaw, deudoresRaw, turnosRaw, averiasRaw, categoriasClienteRaw);
 
     setComparacionData({
       actual: metricasActuales,

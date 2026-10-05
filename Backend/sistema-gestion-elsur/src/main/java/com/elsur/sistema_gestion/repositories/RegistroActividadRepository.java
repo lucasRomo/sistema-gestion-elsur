@@ -19,4 +19,18 @@ public interface RegistroActividadRepository extends JpaRepository<RegistroActiv
            "ORDER BY r.idRegAct DESC")
     List<RegistroActividad> buscarConFiltros(@Param("idUsuario") Integer idUsuario, 
                                              @Param("tabla") String tabla);
+
+    @Query(value = "SELECT r FROM RegistroActividad r WHERE " +
+           "(:idUsuario IS NULL OR r.usuario.idUsuario = :idUsuario) AND " +
+           "(:tabla IS NULL OR LOWER(r.tablaAfectada) LIKE :tabla) " +
+           "ORDER BY r.idRegAct DESC",
+           countQuery = "SELECT COUNT(r) FROM RegistroActividad r WHERE " +
+           "(:idUsuario IS NULL OR r.usuario.idUsuario = :idUsuario) AND " +
+           "(:tabla IS NULL OR LOWER(r.tablaAfectada) LIKE :tabla)")
+    org.springframework.data.domain.Page<RegistroActividad> buscarConFiltrosPaginado(
+            @Param("idUsuario") Integer idUsuario, @Param("tabla") String tabla,
+            org.springframework.data.domain.Pageable pageable);
+
+    @Query("SELECT DISTINCT r.usuario FROM RegistroActividad r WHERE r.usuario IS NOT NULL")
+    List<com.elsur.sistema_gestion.models.Usuario> buscarUsuariosConActividad();
 }

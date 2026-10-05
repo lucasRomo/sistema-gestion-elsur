@@ -4,20 +4,24 @@ import { VistaTicketPagoModal } from '../../../../components/modals/VistaTicketP
 import { PedidoPendienteService } from '../../pedidospendientes/service/pedidoPendienteService';
 import { mostrarAviso } from '../../../../config/dialogStore';
 
+import { formatearMonto } from '../../../../utils/formato';
+import { BuscadorCliente } from './BuscadorCliente';
+import { RegistroClienteModal } from '../../../clientes/components/RegistroClienteModal';
 interface Props {
   clientes: any[];
-  empleados: any[]; 
+  empleados: any[];
   total: number;
   porcentajeDescuento?: number;
   categoriaNombre?: string;
   carrito: CartItem[];
   onVolver: () => void;
-  onGuardar: (payload: { 
-    pedido: Pedido; 
-    idEmpleado: number; 
-    idUsuario?: number; 
-    tipoPago: string; 
-    fileComprobante?: File | null 
+  onClienteCreado?: (cliente: any) => void;
+  onGuardar: (payload: {
+    pedido: Pedido;
+    idEmpleado: number;
+    idUsuario?: number;
+    tipoPago: string;
+    fileComprobante?: File | null
   }) => void;
 }
 
@@ -27,18 +31,20 @@ const obtenerFechaHoraActualLocal = (): string => {
   return new Date(ahora.getTime() - offsetMs).toISOString().slice(0, 16);
 };
 
-export const DetallesPedidoForm: React.FC<Props> = ({ 
-  clientes, 
-  empleados, 
-  total, 
+export const DetallesPedidoForm: React.FC<Props> = ({
+  clientes,
+  empleados,
+  total,
   porcentajeDescuento = 0,
   categoriaNombre = '',
-  carrito, 
-  onVolver, 
-  onGuardar 
+  carrito,
+  onVolver,
+  onGuardar,
+  onClienteCreado
 }) => {
   const [clienteId, setClienteId] = useState<string>('');
-  const [empleadoId, setEmpleadoId] = useState<string>(''); 
+  const [mostrarRegistroCliente, setMostrarRegistroCliente] = useState(false);
+  const [empleadoId, setEmpleadoId] = useState<string>('');
   const [estado, setEstado] = useState('PENDIENTE');
   const [tipoPago, setTipoPago] = useState('Efectivo');
   const [fechaEntrega, setFechaEntrega] = useState('');
@@ -114,7 +120,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!clienteId || clienteId === '0') {
       mostrarAviso("Por favor, seleccione un cliente válido.");
       return;
@@ -158,8 +164,8 @@ export const DetallesPedidoForm: React.FC<Props> = ({
       fechaFinalEntrega = new Date().toISOString().substring(0, 19);
     }
 
-    const textoDescuento = porcentajeDescuento > 0 
-      ? ` [Descuento aplicado: ${porcentajeDescuento}% - Cat: ${categoriaNombre}]` 
+    const textoDescuento = porcentajeDescuento > 0
+      ? ` [Descuento aplicado: ${porcentajeDescuento}% - Cat: ${categoriaNombre}]`
       : (categoriaNombre ? ` [Cat: ${categoriaNombre}]` : '');
 
     const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
@@ -182,8 +188,8 @@ export const DetallesPedidoForm: React.FC<Props> = ({
       pedido: nuevoPedido,
       idEmpleado: Number(empleadoId),
       idUsuario: idUsuarioActivo,
-      tipoPago: tipoPago, 
-      fileComprobante: comprobanteFile 
+      tipoPago: tipoPago,
+      fileComprobante: comprobanteFile
     });
   };
 
@@ -191,18 +197,30 @@ export const DetallesPedidoForm: React.FC<Props> = ({
     <>
       <div className="card p-4 w-100 rounded" style={{ maxWidth: '1570px', backgroundColor: '#1b1b1b', color: '#fff' }}>
         <h2 className="text-center mb-4 fw-bold">Configurar Parámetros del Comprobante</h2>
-        
+
         <form onSubmit={handleSubmit} className="row g-3">
           <div className="col-12">
             <label className="form-label small text-secondary fw-bold">Cliente:</label>
-            <select className="form-select bg-dark text-white border-secondary" value={clienteId} onChange={(e) => setClienteId(e.target.value)} required>
-              <option value="" disabled>-- Seleccione un Cliente --</option>  
-              {clientes.map((c, index) => {
-                const id = c.id_cliente ?? c.idCliente ?? c.id;
-                const nombreCliente = c.persona ? `${c.persona.nombre} ${c.persona.apellido}` : (c.razon_social || `Cliente #${id || index}`);
-                return <option key={`cli-${id ?? index}`} value={id}>{nombreCliente}</option>;
-              })}
-            </select>
+            <BuscadorCliente
+              clientes={clientes}
+              clienteId={clienteId}
+              onSeleccionar={setClienteId}
+              onNuevoCliente={onClienteCreado ? () => setMostrarRegistroCliente(true) : undefined}
+            />
+            {mostrarRegistroCliente && (
+              <RegistroClienteModal
+                clientes={clientes}
+                onCerrar={() => setMostrarRegistroCliente(false)}
+                onRegistrado={(creado) => {
+                  setMostrarRegistroCliente(false);
+                  if (creado) {
+                    onClienteCreado?.(creado);
+                    const id = creado.id_cliente ?? creado.idCliente ?? creado.id;
+                    if (id != null) setClienteId(String(id));
+                  }
+                }}
+              />
+            )}
           </div>
 
           <div className="col-12">
@@ -218,7 +236,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
                     {nombreCompleto} {emp.cargo ? `(${emp.cargo})` : ''} — [{cantPendientes} pendientes]
                   </option>
                 );
-              })} 
+              })}
             </select>
           </div>
 
@@ -255,7 +273,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
 
           <div className="col-md-6">
             <label className="form-label small text-secondary fw-bold">Monto Total Cotizado:</label>
-            <input type="text" className="form-control text-info fw-bold font-monospace fs-5 bg-dark border-secondary" readOnly value={`$${total.toFixed(2)}`} />
+            <input type="text" className="form-control text-info fw-bold font-monospace fs-5 bg-dark border-secondary" readOnly value={`$${formatearMonto(total)}`} />
           </div>
 
           <div className="col-md-6">
@@ -283,7 +301,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
                 </>
               )}
 
-              <button 
+              <button
                 type="button"
                 className="btn btn-outline-warning font-monospace"
                 disabled={Number(montoEntregado) <= 0 || isNaN(Number(montoEntregado))}
@@ -301,7 +319,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
       </div>
 
       {mostrarPreviewTicket && (
-        <VistaTicketPagoModal 
+        <VistaTicketPagoModal
           pedido={{
             cliente: clientes.find(c => String(c.id_cliente ?? c.idCliente ?? c.id) === clienteId) || { id_cliente: Number(clienteId) },
             detalles: carrito.map(item => ({

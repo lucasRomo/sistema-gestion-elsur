@@ -3,6 +3,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Insumo } from '../types/Insumo';
 
+import { formatearMonto } from '../../../utils/formato';
 export const exportarInsumosExcel = async (insumos: Insumo[]) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Stock de Insumos');
@@ -104,7 +105,7 @@ export const exportarInsumosPDF = (
   const tableRows = insumos.map((i) => [
     `#${i.idInsumo ?? '-'}`,
     i.nombreInsumo,
-    `$${i.precio != null ? Number(i.precio).toFixed(2) : '0.00'}`,
+    `$${i.precio != null ? formatearMonto(Number(i.precio)) : '0,00'}`,
     `${i.stockEmpaquetado ?? 0} ${i.unidadCompra?.nombre || ''}`,
     `${i.stockActual} ${i.unidadMedida?.nombre || ''}`,
     `${i.stockMinimo} ${i.unidadMedida?.nombre || ''}`,

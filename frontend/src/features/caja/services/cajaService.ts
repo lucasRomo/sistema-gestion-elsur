@@ -61,9 +61,9 @@ export const cajaService = {
   },
 
 
-  obtenerTodos: async (): Promise<MovimientoCaja[]> => {
+  obtenerTodos: async (desde?: string): Promise<MovimientoCaja[]> => {
     try {
-      const response = await apiFetch(`${API_BASE_URL}/movimientos-caja`);
+      const response = await apiFetch(`${API_BASE_URL}/movimientos-caja${desde ? `?desde=${desde}` : ''}`);
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
       return await response.json();
     } catch (error) {

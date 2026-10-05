@@ -16,7 +16,7 @@ export const CrearPedidoView: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  const { productos, clientes, empleados, maquinas, pedidosPendientes, enviarPedido } = useRegistrarPedido();
+  const { productos, clientes, empleados, maquinas, pedidosPendientes, enviarPedido, agregarCliente } = useRegistrarPedido();
   
   const [paso, setPaso] = useState<number>(1);
   const [carrito, setCarrito] = useState<CartItem[]>([]);
@@ -211,6 +211,7 @@ export const CrearPedidoView: React.FC = () => {
               setPaso(1);
             }}
             onGuardar={handlePreGuardar}
+            onClienteCreado={agregarCliente}
           />
         )}
       </div>

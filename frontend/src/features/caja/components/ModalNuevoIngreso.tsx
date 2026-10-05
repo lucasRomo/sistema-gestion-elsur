@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 import type { NuevoMovimientoDTO } from '../services/cajaService';
-import { pad } from '../../../utils/formato';
+import { pad, formatearMonto } from '../../../utils/formato';
 import { confirmarAccion, mostrarAviso } from '../../../config/dialogStore';
 
 interface ModalProps {
@@ -72,7 +72,7 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
 
     const tipo = esEgreso(categoria) ? 'egreso' : 'ingreso';
     const confirmado = await confirmarAccion(
-      `¿Registrar un ${tipo} de $${Number(monto).toFixed(2)} en concepto de "${concepto.trim()}"?`,
+      `¿Registrar un ${tipo} de $${formatearMonto(Number(monto))} en concepto de "${concepto.trim()}"?`,
       { titulo: 'Confirmar movimiento', textoConfirmar: 'Registrar' }
     );
     if (!confirmado) return;

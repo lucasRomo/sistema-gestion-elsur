@@ -2,6 +2,7 @@ import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+import { formatearMonto } from '../../../utils/formato';
 export interface MovimientoCajaExport {
   id_movimiento?: number;
   idMovimiento?: number;
@@ -228,7 +229,7 @@ export const exportarCajaPDF = (
     `#${obtenerIdMovimiento(m)}`,
     new Date(m.fecha).toLocaleString('es-AR'),
     m.tipoMovimiento === 'EGRESO' ? 'Egreso' : 'Ingreso',
-    `${m.tipoMovimiento === 'EGRESO' ? '-' : '+'}$${Number(m.monto ?? 0).toFixed(2)}`,
+    `${m.tipoMovimiento === 'EGRESO' ? '-' : '+'}$${formatearMonto(Number(m.monto ?? 0))}`,
     m.metodoPago || 'EFECTIVO',
     m.categoria || '-',
     m.descripcion || '-',

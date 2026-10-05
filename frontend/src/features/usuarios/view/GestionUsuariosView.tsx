@@ -11,6 +11,9 @@ import { RegisterView } from '../../primermenu/view/RegisterView';
 import { useTheme } from '../../../Context/ThemeContext';
 import { mostrarError } from '../../../config/dialogStore';
 import { SkeletonFilasTabla } from '../../../components/common/SkeletonCarga';
+import { ThOrdenable } from '../../../components/common/ThOrdenable';
+import { useOrdenTabla } from '../../../hook/useOrdenTabla';
+import { formatearMonto } from '../../../utils/formato';
 
 export const GestionUsuariosView: React.FC = () => {
   const { theme } = useTheme();
@@ -59,7 +62,18 @@ export const GestionUsuariosView: React.FC = () => {
     const coincideEstado = filtroEstado === 'Sin Filtro' || estadoMostrar(u) === filtroEstado;
     return coincideTexto && coincideEstado;
   });
-  const usuariosOrdenados = [...usuariosFiltrados].sort((a, b) => (a.idUsuario ?? 0) - (b.idUsuario ?? 0));
+  const { ordenados: usuariosOrdenados, orden, alternar } = useOrdenTabla(usuariosFiltrados, {
+    id: (u) => u.idUsuario ?? 0,
+    usuario: (u) => u.nombreUsuario,
+    nombre: (u) => u.persona?.nombre,
+    apellido: (u) => u.persona?.apellido,
+    documento: (u) => u.persona?.numeroDocumento,
+    cargo: (u) => u.cargo,
+    salario: (u) => Number(u.salario || 0),
+    estado: (u) => estadoMostrar(u),
+  }, { clave: 'id', direccion: 'asc' });
+  // Los salarios no quedan a la vista de cualquiera que pase frente a la pantalla.
+  const [salariosVisibles, setSalariosVisibles] = useState(false);
 
   return (
     <SidebarLayout activeItem="Gestión de Usuarios">
@@ -98,15 +112,27 @@ export const GestionUsuariosView: React.FC = () => {
             >
               <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1, color: theadText }}>
                 <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${tableHeaderBorder}`, color: theadText, fontSize: '0.85rem', textTransform: 'uppercase' }}>
-                  <th className="py-3 px-3 text-center">ID</th>
-                  <th className="py-3 px-3 text-start">Usuario</th>
+                  <ThOrdenable clave="id" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center">ID</ThOrdenable>
+                  <ThOrdenable clave="usuario" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-start">Usuario</ThOrdenable>
                   <th className="py-3 px-3 text-start">Contraseña</th>
-                  <th className="py-3 px-3 text-start">Nombre</th>
-                  <th className="py-3 px-3 text-start">Apellido</th>
-                  <th className="py-3 px-3 text-start">Documento</th>
-                  <th className="py-3 px-3 text-start">Cargo</th>
-                  <th className="py-3 px-3 text-end">Salario</th>
-                  <th className="py-3 px-3 text-center">Estado</th>
+                  <ThOrdenable clave="nombre" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-start">Nombre</ThOrdenable>
+                  <ThOrdenable clave="apellido" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-start">Apellido</ThOrdenable>
+                  <ThOrdenable clave="documento" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-start">Documento</ThOrdenable>
+                  <ThOrdenable clave="cargo" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-start">Cargo</ThOrdenable>
+                  <th className="py-3 px-3 text-end" style={{ whiteSpace: 'nowrap' }}>
+                    <span style={{ cursor: 'pointer' }} onClick={() => alternar('salario')} title="Ordenar por salario">Salario</span>
+                    <button
+                      type="button"
+                      className="btn btn-sm p-0 ms-2 border-0"
+                      style={{ color: 'inherit', lineHeight: 1 }}
+                      onClick={() => setSalariosVisibles(v => !v)}
+                      title={salariosVisibles ? 'Ocultar salarios' : 'Mostrar salarios'}
+                      aria-label={salariosVisibles ? 'Ocultar salarios' : 'Mostrar salarios'}
+                    >
+                      <i className={`bi ${salariosVisibles ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+                    </button>
+                  </th>
+                  <ThOrdenable clave="estado" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center">Estado</ThOrdenable>
                   <th className="py-3 px-3 text-center">Opciones</th>
                 </tr>
               </thead>
@@ -141,7 +167,7 @@ export const GestionUsuariosView: React.FC = () => {
                       <td className="py-3 px-3" style={{ color: tableText }}>{u.persona?.numeroDocumento || '-'}</td>
                       <td className="py-3 px-3" style={{ color: tableText }}>{u.cargo || '-'}</td>
                       <td className="py-3 px-3 text-end fw-semibold" style={{ color: tableText }}>
-                        ${Number(u.salario || 0).toLocaleString('es-AR')}
+                        {salariosVisibles ? `$${formatearMonto(u.salario)}` : '$ ••••••'}
                       </td>
                       <td className="py-3 px-3 text-center">
                         <span

@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import type { Insumo } from '../../insumos/types/Insumo';
 import { getInsumosBajoStock } from '../../insumos/services/insumoService';
 import { useTheme } from '../../../Context/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 
 export const FaltaStockCard: React.FC = () => {
   const [insumosCriticos, setInsumosCriticos] = useState<Insumo[]>([]);
   const [cargando, setCargando] = useState<boolean>(true);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const navigate = useNavigate();
 
   useEffect(() => {
     const cargarStockCritico = async () => {
@@ -25,11 +27,11 @@ export const FaltaStockCard: React.FC = () => {
   }, []);
 
   return (
-    <div 
-      className="card p-3 h-100 d-flex flex-column" 
-      style={{ 
-        backgroundColor: isDark ? '#1E1E1F' : '#ffffff', 
-        border: isDark ? '1px solid #3f3f46' : '1px solid #e2e8f0', 
+    <div
+      className="card p-3 h-100 d-flex flex-column"
+      style={{
+        backgroundColor: isDark ? '#1E1E1F' : '#ffffff',
+        border: isDark ? '1px solid #3f3f46' : '1px solid #e2e8f0',
         borderRadius: '12px',
         boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.05)'
       }}
@@ -48,22 +50,28 @@ export const FaltaStockCard: React.FC = () => {
           <i className="bi bi-check-circle me-1"></i> Todo el stock está en niveles óptimos
         </div>
       ) : (
-        <div 
-          className="d-flex flex-column gap-2 pe-1" 
-          style={{ 
-            maxHeight: '140px', 
-            overflowY: 'auto', 
-            overflowX: 'hidden' 
+        <div
+          className="d-flex flex-column gap-2 pe-1"
+          style={{
+            maxHeight: '140px',
+            overflowY: 'auto',
+            overflowX: 'hidden'
           }}
         >
           {insumosCriticos.map((insumo) => (
-            <div 
+            <div
               key={insumo.idInsumo} 
+              role="button"
+              tabIndex={0}
+              title="Ir a Insumos"
+              onClick={() => navigate('/insumos')}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/insumos'); }}
               className="d-flex justify-content-between align-items-center px-3 py-2 rounded flex-shrink-0"
-              style={{ 
-                backgroundColor: isDark ? '#27272a' : '#f8fafc', 
+              style={{
+                cursor: 'pointer',
+                backgroundColor: isDark ? '#27272a' : '#f8fafc',
                 border: isDark ? 'none' : '1px solid #e2e8f0',
-                fontSize: '0.85rem' 
+                fontSize: '0.85rem'
               }}
             >
               <span className={`font-monospace fw-semibold text-truncate me-2 ${isDark ? 'text-white' : 'text-dark'}`}>

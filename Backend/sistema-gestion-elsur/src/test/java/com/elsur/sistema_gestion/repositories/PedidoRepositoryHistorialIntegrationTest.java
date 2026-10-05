@@ -48,6 +48,17 @@ class PedidoRepositoryHistorialIntegrationTest {
         return pedidoRepository.save(p);
     }
 
+    // fecha_creacion no se puede modificar después de guardar (updatable = false).
+    private Pedido pedidoCreadoHace(Cliente c, int dias) {
+        Pedido p = new Pedido();
+        p.setCliente(c);
+        p.setEstado("ENTREGADO");
+        p.setMonto_total(BigDecimal.TEN);
+        p.setFecha_entrega_estimada(LocalDateTime.now());
+        p.setFecha_creacion(LocalDateTime.now().minusDays(dias));
+        return pedidoRepository.saveAndFlush(p);
+    }
+
     @Test
     @DisplayName("Busca por cliente, excluye pedidos activos y devuelve los más recientes primero")
     void buscaPorClienteYOrdenaDescendente() {
@@ -76,6 +87,44 @@ class PedidoRepositoryHistorialIntegrationTest {
         assertEquals(2, primera.getContent().size());
         assertTrue(primera.getTotalElements() >= 5);
         assertFalse(primera.isLast());
+    }
+
+    @Test
+    @DisplayName("Contadores del menú: cuenta el taller sin presupuestos y los atrasados sin finalizados")
+    void contadoresDelMenu() {
+        List<String> fueraDeTaller = List.of("VENTA_RAPIDA", "ENTREGADO", "CANCELADO", "DEVUELTO", "PRESUPUESTO");
+        List<String> fueraDeAtrasados = List.of("VENTA_RAPIDA", "ENTREGADO", "CANCELADO", "DEVUELTO", "PRESUPUESTO", "FINALIZADO");
+        LocalDateTime ahora = LocalDateTime.now();
+        long tallerAntes = pedidoRepository.contarConEstadoFueraDe(fueraDeTaller);
+        long atrasadosAntes = pedidoRepository.contarAtrasados(fueraDeAtrasados, ahora);
+
+        Cliente c = cliente("Cliente Contadores");
+        Pedido atrasado = pedido(c, "PENDIENTE", null);
+        atrasado.setFecha_entrega_estimada(ahora.minusDays(1));
+        Pedido aTiempo = pedido(c, "EN PROCESO", null);
+        aTiempo.setFecha_entrega_estimada(ahora.plusDays(2));
+        Pedido finalizadoVencido = pedido(c, "FINALIZADO", null);
+        finalizadoVencido.setFecha_entrega_estimada(ahora.minusDays(1));
+        Pedido presupuesto = pedido(c, "PRESUPUESTO", null);
+        presupuesto.setFecha_entrega_estimada(ahora.minusDays(1));
+        pedido(c, "ENTREGADO", ahora);
+        pedidoRepository.flush();
+
+        assertEquals(tallerAntes + 3, pedidoRepository.contarConEstadoFueraDe(fueraDeTaller));
+        assertEquals(atrasadosAntes + 1, pedidoRepository.contarAtrasados(fueraDeAtrasados, ahora));
+    }
+
+    @Test
+    @DisplayName("Informes: trae solo los pedidos creados desde la fecha pedida")
+    void creadosDesde() {
+        Cliente c = cliente("Cliente Informes");
+        Pedido viejo = pedidoCreadoHace(c, 90);
+        Pedido reciente = pedidoCreadoHace(c, 5);
+
+        List<Pedido> resultado = pedidoRepository.buscarCreadosDesde(LocalDateTime.now().minusDays(30));
+
+        assertTrue(resultado.stream().anyMatch(p -> p.getId_pedido().equals(reciente.getId_pedido())));
+        assertTrue(resultado.stream().noneMatch(p -> p.getId_pedido().equals(viejo.getId_pedido())));
     }
 
     @Test

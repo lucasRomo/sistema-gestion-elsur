@@ -125,7 +125,11 @@ export const useRegistrarPedido = () => {
     }
   };
 
+  // Cliente registrado desde el propio pedido: se suma a la lista sin recargar todo.
+  const agregarCliente = (cliente: any) => setClientes((prev) => [...prev, cliente]);
+
   return {
+    agregarCliente,
     productos,
     clientes,
     empleados,

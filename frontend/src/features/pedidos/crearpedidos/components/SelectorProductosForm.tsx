@@ -6,6 +6,7 @@ import type { Maquina } from '../../../maquinas/types/Maquina';
 import { useTheme } from '../../../../Context/ThemeContext';
 import { crearPedidoService } from '../service/crearPedidoService';
 
+import { formatearMonto } from '../../../../utils/formato';
 interface Props {
   productos: Producto[];
   carrito: CartItem[];
@@ -106,7 +107,17 @@ export const SelectorProductosForm: React.FC<Props> = ({
     subtotal: prodSeleccionado.precioBase * cantidadNum
   };
 
-  setCarrito([...carrito, nuevoItem]);
+  const existente = carrito.findIndex((item) => item.producto.idProducto === nuevoItem.producto.idProducto);
+  if (existente === -1) {
+    setCarrito([...carrito, nuevoItem]);
+  } else {
+    // El mismo producto otra vez: se suma al renglón que ya estaba en vez de duplicarlo.
+    setCarrito(carrito.map((item, i) => {
+      if (i !== existente) return item;
+      const cantidadTotal = item.cantidad + nuevoItem.cantidad;
+      return { ...item, cantidad: cantidadTotal, subtotal: item.producto.precioBase * cantidadTotal };
+    }));
+  }
   setProductoId('');
   setBusquedaProducto('');
   setCantidad('1');
@@ -365,12 +376,12 @@ export const SelectorProductosForm: React.FC<Props> = ({
                       }}
                       onMouseDown={() => {
                         setProductoId(String(p.idProducto));
-                        setBusquedaProducto(`${p.nombreProducto} - $${p.precioBase}`);
+                        setBusquedaProducto(`${p.nombreProducto} - $${formatearMonto(p.precioBase)}`);
                         setMostrarDropdown(false);
                       }}
                     >
                       <span className="fw-semibold small">{p.nombreProducto}</span>
-                      <span className="badge bg-secondary ms-2">${p.precioBase}</span>
+                      <span className="badge bg-secondary ms-2">${formatearMonto(p.precioBase)}</span>
                     </div>
                   ))
                 )}
@@ -426,8 +437,8 @@ export const SelectorProductosForm: React.FC<Props> = ({
                     <span>{item.producto.nombreProducto}</span>
                   </div>
                   <div style={{ width: '20%' }}>{item.cantidad}</div>
-                  <div style={{ width: '20%' }}>${item.producto.precioBase}</div>
-                  <div style={{ width: '20%' }} className="fw-bold text-info">${item.subtotal.toFixed(2)}</div>
+                  <div style={{ width: '20%' }}>${formatearMonto(item.producto.precioBase)}</div>
+                  <div style={{ width: '20%' }} className="fw-bold text-info">${formatearMonto(item.subtotal)}</div>
                 </div>
               ))
             )}
@@ -463,13 +474,13 @@ export const SelectorProductosForm: React.FC<Props> = ({
         <div className="p-3 rounded mb-4" style={{ backgroundColor: cardSectionBg, border: `1px solid ${borderTheme}` }}>
           <div className="d-flex justify-content-between mb-1 small">
             <span>Subtotal Productos:</span>
-            <span className="fw-bold">${subtotal.toFixed(2)}</span>
+            <span className="fw-bold">${formatearMonto(subtotal)}</span>
           </div>
 
           {porcentajeDescuento > 0 && (
             <div className="d-flex justify-content-between text-success mb-1 small">
               <span>Descuento Aplicado ({porcentajeDescuento}%):</span>
-              <span className="fw-bold">-${montoDescuento.toFixed(2)}</span>
+              <span className="fw-bold">-${formatearMonto(montoDescuento)}</span>
             </div>
           )}
 
@@ -477,7 +488,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
           <div className="d-flex justify-content-between align-items-center">
             <span className="fw-bold fs-5">Total a Cobrar:</span>
-            <span className="fw-bold fs-3 font-monospace" style={{ color: '#27ace6' }}>${totalFinal.toFixed(2)}</span>
+            <span className="fw-bold fs-3 font-monospace" style={{ color: '#27ace6' }}>${formatearMonto(totalFinal)}</span>
           </div>
         </div>
 

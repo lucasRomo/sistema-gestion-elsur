@@ -47,6 +47,8 @@ export const DashboardPrincipal: React.FC = () => {
     setVerTicketPedido,
     handleAgregar,
     handleEliminarItem,
+    handleCambiarCantidad,
+    stockPorProducto,
     handleValidarYCompletarVenta,
     ejecutarCompletarVenta,
     ejecutarCancelacion
@@ -55,7 +57,7 @@ export const DashboardPrincipal: React.FC = () => {
   // Atajos globales de Venta Rápida (solo si no hay un modal abierto, para no interferir).
   useEffect(() => {
     const manejarTecla = (e: KeyboardEvent) => {
-      if (document.querySelector('.modal.d-block')) return;
+      if (e.defaultPrevented || document.querySelector('.modal.d-block')) return;
       if (e.key === 'F2' && carrito.length > 0) {
         e.preventDefault();
         handleValidarYCompletarVenta();
@@ -133,16 +135,19 @@ export const DashboardPrincipal: React.FC = () => {
             cantidad={cantidad}
             setCantidad={setCantidad}
             onAgregar={handleAgregar}
+            stockPorProducto={stockPorProducto}
           />
-          <CarritoLista carrito={carrito} onEliminar={handleEliminarItem} />
+          <CarritoLista carrito={carrito} onEliminar={handleEliminarItem} onCambiarCantidad={handleCambiarCantidad} />
         </div>
 
-        <ModalElegirMetodoPago
-          show={showModalMetodoPago}
-          onClose={() => setShowModalMetodoPago(false)}
-          total={totalFinal}
-          onConfirmarPago={(datosPago) => ejecutarCompletarVenta(datosPago)}
-        />
+        {showModalMetodoPago && (
+          <ModalElegirMetodoPago
+            show={showModalMetodoPago}
+            onClose={() => setShowModalMetodoPago(false)}
+            total={totalFinal}
+            onConfirmarPago={(datosPago) => ejecutarCompletarVenta(datosPago)}
+          />
+        )}
 
         <ResumenVenta
           subtotal={subtotalVenta}

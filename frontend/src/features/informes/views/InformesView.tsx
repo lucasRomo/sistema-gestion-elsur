@@ -72,6 +72,7 @@ export const InformesView: React.FC = () => {
     averiasRaw: datos.averiasRaw,
     categoriasClienteRaw: datos.categoriasClienteRaw,
     procesarMetricas,
+    asegurarDesde: datos.asegurarDesde,
   });
 
   const usuarioLogueado = useMemo(() => {
@@ -103,7 +104,7 @@ export const InformesView: React.FC = () => {
 
   const handleAnalizar = async () => {
     if (!confirmarRangoActual()) return;
-    const resultado = await datos.cargarDatos(false, 'Error al recalcular informes');
+    const resultado = await datos.cargarDatos(false, 'Error al recalcular informes', fechaDesdeInput);
     if (!resultado) return;
     procesarMetricas(
       fechaDesdeInput,
@@ -136,7 +137,7 @@ export const InformesView: React.FC = () => {
   const kpiCards = [
     { label: 'INGRESOS TOTALES', sub: 'YMSUR / Total', val: `$${Number(metricas.ventasTotales || 0).toLocaleString('es-AR')}`, color: '#8e45e0', icon: 'bi-currency-dollar', points: generarPuntosSparkline(11, 360, 6, 26) },
     { label: 'TICKETS GENERADOS', sub: 'Operaciones', val: metricas.ticketsGenerados || 0, color: '#20c997', icon: 'bi-receipt', points: generarPuntosSparkline(22, 360, 6, 24) },
-    { label: 'TICKET PROMEDIO', sub: 'Valor Medio', val: `$${metricas.ticketPromedio || '0.00'}`, color: '#0dcaf0', icon: 'bi-graph-up-arrow', points: generarPuntosSparkline(33, 360, 6, 27) },
+    { label: 'TICKET PROMEDIO', sub: 'Valor Medio', val: `$${metricas.ticketPromedio || '0,00'}`, color: '#0dcaf0', icon: 'bi-graph-up-arrow', points: generarPuntosSparkline(33, 360, 6, 27) },
     { label: 'MOVIMIENTOS DE CAJA', sub: 'Registros', val: `${metricas.cantidadMovimientos || 0} reg`, color: '#ffc107', icon: 'bi-wallet2', points: generarPuntosSparkline(31, 360, 6, 25) },
   ];
 

@@ -49,8 +49,9 @@ public class MovimientoCajaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<MovimientoCaja>> obtenerTodos() {
-        return ResponseEntity.ok(movimientoCajaService.obtenerTodos());
+    public ResponseEntity<List<MovimientoCaja>> obtenerTodos(
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate desde) {
+        return ResponseEntity.ok(desde != null ? movimientoCajaService.obtenerDesde(desde) : movimientoCajaService.obtenerTodos());
     }
 
     @GetMapping("/desglose-arqueo")

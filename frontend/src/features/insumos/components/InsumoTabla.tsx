@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Insumo } from '../types/Insumo';
 import { useTheme } from '../../../Context/ThemeContext';
+import { ThOrdenable } from '../../../components/common/ThOrdenable';
+import { useOrdenTabla } from '../../../hook/useOrdenTabla';
 
 interface InsumoTablaProps {
   insumos: Insumo[];
@@ -22,11 +24,16 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
   const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
   const mutedText = isDark ? 'rgba(255,255,255,0.5)' : '#64748b';
 
-  const insumosOrdenados = [...insumos].sort((a, b) => {
-    const idA = a.idInsumo || (a as any).id || 0;
-    const idB = b.idInsumo || (b as any).id || 0;
-    return idA - idB;
-  });
+  const { ordenados: insumosOrdenados, orden, alternar } = useOrdenTabla(insumos, {
+    id: (i) => Number(i.idInsumo || (i as any).id || 0),
+    nombre: (i) => i.nombreInsumo,
+    precio: (i) => Number(i.precio ?? 0),
+    empaquetado: (i) => Number(i.stockEmpaquetado ?? 0),
+    suelto: (i) => Number(i.stockActual ?? 0),
+    minimo: (i) => Number(i.stockMinimo ?? 0),
+    proveedor: (i) => i.proveedor?.nombreComercial || i.proveedor?.tipoProveedor?.descripcion,
+    estado: (i) => (i as any).estado,
+  }, { clave: 'id', direccion: 'asc' });
 
   return (
     <table 
@@ -39,14 +46,14 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
     >
       <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
         <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontSize: '0.85rem', textTransform: 'uppercase' }}>
-          <th className="py-3 px-3 text-center" style={{ width: '6%' }}>ID</th>
-          <th className="py-3 px-3 text-start" style={{ width: '20%' }}>Nombre Insumo</th>
-          <th className="py-3 px-3 text-center" style={{ width: '12%' }}>Precio</th>
-          <th className="py-3 px-3 text-center" style={{ width: '13%' }}>Stock Empaquetado</th>
-          <th className="py-3 px-3 text-center" style={{ width: '20%' }}>Stock Suelto / Consumo</th>
-          <th className="py-3 px-3 text-center" style={{ width: '11%' }}>Stock Mínimo</th>
-          <th className="py-3 px-3 text-start" style={{ width: '15%' }}>Proveedor</th>
-          <th className="py-3 px-3 text-center" style={{ width: '10%' }}>Estado</th>
+          <ThOrdenable clave="id" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '6%' }}>ID</ThOrdenable>
+          <ThOrdenable clave="nombre" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-start" style={{ width: '20%' }}>Nombre Insumo</ThOrdenable>
+          <ThOrdenable clave="precio" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '12%' }}>Precio</ThOrdenable>
+          <ThOrdenable clave="empaquetado" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '13%', whiteSpace: 'normal' }}>Stock Empaquetado</ThOrdenable>
+          <ThOrdenable clave="suelto" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '20%', whiteSpace: 'normal' }}>Stock Suelto / Consumo</ThOrdenable>
+          <ThOrdenable clave="minimo" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '11%', whiteSpace: 'normal' }}>Stock Mínimo</ThOrdenable>
+          <ThOrdenable clave="proveedor" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-start" style={{ width: '15%' }}>Proveedor</ThOrdenable>
+          <ThOrdenable clave="estado" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '10%' }}>Estado</ThOrdenable>
           <th className="py-3 px-3 text-center" style={{ width: '10%' }}>Opciones</th>
         </tr>
       </thead>
@@ -74,7 +81,7 @@ export const InsumoTabla: React.FC<InsumoTablaProps> = ({ insumos, onEditar, onV
                 </td>
 
                 <td className="py-3 px-3 text-center fw-semibold text-info-custom">
-                  ${i.precio != null ? Number(i.precio).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                  ${i.precio != null ? Number(i.precio).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'}
                 </td>
 
                 <td className="py-3 px-3 text-center">

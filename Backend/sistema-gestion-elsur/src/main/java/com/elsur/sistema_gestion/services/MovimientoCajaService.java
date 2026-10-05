@@ -13,6 +13,7 @@ public interface MovimientoCajaService {
     List<MovimientoCaja> listarMovimientosDelDia();
     Map<String, Double> calcularTotalesDelDia();
     List<MovimientoCaja> obtenerTodos();
+    List<MovimientoCaja> obtenerDesde(java.time.LocalDate desde);
     Map<String, Double> obtenerDesgloseArqueo();
     List<MovimientoCaja> listarMovimientosPorTurno(Integer idTurno);
     Map<String, Double> calcularTotalesPorTurno(Integer idTurno);

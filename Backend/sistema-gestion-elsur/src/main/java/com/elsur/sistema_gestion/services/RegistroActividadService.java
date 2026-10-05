@@ -7,6 +7,8 @@ import java.util.List;
 public interface RegistroActividadService {
     List<RegistroActividad> listarTodos();
     List<RegistroActividad> buscarConFiltros(Integer idUsuario, String tabla);
+    java.util.Map<String, Object> buscarConFiltrosPaginado(Integer idUsuario, String tabla, int pagina, int tamano);
+    List<Usuario> listarUsuariosConActividad();
     RegistroActividad buscarPorId(Integer id);
     RegistroActividad guardar(RegistroActividad registro);
     

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { Producto } from '../../productos/types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
+import { formatearMonto } from '../../../utils/formato';
 
 interface Props {
   productos: Producto[];
@@ -9,10 +10,11 @@ interface Props {
   cantidad: string;
   setCantidad: (cant: string) => void;
   onAgregar: () => void;
+  stockPorProducto?: Record<string, number>;
 }
 
 export const SelectorProducto: React.FC<Props> = ({
-  productos, productoId, setProductoId, cantidad, setCantidad, onAgregar
+  productos, productoId, setProductoId, cantidad, setCantidad, onAgregar, stockPorProducto = {}
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -73,7 +75,7 @@ export const SelectorProducto: React.FC<Props> = ({
             } else if (productosFiltrados.length > 0) {
               const primero = productosFiltrados[0];
               setProductoId(String(primero.idProducto));
-              setBusquedaProducto(`${primero.nombreProducto} - $${primero.precioBase}`);
+              setBusquedaProducto(`${primero.nombreProducto} - $${formatearMonto(primero.precioBase)}`);
               setMostrarDropdown(false);
               setTimeout(() => cantidadRef.current?.select(), 0);
             }
@@ -102,12 +104,27 @@ export const SelectorProducto: React.FC<Props> = ({
                     }}
                     onMouseDown={() => {
                       setProductoId(String(p.idProducto));
-                      setBusquedaProducto(`${p.nombreProducto} - $${p.precioBase}`);
+                      setBusquedaProducto(`${p.nombreProducto} - $${formatearMonto(p.precioBase)}`);
                       setMostrarDropdown(false);
                     }}
                   >
                     <span className="fw-semibold small">{p.nombreProducto}</span>
-                    <span className="badge bg-secondary ms-2">${p.precioBase}</span>
+                    <span className="d-flex align-items-center gap-1 flex-shrink-0">
+                      {stockPorProducto[String(p.idProducto)] !== undefined && (
+                        <span
+                          className="badge"
+                          style={{
+                            backgroundColor: 'transparent',
+                            border: `1px solid ${stockPorProducto[String(p.idProducto)] > 0 ? '#22c55e' : '#dc3545'}`,
+                            color: stockPorProducto[String(p.idProducto)] > 0 ? '#22c55e' : '#dc3545'
+                          }}
+                          title="Stock disponible"
+                        >
+                          {stockPorProducto[String(p.idProducto)] > 0 ? `Stock: ${stockPorProducto[String(p.idProducto)]}` : 'Sin stock'}
+                        </span>
+                      )}
+                      <span className="badge bg-secondary ms-1">${formatearMonto(p.precioBase)}</span>
+                    </span>
                   </div>
                 );
               })

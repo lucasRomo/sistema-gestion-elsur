@@ -4,6 +4,7 @@ import { cajaService } from '../services/cajaService';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import type { DatosArqueo, MovimientoCaja } from '../types/caja';
 
+import { formatearMonto } from '../../../utils/formato';
 interface ModalConsultarArqueoProps {
   isOpen: boolean;
   onClose: () => void;
@@ -215,7 +216,7 @@ export const ModalConsultarArqueo: React.FC<ModalConsultarArqueoProps> = ({
                               {new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                             </td>
                             <td className="fw-bold" style={{ backgroundColor: 'transparent', color: textColor }}>
-                              ${Number(m.monto).toFixed(2)}
+                              ${formatearMonto(Number(m.monto))}
                             </td>
                             <td style={{ backgroundColor: 'transparent' }}>
                               <span className="badge bg-secondary">

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { DocumentoDigital } from '../types/Repositorio';
 import { repositorioService } from '../services/repositorioService';
 
+import { formatearMonto } from '../../../utils/formato';
 interface Props {
   documento: DocumentoDigital | null;
   getIconoArchivo: (tipo: string) => React.ReactNode;
@@ -165,7 +166,7 @@ export const DetalleDocumento: React.FC<Props> = ({
                 {documento.area?.institucion?.nombreInstitucion} — {documento.area?.nombreArea}
               </p>
               {documento.producto && (
-                <p className="mb-1 text-success fw-bold">Precio Base Registrado: ${documento.producto.precioBase}</p>
+                <p className="mb-1 text-success fw-bold">Precio Base Registrado: ${formatearMonto(documento.producto.precioBase)}</p>
               )}
             </div>
           </div>

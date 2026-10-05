@@ -60,6 +60,27 @@ public class PedidoServiceImpl implements PedidoService {
         return pedidoRepository.findAll();
     }
 
+    // Contadores del menú lateral: solo COUNTs, sin traer los pedidos con sus relaciones.
+    // Mismo criterio que las pestañas de Pedidos Pendientes (Taller sin presupuestos; atrasados
+    // sin presupuestos ni finalizados).
+    @Override
+    public java.util.Map<String, Long> resumenCola() {
+        List<String> fueraDeTaller = new java.util.ArrayList<>(ESTADOS_FUERA_DE_COLA);
+        fueraDeTaller.add("PRESUPUESTO");
+        List<String> fueraDeAtrasados = new java.util.ArrayList<>(fueraDeTaller);
+        fueraDeAtrasados.add("FINALIZADO");
+
+        java.util.Map<String, Long> resumen = new java.util.LinkedHashMap<>();
+        resumen.put("taller", pedidoRepository.contarConEstadoFueraDe(fueraDeTaller));
+        resumen.put("atrasados", pedidoRepository.contarAtrasados(fueraDeAtrasados, java.time.LocalDateTime.now()));
+        return resumen;
+    }
+
+    @Override
+    public List<Pedido> listarCreadosDesde(java.time.LocalDate desde) {
+        return pedidoRepository.buscarCreadosDesde(desde.atStartOfDay());
+    }
+
     @Override
     public List<Pedido> listarActivos() {
         return pedidoRepository.findByEstadoNotIn(ESTADOS_FUERA_DE_COLA);

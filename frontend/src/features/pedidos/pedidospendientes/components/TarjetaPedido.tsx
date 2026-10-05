@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { confirmarAccion } from '../../../../config/dialogStore';
 import { ContadorTiempo } from './ContadorTiempo';
 import { useTheme } from '../../../../Context/ThemeContext';
-import { pad, formatearFechaHora, resolverEmpleadoGestion } from '../../../../utils/formato';
+import { pad, formatearFechaHora, resolverEmpleadoGestion, formatearMonto } from '../../../../utils/formato';
 import { EstadoBadge } from '../../../../components/common/EstadoBadge';
 
 interface TarjetaPedidoProps {
@@ -167,7 +167,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
 
     const pagos = p.comprobantes || [];
     const primerPago = pagos.length > 0 ? pagos[0] : null;
-    const montoPrimerPago = primerPago ? Number(primerPago.montoPago ?? primerPago.monto_pago ?? 0).toFixed(2) : null;
+    const montoPrimerPago = primerPago ? formatearMonto(Number(primerPago.montoPago ?? primerPago.monto_pago ?? 0)) : null;
 
     if (fechaCreacionRaw) {
       const subtituloEstatico = `Estado Inicial: ${estadoInicial}`;
@@ -224,7 +224,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
     pagosPosteriores.forEach((pago: any, idx: number) => {
       const f = pago.fechaCarga || pago.fecha_carga || pago.fecha;
       if (!f) return;
-      const montoVal = Number(pago.montoPago ?? pago.monto_pago ?? 0).toFixed(2);
+      const montoVal = formatearMonto(Number(pago.montoPago ?? pago.monto_pago ?? 0));
       items.push({
         id: `ev-pago-${idx + 1}`,
         fechaRaw: f,
@@ -535,11 +535,11 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
               <div className="d-flex gap-4 align-items-center">
                 <div>
                   <span className="text-muted small me-2">Monto Total</span>
-                  <span className="fw-bold fs-5 text-white">${Number(p.monto_total).toFixed(2)}</span>
+                  <span className="fw-bold fs-5 text-white">${formatearMonto(Number(p.monto_total))}</span>
                 </div>
                 <div>
                   <span className="text-muted small me-2">Abonado</span>
-                  <span className="fw-bold fs-5 text-info">${Number(p.monto_pago_adelantado).toFixed(2)}</span>
+                  <span className="fw-bold fs-5 text-info">${formatearMonto(Number(p.monto_pago_adelantado))}</span>
                 </div>
               </div>
 

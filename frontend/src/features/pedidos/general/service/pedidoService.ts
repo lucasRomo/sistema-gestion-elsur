@@ -24,8 +24,9 @@ export const pedidoService = {
     return text ? JSON.parse(text) : null; 
   },
 
-  obtenerTodos: async (): Promise<Pedido[]> => {
-    const response = await apiFetch(`${API_BASE_URL}/pedidos`);
+  // Con "desde" (aaaa-mm-dd) trae solo los pedidos creados a partir de esa fecha (Informes).
+  obtenerTodos: async (desde?: string): Promise<Pedido[]> => {
+    const response = await apiFetch(`${API_BASE_URL}/pedidos${desde ? `?desde=${desde}` : ''}`);
     if (!response.ok) throw new Error('Error al obtener la lista de pedidos');
     return await response.json();
   },

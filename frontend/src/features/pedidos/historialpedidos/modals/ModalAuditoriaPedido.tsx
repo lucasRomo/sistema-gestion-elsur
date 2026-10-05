@@ -2,6 +2,7 @@ import React from 'react';
 import { useTheme } from '../../../../Context/ThemeContext';
 import { verComprobantePedido } from '../../../../services/descargarArchivoProtegido';
 
+import { formatearMonto } from '../../../../utils/formato';
 interface ModalAuditoriaPedidoProps {
   pedido: any;
   onClose: () => void;
@@ -15,9 +16,9 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
   onAbrirCuentaCorriente,
   onVerTicket 
 }) => {
-  if (!pedido) return null;
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  if (!pedido) return null;
 
   const cardBg = isDark ? '#121214' : '#f3f3f3';
   const cardBorder = isDark ? '#3f3f46' : '#e2e8f0';
@@ -226,7 +227,7 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                                     )}
                                   </div>
                                 </td>
-                                <td className="text-end px-3 py-3 fw-bold text-success font-monospace">+${Number(montoCobro).toFixed(2)}</td>
+                                <td className="text-end px-3 py-3 fw-bold text-success font-monospace">+${formatearMonto(Number(montoCobro))}</td>
                               </tr>
                             );
                           })}
@@ -240,10 +241,10 @@ export const ModalAuditoriaPedido: React.FC<ModalAuditoriaPedidoProps> = ({
                 </div>
 
                 <div className="mt-3 p-3 rounded" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}>
-                  <div className="d-flex justify-content-between mb-1 text-white"><span>Monto Total:</span> <span className="fw-bold">${Number(pedido.monto_total || pedido.montoTotal || 0).toFixed(2)}</span></div>
-                  <div className="d-flex justify-content-between mb-1 text-white"><span>Total Abonado:</span> <span className="text-info-custom fw-bold">${Number(pedido.monto_pago_adelantado || pedido.montoPagoAdelantado || 0).toFixed(2)}</span></div>
+                  <div className="d-flex justify-content-between mb-1 text-white"><span>Monto Total:</span> <span className="fw-bold">${formatearMonto(Number(pedido.monto_total || pedido.montoTotal || 0))}</span></div>
+                  <div className="d-flex justify-content-between mb-1 text-white"><span>Total Abonado:</span> <span className="text-info-custom fw-bold">${formatearMonto(Number(pedido.monto_pago_adelantado || pedido.montoPagoAdelantado || 0))}</span></div>
                   <div className="d-flex justify-content-between pt-2 border-top border-secondary text-white">
-                    <span>Restante / Saldo:</span> <span className="text-success fw-bold">${Number((pedido.monto_total || pedido.montoTotal || 0) - (pedido.monto_pago_adelantado || pedido.montoPagoAdelantado || 0)).toFixed(2)}</span>
+                    <span>Restante / Saldo:</span> <span className="text-success fw-bold">${formatearMonto(Number((pedido.monto_total || pedido.montoTotal || 0) - (pedido.monto_pago_adelantado || pedido.montoPagoAdelantado || 0)))}</span>
                   </div>
                 </div>
               </div>

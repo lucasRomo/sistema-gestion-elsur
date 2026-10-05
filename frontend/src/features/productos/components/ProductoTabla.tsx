@@ -2,6 +2,9 @@ import React from 'react';
 import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
 
+import { formatearMonto } from '../../../utils/formato';
+import { ThOrdenable } from '../../../components/common/ThOrdenable';
+import { useOrdenTabla } from '../../../hook/useOrdenTabla';
 interface Props {
   productos: Producto[];
   onEditar: (p: Producto) => void;
@@ -27,7 +30,15 @@ export const ProductoTabla: React.FC<Props> = ({
   const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
   const noMachineColor = isDark ? 'rgba(255, 255, 255, 0.5)' : '#64748b';
 
-  const productosOrdenados = [...productos].sort((a, b) => (a.idProducto ?? 0) - (b.idProducto ?? 0));
+  const { ordenados: productosOrdenados, orden, alternar } = useOrdenTabla(productos, {
+    id: (p) => p.idProducto ?? 0,
+    nombre: (p) => p.nombreProducto,
+    categoria: (p) => p.categoria?.nombre,
+    precio: (p) => Number(p.precioBase ?? 0),
+    stock: (p) => Number(p.stock ?? 0),
+    maquina: (p) => p.maquinaNecesaria?.nombre || p.maquinaNecesaria?.nombreMaquina,
+    estado: (p) => p.estado,
+  }, { clave: 'id', direccion: 'asc' });
 
   return (
     <table 
@@ -40,13 +51,13 @@ export const ProductoTabla: React.FC<Props> = ({
     >
       <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
         <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontSize: '0.85rem', textTransform: 'uppercase' }}>
-          <th className="py-3 px-3 text-center" style={{ width: '6%' }}>ID</th>
-          <th className="py-3 px-3 text-start" style={{ width: '22%' }}>Nombre</th>
-          <th className="py-3 px-3 text-center" style={{ width: '14%' }}>Categoría</th>
-          <th className="py-3 px-3 text-center" style={{ width: '12%' }}>Precio</th>
-          <th className="py-3 px-3 text-center" style={{ width: '12%' }}>Stock</th>
-          <th className="py-3 px-3 text-center" style={{ width: '14%' }}>Máquina</th>
-          <th className="py-3 px-3 text-center" style={{ width: '10%' }}>Estado</th>
+          <ThOrdenable clave="id" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '6%' }}>ID</ThOrdenable>
+          <ThOrdenable clave="nombre" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-start" style={{ width: '22%' }}>Nombre</ThOrdenable>
+          <ThOrdenable clave="categoria" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '14%' }}>Categoría</ThOrdenable>
+          <ThOrdenable clave="precio" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '12%' }}>Precio</ThOrdenable>
+          <ThOrdenable clave="stock" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '12%' }}>Stock</ThOrdenable>
+          <ThOrdenable clave="maquina" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '14%' }}>Máquina</ThOrdenable>
+          <ThOrdenable clave="estado" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '10%' }}>Estado</ThOrdenable>
           <th className="py-3 px-3 text-center" style={{ width: '10%' }}>Opciones</th>
         </tr>
       </thead>
@@ -62,7 +73,7 @@ export const ProductoTabla: React.FC<Props> = ({
               <td className="px-3 py-3 text-center text-info-custom fw-bold">#{p.idProducto}</td>
               <td className="px-3 py-3 fw-bold text-start" style={{ color: tableText }}>{p.nombreProducto}</td>
               <td className="px-3 py-3 text-center" style={{ color: tableText }}>{p.categoria?.nombre || '-'}</td>
-              <td className="px-3 py-3 text-center fw-semibold text-info-custom">${Number(p.precioBase).toFixed(2)}</td>
+              <td className="px-3 py-3 text-center fw-semibold text-info-custom">${formatearMonto(Number(p.precioBase))}</td>
               <td className="px-3 py-3 text-center">
                 <span className={p.stock > 0 ? "text-success fw-bold me-2" : "text-danger fw-bold me-2"}>
                   {p.stock}

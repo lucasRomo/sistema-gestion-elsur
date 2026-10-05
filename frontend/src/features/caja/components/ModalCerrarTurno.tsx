@@ -4,6 +4,7 @@ import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import type { DatosArqueo, MovimientoCaja } from '../types/caja';
 import { mostrarAviso } from '../../../config/dialogStore';
 
+import { formatearMonto } from '../../../utils/formato';
 interface ModalCerrarTurnoProps {
   isOpen: boolean;
   onClose: () => void;
@@ -200,7 +201,7 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
                                 {new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                               </td>
                               <td className="fw-bold" style={{ backgroundColor: 'transparent', color: textColor }}>
-                                ${Number(m.monto).toFixed(2)}
+                                ${formatearMonto(Number(m.monto))}
                               </td>
                               <td style={{ backgroundColor: 'transparent' }}>
                                 <span className="badge bg-secondary">

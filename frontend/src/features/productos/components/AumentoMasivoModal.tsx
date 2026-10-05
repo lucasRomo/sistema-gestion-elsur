@@ -3,6 +3,7 @@ import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
 import { confirmarAccion, mostrarAviso, mostrarError } from '../../../config/dialogStore';
 
+import { formatearMonto } from '../../../utils/formato';
 interface Props {
   show: boolean;
   productos: Producto[];
@@ -336,7 +337,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
                           />
                           <label className="form-check-label d-flex justify-content-between pe-2 w-100" htmlFor={`p-${p.idProducto}`} style={{ color: textColor }}>
                             <span>{p.nombreProducto}</span>
-                            <span style={{ color: mutedText }}>Precio Base: ${p.precioBase}</span>
+                            <span style={{ color: mutedText }}>Precio Base: ${formatearMonto(p.precioBase)}</span>
                           </label>
                         </div>
                       ))

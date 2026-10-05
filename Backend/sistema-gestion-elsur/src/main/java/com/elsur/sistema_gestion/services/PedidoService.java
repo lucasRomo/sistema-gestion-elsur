@@ -7,6 +7,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface PedidoService {
     List<Pedido> listarTodos();
+    List<Pedido> listarCreadosDesde(java.time.LocalDate desde);
+    java.util.Map<String, Long> resumenCola();
 
     /** Pedidos que siguen en la cola del taller (incluye presupuestos). */
     List<Pedido> listarActivos();

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ItemCompraInsumo } from '../types/compraInsumos';
 
+import { formatearMonto } from '../../../utils/formato';
 interface TablaItemsCompraProps {
   items: ItemCompraInsumo[];
   onEliminar: (index: number) => void;
@@ -67,9 +68,9 @@ export const TablaItemsCompra: React.FC<TablaItemsCompraProps> = ({
                     </span>
                   </td>
                   <td className="text-center" style={{ backgroundColor: 'transparent' }}>{item.cantidadEmpaquetada}</td>
-                  <td className="text-end" style={{ backgroundColor: 'transparent' }}>${item.precioUnitario.toFixed(2)}</td>
+                  <td className="text-end" style={{ backgroundColor: 'transparent' }}>${formatearMonto(item.precioUnitario)}</td>
                   <td className="text-end fw-bold" style={{ backgroundColor: 'transparent' }}>
-                    <span className="text-info-custom">${item.subtotal.toFixed(2)}</span>
+                    <span className="text-info-custom">${formatearMonto(item.subtotal)}</span>
                   </td>
                   <td className="text-center" style={{ backgroundColor: 'transparent' }}>
                     <button

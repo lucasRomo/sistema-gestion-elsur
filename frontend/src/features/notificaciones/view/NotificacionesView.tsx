@@ -8,7 +8,10 @@ const COLOR_MAP = {
   success: '#198754',
 };
 
-export function NotificacionesView() {
+// En el celular, las fallas de máquinas llevan a la pestaña Máquinas.
+const TAB_POR_TIPO: Partial<Record<string, string>> = { FALLA_MAQUINA: 'maquinas' };
+
+export function NotificacionesView({ onIrA }: { onIrA?: (tab: string) => void } = {}) {
   const { notificaciones, cargando, recargar } = useNotificaciones();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -43,7 +46,16 @@ export function NotificacionesView() {
             <div
               key={n.id}
               className="p-3 rounded-3"
-              style={{ backgroundColor: cardBg, border: `1px solid ${borderColor}`, borderLeft: `4px solid ${COLOR_MAP[n.color]}` }}
+              {...(onIrA && TAB_POR_TIPO[n.tipo] ? {
+                role: 'button',
+                tabIndex: 0,
+                onClick: () => onIrA(TAB_POR_TIPO[n.tipo]!),
+                onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter') onIrA(TAB_POR_TIPO[n.tipo]!); },
+              } : {})}
+              style={{
+                backgroundColor: cardBg, border: `1px solid ${borderColor}`, borderLeft: `4px solid ${COLOR_MAP[n.color]}`,
+                cursor: onIrA && TAB_POR_TIPO[n.tipo] ? 'pointer' : undefined
+              }}
             >
               <div className="d-flex justify-content-between align-items-start">
                 <div className="d-flex align-items-center gap-2">

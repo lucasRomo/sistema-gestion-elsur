@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useHistorialActividad } from '../hooks/useHistorialActividad';
+import { getRegistrosActividad } from '../services/registroActividadServices';
+import { mostrarError } from '../../../config/dialogStore';
 import type { RegistroActividad } from '../types/RegistroActividad';
 import { formatearFechaHora, resolverNombreUsuario } from '../../../utils/formato';
 
@@ -29,10 +31,11 @@ export const HistorialActividadView: React.FC = () => {
   const mutedText = isDark ? '#a1a1aa' : '#64748b';
 
   const navigate = useNavigate();
-  const { actividades, cargando } = useHistorialActividad();
-
   const [filtroEmpleado, setFiltroEmpleado] = useState<string>('Sin Filtro');
   const [busquedaTabla, setBusquedaTabla] = useState<string>('');
+  const idUsuarioFiltro = filtroEmpleado === 'Sin Filtro' ? null : Number(filtroEmpleado);
+  const { actividades, usuarios, cargando, cargandoMas, hayMas, total, cargarMas } =
+    useHistorialActividad(busquedaTabla, idUsuarioFiltro);
 
   const obtenerNombreUsuario = (reg: RegistroActividad) =>
     resolverNombreUsuario(reg.usuario, { nombreCompleto: true, fallback: 'Sistema' });
@@ -42,20 +45,19 @@ export const HistorialActividadView: React.FC = () => {
     return dato.replace(/^"(.*)"$/, '$1');
   };
 
-  const empleadosUnicos = Array.from(
-    new Set(actividades.map((a) => obtenerNombreUsuario(a)))
-  );
+  // Ya vienen filtradas desde el backend (de a páginas).
+  const actividadesFiltradas = actividades;
 
-  const actividadesFiltradas = actividades.filter((act) => {
-    const nombreUsuario = obtenerNombreUsuario(act);
-    const coincideEmpleado =
-      filtroEmpleado === 'Sin Filtro' || nombreUsuario === filtroEmpleado;
-    const coincideTabla = (act.tablaAfectada || '')
-      .toLowerCase()
-      .includes(busquedaTabla.toLowerCase());
-
-    return coincideEmpleado && coincideTabla;
-  });
+  // La exportación trae todos los registros que coinciden con los filtros, no solo los cargados.
+  const exportar = async (formato: 'excel' | 'pdf') => {
+    try {
+      const todas = await getRegistrosActividad({ tabla: busquedaTabla, idUsuario: idUsuarioFiltro });
+      if (formato === 'excel') exportarHistorialActividadExcel(todas);
+      else exportarHistorialActividadPDF(todas);
+    } catch (err) {
+      mostrarError(err instanceof Error ? err.message : 'No se pudo exportar el historial.');
+    }
+  };
 
   const formatearFecha = (fechaRaw?: string | null) => {
     if (!fechaRaw) return '-';
@@ -114,9 +116,9 @@ export const HistorialActividadView: React.FC = () => {
             onChange={(e) => setFiltroEmpleado(e.target.value)}
           >
             <option value="Sin Filtro">Sin Filtro</option>
-            {empleadosUnicos.map((emp) => (
-              <option key={emp} value={emp}>
-                {emp}
+            {usuarios.map((u) => (
+              <option key={u.idUsuario} value={String(u.idUsuario)}>
+                {u.nombre}
               </option>
             ))}
           </select>
@@ -182,6 +184,16 @@ export const HistorialActividadView: React.FC = () => {
             )}
           </tbody>
         </table>
+        {!cargando && actividadesFiltradas.length > 0 && (
+          <div className="d-flex flex-column align-items-center gap-2 py-3" style={{ color: mutedText, fontSize: '0.8rem' }}>
+            <span>Mostrando {actividadesFiltradas.length} de {total} registros</span>
+            {hayMas && (
+              <button className="btn btn-sm fw-bold px-4" style={{ backgroundColor: '#8e45e0', color: '#ffffff' }} onClick={cargarMas} disabled={cargandoMas}>
+                {cargandoMas ? 'Cargando...' : 'Cargar más'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="d-flex align-items-stretch justify-content-between mt-3 mb-4 font-monospace">
@@ -196,7 +208,7 @@ export const HistorialActividadView: React.FC = () => {
         <div className="d-flex gap-2">
           <button 
             className="btn btn-outline-success fw-bold d-inline-flex align-items-center justify-content-center px-3 py-2 shadow-sm"
-            onClick={() => exportarHistorialActividadExcel(actividadesFiltradas)}
+            onClick={() => exportar('excel')}
             disabled={actividadesFiltradas.length === 0 || cargando}
             title="Exportar historial actual a Excel"
           >
@@ -205,7 +217,7 @@ export const HistorialActividadView: React.FC = () => {
 
           <button 
             className="btn btn-outline-danger fw-bold d-inline-flex align-items-center justify-content-center px-3 py-2 shadow-sm"
-            onClick={() => exportarHistorialActividadPDF(actividadesFiltradas)}
+            onClick={() => exportar('pdf')}
             disabled={actividadesFiltradas.length === 0 || cargando}
             title="Exportar historial actual a PDF"
           >

@@ -89,6 +89,11 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
         return movimientoCajaRepository.findAll();
     }
 
+    @Override
+    public List<MovimientoCaja> obtenerDesde(java.time.LocalDate desde) {
+        return movimientoCajaRepository.findByFechaGreaterThanEqual(desde.atStartOfDay());
+    }
+
 
     @Override
     public Map<String, Double> calcularTotalesDelDia() {

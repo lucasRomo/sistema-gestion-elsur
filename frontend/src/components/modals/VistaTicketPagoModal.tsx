@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { formatearMonto } from '../../utils/formato';
 interface Props {
   pedido: any;
   tipo?: 'cliente' | 'pago';
@@ -144,27 +145,27 @@ export const VistaTicketPagoModal: React.FC<Props> = ({ pedido, movimiento, onCl
               {esEgreso ? (
                 <div className="d-flex justify-content-between fw-bold text-danger fs-6 my-2 p-2 rounded" style={{ border: '1.5px solid #dc3545', backgroundColor: '#f8d7da' }}>
                   <span>MONTO EGRESO:</span>
-                  <span>-${montoEsteCobro.toFixed(2)}</span>
+                  <span>-${formatearMonto(montoEsteCobro)}</span>
                 </div>
               ) : (
                 <>
                   {montoEsteCobro > 0 && (
                     <div className="d-flex justify-content-between fw-bold text-success fs-6 my-2 p-2 rounded" style={{ border: '1.5px solid #198754', backgroundColor: '#f0fdf4' }}>
                       <span>MONTO DE ESTE PAGO:</span>
-                      <span>${montoEsteCobro.toFixed(2)}</span>
+                      <span>${formatearMonto(montoEsteCobro)}</span>
                     </div>
                   )}
                   <div className="d-flex justify-content-between my-1" style={{ fontSize: '0.8rem' }}>
                     <span>Monto Total Pedido:</span>
-                    <span>${totalPedido.toFixed(2)}</span>
+                    <span>${formatearMonto(totalPedido)}</span>
                   </div>
                   <div className="d-flex justify-content-between my-1" style={{ fontSize: '0.8rem' }}>
                     <span>Total Acumulado Abonado:</span>
-                    <span>${montoAbonadoTotalMomento.toFixed(2)}</span>
+                    <span>${formatearMonto(montoAbonadoTotalMomento)}</span>
                   </div>
                   <div className="d-flex justify-content-between fw-bold my-1 text-dark">
                     <span>Saldo Pendiente Actual:</span>
-                    <span>${saldoPendienteMomento.toFixed(2)}</span>
+                    <span>${formatearMonto(saldoPendienteMomento)}</span>
                   </div>
                 </>
               )}

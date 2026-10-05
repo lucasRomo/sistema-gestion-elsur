@@ -14,6 +14,7 @@ import { compraInsumosService } from '../services/compraInsumosService';
 import type { ItemCompraInsumo, DatosCompraInsumo } from '../types/compraInsumos';
 import { confirmarAccion } from '../../../config/dialogStore';
 
+import { formatearMonto } from '../../../utils/formato';
 export const CompraInsumosView: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -202,7 +203,7 @@ export const CompraInsumosView: React.FC = () => {
       return setAvisoModal('La lista contiene ítems con un precio menor o igual a 0. Ajuste sus precios antes de continuar.');
     }
 
-    if (!(await confirmarAccion(`¿Registrar la compra de ${itemsCompra.length} ítem(s) por $${montoTotalNum.toFixed(2)}? Se descontará de la caja y se sumará al stock.`, { titulo: 'Registrar compra', textoConfirmar: 'Registrar' }))) return;
+    if (!(await confirmarAccion(`¿Registrar la compra de ${itemsCompra.length} ítem(s) por $${formatearMonto(montoTotalNum)}? Se descontará de la caja y se sumará al stock.`, { titulo: 'Registrar compra', textoConfirmar: 'Registrar' }))) return;
     setLoading(true);
     try {
       const resumenItems = itemsCompra.map(i => `${i.nombreInsumo} (${i.tipoItem}) x${i.cantidadEmpaquetada}`).join(', ');

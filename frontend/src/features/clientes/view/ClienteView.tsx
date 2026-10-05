@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PersonaForm } from '../../auth/persona/view/PersonaForm';
-import { ClienteExtraForm } from '../components/ClienteExtraForm';
+import { RegistroClienteModal } from '../components/RegistroClienteModal';
 import { ClienteEditModal } from '../components/ClienteEditModal';
 import { CategoriaClienteModal } from '../components/CategoriaClienteModal';
 import { CuentaCorrienteModal } from '../components/CuentaCorrienteModal';
@@ -14,10 +13,15 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useIsMobile } from '../../../hook/useIsMobile';
 import { exportarClientesExcel, exportarClientesPDF } from '../utils/exportClientesUtils';
-import { colorPorSaldo } from '../../../utils/formato';
+import { colorPorSaldo, formatearMonto } from '../../../utils/formato';
 import type { Cliente } from '../types/Cliente';
-import { confirmarAccion, mostrarError } from '../../../config/dialogStore';
+import { mostrarError } from '../../../config/dialogStore';
 import { SkeletonFilasTabla } from '../../../components/common/SkeletonCarga';
+import { ThOrdenable } from '../../../components/common/ThOrdenable';
+import { useOrdenTabla } from '../../../hook/useOrdenTabla';
+
+const nombreCliente = (c: Cliente) =>
+  (c.persona ? `${c.persona.nombre ?? ''} ${c.persona.apellido ?? ''}`.trim() : '') || c.razonSocial || '';
 
 export const ClienteView = () => {
   const { theme } = useTheme();
@@ -36,10 +40,9 @@ export const ClienteView = () => {
   const theadText = isDark ? '#fcfcfc' : '#334155';
   const rowBorder = isDark ? '#27272a' : '#f1f5f9';
   const rowHoverBg = isDark ? '#27272a' : '#f8fafc';
-  const modalStepBg = isDark ? '#1e1e24' : '#ffffff';
 
   const { clientes, loading, registrarCliente, cargarClientes } = useClientes();
-  const [paso, setPaso] = useState(0); 
+  const [mostrarRegistro, setMostrarRegistro] = useState(false);
   const [clienteConUbicacionSeleccionada, setClienteConUbicacionSeleccionada] = useState<Cliente | null>(null);
   const [clienteAEditar, setClienteAEditar] = useState<Cliente | null>(null);
   const [clienteCuentaCorriente, setClienteCuentaCorriente] = useState<Cliente | null>(null);
@@ -51,75 +54,6 @@ export const ClienteView = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [msgSuccess, setMsgSuccess] = useState('');
   const [guardando, setGuardando] = useState(false);
-
-  const [formData, setFormData] = useState<any>({
-    nombre: '', apellido: '', email: '', numeroDocumento: '', telefono: '', 
-    tipoDocumento: '1', calle: '', numero: '', piso: '', depto: '', 
-    codPostal: '', ciudad: '', provincia: '', pais: 'Argentina',
-    razonSocial: '', condicionDePago: 'Efectivo', limiteCredito: 0, personaDeContacto: ''
-  });
-
-  const handleRegistrarFinal = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (guardando) return;
-    if (!(await confirmarAccion(`¿Registrar al cliente "${formData.razonSocial || `${formData.nombre} ${formData.apellido}`.trim()}"?`, { titulo: 'Nuevo cliente', textoConfirmar: 'Registrar' }))) return;
-    setGuardando(true);
-
-    const payload = {
-      razonSocial: formData.razonSocial || formData.nombre + " " + formData.apellido,
-      saldoDeudor: 0,
-      limiteCredito: Number(formData.limiteCredito) || 0,
-      estado: 'Activo',
-      personaDeContacto: formData.personaDeContacto || '',
-      condicionDePago: formData.condicionDePago || 'Contado',
-      persona: {
-        nombre: formData.nombre,
-        apellido: formData.apellido,
-        numeroDocumento: formData.numeroDocumento,
-        telefono: formData.telefono,
-        email: formData.email,
-        tipoDocumento: { 
-          idTipoDocumento: parseInt(formData.tipoDocumento) || 1 
-        },
-        tipoPersona: { 
-          idTipoPersona: 1 
-        },
-        direccion: {
-          calle: formData.calle,
-          numero: formData.numero,
-          piso: formData.piso || '',
-          departamento: formData.depto || '',
-          codigoPostal: formData.codPostal,
-          ciudad: formData.ciudad || 'Sin Especificar',
-          provincia: formData.provincia || 'Sin Especificar',
-          pais: formData.pais || 'Argentina'
-        }
-      }
-    };
-
-    showLoading('Registrando cliente...');
-    try {
-      await registrarCliente(payload);
-      setMsgSuccess("El Cliente ha sido registrado con éxito");
-      setShowSuccess(true);
-
-      setFormData({
-        nombre: '', apellido: '', tipoDocumento: '', numeroDocumento: '',
-        email: '', telefono: '', calle: '', numero: '', piso: '',
-        depto: '', codPostal: '', ciudad: '', provincia: '', pais: '',
-        razonSocial: '', personaDeContacto: '', limiteCredito: '0'
-      });
-
-      setPaso(0);
-    }
-    catch (e: any) {
-      mostrarError("Error: " + e.message);
-    }
-    finally {
-      setGuardando(false);
-      hideLoading();
-    }
-  };
 
   const handleConfirmarEdicion = async (data: any) => {
     if (guardando) return;
@@ -157,11 +91,14 @@ export const ClienteView = () => {
     );
   });
 
-  const clientesOrdenados = [...clientesFiltrados].sort((a, b) => {
-    const idA = a.id_cliente || a.idCliente || 0;
-    const idB = b.id_cliente || b.idCliente || 0;
-    return idA - idB;
-  });
+  const { ordenados: clientesOrdenados, orden, alternar } = useOrdenTabla(clientesFiltrados, {
+    id: (c) => Number(c.id_cliente || c.idCliente || 0),
+    cliente: (c) => nombreCliente(c),
+    documento: (c) => c.persona?.numeroDocumento,
+    ctacte: (c) => Number(c.limiteCredito || 0),
+    saldo: (c) => Number(c.saldoDeudor || 0),
+    estado: (c) => c.estado,
+  }, { clave: 'id', direccion: 'asc' });
 
   return (
     <div className="container-fluid px-0 h-100 d-flex flex-column font-monospace" style={{ color: textColor }}>
@@ -206,20 +143,18 @@ export const ClienteView = () => {
         >
           <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
             <tr style={{ backgroundColor: theadBg, borderBottom: `2px solid ${theadBorder}`, color: theadText, fontSize: '0.85rem', textTransform: 'uppercase' }}>
-              <th className="py-3 px-3 text-center" style={{ width: '6%' }}>ID</th>
-              <th className="py-3 px-3 text-start" style={{ width: '15%' }}>Nombre</th>
-              <th className="py-3 px-3 text-start" style={{ width: '15%' }}>Apellido</th>
-              <th className="py-3 px-3 text-center" style={{ width: '12%' }}>Documento</th>
-              <th className="py-3 px-3 text-start" style={{ width: '18%' }}>Razón Social</th>
-              <th className="py-3 px-3 text-center" style={{ width: '12%' }}>Cta. Cte.</th>
-              <th className="py-3 px-3 text-end" style={{ width: '10%' }}>Saldo Deudor</th>
-              <th className="py-3 px-3 text-center" style={{ width: '6%' }}>Estado</th>
+              <ThOrdenable clave="id" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '7%' }}>ID</ThOrdenable>
+              <ThOrdenable clave="cliente" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-start" style={{ width: '33%' }}>Cliente</ThOrdenable>
+              <ThOrdenable clave="documento" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '12%' }}>Documento</ThOrdenable>
+              <ThOrdenable clave="ctacte" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '14%' }}>Cta. Cte.</ThOrdenable>
+              <ThOrdenable clave="saldo" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-end" style={{ width: '12%' }}>Saldo Deudor</ThOrdenable>
+              <ThOrdenable clave="estado" orden={orden} onOrdenar={alternar} className="py-3 px-3 text-center" style={{ width: '8%' }}>Estado</ThOrdenable>
               <th className="py-3 px-3 text-center" style={{ width: '6%' }}>Opciones</th>
             </tr>
           </thead>
           <tbody style={{ fontSize: '0.9rem' }}>
             {loading ? (
-              <SkeletonFilasTabla columnas={9} />
+              <SkeletonFilasTabla columnas={7} />
             ) : clientesOrdenados && clientesOrdenados.length > 0 ? (
               clientesOrdenados.map((c: Cliente) => {
                 const tieneCtaCte = Number(c.limiteCredito || 0) > 0;
@@ -234,15 +169,18 @@ export const ClienteView = () => {
                   >
                     <td className="py-3 px-3 text-center text-info-custom fw-bold">#{idClienteVal}</td>
                     
-                    <td className="px-3 py-3 fw-bold" style={{ color: tableText }}>{c.persona?.nombre}</td>
-                    <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.apellido}</td>
+                    <td className="px-3 py-3" style={{ color: tableText }}>
+                      <div className="fw-bold">{nombreCliente(c)}</div>
+                      {c.razonSocial && c.razonSocial.trim() !== nombreCliente(c) && (
+                        <div className="small" style={{ opacity: 0.65 }}>{c.razonSocial}</div>
+                      )}
+                    </td>
                     <td className="px-3 py-3 text-center" style={{ color: tableText }}>{c.persona?.numeroDocumento}</td>
-                    <td className="px-3 py-3" style={{ color: tableText }}>{c.razonSocial}</td>
                     
                     <td className="px-3 py-3 text-center">
                       {tieneCtaCte ? (
                         <span className="badge rounded-pill bg-success bg-opacity-75 font-monospace px-3 py-2" style={{ color: '#ffffff' }}>
-                          Habilitada (${Number(c.limiteCredito).toFixed(0)})
+                          Habilitada (${Number(c.limiteCredito).toLocaleString('es-AR', { maximumFractionDigits: 0 })})
                         </span>
                       ) : (
                         <span className="badge rounded-pill bg-secondary font-monospace opacity-75 px-3 py-2" style={{ color: '#ffffff' }}>
@@ -253,7 +191,7 @@ export const ClienteView = () => {
 
                     <td className="px-3 py-3 text-end">
                       <span className={`fw-bold ${colorPorSaldo(c.saldoDeudor, c.limiteCredito)}`}>
-                        ${Number(c.saldoDeudor || 0).toFixed(2)}
+                        ${formatearMonto(Number(c.saldoDeudor || 0))}
                       </span>
                     </td>
 
@@ -300,7 +238,7 @@ export const ClienteView = () => {
               })
             ) : (
               <tr>
-                <td colSpan={9} className="text-center py-5 border-0" style={{ color: tableText }}>
+                <td colSpan={7} className="text-center py-5 border-0" style={{ color: tableText }}>
                   <i className="bi display-5 d-block mb-2 opacity-50"></i>
                   <span className="font-monospace">No se han registrado o encontrado clientes en el sistema.</span>
                 </td>
@@ -384,30 +322,25 @@ export const ClienteView = () => {
               fontSize: '1rem',
               minWidth: '90px'
             }}
-            onClick={() => setPaso(1)}
+            onClick={() => setMostrarRegistro(true)}
           >
             Registrar Nuevo Cliente
           </button>
         </div>
       </div>  
 
-      {paso === 1 && (
-  <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 1050 }}>
-    <div className="modal-dialog modal-dialog-centered">
-      <div 
-        className="modal-content p-4 shadow-lg" 
-        style={{ 
-          backgroundColor: modalStepBg, 
-          color: tableText, 
-          border: '1.5px solid #0e9c09'
-        }}
-      >
-        <PersonaForm formData={formData} setFormData={setFormData} clientes={clientes} onSiguiente={() => setPaso(2)} onVolver={() => setPaso(0)} />
-      </div>
-    </div>
-  </div>
-)}
-      {paso === 2 && <ClienteExtraForm formData={formData} setFormData={setFormData} onRegistrar={handleRegistrarFinal} onCerrar={() => setPaso(1)} guardando={guardando} />}
+      {mostrarRegistro && (
+        <RegistroClienteModal
+          clientes={clientes}
+          onCerrar={() => setMostrarRegistro(false)}
+          onRegistrado={async () => {
+            setMostrarRegistro(false);
+            await cargarClientes();
+            setMsgSuccess('El Cliente ha sido registrado con éxito');
+            setShowSuccess(true);
+          }}
+        />
+      )}
       {clienteAEditar && <ClienteEditModal cliente={clienteAEditar} onCerrar={() => setClienteAEditar(null)} onConfirmar={handleConfirmarEdicion} />}
       {clienteConUbicacionSeleccionada && <UbicacionViewModal cliente={clienteConUbicacionSeleccionada} onCerrar={() => setClienteConUbicacionSeleccionada(null)} onConfirmar={handleConfirmarEdicion} />}
       

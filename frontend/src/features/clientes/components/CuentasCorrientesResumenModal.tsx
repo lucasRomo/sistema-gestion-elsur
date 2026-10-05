@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 import type { Cliente } from '../types/Cliente';
 
+import { formatearMonto } from '../../../utils/formato';
 interface Props {
   clientes: Cliente[];
   onCerrar: () => void;
@@ -85,14 +86,14 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
               <div className="col-md-4">
                 <div className="p-3 rounded border" style={{ backgroundColor: cardBg, borderColor: inputBorder }}>
                   <span className="font-monospace small fw-semibold d-block mb-1" style={{ color: mutedText }}>Total Crédito Otorgado</span>
-                  <h4 className="fw-bold text-warning mb-0">${totalLimite.toFixed(2)}</h4>
+                  <h4 className="fw-bold text-warning mb-0">${formatearMonto(totalLimite)}</h4>
                 </div>
               </div>
               <div className="col-md-4">
                 <div className="p-3 rounded border" style={{ backgroundColor: cardBg, borderColor: inputBorder }}>
                   <span className="font-monospace small fw-semibold d-block mb-1" style={{ color: mutedText }}>Total Deuda Acumulada</span>
                   <h4 className={`fw-bold mb-0 ${totalDeuda > 0 ? 'text-danger' : 'text-success'}`}>
-                    ${totalDeuda.toFixed(2)}
+                    ${formatearMonto(totalDeuda)}
                   </h4>
                 </div>
               </div>
@@ -175,10 +176,10 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
                         <td className="px-3 py-3" style={{ color: tableText }}>{c.persona?.numeroDocumento || '-'}</td>
                         <td className="px-3 py-3" style={{ color: tableText }}>{c.razonSocial || '-'}</td>
                         <td className="px-3 py-3 text-end font-monospace text-warning fw-semibold">
-                          ${Number(c.limiteCredito || 0).toFixed(2)}
+                          ${formatearMonto(Number(c.limiteCredito || 0))}
                         </td>
                         <td className={`px-3 py-3 text-end font-monospace fw-bold ${Number(c.saldoDeudor || 0) > 0 ? 'text-danger' : 'text-success'}`}>
-                          ${Number(c.saldoDeudor || 0).toFixed(2)}
+                          ${formatearMonto(Number(c.saldoDeudor || 0))}
                         </td>
                         <td className="px-3 py-3 text-center">
                           <button

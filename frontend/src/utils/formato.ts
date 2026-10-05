@@ -108,3 +108,14 @@ export const colorPorSaldo = (saldo: number, limite: number): string => {
   if (porcentaje >= 75) return 'text-warning';
   return 'text-success';
 };
+
+const FORMATO_MONTO = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/**
+ * Monto con el formato argentino: 12345.5 -> "12.345,50" (el "$" lo pone quien lo muestra).
+ * Antes cada pantalla usaba toFixed(2) ("12345.50") o toLocaleString, y se mezclaban.
+ */
+export const formatearMonto = (valor: number | string | null | undefined): string => {
+  const n = Number(valor ?? 0);
+  return FORMATO_MONTO.format(Number.isFinite(n) ? n : 0);
+};

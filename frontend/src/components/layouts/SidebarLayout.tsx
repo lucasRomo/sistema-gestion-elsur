@@ -5,6 +5,7 @@ import { useTheme } from '../../Context/ThemeContext';
 import { AsistenteWidget } from '../../features/asistente/components/AsistenteWidget';
 import { pad, resolverNombreUsuario } from '../../utils/formato';
 
+import { useContadoresMenu } from '../../hook/useContadoresMenu';
 interface SidebarLayoutProps {
   activeItem: string;
   children: React.ReactNode;
@@ -102,6 +103,22 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
     return esAdmin;
   };
 
+  const contadores = useContadoresMenu(tienePermiso('Pedidos Pendientes'), tienePermiso('Insumos'));
+
+  // Píldoras de cada ítem del menú: [texto, color, descripción para el lector de pantalla]
+  const insigniasDe = (nombre: string): Array<[string, string, string]> => {
+    if (nombre === 'Pedidos Pendientes') {
+      const lista: Array<[string, string, string]> = [];
+      if (contadores.taller > 0) lista.push([String(contadores.taller), '#8e45e0', `${contadores.taller} en el taller`]);
+      if (contadores.atrasados > 0) lista.push([String(contadores.atrasados), '#dc3545', `${contadores.atrasados} atrasados`]);
+      return lista;
+    }
+    if (nombre === 'Insumos' && contadores.stockBajo > 0) {
+      return [[String(contadores.stockBajo), '#d97706', `${contadores.stockBajo} con stock bajo`]];
+    }
+    return [];
+  };
+
   const menuPrincipales = [
     { name: 'Panel Principal', icon: 'bi-grid-fill', path: '/dashboard' },
   ].filter(item => tienePermiso(item.name));
@@ -171,6 +188,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
   const renderizarBotonMenu = (item: { name: string; icon: string; path: string }) => {
     const isActive = activeItem === item.name;
+    const insignias = insigniasDe(item.name);
     const activeBg = esOscuro ? '#2d2d30' : '#f1f5f9';
     const inactiveTextColor = esOscuro ? '#d4d4d8' : '#334155';
 
@@ -178,7 +196,8 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
       <button
         key={item.name}
         onClick={() => handleNavegacion(item.path)}
-        className="btn d-flex align-items-center w-100 transition-all"
+        className="btn d-flex align-items-center w-100 transition-all position-relative"
+        title={insignias.length > 0 ? `${item.name}: ${insignias.map(i => i[2]).join(', ')}` : undefined}
         style={{
           backgroundColor: isActive ? activeBg : 'transparent',
           color: isActive ? '#8e45e0' : inactiveTextColor,
@@ -219,6 +238,26 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
             {item.name}
           </span>
         )}
+
+        {insignias.length > 0 && (colapsado ? (
+          <span
+            aria-hidden="true"
+            style={{ position: 'absolute', top: '3px', right: '6px', width: '7px', height: '7px', borderRadius: '50%', backgroundColor: insignias[insignias.length - 1][1] }}
+          />
+        ) : (
+          <span className="ms-auto d-flex gap-1">
+            {insignias.map(([texto, color, descripcion]) => (
+              <span
+                key={descripcion}
+                className="badge rounded-pill"
+                style={{ backgroundColor: color, color: '#ffffff', fontSize: '0.62rem', padding: '2px 6px' }}
+                aria-label={descripcion}
+              >
+                {texto}
+              </span>
+            ))}
+          </span>
+        ))}
       </button>
     );
   };

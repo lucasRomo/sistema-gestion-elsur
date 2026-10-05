@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTheme } from '../../../../Context/ThemeContext';
-import { formatearFechaHora, resolverEmpleadoGestion } from '../../../../utils/formato';
+import { formatearFechaHora, resolverEmpleadoGestion, formatearMonto } from '../../../../utils/formato';
 import { EstadoBadge } from '../../../../components/common/EstadoBadge';
 
 interface FilaHistorialProps {
@@ -101,11 +101,11 @@ export const FilaHistorial: React.FC<FilaHistorialProps> = ({
       </td>
 
       <td className="py-3 px-3 text-center fw-bold" style={{ color: tableText }}>
-        ${Number(p.monto_total).toFixed(2)}
+        ${formatearMonto(Number(p.monto_total))}
       </td>
 
       <td className="py-3 px-3 text-center text-success fw-bold">
-        ${Number(p.monto_pago_adelantado).toFixed(2)}
+        ${formatearMonto(Number(p.monto_pago_adelantado))}
       </td>
       
       <td className="py-3 px-3 text-center">

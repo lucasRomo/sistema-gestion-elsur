@@ -17,6 +17,15 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
 
     List<Pedido> findByEstadoIn(Collection<String> estados);
 
+    @Query("SELECT COUNT(p) FROM Pedido p WHERE p.estado NOT IN :excluidos")
+    long contarConEstadoFueraDe(@Param("excluidos") Collection<String> excluidos);
+
+    @Query("SELECT COUNT(p) FROM Pedido p WHERE p.estado NOT IN :excluidos AND p.fecha_entrega_estimada < :ahora")
+    long contarAtrasados(@Param("excluidos") Collection<String> excluidos, @Param("ahora") java.time.LocalDateTime ahora);
+
+    @Query("SELECT p FROM Pedido p WHERE p.fecha_creacion >= :desde")
+    List<Pedido> buscarCreadosDesde(@Param("desde") java.time.LocalDateTime desde);
+
     List<Pedido> findByEstadoNotIn(Collection<String> estados);
 
     // Historial paginado: busca por cliente (razón social o nombre completo), por número de

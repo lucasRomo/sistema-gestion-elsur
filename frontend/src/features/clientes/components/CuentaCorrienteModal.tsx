@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 import { clienteService } from '../services/clienteService';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
-import { colorPorSaldo } from '../../../utils/formato';
+import { colorPorSaldo, formatearMonto } from '../../../utils/formato';
 import type { Cliente } from '../types/Cliente';
 import { confirmarAccion } from '../../../config/dialogStore';
 
@@ -90,7 +90,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
   const handleActualizarLimite = async (e: React.FormEvent) => {
   e.preventDefault();
   if (guardandoLimite || !idCliente) return;
-  if (!(await confirmarAccion(`¿Actualizar el límite de crédito a $${Number(limite || 0).toFixed(2)}?`, { titulo: 'Límite de crédito', textoConfirmar: 'Actualizar' }))) return;
+  if (!(await confirmarAccion(`¿Actualizar el límite de crédito a $${formatearMonto(Number(limite || 0))}?`, { titulo: 'Límite de crédito', textoConfirmar: 'Actualizar' }))) return;
   setGuardandoLimite(true);
   try {
     const limiteNumerico = limite === '' ? 0 : Number(limite);
@@ -138,7 +138,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
       return;
     }
 
-    if (!(await confirmarAccion(`¿Registrar un pago de $${Number(montoPago).toFixed(2)} a la cuenta corriente?`, { titulo: 'Registrar pago', textoConfirmar: 'Registrar' }))) return;
+    if (!(await confirmarAccion(`¿Registrar un pago de $${formatearMonto(Number(montoPago))} a la cuenta corriente?`, { titulo: 'Registrar pago', textoConfirmar: 'Registrar' }))) return;
     setGuardandoPago(true);
     try {
       const resPago = await clienteService.registrarPago(
@@ -247,7 +247,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                       const colorClase = colorPorSaldo(saldoDeudorLocal, Number(limite || 0));
                       return (
                         <h3 className={`fw-bold mb-0 ${colorClase}`}>
-                          ${saldoDeudorLocal.toFixed(2)}
+                          ${formatearMonto(saldoDeudorLocal)}
                         </h3>
                       );
                     })()}
@@ -472,7 +472,7 @@ export const CuentaCorrienteModal: React.FC<Props> = ({ cliente, onCerrar, onAct
                           </td>
                           <td style={{ padding: '10px' }}>{m.descripcion}</td>
                           <td style={{ padding: '10px' }} className={`text-end fw-bold ${m.tipo === 'PAGO' ? 'text-success' : 'text-danger'}`}>
-                            {m.tipo === 'PAGO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
+                            {m.tipo === 'PAGO' ? '-' : '+'}${formatearMonto(Number(m.monto))}
                           </td>
                           <td style={{ padding: '10px' }} className="text-center">
                             <div className="d-flex justify-content-center gap-2">

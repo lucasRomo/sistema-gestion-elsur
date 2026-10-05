@@ -31,9 +31,11 @@ public class PedidoController {
         return mapper;
     }
 
+    // Informes pide solo desde la fecha que necesita: traer todos los pedidos de la historia en
+    // cada apertura se iba a volver cada vez más lento a medida que crece la base.
     @GetMapping
-    public List<Pedido> listar() {
-        return pedidoService.listarTodos();
+    public List<Pedido> listar(@RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate desde) {
+        return desde != null ? pedidoService.listarCreadosDesde(desde) : pedidoService.listarTodos();
     }
 
     @GetMapping("/activos")
@@ -44,6 +46,11 @@ public class PedidoController {
     @GetMapping("/cerrados")
     public List<Pedido> listarCerrados() {
         return pedidoService.listarCerrados();
+    }
+
+    @GetMapping("/resumen-cola")
+    public java.util.Map<String, Long> resumenCola() {
+        return pedidoService.resumenCola();
     }
 
     @GetMapping("/cerrados/paginado")

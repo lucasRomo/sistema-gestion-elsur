@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '../../../../Context/ThemeContext';
 import { ContadorTiempo } from './ContadorTiempo';
 import { colorEstado } from '../../../../components/common/estadoPedido';
-import { resolverEmpleadoGestion } from '../../../../utils/formato';
+import { resolverEmpleadoGestion, formatearMonto } from '../../../../utils/formato';
 
 // Vista tablero (kanban) del taller: una columna por estado. Arrastrar una tarjeta a otra
 // columna abre el mismo flujo de cambio de estado que el desplegable de la lista (con su
@@ -91,7 +91,7 @@ export const TableroPedidos: React.FC<Props> = ({ pedidos, onMover }) => {
                   <div className="fw-semibold text-truncate" style={{ fontSize: '0.85rem' }} title={nombreCliente(p)}>{nombreCliente(p)}</div>
                   <div className="d-flex justify-content-between align-items-center mt-1" style={{ fontSize: '0.72rem', color: textoSuave }}>
                     <span className="text-truncate"><i className="bi bi-person me-1" aria-hidden="true"></i>{resolverEmpleadoGestion(p)}</span>
-                    <span>${Number(p.monto_total ?? 0).toFixed(2)}</span>
+                    <span>${formatearMonto(Number(p.monto_total ?? 0))}</span>
                   </div>
                   {/* Alternativa al arrastre (pantallas táctiles): mover desde un desplegable */}
                   <select

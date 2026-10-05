@@ -19,6 +19,7 @@ import { AccionesRapidasCaja } from '../components/AccionesRapidasCaja';
 import { BarraAccionesTurno } from '../components/BarraAccionesTurno';
 import { confirmarAccion } from '../../../config/dialogStore';
 
+import { formatearMonto } from '../../../utils/formato';
 export const CajaView: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -111,7 +112,7 @@ export const CajaView: React.FC = () => {
       return;
     }
 
-    if (!(await confirmarAccion(`¿Abrir la caja con un monto inicial de $${monto.toFixed(2)}?`, { titulo: 'Abrir caja', textoConfirmar: 'Abrir' }))) return;
+    if (!(await confirmarAccion(`¿Abrir la caja con un monto inicial de $${formatearMonto(monto)}?`, { titulo: 'Abrir caja', textoConfirmar: 'Abrir' }))) return;
     setGuardandoApertura(true);
     try {
       await abrirCaja(monto);
@@ -142,7 +143,7 @@ export const CajaView: React.FC = () => {
       setIsModalOpen(false);
       setExitoModal({
         titulo: data.tipoMovimiento === 'EGRESO' ? 'Egreso registrado' : 'Ingreso registrado',
-        descripcion: `Se registró el movimiento "${data.concepto}" por $${Number(data.monto).toFixed(2)} correctamente.`
+        descripcion: `Se registró el movimiento "${data.concepto}" por $${formatearMonto(Number(data.monto))} correctamente.`
       });
       return true;
     } catch (error: any) {
@@ -166,7 +167,7 @@ export const CajaView: React.FC = () => {
       return;
     }
 
-    if (!(await confirmarAccion(`¿Registrar un ajuste de ${tipoAjuste === 'INGRESO' ? 'ingreso' : 'egreso'} por $${montoNum.toFixed(2)}?`, { titulo: 'Ajuste de movimiento', textoConfirmar: 'Registrar' }))) return;
+    if (!(await confirmarAccion(`¿Registrar un ajuste de ${tipoAjuste === 'INGRESO' ? 'ingreso' : 'egreso'} por $${formatearMonto(montoNum)}?`, { titulo: 'Ajuste de movimiento', textoConfirmar: 'Registrar' }))) return;
     setGuardandoAjuste(true);
     try {
       await ajustarMovimiento(
@@ -407,7 +408,7 @@ export const CajaView: React.FC = () => {
                         #{movimientoAjuste.id_movimiento || movimientoAjuste.idMovimiento || '-'} - {movimientoAjuste.descripcion || 'Sin descripción'}
                       </span>
                       <span className={`fw-bold ${movimientoAjuste.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
-                        {movimientoAjuste.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(movimientoAjuste.monto).toFixed(2)}
+                        {movimientoAjuste.tipoMovimiento === 'EGRESO' ? '-' : '+'}${formatearMonto(Number(movimientoAjuste.monto))}
                       </span>
                     </div>
                   </div>
@@ -479,7 +480,7 @@ export const CajaView: React.FC = () => {
                   <div className="alert alert-warning py-2 mb-3 small d-flex align-items-center gap-2">
                     <i className="bi bi-exclamation-triangle-fill fs-5"></i>
                     <span>
-                      Se registrará un nuevo movimiento de <strong>{tipoAjuste}</strong> por <strong>${Number(montoAjuste || 0).toFixed(2)}</strong> vía <strong>{metodoPagoAjuste}</strong>.
+                      Se registrará un nuevo movimiento de <strong>{tipoAjuste}</strong> por <strong>${formatearMonto(Number(montoAjuste || 0))}</strong> vía <strong>{metodoPagoAjuste}</strong>.
                     </span>
                   </div>
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 
+import { formatearMonto } from '../../../utils/formato';
 interface Props {
   show: boolean;
   onClose: () => void;
@@ -22,8 +23,14 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
 
   const [tipoPago, setTipoPago] = useState<'EFECTIVO' | 'TRANSFERENCIA' | 'DEBITO'>('EFECTIVO');
   const [comprobanteFile, setComprobanteFile] = useState<File | null>(null);
+  const [pagaCon, setPagaCon] = useState('');
 
   if (!show) return null;
+
+  // Calculadora de vuelto para efectivo: solo informa, no bloquea el cobro.
+  const pagaConNum = Number(pagaCon.replace(',', '.'));
+  const hayPagaCon = pagaCon.trim() !== '' && Number.isFinite(pagaConNum);
+  const vuelto = hayPagaCon ? pagaConNum - total : 0;
 
   const bgModal = isDark ? '#1b1b1b' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#0f172a';
@@ -77,7 +84,7 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
                 }}
               >
                 <span className="small fw-semibold" style={{ color: subTextColor }}>Total a Cobrar :</span>
-                <span className="fw-bold fs-5" style={{ color: '#22c55e' }}>${total.toFixed(2)}</span>
+                <span className="fw-bold fs-5" style={{ color: '#22c55e' }}>${formatearMonto(total)}</span>
               </div>
 
               <div className="mb-3">
@@ -100,6 +107,42 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
                   <option value="DEBITO" style={{ backgroundColor: selectBg, color: textColor }}>DÉBITO / CRÉDITO</option>
                 </select>
               </div>
+
+              {tipoPago === 'EFECTIVO' && (
+                <div className="mb-3">
+                  <label className="form-label fw-bold small mb-1" style={{ color: textColor }} htmlFor="pagaConInput">
+                    Paga con (opcional):
+                  </label>
+                  <div className="input-group">
+                    <span className="input-group-text" style={{ backgroundColor: cardBg, color: subTextColor, borderColor: cardBorder }}>$</span>
+                    <input
+                      id="pagaConInput"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      inputMode="decimal"
+                      className="form-control font-monospace"
+                      style={{ backgroundColor: selectBg, color: textColor, borderColor: cardBorder }}
+                      placeholder="Ej: 10000"
+                      value={pagaCon}
+                      onChange={(e) => setPagaCon(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+                  {hayPagaCon && (
+                    <div
+                      className="mt-2 p-2 rounded d-flex justify-content-between align-items-center"
+                      style={{ backgroundColor: cardBg, border: `1px solid ${vuelto >= 0 ? '#22c55e' : '#dc3545'}` }}
+                      aria-live="polite"
+                    >
+                      <span className="small fw-semibold" style={{ color: subTextColor }}>{vuelto >= 0 ? 'Vuelto:' : 'Falta:'}</span>
+                      <span className="fw-bold fs-5" style={{ color: vuelto >= 0 ? '#22c55e' : '#dc3545' }}>
+                        ${formatearMonto(Math.abs(vuelto))}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {tipoPago === 'TRANSFERENCIA' && (
                 <div className="mb-3">

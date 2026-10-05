@@ -17,6 +17,7 @@ import { confirmarAccion } from '../../../../config/dialogStore';
 import { mostrarToast } from '../../../../config/toastStore';
 import { TableroPedidos } from '../components/TableroPedidos';
 
+import { formatearMonto } from '../../../../utils/formato';
 export const PedidosPendientesView: React.FC = () => {
   const { pedidos, cargando, pedidosActualizando, actualizarEstado, refrescar, refrescarPedido } = usePedidosPendientes();
   const navigate = useNavigate();
@@ -30,7 +31,10 @@ export const PedidosPendientesView: React.FC = () => {
   const [filtroEmpleado, setFiltroEmpleado] = useState('');
   // Pestañas con contador: antes los presupuestos solo se veían eligiendo una opción escondida
   // del filtro de estado, y parecía que habían desaparecido.
-  const [pestana, setPestana] = useState<'TALLER' | 'PRESUPUESTOS' | 'ATRASADOS'>('TALLER');
+  const [pestana, setPestana] = useState<'TALLER' | 'PRESUPUESTOS' | 'ATRASADOS'>(() => {
+    const pedida = new URLSearchParams(window.location.search).get('pestana');
+    return pedida === 'ATRASADOS' || pedida === 'PRESUPUESTOS' ? pedida : 'TALLER';
+  });
   const [modoVista, setModoVista] = useState<'LISTA' | 'TABLERO'>(() => {
     try { return localStorage.getItem('pedidos_modo_vista') === 'TABLERO' ? 'TABLERO' : 'LISTA'; } catch { return 'LISTA'; }
   });
@@ -196,7 +200,7 @@ export const PedidosPendientesView: React.FC = () => {
       setSucesoError({
         show: true,
         titulo: 'No se puede entregar',
-        mensaje: `El Consumidor Final tiene un saldo pendiente de $${saldoPendientePedido.toFixed(2)}. Cobre el total antes de continuar -- el Consumidor Final no opera con Cuenta Corriente.`
+        mensaje: `El Consumidor Final tiene un saldo pendiente de $${formatearMonto(saldoPendientePedido)}. Cobre el total antes de continuar -- el Consumidor Final no opera con Cuenta Corriente.`
       });
       setPedidoEstadoSel(null);
       return;

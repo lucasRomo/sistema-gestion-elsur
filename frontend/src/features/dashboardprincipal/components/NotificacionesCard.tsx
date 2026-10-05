@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 import { ventaRapidaService } from '../services/ventaRapidaService';
 import type { PedidoNotificacion } from '../services/ventaRapidaService';
 
+import { formatearMonto } from '../../../utils/formato';
 export const NotificacionesCard: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const navigate = useNavigate();
 
   const [vistaActual, setVistaActual] = useState<number>(0);
   const [cajaAbierta, setCajaAbierta] = useState<boolean | null>(null);
@@ -190,7 +193,7 @@ export const NotificacionesCard: React.FC = () => {
                   <div>
                     Monto Inicial:{' '}
                     <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>
-                      ${datosTurno?.montoInicial?.toFixed(2) || '0.00'}
+                      ${formatearMonto(datosTurno?.montoInicial) || '0,00'}
                     </span>
                   </div>
                   <div>
@@ -224,8 +227,14 @@ export const NotificacionesCard: React.FC = () => {
                 pedidosUrgentes.map((ped) => (
                   <div
                     key={ped.id}
+                    role="button"
+                    tabIndex={0}
+                    title="Ver en Pedidos Pendientes"
+                    onClick={() => navigate(ped.estadoTiempo === 'vencido' ? '/pedidos-pendientes?pestana=ATRASADOS' : '/pedidos-pendientes')}
+                    onKeyDown={(e) => { if (e.key === 'Enter') navigate(ped.estadoTiempo === 'vencido' ? '/pedidos-pendientes?pestana=ATRASADOS' : '/pedidos-pendientes'); }}
                     className="p-2 rounded d-flex align-items-center justify-content-between"
                     style={{
+                      cursor: 'pointer',
                       backgroundColor: isDark ? '#27272a' : '#f8fafc',
                       border: isDark ? 'none' : '1px solid #e2e8f0',
                       borderLeft: ped.estadoTiempo === 'vencido' ? '3px solid #ef4444' : '3px solid #f59e0b',

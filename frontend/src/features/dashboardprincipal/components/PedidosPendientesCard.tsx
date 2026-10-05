@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import type { Pedido } from '../../pedidos/general/types/Pedido';
 import { pedidoService } from '../../pedidos/general/service/pedidoService';
 import { useTheme } from '../../../Context/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 
 export const PedidosPendientesCard: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const navigate = useNavigate();
 
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [cargando, setCargando] = useState<boolean>(true);
@@ -20,7 +22,7 @@ export const PedidosPendientesCard: React.FC = () => {
 
         if (usuarioJson) {
           const uObj = JSON.parse(usuarioJson);
-          
+
           const rolString = JSON.stringify(uObj).toUpperCase();
           esAdmin = rolString.includes('"ADMIN"') || rolString.includes('ROLE_ADMIN') || uObj?.rol === 'ADMIN';
 
@@ -31,7 +33,7 @@ export const PedidosPendientesCard: React.FC = () => {
         const lista: any[] = await pedidoService.obtenerActivos();
 
         const estadosInactivos = ['FINALIZADO', 'ENTREGADO', 'COMPLETADO', 'CANCELADO', 'PRESUPUESTO'];
-        
+
         let activos = lista.filter(p => {
           const obs = (p.observaciones || p.observacion || '').toLowerCase();
           const estante = (p.ubicacion_estante || p.estante || '').toLowerCase();
@@ -54,8 +56,8 @@ export const PedidosPendientesCard: React.FC = () => {
 
             const idEmp = empleado.idEmpleado || empleado.id_empleado || empleado.idUsuario || empleado.id;
             const personaEmp = empleado.persona;
-            
-            const nombreCompletoEmp = personaEmp 
+
+            const nombreCompletoEmp = personaEmp
               ? `${personaEmp.nombre} ${personaEmp.apellido}`.toLowerCase()
               : (empleado.nombre || '').toLowerCase();
 
@@ -78,11 +80,11 @@ export const PedidosPendientesCard: React.FC = () => {
   }, []);
 
   return (
-    <div 
-      className="card p-3 shadow-sm h-100 d-flex flex-column" 
-      style={{ 
-  backgroundColor: isDark ? '#1E1E1F' : '#ffffff', 
-  border: isDark ? '1px solid #3f3f46' : '1px solid #e2e8f0', 
+    <div
+      className="card p-3 shadow-sm h-100 d-flex flex-column"
+      style={{
+  backgroundColor: isDark ? '#1E1E1F' : '#ffffff',
+  border: isDark ? '1px solid #3f3f46' : '1px solid #e2e8f0',
   borderRadius: '12px',
   boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 20px rgba(0,0,0,0.05)'
 }}
@@ -101,28 +103,34 @@ export const PedidosPendientesCard: React.FC = () => {
           <i className="bi bi-check-all me-1"></i> No hay pedidos pendientes
         </div>
       ) : (
-        <div 
-          className="d-flex flex-column gap-2 pe-1" 
-          style={{ 
-            maxHeight: '140px', 
+        <div
+          className="d-flex flex-column gap-2 pe-1"
+          style={{
+            maxHeight: '140px',
             overflowY: 'auto',
             overflowX: 'hidden'
           }}
         >
           {pedidos.map((pedido: any) => {
             const id = pedido.id_pedido || pedido.idPedido;
-            const clienteNombre = pedido.cliente?.persona 
+            const clienteNombre = pedido.cliente?.persona
               ? `${pedido.cliente.persona.nombre} ${pedido.cliente.persona.apellido}`
               : (pedido.cliente?.razon_social || pedido.cliente?.nombre || 'Consumidor Final');
 
             return (
-              <div 
+              <div
                 key={id} 
+              role="button"
+              tabIndex={0}
+              title="Ir a Pedidos Pendientes"
+              onClick={() => navigate('/pedidos-pendientes')}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/pedidos-pendientes'); }}
                 className="d-flex justify-content-between align-items-center px-3 py-2 rounded flex-shrink-0"
-                style={{ 
-  backgroundColor: isDark ? '#27272a' : '#f8fafc', 
+                style={{
+  cursor: 'pointer',
+  backgroundColor: isDark ? '#27272a' : '#f8fafc',
   border: isDark ? 'none' : '1px solid #f1f5f9',
-  fontSize: '0.85rem' 
+  fontSize: '0.85rem'
 }}
               >
                 <div className="d-flex flex-column">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { ItemCompraInsumo } from '../types/compraInsumos';
 import { compraInsumosService } from '../services/compraInsumosService';
 
+import { formatearMonto } from '../../../utils/formato';
 interface ModalCargaIAProps {
   isOpen: boolean;
   onClose: () => void;
@@ -284,7 +285,7 @@ export const ModalCargaIA: React.FC<ModalCargaIAProps> = ({
                             />
                           </td>
                           <td className="text-end fw-bold" style={{ backgroundColor: 'inherit' }}>
-                            ${calcularSubtotal(item).toFixed(2)}
+                            ${formatearMonto(calcularSubtotal(item))}
                           </td>
                           <td className="text-center" style={{ backgroundColor: 'inherit' }}>
                             <button

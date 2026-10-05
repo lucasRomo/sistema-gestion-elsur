@@ -3,6 +3,7 @@ import { SuccesModal } from '../../../../components/layouts/SuccesModal';
 import { useTheme } from '../../../../Context/ThemeContext';
 import { PedidoPendienteService } from '../service/pedidoPendienteService';
 
+import { formatearMonto } from '../../../../utils/formato';
 interface ModalRegistrarPagoProps {
   pedido: any;
   show: boolean;
@@ -68,7 +69,7 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
     if (montoNum <= 0 || montoNum > saldoPendiente) {
       setErrorCajaModal({
         show: true,
-        mensaje: `El monto debe ser mayor a 0 y no puede superar el saldo pendiente ($${saldoPendiente.toFixed(2)})`
+        mensaje: `El monto debe ser mayor a 0 y no puede superar el saldo pendiente ($${formatearMonto(saldoPendiente)})`
       });
       return;
     }
@@ -129,13 +130,13 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
                 style={{ backgroundColor: resumenBg, border: `1px solid ${modalBorder}`, fontSize: '0.9rem' }}
               >
                 <div style={{ color: resumenText, fontWeight: '600' }}>
-                  Total : <span className="fw-bold" style={{ color: totalText }}>${Number(total).toFixed(2)}</span>
+                  Total : <span className="fw-bold" style={{ color: totalText }}>${formatearMonto(Number(total))}</span>
                 </div>
                 <div style={{ color: resumenText, fontWeight: '600' }}>
-                  Abonado : <span className="fw-bold" style={{ color: '#16a34a' }}>${Number(adelantado).toFixed(2)}</span>
+                  Abonado : <span className="fw-bold" style={{ color: '#16a34a' }}>${formatearMonto(Number(adelantado))}</span>
                 </div>
                 <div style={{ color: resumenText, fontWeight: '600' }}>
-                  Saldo : <span className="fw-bold" style={{ color: '#dc2626' }}>${Number(saldoPendiente).toFixed(2)}</span>
+                  Saldo : <span className="fw-bold" style={{ color: '#dc2626' }}>${formatearMonto(Number(saldoPendiente))}</span>
                 </div>
               </div>
 

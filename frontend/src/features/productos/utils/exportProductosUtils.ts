@@ -3,6 +3,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Producto } from '../types/Producto';
 
+import { formatearMonto } from '../../../utils/formato';
 export const exportarProductosExcel = async (productos: Producto[]) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Gestión de Productos');
@@ -110,7 +111,7 @@ export const exportarProductosPDF = (
     `#${p.idProducto ?? '-'}`,
     p.nombreProducto,
     p.categoria?.nombre || '-',
-    `$${p.precioBase != null ? Number(p.precioBase).toFixed(2) : '0.00'}`,
+    `$${p.precioBase != null ? formatearMonto(Number(p.precioBase)) : '0,00'}`,
     p.stock ?? 0,
     p.maquinaNecesaria?.nombre || p.maquinaNecesaria?.nombreMaquina || 'No aplica',
     p.estado,

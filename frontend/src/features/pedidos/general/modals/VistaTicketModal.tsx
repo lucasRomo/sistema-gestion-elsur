@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { resolverEmpleadoGestion } from '../../../../utils/formato';
+import { resolverEmpleadoGestion, formatearMonto } from '../../../../utils/formato';
 
 interface Props {
   pedido: any;
@@ -12,9 +12,9 @@ export const VistaTicketModal: React.FC<Props> = ({
   onClose, 
   esVentaRapida = false 
 }) => {
-  if (!pedido) return null;
-
   const [tipoTicket, setTipoTicket] = useState<'cliente' | 'comanda'>('cliente');
+
+  if (!pedido) return null;
 
   const nombreCliente = pedido.cliente?.persona 
     ? `${pedido.cliente.persona.nombre} ${pedido.cliente.persona.apellido}`
@@ -97,7 +97,7 @@ export const VistaTicketModal: React.FC<Props> = ({
             <div className="mb-3 data-section">
               <p className="mb-1"><strong>Cliente:</strong> {nombreCliente}</p>
               <p className={`mb-1 fw-bold ${saldoPendiente === 0 ? 'text-success' : 'text-warning'}`}>
-                <strong>Estado del Pago:</strong> {saldoPendiente === 0 ? 'PAGADO (CONTADO)' : `PAGO PARCIAL (Resta $${saldoPendiente.toFixed(2)})`}
+                <strong>Estado del Pago:</strong> {saldoPendiente === 0 ? 'PAGADO (CONTADO)' : `PAGO PARCIAL (Resta $${formatearMonto(saldoPendiente)})`}
               </p>
               
               {tipoTicket === 'comanda' && (
@@ -130,7 +130,7 @@ export const VistaTicketModal: React.FC<Props> = ({
                   <tr key={index}>
                     <td className="fw-bold">{det.cantidad}</td>
                     <td>{det.producto?.nombreProducto || 'Servicio/Copia'}</td>
-                    <td className="text-end">${Number(det.subtotal).toFixed(2)}</td>
+                    <td className="text-end">${formatearMonto(Number(det.subtotal))}</td>
                   </tr>
                 ))}
               </tbody>
@@ -140,15 +140,15 @@ export const VistaTicketModal: React.FC<Props> = ({
 
             <div className="d-flex justify-content-between fw-bold fs-5 my-1">
               <span>TOTAL:</span>
-              <span>${montoTotal.toFixed(2)}</span>
+              <span>${formatearMonto(montoTotal)}</span>
             </div>
             <div className="d-flex justify-content-between my-1 text-success fw-bold">
               <span>Abonado:</span>
-              <span>${montoAbonado.toFixed(2)}</span>
+              <span>${formatearMonto(montoAbonado)}</span>
             </div>
             <div className="d-flex justify-content-between fw-bold my-1 border-top pt-1 text-dark" style={{ borderColor: '#000' }}>
               <span>Saldo Restante:</span>
-              <span>${saldoPendiente.toFixed(2)}</span>
+              <span>${formatearMonto(saldoPendiente)}</span>
             </div>
 
             {pedido.observaciones && (

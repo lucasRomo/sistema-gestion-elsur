@@ -3,6 +3,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Cliente } from '../types/Cliente';
 
+import { formatearMonto } from '../../../utils/formato';
 export const exportarClientesExcel = async (clientes: Cliente[]) => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet('Gestión de Clientes');
@@ -113,8 +114,8 @@ export const exportarClientesPDF = (
     c.persona?.apellido || '-',
     c.persona?.numeroDocumento || '-',
     c.razonSocial || '-',
-    `$${c.limiteCredito != null ? Number(c.limiteCredito).toFixed(2) : '0.00'}`,
-    `$${c.saldoDeudor != null ? Number(c.saldoDeudor).toFixed(2) : '0.00'}`,
+    `$${c.limiteCredito != null ? formatearMonto(Number(c.limiteCredito)) : '0,00'}`,
+    `$${c.saldoDeudor != null ? formatearMonto(Number(c.saldoDeudor)) : '0,00'}`,
     c.estado || '-',
   ]);
 

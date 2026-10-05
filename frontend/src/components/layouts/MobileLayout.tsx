@@ -18,7 +18,9 @@ export function MobileLayout() {
   return (
     <div className="mobile-layout">
       <div className="mobile-content">
-        {ActiveComponent && <ActiveComponent />}
+        {active === 'notificaciones'
+          ? <NotificacionesView onIrA={setActive} />
+          : ActiveComponent && <ActiveComponent />}
       </div>
 
       <nav className="mobile-bottom-nav">

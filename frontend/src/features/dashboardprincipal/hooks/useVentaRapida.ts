@@ -6,6 +6,7 @@ import type { Maquina } from '../../maquinas/types/Maquina';
 import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
 
+import { formatearMonto } from '../../../utils/formato';
 const MARGEN_MERMA_RESPALDO = 5;
 const TOLERANCIA_PRODUCTO_DIRECTO = 3;
 
@@ -288,7 +289,18 @@ export const useVentaRapida = () => {
     if (!producto) return;
 
     const qty = parseInt(cantidad);
-    setCarrito((prev) => [...prev, { producto, cantidad: qty, subtotal: producto.precioBase * qty }]);
+    // Si el producto ya está en el carrito se suma a ese renglón en vez de duplicarlo.
+    setCarrito((prev) => {
+      const existente = prev.findIndex((item) => item.producto.idProducto === producto.idProducto);
+      if (existente === -1) {
+        return [...prev, { producto, cantidad: qty, subtotal: producto.precioBase * qty }];
+      }
+      return prev.map((item, i) => {
+        if (i !== existente) return item;
+        const nuevaCantidad = item.cantidad + qty;
+        return { ...item, cantidad: nuevaCantidad, subtotal: item.producto.precioBase * nuevaCantidad };
+      });
+    });
     setProductoSeleccionado('');
     setCantidad('1');
   };
@@ -296,6 +308,39 @@ export const useVentaRapida = () => {
   const handleEliminarItem = (index: number) => {
     setCarrito((prev) => prev.filter((_, i) => i !== index));
   };
+
+  // Botones − / + del carrito (sin bajar de 1: para sacarlo está la X).
+  const handleCambiarCantidad = (index: number, delta: number) => {
+    setCarrito((prev) => prev.map((item, i) => {
+      if (i !== index) return item;
+      const nuevaCantidad = Math.max(1, item.cantidad + delta);
+      return { ...item, cantidad: nuevaCantidad, subtotal: item.producto.precioBase * nuevaCantidad };
+    }));
+  };
+
+  // Stock disponible para mostrar en el buscador. Un producto con receta rinde lo que permita
+  // el insumo más escaso; uno sin receta usa su propio stock.
+  const stockPorProducto = useMemo(() => {
+    const mapa: Record<string, number> = {};
+    productosDisponibles.forEach((prod: any) => {
+      const id = String(prod.idProducto ?? '');
+      const receta = Array.isArray(prod.receta) && prod.receta.length > 0 ? prod.receta : (prod.productoInsumos || []);
+      if (receta.length === 0) {
+        mapa[id] = Number(prod.stock ?? prod.stockActual ?? 0);
+        return;
+      }
+      let rinde = Infinity;
+      receta.forEach((pi: any) => {
+        const idInsumo = pi?.insumo?.idInsumo ?? pi?.idInsumo;
+        const insumo = insumosCatalogo.find((i: any) => String(i.idInsumo ?? i.id) === String(idInsumo)) || pi?.insumo;
+        const consumo = Number(pi.cantidadConsumo ?? pi.cantidad ?? 1) || 1;
+        const stockInsumo = Number(insumo?.stockActual ?? insumo?.stockSuelto ?? 0);
+        rinde = Math.min(rinde, Math.floor(stockInsumo / consumo));
+      });
+      mapa[id] = Number.isFinite(rinde) ? Math.max(0, rinde) : 0;
+    });
+    return mapa;
+  }, [productosDisponibles, insumosCatalogo]);
 
   const vaciarCarrito = () => {
     setCarrito([]);
@@ -523,7 +568,7 @@ export const useVentaRapida = () => {
       setSuceso({
         show: true,
         titulo: '¡Éxito!',
-        mensaje: `Venta realizada con éxito ($${totalFinal.toFixed(2)}), registrada con método ${tipoPagoElegido} y stock descontado.`,
+        mensaje: `Venta realizada con éxito ($${formatearMonto(totalFinal)}), registrada con método ${tipoPagoElegido} y stock descontado.`,
         tipo: 'exito'
       });
     } catch (error: any) {
@@ -587,6 +632,8 @@ export const useVentaRapida = () => {
 
     handleAgregar,
     handleEliminarItem,
+    handleCambiarCantidad,
+    stockPorProducto,
     handleValidarYCompletarVenta,
     ejecutarCompletarVenta,
     ejecutarCancelacion

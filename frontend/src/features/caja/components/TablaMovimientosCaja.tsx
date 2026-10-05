@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { MovimientoCaja } from '../types/caja';
 import { renderBadgeCategoria } from './RenderBadgeCategoria';
 
+import { formatearMonto } from '../../../utils/formato';
 interface TablaMovimientosCajaProps {
   movimientos: MovimientoCaja[];
   isDark: boolean;
@@ -23,11 +24,52 @@ export const TablaMovimientosCaja: React.FC<TablaMovimientosCajaProps> = ({
   onVerComprobante,
   onVerTicket
 }) => {
+  // Filtros rápidos: con muchos movimientos en el día costaba encontrar, por ejemplo, solo
+  // los egresos o solo las transferencias.
+  const [filtroTipo, setFiltroTipo] = useState<'TODOS' | 'INGRESO' | 'EGRESO'>('TODOS');
+  const [filtroMetodo, setFiltroMetodo] = useState('TODOS');
+  const metodos = Array.from(new Set(movimientos.map((m) => m.metodoPago || 'EFECTIVO')));
+  const movimientosVisibles = movimientos.filter((m) =>
+    (filtroTipo === 'TODOS' || (filtroTipo === 'EGRESO') === (m.tipoMovimiento === 'EGRESO')) &&
+    (filtroMetodo === 'TODOS' || (m.metodoPago || 'EFECTIVO') === filtroMetodo));
+
+  const chip = (valor: typeof filtroTipo, texto: string, color: string) => {
+    const activo = filtroTipo === valor;
+    return (
+      <button
+        type="button"
+        className="btn btn-sm py-0 px-2 fw-semibold"
+        style={{ fontSize: '0.75rem', borderRadius: '999px', border: `1px solid ${activo ? color : cardBorder}`, backgroundColor: activo ? color : 'transparent', color: activo ? '#ffffff' : (isDark ? '#d4d4d8' : '#475569') }}
+        onClick={() => setFiltroTipo(valor)}
+        aria-pressed={activo}
+      >
+        {texto}
+      </button>
+    );
+  };
+
   return (
     <div className="col-lg-9 d-flex flex-column">
-      <h5 className="mb-3 fw-semibold">Registro de Movimientos de Caja</h5>
+      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h5 className="mb-0 fw-semibold">Registro de Movimientos de Caja</h5>
+        <div className="d-flex align-items-center gap-2 flex-wrap">
+          {chip('TODOS', 'Todos', '#8e45e0')}
+          {chip('INGRESO', 'Ingresos', '#16a34a')}
+          {chip('EGRESO', 'Egresos', '#dc3545')}
+          <select
+            className="form-select form-select-sm py-0"
+            style={{ width: 'auto', fontSize: '0.75rem', backgroundColor: tableWrapBg, color: isDark ? '#ffffff' : '#0f172a', borderColor: cardBorder }}
+            value={filtroMetodo}
+            onChange={(e) => setFiltroMetodo(e.target.value)}
+            aria-label="Filtrar por método de pago"
+          >
+            <option value="TODOS">Todos los métodos</option>
+            {metodos.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+      </div>
 
-      <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: tableWrapBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle, height: '315px' }}>
+      <div className="p-3 rounded-3 d-flex flex-column" style={{ backgroundColor: tableWrapBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle, height: 'clamp(315px, 45vh, 520px)' }}>
         <div className="table-responsive flex-grow-1" style={{ backgroundColor: tableWrapBg, height: '100%', overflowY: 'auto' }}>
           <table className="table table-hover m-0 align-middle text-center" style={{ '--bs-table-bg': tableWrapBg, '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.075)', color: isDark ? '#fff' : 'inherit' } as React.CSSProperties}>
             <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
@@ -38,16 +80,18 @@ export const TablaMovimientosCaja: React.FC<TablaMovimientosCajaProps> = ({
                 <th style={{ width: '110px' }}>Método</th>
                 <th style={{ width: '120px' }}>Categoría</th>
                 <th className="text-start">Descripción</th>
-                <th style={{ width: '60px' }}>Usu.</th>
+                <th style={{ width: '130px' }}>Usuario</th>
                 <th style={{ width: '60px' }}>Ped.</th>
                 <th style={{ width: '120px' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {movimientos.length === 0 ? (
-                <tr><td colSpan={9} className="py-5 opacity-50">No hay movimientos registrados hoy</td></tr>
+              {movimientosVisibles.length === 0 ? (
+                <tr><td colSpan={9} className="py-5 opacity-50">
+                  {movimientos.length === 0 ? 'No hay movimientos registrados hoy' : 'Ningún movimiento coincide con el filtro'}
+                </td></tr>
               ) : (
-                [...movimientos].reverse().map((m, idx) => {
+                [...movimientosVisibles].reverse().map((m, idx) => {
                   const imagenAdjunta =
                     m.comprobanteImagen ||
                     m.comprobante ||
@@ -64,7 +108,7 @@ export const TablaMovimientosCaja: React.FC<TablaMovimientosCajaProps> = ({
                       </td>
                       <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
                       <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
-                        {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${Number(m.monto).toFixed(2)}
+                        {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${formatearMonto(Number(m.monto))}
                       </td>
                       <td>
                         <span className="badge bg-secondary font-monospace">

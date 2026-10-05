@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import { useTheme } from '../../../Context/ThemeContext';
 
+import { formatearMonto } from '../../../utils/formato';
 interface Props {
   subtotal: number;
   montoDescuento: number;
@@ -131,13 +132,13 @@ export const ResumenVenta: React.FC<Props> = ({
       >
         <div className={`d-flex justify-content-between mb-1 small ${isDark ? 'text-light' : 'text-secondary'}`}>
           <span>Subtotal Productos:</span>
-          <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>${subtotal.toFixed(2)}</span>
+          <span className={`fw-bold ${isDark ? 'text-white' : 'text-dark'}`}>${formatearMonto(subtotal)}</span>
         </div>
         
         {porcentaje > 0 && (
           <div className="d-flex justify-content-between text-success mb-1 small">
             <span>Descuento Categoría ({porcentaje}%):</span>
-            <span className="fw-bold">-${montoDescuento.toFixed(2)}</span>
+            <span className="fw-bold">-${formatearMonto(montoDescuento)}</span>
           </div>
         )}
 
@@ -146,7 +147,7 @@ export const ResumenVenta: React.FC<Props> = ({
         <div className="d-flex justify-content-between align-items-center">
           <span className={`fw-bold fs-5 ${isDark ? 'text-white' : 'text-dark'}`}>Total a Cobrar:</span>
           <span className={`fw-bold fs-3 font-monospace ${isDark ? 'text-info' : 'text-primary'}`}>
-            ${total.toFixed(2)}
+            ${formatearMonto(total)}
           </span>
         </div>
       </div>

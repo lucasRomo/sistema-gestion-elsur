@@ -8,6 +8,7 @@ import { incidenciaService } from '../service/incidenciaService';
 import { getUsuarioActualId } from '../service/maquinasService';
 import { confirmarAccion } from '../../../config/dialogStore';
 
+import { formatearMonto } from '../../../utils/formato';
 interface Props {
   show: boolean;
   maquina: Maquina | null;
@@ -219,7 +220,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
         }
       });
 
-      onPagoExitoso?.(`Se registró el egreso de $${Number(montoPago).toFixed(2)} por el servicio técnico de ${maquina.nombre}.`);
+      onPagoExitoso?.(`Se registró el egreso de $${formatearMonto(Number(montoPago))} por el servicio técnico de ${maquina.nombre}.`);
 
       setIncidenciaAPagar(null);
       setComprobanteFile(null);

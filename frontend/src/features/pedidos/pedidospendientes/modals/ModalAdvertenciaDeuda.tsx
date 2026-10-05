@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { mostrarAviso } from '../../../../config/dialogStore';
 
+import { formatearMonto } from '../../../../utils/formato';
 interface Props {
   data: {
     show: boolean;
@@ -53,16 +54,16 @@ export const ModalAdvertenciaDeuda: React.FC<Props> = ({
             </div>
             <div className="d-flex justify-content-between mb-1">
               <span className="text-muted">Deuda Previa:</span>
-              <span>${data.deudaPrevia.toFixed(2)}</span>
+              <span>${formatearMonto(data.deudaPrevia)}</span>
             </div>
             <div className="d-flex justify-content-between mb-1">
               <span className="text-muted">Saldo Pendiente:</span>
-              <span>${data.saldoPendiente.toFixed(2)}</span>
+              <span>${formatearMonto(data.saldoPendiente)}</span>
             </div>
             <hr className="my-2 border-secondary" />
             <div className="d-flex justify-content-between mb-1">
               <span className="text-white fw-bold">Deuda Total Proyectada:</span>
-              <span className="fw-bold text-warning">${data.deudaTotal.toFixed(2)}</span>
+              <span className="fw-bold text-warning">${formatearMonto(data.deudaTotal)}</span>
             </div>
           </div>
 

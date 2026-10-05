@@ -7,7 +7,7 @@ import {
 const METRICAS_INICIALES: any = {
   ventasTotales: 0,
   ticketsGenerados: 0,
-  ticketPromedio: '0.00',
+  ticketPromedio: '0,00',
   cantidadMovimientos: 0,
   ventasPorPeriodo: [],
   distribucionMediosPago: [],
