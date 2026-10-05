@@ -16,6 +16,7 @@ interface TarjetaPedidoProps {
   onCambioEmpleado: (idPedido: number, idEmpleado: string) => void;
   onSelectComprobantes: (pedido: any) => void;
   onGestionarMermas?: (pedido: any) => void;
+  expandidoInicial?: boolean;
 }
 
 interface TimelineItem {
@@ -38,12 +39,13 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
   onSelectPago,
   onSelectTicket,
   onSelectComprobantes,
-  onGestionarMermas
+  onGestionarMermas,
+  expandidoInicial = false
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const [expandido, setExpandido] = useState<boolean>(false);
+  const [expandido, setExpandido] = useState<boolean>(expandidoInicial);
   const [mostrarObsModal, setMostrarObsModal] = useState<boolean>(false);
   const [ubicacionInput, setUbicacionInput] = useState<string>(p.ubicacion_estante || 'Taller');
 

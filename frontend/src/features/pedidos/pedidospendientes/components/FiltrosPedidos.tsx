@@ -32,7 +32,7 @@ export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
 
   return (
     <div 
-      className="row g-3 align-items-center mb-4 p-3 rounded-3 shadow-sm font-monospace d-print-none" 
+      className="row g-3 mx-0 mt-0 align-items-center mb-4 p-3 rounded-3 shadow-sm font-monospace d-print-none" 
       style={{ 
         backgroundColor: containerBg, 
         border: `1px solid ${containerBorder}`,

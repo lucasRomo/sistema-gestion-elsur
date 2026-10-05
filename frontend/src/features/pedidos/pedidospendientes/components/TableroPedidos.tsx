@@ -18,6 +18,7 @@ const COLUMNAS = [
 interface Props {
   pedidos: any[];
   onMover: (pedido: any, estadoDestino: string) => void;
+  onAbrir?: (pedido: any) => void;
 }
 
 const nombreCliente = (p: any) =>
@@ -25,7 +26,7 @@ const nombreCliente = (p: any) =>
     ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
     : (p.cliente?.razon_social || p.cliente?.razonSocial || p.cliente?.nombre || 'Consumidor Final');
 
-export const TableroPedidos: React.FC<Props> = ({ pedidos, onMover }) => {
+export const TableroPedidos: React.FC<Props> = ({ pedidos, onMover, onAbrir }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const [columnaDestacada, setColumnaDestacada] = useState<string | null>(null);
@@ -65,7 +66,7 @@ export const TableroPedidos: React.FC<Props> = ({ pedidos, onMover }) => {
             {...zonaSoltar(col.estado)}
             className="d-flex flex-column rounded-3 p-2"
             style={{
-              flex: '1 1 0', minWidth: '230px', backgroundColor: columnaBg,
+              flex: '1 1 0', minWidth: '175px', backgroundColor: columnaBg,
               border: `1px ${destacada ? 'dashed' : 'solid'} ${destacada ? color : borde}`,
               transition: 'border-color 0.15s'
             }}
@@ -81,6 +82,8 @@ export const TableroPedidos: React.FC<Props> = ({ pedidos, onMover }) => {
                   key={p.id_pedido}
                   draggable
                   onDragStart={(e) => e.dataTransfer.setData('text/plain', String(p.id_pedido))}
+                  onClick={() => onAbrir?.(p)}
+                  title={onAbrir ? 'Clic para ver el pedido completo (cobros, ticket, empleado...) · Arrastrá para cambiar de estado' : undefined}
                   className="rounded-2 p-2 shadow-sm"
                   style={{ backgroundColor: tarjetaBg, border: `1px solid ${borde}`, borderLeft: `3px solid ${color}`, cursor: 'grab' }}
                 >
@@ -94,8 +97,9 @@ export const TableroPedidos: React.FC<Props> = ({ pedidos, onMover }) => {
                     <span>${formatearMonto(Number(p.monto_total ?? 0))}</span>
                   </div>
                   {/* Alternativa al arrastre (pantallas táctiles): mover desde un desplegable */}
+                  <div className="d-flex gap-1 mt-2" onClick={(e) => e.stopPropagation()}>
                   <select
-                    className={`form-select form-select-sm mt-2 py-0 ${isDark ? 'bg-dark text-white border-secondary' : ''}`}
+                    className={`form-select form-select-sm py-0 ${isDark ? 'bg-dark text-white border-secondary' : ''}`}
                     style={{ fontSize: '0.72rem' }}
                     value=""
                     aria-label={`Mover pedido ${p.id_pedido}`}
@@ -107,6 +111,19 @@ export const TableroPedidos: React.FC<Props> = ({ pedidos, onMover }) => {
                     ))}
                     <option value="ENTREGADO">Entregar</option>
                   </select>
+                  {onAbrir && (
+                    <button
+                      type="button"
+                      className="btn btn-sm py-0 px-2"
+                      style={{ border: `1px solid ${borde}`, color: textoSuave, fontSize: '0.72rem' }}
+                      onClick={() => onAbrir(p)}
+                      title="Ver el pedido completo"
+                      aria-label={`Ver el pedido ${p.id_pedido} completo`}
+                    >
+                      <i className="bi bi-arrows-angle-expand" aria-hidden="true"></i>
+                    </button>
+                  )}
+                  </div>
                 </div>
               ))}
               {pedidosColumna.length === 0 && (
@@ -123,7 +140,7 @@ export const TableroPedidos: React.FC<Props> = ({ pedidos, onMover }) => {
         {...zonaSoltar('ENTREGADO')}
         className="d-flex flex-column align-items-center justify-content-center rounded-3 p-2 text-center"
         style={{
-          flex: '0 0 130px', backgroundColor: columnaBg,
+          flex: '0 0 120px', backgroundColor: columnaBg,
           border: `1px dashed ${columnaDestacada === 'ENTREGADO' ? colorEstado('ENTREGADO', isDark) : borde}`,
           color: colorEstado('ENTREGADO', isDark)
         }}

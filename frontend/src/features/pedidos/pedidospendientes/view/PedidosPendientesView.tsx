@@ -12,6 +12,7 @@ import { PedidoPendienteService } from '../service/pedidoPendienteService';
 
 import { FiltrosPedidos } from '../components/FiltrosPedidos';
 import { ListaPedidosPendientes } from '../components/ListaPedidosPendientes';
+import { TarjetaPedido } from '../components/TarjetaPedido';
 import { PedidosModales } from '../components/PedidosModales';
 import { confirmarAccion } from '../../../../config/dialogStore';
 import { mostrarToast } from '../../../../config/toastStore';
@@ -52,6 +53,8 @@ export const PedidosPendientesView: React.FC = () => {
     try { localStorage.setItem('pedidos_modo_vista', modo); } catch { /* sin almacenamiento: solo esta sesión */ }
   };
 
+  // Tablero: pedido abierto en el detalle (se guarda el id para mostrar siempre la versión actual).
+  const [idPedidoDetalle, setIdPedidoDetalle] = useState<number | null>(null);
   const [pedidoEstadoSel, setPedidoEstadoSel] = useState<any>(null);
   const [nuevoEstadoPendiente, setNuevoEstadoPendiente] = useState<string>('');
   const [pedidoPagoSel, setPedidoPagoSel] = useState<any>(null);
@@ -426,7 +429,7 @@ export const PedidosPendientesView: React.FC = () => {
         </div>
 
         <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2 d-print-none font-monospace">
-          <div className="d-flex gap-1 flex-wrap" role="tablist">
+          <div className="control-segmentado flex-wrap" role="tablist" aria-label="Secciones de pedidos">
             {([
               { clave: 'TALLER', texto: 'Taller', icono: 'bi-tools', color: '#8e45e0' },
               { clave: 'PRESUPUESTOS', texto: 'Presupuestos', icono: 'bi-file-earmark-text', color: '#a855f7' },
@@ -436,22 +439,16 @@ export const PedidosPendientesView: React.FC = () => {
               return (
                 <button
                   key={t.clave}
+                  type="button"
                   role="tab"
                   aria-selected={activa}
-                  className="btn btn-sm fw-bold d-flex align-items-center gap-2"
-                  style={{
-                    backgroundColor: activa ? t.color : 'transparent',
-                    color: activa ? '#ffffff' : (isDarkMode ? '#d4d4d8' : '#334155'),
-                    border: `1px solid ${activa ? t.color : (isDarkMode ? '#3f3f46' : '#cbd5e1')}`,
-                    borderRadius: '8px'
-                  }}
+                  className={`control-segmentado__boton${activa ? ' activo' : ''}`}
+                  style={{ '--seg-color': t.color } as React.CSSProperties}
                   onClick={() => setPestana(t.clave)}
                 >
                   <i className={`bi ${t.icono}`} aria-hidden="true"></i>
                   {t.texto}
-                  <span className="badge rounded-pill" style={{ backgroundColor: activa ? 'rgba(255,255,255,0.25)' : t.color, color: '#ffffff' }}>
-                    {contadores[t.clave]}
-                  </span>
+                  <span className="control-segmentado__contador">{contadores[t.clave]}</span>
                 </button>
               );
             })}
@@ -462,9 +459,11 @@ export const PedidosPendientesView: React.FC = () => {
             className="form-select form-select-sm fw-semibold"
             style={{
               width: 'auto',
-              backgroundColor: isDarkMode ? '#1a1a1c' : '#ffffff',
+              height: '38px',
+              borderRadius: '12px',
+              backgroundColor: isDarkMode ? '#121214' : '#eef0f4',
               color: isDarkMode ? '#d4d4d8' : '#334155',
-              borderColor: isDarkMode ? '#3f3f46' : '#cbd5e1'
+              borderColor: isDarkMode ? '#2a2a2e' : '#d4d8e0'
             }}
             value={ordenPedidos}
             onChange={(e) => cambiarOrdenPedidos(e.target.value as 'URGENCIA' | 'NUMERO')}
@@ -475,19 +474,16 @@ export const PedidosPendientesView: React.FC = () => {
             <option value="NUMERO">Por número de pedido</option>
           </select>
           {pestana !== 'PRESUPUESTOS' && (
-            <div className="btn-group btn-group-sm" role="group" aria-label="Modo de vista">
+            <div className="control-segmentado" role="group" aria-label="Modo de vista">
               {(['LISTA', 'TABLERO'] as const).map(m => (
                 <button
                   key={m}
-                  className="btn fw-bold"
-                  style={{
-                    backgroundColor: modoVista === m ? '#8e45e0' : 'transparent',
-                    color: modoVista === m ? '#ffffff' : (isDarkMode ? '#d4d4d8' : '#334155'),
-                    border: `1px solid ${modoVista === m ? '#8e45e0' : (isDarkMode ? '#3f3f46' : '#cbd5e1')}`
-                  }}
+                  type="button"
+                  className={`control-segmentado__boton${modoVista === m ? ' activo' : ''}`}
+                  aria-pressed={modoVista === m}
                   onClick={() => cambiarModoVista(m)}
                 >
-                  <i className={`bi ${m === 'LISTA' ? 'bi-list-ul' : 'bi-kanban'} me-1`} aria-hidden="true"></i>
+                  <i className={`bi ${m === 'LISTA' ? 'bi-list-ul' : 'bi-kanban'}`} aria-hidden="true"></i>
                   {m === 'LISTA' ? 'Lista' : 'Tablero'}
                 </button>
               ))}
@@ -496,7 +492,7 @@ export const PedidosPendientesView: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-2 mb-2">
+        <div className="mt-3 mb-2">
           <FiltrosPedidos
             filtroCliente={filtroCliente}
             setFiltroCliente={setFiltroCliente}
@@ -510,7 +506,7 @@ export const PedidosPendientesView: React.FC = () => {
 
         <div className="flex-grow-1 overflow-y-auto mb-2 pe-1" style={{ height: 'calc(100vh - 210px)' }}>
           {modoVista === 'TABLERO' && pestana !== 'PRESUPUESTOS' && !cargando ? (
-            <TableroPedidos pedidos={pedidosOrdenados} onMover={handleCambioEstadoCombo} />
+            <TableroPedidos pedidos={pedidosOrdenados} onMover={handleCambioEstadoCombo} onAbrir={(p) => setIdPedidoDetalle(p.id_pedido)} />
           ) : (
           <ListaPedidosPendientes
             cargando={cargando}
@@ -543,6 +539,40 @@ export const PedidosPendientesView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {(() => {
+        // En el tablero las tarjetas son chicas (para mover estados); al abrir una se ve la
+        // tarjeta completa de la lista, con cobros, ticket, empleado, ubicación, etc.
+        const pedidoDetalle = idPedidoDetalle != null ? pedidos.find((p: any) => p.id_pedido === idPedidoDetalle) : null;
+        if (!pedidoDetalle) return null;
+        return (
+          <div className="modal d-block font-monospace" style={{ backgroundColor: 'rgba(0,0,0,0.75)', zIndex: 1045 }} onClick={() => setIdPedidoDetalle(null)}>
+            <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-content" style={{ backgroundColor: isDarkMode ? '#121214' : '#f8fafc', border: '1px solid #8e45e0', borderRadius: '14px' }}>
+                <div className="modal-header border-0 pb-0">
+                  <h5 className="modal-title fw-bold" style={{ color: isDarkMode ? '#ffffff' : '#0f172a' }}>Pedido #{pedidoDetalle.id_pedido}</h5>
+                  <button type="button" className={`btn-close ${isDarkMode ? 'btn-close-white' : ''}`} aria-label="Cerrar" onClick={() => setIdPedidoDetalle(null)}></button>
+                </div>
+                <div className="modal-body">
+                  <TarjetaPedido
+                    pedido={pedidoDetalle}
+                    actualizando={pedidosActualizando?.has(pedidoDetalle.id_pedido) ?? false}
+                    onCambioEstado={handleCambioEstadoCombo}
+                    onCambioUbicacion={handleCambioUbicacion}
+                    onSelectPago={handleAbrirPago}
+                    onSelectTicket={setVerTicketPedido}
+                    empleados={empleados}
+                    onCambioEmpleado={handleCambioEmpleado}
+                    onSelectComprobantes={(p) => setPedidoGestionComprobanteSel(p)}
+                    onGestionarMermas={(p) => setPedidoMermaSel(p)}
+                    expandidoInicial
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <PedidosModales
         pedidoEstadoSel={pedidoEstadoSel}

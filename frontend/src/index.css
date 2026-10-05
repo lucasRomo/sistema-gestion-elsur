@@ -581,3 +581,68 @@ html, body {
   animation: skeleton-pulso 1.4s ease-in-out infinite;
 }
 html[data-bs-theme="light"] .skeleton-linea { background-color: #e2e8f0; }
+
+/* Control segmentado (pestañas y Lista/Tablero de Pedidos Pendientes): los botones quedan
+   dentro de una "bandeja" hundida y el elegido sobresale con relieve, en vez de botones
+   sueltos que se apoyaban sobre el borde del cuadro de filtros. */
+.control-segmentado {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #121214;
+  border: 1px solid #2a2a2e;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.55);
+}
+.control-segmentado__boton {
+  --seg-color: #8e45e0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: #a1a1aa;
+  font-weight: 700;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
+}
+.control-segmentado__boton:hover:not(.activo) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+.control-segmentado__boton.activo {
+  color: #ffffff;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--seg-color) 78%, #ffffff) 0%, var(--seg-color) 55%, color-mix(in srgb, var(--seg-color) 80%, #000000) 100%);
+  border-color: color-mix(in srgb, var(--seg-color) 70%, #000000);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+.control-segmentado__boton:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), inset 0 1px 2px rgba(0, 0, 0, 0.25); }
+/* El anillo de foco queda adentro del botón (no se sale de la bandeja). */
+.control-segmentado__boton:focus { outline: none; }
+.control-segmentado__boton:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.85); outline-offset: -3px; }
+.control-segmentado__contador {
+  display: inline-block;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  text-align: center;
+  color: #ffffff;
+  background: var(--seg-color);
+}
+.control-segmentado__boton.activo .control-segmentado__contador { background: rgba(255, 255, 255, 0.25); }
+
+html[data-bs-theme="light"] .control-segmentado {
+  background: #eef0f4;
+  border-color: #d4d8e0;
+  box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.12);
+}
+html[data-bs-theme="light"] .control-segmentado__boton { color: #475569; }
+html[data-bs-theme="light"] .control-segmentado__boton:hover:not(.activo) { color: #0f172a; background: rgba(15, 23, 42, 0.06); }
+html[data-bs-theme="light"] .control-segmentado__boton:focus-visible:not(.activo) { outline-color: #8e45e0; }
+html[data-bs-theme="light"] .control-segmentado__boton.activo { color: #ffffff; box-shadow: 0 3px 6px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
