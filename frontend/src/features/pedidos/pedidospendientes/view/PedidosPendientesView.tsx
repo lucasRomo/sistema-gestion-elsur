@@ -17,7 +17,7 @@ import { confirmarAccion } from '../../../../config/dialogStore';
 import { mostrarToast } from '../../../../config/toastStore';
 import { TableroPedidos } from '../components/TableroPedidos';
 
-import { formatearMonto } from '../../../../utils/formato';
+import { formatearMonto, normalizarTexto } from '../../../../utils/formato';
 export const PedidosPendientesView: React.FC = () => {
   const { pedidos, cargando, pedidosActualizando, actualizarEstado, refrescar, refrescarPedido } = usePedidosPendientes();
   const navigate = useNavigate();
@@ -38,6 +38,15 @@ export const PedidosPendientesView: React.FC = () => {
   const [modoVista, setModoVista] = useState<'LISTA' | 'TABLERO'>(() => {
     try { return localStorage.getItem('pedidos_modo_vista') === 'TABLERO' ? 'TABLERO' : 'LISTA'; } catch { return 'LISTA'; }
   });
+  // Por defecto los que vencen primero arriba (lo que el taller necesita ver); se puede volver
+  // al orden por número de pedido. Se recuerda por navegador.
+  const [ordenPedidos, setOrdenPedidos] = useState<'URGENCIA' | 'NUMERO'>(() => {
+    try { return localStorage.getItem('pedidos_orden') === 'NUMERO' ? 'NUMERO' : 'URGENCIA'; } catch { return 'URGENCIA'; }
+  });
+  const cambiarOrdenPedidos = (orden: 'URGENCIA' | 'NUMERO') => {
+    setOrdenPedidos(orden);
+    try { localStorage.setItem('pedidos_orden', orden); } catch { /* sin almacenamiento: solo esta sesión */ }
+  };
   const cambiarModoVista = (modo: 'LISTA' | 'TABLERO') => {
     setModoVista(modo);
     try { localStorage.setItem('pedidos_modo_vista', modo); } catch { /* sin almacenamiento: solo esta sesión */ }
@@ -366,7 +375,7 @@ export const PedidosPendientesView: React.FC = () => {
       ? `${p.cliente.persona.nombre} ${p.cliente.persona.apellido}`
       : (p.cliente?.razonSocial || p.cliente?.razon_social || p.cliente?.nombre || 'Consumidor Final');
 
-    if (!nombreCliente.toLowerCase().includes(filtroCliente.toLowerCase())) return false;
+    if (!normalizarTexto(nombreCliente).includes(normalizarTexto(filtroCliente))) return false;
 
     if (filtroEstado === 'DEVUELTO') {
       const listaHistoriales = p.historiales || p.historialEstadoPedidos || [];
@@ -397,7 +406,15 @@ export const PedidosPendientesView: React.FC = () => {
     return true;
   });
 
-  const pedidosOrdenados = [...pedidosFiltrados].sort((a, b) => (a.id_pedido ?? 0) - (b.id_pedido ?? 0));
+  const pedidosOrdenados = [...pedidosFiltrados].sort((a, b) => {
+    if (ordenPedidos === 'URGENCIA') {
+      // Sin fecha estimada van al final; a igual fecha, por número.
+      const fa = a.fecha_entrega_estimada ? new Date(a.fecha_entrega_estimada).getTime() : Infinity;
+      const fb = b.fecha_entrega_estimada ? new Date(b.fecha_entrega_estimada).getTime() : Infinity;
+      if (fa !== fb) return fa < fb ? -1 : 1;
+    }
+    return (a.id_pedido ?? 0) - (b.id_pedido ?? 0);
+  });
 
   return (
     <SidebarLayout activeItem="Pedidos Pendientes">
@@ -440,6 +457,23 @@ export const PedidosPendientesView: React.FC = () => {
             })}
           </div>
 
+          <div className="d-flex align-items-center gap-2 flex-wrap">
+          <select
+            className="form-select form-select-sm fw-semibold"
+            style={{
+              width: 'auto',
+              backgroundColor: isDarkMode ? '#1a1a1c' : '#ffffff',
+              color: isDarkMode ? '#d4d4d8' : '#334155',
+              borderColor: isDarkMode ? '#3f3f46' : '#cbd5e1'
+            }}
+            value={ordenPedidos}
+            onChange={(e) => cambiarOrdenPedidos(e.target.value as 'URGENCIA' | 'NUMERO')}
+            aria-label="Ordenar pedidos"
+            title="Ordenar pedidos"
+          >
+            <option value="URGENCIA">Más urgentes primero</option>
+            <option value="NUMERO">Por número de pedido</option>
+          </select>
           {pestana !== 'PRESUPUESTOS' && (
             <div className="btn-group btn-group-sm" role="group" aria-label="Modo de vista">
               {(['LISTA', 'TABLERO'] as const).map(m => (
@@ -459,6 +493,7 @@ export const PedidosPendientesView: React.FC = () => {
               ))}
             </div>
           )}
+          </div>
         </div>
 
         <div className="mt-2 mb-2">

@@ -5,6 +5,7 @@ import { confirmarAccion } from '../../../config/dialogStore';
 import { useTheme } from '../../../Context/ThemeContext';
 import { getMermas } from '../services/insumoService';
 
+import { normalizarTexto } from '../../../utils/formato';
 interface ModalMermasInsumosProps {
   show: boolean;
   insumos: Insumo[];
@@ -66,7 +67,7 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
   if (!show) return null;
 
   const insumosFiltrados = insumos.filter(i => 
-    i.nombreInsumo.toLowerCase().includes(busqueda.toLowerCase())
+    normalizarTexto(i.nombreInsumo).includes(normalizarTexto(busqueda))
   );
 
   const toggleSelection = (idInsumo: number) => {

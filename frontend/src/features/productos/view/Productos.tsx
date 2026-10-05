@@ -26,6 +26,7 @@ import { useIsMobile } from '../../../hook/useIsMobile';
 import { confirmarAccion, mostrarError } from '../../../config/dialogStore';
 import { SkeletonTabla } from '../../../components/common/SkeletonCarga';
 
+import { normalizarTexto } from '../../../utils/formato';
 export const Productos: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -75,7 +76,7 @@ export const Productos: React.FC = () => {
   }, [location.state, productos]);
 
   const productosFiltrados = productos.filter((p: Producto) => {
-    const cumpleNombre = p.nombreProducto?.toLowerCase().includes(filtroNombre.toLowerCase());
+    const cumpleNombre = normalizarTexto(p.nombreProducto).includes(normalizarTexto(filtroNombre));
     const cumpleEstado = filtroEstado === 'Sin Filtro' || p.estado === filtroEstado;
     return cumpleNombre && cumpleEstado;
   });

@@ -6,6 +6,8 @@ import { AsistenteWidget } from '../../features/asistente/components/AsistenteWi
 import { pad, resolverNombreUsuario } from '../../utils/formato';
 
 import { useContadoresMenu } from '../../hook/useContadoresMenu';
+import { puedeSalirDeLaPantalla } from '../../hook/useAvisoCambiosSinGuardar';
+import { esPantallaMovil, forzarVistaCompleta, vistaCompletaForzada } from '../../hook/useIsMobile';
 interface SidebarLayoutProps {
   activeItem: string;
   children: React.ReactNode;
@@ -103,6 +105,13 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
     return esAdmin;
   };
 
+  // Título de la pestaña del navegador según la pantalla ("Caja · El Sur"), para distinguir
+  // varias pestañas abiertas. Al salir del sistema vuelve al título general.
+  useEffect(() => {
+    document.title = activeItem ? `${activeItem} · El Sur` : 'El Sur · Sistema de Gestión';
+    return () => { document.title = 'El Sur · Sistema de Gestión'; };
+  }, [activeItem]);
+
   const contadores = useContadoresMenu(tienePermiso('Pedidos Pendientes'), tienePermiso('Insumos'));
 
   // Píldoras de cada ítem del menú: [texto, color, descripción para el lector de pantalla]
@@ -154,7 +163,8 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
     { name: 'Configuración', icon: 'bi-gear-fill', path: '/configuracion' },
   ].filter(item => tienePermiso(item.name));
 
-  const handleCerrarSesion = () => {
+  const handleCerrarSesion = async () => {
+    if (!(await puedeSalirDeLaPantalla())) return;
     localStorage.removeItem('usuario_logueado');
     localStorage.removeItem('usuario');
     localStorage.removeItem('token_sesion');
@@ -175,11 +185,12 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
     });
   };
 
-  const handleNavegacion = (path: string) => {
+  const handleNavegacion = async (path: string) => {
     if (colapsado) {
       setColapsado(false);
       return;
     }
+    if (!(await puedeSalirDeLaPantalla())) return;
     if (scrollContainerRef.current) {
       localStorage.setItem('sidebar_scroll_position', scrollContainerRef.current.scrollTop.toString());
     }
@@ -347,7 +358,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
             <div
               className="d-flex align-items-center gap-2"
               style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/dashboard')}
+              onClick={async () => { if (await puedeSalirDeLaPantalla()) navigate('/dashboard'); }}
             >
               <img
   src={logoSur}
@@ -458,6 +469,17 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         </div>
 
         <div className="pt-2 mt-1" style={{ borderTop: `1px solid ${sidebarBorder}` }}>
+          {vistaCompletaForzada() && esPantallaMovil() && (
+            <button
+              onClick={() => forzarVistaCompleta(false)}
+              className="btn btn-sm d-flex align-items-center w-100 px-2 mb-1"
+              style={{ borderRadius: '6px', fontSize: '0.75rem', color: '#8e45e0', border: '1px solid #8e45e0', justifyContent: colapsado ? 'center' : 'flex-start' }}
+              title="Volver a la vista para celular"
+            >
+              <i className="bi bi-phone" style={{ marginRight: colapsado ? 0 : '0.5rem' }} aria-hidden="true"></i>
+              {!colapsado && 'Vista móvil'}
+            </button>
+          )}
           <button
             onClick={handleCerrarSesion}
             className="btn d-flex align-items-center w-100 px-2 py-1.5 fw-semibold transition-all"

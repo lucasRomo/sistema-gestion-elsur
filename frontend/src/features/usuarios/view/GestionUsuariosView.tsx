@@ -13,7 +13,7 @@ import { mostrarError } from '../../../config/dialogStore';
 import { SkeletonFilasTabla } from '../../../components/common/SkeletonCarga';
 import { ThOrdenable } from '../../../components/common/ThOrdenable';
 import { useOrdenTabla } from '../../../hook/useOrdenTabla';
-import { formatearMonto } from '../../../utils/formato';
+import { formatearMonto, normalizarTexto } from '../../../utils/formato';
 
 export const GestionUsuariosView: React.FC = () => {
   const { theme } = useTheme();
@@ -53,11 +53,11 @@ export const GestionUsuariosView: React.FC = () => {
   const estadoMostrar = (u: any) => u.estado || 'Activo';
 
   const usuariosFiltrados = usuarios.filter(u => {
-    const busqueda = filtroTexto.toLowerCase();
+    const busqueda = normalizarTexto(filtroTexto);
 
-    const coincideTexto = u.nombreUsuario?.toLowerCase().includes(busqueda) ||
-                          u.persona?.nombre?.toLowerCase().includes(busqueda) ||
-                          u.persona?.apellido?.toLowerCase().includes(busqueda);
+    const coincideTexto = normalizarTexto(u.nombreUsuario).includes(busqueda) ||
+                          normalizarTexto(u.persona?.nombre).includes(busqueda) ||
+                          normalizarTexto(u.persona?.apellido).includes(busqueda);
 
     const coincideEstado = filtroEstado === 'Sin Filtro' || estadoMostrar(u) === filtroEstado;
     return coincideTexto && coincideEstado;

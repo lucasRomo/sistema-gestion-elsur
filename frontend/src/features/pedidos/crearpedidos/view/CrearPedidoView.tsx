@@ -12,6 +12,7 @@ import type { CategoriaCliente } from '../../../clientes/types/CategoriaCliente'
 
 import { VistaTicketPagoModal } from '../../../../components/modals/VistaTicketPagoModal';
 
+import { useAvisoCambiosSinGuardar } from '../../../../hook/useAvisoCambiosSinGuardar';
 export const CrearPedidoView: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,6 +29,10 @@ export const CrearPedidoView: React.FC = () => {
   const [confirmarGuardado, setConfirmarGuardado] = useState(false);
   
   const [ticketGenerado, setTicketGenerado] = useState<{ pedido: Pedido; movimiento?: MovimientoCaja } | null>(null);
+  useAvisoCambiosSinGuardar(
+    carrito.length > 0 && !(suceso.show && suceso.tipo === 'exito') && !ticketGenerado,
+    'Tenés un pedido a medio cargar. Si salís ahora se pierden los productos cargados.'
+  );
 
   const [payloadTemporal, setPayloadTemporal] = useState<{ pedido: any; idEmpleado: number; idUsuario: number | null; tipoPago: string; idCategoriaCliente?: number | null } | null>(null);
   const [fileTemporal, setFileTemporal] = useState<File | null>(null);

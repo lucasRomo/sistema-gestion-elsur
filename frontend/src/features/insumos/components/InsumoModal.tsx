@@ -6,6 +6,7 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { GestionUnidadesModal } from './GestionUnidadesModal';
 import { RelacionesModal } from './RelacionesModal';
 
+import { normalizarTexto } from '../../../utils/formato';
 interface InsumoModalProps {
   show: boolean;
   insumoEditando: Insumo | null;
@@ -218,15 +219,15 @@ export const InsumoModal: React.FC<InsumoModalProps> = ({ show, insumoEditando, 
   };
 
   const unidadesSueltasFiltradas = unidadesMedida.filter(u => 
-    u.nombre?.toLowerCase().includes(formData.nombreUnidad.toLowerCase())
+    normalizarTexto(u.nombre).includes(normalizarTexto(formData.nombreUnidad))
   );
   
   const unidadesCompraFiltradas = unidadesMedida.filter(u => 
-    u.nombre?.toLowerCase().includes(formData.nombreUnidadCompra.toLowerCase())
+    normalizarTexto(u.nombre).includes(normalizarTexto(formData.nombreUnidadCompra))
   );
 
   const proveedoresFiltrados = proveedores.filter(p => 
-    p.nombreComercial?.toLowerCase().includes(formData.nombreProveedor.toLowerCase())
+    normalizarTexto(p.nombreComercial).includes(normalizarTexto(formData.nombreProveedor))
   );
 
   if (!show) return null;

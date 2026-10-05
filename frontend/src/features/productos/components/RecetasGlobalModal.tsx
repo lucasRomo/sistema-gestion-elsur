@@ -3,6 +3,7 @@ import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
 import { getTodasLasRecetas } from '../services/productoService';
 
+import { normalizarTexto } from '../../../utils/formato';
 interface Props {
   show: boolean;
   productos: Producto[];
@@ -50,7 +51,7 @@ export const RecetasGlobalModal: React.FC<Props> = ({ show, productos, onClose, 
 
   const productosFiltrados = productos.filter(p => {
     const tieneReceta = p.idProducto ? idsConReceta.has(p.idProducto) : false;
-    const coincideBusqueda = p.nombreProducto?.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideBusqueda = normalizarTexto(p.nombreProducto).includes(normalizarTexto(busqueda));
     return tieneReceta && coincideBusqueda;
   });
 

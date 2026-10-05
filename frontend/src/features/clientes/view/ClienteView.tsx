@@ -13,7 +13,7 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useIsMobile } from '../../../hook/useIsMobile';
 import { exportarClientesExcel, exportarClientesPDF } from '../utils/exportClientesUtils';
-import { colorPorSaldo, formatearMonto } from '../../../utils/formato';
+import { colorPorSaldo, formatearMonto, normalizarTexto } from '../../../utils/formato';
 import type { Cliente } from '../types/Cliente';
 import { mostrarError } from '../../../config/dialogStore';
 import { SkeletonFilasTabla } from '../../../components/common/SkeletonCarga';
@@ -80,14 +80,14 @@ export const ClienteView = () => {
     if (c.id_cliente === 1) return false;
     if (filtroEstado !== 'Sin Filtro' && c.estado !== filtroEstado) return false;
     
-    const busqueda = filtroTexto.toLowerCase().trim();
+    const busqueda = normalizarTexto(filtroTexto).trim();
     if (!busqueda) return true;
     
     return (
-      c.persona?.nombre?.toLowerCase().includes(busqueda) || 
-      c.persona?.apellido?.toLowerCase().includes(busqueda) || 
+      normalizarTexto(c.persona?.nombre).includes(busqueda) || 
+      normalizarTexto(c.persona?.apellido).includes(busqueda) || 
       c.persona?.numeroDocumento?.includes(busqueda) || 
-      c.razonSocial?.toLowerCase().includes(busqueda)
+      normalizarTexto(c.razonSocial).includes(busqueda)
     );
   });
 

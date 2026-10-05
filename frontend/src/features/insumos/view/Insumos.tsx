@@ -22,6 +22,7 @@ import { useIsMobile } from '../../../hook/useIsMobile';
 import { confirmarAccion, mostrarError } from '../../../config/dialogStore';
 import { SkeletonTabla } from '../../../components/common/SkeletonCarga';
 
+import { normalizarTexto } from '../../../utils/formato';
 export const Insumos: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -54,7 +55,7 @@ export const Insumos: React.FC = () => {
   const [mensajeExito, setMensajeExito] = useState('');
 
   const insumosFiltrados = insumos.filter((i) => {
-    const cumpleNombre = i.nombreInsumo.toLowerCase().includes(filtroNombre.toLowerCase());
+    const cumpleNombre = normalizarTexto(i.nombreInsumo).includes(normalizarTexto(filtroNombre));
     const cumpleEstado = filtroEstado === 'Sin Filtro' || i.estado === filtroEstado;
     return cumpleNombre && cumpleEstado;
   });

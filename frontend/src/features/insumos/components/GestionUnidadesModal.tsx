@@ -4,6 +4,7 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { crearUnidadMedida, eliminarUnidadMedida } from '../services/insumoService';
 import { confirmarAccion } from '../../../config/dialogStore';
 
+import { normalizarTexto } from '../../../utils/formato';
 interface GestionUnidadesModalProps {
   show: boolean;
   unidades: UnidadMedida[];
@@ -44,7 +45,7 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
   const unidadesFiltradas = useMemo(() => {
     if (!busqueda.trim()) return unidades;
     return unidades.filter(u => 
-      u.nombre?.toLowerCase().includes(busqueda.toLowerCase())
+      normalizarTexto(u.nombre).includes(normalizarTexto(busqueda))
     );
   }, [unidades, busqueda]);
 

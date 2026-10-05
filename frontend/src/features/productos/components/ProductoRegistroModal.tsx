@@ -11,6 +11,7 @@ import {
 } from '../services/productoService';
 import { confirmarAccion, mostrarAviso, mostrarError } from '../../../config/dialogStore';
 
+import { normalizarTexto } from '../../../utils/formato';
 interface Props {
   show: boolean;
   producto: Producto | null;
@@ -406,7 +407,7 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                             .filter((m: any) => {
                               if (textoMaquina === 'No aplica' && formData.idMaquinaNecesaria === '') return true; 
                               const nombreStr = `${m.nombre || m.nombreMaquina} (${m.estado})`;
-                              return nombreStr.toLowerCase().includes(textoMaquina.toLowerCase());
+                              return normalizarTexto(nombreStr).includes(normalizarTexto(textoMaquina));
                             })
                             .map((m: any) => {
                               const isSelected = m.idMaquina.toString() === formData.idMaquinaNecesaria;
@@ -469,11 +470,11 @@ export const ProductoRegistroModal: React.FC<Props> = ({ show, producto, onClose
                         className={`position-absolute shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
                         style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0, right: 0 }}
                       >
-                        {categorias.filter(c => c.nombre.toLowerCase().includes(formData.nombreCategoria.toLowerCase())).length === 0 ? (
+                        {categorias.filter(c => normalizarTexto(c.nombre).includes(normalizarTexto(formData.nombreCategoria))).length === 0 ? (
                           <div className="p-2 small text-muted text-center">Sin coincidencias</div>
                         ) : (
                           categorias
-                            .filter(c => c.nombre.toLowerCase().includes(formData.nombreCategoria.toLowerCase()))
+                            .filter(c => normalizarTexto(c.nombre).includes(normalizarTexto(formData.nombreCategoria)))
                             .map((c) => {
                               const isSelected = c.nombre === formData.nombreCategoria;
                               return (

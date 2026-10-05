@@ -3,6 +3,7 @@ import type { Insumo } from '../types/Insumo';
 import { useTheme } from '../../../Context/ThemeContext';
 import { confirmarAccion, mostrarAviso, mostrarError } from '../../../config/dialogStore';
 
+import { normalizarTexto } from '../../../utils/formato';
 interface Props {
   show: boolean;
   insumos: Insumo[];
@@ -48,7 +49,7 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
   const insumosFiltradosManual = useMemo(() => {
     if (!busquedaInsumo.trim()) return insumos;
     return insumos.filter(ins =>
-      ins.nombreInsumo.toLowerCase().includes(busquedaInsumo.toLowerCase())
+      normalizarTexto(ins.nombreInsumo).includes(normalizarTexto(busquedaInsumo))
     );
   }, [insumos, busquedaInsumo]);
 
@@ -271,11 +272,11 @@ export const AumentoMasivoInsumosModal: React.FC<Props> = ({
                         className={`position-absolute w-100 shadow rounded mt-1 overflow-auto ${isDark ? 'bg-dark text-white' : 'bg-white text-dark'}`}
                         style={{ maxHeight: '180px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
                       >
-                        {proveedores.filter(([, nombre]) => nombre.toLowerCase().includes(textoProveedor.toLowerCase())).length === 0 ? (
+                        {proveedores.filter(([, nombre]) => normalizarTexto(nombre).includes(normalizarTexto(textoProveedor))).length === 0 ? (
                           <div className="p-2 small text-muted text-center">Sin coincidencias</div>
                         ) : (
                           proveedores
-                            .filter(([, nombre]) => nombre.toLowerCase().includes(textoProveedor.toLowerCase()))
+                            .filter(([, nombre]) => normalizarTexto(nombre).includes(normalizarTexto(textoProveedor)))
                             .map(([id, nombre]) => {
                               const isSelected = id === proveedorSeleccionado;
                               return (

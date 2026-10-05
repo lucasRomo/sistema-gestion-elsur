@@ -6,7 +6,7 @@ import type { Maquina } from '../../../maquinas/types/Maquina';
 import { useTheme } from '../../../../Context/ThemeContext';
 import { crearPedidoService } from '../service/crearPedidoService';
 
-import { formatearMonto } from '../../../../utils/formato';
+import { formatearMonto, normalizarTexto } from '../../../../utils/formato';
 interface Props {
   productos: Producto[];
   carrito: CartItem[];
@@ -79,7 +79,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
   const productosFiltrados = useMemo(() => {
     if (!busquedaProducto.trim()) return productos;
     return productos.filter(p => 
-      p.nombreProducto.toLowerCase().includes(busquedaProducto.toLowerCase())
+      normalizarTexto(p.nombreProducto).includes(normalizarTexto(busquedaProducto))
     );
   }, [productos, busquedaProducto]);
 

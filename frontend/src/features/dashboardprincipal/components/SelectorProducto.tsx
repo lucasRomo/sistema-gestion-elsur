@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { Producto } from '../../productos/types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
-import { formatearMonto } from '../../../utils/formato';
+import { formatearMonto, normalizarTexto } from '../../../utils/formato';
 
 interface Props {
   productos: Producto[];
@@ -44,7 +44,7 @@ export const SelectorProducto: React.FC<Props> = ({
   const productosFiltrados = useMemo(() => {
     if (!busquedaProducto.trim()) return productos;
     return productos.filter(p =>
-      p.nombreProducto.toLowerCase().includes(busquedaProducto.toLowerCase())
+      normalizarTexto(p.nombreProducto).includes(normalizarTexto(busquedaProducto))
     );
   }, [productos, busquedaProducto]);
 

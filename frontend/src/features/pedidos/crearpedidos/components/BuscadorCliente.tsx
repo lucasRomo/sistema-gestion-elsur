@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useTheme } from '../../../../Context/ThemeContext';
 
+import { normalizarTexto } from '../../../../utils/formato';
 // Reemplaza al desplegable de clientes: con cientos de clientes había que bajar a mano hasta
 // encontrarlo. Se escribe nombre, razón social o documento y se elige de la lista.
 
@@ -25,11 +26,11 @@ export const BuscadorCliente: React.FC<Props> = ({ clientes, clienteId, onSelecc
   const seleccionado = clientes.find((c) => String(idDeCliente(c)) === clienteId);
 
   const filtrados = useMemo(() => {
-    const q = texto.trim().toLowerCase();
+    const q = normalizarTexto(texto.trim());
     const lista = q
       ? clientes.filter((c) =>
-          nombreDeCliente(c).toLowerCase().includes(q) ||
-          String(c?.razon_social || c?.razonSocial || '').toLowerCase().includes(q) ||
+          normalizarTexto(nombreDeCliente(c)).includes(q) ||
+          normalizarTexto(String(c?.razon_social || c?.razonSocial || '')).includes(q) ||
           String(c?.persona?.numeroDocumento || '').includes(q))
       : clientes;
     return lista.slice(0, 50);

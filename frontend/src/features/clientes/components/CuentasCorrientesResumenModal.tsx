@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 import type { Cliente } from '../types/Cliente';
 
-import { formatearMonto } from '../../../utils/formato';
+import { formatearMonto, normalizarTexto } from '../../../utils/formato';
 interface Props {
   clientes: Cliente[];
   onCerrar: () => void;
@@ -44,12 +44,12 @@ export const CuentasCorrientesResumenModal: React.FC<Props> = ({
     if (soloConDeuda && Number(c.saldoDeudor || 0) <= 0) return false;
 
     if (!busqueda) return true;
-    const q = busqueda.toLowerCase().trim();
+    const q = normalizarTexto(busqueda).trim();
     return (
-      c.persona?.nombre?.toLowerCase().includes(q) ||
-      c.persona?.apellido?.toLowerCase().includes(q) ||
+      normalizarTexto(c.persona?.nombre).includes(q) ||
+      normalizarTexto(c.persona?.apellido).includes(q) ||
       c.persona?.numeroDocumento?.includes(q) ||
-      c.razonSocial?.toLowerCase().includes(q)
+      normalizarTexto(c.razonSocial).includes(q)
     );
   });
 

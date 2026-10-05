@@ -7,6 +7,7 @@ import { showLoading, hideLoading } from '../../../config/loadingStore';
 import { useSeleccionMermas, validarSeleccionMermas, insumosDeReceta } from '../../../hook/useSeleccionMermas';
 import { confirmarAccion } from '../../../config/dialogStore';
 
+import { normalizarTexto } from '../../../utils/formato';
 interface ModalMermasProductosProps {
   show: boolean;
   productos: Producto[];
@@ -127,7 +128,7 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
   if (!show) return null;
 
   const productosFiltrados = productos.filter((p) =>
-    p.nombreProducto.toLowerCase().includes(busqueda.toLowerCase())
+    normalizarTexto(p.nombreProducto).includes(normalizarTexto(busqueda))
   );
 
   const handleGuardarMermas = async () => {

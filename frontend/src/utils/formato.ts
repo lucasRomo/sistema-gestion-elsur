@@ -119,3 +119,10 @@ export const formatearMonto = (valor: number | string | null | undefined): strin
   const n = Number(valor ?? 0);
   return FORMATO_MONTO.format(Number.isFinite(n) ? n : 0);
 };
+
+/**
+ * Texto para comparar en búsquedas: minúsculas y sin acentos, así "impresion" encuentra
+ * "Impresión" y "martinez" encuentra "Martínez". Acepta null/undefined (devuelve '').
+ */
+export const normalizarTexto = (valor: string | number | null | undefined): string =>
+  String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();

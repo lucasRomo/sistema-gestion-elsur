@@ -16,6 +16,7 @@ import { useIsMobile } from '../../../hook/useIsMobile';
 import { mostrarError } from '../../../config/dialogStore';
 import { SkeletonTabla } from '../../../components/common/SkeletonCarga';
 
+import { normalizarTexto } from '../../../utils/formato';
 export const Proveedores: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -41,9 +42,9 @@ export const Proveedores: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState('');
 
   const proveedoresFiltrados = proveedores.filter((p) => {
-    const cumpleNombre = p.nombreComercial.toLowerCase().includes(filtroNombre.toLowerCase()) || 
-                         (p.contactoNombre?.toLowerCase().includes(filtroNombre.toLowerCase())) ||
-                         (p.emailContacto?.toLowerCase().includes(filtroNombre.toLowerCase()));
+    const cumpleNombre = normalizarTexto(p.nombreComercial).includes(normalizarTexto(filtroNombre)) || 
+                         (normalizarTexto(p.contactoNombre).includes(normalizarTexto(filtroNombre))) ||
+                         (normalizarTexto(p.emailContacto).includes(normalizarTexto(filtroNombre)));
     const cumpleEstado = filtroEstado === 'Sin Filtro' || p.estado === filtroEstado;
     const cumpleTipo = filtroTipo === 'Sin Filtro' || (p.tipoProveedor?.descripcion === filtroTipo);
     return cumpleNombre && cumpleEstado && cumpleTipo;

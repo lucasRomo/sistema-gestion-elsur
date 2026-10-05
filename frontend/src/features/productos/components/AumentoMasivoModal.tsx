@@ -3,7 +3,7 @@ import type { Producto } from '../types/Producto';
 import { useTheme } from '../../../Context/ThemeContext';
 import { confirmarAccion, mostrarAviso, mostrarError } from '../../../config/dialogStore';
 
-import { formatearMonto } from '../../../utils/formato';
+import { formatearMonto, normalizarTexto } from '../../../utils/formato';
 interface Props {
   show: boolean;
   productos: Producto[];
@@ -47,7 +47,7 @@ export const AumentoMasivoModal: React.FC<Props> = ({
   const productosFiltradosManual = useMemo(() => {
     if (!busquedaProducto.trim()) return productos;
     return productos.filter(p =>
-      p.nombreProducto?.toLowerCase().includes(busquedaProducto.toLowerCase())
+      normalizarTexto(p.nombreProducto).includes(normalizarTexto(busquedaProducto))
     );
   }, [productos, busquedaProducto]);
 

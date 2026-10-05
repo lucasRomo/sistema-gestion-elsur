@@ -3,6 +3,7 @@ import { repositorioService } from '../services/repositorioService';
 import type { DocumentoDigital, AreaCurso, Institucion } from '../types/Repositorio';
 import type { Producto } from '../../productos/types/Producto';
 
+import { normalizarTexto } from '../../../utils/formato';
 export const useRepositorioDigital = () => {
   const [documentos, setDocumentos] = useState<DocumentoDigital[]>([]);
   const [areas, setAreas] = useState<AreaCurso[]>([]);
@@ -63,9 +64,9 @@ export const useRepositorioDigital = () => {
   const documentosFiltrados = useMemo(() => {
     return documentos.filter((doc) => {
       const coincideBusqueda =
-        doc.titulo.toLowerCase().includes(busqueda.toLowerCase()) ||
-        doc.autor.toLowerCase().includes(busqueda.toLowerCase()) ||
-        doc.area?.nombreArea?.toLowerCase().includes(busqueda.toLowerCase());
+        normalizarTexto(doc.titulo).includes(normalizarTexto(busqueda)) ||
+        normalizarTexto(doc.autor).includes(normalizarTexto(busqueda)) ||
+        normalizarTexto(doc.area?.nombreArea).includes(normalizarTexto(busqueda));
 
       const coincideMateria =
         !filtroMateria || doc.area?.idArea?.toString() === filtroMateria;

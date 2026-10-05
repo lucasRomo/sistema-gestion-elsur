@@ -24,6 +24,14 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   const [procesando, setProcesando] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    const verificarCaja = async () => {
+      const estaAbierta = await PedidoPendienteService.verificarEstadoCaja();
+      setCajaAbierta(estaAbierta);
+    };
+    verificarCaja();
+  }, []);
+
   if (!show) return null;
 
   const idPed = pedido.id_pedido || pedido.idPedido;
@@ -43,14 +51,6 @@ export const ModalRegistrarPago: React.FC<ModalRegistrarPagoProps> = ({ pedido, 
   const botonAdjuntarBg = isDark ? '#1a1a1c' : '#f8fafc';
   const botonAdjuntarBorder = isDark ? '#38bdf8' : '#0284c7';
   const botonAdjuntarText = isDark ? '#38bdf8' : '#0284c7';
-
-  useEffect(() => {
-    const verificarCaja = async () => {
-      const estaAbierta = await PedidoPendienteService.verificarEstadoCaja();
-      setCajaAbierta(estaAbierta);
-    };
-    verificarCaja();
-  }, []);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();

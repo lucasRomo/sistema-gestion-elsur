@@ -4,6 +4,7 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { getInsumos, getRecetaPorProducto, guardarRecetaProducto } from '../services/productoService';
 import { confirmarAccion, mostrarAviso, mostrarError } from '../../../config/dialogStore';
 
+import { normalizarTexto } from '../../../utils/formato';
 interface Props {
   show: boolean;
   producto: Producto;
@@ -202,18 +203,18 @@ export const RecetaModal: React.FC<Props> = ({ show, producto, onClose, onGuarda
                       style={{ maxHeight: '200px', zIndex: 1060, border: `1px solid ${inputBorder}`, top: '100%', left: 0 }}
                     >
                       {insumosDisponibles.filter(i => {
-                        const search = busquedaInsumo.toLowerCase();
+                        const search = normalizarTexto(busquedaInsumo);
                         const nombreUnidad = obtenerNombreUnidad(i.unidadMedida);
                         const etiqueta = `${i.nombreInsumo} (${nombreUnidad}) - Stock: ${i.stockActual}`;
-                        return i.nombreInsumo.toLowerCase().includes(search) || etiqueta.toLowerCase().includes(search);
+                        return normalizarTexto(i.nombreInsumo).includes(search) || normalizarTexto(etiqueta).includes(search);
                       }).length === 0 ? (
                         <div className="p-2 small text-muted text-center">Sin coincidencias</div>
                       ) : (
                         insumosDisponibles.filter(i => {
-                          const search = busquedaInsumo.toLowerCase();
+                          const search = normalizarTexto(busquedaInsumo);
                           const nombreUnidad = obtenerNombreUnidad(i.unidadMedida);
                           const etiqueta = `${i.nombreInsumo} (${nombreUnidad}) - Stock: ${i.stockActual}`;
-                          return i.nombreInsumo.toLowerCase().includes(search) || etiqueta.toLowerCase().includes(search);
+                          return normalizarTexto(i.nombreInsumo).includes(search) || normalizarTexto(etiqueta).includes(search);
                         }).map(i => {
                           const nombreUnidad = obtenerNombreUnidad(i.unidadMedida);
                           const isSelected = i.nombreInsumo === busquedaInsumo;

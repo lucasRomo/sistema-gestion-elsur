@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+import { normalizarTexto } from '../../../utils/formato';
 export interface OptionItem {
   id: string | number;
   label: string;
@@ -41,8 +42,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   }, []);
 
   const filteredOptions = options.filter(o =>
-    o.label.toLowerCase().includes(search.toLowerCase()) ||
-    (o.sublabel && o.sublabel.toLowerCase().includes(search.toLowerCase()))
+    normalizarTexto(o.label).includes(normalizarTexto(search)) ||
+    (o.sublabel && normalizarTexto(o.sublabel).includes(normalizarTexto(search)))
   );
 
   const inputBg = isDark ? '#222122' : '#ffffff';

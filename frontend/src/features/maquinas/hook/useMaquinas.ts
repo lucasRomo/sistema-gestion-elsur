@@ -6,6 +6,7 @@ import {
   reportarFallaAPI 
 } from '../service/maquinasService';
 
+import { normalizarTexto } from '../../../utils/formato';
 export const useMaquinas = () => {
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -45,8 +46,8 @@ export const useMaquinas = () => {
   };
 
   const maquinasFiltradas = maquinas.filter(m =>
-    m.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
-    m.estado.toLowerCase().includes(filtro.toLowerCase())
+    normalizarTexto(m.nombre).includes(normalizarTexto(filtro)) ||
+    normalizarTexto(m.estado).includes(normalizarTexto(filtro))
   );
 
   return {

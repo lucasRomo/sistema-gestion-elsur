@@ -11,6 +11,7 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { useVentaRapida } from '../hooks/useVentaRapida';
 import { ModalElegirMetodoPago } from '../components/ModalElegirMetodoPago';
 
+import { useAvisoCambiosSinGuardar } from '../../../hook/useAvisoCambiosSinGuardar';
 export const DashboardPrincipal: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -53,6 +54,11 @@ export const DashboardPrincipal: React.FC = () => {
     ejecutarCompletarVenta,
     ejecutarCancelacion
   } = useVentaRapida();
+
+  useAvisoCambiosSinGuardar(
+    carrito.length > 0,
+    'Hay productos en la venta rápida sin cobrar. Si salís ahora se pierde el carrito.'
+  );
 
   // Atajos globales de Venta Rápida (solo si no hay un modal abierto, para no interferir).
   useEffect(() => {
