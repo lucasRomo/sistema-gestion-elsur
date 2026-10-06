@@ -17,11 +17,20 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
 
     List<Pedido> findByEstadoIn(Collection<String> estados);
 
-    @Query("SELECT COUNT(p) FROM Pedido p WHERE p.estado NOT IN :excluidos")
+    // Las ventas rápidas ya cobradas se guardan como pedido (con "Venta Rápida" en las
+    // observaciones) y algunas quedan con otro estado que VENTA_RAPIDA: no son trabajo del
+    // taller. Mismo criterio que la pantalla de Pedidos Pendientes.
+    String SIN_VENTAS_RAPIDAS_CERRADAS =
+            " AND NOT (LOWER(COALESCE(p.observaciones, '')) LIKE '%venta rápida%' AND p.estado <> 'PENDIENTE')";
+
+    @Query("SELECT COUNT(p) FROM Pedido p WHERE p.estado NOT IN :excluidos" + SIN_VENTAS_RAPIDAS_CERRADAS)
     long contarConEstadoFueraDe(@Param("excluidos") Collection<String> excluidos);
 
-    @Query("SELECT COUNT(p) FROM Pedido p WHERE p.estado NOT IN :excluidos AND p.fecha_entrega_estimada < :ahora")
+    @Query("SELECT COUNT(p) FROM Pedido p WHERE p.estado NOT IN :excluidos AND p.fecha_entrega_estimada < :ahora" + SIN_VENTAS_RAPIDAS_CERRADAS)
     long contarAtrasados(@Param("excluidos") Collection<String> excluidos, @Param("ahora") java.time.LocalDateTime ahora);
+
+    @Query("SELECT p FROM Pedido p WHERE p.estado NOT IN :excluidos" + SIN_VENTAS_RAPIDAS_CERRADAS)
+    List<Pedido> buscarActivos(@Param("excluidos") Collection<String> excluidos);
 
     @Query("SELECT p FROM Pedido p WHERE p.fecha_creacion >= :desde")
     List<Pedido> buscarCreadosDesde(@Param("desde") java.time.LocalDateTime desde);

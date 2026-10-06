@@ -83,7 +83,7 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public List<Pedido> listarActivos() {
-        return pedidoRepository.findByEstadoNotIn(ESTADOS_FUERA_DE_COLA);
+        return pedidoRepository.buscarActivos(ESTADOS_FUERA_DE_COLA);
     }
 
     @Override

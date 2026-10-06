@@ -115,6 +115,27 @@ class PedidoRepositoryHistorialIntegrationTest {
     }
 
     @Test
+    @DisplayName("Las ventas rápidas ya cobradas no cuentan como trabajo del taller (sí si siguen pendientes)")
+    void ventasRapidasCerradasFueraDeLaCola() {
+        List<String> fueraDeTaller = List.of("VENTA_RAPIDA", "ENTREGADO", "CANCELADO", "DEVUELTO", "PRESUPUESTO");
+        long tallerAntes = pedidoRepository.contarConEstadoFueraDe(fueraDeTaller);
+
+        Cliente c = cliente("Cliente Mostrador");
+        Pedido cobrada = pedido(c, "FINALIZADO", null);
+        cobrada.setObservaciones("Venta Rápida (Categoría: Docente - 10% Desc.)");
+        Pedido pendiente = pedido(c, "PENDIENTE", null);
+        pendiente.setObservaciones("Venta Rápida");
+        Pedido delTaller = pedido(c, "EN PROCESO", null);
+        pedidoRepository.flush();
+
+        assertEquals(tallerAntes + 2, pedidoRepository.contarConEstadoFueraDe(fueraDeTaller));
+        List<Integer> activos = pedidoRepository.buscarActivos(fueraDeTaller).stream().map(Pedido::getId_pedido).toList();
+        assertFalse(activos.contains(cobrada.getId_pedido()));
+        assertTrue(activos.contains(pendiente.getId_pedido()));
+        assertTrue(activos.contains(delTaller.getId_pedido()));
+    }
+
+    @Test
     @DisplayName("Informes: trae solo los pedidos creados desde la fecha pedida")
     void creadosDesde() {
         Cliente c = cliente("Cliente Informes");
