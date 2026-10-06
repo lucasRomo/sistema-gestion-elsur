@@ -121,13 +121,6 @@ export const ModalNuevoIngreso: React.FC<ModalProps> = ({ isOpen, onClose, onGua
           </div>
 
           <div className="modal-body border-0 position-relative py-3">
-            <div 
-              className="position-absolute start-50 top-50 translate-middle w-100 h-100 d-flex align-items-center justify-content-center pointer-events-none" 
-              style={{ zIndex: 0, userSelect: 'none', opacity: isDark ? 0.08 : 0.04 }}
-            >
-              <span className="fw-bold" style={{ fontSize: '4.5rem', color: '#8e45e0' }}>{"{GestaPro}"}</span>
-            </div>
-
             <div className="position-relative" style={{ zIndex: 1 }}>
               <div className="mb-3">
                 <label className="form-label small fw-bold mb-1" style={{ color: labelColor }}>

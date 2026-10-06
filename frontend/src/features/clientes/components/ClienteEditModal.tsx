@@ -88,14 +88,14 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
           <div 
             className="modal-content text-white" 
             style={{ 
-              border: '1.5px solid #8e45e0', 
+              border: '1.5px solid #149bdf', 
               backgroundColor: '#1a1a1c', 
               borderRadius: '14px' 
             }}
           >
             
             <div className="d-flex justify-content-between align-items-center px-4 pt-4 pb-2">
-              <h4 className="m-0 fw-bold text-info d-flex align-items-center">
+              <h4 className="m-0 fw-bold d-flex align-items-center" style={{ color: '#149bdf' }}>
                 <i className="bi bi-pencil-square me-2"></i>Modificar Cliente
               </h4>
               <button type="button" className="btn-close btn-close-white" onClick={onCerrar}></button>
@@ -300,8 +300,8 @@ export const ClienteEditModal: React.FC<ClienteEditModalProps> = ({ cliente, onC
       {mostrarConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered" style={{ maxWidth: '400px' }}>
-            <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #8e45e0', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
-              <i className="bi bi-exclamation-triangle fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
+            <div className="modal-content p-4 text-white text-center" style={{ border: '2px solid #149bdf', backgroundColor: '#1a1a1c', borderRadius: '12px' }}>
+              <i className="bi bi-exclamation-triangle fs-1 mb-2" style={{ color: '#149bdf' }}></i>
               <h5 className="fw-bold">¿Confirmar Modificaciones?</h5>
               <p className="small" style={{ color: '#a1a1aa' }}>Se sobreescribirán de forma permanente los datos del cliente en la base de datos de El Sur.</p>
               <div className="d-flex justify-content-center gap-2 mt-3">

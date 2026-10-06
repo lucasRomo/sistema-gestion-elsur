@@ -3,8 +3,8 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { SuccesModal } from '../../../components/layouts/SuccesModal';
 import type { DatosArqueo, MovimientoCaja } from '../types/caja';
 import { mostrarAviso } from '../../../config/dialogStore';
+import { TablaMovimientosArqueo } from './TablaMovimientosArqueo';
 
-import { formatearMonto } from '../../../utils/formato';
 interface ModalCerrarTurnoProps {
   isOpen: boolean;
   onClose: () => void;
@@ -167,69 +167,7 @@ export const ModalCerrarTurno: React.FC<ModalCerrarTurnoProps> = ({
 
                 <div className="mb-5">
                   <h6 className="fw-bold mb-2" style={{ color: textColor }}>Detalle de Movimientos del Turno</h6>
-                  <div className="table-responsive rounded-3" style={{ maxHeight: '150px', overflowY: 'auto', border: `1px solid ${cardBorder}` }}>
-                    <table 
-                      className="table table-sm table-hover m-0 text-center align-middle"
-                      style={{
-                        backgroundColor: 'transparent',
-                        '--bs-table-bg': 'transparent',
-                        '--bs-table-hover-bg': isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                        color: textColor,
-                        borderColor: cardBorder
-                      } as React.CSSProperties}
-                    >
-                      <thead style={{ position: 'sticky', top: 0, backgroundColor: modalBg, zIndex: 1 }}>
-                        <tr className="text-muted small" style={{ backgroundColor: modalBg }}>
-                          <th style={{ backgroundColor: modalBg, color: textMuted }}>Hora</th>
-                          <th style={{ backgroundColor: modalBg, color: textMuted }}>Monto</th>
-                          <th style={{ backgroundColor: modalBg, color: textMuted }}>Método</th>
-                          <th style={{ backgroundColor: modalBg, color: textMuted }}>Tipo</th>
-                          <th className="text-start" style={{ backgroundColor: modalBg, color: textMuted }}>Descripción</th>
-                        </tr>
-                      </thead>
-                      <tbody className="small">
-                        {movimientos.length === 0 ? (
-                          <tr>
-                            <td colSpan={5} className="py-3 text-muted" style={{ backgroundColor: 'transparent' }}>
-                              No hay movimientos registrados en este turno
-                            </td>
-                          </tr>
-                        ) : (
-                          movimientos.map((m: any) => (
-                            <tr key={m.id_movimiento || m.idMovimiento} style={{ borderColor: cardBorder }}>
-                              <td style={{ backgroundColor: 'transparent', color: textColor }}>
-                                {new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-                              </td>
-                              <td className="fw-bold" style={{ backgroundColor: 'transparent', color: textColor }}>
-                                ${formatearMonto(Number(m.monto))}
-                              </td>
-                              <td style={{ backgroundColor: 'transparent' }}>
-                                <span className="badge bg-secondary">
-                                  {m.metodoPago || 'Efectivo'}
-                                </span>
-                              </td>
-                              <td style={{ backgroundColor: 'transparent' }}>
-                                <span 
-                                  className="d-inline-block px-2 py-1 rounded fw-semibold"
-                                  style={{
-                                    backgroundColor: m.tipoMovimiento === 'INGRESO' ? '#1c9b4a' : '#ef4444',
-                                    color: '#ffffff',
-                                    border: `1px solid ${m.tipoMovimiento === 'INGRESO' ? '#1c9b4a' : '#ef4444'}`,
-                                    fontSize: '0.60rem'
-                                  }}
-                                >
-                                  {m.tipoMovimiento === 'INGRESO' ? 'Ganancia' : 'Egreso'}
-                                </span>
-                              </td>
-                              <td className="text-start text-truncate" style={{ maxWidth: '200px', backgroundColor: 'transparent', color: textColor }}>
-                                {m.descripcion || '-'}
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                  <TablaMovimientosArqueo movimientos={movimientos} colorAcento={modalBorder} alturaMaxima="220px" />
                 </div>
 
                 <form id="form-cierre" onSubmit={handleValidarYSiguiente}>

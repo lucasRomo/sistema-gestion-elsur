@@ -193,8 +193,9 @@ export const MaquinaFallaModal: React.FC<Props> = ({ show, maquinas, onClose, on
             </div>
 
             <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
-              <button type="button" className="btn btn-danger" onClick={onClose} disabled={cargando}>
-                Cancelar
+              {/* La acción principal ya es roja (inhabilita la máquina): para salir, Volver en gris. */}
+              <button type="button" className="btn btn-secondary" onClick={onClose} disabled={cargando}>
+                Volver
               </button>
               <button type="submit" className="btn btn-danger fw-bold px-4" disabled={cargando || maquinasOperativas.length === 0}>
                 {cargando ? 'Procesando...' : 'Registrar e Inhabilitar'}

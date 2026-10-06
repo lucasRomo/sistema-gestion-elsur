@@ -4,6 +4,7 @@ import {
   ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis,
 } from 'recharts';
 import { ChartScrollWrapper } from '../ChartScrollWrapper';
+import { TickEtiqueta } from '../TickEtiqueta';
 import { CustomArqueoTooltip, CustomAveriaTooltip, CustomMermaTooltip } from '../../tooltips/InformesTooltips';
 import type { RendererChartProps } from '../../types/informeTypes';
 
@@ -47,11 +48,11 @@ export const AveriasChart: React.FC<RendererChartProps> = ({ data, esAnterior = 
 );
 
 export const IncongruenciasChart: React.FC<RendererChartProps> = ({ data, esAnterior = false }) => (
-  <ChartScrollWrapper cantidadItems={data.incongruenciasArqueo?.length || 0} anchoPorItem={90} height="100%">
+  <ChartScrollWrapper cantidadItems={data.incongruenciasArqueo?.length || 0} anchoPorItem={90} etiquetas={(data.incongruenciasArqueo || []).map((d: any) => d.empleado)} height="100%">
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data.incongruenciasArqueo} margin={{ top: 20, right: 20, left: 0, bottom: 10 }} barSize={30}>
         <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-        <XAxis dataKey="empleado" stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
+        <XAxis dataKey="empleado" stroke="#a1a1aa" interval={0} height={44} tick={<TickEtiqueta />} axisLine={false} tickLine={false} />
         <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} tickFormatter={(val) => `$${val}`} />
         <RechartsTooltip cursor={false} content={<CustomArqueoTooltip />} />
         <Bar dataKey="montoDiferencia" fill={esAnterior ? '#71717a' : '#f43f5e'} radius={[6, 6, 0, 0]}>

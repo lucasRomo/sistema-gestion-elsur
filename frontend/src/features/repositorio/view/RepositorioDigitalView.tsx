@@ -216,8 +216,8 @@ export const RepositorioDigitalView: React.FC = () => {
                 </div>
                 <h6 className="fw-bold my-2 text-white">¿Deseas eliminar este archivo del repositorio?</h6>
                 <div className="d-flex justify-content-center gap-2 mt-4">
-                  <button type="button" className="btn btn-danger btn-sm px-3 fw-semibold" onClick={() => setMostrarConfirmarEliminar(false)}>
-                    Cancelar
+                  <button type="button" className="btn btn-secondary btn-sm px-3 fw-semibold" onClick={() => setMostrarConfirmarEliminar(false)}>
+                    Volver
                   </button>
                   <button type="button" className="btn btn-sm btn-danger text-white px-3 fw-bold" onClick={confirmarEliminar}>
                     Eliminar

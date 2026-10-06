@@ -728,8 +728,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
               </div>
 
               <div className="modal-footer" style={{ borderTop: `1px solid ${modalBorder}` }}>
-                <button type="button" className="btn btn-danger" onClick={() => setIncidenciaAPagar(null)} disabled={procesandoPago}>
-                  Cancelar
+                <button type="button" className="btn btn-secondary" onClick={() => setIncidenciaAPagar(null)} disabled={procesandoPago}>
+                  Volver
                 </button>
                 <button type="button" className="btn btn-danger fw-bold px-4" onClick={() => ejecutarPagoMantenimiento(false)} disabled={procesandoPago}>
                   {procesandoPago ? 'Procesando...' : 'Confirmar Egreso'}

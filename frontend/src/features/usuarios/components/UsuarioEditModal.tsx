@@ -75,12 +75,12 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
     backgroundColor: modalBg,
     color: textColor,
     borderRadius: '14px',
-    border: '1.5px solid #8e45e0'
+    border: '1.5px solid #149bdf'
   }}
 >
 
             <div className="d-flex justify-content-between align-items-center px-4 pt-4 pb-2">
-              <h4 className="m-0 fw-bold text-info d-flex align-items-center">
+              <h4 className="m-0 fw-bold d-flex align-items-center" style={{ color: '#149bdf' }}>
                 <i className="bi bi-person-lines-fill me-2"></i>Modificar Usuario
               </h4>
               <button type="button" className={`btn-close ${isDark ? 'btn-close-white' : ''}`} onClick={onCerrar}></button>
@@ -241,8 +241,8 @@ export const UsuarioEditModal: React.FC<UsuarioEditModalProps> = ({ usuario, onC
       {mostrarConfirmacion && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.9)', zIndex: 1060 }}>
           <div className="modal-dialog modal-sm modal-dialog-centered" style={{ maxWidth: '400px' }}>
-            <div className="modal-content p-4 text-center shadow-lg" style={{ border: '2px solid #8e45e0', backgroundColor: modalBg, color: textColor, borderRadius: '12px' }}>
-              <i className="bi bi-shield-lock fs-1 mb-2" style={{ color: '#8e45e0' }}></i>
+            <div className="modal-content p-4 text-center shadow-lg" style={{ border: '2px solid #149bdf', backgroundColor: modalBg, color: textColor, borderRadius: '12px' }}>
+              <i className="bi bi-shield-lock fs-1 mb-2" style={{ color: '#149bdf' }}></i>
               <h5 className="fw-bold">¿Actualizar Perfil?</h5>
               <p className="small" style={{ color: labelColor }}>Se modificarán las credenciales y permisos de acceso para este usuario.</p>
 

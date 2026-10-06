@@ -223,7 +223,7 @@ export const DashboardPrincipal: React.FC = () => {
                     </div>
                     <span
                       className="badge text-dark fw-bold px-2 py-1"
-                      style={{ backgroundColor: '#ffc107', fontSize: '0.75rem' }}
+                      style={{ backgroundColor: '#d39e00', fontSize: '0.75rem' }}
                     >
                       Quedarán {item.quedaran} {item.unidad} (Tolerancia: {item.tolerancia} {item.unidad})
                     </span>
@@ -246,7 +246,7 @@ export const DashboardPrincipal: React.FC = () => {
                 <button
                   type="button"
                   className="btn btn-sm flex-fill py-2 font-monospace fw-bold"
-                  style={{ backgroundColor: '#ffc107', color: '#ffff', border: 'none' }}
+                  style={{ backgroundColor: '#d39e00', color: '#ffff', border: 'none' }}
                   onClick={continuarFlujoPostStock}
                 >
                   Continuar de todas formas
@@ -308,7 +308,7 @@ export const DashboardPrincipal: React.FC = () => {
                 </button>
                 <button
                   className="btn btn-sm px-3 font-weight-bold"
-                  style={{ backgroundColor: '#ffc107', color: '#ffff', border: '1px solid #ffc107', borderRadius: '6px', fontWeight: 'bold' }}
+                  style={{ backgroundColor: '#d39e00', color: '#ffff', border: '1px solid #d39e00', borderRadius: '6px', fontWeight: 'bold' }}
                   onClick={() => {
                     setShowModalMaquinas(false);
                     setConfirmarMaquinaNoDisponible(true);
@@ -344,7 +344,7 @@ export const DashboardPrincipal: React.FC = () => {
                   <div className="d-flex gap-2 justify-content-center">
                     <button
                       className="btn fw-bold text-dark btn-sm flex-fill py-2"
-                      style={{ backgroundColor: '#eab308' }}
+                      style={{ backgroundColor: '#d39e00' }}
                       onClick={() => {
                         setSuceso({ ...suceso, show: false });
                         setVerTicketPedido({ pedido: ultimoPedidoRealizado, tipo: 'cliente' });

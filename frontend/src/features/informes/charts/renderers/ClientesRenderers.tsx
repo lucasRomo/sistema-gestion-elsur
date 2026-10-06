@@ -4,6 +4,7 @@ import {
   Pie, PieChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis,
 } from 'recharts';
 import { ChartScrollWrapper } from '../ChartScrollWrapper';
+import { TickEtiqueta } from '../TickEtiqueta';
 import { crearRendererEtiquetasSinColision, formatearDinero, normalizarDatosTorta } from '../etiquetasPieSinColision';
 import { COLORES_TORTA } from '.././Colores';
 import { CustomRankingTooltip } from '../../tooltips/InformesTooltips';
@@ -95,11 +96,11 @@ export const DeudoresChart: React.FC<RendererChartProps> = ({ data, isDark, isMo
 };
 
 export const CategoriasClienteChart: React.FC<RendererChartProps> = ({ data, esAnterior = false }) => (
-  <ChartScrollWrapper cantidadItems={data.ventasPorCategoriaCliente?.length || 0} anchoPorItem={90} height="100%">
+  <ChartScrollWrapper cantidadItems={data.ventasPorCategoriaCliente?.length || 0} anchoPorItem={90} etiquetas={(data.ventasPorCategoriaCliente || []).map((d: any) => d.name)} height="100%">
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data.ventasPorCategoriaCliente} margin={{ top: 20, right: 30, left: 20, bottom: 10 }} barSize={35}>
         <CartesianGrid strokeDasharray="3 3" stroke="#2d2d30" vertical={false} />
-        <XAxis dataKey="name" stroke="#a1a1aa" tick={{ fill: '#a1a1aa', fontSize: 12 }} axisLine={false} tickLine={false} />
+        <XAxis dataKey="name" stroke="#a1a1aa" interval={0} height={44} tick={<TickEtiqueta />} axisLine={false} tickLine={false} />
         <YAxis stroke="#a1a1aa" tick={{ fill: '#a1a1aa' }} axisLine={false} tickLine={false} allowDecimals={false} />
         <RechartsTooltip
           cursor={false}

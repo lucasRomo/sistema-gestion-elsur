@@ -201,8 +201,8 @@ export const Insumos: React.FC = () => {
           <button 
             className={`btn fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
             style={{ 
-              backgroundColor: '#eab308', 
-              borderColor: '#eab308', 
+              backgroundColor: '#d39e00', 
+              borderColor: '#d39e00', 
               color: '#ffffff',
               padding: '11px 24px',
               fontSize: '1rem',

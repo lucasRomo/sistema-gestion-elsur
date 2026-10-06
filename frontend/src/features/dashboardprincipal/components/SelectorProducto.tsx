@@ -113,11 +113,14 @@ export const SelectorProducto: React.FC<Props> = ({
                       {stockPorProducto[String(p.idProducto)] !== undefined && (
                         <span
                           className="badge"
-                          style={{
-                            backgroundColor: 'transparent',
-                            border: `1px solid ${stockPorProducto[String(p.idProducto)] > 0 ? '#22c55e' : '#dc3545'}`,
-                            color: stockPorProducto[String(p.idProducto)] > 0 ? '#22c55e' : '#dc3545'
-                          }}
+                          style={(() => {
+                            // Colores distintos por tema: el verde claro de modo oscuro casi no
+                            // se leía sobre el fondo blanco del modo claro.
+                            const hay = stockPorProducto[String(p.idProducto)] > 0;
+                            const color = hay ? (isDark ? '#4ade80' : '#15803d') : (isDark ? '#f87171' : '#b91c1c');
+                            const fondo = hay ? (isDark ? 'rgba(34,197,94,0.12)' : '#dcfce7') : (isDark ? 'rgba(220,53,69,0.15)' : '#fee2e2');
+                            return { backgroundColor: fondo, border: `1px solid ${color}`, color };
+                          })()}
                           title="Stock disponible"
                         >
                           {stockPorProducto[String(p.idProducto)] > 0 ? `Stock: ${stockPorProducto[String(p.idProducto)]}` : 'Sin stock'}
