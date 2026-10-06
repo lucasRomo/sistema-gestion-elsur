@@ -647,39 +647,40 @@ html[data-bs-theme="light"] .control-segmentado__boton:hover:not(.activo) { colo
 html[data-bs-theme="light"] .control-segmentado__boton:focus-visible:not(.activo) { outline-color: #8e45e0; }
 html[data-bs-theme="light"] .control-segmentado__boton.activo { color: #ffffff; box-shadow: 0 3px 6px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
 
-/* Botones amarillos: el amarillo de Bootstrap (#ffc107) era muy brillante y en modo claro casi
-   no se leía. Mismo tono más oscuro en todos los botones de advertencia del sistema. */
+/* Botones amarillos: el amarillo de Bootstrap (#ffc107) era muy brillante y se leía mal.
+   Mismo amarillo, apenas más oscuro (#eab308), en todos los botones de advertencia. */
 .btn-warning {
   --bs-btn-color: #1a1a1a;
-  --bs-btn-bg: #d39e00;
-  --bs-btn-border-color: #d39e00;
-  --bs-btn-hover-color: #ffffff;
-  --bs-btn-hover-bg: #b88a00;
-  --bs-btn-hover-border-color: #b88a00;
-  --bs-btn-active-color: #ffffff;
-  --bs-btn-active-bg: #a67c00;
-  --bs-btn-active-border-color: #a67c00;
+  --bs-btn-bg: #eab308;
+  --bs-btn-border-color: #eab308;
+  --bs-btn-hover-color: #1a1a1a;
+  --bs-btn-hover-bg: #facc15;
+  --bs-btn-hover-border-color: #facc15;
+  --bs-btn-active-color: #1a1a1a;
+  --bs-btn-active-bg: #ca8a04;
+  --bs-btn-active-border-color: #ca8a04;
   --bs-btn-disabled-color: #1a1a1a;
-  --bs-btn-disabled-bg: #d39e00;
-  --bs-btn-disabled-border-color: #d39e00;
+  --bs-btn-disabled-bg: #eab308;
+  --bs-btn-disabled-border-color: #eab308;
 }
 .btn-outline-warning {
-  --bs-btn-color: #e0a800;
-  --bs-btn-border-color: #e0a800;
+  --bs-btn-color: #eab308;
+  --bs-btn-border-color: #eab308;
   --bs-btn-hover-color: #1a1a1a;
-  --bs-btn-hover-bg: #d39e00;
-  --bs-btn-hover-border-color: #d39e00;
-  --bs-btn-active-color: #ffffff;
-  --bs-btn-active-bg: #b88a00;
-  --bs-btn-active-border-color: #b88a00;
-  --bs-btn-disabled-color: #e0a800;
-  --bs-btn-disabled-border-color: #e0a800;
+  --bs-btn-hover-bg: #eab308;
+  --bs-btn-hover-border-color: #eab308;
+  --bs-btn-active-color: #1a1a1a;
+  --bs-btn-active-bg: #ca8a04;
+  --bs-btn-active-border-color: #ca8a04;
+  --bs-btn-disabled-color: #eab308;
+  --bs-btn-disabled-border-color: #eab308;
 }
+/* Sobre fondo blanco el borde y la letra van un punto más oscuros para que se lean. */
 html[data-bs-theme="light"] .btn-outline-warning {
-  --bs-btn-color: #9a6f00;
-  --bs-btn-border-color: #b8860b;
-  --bs-btn-disabled-color: #9a6f00;
-  --bs-btn-disabled-border-color: #b8860b;
+  --bs-btn-color: #ca8a04;
+  --bs-btn-border-color: #ca8a04;
+  --bs-btn-disabled-color: #ca8a04;
+  --bs-btn-disabled-border-color: #ca8a04;
 }
 
 /* Celeste de "editar": el mismo tono (#149bdf) en los botones de las tablas y en el borde,

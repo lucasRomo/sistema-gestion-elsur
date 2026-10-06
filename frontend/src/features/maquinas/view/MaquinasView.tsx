@@ -188,8 +188,8 @@ export const MaquinasView: React.FC = () => {
           <button
             className={`btn btn-warning fw-bold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
             style={{ 
-              backgroundColor: "#d39e00", 
-              borderColor: "#d39e00", 
+              backgroundColor: "#eab308", 
+              borderColor: "#eab308", 
               color: '#ffffff',
               padding: '11px 24px',
               fontSize: '1rem',
