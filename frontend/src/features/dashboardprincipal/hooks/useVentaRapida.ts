@@ -462,8 +462,27 @@ export const useVentaRapida = () => {
     tipoPago: 'EFECTIVO' | 'TRANSFERENCIA' | 'DEBITO' | 'CUENTA_CORRIENTE';
     idCliente?: number;
     comprobanteFile?: File | null;
+    montoRecibido?: number;
   }) => {
     const tipoPagoElegido = datosPago?.tipoPago || 'EFECTIVO';
+
+    // Segunda barrera (el modal ya no deja avanzar): en efectivo, lo recibido tiene que cubrir el total.
+    const montoRecibido = datosPago?.montoRecibido;
+    if (tipoPagoElegido === 'EFECTIVO') {
+      if (montoRecibido == null || !Number.isFinite(montoRecibido) || Math.round(montoRecibido * 100) < Math.round(totalFinal * 100)) {
+        setSuceso({
+          show: true,
+          titulo: 'Monto insuficiente',
+          mensaje: `El monto recibido no cubre el total de la venta ($${formatearMonto(totalFinal)}). No se registró el cobro.`,
+          tipo: 'error'
+        });
+        return;
+      }
+    }
+    const vueltoEntregado = tipoPagoElegido === 'EFECTIVO' && montoRecibido != null ? montoRecibido - totalFinal : 0;
+    const detalleEfectivo = tipoPagoElegido === 'EFECTIVO' && montoRecibido != null
+      ? ` | Pagó con $${formatearMonto(montoRecibido)} - Vuelto $${formatearMonto(vueltoEntregado)}`
+      : '';
     const esCuentaCorriente = tipoPagoElegido === 'CUENTA_CORRIENTE';
     const idClienteAsignado = esCuentaCorriente && datosPago?.idCliente ? datosPago.idCliente : 1;
     const idUsuarioLogueado = (() => {
@@ -490,7 +509,7 @@ export const useVentaRapida = () => {
         monto_pago_adelantado: esCuentaCorriente ? 0 : totalFinal,
         es_cuenta_corriente: esCuentaCorriente,
         es_presupuesto: false,
-        observaciones: `Venta Rápida ${porcentajeDescuento > 0 ? `(Categoría: ${categoriaActual?.nombreCategoria} - ${porcentajeDescuento}% Desc.)` : ''}`,
+        observaciones: `Venta Rápida ${porcentajeDescuento > 0 ? `(Categoría: ${categoriaActual?.nombreCategoria} - ${porcentajeDescuento}% Desc.)` : ''}`.trim() + detalleEfectivo,
         detalles: carrito.map((item) => ({
           producto: { idProducto: item.producto.idProducto },
           cantidad: item.cantidad,
@@ -568,7 +587,8 @@ export const useVentaRapida = () => {
       setSuceso({
         show: true,
         titulo: '¡Éxito!',
-        mensaje: `Venta realizada con éxito ($${formatearMonto(totalFinal)}), registrada con método ${tipoPagoElegido} y stock descontado.`,
+        mensaje: `Venta realizada con éxito ($${formatearMonto(totalFinal)}), registrada con método ${tipoPagoElegido} y stock descontado.`
+          + (vueltoEntregado > 0 ? ` Vuelto a entregar: $${formatearMonto(vueltoEntregado)}.` : ''),
         tipo: 'exito'
       });
     } catch (error: any) {

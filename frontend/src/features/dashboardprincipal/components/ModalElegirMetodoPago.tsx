@@ -9,8 +9,22 @@ interface Props {
   onConfirmarPago: (datosPago: {
     tipoPago: 'EFECTIVO' | 'TRANSFERENCIA' | 'DEBITO';
     comprobanteFile?: File | null;
+    montoRecibido?: number;
   }) => void;
 }
+
+// Billetes "redondos" que suele entregar el cliente, para cargar el monto recibido con un clic.
+const BILLETES_SUGERIDOS = [1000, 2000, 5000, 10000, 20000];
+
+const sugerenciasDePago = (total: number): number[] => {
+  const sugeridas = new Set<number>();
+  for (const billete of BILLETES_SUGERIDOS) {
+    const redondeado = Math.ceil(total / billete) * billete;
+    if (redondeado > total) sugeridas.add(redondeado);
+    if (sugeridas.size === 3) break;
+  }
+  return [...sugeridas].sort((a, b) => a - b);
+};
 
 export const ModalElegirMetodoPago: React.FC<Props> = ({
   show,
@@ -27,10 +41,14 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
 
   if (!show) return null;
 
-  // Calculadora de vuelto para efectivo: solo informa, no bloquea el cobro.
+  // En efectivo el monto recibido es obligatorio y tiene que cubrir el total: antes se podía
+  // cobrar una venta de $5.000 cargando que el cliente pagó $5, y la caja la registraba completa.
+  // Se compara en centavos para no fallar por redondeos ($1.234,50 vs 1234.5000001).
   const pagaConNum = Number(pagaCon.replace(',', '.'));
-  const hayPagaCon = pagaCon.trim() !== '' && Number.isFinite(pagaConNum);
+  const hayPagaCon = pagaCon.trim() !== '' && Number.isFinite(pagaConNum) && pagaConNum >= 0;
+  const cubreTotal = hayPagaCon && Math.round(pagaConNum * 100) >= Math.round(total * 100);
   const vuelto = hayPagaCon ? pagaConNum - total : 0;
+  const puedeCobrar = tipoPago !== 'EFECTIVO' || cubreTotal;
 
   const bgModal = isDark ? '#1b1b1b' : '#ffffff';
   const textColor = isDark ? '#ffffff' : '#0f172a';
@@ -41,33 +59,35 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!puedeCobrar) return;
 
     onConfirmarPago({
       tipoPago,
-      comprobanteFile
+      comprobanteFile,
+      montoRecibido: tipoPago === 'EFECTIVO' ? pagaConNum : undefined
     });
   };
 
   return (
     <div className="modal show d-block font-monospace" tabIndex={-1} style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)', zIndex: 1060 }}>
       <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '440px'}}>
-        <div 
-  className="modal-content shadow-lg" 
-  style={{ 
-    backgroundColor: bgModal, 
-    border: '1.5px solid #10b981', 
+        <div
+  className="modal-content shadow-lg"
+  style={{
+    backgroundColor: bgModal,
+    border: '1.5px solid #10b981',
     borderRadius: '16px',
-    color: textColor 
+    color: textColor
   }}
 >
-          
+
           <div className="modal-header border-0 pb-0 pt-4 px-4 d-flex justify-content-between align-items-center">
             <h5 className="modal-title fw-bold d-flex align-items-center gap-2 fs-5" style={{ color: '#10b981' }}>
               <i className="bi bi-currency-dollar fs-4"></i> Método de Pago
             </h5>
-            <button 
-              type="button" 
-              className={`btn-close ${isDark ? 'btn-close-white' : ''}`} 
+            <button
+              type="button"
+              className={`btn-close ${isDark ? 'btn-close-white' : ''}`}
               onClick={onClose}
               style={{ opacity: 0.8 }}
             ></button>
@@ -76,11 +96,11 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
           <form onSubmit={handleSubmit}>
             <div className="modal-body px-4 pt-3 pb-2">
 
-              <div 
-                className="p-3 mb-3 text-center rounded d-flex justify-content-between align-items-center" 
-                style={{ 
-                  backgroundColor: cardBg, 
-                  border: `1px solid ${cardBorder}` 
+              <div
+                className="p-3 mb-3 text-center rounded d-flex justify-content-between align-items-center"
+                style={{
+                  backgroundColor: cardBg,
+                  border: `1px solid ${cardBorder}`
                 }}
               >
                 <span className="small fw-semibold" style={{ color: subTextColor }}>Total a Cobrar :</span>
@@ -111,7 +131,7 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
               {tipoPago === 'EFECTIVO' && (
                 <div className="mb-3">
                   <label className="form-label fw-bold small mb-1" style={{ color: textColor }} htmlFor="pagaConInput">
-                    Paga con (opcional):
+                    Monto recibido del cliente:
                   </label>
                   <div className="input-group">
                     <span className="input-group-text" style={{ backgroundColor: cardBg, color: subTextColor, borderColor: cardBorder }}>$</span>
@@ -127,17 +147,37 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
                       value={pagaCon}
                       onChange={(e) => setPagaCon(e.target.value)}
                       autoFocus
+                      required
+                      aria-invalid={hayPagaCon && !cubreTotal}
                     />
                   </div>
+                  <div className="d-flex flex-wrap gap-1 mt-2">
+                    {[{ texto: 'Exacto', valor: total }, ...sugerenciasDePago(total).map((v) => ({ texto: `$${formatearMonto(v)}`, valor: v }))].map((s) => (
+                      <button
+                        key={s.texto}
+                        type="button"
+                        className="btn btn-sm py-0 px-2 font-monospace"
+                        style={{ fontSize: '0.75rem', borderRadius: '999px', border: `1px solid ${cardBorder}`, color: textColor, backgroundColor: cardBg }}
+                        onClick={() => setPagaCon(String(Math.round(s.valor * 100) / 100))}
+                      >
+                        {s.texto}
+                      </button>
+                    ))}
+                  </div>
+                  {!hayPagaCon && (
+                    <div className="small mt-2" style={{ color: subTextColor }}>
+                      Ingresá con cuánto paga el cliente (o tocá "Exacto").
+                    </div>
+                  )}
                   {hayPagaCon && (
                     <div
                       className="mt-2 p-2 rounded d-flex justify-content-between align-items-center"
-                      style={{ backgroundColor: cardBg, border: `1px solid ${vuelto >= 0 ? '#22c55e' : '#dc3545'}` }}
+                      style={{ backgroundColor: cardBg, border: `1px solid ${cubreTotal ? '#22c55e' : '#dc3545'}` }}
                       aria-live="polite"
                     >
-                      <span className="small fw-semibold" style={{ color: subTextColor }}>{vuelto >= 0 ? 'Vuelto:' : 'Falta:'}</span>
-                      <span className="fw-bold fs-5" style={{ color: vuelto >= 0 ? '#22c55e' : '#dc3545' }}>
-                        ${formatearMonto(Math.abs(vuelto))}
+                      <span className="small fw-semibold" style={{ color: subTextColor }}>{cubreTotal ? 'Vuelto:' : 'Falta:'}</span>
+                      <span className="fw-bold fs-5" style={{ color: cubreTotal ? '#22c55e' : '#dc3545' }}>
+                        ${formatearMonto(cubreTotal ? vuelto : Math.abs(vuelto))}
                       </span>
                     </div>
                   )}
@@ -187,10 +227,19 @@ export const ModalElegirMetodoPago: React.FC<Props> = ({
             >
              Volver
             </button>
-              <button 
-                type="submit" 
-                className="btn fw-bold px-4" 
-                style={{ backgroundColor: '#10b92c', color: '#ffff', borderRadius: '8px', border: 'none' }}
+              <button
+                type="submit"
+                className="btn fw-bold px-4"
+                style={{
+                  backgroundColor: puedeCobrar ? '#10b92c' : '#52525b',
+                  color: '#ffff',
+                  borderRadius: '8px',
+                  border: 'none',
+                  opacity: puedeCobrar ? 1 : 0.6,
+                  cursor: puedeCobrar ? 'pointer' : 'not-allowed'
+                }}
+                disabled={!puedeCobrar}
+                title={puedeCobrar ? undefined : 'El monto recibido no cubre el total de la venta'}
               >
                 Procesar Cobro
               </button>
