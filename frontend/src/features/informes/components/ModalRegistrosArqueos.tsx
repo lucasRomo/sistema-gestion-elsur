@@ -238,6 +238,13 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
     if (!turno.fechaCierre) {
       return <span className="badge bg-warning text-dark fw-bold">En curso</span>;
     }
+    if (turno.cierreAutomatico) {
+      return (
+        <span className="badge bg-secondary text-white fw-bold" title="La caja quedó abierta y el sistema la cerró a medianoche, sin contar el efectivo">
+          <i className="bi bi-moon-stars me-1" aria-hidden="true"></i>Cierre automático
+        </span>
+      );
+    }
     const diferencia = Number(turno.diferenciaArqueo || 0);
     if (diferencia === 0) {
       return <span className="badge bg-success text-dark fw-bold">Arqueo Exacto</span>;

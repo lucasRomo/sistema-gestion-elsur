@@ -145,7 +145,11 @@ export const ventaRapidaService = {
     let egresosTurno = 0;
 
     try {
-      const resTotales = await apiFetch(`${API_BASE_URL}/movimientos-caja/totales`);
+      // Totales del turno abierto (antes eran los del día calendario, aunque la tarjeta dice "turno").
+      const idTurno = dataCaja?.idTurno ?? dataCaja?.id_turno;
+      const resTotales = await apiFetch(idTurno != null
+        ? `${API_BASE_URL}/movimientos-caja/totales/turno/${idTurno}`
+        : `${API_BASE_URL}/movimientos-caja/totales`);
       if (resTotales.ok) {
         const dataTotales = await resTotales.json();
         ingresosTurno = dataTotales.totalIngresos || 0;

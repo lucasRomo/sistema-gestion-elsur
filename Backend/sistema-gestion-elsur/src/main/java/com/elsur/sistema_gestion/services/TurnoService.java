@@ -14,6 +14,9 @@ public interface TurnoService {
 
     Optional<Turno> obtenerTurnoAbiertoHoy();
 
+    /** Cierra las cajas que quedaron abiertas de un día anterior. Devuelve cuántas cerró. */
+    int cerrarTurnosVencidos();
+
     boolean existeTurnoAbiertoHoy();
 
     List<Turno> obtenerTodos();

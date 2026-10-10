@@ -43,4 +43,8 @@ public class Turno {
     @Column(name = "estado", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private EstadoTurno estado;
+
+    // true si la cerró el sistema a medianoche porque nadie hizo el cierre de turno.
+    @Column(name = "cierre_automatico")
+    private Boolean cierreAutomatico = false;
 }

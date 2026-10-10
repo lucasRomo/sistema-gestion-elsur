@@ -17,7 +17,7 @@ import { GraficoFlujoCajaCard } from '../components/GraficoFlujoCajaCard';
 import { TablaMovimientosCaja } from '../components/TablaMovimientosCaja';
 import { AccionesRapidasCaja } from '../components/AccionesRapidasCaja';
 import { BarraAccionesTurno } from '../components/BarraAccionesTurno';
-import { confirmarAccion } from '../../../config/dialogStore';
+import { confirmarAccion, mostrarAviso } from '../../../config/dialogStore';
 
 import { formatearMonto } from '../../../utils/formato';
 export const CajaView: React.FC = () => {
@@ -87,6 +87,31 @@ export const CajaView: React.FC = () => {
   useEffect(() => {
     inicializarCaja();
   }, [inicializarCaja]);
+
+  // Si la última caja la cerró el sistema a medianoche (nadie hizo el cierre de turno), se avisa
+  // una sola vez al entrar, para que se sepa que ese día no tuvo arqueo de efectivo.
+  useEffect(() => {
+    if (cajaAbierta) return;
+    let cancelado = false;
+    cajaService.obtenerTodosLosTurnos().then((turnos) => {
+      const ultimo = turnos[0];
+      if (cancelado || !ultimo?.cierreAutomatico) return;
+      const clave = `aviso_cierre_automatico_${ultimo.idTurno}`;
+      try {
+        if (localStorage.getItem(clave)) return;
+        localStorage.setItem(clave, '1');
+      } catch { /* sin almacenamiento: se avisa igual */ }
+      const dia = new Date(ultimo.fechaApertura).toLocaleDateString('es-AR');
+      mostrarAviso(
+        `La caja del ${dia} quedó abierta y el sistema la cerró automáticamente a medianoche. ` +
+        `Como no se hizo el cierre de turno, no se contó el efectivo: se registró el monto esperado ` +
+        `($${formatearMonto(ultimo.montoEsperadoSistema ?? 0)}). Lo podés ver en el historial de cajas (Informes). ` +
+        `Para empezar el día, abrí una caja nueva.`,
+        { titulo: 'Caja cerrada automáticamente' }
+      );
+    });
+    return () => { cancelado = true; };
+  }, [cajaAbierta]);
 
   const handleAbrirAperturaModal = () => {
     setMontoInicialInput('0');

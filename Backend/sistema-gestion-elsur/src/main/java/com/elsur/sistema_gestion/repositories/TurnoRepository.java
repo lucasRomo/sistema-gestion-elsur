@@ -30,4 +30,6 @@ public interface TurnoRepository extends JpaRepository<Turno, Integer> {
       List<Turno> findAllByOrderByFechaAperturaDesc();
 
     Optional<Turno> findTopByEstadoOrderByFechaAperturaDesc(EstadoTurno estado);
+
+    List<Turno> findByEstadoAndFechaAperturaBefore(EstadoTurno estado, java.time.LocalDateTime antesDe);
 }

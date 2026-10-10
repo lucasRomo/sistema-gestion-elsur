@@ -70,4 +70,6 @@ export interface Turno {
   diferenciaArqueo?: number;
   observaciones?: string;
   estado: 'ABIERTO' | 'CERRADO';
+  /** La cerró el sistema a medianoche porque nadie hizo el cierre de turno. */
+  cierreAutomatico?: boolean | null;
 }

@@ -53,8 +53,14 @@ class IncidenciaServiceImplUnitTest {
     }
 
     private Turno turnoAbierto() {
+        return turnoAbierto(0.0);
+    }
+
+    private Turno turnoAbierto(double montoInicial) {
         Turno t = new Turno();
+        t.setIdTurno(7);
         t.setEstado(EstadoTurno.ABIERTO);
+        t.setMontoInicial(montoInicial);
         return t;
     }
 
@@ -180,13 +186,29 @@ class IncidenciaServiceImplUnitTest {
     }
 
     @Test
+    @DisplayName("registrarPagoMantenimiento: cuenta el monto inicial del turno (caja abierta con plata y sin movimientos)")
+    void registrarPagoMantenimiento_usaMontoInicialDelTurno() {
+        Incidencia inc = incidencia(10, maquina(1, "FUERA DE SERVICIO"), "PENDIENTE");
+        when(incidenciaRepository.findById(10)).thenReturn(Optional.of(inc));
+        when(turnoRepository.findTopByEstadoOrderByFechaAperturaDesc(EstadoTurno.ABIERTO))
+                .thenReturn(Optional.of(turnoAbierto(5000.0)));
+        when(movimientoCajaService.obtenerDesgloseArqueoPorTurno(7)).thenReturn(Map.of("totalEfectivo", 0.0));
+        when(usuarioRepository.findById(5)).thenReturn(Optional.empty());
+
+        // Con el cálculo viejo (movimientos del día) esto daba SALDO_INSUFFICIENT; ahora pasa la
+        // validación de saldo y sigue hasta la del usuario.
+        assertThrows(com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException.class,
+                () -> service.registrarPagoMantenimiento(10, new BigDecimal("300"), "EFECTIVO", "desc", 5, false, null));
+    }
+
+    @Test
     @DisplayName("registrarPagoMantenimiento: saldo insuficiente en efectivo sin forzar lanza IllegalArgumentException prefijada SALDO_INSUFFICIENT")
     void registrarPagoMantenimiento_saldoInsuficiente_lanzaIllegalArgument() {
         Incidencia inc = incidencia(10, maquina(1, "FUERA DE SERVICIO"), "PENDIENTE");
         when(incidenciaRepository.findById(10)).thenReturn(Optional.of(inc));
         when(turnoRepository.findTopByEstadoOrderByFechaAperturaDesc(EstadoTurno.ABIERTO))
                 .thenReturn(Optional.of(turnoAbierto()));
-        when(movimientoCajaService.calcularTotalesDelDia()).thenReturn(Map.of("saldoActual", 50.0));
+        when(movimientoCajaService.obtenerDesgloseArqueoPorTurno(7)).thenReturn(Map.of("totalEfectivo", 50.0));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> service.registrarPagoMantenimiento(10, new BigDecimal("100"), "EFECTIVO", "desc", 5, false, null));
@@ -200,7 +222,7 @@ class IncidenciaServiceImplUnitTest {
         when(incidenciaRepository.findById(10)).thenReturn(Optional.of(inc));
         when(turnoRepository.findTopByEstadoOrderByFechaAperturaDesc(EstadoTurno.ABIERTO))
                 .thenReturn(Optional.of(turnoAbierto()));
-        when(movimientoCajaService.calcularTotalesDelDia()).thenReturn(Map.of("saldoActual", 5000.0));
+        when(movimientoCajaService.obtenerDesgloseArqueoPorTurno(7)).thenReturn(Map.of("totalEfectivo", 5000.0));
         when(usuarioRepository.findById(999)).thenReturn(Optional.empty());
 
         assertThrows(SolicitudInvalidaException.class,
@@ -214,7 +236,7 @@ class IncidenciaServiceImplUnitTest {
         when(incidenciaRepository.findById(10)).thenReturn(Optional.of(inc));
         when(turnoRepository.findTopByEstadoOrderByFechaAperturaDesc(EstadoTurno.ABIERTO))
                 .thenReturn(Optional.of(turnoAbierto()));
-        when(movimientoCajaService.calcularTotalesDelDia()).thenReturn(Map.of("saldoActual", 5000.0));
+        when(movimientoCajaService.obtenerDesgloseArqueoPorTurno(7)).thenReturn(Map.of("totalEfectivo", 5000.0));
         when(usuarioRepository.findById(5)).thenReturn(Optional.of(new Usuario()));
         when(incidenciaRepository.save(any(Incidencia.class))).thenAnswer(i -> i.getArgument(0));
         when(movimientoCajaRepository.save(any(MovimientoCaja.class))).thenAnswer(i -> i.getArgument(0));

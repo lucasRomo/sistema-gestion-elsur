@@ -148,8 +148,13 @@ public class IncidenciaServiceImpl implements IncidenciaService {
                 .orElseThrow(() -> new IllegalStateException("CAJA_CERRADA: La caja debe estar abierta para poder registrar pagos de mantenimiento."));
         
         if ("EFECTIVO".equalsIgnoreCase(metodoPago) && !forzarSaldoInsuficiente) {
-            Map<String, Double> totales = movimientoCajaService.calcularTotalesDelDia();
-            Double saldoActual = totales.getOrDefault("saldoActual", 0.0);
+            // Efectivo disponible en la caja del turno abierto: monto inicial + efectivo que entró
+            // - efectivo que salió. Antes sumaba los movimientos del día (sin el monto inicial y
+            // mezclando transferencias), así que con la caja abierta con plata decía "saldo
+            // insuficiente" si ese día todavía no había entrado nada.
+            Map<String, Double> desglose = movimientoCajaService.obtenerDesgloseArqueoPorTurno(turnoActivo.getIdTurno());
+            double inicial = turnoActivo.getMontoInicial() != null ? turnoActivo.getMontoInicial() : 0.0;
+            Double saldoActual = inicial + desglose.getOrDefault("totalEfectivo", 0.0);
 
             if (monto.doubleValue() > saldoActual) {
                 throw new IllegalArgumentException("SALDO_INSUFFICIENT: Saldo actual en caja ($" + saldoActual + ") es menor al monto solicitado ($" + monto + ").");
