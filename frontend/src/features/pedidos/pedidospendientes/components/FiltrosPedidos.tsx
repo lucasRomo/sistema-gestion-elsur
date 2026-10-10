@@ -68,7 +68,6 @@ export const FiltrosPedidos: React.FC<FiltrosPedidosProps> = ({
           <option value="PENDIENTE">PENDIENTE</option>
           <option value="EN PROCESO">EN PROCESO</option>
           <option value="PAUSADO">PAUSADO</option>
-          <option value="CANCELADO">CANCELADO</option>
           <option value="FINALIZADO">FINALIZADO</option>
           <option value="DEVUELTO">DEVUELTOS ↩</option>
         </select>

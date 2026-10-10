@@ -697,3 +697,24 @@ html[data-bs-theme="light"] .btn-outline-warning {
   --bs-btn-disabled-color: #149bdf;
   --bs-btn-disabled-border-color: #149bdf;
 }
+
+/* En modo claro, ".text-white" se pasa a negro (para textos sobre fondo blanco). Pero sobre
+   fondos de color (carteles verdes/rojos, botones, insignias) tiene que seguir blanco: si no,
+   por ejemplo, el mensaje "¡Contraseña actualizada!" de Configuración quedaba negro sobre verde. */
+html[data-bs-theme="light"] .bg-success.text-white,
+html[data-bs-theme="light"] .bg-danger.text-white,
+html[data-bs-theme="light"] .bg-primary.text-white,
+html[data-bs-theme="light"] .bg-secondary.text-white,
+html[data-bs-theme="light"] .bg-info.text-white,
+html[data-bs-theme="light"] .alert-success.text-white,
+html[data-bs-theme="light"] .alert-danger.text-white,
+html[data-bs-theme="light"] .btn-success.text-white,
+html[data-bs-theme="light"] .btn-danger.text-white,
+html[data-bs-theme="light"] .btn-primary.text-white,
+html[data-bs-theme="light"] .btn-secondary.text-white,
+html[data-bs-theme="light"] .btn-info.text-white,
+html[data-bs-theme="light"] .badge.text-white,
+/* Botones con el color de fondo puesto a mano (style) y letra blanca. */
+html[data-bs-theme="light"] .btn.text-white {
+  color: #ffffff !important;
+}

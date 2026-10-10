@@ -268,13 +268,13 @@ export const GestionUnidadesModal: React.FC<GestionUnidadesModalProps> = ({
                 <div className="d-flex justify-content-center gap-2">
                   <button 
                     type="button"
-                    className="btn btn-danger btn-sm px-3 fw-semibold" 
+                    className="btn btn-secondary btn-sm px-3 fw-semibold" 
                     onClick={() => {
                       setMostrarModalConfirmar(false);
                       setIdEliminar(null);
                     }}
                   >
-                    Cancelar
+                    Volver
                   </button>
                   <button 
                     type="button"

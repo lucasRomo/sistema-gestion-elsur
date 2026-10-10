@@ -158,7 +158,7 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
   className="modal-content shadow-lg font-monospace" 
   style={{ 
     backgroundColor: modalBg, 
-    border: '1.5px solid #8e45e0', 
+    border: '1.5px solid #149bdf', 
     color: titleColor 
   }}
 >
@@ -400,14 +400,14 @@ export const CategoriaClienteModal: React.FC<CategoriaClienteModalProps> = ({ on
 
                 <div className="d-flex justify-content-center gap-2">
                   <button
-                    className="btn btn-danger btn-sm px-3 fw-semibold"
+                    className="btn btn-secondary btn-sm px-3 fw-semibold"
                     onClick={() => {
                       setMostrarModalConfirmar(false);
                       setIdEliminar(null);
                     }}
                     disabled={eliminando}
                   >
-                    Cancelar
+                    Volver
                   </button>
                   <button
                     className="btn btn-sm btn-danger px-3 fw-bold"
