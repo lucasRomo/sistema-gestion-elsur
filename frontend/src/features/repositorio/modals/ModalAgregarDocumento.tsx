@@ -3,6 +3,7 @@ import type { AreaCurso } from '../types/Repositorio';
 import { useTheme } from '../../../Context/ThemeContext';
 import { ErrorModal } from '../../../components/modals/ErrorModal';
 
+import { mostrarAviso } from '../../../config/dialogStore';
 interface Props {
   show: boolean;
   areas: AreaCurso[];
@@ -90,7 +91,17 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
 
   const handlePreSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!archivo || !idArea || !titulo || !autor) return;
+    // El selector de archivo está oculto: si faltaba, el navegador frenaba el envío sin mostrar
+    // nada. Ahora se avisa con un modal.
+    if (!archivo) {
+      mostrarAviso('Tenés que adjuntar el archivo del documento (PDF, Word o imagen) antes de registrarlo. '
+        + 'Arrastralo al recuadro o tocá para elegirlo.', { titulo: 'Falta el archivo' });
+      return;
+    }
+    if (!idArea || !titulo.trim() || !autor.trim()) {
+      mostrarAviso('Completá el título, el autor/docente y la cátedra antes de registrar el documento.', { titulo: 'Faltan datos' });
+      return;
+    }
     setMostrarConfirmar(true);
   };
 
@@ -293,7 +304,6 @@ export const ModalAgregarDocumento: React.FC<Props> = ({
                     id="archivo-input"
                     type="file"
                     className="d-none"
-                    required={!archivo}
                     accept=".pdf,.docx,.doc,.jpg,.jpeg,.png"
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {

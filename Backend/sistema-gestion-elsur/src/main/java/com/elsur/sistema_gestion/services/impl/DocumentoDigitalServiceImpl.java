@@ -1,5 +1,6 @@
 package com.elsur.sistema_gestion.services.impl;
 
+import com.elsur.sistema_gestion.exceptions.RecursoDuplicadoException;
 import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
 import com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException;
 import com.elsur.sistema_gestion.models.Area_Curso;
@@ -88,6 +89,19 @@ public class DocumentoDigitalServiceImpl implements DocumentoDigitalService {
 
         Area_Curso area = areaCursoRepository.findById(idArea)
                 .orElseThrow(() -> new RecursoNoEncontradoException("El área/cátedra seleccionada no existe"));
+
+        // Documento repetido: se valida ANTES de subir el archivo al storage (si no, quedaba el
+        // archivo subido y el error salía al final, poco claro). Cada documento crea además un
+        // producto "Apunte: <título>" para venderlo, que tampoco puede repetirse.
+        String tituloLimpio = titulo.trim();
+        if (documentoDigitalRepository.existsByTituloIgnoreCaseAndArea_IdAreaAndEstado(tituloLimpio, idArea, "Activo")) {
+            throw new RecursoDuplicadoException("Ya existe un documento llamado \"" + tituloLimpio
+                    + "\" en esa cátedra. Cambiá el título o eliminá el documento anterior.");
+        }
+        if (productoRepository.existsByNombreProductoIgnoreCaseAndEstado("Apunte: " + tituloLimpio, "Activo")) {
+            throw new RecursoDuplicadoException("Ya existe un apunte llamado \"" + tituloLimpio
+                    + "\" (en otra cátedra). Usá un título distinto, por ejemplo agregando la cátedra o el año.");
+        }
 
         String nombreOriginal = archivo.getOriginalFilename();
         String extension = "";

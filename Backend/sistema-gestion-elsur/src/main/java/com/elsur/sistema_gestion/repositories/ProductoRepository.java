@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface ProductoRepository extends JpaRepository<Producto, Integer> {
 
     boolean existsByNombreProductoIgnoreCaseAndIdProductoNot(String nombreProducto, Integer idProducto);
+    boolean existsByNombreProductoIgnoreCaseAndEstado(String nombreProducto, String estado);
 }
