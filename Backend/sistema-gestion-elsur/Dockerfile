@@ -21,9 +21,11 @@ RUN useradd --system --create-home elsur
 COPY --from=build /app/target/*.jar app.jar
 USER elsur
 
-# Render free tiene 512 MB: limitar el heap a un porcentaje del contenedor evita que el
-# proceso sea matado por exceder la memoria.
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Xss512k -Duser.timezone=America/Argentina/Buenos_Aires"
+# Render free tiene 512 MB para TODO el proceso, no solo el heap: Spring Boot + Hibernate usan
+# además ~150 MB fuera del heap (clases, código compilado, hilos). Con el heap al 75% (~384 MB)
+# la suma pasaba los 512 y Render mataba el proceso ("exceeded its memory limit").
+# Heap al 55% (~280 MB) y topes explícitos para el resto.
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=55 -XX:MaxMetaspaceSize=170m -XX:ReservedCodeCacheSize=48m -XX:MaxDirectMemorySize=32m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Xss512k -XX:+ExitOnOutOfMemoryError -Duser.timezone=America/Argentina/Buenos_Aires"
 # Render corre en UTC: sin esto "hoy" cambiaba a las 21:00 de Argentina (cierre de caja,
 # movimientos del día, fechas de pedidos) y las fechas nuevas quedaban 3 horas corridas.
 ENV TZ=America/Argentina/Buenos_Aires

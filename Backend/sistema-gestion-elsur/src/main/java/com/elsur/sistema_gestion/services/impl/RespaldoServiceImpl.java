@@ -109,27 +109,6 @@ public class RespaldoServiceImpl implements RespaldoService {
             backupData.put("_fechaGeneracion", LocalDateTime.now().toString());
             backupData.put("_generadoPor", usuarioOperador != null ? usuarioOperador : "Sistema");
 
-            Set<EntityType<?>> entities = entityManager.getMetamodel().getEntities();
-            Map<String, Object> tablasData = new HashMap<>();
-
-            for (EntityType<?> entity : entities) {
-                String nombreEntidad = entity.getName();
-
-                if ("RespaldoLog".equalsIgnoreCase(nombreEntidad)) {
-                    continue;
-                }
-
-                try {
-                    List<?> registros = entityManager
-                            .createQuery("SELECT e FROM " + nombreEntidad + " e", entity.getJavaType())
-                            .getResultList();
-                    tablasData.put(nombreEntidad, registros);
-                } catch (Exception e) {
-                    tablasData.put(nombreEntidad, "Error al exportar: " + e.getMessage());
-                }
-            }
-            backupData.put("datos", tablasData);
-
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.registerModule(new JavaTimeModule());
             objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
@@ -137,8 +116,46 @@ public class RespaldoServiceImpl implements RespaldoService {
             objectMapper.addMixIn(Object.class, HibernateProxyMixIn.class);
             objectMapper.addMixIn(Usuario.class, UsuarioBackupMixIn.class);
 
-            String jsonOutput = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(backupData);
-            byte[] bytes = jsonOutput.getBytes(StandardCharsets.UTF_8);
+            // Antes se cargaban TODAS las tablas a la vez, se armaba un texto JSON con sangrías y
+            // se copiaba a bytes (tres copias de la base en memoria): en Render (512 MB) eso hacía
+            // reiniciar el servidor. Ahora se escribe tabla por tabla, en JSON compacto, y se
+            // libera la memoria de cada tabla antes de pasar a la siguiente. El formato del
+            // archivo es el mismo, así que los respaldos se restauran igual que antes.
+            java.io.ByteArrayOutputStream salida = new java.io.ByteArrayOutputStream();
+            try (com.fasterxml.jackson.core.JsonGenerator gen = objectMapper.getFactory().createGenerator(salida)) {
+                gen.writeStartObject();
+                for (Map.Entry<String, Object> cabecera : backupData.entrySet()) {
+                    gen.writeStringField(cabecera.getKey(), String.valueOf(cabecera.getValue()));
+                }
+                gen.writeObjectFieldStart("datos");
+
+                Set<EntityType<?>> entities = entityManager.getMetamodel().getEntities();
+                for (EntityType<?> entity : entities) {
+                    String nombreEntidad = entity.getName();
+
+                    if ("RespaldoLog".equalsIgnoreCase(nombreEntidad)) {
+                        continue;
+                    }
+
+                    String tablaJson;
+                    try {
+                        List<?> registros = entityManager
+                                .createQuery("SELECT e FROM " + nombreEntidad + " e", entity.getJavaType())
+                                .getResultList();
+                        tablaJson = objectMapper.writeValueAsString(registros);
+                    } catch (Exception e) {
+                        tablaJson = objectMapper.writeValueAsString("Error al exportar: " + e.getMessage());
+                    } finally {
+                        entityManager.clear();
+                    }
+                    gen.writeFieldName(nombreEntidad);
+                    gen.writeRawValue(tablaJson);
+                }
+
+                gen.writeEndObject();
+                gen.writeEndObject();
+            }
+            byte[] bytes = salida.toByteArray();
 
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             String fileName = "backup_elsur_contingencia_" + timestamp + ".json";

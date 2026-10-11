@@ -41,6 +41,9 @@ public class IncidenciaServiceImpl implements IncidenciaService {
     @Autowired
     private MovimientoCajaService movimientoCajaService;
 
+    @Autowired(required = false)
+    private com.elsur.sistema_gestion.services.SupabaseStorageService supabaseStorageService;
+
     @Override
     @Transactional
     public Incidencia registrarFalla(Integer idMaquina, String descripcion, String prioridad, Integer idEmpleadoReporta) {
@@ -114,8 +117,8 @@ public class IncidenciaServiceImpl implements IncidenciaService {
         Maquina maquina = incidencia.getMaquina();
         List<Incidencia> pendientes = incidenciaRepository
                 .findByMaquinaIdMaquinaAndEstadoIncidencia(maquina.getIdMaquina(), "PENDIENTE");
-        
-        if (pendientes.size() <= 1) { 
+
+        if (pendientes.size() <= 1) {
             maquina.setEstado("OPERATIVA");
             maquinaRepository.save(maquina);
         }
@@ -126,12 +129,12 @@ public class IncidenciaServiceImpl implements IncidenciaService {
     @Override
     @Transactional
     public MovimientoCaja registrarPagoMantenimiento(
-            Integer idIncidencia, 
-            BigDecimal monto, 
-            String metodoPago, 
-            String descripcion, 
-            Integer idUsuario, 
-            boolean forzarSaldoInsuficiente, 
+            Integer idIncidencia,
+            BigDecimal monto,
+            String metodoPago,
+            String descripcion,
+            Integer idUsuario,
+            boolean forzarSaldoInsuficiente,
             MultipartFile comprobante) {
 
         Incidencia incidencia = incidenciaRepository.findById(idIncidencia)
@@ -146,7 +149,7 @@ public class IncidenciaServiceImpl implements IncidenciaService {
 
         Turno turnoActivo = turnoRepository.findTopByEstadoOrderByFechaAperturaDesc(EstadoTurno.ABIERTO)
                 .orElseThrow(() -> new IllegalStateException("CAJA_CERRADA: La caja debe estar abierta para poder registrar pagos de mantenimiento."));
-        
+
         if ("EFECTIVO".equalsIgnoreCase(metodoPago) && !forzarSaldoInsuficiente) {
             // Efectivo disponible en la caja del turno abierto: monto inicial + efectivo que entró
             // - efectivo que salió. Antes sumaba los movimientos del día (sin el monto inicial y
@@ -173,8 +176,8 @@ public class IncidenciaServiceImpl implements IncidenciaService {
         movimiento.setTipoMovimiento("EGRESO");
         movimiento.setCategoria("EGRESO_MANTENIMIENTO");
         movimiento.setMetodoPago(metodoPago != null ? metodoPago : "EFECTIVO");
-        movimiento.setDescripcion(descripcion != null && !descripcion.isBlank() 
-            ? descripcion 
+        movimiento.setDescripcion(descripcion != null && !descripcion.isBlank()
+            ? descripcion
             : "Pago mantenimiento " + incidencia.getMaquina().getNombre() + " (Incidencia #" + idIncidencia + ")");
         movimiento.setFecha(LocalDateTime.now());
         movimiento.setUsuario(usuario);
@@ -183,14 +186,16 @@ public class IncidenciaServiceImpl implements IncidenciaService {
 
         if (comprobante != null && !comprobante.isEmpty()) {
             try {
-                String contentType = comprobante.getContentType() != null 
-                        ? comprobante.getContentType() 
-                        : "image/jpeg";
-                
-                String base64Content = Base64.getEncoder().encodeToString(comprobante.getBytes());
-                String dataUrl = "data:" + contentType + ";base64," + base64Content;
-                
-                movimiento.setComprobanteImagen(dataUrl);
+                // Al bucket "comprobantes" como el resto de los comprobantes de caja. Antes se
+                // guardaba la imagen entera en base64 dentro de la base, y cada consulta de
+                // movimientos (caja, informes, respaldos) la arrastraba a memoria.
+                if (supabaseStorageService != null) {
+                    movimiento.setComprobanteImagen(supabaseStorageService.subirArchivo(comprobante, "comprobantes"));
+                } else {
+                    String contentType = comprobante.getContentType() != null ? comprobante.getContentType() : "image/jpeg";
+                    movimiento.setComprobanteImagen("data:" + contentType + ";base64,"
+                            + Base64.getEncoder().encodeToString(comprobante.getBytes()));
+                }
             } catch (Exception e) {
                 throw new RuntimeException("Error al procesar el archivo de comprobante", e);
             }
