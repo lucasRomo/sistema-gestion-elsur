@@ -21,7 +21,19 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
 
   const [usuario, setUsuario] = useState<any>(null);
   const [fechaActual, setFechaActual] = useState<string>('');
-  const [colapsado, setColapsado] = useState<boolean>(false);
+  // Plegado = solo íconos. Se recuerda entre pantallas; la primera vez arranca plegado en
+  // pantallas de menos de 1200 px (tablet acostada, ventana chica) para dejarle lugar al contenido.
+  const [colapsado, setColapsadoEstado] = useState<boolean>(() => {
+    try {
+      const guardado = localStorage.getItem('sidebar_colapsado');
+      if (guardado !== null) return guardado === 'true';
+    } catch { /* sin almacenamiento */ }
+    return window.innerWidth < 1200;
+  });
+  const setColapsado = (valor: boolean) => {
+    setColapsadoEstado(valor);
+    try { localStorage.setItem('sidebar_colapsado', String(valor)); } catch { /* sin almacenamiento */ }
+  };
   const [seccionesAbiertas, setSeccionesAbiertas] = useState<Record<string, boolean>>(() => {
     try {
       const guardado = localStorage.getItem('sidebar_secciones_abiertas');
@@ -187,10 +199,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   };
 
   const handleNavegacion = async (path: string) => {
-    if (colapsado) {
-      setColapsado(false);
-      return;
-    }
+    // Con el menú plegado, el ícono lleva directo a la pantalla (antes solo desplegaba el menú).
     if (!(await puedeSalirDeLaPantalla())) return;
     if (scrollContainerRef.current) {
       localStorage.setItem('sidebar_scroll_position', scrollContainerRef.current.scrollTop.toString());
@@ -209,7 +218,8 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         key={item.name}
         onClick={() => handleNavegacion(item.path)}
         className="btn d-flex align-items-center w-100 transition-all position-relative"
-        title={insignias.length > 0 ? `${item.name}: ${insignias.map(i => i[2]).join(', ')}` : undefined}
+        title={insignias.length > 0 ? `${item.name}: ${insignias.map(i => i[2]).join(', ')}` : (colapsado ? item.name : undefined)}
+        aria-label={item.name}
         style={{
           backgroundColor: isActive ? activeBg : 'transparent',
           color: isActive ? '#8e45e0' : inactiveTextColor,

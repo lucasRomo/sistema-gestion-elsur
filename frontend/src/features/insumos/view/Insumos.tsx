@@ -23,6 +23,7 @@ import { confirmarAccion, mostrarError } from '../../../config/dialogStore';
 import { SkeletonTabla } from '../../../components/common/SkeletonCarga';
 
 import { normalizarTexto } from '../../../utils/formato';
+import { MasAcciones } from '../../../components/common/MasAcciones';
 export const Insumos: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -182,51 +183,11 @@ export const Insumos: React.FC = () => {
             <i className="bi bi-file-earmark-pdf-fill fs-5"></i>
           </button>
 
-          <button 
-            type="button"
-            className={`btn fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
-            style={{ 
-              backgroundColor: '#149bdf', 
-              borderColor: '#149bdf', 
-              color: '#ffffff',
-              padding: '0.7rem clamp(0.75rem, 1.1vw, 1.4rem)',
-              fontSize: '1rem',
-              minWidth: '5.5rem'
-            }}
-            onClick={() => setShowRelacionesModal(true)}
-          >
-            Ver Relaciones
-          </button>
-
-          <button 
-            className={`btn fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
-            style={{ 
-              backgroundColor: '#eab308', 
-              borderColor: '#eab308', 
-              color: '#ffffff',
-              padding: '0.7rem clamp(0.75rem, 1.1vw, 1.4rem)',
-              fontSize: '1rem',
-              minWidth: '5.5rem'
-            }}
-            onClick={() => setShowMermasModal(true)}
-          >
-            Mermas
-          </button>
-
-          <button 
-            className={`btn fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`} 
-            style={{ 
-              backgroundColor: '#c27a0d', 
-              borderColor: '#c27a0d', 
-              color: '#ffffff',
-              padding: '0.7rem clamp(0.75rem, 1.1vw, 1.4rem)',
-              fontSize: '1rem',
-              minWidth: '5.5rem'
-            }}
-            onClick={() => setShowAumentoModal(true)}
-          >
-            Modificar Varios Precios
-          </button>
+          <MasAcciones acciones={[
+            { texto: 'Ver Relaciones', icono: 'bi-diagram-3', onClick: () => setShowRelacionesModal(true), estilo: { padding: '0.7rem clamp(0.75rem, 1.1vw, 1.4rem)', fontSize: '1rem', color: '#ffffff', backgroundColor: '#149bdf', borderColor: '#149bdf' } },
+            { texto: 'Mermas', icono: 'bi-trash3', onClick: () => setShowMermasModal(true), estilo: { padding: '0.7rem clamp(0.75rem, 1.1vw, 1.4rem)', fontSize: '1rem', color: '#ffffff', backgroundColor: '#eab308', borderColor: '#eab308' } },
+            { texto: 'Modificar Varios Precios', icono: 'bi-percent', onClick: () => setShowAumentoModal(true), estilo: { padding: '0.7rem clamp(0.75rem, 1.1vw, 1.4rem)', fontSize: '1rem', color: '#ffffff', backgroundColor: '#c27a0d', borderColor: '#c27a0d' } },
+          ]} />
           
           <button 
             className={`btn btn-success fw-bold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`} 

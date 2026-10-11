@@ -9,7 +9,7 @@ const COLOR_MAP = {
 };
 
 // En el celular, las fallas de máquinas llevan a la pestaña Máquinas.
-const TAB_POR_TIPO: Partial<Record<string, string>> = { FALLA_MAQUINA: 'maquinas' };
+const TAB_POR_TIPO: Partial<Record<string, string>> = { FALLA_MAQUINA: 'maquinas', PEDIDO_DEMORADO: 'pedidos:ATRASADOS', PEDIDO_PENDIENTE: 'pedidos' };
 
 export function NotificacionesView({ onIrA }: { onIrA?: (tab: string) => void } = {}) {
   const { notificaciones, cargando, recargar } = useNotificaciones();

@@ -776,3 +776,41 @@ table .btn {
 .historial-solo-lectura .accion-incidencia {
   display: none !important;
 }
+
+/* "Más acciones" (components/common/MasAcciones.tsx): en línea desde 1600 px, menú debajo. */
+.mas-acciones-menu { display: none; }
+@media (max-width: 1599.98px) {
+  .mas-acciones-en-linea { display: none !important; }
+  .mas-acciones-menu { display: inline-block; }
+}
+.mas-acciones-lista {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  min-width: 240px;
+  z-index: 1030;
+  padding: 6px;
+  border-radius: 10px;
+  background: #1a1a1c;
+  border: 1px solid #3f3f46;
+}
+.mas-acciones-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #e4e4e7;
+  font-size: 0.9rem;
+  text-align: left;
+  white-space: nowrap;
+}
+.mas-acciones-item:hover:not(:disabled) { background: rgba(142, 69, 224, 0.18); color: #ffffff; }
+.mas-acciones-item:disabled { opacity: 0.45; }
+.mas-acciones-item i { width: 18px; color: #a855f7; }
+html[data-bs-theme="light"] .mas-acciones-lista { background: #ffffff; border-color: #e2e8f0; }
+html[data-bs-theme="light"] .mas-acciones-item { color: #334155; }
+html[data-bs-theme="light"] .mas-acciones-item:hover:not(:disabled) { color: #0f172a; }
