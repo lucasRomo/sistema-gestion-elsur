@@ -51,7 +51,8 @@ export const cajaService = {
 
   obtenerPedidoPorId: async (idPedido: number): Promise<any | null> => {
     try {
-      const response = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}`);
+      // Pantalla de carga mientras se trae el pedido para armar el ticket.
+      const response = await apiFetch(`${API_BASE_URL}/pedidos/${idPedido}`, { forceLoading: true, loadingMessage: 'Cargando comprobante...' });
       if (!response.ok) return null;
       return await response.json();
     } catch (error) {

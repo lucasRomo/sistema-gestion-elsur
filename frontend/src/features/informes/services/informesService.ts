@@ -1,11 +1,11 @@
-import { API_BASE_URL, apiFetch } from '../../../config/api';
+import { API_BASE_URL, apiFetch, type ApiFetchOptions } from '../../../config/api';
 import type { Turno, MovimientoCaja, TotalesCaja, DatosArqueo } from '../../caja/types/caja';
 
 export type { Turno, MovimientoCaja, TotalesCaja, DatosArqueo };
 
-async function obtenerJsonSiOk<T>(endpoint: string, valorPorDefecto: T, onFallo?: () => void): Promise<T> {
+async function obtenerJsonSiOk<T>(endpoint: string, valorPorDefecto: T, onFallo?: () => void, opciones?: ApiFetchOptions): Promise<T> {
   try {
-    const res = await apiFetch(`${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`);
+    const res = await apiFetch(`${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`, opciones);
     if (!res.ok) {
       console.warn(`[informesService] Respuesta no satisfactoria (${res.status}) para ${endpoint}`);
       onFallo?.();
@@ -54,7 +54,8 @@ export const informesService = {
   },
 
   async obtenerPedidoPorId(idPedido: number): Promise<any | null> {
-    return obtenerJsonSiOk<any | null>(`/pedidos/${idPedido}`, null);
+    // Se muestra la pantalla de carga: el ticket no se abre hasta tener el pedido completo.
+    return obtenerJsonSiOk<any | null>(`/pedidos/${idPedido}`, null, undefined, { forceLoading: true, loadingMessage: 'Cargando comprobante...' });
   },
 
   obtenerUrlComprobante(url?: string | null): string {

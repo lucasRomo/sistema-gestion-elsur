@@ -616,7 +616,10 @@ export const ModalRegistrosArqueo: React.FC<ModalRegistrosArqueoProps> = ({ isOp
               </div>
               <div className="text-center p-2">
   {cargandoComprobante ? (
-    <p className="opacity-50 py-4 m-0" style={{ color: textMuted }}>Cargando comprobante...</p>
+    <div className="py-5">
+      <div className="spinner-border text-info mb-3" role="status"></div>
+      <p className="m-0" style={{ color: textMuted }}>Cargando comprobante...</p>
+    </div>
   ) : comprobanteBlobUrl ? (
     <img
       src={comprobanteBlobUrl}

@@ -4,7 +4,7 @@ import { mostrarToast } from './toastStore';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
-interface ApiFetchOptions extends RequestInit {
+export interface ApiFetchOptions extends RequestInit {
   skipLoading?: boolean;
   forceLoading?: boolean;
   loadingMessage?: string;
