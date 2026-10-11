@@ -718,3 +718,21 @@ html[data-bs-theme="light"] .badge.text-white,
 html[data-bs-theme="light"] .btn.text-white {
   color: #ffffff !important;
 }
+
+/* Notebooks: el sistema se diseñó en monitores de 1920x1080 y en una notebook (1366x768, o
+   1280x720 con el escalado de Windows al 125%) no entraba: tablas con botones corridos,
+   paneles cortados, mucho scroll. Bootstrap y casi todos los estilos usan "rem", así que
+   bajar la letra base achica todo de forma pareja, como el zoom del navegador, pero sin
+   romper las alturas de pantalla completa (100vh). En monitores grandes no cambia nada. */
+@media (max-width: 1440px), (max-height: 820px) {
+  html { font-size: 14px; }
+}
+@media (max-width: 1300px), (max-height: 740px) {
+  html { font-size: 13px; }
+}
+
+/* Botones dentro de tablas: nunca partidos en dos líneas (en notebooks "Ver / Restablecer",
+   "Ver Detalle", etc. se cortaban y hacían cada fila el doble de alta). */
+table .btn {
+  white-space: nowrap;
+}

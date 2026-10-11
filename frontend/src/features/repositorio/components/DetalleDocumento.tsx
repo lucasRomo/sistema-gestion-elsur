@@ -120,8 +120,10 @@ export const DetalleDocumento: React.FC<Props> = ({
               style={{
                 backgroundColor: isDarkMode ? '#121212' : '#f8f9fa',
                 border: `1px solid ${cardBorder}`,
-                flex: '1 1 550px', 
-                minHeight: '150px',
+                // Alto según la ventana (antes 550px fijos: en una notebook los datos del
+                // documento quedaban abajo, fuera de la pantalla).
+                height: 'clamp(160px, calc(100vh - 400px), 550px)',
+                flex: '0 0 auto',
               }}
             >
               {ext === 'PDF' ? (

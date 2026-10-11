@@ -130,7 +130,7 @@ export const HistorialActividadView: React.FC = () => {
         style={{ 
           backgroundColor: mainCardBg, 
           borderColor: cardBorder,
-          height: '65.3vh',
+          height: 'clamp(260px, calc(100vh - 290px), 65.3vh)', // en monitores grandes sigue siendo 65.3vh; en notebooks deja lugar a los botones de abajo
           overflowY: 'auto',
           display: 'block'
         }}

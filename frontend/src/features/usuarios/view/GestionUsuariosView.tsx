@@ -226,9 +226,9 @@ export const GestionUsuariosView: React.FC = () => {
               className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center"
               style={{
                 color: '#ffffff',
-                padding: '11px 24px',
+                padding: '0.7rem clamp(0.75rem, 1.1vw, 1.4rem)',
                 fontSize: '1rem',
-                minWidth: '90px'
+                minWidth: '5.5rem'
               }}
             >
               Volver
@@ -239,9 +239,9 @@ export const GestionUsuariosView: React.FC = () => {
               className="btn btn-success fw-bold shadow-sm d-inline-flex align-items-center justify-content-center"
               style={{
                 color: '#ffffff',
-                padding: '11px 24px',
+                padding: '0.7rem clamp(0.75rem, 1.1vw, 1.4rem)',
                 fontSize: '1rem',
-                minWidth: '90px'
+                minWidth: '5.5rem'
               }}
             >
               Crear Nuevo Usuario

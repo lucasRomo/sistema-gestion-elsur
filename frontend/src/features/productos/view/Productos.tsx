@@ -174,7 +174,7 @@ export const Productos: React.FC = () => {
         style={{ 
           backgroundColor: mainCardBg, 
           borderColor: cardBorder,
-          height: '65.3vh',
+          height: 'clamp(260px, calc(100vh - 290px), 65.3vh)', // en monitores grandes sigue siendo 65.3vh; en notebooks deja lugar a los botones de abajo
           overflowY: 'auto',
           overflowX: 'hidden',
           display: 'block'
@@ -258,9 +258,9 @@ export const Productos: React.FC = () => {
               backgroundColor: '#c27a0d', 
               borderColor: '#c27a0d', 
               color: '#ffffff',
-              padding: '11px 24px',
+              padding: '0.7rem clamp(0.75rem, 1.1vw, 1.4rem)',
               fontSize: '1rem',
-              minWidth: '90px'
+              minWidth: '5.5rem'
             }} 
             onClick={() => setShowAumentoModal(true)}
           >

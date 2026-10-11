@@ -399,10 +399,10 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
         </div>
 
         {expandido && (
-          <div className="p-4 d-flex flex-column gap-4">
+          <div className="p-3 p-xxl-4 d-flex flex-column gap-3 gap-xxl-4">
             
             <div 
-              className="p-4 rounded-3 border position-relative" 
+              className="p-3 p-xxl-4 rounded-3 border position-relative" 
               style={{ 
                 backgroundColor: timelineContainerBg, 
                 borderColor: timelineContainerBorder,
@@ -426,14 +426,14 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
                   </span>
                 </div>
               )}
-              <div className="d-flex align-items-center justify-content-between mb-4">
+              <div className="d-flex align-items-center justify-content-between mb-2 mb-xxl-4">
                 <span className="text-muted small font-monospace text-uppercase tracking-wider">
                   <i className="bi bi-activity text-purple me-2" style={{ color: '#a855f7' }}></i>
                   Historial Traza del Pedido
                 </span>
               </div>
 
-              <div className="position-relative overflow-x-auto py-3">
+              <div className="position-relative overflow-x-auto py-1 py-xxl-3">
                 <div 
                   className="d-flex justify-content-between align-items-start position-relative" 
                   style={{ minWidth: `${Math.max(650, timelineEvents.length * 150)}px` }}
@@ -479,7 +479,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
                         </div>
 
                         <div 
-                          className="mt-3 p-2 rounded-2 w-100 border text-start transition-all shadow-sm"
+                          className="mt-2 mt-xxl-3 p-2 rounded-2 w-100 border text-start transition-all shadow-sm"
                           style={{ 
                             backgroundColor: timelineCardBg, 
                             borderColor: esPago ? '#10b981' : esMerma ? '#ef4444' : timelineCardBorder

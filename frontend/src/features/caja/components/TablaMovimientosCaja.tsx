@@ -75,12 +75,12 @@ export const TablaMovimientosCaja: React.FC<TablaMovimientosCajaProps> = ({
             <thead style={{ position: 'sticky', top: 0, backgroundColor: theadBg, zIndex: 1 }}>
               <tr className="text-muted border-secondary" style={{ fontSize: '0.9rem' }}>
                 <th style={{ width: '60px' }}>ID</th>
-                <th style={{ width: '140px' }}>Fecha/Hora</th>
+                <th style={{ width: '85px' }}>Hora</th>
                 <th style={{ width: '90px' }}>Monto</th>
                 <th style={{ width: '110px' }}>Método</th>
                 <th style={{ width: '120px' }}>Categoría</th>
                 <th className="text-start">Descripción</th>
-                <th style={{ width: '130px' }}>Usuario</th>
+                <th style={{ width: '110px' }}>Usuario</th>
                 <th style={{ width: '60px' }}>Ped.</th>
                 <th style={{ width: '120px' }}>Acciones</th>
               </tr>
@@ -106,7 +106,7 @@ export const TablaMovimientosCaja: React.FC<TablaMovimientosCajaProps> = ({
                       <td className="fw-bold opacity-75">
                         #{m.id_movimiento || m.idMovimiento || '-'}
                       </td>
-                      <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
+                      <td style={{ whiteSpace: 'nowrap' }} title={new Date(m.fecha).toLocaleString('es-AR')}>{new Date(m.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}</td>
                       <td className={`fw-bold ${m.tipoMovimiento === 'EGRESO' ? 'text-danger' : 'text-success'}`}>
                         {m.tipoMovimiento === 'EGRESO' ? '-' : '+'}${formatearMonto(Number(m.monto))}
                       </td>
@@ -120,7 +120,7 @@ export const TablaMovimientosCaja: React.FC<TablaMovimientosCajaProps> = ({
                       <td>
                         <div
                           className="text-start"
-                          style={{ wordBreak: 'break-word', minWidth: '180px' }}
+                          style={{ wordBreak: 'break-word', minWidth: '130px' }}
                           title={m.descripcion || 'Sin descripción'}
                         >
                           {m.descripcion || '-'}

@@ -73,7 +73,7 @@ export const Proveedores: React.FC = () => {
         style={{ 
           backgroundColor: mainCardBg, 
           borderColor: cardBorder,
-          height: '65.3vh',
+          height: 'clamp(260px, calc(100vh - 290px), 65.3vh)', // en monitores grandes sigue siendo 65.3vh; en notebooks deja lugar a los botones de abajo
           overflowY: 'auto',
           display: 'block'
         }}
@@ -100,9 +100,9 @@ export const Proveedores: React.FC = () => {
             className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center"
             style={{ 
               color: '#ffffff',
-              padding: '11px 24px',
+              padding: '0.7rem clamp(0.75rem, 1.1vw, 1.4rem)',
               fontSize: '1rem',
-              minWidth: '90px'
+              minWidth: '5.5rem'
             }}
           >
             Volver
@@ -133,9 +133,9 @@ export const Proveedores: React.FC = () => {
             className={`btn btn-success fw-bold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
             style={{ 
               color: '#ffffff',
-              padding: '11px 24px',
+              padding: '0.7rem clamp(0.75rem, 1.1vw, 1.4rem)',
               fontSize: '1rem',
-              minWidth: '90px'
+              minWidth: '5.5rem'
             }}
           >
             Registrar Nuevo Proveedor
