@@ -49,7 +49,7 @@ export const TablaMovimientosCaja: React.FC<TablaMovimientosCajaProps> = ({
   };
 
   return (
-    <div className="col-lg-9 d-flex flex-column">
+    <div className="col-12 col-xl-9 d-flex flex-column">
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h5 className="mb-0 fw-semibold">Registro de Movimientos de Caja</h5>
         <div className="d-flex align-items-center gap-2 flex-wrap">

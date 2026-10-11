@@ -15,6 +15,8 @@ interface Props {
   onClose: () => void;
   onIncidenciaResuelta: () => void;
   onPagoExitoso?: (mensaje: string) => void;
+  /** Celular: el administrador solo consulta (sin pagar, poner en mantenimiento ni resolver). */
+  soloLectura?: boolean;
 }
 
 export const HistorialIncidenciasModal: React.FC<Props> = ({ 
@@ -22,7 +24,8 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
   maquina: maquinaProp, 
   onClose, 
   onIncidenciaResuelta,
-  onPagoExitoso 
+  onPagoExitoso,
+  soloLectura = false
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -269,7 +272,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
   };
 
   return (
-    <div className="modal d-block" style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)', zIndex: 1050 }}>
+    <div className={`modal d-block${soloLectura ? ' historial-solo-lectura' : ''}`} style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)', zIndex: 1050 }}>
       <div className="modal-dialog modal-xl modal-dialog-centered">
         <div className="modal-content" style={{ backgroundColor: modalBg, color: textColor, borderRadius: '12px', border: '1.5px solid #07aadb' }}>
 
@@ -382,7 +385,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                             </div>
                           ) : (
                             <button 
-                              className="btn btn-xs btn-outline-danger fw-bold py-0 px-2"
+                              className="accion-incidencia btn btn-xs btn-outline-danger fw-bold py-0 px-2"
                               style={{ fontSize: '0.78rem' }}
                               onClick={() => {
                                 setIncidenciaAPagar(inc);
@@ -478,7 +481,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                               ) : (
                                 <div className="text-center py-2">
                                   <button
-                                    className="btn btn-warning text-dark fw-bold btn-sm px-3 py-1 shadow"
+                                    className="accion-incidencia btn btn-warning text-dark fw-bold btn-sm px-3 py-1 shadow"
                                     style={{ fontSize: '0.78rem' }}
                                     onClick={() => {
                                       setIdAccionActiva(inc.idIncidencia!);
@@ -545,7 +548,7 @@ export const HistorialIncidenciasModal: React.FC<Props> = ({
                               ) : (
                                 <div className="text-center py-2">
                                   <button
-                                    className="btn btn-success btn-sm fw-bold px-2 py-1 shadow"
+                                    className="accion-incidencia btn btn-success btn-sm fw-bold px-2 py-1 shadow"
                                     style={{ fontSize: '0.78rem' }}
                                     onClick={() => {
                                       setIdAccionActiva(inc.idIncidencia!);

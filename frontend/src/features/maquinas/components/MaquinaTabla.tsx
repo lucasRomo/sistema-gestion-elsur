@@ -4,7 +4,7 @@ import { useTheme } from '../../../Context/ThemeContext';
 
 interface MaquinaTablaProps {
   maquinas: Maquina[];
-  onEditar: (maquina: Maquina) => void;
+  onEditar?: (maquina: Maquina) => void;
   onVerIncidencias: (maquina: Maquina) => void;
 }
 
@@ -97,14 +97,16 @@ export const MaquinaTabla: React.FC<MaquinaTablaProps> = ({
                     <i className="bi bi-clock-history"></i>
                   </button>
 
-                  <button 
-                    onClick={() => onEditar(maq)}
-                    className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2"
-                    style={{ width: '34px', height: '34px' }}
-                    title="Modificar Equipo"
-                  >
-                    <i className="bi bi-pencil-square"></i>
-                  </button>
+                  {onEditar && (
+                    <button 
+                      onClick={() => onEditar(maq)}
+                      className="btn btn-outline-warning btn-sm d-flex align-items-center justify-content-center rounded-2"
+                      style={{ width: '34px', height: '34px' }}
+                      title="Modificar Equipo"
+                    >
+                      <i className="bi bi-pencil-square"></i>
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>

@@ -7,12 +7,13 @@ import { pad, resolverNombreUsuario } from '../../utils/formato';
 
 import { useContadoresMenu } from '../../hook/useContadoresMenu';
 import { puedeSalirDeLaPantalla } from '../../hook/useAvisoCambiosSinGuardar';
-import { esPantallaMovil, forzarVistaCompleta, vistaCompletaForzada } from '../../hook/useIsMobile';
 interface SidebarLayoutProps {
   activeItem: string;
   children: React.ReactNode;
 }
 
+// El menú tiene ancho fijo (240px): sus letras van en px para que no se achiquen con el ajuste
+// de letra para notebooks (index.css), que solo tiene que afectar al contenido.
 export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, children }) => {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -215,7 +216,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           borderRadius: '6px',
           border: isActive ? '1px solid #8e45e0' : '1px solid transparent',
           textAlign: 'left',
-          fontSize: '0.78rem',
+          fontSize: '12.5px',
           fontWeight: isActive ? '600' : '400',
           justifyContent: colapsado ? 'center' : 'flex-start',
           padding: colapsado ? '0.4rem 0px' : '0.25rem 0.55rem',
@@ -237,7 +238,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         <i
           className={`bi ${item.icon}`}
           style={{
-            fontSize: '0.9rem',
+            fontSize: '14.4px',
             color: isActive ? '#8e45e0' : (esOscuro ? 'gray' : '#64748b'),
             marginRight: colapsado ? '0px' : '0.55rem',
             transition: 'margin 0.2s'
@@ -261,7 +262,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
               <span
                 key={descripcion}
                 className="badge rounded-pill"
-                style={{ backgroundColor: color, color: '#ffffff', fontSize: '0.62rem', padding: '2px 6px' }}
+                style={{ backgroundColor: color, color: '#ffffff', fontSize: '9.9px', padding: '2px 6px' }}
                 aria-label={descripcion}
               >
                 {texto}
@@ -296,12 +297,12 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
               style={{ backgroundColor: 'transparent' }}
               title={abierta ? 'Contraer sección' : 'Expandir sección'}
             >
-              <span className="small fw-bold font-monospace" style={{ fontSize: '0.63rem', letterSpacing: '0.8px', color: mutedText }}>
+              <span className="small fw-bold font-monospace" style={{ fontSize: '10.1px', letterSpacing: '0.8px', color: mutedText }}>
                 — {nombreSeccion}
               </span>
               <i
                 className={`bi bi-chevron-${abierta ? 'up' : 'down'}`}
-                style={{ fontSize: '0.6rem', color: mutedText, transition: 'transform 0.2s' }}
+                style={{ fontSize: '9.6px', color: mutedText, transition: 'transform 0.2s' }}
               ></i>
             </button>
           )}
@@ -371,7 +372,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
   }}
 />
               {!colapsado && (
-                <span className="fw-bold font-monospace" style={{ fontSize: '1rem', letterSpacing: '1px', color: textColor }}>
+                <span className="fw-bold font-monospace" style={{ fontSize: '16px', letterSpacing: '1px', color: textColor }}>
                   El SUR
                 </span>
               )}
@@ -400,20 +401,20 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
                 minHeight: '82px'
               }}
             >
-              <div className="small font-monospace" style={{ fontSize: '0.8rem', color: textColor }}>
+              <div className="small font-monospace" style={{ fontSize: '12.8px', color: textColor }}>
                 Buenos Días: <span style={{ color: '#8e45e0' }} className="fw-bold">{nombrePersona.toUpperCase()}</span>
               </div>
-              <div className="small font-monospace mt-1" style={{ fontSize: '0.8rem', color: textColor }}>
+              <div className="small font-monospace mt-1" style={{ fontSize: '12.8px', color: textColor }}>
                 Fecha: <span style={{ color: mutedText }}>{fechaActual}</span>
               </div>
-              <div className="small font-monospace mt-1" style={{ fontSize: '0.8rem', color: textColor }}>
+              <div className="small font-monospace mt-1" style={{ fontSize: '12.8px', color: textColor }}>
   Rol: <span
     className="d-inline-block ms-2 px-2 py-1 rounded fw-semibold"
     style={{
       backgroundColor: esOscuro ? '#222122' : '#f3e8ff',
       color: esOscuro ? '#a855f7' : '#7e22ce',
       border: `1px solid ${esOscuro ? '#8e45e0' : '#c084fc'}`,
-      fontSize: '0.68rem',
+      fontSize: '10.9px',
       lineHeight: '1'
     }}
   >
@@ -469,24 +470,13 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
         </div>
 
         <div className="pt-2 mt-1" style={{ borderTop: `1px solid ${sidebarBorder}` }}>
-          {vistaCompletaForzada() && esPantallaMovil() && (
-            <button
-              onClick={() => forzarVistaCompleta(false)}
-              className="btn btn-sm d-flex align-items-center w-100 px-2 mb-1"
-              style={{ borderRadius: '6px', fontSize: '0.75rem', color: '#8e45e0', border: '1px solid #8e45e0', justifyContent: colapsado ? 'center' : 'flex-start' }}
-              title="Volver a la vista para celular"
-            >
-              <i className="bi bi-phone" style={{ marginRight: colapsado ? 0 : '0.5rem' }} aria-hidden="true"></i>
-              {!colapsado && 'Vista móvil'}
-            </button>
-          )}
           <button
             onClick={handleCerrarSesion}
             className="btn d-flex align-items-center w-100 px-2 py-1.5 fw-semibold transition-all"
             style={{
               borderRadius: '6px',
               border: '1px solid transparent',
-              fontSize: '0.8rem',
+              fontSize: '12.8px',
               backgroundColor: 'transparent',
               color: '#ff4d4d',
               justifyContent: colapsado ? 'center' : 'flex-start',
@@ -503,7 +493,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ activeItem, childr
           >
             <i
               className="bi bi-box-arrow-left"
-              style={{ fontSize: '0.9rem', marginRight: colapsado ? '0px' : '0.55rem' }}
+              style={{ fontSize: '14.4px', marginRight: colapsado ? '0px' : '0.55rem' }}
             ></i>
             {!colapsado && <span>Cerrar Sesión</span>}
           </button>

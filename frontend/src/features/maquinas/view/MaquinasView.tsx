@@ -143,7 +143,7 @@ export const MaquinasView: React.FC = () => {
         ) : (
           <MaquinaTabla
             maquinas={maquinasFiltradas}
-            onEditar={(m) => {
+            onEditar={isMobile ? undefined : (m) => {
               setMaquinaAEditar(m);
               setShowModalCrud(true);
             }}
@@ -155,7 +155,9 @@ export const MaquinasView: React.FC = () => {
         )}
       </div>
 
-      <div className={`d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
+      {/* En el celular el administrador solo consulta: sin reportar fallas ni cargar equipos. */}
+      {!isMobile && (
+      <div className={`barra-acciones d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
         
         {!isMobile && (
           <button
@@ -204,6 +206,7 @@ export const MaquinasView: React.FC = () => {
           </button>
         </div>
       </div>
+      )}
 
       <MaquinaModal
         show={showModalCrud}
@@ -224,6 +227,7 @@ export const MaquinasView: React.FC = () => {
         maquina={maquinaHistorial}
         onClose={() => setShowModalHistorial(false)}
         onIncidenciaResuelta={cargarMaquinas}
+        soloLectura={isMobile}
         onPagoExitoso={(msj) => {
           setSuccessState({
             show: true,

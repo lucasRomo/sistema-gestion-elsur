@@ -220,7 +220,7 @@ export const GestionUsuariosView: React.FC = () => {
             </table>
           </div>
 
-          <div className="d-flex align-items-center justify-content-between mt-3 mb-4 font-monospace">
+          <div className="barra-acciones d-flex align-items-center justify-content-between mt-3 mb-4 font-monospace">
             <button 
               onClick={() => navigate('/dashboard')} 
               className="btn btn-secondary fw-bold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center"

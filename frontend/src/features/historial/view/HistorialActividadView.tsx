@@ -196,7 +196,7 @@ export const HistorialActividadView: React.FC = () => {
         )}
       </div>
 
-      <div className="d-flex align-items-stretch justify-content-between mt-3 mb-4 font-monospace">
+      <div className="barra-acciones d-flex align-items-stretch justify-content-between mt-3 mb-4 font-monospace">
         <button
           className="btn btn-secondary px-4 py-2 fw-semibold shadow-sm font-monospace d-inline-flex align-items-center justify-content-center"
           style={{ color: '#ffffff' }}

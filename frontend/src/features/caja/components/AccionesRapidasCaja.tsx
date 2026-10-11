@@ -16,8 +16,8 @@ export const AccionesRapidasCaja: React.FC<AccionesRapidasCajaProps> = ({
   onExportarPDF
 }) => {
   return (
-    <div className="col-lg-3 d-flex flex-column justify-content-start align-items-stretch gap-4 pt-0">
-      <h5 className="mb-5 fw-semibold align-self-start" style={{ visibility: 'hidden' }}>Acciones</h5>
+    <div className="col-12 col-xl-3 d-flex flex-column flex-md-row flex-xl-column justify-content-start align-items-stretch gap-2 gap-xl-4 pt-0">
+      <h5 className="mb-5 fw-semibold align-self-start d-none d-xl-block" style={{ visibility: 'hidden' }}>Acciones</h5>
 
       <button
         className="btn btn-success py-2 d-flex justify-content-between align-items-center fw-semibold px-3 w-100"

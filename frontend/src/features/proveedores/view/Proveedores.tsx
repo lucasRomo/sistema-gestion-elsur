@@ -92,7 +92,7 @@ export const Proveedores: React.FC = () => {
         )}
       </div>
 
-      <div className={`d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
+      <div className={`barra-acciones d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
         
         {!isMobile && (
           <button 

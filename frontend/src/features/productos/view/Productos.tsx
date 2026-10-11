@@ -176,7 +176,7 @@ export const Productos: React.FC = () => {
           borderColor: cardBorder,
           height: 'clamp(260px, calc(100vh - 290px), 65.3vh)', // en monitores grandes sigue siendo 65.3vh; en notebooks deja lugar a los botones de abajo
           overflowY: 'auto',
-          overflowX: 'hidden',
+          overflowX: 'auto', // si la tabla no entra (pantallas angostas), se desplaza en vez de cortar columnas
           display: 'block'
         }}
       >
@@ -198,7 +198,7 @@ export const Productos: React.FC = () => {
         )}
       </div>
 
-      <div className={`d-flex align-items-stretch mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
+      <div className={`barra-acciones d-flex align-items-stretch mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
         {!isMobile && (
           <button 
             onClick={() => navigate('/dashboard')} 

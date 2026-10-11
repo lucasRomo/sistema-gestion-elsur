@@ -736,3 +736,43 @@ html[data-bs-theme="light"] .btn.text-white {
 table .btn {
   white-space: nowrap;
 }
+
+/* Barra de botones de abajo de cada pantalla (Volver + acciones). Antes cada pantalla la
+   armaba distinto: con muchos botones, "Volver" se estiraba a todo el alto y las acciones
+   quedaban mezcladas en dos filas desparejas. */
+.barra-acciones {
+  align-items: flex-start !important;
+  gap: 0.5rem;
+}
+.barra-acciones > .btn {
+  flex: 0 0 auto;
+}
+.barra-acciones > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem !important;
+  min-width: 0;
+}
+.barra-acciones .btn {
+  min-height: 2.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  padding-top: 0.45rem !important;
+  padding-bottom: 0.45rem !important;
+  font-size: 0.9rem !important;
+}
+@media (max-width: 1440px) {
+  .barra-acciones .btn {
+    padding-left: 0.8rem !important;
+    padding-right: 0.8rem !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+/* Historial de incidencias en el celular: solo consulta (sin pagar, poner en mantenimiento ni resolver). */
+.historial-solo-lectura .accion-incidencia {
+  display: none !important;
+}
