@@ -1,10 +1,9 @@
-import ExcelJS from 'exceljs';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { cargarExcel, cargarPdf } from '../../../utils/cargarExportadores';
 import type { Proveedor } from '../types/Proveedor';
 
 export const exportarProveedoresExcel = async (proveedores: Proveedor[]) => {
-  const workbook = new ExcelJS.Workbook();
+  const Excel = await cargarExcel();
+  const workbook = new Excel.Workbook();
   const worksheet = workbook.addWorksheet('Gestión de Proveedores');
 
   worksheet.columns = [
@@ -63,11 +62,12 @@ export const exportarProveedoresExcel = async (proveedores: Proveedor[]) => {
   window.URL.revokeObjectURL(url);
 };
 
-export const exportarProveedoresPDF = (
+export const exportarProveedoresPDF = async (
   proveedores: Proveedor[],
   fechaDesde?: string,
   fechaHasta?: string
 ) => {
+  const { jsPDF, autoTable } = await cargarPdf();
   const doc = new jsPDF('landscape');
 
   const pageWidth = doc.internal.pageSize.getWidth();

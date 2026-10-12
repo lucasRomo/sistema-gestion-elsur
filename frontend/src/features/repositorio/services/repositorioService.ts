@@ -1,8 +1,15 @@
 import type { DocumentoDigital, AreaCurso, Institucion } from '../types/Repositorio';
 import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
-import * as pdfjsLib from 'pdfjs-dist';
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+// El visor de PDF (~450 KB) se descarga la primera vez que hace falta una vista previa,
+// no al abrir el Repositorio: la tabla aparece antes y las miniaturas llegan después.
+let pdfjsPromesa: Promise<typeof import('pdfjs-dist')> | null = null;
+const cargarPdfjs = () => {
+  pdfjsPromesa ??= import('pdfjs-dist').then((lib) => {
+    lib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${lib.version}/pdf.worker.min.mjs`;
+    return lib;
+  });
+  return pdfjsPromesa;
+};
 
 export const repositorioService = {
   async getDocumentos(): Promise<DocumentoDigital[]> {
@@ -84,6 +91,7 @@ export const repositorioService = {
     if (!response.ok) throw new Error('No se pudo obtener el PDF');
     const arrayBuffer = await response.arrayBuffer();
 
+    const pdfjsLib = await cargarPdfjs();
     const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
     const pdf = await loadingTask.promise;
     const page = await pdf.getPage(1);

@@ -1,6 +1,4 @@
-import ExcelJS from 'exceljs';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { cargarExcel, cargarPdf } from '../../../utils/cargarExportadores';
 import type { RegistroActividad } from '../types/RegistroActividad';
 import { formatearFechaHora, resolverNombreUsuario } from '../../../utils/formato';
 
@@ -19,7 +17,8 @@ const formatearFechaExport = (fechaRaw: string) => {
 };
 
 export const exportarHistorialActividadExcel = async (actividades: RegistroActividad[]) => {
-  const workbook = new ExcelJS.Workbook();
+  const Excel = await cargarExcel();
+  const workbook = new Excel.Workbook();
   const worksheet = workbook.addWorksheet('Historial de Actividad');
 
   worksheet.columns = [
@@ -80,11 +79,12 @@ export const exportarHistorialActividadExcel = async (actividades: RegistroActiv
   window.URL.revokeObjectURL(url);
 };
 
-export const exportarHistorialActividadPDF = (
+export const exportarHistorialActividadPDF = async (
   actividades: RegistroActividad[],
   fechaDesde?: string,
   fechaHasta?: string
 ) => {
+  const { jsPDF, autoTable } = await cargarPdf();
   const doc = new jsPDF('landscape');
 
   const pageWidth = doc.internal.pageSize.getWidth();

@@ -13,6 +13,8 @@ public interface PedidoService {
     /** Pedidos que siguen en la cola del taller (incluye presupuestos). */
     List<Pedido> listarActivos();
 
+    List<java.util.Map<String, Object>> listarResumenActivos();
+
     /** Pedidos cerrados que se muestran en el Historial de Pedidos. */
     List<Pedido> listarCerrados();
 

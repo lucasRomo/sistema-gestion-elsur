@@ -1,5 +1,4 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { cargarPdf } from '../../../utils/cargarExportadores';
 import { capturarElementoParaPdf } from './modoImpresionPdf';
 
 interface ConfigTabla {
@@ -274,6 +273,7 @@ export const exportarInformePDF = async (
   metricas: any,
   incongruenciasArqueo: any[] = []
 ) => {
+  const { jsPDF, autoTable } = await cargarPdf();
   if (seccionActiva === 'MENU') return;
 
   const doc = new jsPDF({

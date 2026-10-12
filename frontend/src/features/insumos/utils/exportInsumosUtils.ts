@@ -1,11 +1,11 @@
-import ExcelJS from 'exceljs';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { cargarExcel, cargarPdf } from '../../../utils/cargarExportadores';
+import type ExcelJS from 'exceljs';
 import type { Insumo } from '../types/Insumo';
 
 import { formatearMonto } from '../../../utils/formato';
 export const exportarInsumosExcel = async (insumos: Insumo[]) => {
-  const workbook = new ExcelJS.Workbook();
+  const Excel = await cargarExcel();
+  const workbook = new Excel.Workbook();
   const worksheet = workbook.addWorksheet('Stock de Insumos');
 
   worksheet.columns = [
@@ -62,11 +62,12 @@ export const exportarInsumosExcel = async (insumos: Insumo[]) => {
   window.URL.revokeObjectURL(url);
 };
 
-export const exportarInsumosPDF = (
+export const exportarInsumosPDF = async (
   insumos: Insumo[],
   fechaDesde?: string,
   fechaHasta?: string
 ) => {
+  const { jsPDF, autoTable } = await cargarPdf();
   const doc = new jsPDF('landscape');
 
   const pageWidth = doc.internal.pageSize.getWidth();

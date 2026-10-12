@@ -1,6 +1,5 @@
-import ExcelJS from 'exceljs';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { cargarExcel, cargarPdf } from '../../../utils/cargarExportadores';
+import type ExcelJS from 'exceljs';
 
 import { formatearMonto } from '../../../utils/formato';
 export interface MovimientoCajaExport {
@@ -80,7 +79,8 @@ export const exportarCajaExcel = async (
   movimientos: MovimientoCajaExport[],
   resumen?: ResumenTurnoCaja
 ) => {
-  const workbook = new ExcelJS.Workbook();
+  const Excel = await cargarExcel();
+  const workbook = new Excel.Workbook();
   const worksheet = workbook.addWorksheet('Movimientos de Caja');
 
   worksheet.columns = [
@@ -166,12 +166,13 @@ export const exportarCajaExcel = async (
 };
 
 
-export const exportarCajaPDF = (
+export const exportarCajaPDF = async (
   movimientos: MovimientoCajaExport[],
   resumen?: ResumenTurnoCaja,
   fechaDesde?: string,
   fechaHasta?: string
 ) => {
+  const { jsPDF, autoTable } = await cargarPdf();
   const doc = new jsPDF('landscape');
 
   const pageWidth = doc.internal.pageSize.getWidth();

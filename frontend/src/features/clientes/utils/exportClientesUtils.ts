@@ -1,11 +1,10 @@
-import ExcelJS from 'exceljs';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { cargarExcel, cargarPdf } from '../../../utils/cargarExportadores';
 import type { Cliente } from '../types/Cliente';
 
 import { formatearMonto } from '../../../utils/formato';
 export const exportarClientesExcel = async (clientes: Cliente[]) => {
-  const workbook = new ExcelJS.Workbook();
+  const Excel = await cargarExcel();
+  const workbook = new Excel.Workbook();
   const worksheet = workbook.addWorksheet('Gestión de Clientes');
 
   worksheet.columns = [
@@ -68,11 +67,12 @@ export const exportarClientesExcel = async (clientes: Cliente[]) => {
   window.URL.revokeObjectURL(url);
 };
 
-export const exportarClientesPDF = (
+export const exportarClientesPDF = async (
   clientes: Cliente[],
   fechaDesde?: string,
   fechaHasta?: string
 ) => {
+  const { jsPDF, autoTable } = await cargarPdf();
   const doc = new jsPDF('landscape');
 
   const pageWidth = doc.internal.pageSize.getWidth();

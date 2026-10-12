@@ -43,6 +43,11 @@ public class PedidoController {
         return pedidoService.listarActivos();
     }
 
+    @GetMapping("/activos/resumen")
+    public List<Map<String, Object>> listarResumenActivos() {
+        return pedidoService.listarResumenActivos();
+    }
+
     @GetMapping("/cerrados")
     public List<Pedido> listarCerrados() {
         return pedidoService.listarCerrados();

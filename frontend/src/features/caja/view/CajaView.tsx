@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { SidebarLayout } from '../../../components/layouts/SidebarLayout';
@@ -13,7 +13,10 @@ import { ModalCerrarTurno } from '../components/ModalCerrarTurno';
 import { VistaTicketPagoModal } from '../../../components/modals/VistaTicketPagoModal';
 import { cajaService, type NuevoMovimientoDTO } from '../services/cajaService';
 import { ResumenTurnoCard } from '../components/ResumenTurnoCard';
-import { GraficoFlujoCajaCard } from '../components/GraficoFlujoCajaCard';
+// El gráfico usa recharts (~350 KB): se carga aparte para que el resto de Caja aparezca antes.
+const GraficoFlujoCajaCard = lazy(() =>
+  import('../components/GraficoFlujoCajaCard').then((m) => ({ default: m.GraficoFlujoCajaCard }))
+);
 import { TablaMovimientosCaja } from '../components/TablaMovimientosCaja';
 import { AccionesRapidasCaja } from '../components/AccionesRapidasCaja';
 import { BarraAccionesTurno } from '../components/BarraAccionesTurno';
@@ -315,6 +318,13 @@ export const CajaView: React.FC = () => {
             cardBorder={cardBorder}
           />
 
+          <Suspense fallback={
+            <div className="col-md-6">
+              <div className="p-4 rounded-3 h-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: shadowStyle, minHeight: '240px' }}>
+                <div className="spinner-border spinner-border-sm text-secondary" role="status" aria-label="Cargando gráfico"></div>
+              </div>
+            </div>
+          }>
           <GraficoFlujoCajaCard
             cajaAbierta={cajaAbierta}
             movimientos={movimientos}
@@ -326,6 +336,7 @@ export const CajaView: React.FC = () => {
             chartTick={chartTick}
             dotColor={dotColor}
           />
+          </Suspense>
         </div>
 
         <div className="row g-4 align-items-stretch mb-4">

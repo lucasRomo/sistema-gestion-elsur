@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import logoSur from '../../assets/logo-elsur.png';
+import logoSur from '../../assets/logo-elsur.webp';
 import { useTheme } from '../../Context/ThemeContext';
 import { AsistenteWidget } from '../../features/asistente/components/AsistenteWidget';
 import { pad, resolverNombreUsuario } from '../../utils/formato';

@@ -36,10 +36,15 @@ export const NotificacionesCard: React.FC = () => {
     }
   };
 
+  // Se actualiza cada minuto, pero solo con la pestaña visible: el panel suele quedar abierto
+  // todo el día en segundo plano y antes consultaba al servidor cada 30 s igual. Al volver a la
+  // pestaña se pone al día enseguida.
   useEffect(() => {
     fetchNotificaciones();
-    const interval = setInterval(fetchNotificaciones, 30000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => { if (!document.hidden) fetchNotificaciones(); }, 60000);
+    const alVolver = () => { if (!document.hidden) fetchNotificaciones(); };
+    document.addEventListener('visibilitychange', alVolver);
+    return () => { clearInterval(interval); document.removeEventListener('visibilitychange', alVolver); };
   }, []);
 
   const cambiarVista = (direccion: 'next' | 'prev') => {

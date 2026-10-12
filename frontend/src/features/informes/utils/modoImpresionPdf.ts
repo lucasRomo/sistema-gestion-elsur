@@ -1,4 +1,3 @@
-import html2canvas from 'html2canvas';
 
 
 const ID_ESTILO = 'modo-impresion-pdf-informes';
@@ -71,6 +70,8 @@ export const capturarElementoParaPdf = async (
   document.body.appendChild(contenedorOffscreen);
 
   try {
+    // Se descarga recién al exportar el informe (~200 KB).
+    const { default: html2canvas } = await import('html2canvas');
     const canvas = await html2canvas(clon, {
       scale: 3,
       useCORS: true,

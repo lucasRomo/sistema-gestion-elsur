@@ -49,8 +49,11 @@ export const useContadoresMenu = (verPedidos: boolean, verInsumos: boolean): Con
     };
 
     actualizar();
-    const intervalo = setInterval(actualizar, 60000);
-    return () => { cancelado = true; clearInterval(intervalo); };
+    // Con la pestaña oculta no se consulta; al volver se actualiza (si el dato ya venció).
+    const intervalo = setInterval(() => { if (!document.hidden) actualizar(); }, 60000);
+    const alVolver = () => { if (!document.hidden) actualizar(); };
+    document.addEventListener('visibilitychange', alVolver);
+    return () => { cancelado = true; clearInterval(intervalo); document.removeEventListener('visibilitychange', alVolver); };
   }, [verPedidos, verInsumos]);
 
   return contadores;

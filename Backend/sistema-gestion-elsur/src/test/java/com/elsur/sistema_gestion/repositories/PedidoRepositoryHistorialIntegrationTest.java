@@ -136,6 +136,29 @@ class PedidoRepositoryHistorialIntegrationTest {
     }
 
     @Test
+    @DisplayName("Resumen de activos (notificaciones): mismos pedidos que la cola, solo con los campos livianos")
+    void resumenDeActivos() {
+        List<String> fueraDeTaller = List.of("VENTA_RAPIDA", "ENTREGADO", "CANCELADO", "DEVUELTO", "PRESUPUESTO");
+        Cliente c = cliente("Cliente Resumen");
+        Pedido activo = pedido(c, "EN PROCESO", null);
+        activo.setUbicacion_estante("E2");
+        Pedido entregado = pedido(c, "ENTREGADO", LocalDateTime.now());
+        pedidoRepository.flush();
+
+        List<Integer> completos = pedidoRepository.buscarActivos(fueraDeTaller).stream().map(Pedido::getId_pedido).toList();
+        List<Object[]> resumen = pedidoRepository.buscarResumenActivos(fueraDeTaller);
+        List<Integer> ids = resumen.stream().map(f -> (Integer) f[0]).toList();
+
+        assertEquals(completos.size(), resumen.size());
+        assertTrue(ids.contains(activo.getId_pedido()));
+        assertFalse(ids.contains(entregado.getId_pedido()));
+        Object[] fila = resumen.stream().filter(f -> activo.getId_pedido().equals(f[0])).findFirst().orElseThrow();
+        assertEquals("EN PROCESO", fila[1]);
+        assertEquals("E2", fila[4]);
+        assertEquals("Cliente Resumen", fila[7]);
+    }
+
+    @Test
     @DisplayName("Informes: trae solo los pedidos creados desde la fecha pedida")
     void creadosDesde() {
         Cliente c = cliente("Cliente Informes");

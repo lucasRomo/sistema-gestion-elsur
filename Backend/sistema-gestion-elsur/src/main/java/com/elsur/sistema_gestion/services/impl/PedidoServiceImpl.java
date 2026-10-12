@@ -87,6 +87,30 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<java.util.Map<String, Object>> listarResumenActivos() {
+        // Mismas claves que el JSON del pedido completo, para que el frontend lo lea igual.
+        return pedidoRepository.buscarResumenActivos(ESTADOS_FUERA_DE_COLA).stream().map(f -> {
+            java.util.Map<String, Object> cliente = new java.util.LinkedHashMap<>();
+            if (f[5] != null || f[6] != null) {
+                java.util.Map<String, Object> persona = new java.util.LinkedHashMap<>();
+                persona.put("nombre", f[5]);
+                persona.put("apellido", f[6]);
+                cliente.put("persona", persona);
+            }
+            cliente.put("razonSocial", f[7]);
+            java.util.Map<String, Object> pedido = new java.util.LinkedHashMap<>();
+            pedido.put("id_pedido", f[0]);
+            pedido.put("estado", f[1]);
+            pedido.put("fecha_entrega_estimada", f[2]);
+            pedido.put("observaciones", f[3]);
+            pedido.put("ubicacion_estante", f[4]);
+            pedido.put("cliente", cliente);
+            return pedido;
+        }).toList();
+    }
+
+    @Override
     public List<Pedido> listarCerrados() {
         return pedidoRepository.findByEstadoIn(ESTADOS_HISTORIAL);
     }

@@ -32,6 +32,14 @@ public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
     @Query("SELECT p FROM Pedido p WHERE p.estado NOT IN :excluidos" + SIN_VENTAS_RAPIDAS_CERRADAS)
     List<Pedido> buscarActivos(@Param("excluidos") Collection<String> excluidos);
 
+    // Mismos pedidos que buscarActivos pero solo con lo que muestran las notificaciones: no carga
+    // detalles, historial, movimientos ni comprobantes (el panel lo consulta cada minuto).
+    @Query("SELECT p.id_pedido, p.estado, p.fecha_entrega_estimada, p.observaciones, p.ubicacion_estante, "
+            + "pe.nombre, pe.apellido, c.razonSocial "
+            + "FROM Pedido p JOIN p.cliente c LEFT JOIN c.persona pe "
+            + "WHERE p.estado NOT IN :excluidos" + SIN_VENTAS_RAPIDAS_CERRADAS)
+    List<Object[]> buscarResumenActivos(@Param("excluidos") Collection<String> excluidos);
+
     @Query("SELECT p FROM Pedido p WHERE p.fecha_creacion >= :desde")
     List<Pedido> buscarCreadosDesde(@Param("desde") java.time.LocalDateTime desde);
 

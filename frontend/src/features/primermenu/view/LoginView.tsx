@@ -1,8 +1,8 @@
 import React from 'react';
 import { LoginFeedbackModal } from '../../../components/modals/LoginFeedbackModal';
-import fondoImg from '/src/assets/fondo-izq.png'; 
-import logoGesta from '/src/assets/logo-gestapro.png';
-import logoSur from '/src/assets/logo-elsur.png';
+import fondoImg from '/src/assets/fondo-izq.webp'; 
+import logoGesta from '/src/assets/logo-gestapro.webp';
+import logoSur from '/src/assets/logo-elsur.webp';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useLogin } from '../hooks/useLogin';
 
