@@ -4,7 +4,8 @@ const API_URL = `${API_BASE_URL}/pedidos`;
 
 export const historialPedidoService = {
   obtenerPorId: async (idPedido: number): Promise<any> => {
-    const response = await apiFetch(`${API_URL}/${idPedido}`);
+    // Pantalla de carga hasta tener el pedido completo para abrir la auditoría.
+    const response = await apiFetch(`${API_URL}/${idPedido}`, { forceLoading: true, loadingMessage: 'Cargando historial...' });
     if (!response.ok) {
       throw new Error("No se pudo obtener el historial detallado de este pedido.");
     }

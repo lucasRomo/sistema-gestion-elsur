@@ -22,6 +22,30 @@ const pedirJson = async (ruta: string) => {
   return texto ? JSON.parse(texto) : null;
 };
 
+interface TarjetaProps {
+  titulo: string;
+  icono: string;
+  color: string;
+  colores: { fondo: string; borde: string; suave: string };
+  onClick?: () => void;
+  children: React.ReactNode;
+}
+
+const Tarjeta: React.FC<TarjetaProps> = ({ titulo, icono, color, colores, onClick, children }) => (
+  <div
+    className="p-3 rounded-3 h-100"
+    style={{ backgroundColor: colores.fondo, border: `1px solid ${colores.borde}`, borderLeft: `4px solid ${color}`, cursor: onClick ? 'pointer' : 'default' }}
+    onClick={onClick}
+    role={onClick ? 'button' : undefined}
+  >
+    <div className="d-flex align-items-center gap-2 mb-1 small fw-bold" style={{ color: colores.suave }}>
+      <i className={`bi ${icono}`} style={{ color }} aria-hidden="true"></i>{titulo}
+      {onClick && <i className="bi bi-chevron-right ms-auto" aria-hidden="true"></i>}
+    </div>
+    {children}
+  </div>
+);
+
 export const InicioMovil: React.FC<{ onIrA: (tab: string) => void }> = ({ onIrA }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -68,22 +92,7 @@ export const InicioMovil: React.FC<{ onIrA: (tab: string) => void }> = ({ onIrA 
   const borde = isDark ? '#3f3f46' : '#e2e8f0';
   const texto = isDark ? '#ffffff' : '#0f172a';
   const suave = isDark ? '#a1a1aa' : '#64748b';
-
-  const Tarjeta: React.FC<{ titulo: string; icono: string; color: string; onClick?: () => void; children: React.ReactNode }> =
-    ({ titulo, icono, color, onClick, children }) => (
-      <div
-        className="p-3 rounded-3 h-100"
-        style={{ backgroundColor: tarjetaBg, border: `1px solid ${borde}`, borderLeft: `4px solid ${color}`, cursor: onClick ? 'pointer' : 'default' }}
-        onClick={onClick}
-        role={onClick ? 'button' : undefined}
-      >
-        <div className="d-flex align-items-center gap-2 mb-1 small fw-bold" style={{ color: suave }}>
-          <i className={`bi ${icono}`} style={{ color }} aria-hidden="true"></i>{titulo}
-          {onClick && <i className="bi bi-chevron-right ms-auto" aria-hidden="true"></i>}
-        </div>
-        {children}
-      </div>
-    );
+  const colores = { fondo: tarjetaBg, borde, suave };
 
   const hoy = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -106,7 +115,7 @@ export const InicioMovil: React.FC<{ onIrA: (tab: string) => void }> = ({ onIrA 
       ) : (
         <div className="row g-2">
           <div className="col-12">
-            <Tarjeta titulo="Caja" icono="bi-wallet2" color={resumen.caja?.abierta ? '#22c55e' : '#dc3545'}>
+            <Tarjeta colores={colores} titulo="Caja" icono="bi-wallet2" color={resumen.caja?.abierta ? '#22c55e' : '#dc3545'}>
               {resumen.caja?.abierta ? (
                 <>
                   <div className="d-flex align-items-baseline gap-2">
@@ -133,20 +142,20 @@ export const InicioMovil: React.FC<{ onIrA: (tab: string) => void }> = ({ onIrA 
           </div>
 
           <div className="col-6">
-            <Tarjeta titulo="En taller" icono="bi-tools" color="#8e45e0" onClick={() => onIrA('pedidos')}>
+            <Tarjeta colores={colores} titulo="En taller" icono="bi-tools" color="#8e45e0" onClick={() => onIrA('pedidos')}>
               <span className="fs-3 fw-bold">{resumen.taller}</span>
               <div className="small" style={{ color: suave }}>pedidos activos</div>
             </Tarjeta>
           </div>
           <div className="col-6">
-            <Tarjeta titulo="Atrasados" icono="bi-alarm" color="#dc3545" onClick={() => onIrA('pedidos:ATRASADOS')}>
+            <Tarjeta colores={colores} titulo="Atrasados" icono="bi-alarm" color="#dc3545" onClick={() => onIrA('pedidos:ATRASADOS')}>
               <span className="fs-3 fw-bold" style={{ color: resumen.atrasados > 0 ? '#ef4444' : undefined }}>{resumen.atrasados}</span>
               <div className="small" style={{ color: suave }}>pasados de fecha</div>
             </Tarjeta>
           </div>
 
           <div className="col-12">
-            <Tarjeta titulo={`Stock bajo (${resumen.stockBajo.length})`} icono="bi-box-seam" color="#eab308">
+            <Tarjeta colores={colores} titulo={`Stock bajo (${resumen.stockBajo.length})`} icono="bi-box-seam" color="#eab308">
               {resumen.stockBajo.length === 0 ? (
                 <span className="small" style={{ color: suave }}>Todos los insumos están por encima del mínimo.</span>
               ) : (
@@ -164,7 +173,7 @@ export const InicioMovil: React.FC<{ onIrA: (tab: string) => void }> = ({ onIrA 
           </div>
 
           <div className="col-12">
-            <Tarjeta titulo="Máquinas" icono="bi-cpu" color={resumen.maquinasFuera.length ? '#dc3545' : '#22c55e'} onClick={() => onIrA('maquinas')}>
+            <Tarjeta colores={colores} titulo="Máquinas" icono="bi-cpu" color={resumen.maquinasFuera.length ? '#dc3545' : '#22c55e'} onClick={() => onIrA('maquinas')}>
               {resumen.maquinasFuera.length === 0 ? (
                 <span className="small">Todas operativas.</span>
               ) : (

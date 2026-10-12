@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { API_BASE_URL } from '../../../config/api'; 
+import { conCargaDeArranque } from '../../../config/loadingStore';
 
 interface UseLoginProps {
   onLoginExitoso: (usuario: any) => void;
@@ -25,11 +26,13 @@ export const useLogin = ({ onLoginExitoso }: UseLoginProps) => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_BASE_URL}/usuarios/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials)
-      });
+      const response = await conCargaDeArranque('Iniciando sesión...', () =>
+        fetch(`${API_BASE_URL}/usuarios/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(credentials)
+        })
+      );
 
       if (response.ok) {
         const data = await response.json();

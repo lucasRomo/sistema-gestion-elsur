@@ -200,7 +200,10 @@ public class GeminiIaService {
         for (int intento = 1; intento <= maxIntentos; intento++) {
             try {
                 return restClient.post()
-                        .uri(apiUrl + "?key=" + apiKey)
+                        // La key va en un header y no en la URL: así no queda escrita en los
+                        // logs cuando un error de conexión imprime la URL del pedido.
+                        .uri(apiUrl)
+                        .header("x-goog-api-key", apiKey)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(requestBody)
                         .retrieve()

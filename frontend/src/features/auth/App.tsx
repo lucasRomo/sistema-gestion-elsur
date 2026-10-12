@@ -15,6 +15,12 @@ import { ToastHost } from '../../components/common/ToastHost';
 import { BannerSinConexion } from '../../components/common/BannerSinConexion';
 import { CerrarModalConEscape } from '../../components/common/CerrarModalConEscape';
 import { BackupReminderModal } from '../../components/common/BackupReminderModal';
+import { API_BASE_URL } from '../../config/api';
+
+// El backend (plan gratis de Render) se apaga tras un rato sin uso y tarda en arrancar: apenas se
+// abre la página se lo "despierta" con un pedido liviano, así arranca mientras el usuario escribe
+// el usuario y la contraseña en vez de recién al apretar Iniciar sesión.
+fetch(`${API_BASE_URL.replace(/\/api\/?$/, '')}/actuator/health`).catch(() => { /* solo despierta */ });
 
 // Cada pantalla se descarga recién cuando se entra a ella: antes el login bajaba todo el
 // sistema (~4 MB de JS con ExcelJS, jsPDF, gráficos y el visor de PDF).

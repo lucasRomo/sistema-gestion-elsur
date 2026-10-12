@@ -54,3 +54,26 @@ export const hideLoading = () => {
     emitir();
   }
 };
+// Cambia el texto de la pantalla de carga que ya está visible (ej. cuando una espera se alarga).
+export const actualizarMensajeLoading = (mensaje: string) => {
+  if (activeCount === 0) return;
+  mensajeActual = mensaje;
+  emitir();
+};
+
+// Muestra la pantalla de carga mientras corre `tarea`. Si tarda más de unos segundos, avisa que
+// el servidor se está despertando: en el plan gratis de Render se apaga tras un rato sin uso y el
+// primer pedido puede tardar hasta un minuto.
+export const conCargaDeArranque = async <T,>(mensaje: string, tarea: () => Promise<T>): Promise<T> => {
+  showLoading(mensaje);
+  const aviso = setTimeout(
+    () => actualizarMensajeLoading('El servidor se está iniciando, puede tardar hasta un minuto...'),
+    4000
+  );
+  try {
+    return await tarea();
+  } finally {
+    clearTimeout(aviso);
+    hideLoading();
+  }
+};

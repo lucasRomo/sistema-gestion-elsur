@@ -30,7 +30,7 @@ export const SkeletonFilasTabla: React.FC<{ filas?: number; columnas: number }> 
     {Array.from({ length: filas }).map((_, i) => (
       <tr key={i} aria-busy="true">
         {Array.from({ length: columnas }).map((__, j) => (
-          <td key={j} className="py-3 px-3">
+          <td key={j} className="py-3 px-3" style={{ backgroundColor: 'transparent' }}>
             <Linea ancho={j === 1 ? '80%' : '60%'} />
           </td>
         ))}
@@ -40,7 +40,12 @@ export const SkeletonFilasTabla: React.FC<{ filas?: number; columnas: number }> 
 );
 
 export const SkeletonTabla: React.FC<{ filas?: number; columnas?: number }> = ({ filas = 8, columnas = 6 }) => (
-  <table className="table m-0 align-middle" style={{ backgroundColor: 'transparent' }}>
+  // Fondo transparente: sin esto las celdas toman el gris azulado por defecto de Bootstrap en
+  // modo oscuro y el esqueleto no coincide con el fondo de la pantalla (como en Gestión de Usuarios).
+  <table
+    className="table table-borderless m-0 align-middle"
+    style={{ backgroundColor: 'transparent', '--bs-table-bg': 'transparent' } as React.CSSProperties}
+  >
     <tbody>
       <SkeletonFilasTabla filas={filas} columnas={columnas} />
     </tbody>

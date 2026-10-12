@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { API_BASE_URL } from '../../../config/api';
+import { conCargaDeArranque } from '../../../config/loadingStore';
 import { useTheme } from '../../../Context/ThemeContext';
 
 interface GateScreenProps {
@@ -27,11 +28,13 @@ export const GateScreen: React.FC<GateScreenProps> = ({ onAutorizado }) => {
     setError('');
     setCargando(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/acceso/validar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clave })
-      });
+      const res = await conCargaDeArranque('Verificando acceso...', () =>
+        fetch(`${API_BASE_URL}/acceso/validar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clave })
+        })
+      );
 
       if (res.ok) {
         const data = await res.json();
