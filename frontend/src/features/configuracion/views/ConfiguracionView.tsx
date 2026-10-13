@@ -2,6 +2,7 @@ import React from 'react';
 import { useTheme } from '../../../Context/ThemeContext';
 import { useConfiguracion } from '../hooks/useConfiguracion';
 import { AparienciaSection } from '../components/AparienciaSection';
+import { ManualUsuarioSection } from '../components/ManualUsuarioSection';
 import { AjustesPerfilCard } from '../components/AjustesPerfilCard';
 import { RespaldoCard } from '../components/RespaldoCard';
 import { ConfirmarRestauracionModal } from '../components/ConfirmarRestauracionModal';
@@ -34,6 +35,14 @@ export const ConfiguracionView: React.FC = () => {
       <AparienciaSection 
         esOscuro={esOscuro}
         toggleTheme={toggleTheme}
+        cardBg={cardBg}
+        cardBorder={cardBorder}
+        textColor={textColor}
+        mutedTextColor={mutedTextColor}
+      />
+
+      <ManualUsuarioSection
+        esOscuro={esOscuro}
         cardBg={cardBg}
         cardBorder={cardBorder}
         textColor={textColor}

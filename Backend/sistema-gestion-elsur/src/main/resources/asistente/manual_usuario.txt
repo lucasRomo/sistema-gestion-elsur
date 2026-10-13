@@ -1,0 +1,1957 @@
+ÍNDICE DEL MANUAL DE USUARIO (números de sección válidos):
+1. Introducción
+  1.1. ¿Qué es GestaPro?
+  1.2. Objetivo del manual
+  1.3. Perfiles de usuario y permisos
+  1.4. Descripción general de la interfaz
+  1.5. Estados de un pedido
+  1.6. Activar, desactivar y dar de baja registros
+2. Acceso al Sistema
+  2.1. Ingresar al sistema
+  2.2. Primer inicio
+  2.3. Registrarse en el sistema
+  2.4. Iniciar sesión
+  2.5. Cerrar sesión
+  2.6. Usar GestaPro en el celular
+3. Módulo Panel Principal
+  3.1. Panel Principal
+  3.2. Tarjeta de Notificaciones
+  3.3. Botón de ayuda
+  3.4. Registrar una venta rápida
+4. Módulo Configuración y Seguridad (Mi Cuenta)
+  4.1. Gestionar mi contraseña / email / nombre de usuario
+  4.2. Alternar modo claro / oscuro
+  4.3. Generar Respaldo de Datos en Respaldo Local Contingente
+  4.4. Restaurar Copia de Seguridad
+5. Módulo Clientes
+  5.1. Registrar un cliente
+  5.2. Modificar los datos de un cliente
+  5.3. Visualizar Dirección
+  5.4. Modificar la dirección de un cliente
+  5.5. Visualizar Categorías de clientes y descuentos
+  5.6. Crear Categorías de Clientes y Descuentos
+  5.7. Editar Categorías de Clientes y Descuentos
+  5.8. Eliminar una categoría de Cliente y Descuentos
+  5.9. Asignar un límite de crédito a un cliente
+  5.10. Consultar y liquidar la cuenta corriente del Cliente
+  5.11. Visualizar todas las Cuentas corrientes
+  5.12. Descargar Pdf/Excel de Clientes Registrados en el Sistema
+6. Módulo Proveedores
+  6.1. Gestionar proveedores
+  6.2. Registrar Proveedores
+  6.3. Editar Datos de Proveedores
+  6.4. Editar Datos de ubicación de Proveedores
+  6.5. Enviar Correo a Proveedor desde la tabla de Gestión de Proveedores
+  6.6. Descargar Pdf/Excel de Proveedores Registrados en el Sistema
+7. Módulo Equipos / Máquinas
+  7.1. Visualizar Máquinas Registradas
+  7.2. Registrar Nueva Máquina
+  7.3. Editar Equipos y máquinas
+  7.4. Equipos y máquinas: Reportar fallas
+  7.5. Modificar Estado Operativo de Máquina
+  7.6. Visualizar Historial de Incidencias
+  7.7. Pagar Arreglo por incidencia
+  7.8. Pasar máquina con Incidencia a mantenimiento
+  7.9. Pasar máquina en Mantenimiento a Alta Operativa y Activar Máquina
+8. Módulo Crear Pedido
+  8.1. Registrar un pedido formal
+  8.2. Generar un presupuesto
+9. Módulo Pedidos Pendientes (Taller)
+  9.1. Visualización Cola de producción (Tablero y Lista de seguimiento) y Detalles de Pedido
+  9.2. Registrar señas y pagos posteriores
+  9.3. Visualización y Opciones de Comprobantes Vinculados
+  9.4. Eliminar / Reemplazar Comprobante Vinculado
+  9.5. Actualizar el estado de un trabajo
+  9.6. Emitir el ticket técnico de taller (PDF)
+  9.7. Notificaciones al cliente
+  9.8. Asignar pedidos a empleados
+  9.9. Cambiar ubicación de Pedido
+  9.10. Pausar/Cancelar Pedidos
+  9.11. Registrar Merma
+  9.12. Visualizar Presupuestos
+  9.13. Visualizar Mensajes de Devolución
+10. Módulo Historial de Pedidos
+  10.1. Historial de pedidos y control de retiros
+  10.2. Abrir Auditoría de Pedidos
+  10.3. Imprimir Ticket del Cliente/Comanda del Taller
+  10.4. Ver Historial de Mermas
+  10.5. Registrar Devolución de Pedido
+11. Módulo Caja
+  11.1. Visualización de Caja: Estado y Movimientos manuales
+  11.2. Abrir turno de Caja
+  11.3. Registrar un Nuevo Movimiento de Caja Manual
+  11.4. Realizar Arqueo automático de caja
+  11.5. Realizar el arqueo y cierre de turno
+  11.6. Descargar Pdf/Excel de Movimientos de Caja Registrados en el Sistema
+12. Módulo Repositorio Digital
+  12.1. Repositorio digital: registrar archivos
+  12.2. Registrar Nueva Institución
+  12.3. Registrar Nueva Cátedra/Área
+  12.4. Registrar Receta de Impresión
+  12.5. Eliminar Insumo de Receta
+  12.6. Registrar Nuevo Pedido de Impresión
+  12.7. Visualizar Archivo Registrado
+  12.8. Ver detalles del Producto
+  12.9. Repositorio digital: eliminar archivos
+13. Módulo Insumos
+  13.1. Gestión de insumos
+  13.2. Registrar Insumo
+  13.3. Registrar Nuevo Tipo de Unidad
+  13.4. Eliminar Tipo de Unidad
+  13.5. Modificar datos y estado de insumo
+  13.6. Conversión de unidades (bultos a unidades sueltas)
+  13.7. Consultar alertas de stock crítico
+  13.8. Consultar Proveedores del Insumo
+  13.9. Consultar tabla de equivalencias y relaciones de insumos
+  13.10. Modificar Varios Precios
+  13.11. Registrar mermas de Insumo
+  13.12. Visualizar mermas de Insumo
+  13.13. Descargar Pdf/Excel de Lista de Insumos Registrados en el Sistema
+14. Módulo Productos
+  14.1. Visualizar Tabla de Productos
+  14.2. Registrar productos
+  14.3. Editar Producto o Estado de producto
+  14.4. Configurar la receta de un producto
+  14.5. Vincular el stock de un producto a sus insumos
+  14.6. Descuento automático de stock
+  14.7. Registrar mermas de material
+  14.8. Visualizar Historial de mermas
+  14.9. Modificar varios precios (aumentos porcentuales masivos)
+  14.10. Ver Productos con recetas (global)
+  14.11. Descargar Pdf/Excel de Lista de Productos Registrados en el Sistema
+  14.12. Consultar alertas de stock crítico
+15. Módulo Compra de Insumos
+  15.1. Compra de insumos Existente
+  15.2. Compra de insumos Nuevos
+  15.3. Compra de Productos
+  15.4. Cargar Lista de Compra con IA
+16. Módulo Informes
+  16.1. Informes y métricas
+  16.2. Descargar Comprobantes en Formato PDF
+  16.3. Comparar métricas mediante fecha Establecida
+  16.4. Ver Historial de Arqueo de Caja
+17. Módulo Matriz de Permisos
+  17.1. Configurar la matriz de permisos
+  17.2. Crear Nuevo Perfil Huérfano
+18. Módulo Gestión de Usuarios
+  18.1. Autorizar solicitudes
+  18.2. Crear Empleados/Usuario
+  18.3. Editar Empleado/Usuario
+  18.4. Visualizar y Editar Dirección de Empleado/Usuario
+  18.5. Dar de baja un Usuario
+  18.6. Visualizar la contraseña de un Usuario
+  18.7. Modificar la contraseña de un Usuario
+19. Módulo Historial de Actividad
+  19.1. Consultar el historial de actividad (auditoría)
+  19.2. Descargar PDF/Excel de Tabla de Historial de Actividad
+20. Tecnologías utilizadas
+21. Requisitos del sistema
+22. Consideraciones finales
+  22.1. Soporte técnico
+  22.2. Problemas frecuentes
+23. Anexo A. Glosario
+
+CONTENIDO DEL MANUAL DE USUARIO:
+Convenciones
+Convenciones
+En este manual se utilizan las siguientes convenciones. Conocerlas ayuda a seguir los
+procedimientos más rápido.
+Convención
+Significado
+Ejemplo
+Ruta de menú
+(MENÚ › Opción)
+Indica qué grupo abrir en la barra lateral y
+qué opción elegir. STOCK › Productos
+significa abrir el grupo STOCK y hacer clic
+en Productos.
+Botones en negrita
+El nombre de un botón o de una opción de
+la pantalla se escribe en negrita, tal como
+aparece en el sistema.
+Hacer clic en Registrar Nuevo
+Cliente.
+Cuadro rojo
+En las capturas, el recuadro rojo marca el
+botón o el sector de la pantalla donde se
+debe hacer clic.
+«Mensajes»
+Los textos que muestra el sistema (avisos,
+confirmaciones y mensajes de éxito) se
+escriben entre comillas angulares.
+Confirmaciones
+Antes de guardar, modificar o eliminar, el
+sistema pide confirmar la acción. Los
+pasos del manual indican qué botón
+elegir.
+Perfil:
+La franja gris al comienzo de cada
+procedimiento indica qué perfiles pueden
+realizarlo (ver sección 1.3).
+Perfil: Operario · Gerente · Dueño
+Nota / Importante /
+Consejo
+Recuadros de color: Nota (azul) amplía la
+información; Importante (rojo) advierte
+sobre algo que puede causar errores o
+pérdida de datos; Consejo (verde)
+sugiere una buena práctica.
+Aparecen debajo de los pasos del
+procedimiento.
+Referencias
+Una referencia como «(ver sección 5.1)»
+remite a otro apartado del manual donde
+se explica ese tema.
+(ver sección 5.1)
+Convención
+Significado
+Ejemplo
+Botón de ayuda
+«?»
+Botón circular violeta, arriba a la derecha
+de todas las pantallas. Abre el asistente
+de ayuda con inteligencia artificial (ver
+sección 3.3).
+Colores e íconos de los botones
+Los botones mantienen el mismo color e ícono en todos los módulos. En las tablas, la columna
+Opciones agrupa las acciones de cada fila; debajo de cada tabla, una barra reúne las acciones
+generales de la pantalla.
+Columna Opciones de una fila: cuenta corriente (verde), editar (celeste) y dirección (amarillo).
+Barra inferior: Volver (gris), Excel (verde), PDF (rojo), acciones secundarias y la acción principal (verde, a la
+derecha).
+Botón / ícono
+Para qué sirve
+Lápiz (celeste o amarillo)
+Editar o modificar el registro de esa fila.
+Casa (amarillo)
+Ver o modificar la dirección postal.
+Billetera (verde)
+Abrir la cuenta corriente del cliente.
+Hoja con «X» (verde)
+Descargar la tabla en Excel.
+Hoja PDF (rojo)
+Descargar la tabla en PDF.
+Tacho de basura (rojo)
+Eliminar o registrar mermas, según el módulo. Siempre pide confirmación.
+Impresora (amarillo)
+Ver e imprimir tickets y comandas.
+Ojo (celeste)
+Ver un comprobante o una imagen vinculada.
+Volver (gris)
+Regresar a la pantalla anterior.
+Botón verde de la derecha
+Acción principal de la pantalla (por ejemplo, Registrar Nuevo Cliente).
+1. Introducción
+1.1. ¿Qué es GestaPro?
+GestaPro (Sistema de Gestión de Imprenta) es una solución integral de gestión interna pensada
+para el rubro de la industria gráfica, imprentas y centros de copiado. Funciona como el núcleo de
+la operación diaria del negocio y reúne en una única interfaz web cinco pilares:
+• Automatización comercial: pedidos formales, ventas rápidas, presupuestos, señas,
+descuentos por categoría de cliente y comprobantes en PDF.
+• Gestión del flujo de trabajo: cola de producción del taller, estados de los trabajos,
+asignación de pedidos a empleados y notificaciones al cliente.
+• Control financiero y de pagos: múltiples medios de pago, cuentas corrientes con límite de
+crédito, caja por turnos, arqueo y cierre.
+• Administración de recursos y stock: insumos, conversión de unidades, recetas de
+productos, descuento automático de stock, mermas, alertas de stock crítico y estado de las
+máquinas.
+• Análisis por jerarquía: perfiles de Dueño, Gerente y Operario, matriz de permisos, historial
+de auditoría e informes de gestión (también desde el celular).
+El sistema se utiliza desde el navegador web, sin instalar programas en la computadora, y puede
+consultarse desde un teléfono móvil para las funciones de supervisión.
+1.2. Objetivo del manual
+Este manual brinda una guía clara y detallada a todas las personas que intervienen en el proceso
+de ventas, producción y administración del local. Su uso correcto contribuye a mantener la
+integridad de la información comercial y operativa.
+Para el Dueño y los Gerentes encontrarán información sobre:
+• La administración de usuarios, la asignación de roles y la configuración de la matriz de
+permisos.
+• El control de cuentas corrientes, límites de crédito, listas de precios y categorías de clientes.
+• La consulta del historial de auditoría, los informes y el dashboard móvil.
+Para los Operarios (mostrador y taller) encontrarán una guía sobre:
+• Cómo registrar clientes, pedidos, ventas rápidas y presupuestos, y cómo cobrar (señas,
+pagos parciales y múltiples medios de pago).
+• Cómo seguir y actualizar el estado de los trabajos en el taller, emitir tickets y subir archivos
+al repositorio digital.
+• Cómo controlar insumos, registrar mermas, reportar fallas de equipos y realizar el cierre de
+turno.
+1.3. Perfiles de usuario y permisos
+Cada persona que usa GestaPro tiene un perfil que determina qué módulos y acciones puede
+utilizar. Los perfiles definidos por el sistema son:
+Perfil
+Descripción
+Tareas típicas
+Dueño
+Máxima jerarquía. Administra el
+sistema y su configuración.
+Autorizar usuarios y asignar roles, gestionar
+empleados, configurar permisos, categorías de
+clientes, recetas y precios masivos, consultar
+auditoría y dashboard móvil.
+Gerente
+Supervisión operativa y financiera
+del local.
+Límites de crédito y cuentas corrientes,
+asignación de pedidos, control de retiros,
+conversión de insumos, informes, restablecer
+contraseñas.
+Operario
+Atención de mostrador y trabajo de
+taller.
+Clientes, pedidos, ventas rápidas, presupuestos,
+cobros, cola de producción, repositorio, mermas,
+reporte de fallas y cierre de turno.
+La siguiente tabla resume la configuración de permisos sugerida por la definición del producto. El
+dueño puede modificarla en cualquier momento desde la matriz de permisos (sección 17.1).
+Función
+Sección
+Dueño
+Gerente
+Operario
+Autorizar solicitudes y asignar roles
+18.1
+Sí
+—
+—
+Gestionar empleados
+18.2–18.5
+Sí
+—
+—
+Matriz de permisos e historial de actividad
+17.1, 19.1
+Sí
+—
+—
+Categorías de clientes y descuentos
+5.5–5.8
+Sí
+—
+—
+Recetas de productos
+14.4
+Sí
+—
+—
+Modificar varios precios (aumentos masivos)
+13.10, 14.9
+Sí
+—
+—
+Consulta desde el celular
+2.6
+Sí
+—
+—
+Límite de crédito, cuentas corrientes y bajas lógicas
+5.9–5.11, 1.6
+Sí
+Sí
+—
+Asignar pedidos y controlar retiros
+9.8, 10.1
+Sí
+Sí
+—
+Conversión de insumos
+13.6
+Sí
+Sí
+—
+Restablecer contraseñas de otros usuarios
+18.7
+Sí
+Sí
+—
+Clientes, proveedores e insumos (alta y
+modificación)
+5.1, 6.2, 13.2 Sí
+Sí
+Sí
+Pedidos, ventas rápidas, presupuestos y cobros
+3.4, 8.1, 8.2,
+9.2
+Sí
+Sí
+Sí
+Cola de producción, tickets y repositorio digital
+9.1, 9.6, 12.1 Sí
+Sí
+Sí
+Mermas, alertas de stock y reporte de fallas
+13.11, 13.7,
+7.4
+Sí
+Sí
+Sí
+Movimientos de caja, arqueo y cierre de turno
+11.2–11.5
+Sí
+Sí
+Sí
+Cambiar la propia contraseña y el modo
+claro/oscuro
+4.1, 4.2
+Sí
+Sí
+Sí
+Nota: Lo que cada persona ve en el menú depende de su perfil y de los ajustes de la matriz de
+permisos. Si un módulo de este manual no aparece en su pantalla, consulte al Dueño.
+Nota: En el sistema, el perfil Dueño corresponde al rol ADMIN y el perfil Operario al rol
+OPERARIO. El perfil Gerente es un perfil personalizado: el Dueño lo crea desde la Matriz de
+Permisos (sección 17.2) y le asigna los módulos que considere.
+1.4. Descripción general de la interfaz
+La interfaz de GestaPro es consistente en todas sus pantallas: una barra de navegación lateral a
+la izquierda y el contenido de cada módulo a la derecha.
+A) Barra lateral y menú principal
+En la parte superior de la barra lateral se muestra el logo de El Sur, el saludo («Buenos días:
+[usuario]»), la fecha actual y el rol de la persona que inició sesión. Debajo se agrupan las
+opciones del menú. Con el botón de flecha se puede contraer la barra para ganar espacio.
+Grupo
+Opción
+Para qué sirve
+Ver
+—
+Panel Principal
+Resumen del día: pedidos pendientes, estado de
+caja, falta de stock y caja registradora.
+3.1
+PRODUCCIÓN
+Crear Pedido
+Armar pedidos formales, ventas y presupuestos.
+8.1
+Pedidos
+Pendientes
+Cola de producción del taller y cambio de estados.
+9.1
+Historial de
+Pedidos
+Pedidos concluidos, comprobantes y control de
+retiros.
+10.1
+Caja
+Movimientos, arqueo y cierre de turno.
+11.1
+Repositorio Digital
+Apuntes y archivos digitales para imprimir.
+12.1
+Grupo
+Opción
+Para qué sirve
+Ver
+STOCK
+Insumos
+Inventario de insumos, conversión de unidades y
+alertas.
+13.1
+Productos
+Catálogo, recetas, precios y vínculo de stock.
+14.1
+Compra de
+Insumos
+Reposición de insumos a proveedores.
+15.1
+ADMINISTRACIÓ
+N / ENTIDADES
+Clientes
+Clientes, categorías, límites de crédito y cuentas
+corrientes.
+5.1
+Proveedores
+Alta y gestión de proveedores.
+6.1
+Equipos /
+Máquinas
+Estado de las máquinas y reporte de fallas.
+7.1
+OPCIONES DE
+GERENTE
+Informes
+Métricas y reportes de gestión.
+16.1
+Matriz de
+Permisos
+Permisos por perfil y por usuario.
+17.1
+Gestión de
+Usuarios
+Alta, autorización y baja de usuarios.
+18.1
+Historial de
+Actividad
+Auditoría de cambios del sistema.
+19.1
+MI CUENTA
+Configuración
+Apariencia, contraseña y respaldo local.
+4.1
+—
+Cerrar Sesión
+Salir del sistema de forma segura.
+2.5
+B) Tablas de datos
+La mayoría de los módulos presentan sus datos en una tabla central con desplazamiento interno.
+Las columnas de Opciones agrupan botones de acción por fila (por ejemplo, editar con el ícono
+de lápiz o configurar la receta con el ícono de caja). Las columnas de Estado muestran etiquetas
+de color: verde para «Activo» y rojo para «Inactivo».
+C) Filtros y búsqueda
+• Búsqueda rápida: un campo de texto sobre la tabla filtra de inmediato las filas que
+coinciden con lo escrito (por ejemplo, un nombre, un documento o un ID).
+• Filtros de despliegue: listas para segmentar por estado, empleado, categoría u otros
+valores. La opción «Sin Filtro» muestra todos los registros.
+• Los filtros pueden combinarse entre sí.
+D) Ventanas emergentes y mensajes
+• Formularios y detalles: se abren en una ventana emergente (modal) sobre la pantalla
+actual.
+• Confirmaciones: antes de acciones importantes el sistema pregunta («¿Confirmar
+modificaciones?»).
+• Mensajes de éxito: una ventana con un tilde violeta informa que la operación se realizó
+correctamente.
+• Alertas y errores: avisos en rojo o amarillo indican datos inválidos, permisos insuficientes u
+operaciones bloqueadas.
+E) Botón de ayuda
+Como mencionamos anteriormente, en la esquina superior derecha de todas las pantallas hay un
+botón circular violeta con el símbolo «?». Abre el asistente de ayuda, un chat con inteligencia
+artificial que responde dudas sobre el uso del sistema (ver sección 3.3).
+1.5. Estados de un pedido
+A lo largo de su vida, un pedido pasa por distintos estados. Conocerlos es fundamental para
+operar el taller y el mostrador:
+Estado
+Significado
+Efectos en el sistema
+Presupuesto
+Cotización informal con validez
+temporal.
+No afecta la caja ni reserva stock. Se consulta en
+Pedidos Pendientes, pestaña Presupuestos
+(sección 9.12).
+Pendiente
+Pedido confirmado, en cola para
+producción.
+Aparece en la cola del taller y en el Panel
+Principal. Si se cobró una seña, queda
+registrada.
+En Proceso
+El trabajo se está realizando en el
+taller.
+Se registra el cambio en el historial.
+Pausado
+Trabajo detenido temporalmente.
+Exige un motivo obligatorio para documentar la
+demora.
+Finalizado
+Trabajo terminado, a la espera de
+retiro.
+Descuenta los insumos del stock según la receta.
+Desde el pedido se puede avisar al cliente por
+WhatsApp o Email (sección 9.7).
+Entregado
+El cliente retiró el trabajo.
+Cierra el pedido. Si queda saldo pendiente, el
+sistema advierte antes de entregar (sección 9.2).
+Cancelado /
+Anulado
+El pedido se anuló.
+Reintegra los insumos comprometidos y
+conserva el registro en el historial (no se
+elimina).
+Nota: Los pedidos en estado Entregado o Cancelado se archivan en el Historial de Pedidos y
+dejan de mostrarse en la cola del taller.
+1.6. Activar, desactivar y dar de baja registros
+Perfil: Gerente · Dueño
+GestaPro no elimina físicamente comprobantes de venta, órdenes ni recibos. Para mantener la
+integridad del historial, todo se administra mediante estados (Activo / Inactivo / Anulado) y bajas
+lógicas.
+1. En el listado del módulo (clientes, proveedores, insumos, productos, empleados), ubicar la
+fila.
+2. Hacer clic en la columna Estado y elegir el nuevo valor, o usar el botón de baja disponible.
+3. Confirmar cuando el sistema lo solicite. Aparece un mensaje de estado actualizado.
+• Los registros inactivos dejan de ofrecerse en las nuevas operaciones, pero siguen visibles
+en el historial.
+• Las transacciones ya archivadas no pueden modificarse: el sistema muestra una alerta y
+conserva importe, ítems y estado sin cambios.
+2. Acceso al Sistema
+2.1. Ingresar al sistema
+1. Abrir el navegador e ingresar a la dirección del sistema:
+https://sistema-gestion-elsur.vercel.app
+2. Ingresar la contraseña del Portón de Acceso Restringido (la provee el Dueño). Se pide la
+primera vez que se entra desde una computadora y cada vez que se cierra la sesión.
+2.2. Primer inicio
+Si ya tiene una cuenta registrada en el sistema, haga clic en Iniciar sesión. Las personas nuevas
+deben registrarse (sección 2.3) y esperar la autorización del Dueño (sección 18.1). Si la persona
+que se registra es la primera de la base de datos, el sistema le asigna automáticamente el perfil
+Dueño (rol ADMIN).
+2.3. Registrarse en el sistema
+Perfil: Nuevo usuario (aún sin sesión iniciada)   ·
+Toda persona que necesite usar GestaPro debe solicitar acceso completando el formulario de
+registro. Su cuenta quedará en estado Pendiente hasta que el Dueño la autorice (sección 18.1).
+1. Abrir la dirección de la aplicación en el navegador. (2.1)
+2. En la pantalla de bienvenida, hacer clic en el botón Registrarse.
+3. Completar los Datos Personales:
+- Nombre y Apellido.
+- Tipo de documento (DNI, CUIL, CUIT) y N° de documento.
+- Email y Teléfono.
+4. Completar los Datos de Dirección: Calle, Número, Piso y Departamento (opcionales),
+Código Postal, Ciudad, Provincia y País (opcionales).
+5. Completar los Datos de Acceso y Laborales:
+- Usuario y contraseña.
+- Fecha de contratación, Cargo y Salario.
+6. Hacer clic en Registrar Nuevo Empleado.
+7. El sistema muestra el mensaje «¡Usuario Registrado Correctamente!».
+Importante: La contraseña debe tener al menos 8 caracteres, con una letra mayúscula y un
+número. Se guarda cifrada: sólo el Dueño puede consultarla desde Gestión de Usuarios,
+confirmando su propia contraseña (sección 18.6).
+Nota: Cada campo tiene su validación. Por ejemplo, el nombre solo admite letras y espacios, y
+el email no puede estar registrado previamente: si ya existe, el sistema muestra una alerta
+indicando que el correo está en uso y el registro no se completa.
+2.4. Iniciar sesión
+Perfil: Todos los usuarios con cuenta activa
+1. Abrir la aplicación y hacer clic en Iniciar Sesión.
+2. Ingresar el usuario y la contraseña. El ícono del ojo permite ver la contraseña mientras se
+escribe.
+3. Hacer clic en Iniciar Sesión.
+4. Si los datos son correctos, aparece el mensaje «¡Bienvenido!» y el sistema abre el Panel
+Principal.
+Si no se puede ingresar
+Situación
+Mensaje del sistema
+Qué hacer
+Usuario o contraseña
+incorrectos
+Aviso de credenciales inválidas.
+Revisar los datos e intentar
+nuevamente.
+Cuenta en estado Pendiente
+Cartel indicando que la cuenta está
+bajo revisión.
+Solicitar al Dueño que autorice la
+cuenta (18.1).
+Cuenta Desactivada
+Acceso denegado.
+Consultar con el Dueño o Gerente.
+Nota: Al ingresar, el sistema entrega una credencial de sesión segura que contiene el rol y los
+permisos de la persona. Esa credencial vence por inactividad; si ocurre, será necesario iniciar
+sesión nuevamente.
+2.5. Cerrar sesión
+Perfil: Todos los usuarios con cuenta activa
+1. En la parte inferior de la barra lateral, hacer clic en Cerrar Sesión.
+2. El sistema invalida la credencial actual, borra los datos de la sesión almacenados en el
+navegador y vuelve a la pantalla de ingreso.
+Consejo: Cerrar sesión al terminar el turno o al dejar el mostrador protege la cuenta y libera la
+terminal para otra persona. Si la sesión ya había vencido por inactividad, el sistema lo resuelve
+sin mostrar errores técnicos y redirige al ingreso con un mensaje breve.
+2.6. Usar GestaPro en el celular
+Desde el teléfono, GestaPro funciona en modo consulta para el Dueño: permite supervisar el
+negocio, pero las tareas operativas (cobrar, crear pedidos, cambiar estados) se realizan desde la
+computadora. La barra inferior tiene cinco pestañas: Inicio, Pedidos, Informes, Máquinas y
+Ajustes.
+1. Abrir la dirección del sistema en el navegador del teléfono e iniciar sesión.
+• Inicio: resumen del día con el estado de la caja (saldo, ingresos y egresos), los pedidos en
+el taller y los atrasados, los insumos con stock bajo, las máquinas con problemas y las
+notificaciones.
+• Pedidos: cola del taller con el estado, el cliente, el tiempo de entrega, el total y la seña de
+cada pedido. Los filtros Taller, Atrasados y Presupuestos y el buscador ayudan a
+encontrar un trabajo; al tocar un pedido se ven sus productos y observaciones.
+• Informes, Máquinas y Ajustes: las mismas consultas que en la computadora (sección 16.1,
+7.1 y 4.1), en formato de pantalla de teléfono.
+• Al tocar las tarjetas En taller, Atrasados o Máquinas de Inicio, el sistema abre directamente
+la pestaña correspondiente.
+Pestaña Pedidos en el celular: la cola del taller y el detalle de un pedido.
+Pedidos: cola del taller con filtros
+Al tocar un pedido se ven sus productos
+3. Módulo Panel Principal
+3.1. Panel Principal
+Perfil: Todos los usuarios con cuenta activa
+Es la pantalla de inicio. Reúne información de acceso rápido:
+• Pedidos Pendientes: lista de pedidos activos con cliente, monto y fecha de entrega.
+• Falta de Stock: insumos que alcanzaron el stock mínimo (sección 13.7).
+• Caja Registradora: Sección para Crear Pedido Rápido (Selector de Productos, Selector de
+categoría de Descuentos y Opción para ver Tickets del pago y del pedido.
+3.2. Tarjeta de Notificaciones
+En la pantalla de inicio, se puede visualizar un apartado de notificaciones en el que se mostrará la
+siguiente información:
+• Estado de Caja: Situación del turno actual (ingresos, egresos, etc) y si la caja está abierta o
+cerrada.
+• Pedidos Demorados: Id del pedido, nombre del cliente con pedido demorado, tiempo de
+demora y si este ya excedió o no el tiempo establecido.
+3.3. Botón de ayuda
+Perfil: Todos los usuarios con cuenta activa
+1. Hacer clic en el botón circular «?» de la esquina superior derecha de la pantalla.
+2. Se abre el panel Asistente de ayuda, que indica en qué módulo se encuentra la persona.
+3. Escribir la consulta en Escribí tu pregunta… y presionar Enter (o el botón de enviar).
+4. El asistente responde con los pasos a seguir. Se pueden hacer nuevas preguntas en la
+misma conversación.
+5. Para cerrarlo, hacer clic otra vez en el botón, que ahora muestra una «X».
+Nota: El asistente orienta sobre cómo usar el sistema, pero no realiza acciones: no crea
+pedidos ni modifica datos. Necesita conexión a internet; si no está disponible, muestra un aviso
+para intentar nuevamente.
+3.4. Registrar una venta rápida
+Perfil: Todos los usuarios con cuenta activa
+Para atender rápido en horas de mucha demanda, la venta rápida se asocia al cliente genérico
+Consumidor Final, sin pedir DNI ni CUIT.
+1. Ir al Panel Principal y ubicar el selector de productos.
+2. Buscar el producto por nombre en la barra de búsqueda, indicar la cantidad y hacer clic en el
+botón Agregar.
+3. Seleccionar la categoría de descuentos de clientes si es necesario, haciendo clic en la barra
+con bordes celestes que dice Sin Categoría.
+4. Una vez finalizada la lista de Productos, hacer clic en Elegir Método de Pago.
+5. Elegir el método de pago y confirmar el cobro.
+6. La venta se procesa de inmediato, descuenta el stock, se asienta en la caja como «Venta
+Rápida» y queda lista la pantalla para la siguiente atención.
+Nota 1: Si el Método de pago es Transferencia, el sistema presentará una opción para vincular
+la imagen de un comprobante al pago para luego poder visualizarlos en movimientos de caja o
+en otros apartados del sistema.
+Nota 2: No se puede cerrar una venta con el carrito vacío: el sistema pide agregar al menos un
+producto.
+4. Módulo Configuración y Seguridad (Mi Cuenta)
+4.1. Gestionar mi contraseña / email / nombre de usuario
+Perfil: Todos los usuarios con cuenta activa
+1. Ir a Mi Cuenta › Configuración.
+2. En la sección de Perfil, se presentan 3 opciones: Cambiar Contraseña Propia, Modificar
+Nombre de Usuario y Modificar Correo Electrónico.
+3. Para la Explicación mostraremos la opción de la contraseña, primero es necesario ingresar
+la contraseña actual (Si el usuario no la conoce, se puede visualizar en Gestión de
+Usuarios).
+4. Escribir la contraseña nueva y repetirla en Repite la nueva contraseña.
+5. Hacer clic en Actualizar contraseña.
+Nota: Esta serie de pasos también aplica para la modificación del Nombre de Usuario y el de
+Nombre de Email.
+4.2. Alternar modo claro / oscuro
+Perfil: Todos los usuarios con cuenta activa
+1. Ir a Mi Cuenta › Configuración.
+2. En Apariencia del Sistema hacer clic en Cambiar a Claro o Cambiar a Oscuro. La
+pantalla indica el modo actual Establecido.
+Nota: La preferencia se guarda en el navegador, por lo que se conserva entre sesiones en el
+mismo dispositivo.
+4.3. Generar Respaldo de Datos en Respaldo Local Contingente
+Perfil: Dueño
+Gestapro presenta una opción para poder generar respaldos de la base de datos (Lista de
+Insumos, Usuarios y contraseñas, etc) en caso de emergencia (El sistema al funcionar en
+navegador, está conectado a una base de datos en la nube, por lo tanto, es en caso de un
+problema de emergencia o algo similar relacionado a la base de datos en la nube).
+1. Ir a  Mi Cuenta › Configuración › Respaldo Local Contingente.
+2. Hacer clic en Generar Respaldo Ahora y luego en Generar.
+3. Aparecerá un mensaje de éxito, resaltando que el archivo quedó registrado en el Historial
+de Respaldos Generados en la base de datos en la Nube (junto a los datos de Fecha /
+Hora, Archivo, Tamaño, Operador y Acciones).
+Nota: Si luego se quiere restaurar una base de datos en base a un archivo del Historial de
+respaldos generados en la nube. haga clic en el icono de descargar a la derecha. El archivo se
+descargará en formato (.JSON). También existe la posibilidad de eliminarlo de la base de datos
+con el icono de tacho de basura si es necesario.
+4.4. Restaurar Copia de Seguridad.
+Perfil: Dueño
+1. Ir a  Mi Cuenta › Configuración › Respaldo Local Contingente.
+2. En Cargar / Restaurar Copia de Seguridad JSON hacer clic en Seleccionar archivo. (Es
+necesario tener el archivo ya en la computadora con anterioridad o descargarlo de el
+Historial de Respaldos Generados en la nube)
+3. Elegir el archivo de respaldo (.json) de los archivos en la computadora.
+4. Una vez aparezca el nombre del archivo, hacer clic en Restaurar Datos y luego en SI,
+Actualizar.
+Importante: Este procedimiento afectará la base de datos del sistema Permanentemente, por
+lo que recomendamos encarecidamente usar este procedimiento en caso de emergencia.
+5. Módulo Clientes
+En el Módulo Clientes, Se podrá visualizar una tabla con todos los datos de los clientes habituales
+registrados junto a sus respectivos datos tales como apellido y nombre, documento, razón social,
+categoría, estado de la cuenta corriente, saldo deudor y opciones varias.
+Para Ingresar, debe navegar hacia Administración / Entidades › Clientes
+5.1. Registrar un cliente
+Perfil: Operario · Gerente · Dueño
+1. Ir a Administración / Entidades › Clientes
+2. Hacer clic en Registrar Nuevo Cliente.
+3. Completar los datos personales: Nombre y Apellido (o razón social), Tipo de documento
+(DNI, CUIL, CUIT), N° de documento / CUIT, Email, Teléfono y Dirección.
+4. Completar los datos comerciales (razón social, persona de contacto, condiciones de pago).
+5. Hacer clic en Registrar.
+Importante: El DNI o CUIT es obligatorio y único. Antes de guardar, el sistema verifica que
+no exista otro registro con el mismo documento; si existe, no se guarda y aparece un aviso.
+Esto evita Duplicados o errores.
+Nota: El sistema incluye un cliente genérico llamado Consumidor Final, que no requiere
+documento y se usa en las ventas rápidas. No puede modificarse ni comprar a cuenta
+corriente.
+5.2. Modificar los datos de un cliente
+Perfil: Operario · Gerente · Dueño
+1. Ir a Administración / Entidades › Clientes
+2. Hacer clic en el ícono de lápiz de la fila del cliente seleccionado (Modificar).
+3. Editar los datos necesarios. Si se cambia el documento, el sistema vuelve a validar que sea
+único.
+4. Confirmar con Guardar y luego Confirmar.
+5.3. Visualizar Dirección
+Perfil: Operario · Gerente · Dueño
+Los formularios de clientes y proveedores incluyen un apartado de Dirección Postal, que se
+puede visualizar haciendo clic en el botón de Ver Ubicación en Administración / Entidades ›
+Clientes (El botón Amarillo con el icono de la casa), los datos que se pueden visualizar en el
+modal son:
+• Calle y Número.
+• Piso y departamento (opcionales).
+• Código Postal y Ciudad.
+• Provincia y País (opcionales).
+5.4. Modificar la dirección de un cliente.
+Perfil: Operario · Gerente · Dueño
+1. Ir a Administración / Entidades › Clientes
+2. En el listado del cliente, hacer clic en el botón Ver Dirección de la fila del cliente
+Seleccionado.
+3. En la ventana «Dirección», hacer clic en Habilitar Modificación para habilitar la edición.
+4. Cambiar los datos y hacer clic en Guardar Cambios (o cerrar para descartar).
+5.5. Visualizar Categorías de clientes y descuentos
+Perfil: Operario · Gerente · Dueño
+Las categorías permiten aplicar automáticamente un porcentaje de descuento a los clientes
+habituales (por ejemplo, Estudiante, Judicial, Gremio o Mayorista) a la hora de crear un pedido.
+1. Ir a Administración / Entidades › Clientes
+2. Hacer clic en el botón Categorías.
+5.6. Crear Categorías de Clientes y Descuentos
+Perfil: Operario · Gerente · Dueño
+1. Ir a Administración / Entidades › Clientes
+2. Hacer clic en el botón Categorías.
+3. Ingresar el Nombre de la categoría.
+4. Ingresar el número del descuento.
+5. Hacer clic en el botón Guardar y luego en Crear.
+Nota: Al armar un pedido, el panel «Categoría de Cliente / Descuento» aplica el porcentaje
+sobre el total bruto.
+5.7. Editar Categorías de Clientes y Descuentos
+Perfil: Operario · Gerente · Dueño
+1. Ir a Administración / Entidades › Clientes
+2. Hacer clic en el botón Categorías.
+3. Hacer clic en el botón de Editar en la fila de la categoría seleccionada (El botón amarillo
+con el Icono de un lápiz).
+4. Una vez se termine de editar, hacer clic en el botón Actualizar y luego en Guardar.
+5.8. Eliminar una categoría de Cliente y Descuentos
+Perfil: Operario · Gerente · Dueño
+1. Ir a Administración / Entidades › Clientes
+2. Hacer clic en el botón Categorías.
+3. Hacer clic en el Botón Eliminar (el botón rojo con el icono del tacho de basura) y luego en
+Eliminar Nuevamente
+5.9. Asignar un límite de crédito a un cliente
+Perfil: Operario · Gerente · Dueño
+El límite de crédito es el monto máximo que un cliente habitual puede adeudar comprando «a
+cuenta».
+1. Ir a Administración / Entidades › Clientes
+2. En la columna Acciones › Cta. Cte. Hacer clic para abrir la ventana Cuenta Corriente del
+Cliente
+3. En Límite de Crédito Permitido ($) escribir el monto máximo requerido.
+4. Hacer clic en Actualizar Límite.
+Importante: Al vender con el método Cuenta Corriente, o al finalizar un pedido sin registrar
+un pago en el pedido del cliente, el sistema valida que el saldo deudor acumulado más el
+total de la venta no supere el límite. Si lo supera, muestra una advertencia con opciones para
+resolverlo. Un límite en cero significa que el cliente no tiene crédito habilitado.
+5.10. Consultar y liquidar la cuenta corriente del Cliente
+Perfil: Operario · Gerente · Dueño
+La ventana Cuenta Corriente: funciona como estado de cuenta. Desde ella se consulta cuánto
+debe el cliente y se registran los cobros.
+1. Ir a Administración / Entidades › Clientes
+2. Hacer clic en el botón de cuenta corriente del cliente (columna Acciones).
+3. Revisar el Saldo Deudor Actual y el Límite de Crédito Permitido.
+4. Para registrar un cobro, completar Registrar Cobro / Liquidación de Saldo:
+– Monto ($): importe que abona el cliente (total o parcial).
+– Medio de Pago: por ejemplo, Efectivo o Transferencia.
+– Observaciones / Comprobante: texto libre (por ejemplo, «Pago parcial / total»).
+5. Hacer clic en Imputar Pago y luego en Registrar. El saldo deudor disminuye o se Finaliza
+por el importe cobrado.
+Nota: En el caso de ser un Pago con transferencia, el operario podrá vincular la imagen del
+comprobante del pago, para luego poder visualizar tanto el comprobante de pago de caja,
+como también la imagen del comprobante vinculado:
+5.11. Visualizar todas las Cuentas corrientes
+Perfil: Operario · Gerente · Dueño
+El botón Cuentas Corrientes: funciona como un visualizador de todas las cuentas corrientes y
+deudas registradas en el sistema. en él se podrá visualizar y filtrar los diferentes clientes con
+deudas y cuentas corrientes, junto a información como Total de Crédito otorgado, total de deuda
+acumulada, entre otros,
+1. Ir a Administración / Entidades › Clientes
+2. Hacer clic en el botón amarillo Cuentas corrientes.
+3. Visualizar datos, Filtrar Clientes con deuda pendiente o no, y gestionar cuentas corrientes
+de cliente específico haciendo clic en el botón gestionar.
+5.12. Descargar Pdf/Excel de Clientes Registrados en el Sistema
+Perfil: Operario · Gerente · Dueño
+En este módulo, hay dos botones junto a categorías, que permiten generar un pdf (el botón rojo de
+la derecha) y un excel (el botón verde de la izquierda) con los registros de todos los clientes que
+aparecen en la tabla.
+1. Ir a Administración / Entidades › Clientes
+2. Seleccionar el botón generar pdf (o el botón generar excel).
+- Ejemplo de PDF Generado:
+6. Módulo Proveedores
+6.1. Gestionar proveedores
+Perfil: Operario · Gerente · Dueño
+En este módulo, se podrán visualizar todos los datos registrados de los Proveedores en el
+sistema, entre ellos nombre comercial, contacto, email, entre otros. Para entrar se debe dirigir a
+Administración / Entidades › Gestión de Proveedores
+6.2. Registrar Proveedores
+Perfil:  Operario · Gerente · Dueño
+1. Ir a Administración / Entidades › Gestión de Proveedores
+2. Hacer clic en Registrar Proveedor.
+3. Completar los datos del proveedor: nombre / razón social, persona de contacto, email y
+teléfono, identificador (CUIT), dirección (sección 5.3) y tipo de proveedor (por ejemplo,
+papel, tinta, librería).
+4. Seleccionar un tipo de Proveedor
+5. Hacer clic en Aceptar y luego en Registrar
+6.3. Editar Datos de Proveedores
+Perfil: Operario · Gerente · Dueño
+1. Ir a Administración / Entidades › Gestión de Proveedores
+2. Buscar el proveedor a editar y seleccionar el botón de editar proveedor (botón con icono de
+lápiz celeste)
+3. Luego de modificar los datos necesarios, seleccionar el botón guardar y confirmar la
+modificación.
+6.4. Editar Datos de ubicación de Proveedores
+Perfil: Operario · Gerente · Dueño
+1. Ir a Administración / Entidades › Gestión de Proveedores
+2. Buscar el proveedor a editar y seleccionar el botón de editar ubicación del proveedor
+(botón con icono de una casa amarilla)
+3. Seleccionar la opción habilitar edición.
+4. Luego de modificar los datos necesarios, seleccionar el botón guardar y confirmar la
+modificación.
+6.5. Enviar Correo a Proveedor desde la tabla de Gestión de Proveedores.
+Perfil: Operario · Gerente · Dueño
+En este módulo, se puede ir directamente al gmail del usuario (o de la cuenta de google iniciada
+en el navegador predeterminado) con los datos del gmail del proveedor para enviar un correo de
+manera rápida.
+1. Ir a Administración / Entidades › Gestión de Proveedores
+2. Hacer clic en el gmail del proveedor seleccionado.
+6.6. Descargar Pdf/Excel de Proveedores Registrados en el Sistema
+Perfil: Operario · Gerente · Dueño
+En este módulo, hay dos botones junto al botón de registrar nuevo proveedor, que permiten
+generar un pdf (el botón rojo de la derecha) y un excel (el botón verde de la izquierda) con los
+registros de todos los proveedores que aparecen en la tabla.
+1. Ir a Administración / Entidades › Gestión de Proveedores
+2. Seleccionar el botón generar pdf (o el botón generar excel).
+Ej de PDF con los datos de los Proveedores:
+7. Módulo Equipos / Máquinas
+7.1. Visualizar Máquinas Registradas
+Perfil: Operario · Gerente · Dueño
+La pantalla Máquinas lista los equipos del taller con su Nombre, Estado actual (Operativa /
+Fuera de Servicio) y Opciones. Para ingresar diríjase a Ir a Administración / Entidades ›
+Equipos / Máquinas
+7.2. Registrar Nueva Máquina
+Perfil: Operario · Gerente · Dueño
+1. ir a Administración / Entidades › Equipos / Máquinas
+2. Hacer clic en botón nuevo equipo.
+3. Ingresar nombre del equipo.
+4. Seleccionar el estado del equipo (Operativa, Fuera de Servicio, falla o mantenimiento).
+5. Seleccionar Disponibilidad del equipo (Activo o Desactivado).
+6. Hacer clic en guardar.
+7.3. Editar Equipos y máquinas
+Perfil: Operario · Gerente · Dueño
+1. Ir a Administración / Entidades › Equipos / Máquinas
+2. Hacer clic en botón Modificar Equipo (El de color amarillo con un icono de lápiz con
+papel)
+3. Hacer modificaciones Necesarias.
+4. Hacer clic en guardar.
+7.4. Equipos y máquinas: Reportar fallas
+Perfil: Operario · Gerente · Dueño
+La pantalla Máquinas presenta una opción para reportar una falla en uno de los equipos
+1. Ir a Administración / Entidades › Equipos / Máquinas
+2. hacer clic en Reportar Falla.
+3. Elegir el equipo en Seleccionar Equipo.
+4. Indicar el Nivel de Urgencia (por ejemplo, Media) y describir el problema en Descripción
+del Problema / Falla.
+5. Hacer clic en Registrar e Inhabilitar y luego en Reportar. El equipo pasa a Fuera de
+Servicio.
+Importante: Mientras un equipo esté fuera de servicio, el sistema bloquea la venta de los
+productos que dependen de él. Pero se mantiene activo hasta que se edite manualmente como
+Desactivado. Cuando se repara, se registra el alta operativa y la venta vuelve a habilitarse. El
+historial de incidencias muestra las etapas: 1. Reportado, 2. Mantenimiento, 3. Alta operativa.
+7.5. Modificar Estado Operativo de Máquina
+Perfil: Operario · Gerente · Dueño
+En la tabla de la pantalla de máquinas, al seleccionar el botón de Modificar Equipo (Botón Amarillo
+con un lápiz) se podrá visualizar la opción de cambiar el estado operativo en 4 opciones
+(Operativa, Fuera de Servicio, Falla y Mantenimiento). Una vez seleccionada una opción que no
+sea operativa, se deberá cambiar manualmente el estado de la disponibilidad a inactivo, e ingresar
+un Detalle/Motivo del cambio de estado para poder registrar la modificación de estado del equipo.
+1. Ir a Administración / Entidades › Equipos / Máquinas
+2. En la tabla, hacer clic en el botón de Modificar equipo.
+3. Seleccionar el estado del equipo (Operativa, Fuera de Servicio, falla o mantenimiento).
+4. Cambiar la disponibilidad del equipo a Desactivado.
+5. Ingresar detalle/motivo del cambio de estado.
+6. Hacer clic en guardar.
+7.6. Visualizar Historial de Incidencias
+Perfil: Operario · Gerente · Dueño
+En la tabla de la pantalla de máquinas, al seleccionar el botón de Historial de Incidencias (Botón
+celeste con un reloj), se puede visualizar una ventana con los 3 estados de incidencia de una
+máquina (1. Reportado, 2. Mantenimiento, 3. Alta operativa.). junto a un botón de Pagar arreglo.
+1. Ir a Administración / Entidades › Equipos / Máquinas
+2. En la tabla, hacer clic en el botón de ver Historial de Incidencias.
+7.7. Pagar Arreglo por incidencia
+Perfil: Operario · Gerente · Dueño
+Una vez que se registró una incidencia en una máquina, en el historial de incidencias, se podrá
+visualizar la opción “Pagar arreglo”, para poder registrar en movimientos de caja que hubo un
+egreso de dinero de la caja para poder pasar la máquina al estado “en mantenimiento”.
+1. Ir a Administración / Entidades › Equipos / Máquinas
+2. En la tabla, hacer clic en el botón de ver Historial de Incidencias.
+3. Hacer clic en el botón Pagar arreglo.
+4. Ingresar Monto Pagado.
+5. Seleccionar Medio de Pago
+6. Ingresar o modificar concepto/detalle (opcional).
+7. Hacer clic en el botón Confirmar arreglo.
+Nota 1: En el caso de ser un tipo de pago Transferencia, el usuario podrá vincular una imagen
+del comprobante de pago para luego poder visualizarlo en la tabla de movimientos de caja y/o
+en el historial de arqueos de caja.
+Nota 2: En el caso de que el pago sobrepase el monto en la caja, aparecerá una validación de
+advertencia
+7.8. Pasar máquina con Incidencia a mantenimiento.
+Perfil: Operario · Gerente · Dueño
+Una vez que se registró una incidencia en una máquina, en el historial de incidencias, se podrá
+visualizar la opción “Pasar a Mantenimiento”, para poder registrar que la máquina ya se está
+arreglando. y que pronto podrá estar operando.
+1. Ir a Administración / Entidades › Equipos / Máquinas
+2. En la tabla, hacer clic en el botón de ver Historial de Incidencias.
+3. Hacer clic en Pasar a Mantenimiento.
+4. Ingresar un detalle técnico de mantenimiento.
+5. Hacer clic en Guardar y luego en Confirmar
+7.9. Pasar máquina en Mantenimiento a Alta Operativa y Activar Máquina.
+Perfil: Operario · Gerente · Dueño
+Una vez que se registró una incidencia en una máquina, en el historial de incidencias, se podrá
+visualizar la opción “Resolver/operativa”, para poder registrar que la máquina ya está arreglada y
+que se podrá operar sin problemas.
+1. Ir a Administración / Entidades › Equipos / Máquinas
+2. En la tabla, hacer clic en el botón de ver Historial de Incidencias.
+3. Hacer clic en “Resolver/operativa”.
+4. Ingresar una solución final para dar de alta.
+5. Hacer clic en Dar de Alta.
+6. Ahora la máquina está operativa, pero para poder activarla, debe Ingresar a Editar
+máquina (Botón amarillo con icono de lápiz) y cambiar a estado de habilitación activo,
+8. Módulo Crear Pedido
+8.1. Registrar un pedido formal
+Perfil: Operario · Gerente · Dueño
+Un pedido formal asocia un cliente, los productos, la fecha de entrega y las condiciones de pago.
+Se realiza en dos pasos: armar el carrito y configurar los parámetros del comprobante.
+1. Ir a Producción › Crear Pedido
+2. En Buscar Producto, escribir el nombre y elegirlo de la lista.
+3. Indicar la Cantidad y hacer clic en Agregar. Repetir con cada producto.
+4. Controlar la Lista de Productos. El sistema calcula automáticamente el Subtotal
+Productos y el Total a Cobrar.
+5. Revisar el panel Categoría de Cliente / Descuento, que aplica el descuento de la categoría
+si es seleccionado o no.
+6. Hacer clic en el botón Siguiente para continuar con los Parámetros del Comprobante.
+Si el insumo no llega al stock sugerido para crear el pedido, aparecerá una advertencia de stock
+insuficiente.
+7. Completar los Parámetros del Comprobante:
+- Seleccione Cliente (Seleccione entre los que están registrados en el sistema) o
+Consumidor Final .
+- Empleado que Confeccionará el pedido (Seleccione entre los que están registrados en el
+sistema).
+- Estado del pedido en el momento de la creación.
+- Método de Pago.
+- Fecha y hora estimada de Entrega.
+- Seña, Adelanto o Total de pago Recibido.
+- Instrucciones (Opcional).
+- Hacer clic en Confirmar Pedido. (Ver Ticket muestra una vista previa.)
+- Responder Confirmar en el modal de confirmación.
+- El sistema muestra «¡Pedido Guardado! Se ha creado el pedido exitosamente». El
+pedido nace en estado Pendiente y, si corresponde, actualiza la cuenta corriente del
+cliente.
+Nota 1: Si un producto depende de una máquina que está Fuera de Servicio, el sistema impide
+venderlo mientras siga fuera de servicio (sección 7.1). Y el consumidor final no puede comprar a
+cuenta corriente.
+Nota 2: Si en tipo de pago, selecciona el tipo de transferencia, el sistema le otorgará la
+posibilidad de vincular la imagen de un comprobante para luego poder visualizarlo en el botón
+comprobantes en el módulo pedidos pendientes, en la tabla de movimientos de caja en el módulo
+caja, y en el historial de arqueo de caja en el módulo informes.
+Nota 3: En caso de necesitar registrar un cliente de manera rápida, en Configurar Parámetros del
+Comprobante (Paso 2) haga clic en el botón Cliente a la derecha y se abrirá una ventana de
+Registro de Cliente. En caso de no querer seleccionar uno, deje Consumidor Final.
+Nota 4: Con el botón Ver Ticket amarillo podrá visualizar el ticket de comprobante de pago antes
+de finalizar el pedido.
+8.2. Generar un presupuesto
+Perfil: Operario · Gerente · Dueño
+El presupuesto sirve para cotizar trabajos informales. No modifica la caja ni reserva stock. Se
+guarda en Pedidos Pendientes, en la pestaña Presupuestos (sección 9.12).
+1. Ir a Producción › Crear Pedido
+2. Armar la lista de productos en Crear Pedido. (8.1).
+3. Hacer clic en Siguiente.
+4. En «Configurar Parámetros del Comprobante», elegir el estado “Presupuesto”.
+5. Completar los siguientes Parámetros de Comprobante.
+- Seleccione Cliente (Seleccione entre los que están registrados en el sistema) o
+Consumidor Final .
+- Empleado que Confeccionará el pedido (Seleccione entre los que están registrados en el
+sistema).
+- Estado del pedido en el momento de la creación (Poner Presupuesto).
+- Fecha y hora estimada de Entrega.
+- Instrucciones (Opcional).
+- Hacer clic en Guardar Presupuesto.
+- Responder Finalizar en el modal de confirmación.
+- El sistema muestra «¡Pedido Guardado! Se ha creado el pedido exitosamente». El
+Presupuesto se guarda en la pestaña Presupuestos en Pedidos Pendientes.
+6. Para Visualizar los Presupuestos, Diríjase a Pedidos Pendientes y seleccione la opción
+Presupuestos que está arriba
+9. Módulo Pedidos Pendientes (Taller)
+9.1. Visualización Cola de producción (Tablero y Lista de seguimiento) y
+Detalles de Pedido
+Perfil: Operario · Gerente · Dueño
+En este módulo, se podrá visualizar todos los pedidos en estado “Pendiente de Finalización”, junto
+a diferentes opciones para visualizar detalles, filtrar pedidos, visualizar presupuestos, registrar
+pagos, finalizar pedidos, entre otras opciones que serán mencionadas a continuación, para
+ingresar realizar los siguientes pasos
+:
+1. Ir a PRODUCCIÓN › Pedidos Pendientes (pantalla «Cola de Producción Taller»).
+2. En el sistema habrá dos maneras de visualizar la Cola de Producción, la versión Tablero y la
+versión Lista. Para modificar el modo de visualización, seleccione uno de los botones a la
+derecha
+3. Usar los filtros para encontrar trabajos:
+– Buscar por Cliente.
+– Filtrar por Estado Operativo (por defecto «Todos los activos (Taller)»).
+– Filtrar por Empleado Asignado.
+4. La lectura de las Tarjetas de Pedido. Se muestran de forma cronológica, el más antiguo
+primero, con el ID, el nombre del cliente, el tiempo restante (o sobrepasado) y el estado.
+5. En la Versión Tablero para ver los detalles del Pedido haga clic en el botón ver el Pedido
+Completo
+6. En la versión Lista, para ver los detalles haga clic en el botón Más.
+7. se puede visualizar el mensaje de Producción haciendo clic en ver observaciones (el icono
+de mensaje amarillo) a un lado del nombre del cliente. Si está en el Modo taller, haga clic en
+el botón Ver Pedido Completo y luego en el botón Ver Observaciones. Si el pedido fue
+devuelto, aparecerá una flecha a un lado del icono de mensaje y se visualizará tanto la
+descripción como la información de devolución.
+Consejo: Los pedidos con tiempo sobrepasado se resaltan para priorizarlos.
+9.2. Registrar señas y pagos posteriores
+Perfil: Operario · Gerente · Dueño
+Si un pedido se crea con un pago parcial (Es decir, no se completa el pago en “Seña / Adelanto
+Recibido” en Configurar Parámetros del Comprobante, en Este módulo se podrá registrar un
+nuevo pago o seña para completar el monto total de pago del pedido.
+1. Ir a PRODUCCIÓN › Pedidos Pendientes, ubicar el pedido y hacer clic en el botón “Más” (o
+en el modo tablero, Ver el pedido Completado).
+2. Hacer clic en el botón de pago del pedido (Cobrar / Pago)
+3. En la ventana “Registrar Pago – Pedido #N” se muestran Total, Abonado y Saldo
+pendiente. Elegir el Tipo de Pago (Efectivo, Transferencia…) y escribir el Monto a Ingresar
+($).
+4. Hacer clic en Sí, Ingresar. El sistema genera un Comprobante de Pago con el pedido, el
+método, el monto y el saldo pendiente actual.
+Importante 1°: Si el pedido se marca como Finalizado pero mantiene saldo deudor, el sistema
+emite alertas visuales y no permite entregarlo sin resolver la deuda (cobrarla, o autorizarla a
+cuenta corriente: sección 5.9).
+Importante 2°: Si el pedido se marca con el tipo de Pago “Transferencia” el sistema le otorgará
+la opción de Vincular una imagen de comprobante al pago, que luego podrá visualizarse en el
+botón “Comprobantes” y en otras secciones ya mencionadas.
+9.3. Visualización y Opciones de Comprobantes Vinculados
+Perfil: Operario · Gerente · Dueño
+Como se menciona en 9.2 Los diferentes pagos parciales y/o totales, se pueden visualizar en el
+botón Comprobantes del Pedido Seleccionado, y dentro de dicha ventana hay diferentes opciones
+vinculadas a los comprobantes que serán mencionadas:
+1. Ir a PRODUCCIÓN › Pedidos Pendientes, ubicar el pedido y hacer clic en el botón “Más”
+(o en el modo tablero, Ver el pedido Completado).
+2. Hacer clic en el botón Comprobantes
+Nota: En esta ventana están las opciones de Visualizar e Imprimir Ticket de Pago, Visualizar
+comprobante vinculado (imagen) y Desvincular / Eliminar Comprobante Vinculado.
+9.4. Eliminar / Reemplazar Comprobante Vinculado
+Perfil: Operario · Gerente · Dueño
+1. Ir a PRODUCCIÓN › Pedidos Pendientes, ubicar el pedido y hacer clic en el botón “Más”
+(o en el modo tablero, Ver el pedido Completado).
+2. Hacer clic en el botón Comprobantes
+3. Hacer clic en el botón Eliminar Comprobante Adjunto (El botón rojo que tiene el icono de
+tacho de basura) y en Desvincular (Esta Opción va a eliminar dicha imagen de todo el
+sistema, así que sea precavido con esta opción)
+Nota: Una vez hecho los pasos, se habilitará la opción de vincular una nueva imagen al pago.
+Para hacerlo, solo tiene que hacer clic en el botón Vincular y seleccionar una imagen de los
+archivos de la computadora
+9.5. Actualizar el estado de un trabajo
+Perfil: Operario · Gerente · Dueño
+1. Ir a PRODUCCIÓN › Pedidos Pendientes, ubicar el pedido y hacer clic en el botón “Más” (o
+en el modo tablero, Ver el pedido Completado).
+2. Hacer clic en el desplegable Modificar Estado Proceso y Seleccionar una de las opciones
+3. Aparecerá la ventana Auditoría de Cambio de Estado: (EJ: Vas a cambiar el pedido N°29
+del estado Pendiente al estado En Proceso».
+4. Escribir el motivo o la observación (opcional) y hacer clic en el botón Guardar Historial. Es
+obligatorio si el nuevo estado es pausado
+5. El sistema muestra un cartel en la Línea de Tiempo en donde se Visualizará tanto el
+mensaje como el comentario, y se cambiará el cartel a un lado de Estado.
+● En el Modo Taller, el Pedido pasará de Pendiente a En Proceso
+6. Al pasar a Finalizado y/o Entregado, el sistema descuenta los insumos del stock y el
+Pedido pasa automáticamente a Historial de Pedidos con el estado de Pedido Completado.
+• Si falta stock de un insumo o la máquina está fuera de servicio, el sistema informa el motivo
+y no permite finalizar.
+• Al pasar a Entregado con saldo pendiente, se aplica lo indicado en la sección 5.9
+(Aparecerá el Modo de Advertencia de Límite de crédito de Cuenta Corriente).
+• Todos los cambios quedan registrados en el módulo Historial de Actividad luego de hacer
+clic en el botón Auditoría de Pago.
+• Otra opción para pasar un pedido de un estado a otro, es en el modo Tablero, hacer clic y
+mantener el clic y mover el pedido de en pendiente a proceso, pausado, finalizado o
+Entregado:
+9.6. Emitir el ticket técnico de taller (PDF)
+Perfil: Operario · Gerente · Dueño
+1. Ir a PRODUCCIÓN › Pedidos Pendientes, ubicar el pedido y hacer clic en el botón “Más” (o
+en el modo tablero, Ver el pedido Completado).
+2. Hacer clic en el botón de Ticket (El botón amarillo con el icono de una impresora).
+3. Hacer clic en el botón Imprimir Ticket (El botón Verde con el icono de la impresora)
+4. El sistema genera un PDF optimizado para impresión con el ID del pedido, la fecha de
+entrega prometida, los detalles técnicos (papel, color, anillado), las instrucciones
+adicionales para el taller y un código identificatorio.
+5. Imprimirlo y acompañar físicamente el trabajo con esa hoja (Se requiere Impresora
+Conectada).
+9.7. Notificaciones al cliente
+Perfil: Operario · Gerente · Dueño
+Tanto en Pedidos Pendientes como en Historial de Pedido, se presenta la opción para mandar un
+mensaje al contacto de Whatsapp y/o de Email del cliente registrado haciendo clic en uno de los
+botones que se pueden visualizar en ambas pantallas una vez se ubica el pedido del cliente.
+• El cliente debe tener cargado su email o teléfono (sección 5.1).
+• Una vez se Haga Clic en uno de los botones, el sistema Ubicará al usuario al navegador
+automáticamente, más específicamente al email o al whatsapp previamente iniciado allí.
+1. Ir a PRODUCCIÓN › Pedidos Pendientes y/o Historial de Pedidos, ubicar el pedido y
+hacer clic en el botón uno de los botones mencionados (Icono de Whatsapp o de Gmail). Si
+es en modo Taller, Tiene que hacer clic en Ver Pedido Completo
+● Al hacer clic en el botón de Whatsapp, el sistema abrirá en el navegador el chat de
+whatsapp del número del cliente registrado, de la cuenta iniciada previamente en el
+navegador (Si el sistema tiene descargado whatsapp como aplicación, le presentará la
+opción de abrir el programa). Al hacer clic en el botón de gmail, el sistema abrirá en el
+navegador la pestaña de redactar gmail de la cuenta iniciada en el navegador, para
+mandar un correo al cliente de la cuenta de email registrada en el sistema.
+9.8. Asignar pedidos a empleados
+Perfil: Operario · Gerente · Dueño
+Al crear un pedido y asignar un empleado a cargo de dicho pedido, En pedidos pendientes se
+presenta la opción de Modificar el empleado designado a cargo.
+1. Ir a PRODUCCIÓN › Pedidos Pendientes, ubicar el pedido y hacer clic en el botón “Más” (o
+en el modo tablero, Ver el pedido Completado).
+2. Hacer clic en el desplegable Modificar Empleado Asignado y Seleccionar una de los usuarios
+ya registrados en el sistema. Este cambio se verá reflejado en la Línea de Tiempo.
+3. Para ver el trabajo de un empleado en concreto, usar el filtro Empleado Asignado de la cola
+de producción.
+9.9. Cambiar ubicación de Pedido
+Perfil: Operario · Gerente · Dueño
+Al crear un pedido, se podrá modificar la ubicación actual del pedido en los detalles del pedido.
+1. Ir a PRODUCCIÓN › Pedidos Pendientes, ubicar el pedido y hacer clic en el botón “Más”
+(o en el modo tablero, Ver el pedido Completado).
+2. hacer clic en el campo Modificación de Ubicación Actual, Ingresar la nueva ubicación
+actual y hacer clic fuera del campo (O hacer clic en la tecla ENTER). La modificación será
+resaltada en la línea de tiempo.
+9.10. Pausar/Cancelar Pedidos
+Perfil: Operario · Gerente · Dueño
+1. Ir a PRODUCCIÓN › Pedidos Pendientes, ubicar el pedido y hacer clic en el botón “Más” (o
+en el modo tablero, Ver el pedido Completado).
+2. Hacer clic en el desplegable Modificar estado Proceso y seleccionar Cancelado (O Pausado
+si aún no se confirma la cancelación)
+3. Escribir la justificación del movimiento en Auditoría de Cambio de Estado y luego hacer clic
+en Guardar Historial.
+4. El sistema lee la receta de los productos anulados y reintegra automáticamente los
+insumos al stock. El pedido pasa a Cancelado y queda en el Historial de Pedidos.
+Importante: Un pedido anulado no se elimina: mantiene su registro en el historial. Si hubo
+dinero cobrado, se recomienda registrar la devolución como egreso en Movimientos de caja.
+9.11. Registrar Merma
+Perfil: Operario · Gerente · Dueño
+En ver detalles del pedido, se puede registrar si hubo un caso de una merma a la hora de hacer
+un pedido, como también un historial de mermas de dicho pedido.
+1. Ir a PRODUCCIÓN › Pedidos Pendientes, ubicar el pedido y hacer clic en el botón “Más”
+(o en el modo tablero, Ver el pedido Completado).
+2. hacer clic en el botón de mermas (el botón rojo con icono de tacho de basura).
+3. Seleccionar el Producto y/o insumo haciendo clic en el cuadrado del mismo.
+4. Ingresar la cantidad de mermas y el motivo de la merma.
+5. Hacer clic en Registrar Mermas. (Una vez se registre la merma, el sistema
+automáticamente lo dirigirá a Historial para Visualizar el Registro)
+Nota: Este Historial también se podrá visualizar en Historial de Mermas en Historial de Pedido
+una vez el pedido sea completado o cancelado.
+9.12. Visualizar Presupuestos.
+Perfil: Operario · Gerente · Dueño
+En el módulo pedidos, se podrá visualizar los presupuestos creados en el módulo Crear Pedidos
+de la siguiente manera:
+1. Ir a PRODUCCIÓN › Pedidos Pendientes y hacer clic en el botón Presupuestos.
+9.13. Visualizar Mensajes de Devolución
+Perfil: Operario · Gerente · Dueño
+En el módulo de Pedidos Pendientes, Si hubo un pedido Devuelto, se podrá visualizar el mensaje
+y/o la razón de devolución de la siguiente manera:
+1. Ir a PRODUCCIÓN › Pedidos Pendientes, Ubicar el pedido devuelto y hacer clic en ver
+observaciones (el icono de mensaje amarillo) a un lado del nombre del cliente. Si está en
+el Modo taller, haga clic en el botón Ver Pedido Completo y luego en el botón Ver
+Observaciones. Se muestran la descripción del pedido y el motivo de la devolución.
+10. Módulo Historial de Pedidos
+10.1. Historial de pedidos y control de retiros
+Perfil: Operario · Gerente · Dueño
+1. Ir a PRODUCCIÓN › Historial de Pedidos. Consultar la fila del pedido: cliente, contacto,
+operador de cierre, fecha de creación, fecha de entrega estimada y final, estado final, monto
+total y monto cobrado.
+2. Filtrar por cliente, empleado o fecha, y por Estado (por ejemplo, «Todos los concluidos
+(Cerrados)»).
+10.2. Abrir Auditoría de Pedidos
+Perfil: Operario · Gerente · Dueño
+En Historial de Pedidos, se puede ver el historial de flujo de Movimientos y de pagos de un pedido
+de la siguiente manera:
+1. Ir a PRODUCCIÓN › Historial de Pedidos.
+2. En la tabla de historial de pedidos, hacer clic en el botón Auditoría de Pedido (El botón
+verde con el signo de dólar)
+Nota: En Auditoría de Pedido se puede visualizar la línea de tiempo junto a los mensajes
+registrados, y en Historial de Cobros todos los movimientos de caja registrados en Pedidos
+Pendientes, Si hubo una Transferencia con un comprobante (Imagen) Vinculado, Este se podrá
+visualizar haciendo clic en el botón celeste con el icono del Ojo.
+Nota 2: Si el Pedido fue vinculado a una cuenta Corriente, en Auditoría de Pedido al Finalizar
+dicho Pedido se resaltará que el pago está vinculado a la cuenta corriente del cliente, Y se
+Mostrará una opción que abrirá la ventana de visualización de la cuenta corriente del Cliente.
+10.3. Imprimir Ticket del Cliente/Comanda del Taller
+Perfil: Operario · Gerente · Dueño
+En Historial de Pedidos, se puede visualizar tanto el ticket del pedido como la comanda del taller,
+junto a una opción para poder imprimir la opción seleccionada.
+1. Ir a PRODUCCIÓN › Historial de Pedidos.
+2. En la tabla de Historial de Pedidos, hacer clic en el botón imprimir ticket (el botón amarillo
+con el icono de la impresora).
+3. Seleccionar Ticket de Cliente o Comanda de Taller y hacer clic en el botón Imprimir Ticket
+10.4. Ver Historial de Mermas
+Perfil: Operario · Gerente · Dueño
+En este módulo, existe la opción para poder visualizar un historial de todas las mermas que
+ocurrieron en el pedido.
+1. Ir a PRODUCCIÓN › Historial de Pedidos.
+2. En la tabla de Historial de Pedidos, hacer clic en el botón ver/registrar mermas (el botón
+amarillo con el icono de advertencia).
+10.5. Registrar Devolución de Pedido
+Perfil: Operario · Gerente · Dueño
+Este Módulo, presenta la opción de poder registrar si se devolvió un pedido, mostrando las
+opciones de Marcarlo como devuelto sin moverlo del historial de pedidos, o marcarlo como
+devuelto y volver a registrar el pedido en pedidos pendientes para rehacerlo.
+1. Ir a PRODUCCIÓN › Historial de Pedidos.
+2. En la tabla de Historial de Pedidos, hacer clic en el botón Devolución de Pedido.
+3. Ingresar los detalles o razón por devolución.
+4. Si se quiere devolver el pedido al taller de Pedidos Pendientes, hacer clic en el botón
+Volver a Hacer.
+Nota: Si se elige la opción marcar como devuelto, el pedido solo cambiará el estado final en la
+tabla a Devuelto, Si se vuelve a hacer clic en el botón Devolución de Pedido, El sistema le
+avisará que el pedido ya fue devuelto.
+11. Módulo Caja
+11.1. Visualización de Caja: Estado y Movimientos manuales
+Perfil: Operario · Gerente · Dueño
+La pantalla PRODUCCIÓN › Caja resume el turno actual: Flujo de Caja Actual, Inicio de Caja,
+Total de Ingresos de Turno y Total de Egresos de Turno. Debajo se listan los Movimientos de
+Caja con Fecha / Hora, Método, Categoría, Descripción y Acciones (ventas rápidas, señas,
+cobros, etc.).
+11.2. Abrir turno de Caja
+1. Al comenzar la jornada, Dirigirse a PRODUCCIÓN › Caja
+2. Hacer clic en Iniciar Turno de Caja
+3. Ingresar el monto Inicial de caja
+4. Hacer clic en Abrir Caja y luego en Abrir
+11.3. Registrar un Nuevo Movimiento de Caja Manual
+Perfil: Operario · Gerente · Dueño
+1. Dirigirse a PRODUCCIÓN › Caja
+2. Hacer clic en Crear Nuevo Movimiento.
+3. Completar el monto, el tipo de categoría de operación (Ingreso, Egreso, cobro de cuenta
+corriente, compra de insumos y gastos de mantenimiento), el método de pago y la
+descripción del concepto. Todos son obligatorios.
+4. Hacer clic en Guardar Movimiento. El movimiento se registrará en el turno activo en Historial
+de Arqueos y en Registros de Movimiento de Caja.
+Importante: Solo se pueden registrar movimientos si hay un turno activo. Si la caja está
+cerrada, el sistema lo impide.
+Nota: Si al crear un nuevo movimiento, seleccionamos el tipo de pago transferencia, el sistema
+nos presentará la opción de vincular un comprobante (imagen) al movimiento de caja, para
+luego poder visualizarse en la tabla de registro de movimiento de caja.
+11.4. Realizar Arqueo automático de caja
+Perfil: Operario · Gerente · Dueño
+1. Dirigirse a PRODUCCIÓN › Caja
+2. Hacer clic en Consultar arqueo
+Nota: En arqueo de caja también se puede visualizar las imágenes vinculadas de los
+comprobantes.
+11.5. Realizar el arqueo y cierre de turno
+Perfil: Operario · Gerente · Dueño
+1. Dirigirse a PRODUCCIÓN › Caja
+2. Hacer clic en Cerrar Turno. Se abre la ventana «Cerrar Turno y Arqueo».
+3. Revisar el Fondo Inicial, el Flujo de Efectivo, el Efectivo esperado en cajón y el detalle
+de movimientos del turno (hora, monto, método y descripción).
+4. Contar el dinero físico e ingresarlo en Ingresa el efectivo contado en la caja física ($).
+5. Si hay diferencia entre lo esperado y lo contado, el sistema calcula el faltante o sobrante y
+pide completar la Justificación de Diferencia.
+6. Una vez confirmado el cierre de la caja, el sistema bloqueará cualquier intento de crear un
+nuevo movimiento hasta que se abra el turno de la caja nuevamente.
+7. Para visualizar los datos del Turno cerrado previamente, ingresar a Informes y luego a
+Registros de Arqueo.
+11.6. Descargar Pdf/Excel de Movimientos de Caja Registrados en el
+Sistema
+Perfil: Operario · Gerente · Dueño
+En este módulo, hay dos botones debajo del botón de registrar nuevo movimiento, que permiten
+generar un pdf (el botón rojo de abajo) y un excel (el botón verde de arriba) con los registros de
+todos los movimientos de caja registrados del día.
+1. Dirigirse a PRODUCCIÓN › Caja
+2. Seleccionar el botón Descargar PDF de Caja (o el botón descargar Excel de Caja)
+Ej de Visualización de PDF:
+12. Módulo Repositorio Digital
+12.1. Repositorio digital: registrar archivos
+Perfil: Operario · Gerente · Dueño
+El repositorio digital almacena los apuntes institucionales que se imprimen habitualmente.
+1. Ir a PRODUCCIÓN › Repositorio Digital y hacer clic en el botón para agregar un archivo.
+2. Completar los datos obligatorios:
+– Título del documento.
+– Materia y Cátedra / Área (si no existe, usar Nueva Cátedra / Área e indicar Instituto /
+Terciario, materia y profesor).
+– Precio base de impresión ($).
+3. Hacer clic en Seleccionar archivo y elegir el documento.
+4. Hacer clic en Guardar en Repositorio y responder Confirmar a «¿Deseas guardar este
+documento en el repositorio?».
+Importante: Solo se admiten archivos .pdf, .docx, .jpg y .jpeg que no superen el tamaño
+máximo (50 MB). Con otra extensión, el sistema bloquea el envío y muestra una advertencia
+con las extensiones permitidas.
+12.2. Registrar Nueva Institución
+Perfil: Operario · Gerente · Dueño
+1. Ir a PRODUCCIÓN › Repositorio Digital y hacer clic en el botón para agregar un archivo
+2. Hacer clic en el botón registrar institución (el botón celeste con un icono de un edificio).
+3. Ingresar los datos del Nombre de Institución
+4. Seleccionar el tipo de Institución
+5. Hacer clic en el botón Guardar Institución
+12.3. Registrar Nueva Cátedra/Área
+Perfil: Operario · Gerente · Dueño
+1. Ir a PRODUCCIÓN › Repositorio Digital y hacer clic en el botón para agregar un archivo
+2. Hacer clic en el botón registrar Nueva Cátedra/Área (el botón gris con un icono en forma
+de engranaje)
+3. Seleccionar la Institución de la Cátedra
+4. Ingresar el Nombre de la Cátedra
+5. Hacer clic en el botón Guardar Cátedra
+12.4. Registrar Receta de Impresión
+Perfil: Operario · Gerente · Dueño
+1. Ir a PRODUCCIÓN › Repositorio Digital
+2. Hacer clic en el botón de Crear/Editar Receta en el Documento Seleccionado.
+3. Ingrese o Seleccione el Insumo a consumir para efectuar el pedido de Impresión
+4. Ingrese la cantidad de Insumos a consumir para efectuar el pedido de impresión
+5. Hacer clic en Agregar
+6. Luego de completar la receta hacer clic en guardar receta para completar el formulario
+12.5. Eliminar Insumo de Receta
+Perfil: Operario · Gerente · Dueño
+1. Ir a PRODUCCIÓN › Repositorio Digital
+2. Hacer clic en el botón de Crear/Editar Receta en el Documento Seleccionado
+3. Hacer clic en el botón rojo con el icono de un tacho de basura en el insumo seleccionado
+4. Una vez eliminado el/los insumos hacer clic en el botón guardar. (Si la receta queda vacía,
+el sistema te pregunta si quiere guardar la receta sin insumos en la lista)
+12.6. Registrar Nuevo Pedido de Impresión
+Perfil: Operario · Gerente · Dueño
+1. Ir a PRODUCCIÓN › Repositorio Digital
+2. Seleccionar el archivo para convertir en pedido
+3. hacer clic en el botón verde Crear pedido de Impresión a la derecha
+El sistema redirigirá la ventana a Crear nuevo pedido con el archivo de impresión ya seleccionado
+y listo para continuar con la creación del pedido.
+12.7. Visualizar Archivo Registrado
+Perfil: Operario · Gerente · Dueño
+1. Ir a PRODUCCIÓN › Repositorio Digital
+2. Seleccionar el archivo.
+3. hacer clic en el botón ver (pantalla completa)
+Ej de Visualización de Archivo:
+12.8. Ver detalles del Producto
+Perfil: Operario · Gerente · Dueño
+1. Ir a PRODUCCIÓN › Repositorio Digital
+2. Seleccionar el archivo.
+3. Hacer clic en el botón ver detalles del producto.
+El sistema redirigirá la ventana al módulo Productos y a la ventana Modificar Producto
+automáticamente.
+12.9. Repositorio digital: eliminar archivos
+Perfil: Operario · Gerente · Dueño
+1. En Repositorio Digital, ubicar el archivo en desuso.
+2. Hacer clic en Eliminar junto al archivo (El icono rojo con la X) y luego eliminar Nuevamente.
+Nota: La eliminación es lógica: el archivo deja de aparecer en el listado, pero se conserva su
+registro en Productos con el estado (Desactivado) para no afectar las ventas históricas.
+13. Módulo Insumos
+13.1. Gestión de insumos
+Perfil: Operario · Gerente · Dueño
+La pantalla STOCK › Insumos («Stock de Insumos») lista los materiales del taller con estas
+columnas: Nombre Insumo, Precio, Stock Empaquetado (bultos, resmas, cajas), Stock Suelto /
+Consumo (hojas, unidades), Stock Mínimo, Proveedor y Opciones.
+13.2. Registrar Insumo
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Insumos y hacer clic en Registrar Insumo.
+2. Completar: nombre, descripción, precio, unidad de empaque y de consumo, stock mínimo,
+stock inicial y proveedor.
+3. Hacer clic en Guardar.
+13.3. Registrar Nuevo Tipo de Unidad
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Insumos y hacer clic en Registrar Insumo.
+2. Hacer clic en el botón amarillo de Unidades
+
+3. Ingresar el nombre del tipo de unidad y hacer clic en añadir
+13.4. Eliminar Tipo de Unidad
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Insumos y hacer clic en Registrar Insumo.
+2. Hacer clic en el botón amarillo de Unidades
+3. Hacer clic en el icono del tacho de basura en el tipo de unidad a eliminar.
+13.5. Modificar datos y estado de insumo
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Insumos
+2. Hacer clic sobre el dato que se quiere modificar (o en el lápiz de la fila) y editarlo.
+3. Para dar de baja el insumo, cambiar la columna Estado a Desactivado.
+13.6. Conversión de unidades (bultos a unidades sueltas)
+Perfil: Operario · Gerente · Dueño
+Los insumos suelen comprarse en unidades grandes (resma, caja) y consumirse en unidades
+chicas (hoja, unidad). La conversión transformá la unidad grande en unidades chicas.
+1. Ir a STOCK › Insumos
+1. seleccionar el insumo empaquetado y hacer clic en el botón registrar conversión de insumos
+(el botón verde con una flecha apuntando hacia arriba)
+2. Ingresar la cantidad de bultos a abrir y confirmar. El sistema resta los bultos del stock
+empaquetado y suma las unidades sueltas (bultos × factor) en una única operación.
+Importante: Cada insumo empaquetado necesita su factor de conversión configurado antes de
+poder abrir bultos.
+13.7. Consultar alertas de stock crítico
+Perfil: Operario · Gerente · Dueño
+El sistema compara el stock actual de cada insumo con su stock mínimo. Cuando el stock actual
+es igual o menor al mínimo, muestra un indicador de advertencia con las unidades faltantes.
+• En Insumos, las filas críticas se destacan con color de advertencia.
+• En el Panel Principal, el panel Falta de Stock lista los insumos por debajo del mínimo.
+• En Insumos, el botón Stock Crítico muestra un contador y abre el detalle de los ítems
+afectados.
+13.8. Consultar Proveedores del Insumo
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Insumos
+2. hacer clic en el botón de ver proveedores del insumo seleccionado (el botón morado con
+un icono de un camión)
+13.9. Consultar tabla de equivalencias y relaciones de insumos
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Insumos
+2. hacer clic en el botón celeste de ver relaciones junto al botón de mermas.
+13.10. Modificar Varios Precios
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Insumos
+2. hacer clic en el botón naranja de modificar varios precios
+3. seleccionar el tipo de acción (aumento o descuento)
+4. Ingresar el porcentaje de aumento.
+5. Seleccionar el tipo de Aplicación (Todos los insumos, por proveedor o selección manual).
+6. Una vez terminado el formulario, hacer clic en el botón Aplicar Aumento.
+13.11. Registrar mermas de Insumo
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Insumos
+2. hacer clic en el botón amarillo de Mermas
+3. Escribe o selecciona el insumo al cual registrar la merma.
+4. Ingresar la cantidad de pérdida.
+5. ingresar el motivo/descripción de merma
+6. Hacer clic en el botón registrar merma
+13.12. Visualizar mermas de Insumo
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Insumos
+2. hacer clic en el botón amarillo de Mermas
+3. Hacer clic en el botón historial de mermas.
+4. Visualizar o filtrar por nombre de producto, insumo y proveedor.
+13.13. Descargar Pdf/Excel de Lista de Insumos Registrados en el Sistema
+Perfil: Operario · Gerente · Dueño
+En este módulo, hay dos botones a un lado del botón de stock crítico, que permiten generar un pdf
+(el botón rojo de la izquierda) y un excel (el botón verde de la derecha) con los registros de todos
+los detalles de los insumos registrados.
+1. Ir a STOCK › Insumos
+2. Seleccionar el botón Descargar PDF de Gestión de Insumos (o el botón descargar Excel
+de Gestión de Insumos).
+Ejemplo de Generación de Pdf:
+14. Módulo Productos
+14.1. Visualizar Tabla de Productos
+Perfil: Operario · Gerente · Dueño
+La pantalla STOCK › Productos («Gestión de Productos») muestra el catálogo con los filtros
+Buscar producto y Filtrar por Estado, y la tabla: ID, Nombre, Categoría, Precio, Stock (con la
+etiqueta Auto si está vinculado a insumos), Máquina, Estado y Opciones.
+14.2. Registrar productos
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Productos
+2. Hacer clic en Registrar Nuevo Producto.
+3. Completar nombre, categoría, precio, máquina asociada (si el producto depende de un
+equipo) y estado.
+4. Hacer clic en Guardar y luego en Registrar. El sistema muestra «Producto Guardado
+Exitosamente».
+14.3. Editar Producto o Estado de producto
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Productos
+2. En la Tabla, hacer clic en el ícono de lápiz (Editar).
+3. Cambiar los datos y guardar. El sistema pide confirmar («¿Confirmar Modificaciones?») y
+luego muestra «Modificación hecha exitosamente».
+Nota: Los productos dados de baja se marcan como Inactivo y quedan disponibles en el
+historial (sección 1.6).
+14.4. Configurar la receta de un producto
+Perfil: Operario · Gerente · Dueño
+La receta define qué insumos, y en qué cantidad, consume cada unidad de un producto (papel,
+tapas, espirales, tinta). Permite calcular costos y descontar stock automáticamente.
+1. Ir a STOCK › Productos, hacer clic en el ícono de caja (Receta / Insumos) de la fila. Se
+abre la ventana Recetas de Insumo.
+2. En Buscar Insumo, escribir el nombre y elegirlo de la lista.
+3. En Cantidad a consumir, escribir cuánto se usa por cada unidad del producto (ej.: 1.5).
+4. Hacer clic en Agregar. El insumo aparece en la tabla «Insumos que componen el producto»
+(Insumo, Unidad, Cantidad por Unidad de Producto y Acción).
+5. Repetir para los demás insumos.
+6. Hacer clic en Guardar Receta. El sistema muestra «Receta guardada exitosamente».
+(Cancelar descarta los cambios.)
+Nota: Con Ver Productos con Receta se accede a un listado de todos los productos que ya
+tienen receta, desde donde también se pueden editar.
+14.5. Vincular el stock de un producto a sus insumos
+Perfil: Operario · Gerente · Dueño
+Al vincular, el stock del producto deja de cargarse a mano: se calcula a partir de los insumos de su
+receta y se muestra con la etiqueta Auto.
+1. Ir a STOCK › Productos, hacer clic en el botón de vínculo (ícono de cadena) de la fila.
+2. Si el producto tiene receta, el sistema lo vincula y muestra «Stock vinculado a los insumos
+exitosamente».
+3. Para deshacerlo, volver a hacer clic en el mismo botón: aparece «Stock desvinculado de
+los insumos exitosamente».
+Importante: Si el producto no tiene receta, el sistema muestra «No se puede vincular el
+stock» con los botones Cerrar y Configurar Receta. Primero hay que definir la receta (sección
+14.4).
+14.6. Descuento automático de stock
+Perfil: Automático (lo realiza el sistema, sin intervención del usuario)
+Cuando un pedido se marca como Finalizado (o se crea ya finalizado, como en una venta rápida),
+el sistema recorre la receta de cada producto, multiplica las cantidades por las unidades vendidas
+y descuenta los insumos del stock en la misma operación.
+• El descuento se aplica una sola vez por pedido.
+• Si un insumo no alcanza, el sistema indica cuál y no permite finalizar el pedido.
+• A medida que baja el stock, aparecen alertas en la tabla de insumos, en el botón de stock
+crítico y en el panel «Falta de Stock» del Panel Principal.
+• Si el pedido se anula, los insumos se reintegran (sección 9.10).
+14.7. Registrar mermas de material
+Perfil: Operario · Gerente · Dueño
+Una merma es material perdido, por ejemplo por impresiones fallidas o papel dañado.
+1. Ir a STOCK › Productos y hacer clic en el botón amarillo Mermas.
+2. Elegir el insumo, escribir la cantidad de descarte y describir el motivo.
+3. Hacer clic en Registrar. El sistema muestra «Merma registrada con éxito», resta el
+material del inventario y guarda un registro inalterable.
+14.8. Visualizar Historial de mermas
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Productos y hacer clic en el botón amarillo Mermas.
+2. Hacer clic en el botón historial de mermas.
+14.9. Modificar varios precios (aumentos porcentuales masivos)
+Perfil: Operario · Gerente · Dueño
+Permite actualizar rápidamente el catálogo frente a variaciones de costos.
+1. Ir a STOCK › Productos y hacer clic en Modificar Varios Precios.
+2. Seleccionar la categoría o el proveedor cuyos productos se quieren actualizar
+3. Seleccionar el tipo de Acción (Aumento o Descuento)
+4. Hacer clic en Aplicar Aumento y luego en Aplicar, El sistema actualiza de inmediato el
+precio de venta de todos los artículos filtrados y muestra un mensaje de éxito.
+Importante: El cambio es masivo e inmediato y queda registrado en el Historial de Actividad.
+Verifique el filtro y el porcentaje antes de confirmar.
+14.10. Ver Productos con recetas (global)
+Perfil: Operario · Gerente · Dueño
+1. Ir a STOCK › Productos
+2. Hacer clic en el botón morado Ver productos con recetas.
+3. Para poder visualizar una receta de un producto en específico, hacer clic en el botón
+ver/editar receta.
+14.11. Descargar Pdf/Excel de Lista de Productos Registrados en el
+Sistema
+Perfil: Operario · Gerente · Dueño
+En este módulo, hay dos botones a un lado del botón de stock crítico, que permiten generar un pdf
+(el botón rojo de la derecha) y un excel (el botón verde de la izquierda) con los registros de todos
+los detalles de los productos registrados.
+3. Ir a STOCK › Productos
+4. Seleccionar el botón Descargar PDF de Gestión de Productos (o el botón descargar Excel
+de Gestión de Productos).
+Ej de generación de PDF:
+14.12. Consultar alertas de stock crítico
+Perfil: Operario · Gerente · Dueño
+El sistema compara el stock actual de cada insumo con su stock mínimo. Cuando el stock actual
+es igual o menor al mínimo, muestra un indicador de advertencia con las unidades faltantes.
+• En Productos, las filas críticas se destacan con color de advertencia.
+• En Productos, el botón Stock Crítico muestra un contador y abre el detalle de los ítems
+afectados.
+15. Módulo Compra de Insumos
+15.1. Compra de insumos Existente
+Perfil: Gerente · Dueño
+La opción STOCK › Compra de Insumos permite registrar la reposición de materiales ya
+registrados a los proveedores.
+1. Ir a STOCK › Compra de Insumos
+2. Seleccionar El tipo de compra Insumo
+3. Seleccionar el insumo existente
+4. ingresar la cantidad de empaque
+5. Ingresar el Precio Unitario
+6. Hacer clic en añadir a la lista
+7. Luego de añadir los insumos necesarios, seleccionar el proveedor.
+8. Seleccionar el método de pago
+9. Ingresar una Observación (no es obligatorio)
+10.Hacer clic en el botón confirmar compra.
+Nota: Si se elige el tipo de pago Transferencia, el sistema presentará la opción de vincular un
+comprobante (Imagen) de compra, que luego se podrá visualizar en movimientos de caja o en
+el historial de arqueo.
+15.2. Compra de insumos Nuevos
+Perfil: Gerente · Dueño
+La opción STOCK › Compra de Insumos permite registrar la reposición de materiales nuevos a
+los proveedores.
+1. Ir a STOCK › Compra de Insumos
+2. Seleccionar El tipo de compra Insumo
+3. Seleccionar el tipo de insumo: nuevo insumo
+4. Ingresar el nombre del nuevo insumo
+5. ingresar la unidad suelta (consumo)
+6. ingresar la unidad de empaque (compra)
+7. ingresar el factor de conversión.
+8. ingresar la cantidad de empaques en el stock
+9. ingresar el precio unitario
+10.Hacer clic en el botón añadir a la lista.
+11.Luego de registrar y añadir los insumos necesarios, seleccionar el proveedor.
+12.Seleccionar el método de pago
+13.Ingresar una Observación (no es obligatorio)
+14.Hacer clic en el botón confirmar compra.
+15.3. Compra de Productos
+Perfil: Gerente · Dueño
+1. Ir a STOCK › Compra de Insumos
+2. Seleccionar El tipo de compra Producto
+3. Seleccionar el Producto existente
+4. ingresar la cantidad de unidades
+5. Ingresar el Precio Unitario
+6. Hacer clic en añadir a la lista
+7. Luego de añadir los Productos necesarios, seleccionar el proveedor.
+8. Seleccionar el método de pago
+9. (Si el método de pago es transferencia, hacer clic en el botón subir comprobante y
+seleccionar el archivo)
+10.Ingresar una Observación (no es obligatorio)
+11.Hacer clic en el botón confirmar compra.
+15.4. Cargar Lista de Compra con IA
+Perfil: Gerente · Dueño
+La opción STOCK › Compra de Insumos permite registrar la reposición de materiales analizando
+una imagen del remito, factura, o lista de compras con inteligencia artificial.
+1. Ir a STOCK › Compra de Insumos
+2. Hacer clic en botón morado Cargar con IA.
+3. hacer clic en botón Seleccionar Archivo.
+4. Seleccionar archivo de la computadora.
+5. Hacer clic en botón Escanear Comprobante
+6. Una vez escaneado con éxito, hacer clic en botón cargar ítem a la compra, y luego
+continúe con la compra
+16. Módulo Informes
+16.1. Informes y métricas
+Perfil: Gerente · Dueño
+1. Ir a OPCIONES DE GERENTE › Informes
+2. Elegir el período: Hoy, Semana, Mes o un rango de fechas.
+3. Consultar las tarjetas resumen: Ingresos Totales, Tickets Generados, Ticket Promedio y
+Movimientos de Caja.
+4. Seleccionar un módulo de informes y hacer clic en Ver Reportes.
+Ej de Visualización de Sección de Informes Finanzas y Caja:
+16.2. Descargar Comprobantes en Formato PDF
+Perfil: Gerente · Dueño
+1. Ir a OPCIONES DE GERENTE › Informes
+2. Elegir el período: Hoy, Semana, Mes o un rango de fechas.
+3. Seleccionar un módulo de informes y hacer clic en Ver Reportes.
+4. Hacer clic en el botón Exportar PDF
+Ej de Generación de PDF de sección de Informes:
+16.3. Comparar métricas mediante fecha Establecida
+Perfil: Gerente · Dueño
+1. Ir a OPCIONES DE GERENTE › Informes (pantalla «Métricas e Informes»).
+2. Seleccionar un módulo de informes y hacer clic en Ver Reportes.
+3. Hacer clic en el botón de comparar en una de las métricas.
+4. Seleccionar alguna opción de fecha de comparación (día anterior, semana anterior, mes
+anterior, personalizado) o ingresar manualmente período actual y periodo a comparar.
+16.4. Ver Historial de Arqueo de Caja
+Perfil: Gerente · Dueño
+En el Módulo Informes, los usuarios con perfil Dueño podrán visualizar un Historial de Arqueos de
+Caja siguiendo los siguientes pasos:
+1. Ir a OPCIONES DE GERENTE › Informes
+2. Seleccionar el Módulo Registros de Arqueo
+● Para Filtrar por Fecha de Apertura o por Estado del Turno haga clic en las Opciones de
+Arriba
+3. Para ver más detalles del turno, Haga clic en el botón Ver Detalle
+Nota: En Ver Detalles se Pueden Visualizar los tickets/Comprobantes de pago y los
+comprobantes (Imagenes) vinculados al movimiento de caja, También se pueden filtrar los
+Movimientos de caja por Categoría, Hora Desde y Hora Hasta
+17. Módulo Matriz de Permisos
+17.1. Configurar la matriz de permisos
+Perfil: Gerente · Dueño
+La matriz de permisos permite habilitar o deshabilitar módulos completos para cada perfil o
+usuario, según cambien las necesidades del local.
+1. Ir a OPCIONES DE GERENTE › Matriz de Permisos.
+2. Busque a un usuario en la lista de la izquierda.
+3. Para cada módulo, activar o desactivar el interruptor (ACTIVADO / DESACTIVADO):
+4. Guardar los cambios.
+5. Para cambiar el perfil de una persona, Seleccione el perfil del usuario, y luego seleccione
+una de las plantillas de perfil arriba a la derecha.
+6. Verifique si necesita asignar un modulo mas o un modulo menos, y luego haga clic en el
+botón guardar cambios
+Importante: Los cambios se aplican de inmediato: la persona pierde o gana acceso al módulo
+en cuanto se guardan. El sistema no permite dejar al rol “Dueño” sin sus permisos críticos de
+administración: si se intenta, muestra una alerta y no guarda los cambios.
+17.2. Crear Nuevo Perfil Huérfano
+Perfil: Gerente · Dueño
+El módulo Matriz de permisos también te permite crear perfiles para luego poder asignarles los
+perfiles a los usuarios de manera fácil y rápida.
+1. Ir a OPCIONES DE GERENTE › Matriz de Permisos.
+2. Hacer clic en el botón Nuevo Perfil
+3. Ingresar el Nombre del Perfil y luego hacer clic en el botón Guardar.
+4. Seleccionar los módulos a los que podrá ingresar el perfil
+5. Hacer clic en Guardar y luego en confirmar.
+18. Módulo Gestión de Usuarios
+18.1. Autorizar solicitudes
+Perfil: Gerente · Dueño
+1. En el menú, ir a OPCIONES DE GERENTE › Gestión de Usuarios.
+2. En la fila de la persona, hacer clic en el ícono de lápiz en el usuario a activar o use los filtros
+para que solo aparezcan en la tabla los usuarios con estado pendiente.
+3. En la sección Perfil y Permisos, cambiar el Estado a Activo.
+4. Hacer clic en Guardar. El usuario pasa a estado Activo y ya puede iniciar sesión con los
+permisos de su rol.
+Nota: Si dos Dueños trabajan a la vez y uno ya aprobó una solicitud, el sistema avisa que la
+solicitud ya fue procesada, mantiene el rol y el estado asignados en la primera aprobación y
+actualiza la lista.
+18.2. Crear Empleados/Usuario
+Perfil: Gerente · Dueño
+El módulo Gestión de Usuarios permite mantener actualizada la nómina de personal del local.
+1. Ir a OPCIONES DE GERENTE › Gestión de Usuarios y hacer clic en Crear Nuevo
+Usuario.
+2. Completar el formulario (Nombre, Apellido, DNI, Email, Etc.)
+3. Hacer clic en Registrar Nuevo Empleado
+18.3. Editar Empleado/Usuario
+Perfil: Gerente · Dueño
+1. Ir a OPCIONES DE GERENTE › Gestión de Usuarios, Buscar al empleado en la tabla o
+con el filtro por usuario, nombre o apellido.
+2. Hacer clic en el ícono de lápiz de la fila, modificar los datos y presionar Guardar Cambios.
+18.4. Visualizar y Editar Dirección de Empleado/Usuario
+Perfil: Gerente · Dueño
+1. Ir a OPCIONES DE GERENTE › Gestión de Usuarios
+2. Hacer clic en el botón con el icono de amarillo de la casa en el usuario seleccionado
+3. Hacer clic en Habilitar Edición
+4. Luego de hacer la modificación, hacer clic en botón Confirmar.
+18.5. Dar de baja un Usuario.
+Perfil: Gerente · Dueño
+Para dar de baja a un empleado se cambia su Estado a Desactivado. El registro deja de
+aparecer en los listados habituales pero no se borra de la base de datos, para no alterar el
+historial de auditoría.
+1. Ir a OPCIONES DE GERENTE › Gestión de Usuarios.
+2. Hacer clic en el ícono de lápiz de la fila
+3. Hacer clic en el desplegable de Estado y Seleccionar Desactivado
+4. Hacer clic en Guardar Cambios.
+18.6. Visualizar la contraseña de un Usuario
+Perfil: Gerente · Dueño
+1. Ir a OPCIONES DE GERENTE › Gestión de Usuarios
+2. Hacer clic en el botón ver / restablecer en el usuario seleccionado
+3. Hacer clic en el botón ver Contraseña
+4. Ingresar la contraseña del usuario con el que se inició sesión anteriormente y poner
+Confirmar
+- Se podrá visualizar la contraseña del usuario en la ventana.
+18.7. Modificar la contraseña de un Usuario
+1. Ir a OPCIONES DE GERENTE › Gestión de Usuarios
+2. Hacer clic en el botón ver / restablecer en el usuario seleccionado
+3. Hacer clic en el botón Modificar Contraseña
+4. Ingresar la contraseña del usuario con el que se inició sesión anteriormente
+5. Ingresar Contraseña nueva para el usuario seleccionado
+6. Volver a ingresar la contraseña nueva para el usuario seleccionado.
+7. Hacer clic en el botón Restablecer.
+19. Módulo Historial de Actividad
+19.1. Consultar el historial de actividad (auditoría)
+Perfil: Gerente · Dueño
+El historial de actividad registra automáticamente los eventos críticos del sistema (cambios de
+estado de pedidos, modificaciones de productos, ajustes de caja, bajas lógicas y variaciones
+masivas de precios). Es inalterable: no existe forma de modificar ni borrar estos registros.
+1. Ir a OPCIONES DE GERENTE › Historial de Actividad.
+2. Usar los filtros para agilizar la búsqueda: Filtrar por Tabla Modificada (por ejemplo,
+«Producto» o «Pedido») y Filtrar por Empleado / Usuario.
+19.2. Descargar PDF/Excel de Tabla de Historial de Actividad
+En este módulo, hay dos botones abajo de todo a la derecha, que permiten generar un pdf (el
+botón rojo de la derecha) y un excel (el botón verde de la izquierda) con los registros de todos los
+detalles de los insumos registrados.
+1. Ir a OPCIONES DE GERENTE › Historial de Actividad.
+2. Seleccionar el botón Descargar PDF de Gestión de Insumos (o el botón descargar Excel
+de Gestión de Insumos).
+Ej de generación de PDF de Historial de Actividad:
+20. Tecnologías utilizadas
+GestaPro se desarrolló bajo el marco ágil Scrum, con historias de usuario organizadas en sprints.
+Componente
+Tecnología
+Interfaz (Frontend)
+React 19, TypeScript y Vite. Publicada en Vercel.
+Servidor (Backend)
+Java (JDK 25) y Spring Boot. Alojado en Render.
+Seguridad
+Spring Security con credenciales JWT y control de acceso por roles.
+Base de datos
+PostgreSQL en la nube de Supabase.
+Archivos
+Almacenamiento de PDF y archivos del repositorio digital en
+Supabase.
+Copias de seguridad y monitoreo
+Backups gestionados por Supabase; estadísticas y logs con Vercel
+Analytics y Actuator.
+Seguridad de la conexión
+Dominio con certificado SSL (https).
+Nota: Los recursos se ajustan inicialmente a los planes gratuitos de cada proveedor: 500 MB
+de base de datos, 1 GB de almacenamiento de archivos y 2 GB mensuales de transferencia.
+Herramientas de diseño y gestión del proyecto: GitHub (control de versiones y trabajo en equipo),
+Visual Studio Code e IntelliJ IDEA.
+21. Requisitos del sistema
+GestaPro es una aplicación web: no requiere instalación.
+• Dispositivo: computadora, notebook o tablet para el mostrador y el taller; teléfono móvil
+para las funciones de supervisión.
+• Navegador: versión actualizada de Google Chrome, Microsoft Edge o Mozilla Firefox.
+• Conexión a internet estable. El sistema funciona en línea, por lo que no puede usarse sin
+conexión. Ante una emergencia con la base de datos, se puede restaurar un respaldo
+(secciones 4.3 y 4.4).
+• Resolución de pantalla recomendada: 1366x768 o superior.
+• Impresora (opcional) para tickets y comandas de taller en PDF.
+Nota: A diferencia de la versión 1.0 (aplicación de escritorio para Windows 10 con Java), esta
+versión no necesita sistema operativo específico ni base de datos local.
+22. Consideraciones finales
+22.1. Soporte técnico
+Para asistencia adicional, contactar al equipo de soporte técnico:
+Número e Email de Teléfono de Desarrolladores y de Product Owner:
+● Romero Lisandro:
+● Número de Teléfono: +54 9 3541 21-6302
+● Gmail: Lisandroromeroh@gmail.com
+● Romo Lucas:
+● Número de Teléfono: +54 9 3541 31-8154
+● Gmail: lucasromo22@gmail.com
+● Ballesteros Agustín:
+● Número de Teléfono: +54 9 3425 97-9033
+● Gmail: agustinballesteros98@gmail.com
+22.2. Problemas frecuentes
+Problema
+Causa probable
+Qué hacer
+No puedo iniciar sesión.
+Datos incorrectos, cuenta
+Pendiente o Desactivada.
+Revisar los datos; si la cuenta está bajo
+revisión, pedir al Dueño que la autorice
+(18.1).
+No veo un módulo en el
+menú.
+Falta el permiso para mi
+perfil.
+Solicitar al Dueño que lo habilite (17.1).
+«La Caja no está abierta».
+No hay turno de caja activo.
+Abrir un turno antes de registrar cobros
+(11.2).
+No puedo vender un
+producto.
+La máquina asociada está
+Fuera de servicio.
+Esperar el alta operativa del equipo
+(7.9).
+No puedo finalizar un pedido.
+Falta stock de un insumo de
+la receta.
+Reponer o convertir insumos (13.6).
+No puedo entregar un pedido.
+Tiene saldo pendiente.
+Cobrar el saldo o autorizar a cuenta
+corriente (5.9).
+El cliente no puede comprar a
+cuenta corriente.
+Sin límite de crédito, límite
+superado o es Consumidor
+Final.
+Actualizar el límite (5.9).
+No puedo vincular el stock de
+un producto.
+El producto no tiene receta.
+Configurar la receta primero (14.4).
+No puedo pausar un pedido.
+Falta el motivo obligatorio.
+Completar el motivo de pausa (9.10).
+No se sube un archivo al
+repositorio.
+Extensión no admitida o
+tamaño excedido.
+Usar .pdf, .docx, .jpg o .jpeg dentro del
+límite (12.1).
+23. Anexo A. Glosario
+Término
+Definición
+ABM
+Alta, Baja y Modificación de registros.
+Arqueo
+Recuento del efectivo físico de la caja para compararlo con el saldo que
+calcula el sistema.
+Auditoría
+Registro inalterable de las acciones críticas: quién, cuándo y qué valores
+cambió.
+Baja lógica
+Desactivar un registro sin borrarlo de la base de datos, para conservar el
+historial.
+Comanda de taller
+Ticket técnico en PDF que acompaña al trabajo físico dentro del taller.
+Consumidor Final
+Cliente genérico para ventas rápidas, sin datos personales.
+Cuenta corriente
+Cuenta de un cliente donde se acumulan sus compras «a cuenta» y sus
+pagos.
+Factor de conversión
+Cantidad de unidades sueltas que contiene un empaque (1 resma = 500
+hojas).
+Insumo
+Material que se consume para producir (papel, tinta, anillos, tapas).
+Límite de crédito
+Deuda máxima permitida a un cliente en su cuenta corriente.
+Matriz de permisos
+Grilla que define qué módulos puede usar cada perfil o usuario.
+Merma
+Material desperdiciado (impresiones fallidas, papel dañado).
+Presupuesto
+Cotización sin efecto en caja ni stock, con validez temporal.
+Receta
+Lista de insumos y cantidades que consume cada unidad de un producto.
+Respaldo contingente
+Copia de seguridad de la base de datos en un archivo .json, para restaurarla
+ante una emergencia (secciones 4.3 y 4.4).
+Saldo deudor
+Monto que un cliente adeuda en su cuenta corriente.
+Seña
+Pago parcial inicial al confirmar un trabajo.
+Stock crítico
+Situación en que el stock actual es igual o menor al stock mínimo.
+Stock empaquetado /
+suelto
+Stock en unidades de compra (paquete, caja) o de consumo (hoja, unidad).
+Turno
+Período de trabajo de caja, desde su apertura hasta el arqueo y cierre.
