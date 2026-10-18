@@ -12,7 +12,7 @@ interface ModalMermasProductosProps {
   show: boolean;
   productos: Producto[];
   onClose: () => void;
-  onExito: () => void;
+  onExito: () => void | Promise<void>;
 }
 
 interface InsumoReceta {
@@ -171,7 +171,9 @@ export const ModalMermasProductos: React.FC<ModalMermasProductosProps> = ({
       limpiar();
       setBusqueda('');
       await cargarHistorial();
-      onExito();
+      // Se espera a que la pantalla de origen termine (recargar la lista y preparar el cartel
+      // de éxito) antes de sacar la pantalla de carga: antes se volvía a ver el formulario.
+      await onExito();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error al guardar la merma';
       setMensajeAlerta(msg);

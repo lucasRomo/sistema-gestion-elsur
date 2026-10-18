@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import com.elsur.sistema_gestion.exceptions.ConflictoDeIntegridadException;
+import com.elsur.sistema_gestion.exceptions.RecursoNoEncontradoException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Service
 public class UnidadMedidaServiceImpl implements UnidadMedidaService {
@@ -42,6 +45,15 @@ public class UnidadMedidaServiceImpl implements UnidadMedidaService {
 
     @Override
     public void eliminar(Integer id) {
-        unidadMedidaRepository.deleteById(id);
+        if (!unidadMedidaRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("No se encontró la unidad de medida con id: " + id);
+        }
+        try {
+            unidadMedidaRepository.deleteById(id);
+            unidadMedidaRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictoDeIntegridadException(
+                "No se puede eliminar la unidad porque la usan uno o más insumos. Cambiá la unidad de esos insumos antes de eliminarla.");
+        }
     }
 }

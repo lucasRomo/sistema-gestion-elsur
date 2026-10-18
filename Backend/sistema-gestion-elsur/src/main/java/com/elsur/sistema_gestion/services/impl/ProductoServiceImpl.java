@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.Optional;
+import com.elsur.sistema_gestion.exceptions.ConflictoDeIntegridadException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Service
 public class ProductoServiceImpl implements ProductoService {
@@ -168,7 +170,16 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     @Transactional
     public void eliminar(Integer id) {
-        productoRepository.deleteById(id);
+        if (!productoRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("No se encontró el producto con id: " + id);
+        }
+        try {
+            productoRepository.deleteById(id);
+            productoRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictoDeIntegridadException(
+                "No se puede eliminar el producto porque tiene pedidos, recetas o mermas registradas. Podés desactivarlo para que deje de ofrecerse.");
+        }
     }
 
     @Override

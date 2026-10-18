@@ -19,6 +19,8 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import com.elsur.sistema_gestion.exceptions.ConflictoDeIntegridadException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Service
 public class InsumoServiceImpl implements InsumoService {
@@ -159,7 +161,16 @@ public class InsumoServiceImpl implements InsumoService {
     @Override
     @Transactional
     public void eliminar(Integer id) {
-        insumoRepository.deleteById(id);
+        if (!insumoRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("No se encontró el insumo con id: " + id);
+        }
+        try {
+            insumoRepository.deleteById(id);
+            insumoRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictoDeIntegridadException(
+                "No se puede eliminar el insumo porque forma parte de recetas, compras o mermas registradas. Podés desactivarlo para que deje de usarse.");
+        }
     }
 
     @Override

@@ -23,6 +23,7 @@ import { BarraAccionesTurno } from '../components/BarraAccionesTurno';
 import { confirmarAccion, mostrarAviso } from '../../../config/dialogStore';
 
 import { formatearMonto } from '../../../utils/formato';
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 export const CajaView: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -87,8 +88,11 @@ export const CajaView: React.FC = () => {
     descripcion: m.descripcion ?? '',
   }));
 
+  // Pantalla de carga al entrar: el estado del turno, los movimientos y los totales tardan
+  // (sobre todo si el servidor estaba dormido) y antes se veía la pantalla vacía.
   useEffect(() => {
-    inicializarCaja();
+    showLoading('Cargando caja...');
+    inicializarCaja().finally(() => hideLoading());
   }, [inicializarCaja]);
 
   // Si la última caja la cerró el sistema a medianoche (nadie hizo el cierre de turno), se avisa

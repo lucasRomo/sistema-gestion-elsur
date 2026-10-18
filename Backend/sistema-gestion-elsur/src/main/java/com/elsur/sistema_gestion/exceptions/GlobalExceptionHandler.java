@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -77,6 +78,21 @@ public class GlobalExceptionHandler {
         return construirRespuesta(HttpStatus.PAYLOAD_TOO_LARGE,
                 "El archivo supera el tamaño máximo permitido (15MB). Elegí un archivo más liviano o comprimilo antes de subirlo.",
                 request);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleIntegridad(DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.warn("Violación de integridad en {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMostSpecificCause().getMessage());
+        String detalle = String.valueOf(ex.getMostSpecificCause().getMessage()).toLowerCase();
+        String mensaje;
+        if ("DELETE".equalsIgnoreCase(request.getMethod()) || detalle.contains("foreign key") || detalle.contains("llave foránea")) {
+            mensaje = "No se puede eliminar porque está en uso por otros registros del sistema. Desactivalo o quitá esas referencias primero.";
+        } else if (detalle.contains("duplicate") || detalle.contains("unique") || detalle.contains("duplicada")) {
+            mensaje = "Ya existe un registro con esos datos.";
+        } else {
+            mensaje = "Faltan datos obligatorios o hay datos inválidos. Revisá el formulario.";
+        }
+        return construirRespuesta(HttpStatus.CONFLICT, mensaje, request);
     }
 
     @ExceptionHandler(RuntimeException.class)

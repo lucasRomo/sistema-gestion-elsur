@@ -221,15 +221,10 @@ export const Insumos: React.FC = () => {
         insumos={insumos}
         onClose={() => setShowMermasModal(false)}
         onExito={async () => {
-          showLoading('Registrando merma...');
-          try {
-            await cargar();
-            setShowMermasModal(false);
-            setMensajeExito('Merma de insumo registrada exitosamente');
-            setMostrarExito(true);
-          } finally {
-            hideLoading();
-          }
+          await cargar();
+          setShowMermasModal(false);
+          setMensajeExito('Merma de insumo registrada exitosamente');
+          setMostrarExito(true);
         }}
       />
 

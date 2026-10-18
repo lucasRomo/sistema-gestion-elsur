@@ -31,7 +31,14 @@ export const LoadingOverlay: React.FC = () => {
         role="status"
         style={{ color: COLOR_MORADO, width: '3rem', height: '3rem' }}
       />
-      <h5 className="text-white font-monospace fw-bold m-0 text-center px-3">{mensaje}</h5>
+      {/* Violeta claro fijo (no text-white: en modo claro esa clase se pinta oscura y el texto
+          quedaba negro). La sombra lo despega tanto de fondos claros como oscuros. */}
+      <h5
+        className="font-monospace fw-bold m-0 text-center px-3"
+        style={{ color: '#d4b8ff', textShadow: '0 1px 4px rgba(0, 0, 0, 0.75)' }}
+      >
+        {mensaje}
+      </h5>
     </div>
   );
 };

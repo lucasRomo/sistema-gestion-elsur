@@ -380,8 +380,9 @@ export const Productos: React.FC = () => {
         show={showMermasModal}
         productos={productos}
         onClose={() => setShowMermasModal(false)}
-        onExito={() => {
-          cargar();
+        onExito={async () => {
+          await cargar();
+          setShowMermasModal(false);
           setMensajeExito('Merma registrada con éxito');
           setMostrarExito(true);
         }}

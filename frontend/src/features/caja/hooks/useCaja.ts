@@ -31,8 +31,8 @@ export const useCaja = (setCajaAbierta: (val: boolean) => void) => {
     if (data && data.estado === 'ABIERTO') {
       setCajaAbierta(true);
       setTurnoActual(data);
-      await fetchMovimientos(data.idTurno);
-      await fetchTotales(data.idTurno, data.montoInicial || 0);
+      // En paralelo: antes se pedían uno después del otro y la pantalla tardaba el doble.
+      await Promise.all([fetchMovimientos(data.idTurno), fetchTotales(data.idTurno, data.montoInicial || 0)]);
     } else {
       setCajaAbierta(false);
       setTurnoActual(null);

@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import com.elsur.sistema_gestion.exceptions.ConflictoDeIntegridadException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Service
 public class CategoriaServiceImpl implements CategoriaService {
@@ -47,10 +49,15 @@ public class CategoriaServiceImpl implements CategoriaService {
     @Override
     @Transactional
     public void eliminar(Integer id) {
-        if (categoriaRepository.existsById(id)) {
+        if (!categoriaRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("No se encontró la categoría con id: " + id);
+        }
+        try {
             categoriaRepository.deleteById(id);
-        } else {
-            throw new RecursoNoEncontradoException("No se encontró la categoría con ID: " + id);
+            categoriaRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new ConflictoDeIntegridadException(
+                "No se puede eliminar la categoría porque la usan uno o más productos.");
         }
     }
 }

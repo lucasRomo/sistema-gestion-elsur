@@ -155,8 +155,8 @@ export const MaquinasView: React.FC = () => {
         )}
       </div>
 
-      {/* En el celular el administrador solo consulta: sin reportar fallas ni cargar equipos. */}
-      {!isMobile && (
+      {/* En el celular el sistema es de consulta, salvo Reportar Falla (lo pide la definición del
+          producto): ahí no se muestran Volver ni Nuevo Equipo. */}
       <div className={`barra-acciones d-flex align-items-center mt-3 mb-4 font-monospace ${isMobile ? 'justify-content-stretch' : 'justify-content-between'}`}>
         
         {!isMobile && (
@@ -185,8 +185,9 @@ export const MaquinasView: React.FC = () => {
             }}
             onClick={() => setShowModalFalla(true)}
           >
-            Reportar Falla
+            <i className="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>Reportar Falla
           </button>
+          {!isMobile && (
           <button
             className={`btn btn-warning fw-bold shadow-sm d-inline-flex align-items-center justify-content-center ${isMobile ? 'flex-fill text-nowrap' : ''}`}
             style={{ 
@@ -204,9 +205,9 @@ export const MaquinasView: React.FC = () => {
           >
             Nuevo Equipo
           </button>
+          )}
         </div>
       </div>
-      )}
 
       <MaquinaModal
         show={showModalCrud}

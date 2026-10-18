@@ -119,11 +119,6 @@ export const PedidosPendientesView: React.FC = () => {
       : 'el empleado seleccionado';
     if (!(await confirmarAccion(`¿Asignar el pedido #${idPedido} a ${nombreElegido}?`, { titulo: 'Reasignar empleado', textoConfirmar: 'Asignar' }))) return;
 
-    const pedidoActual = pedidos.find(p => p.id_pedido === idPedido);
-    const asignaciones = pedidoActual?.asignaciones || [];
-    const ultimaAsignacion = asignaciones.length > 0 ? asignaciones[asignaciones.length - 1] : null;
-    const idEmpleadoAnterior = ultimaAsignacion?.empleado?.idEmpleado ?? ultimaAsignacion?.empleado?.id_empleado;
-
     showLoading('Asignando empleado...');
     try {
       const userLogueado = JSON.parse(localStorage.getItem('usuario_logueado') || '{}');
@@ -131,21 +126,8 @@ export const PedidosPendientesView: React.FC = () => {
 
       await PedidoPendienteService.asignarEmpleado(idPedido, idEmpleado, idUsuarioActivo);
       hideLoading();
-      // Acción chica y reversible: aviso breve con "Deshacer" en vez de un modal que hay que cerrar.
-      mostrarToast(`Pedido #${idPedido} asignado a ${nombreElegido}`, {
-        accion: idEmpleadoAnterior ? {
-          texto: 'Deshacer',
-          onClick: async () => {
-            try {
-              await PedidoPendienteService.asignarEmpleado(idPedido, String(idEmpleadoAnterior), idUsuarioActivo);
-              mostrarToast(`Se restauró el empleado anterior del pedido #${idPedido}`, { tipo: 'info' });
-              refrescarPedido(idPedido);
-            } catch (err: any) {
-              mostrarToast(err?.message || 'No se pudo deshacer la asignación.', { tipo: 'error' });
-            }
-          }
-        } : undefined
-      });
+      // Igual que el resto de las modificaciones: confirmación antes y cartel de éxito después.
+      setModalNotif({ show: true, msg: `El pedido #${idPedido} quedó asignado a ${nombreElegido}.` });
       refrescarPedido(idPedido);
     } catch (error: any) {
       console.error("Error al asignar:", error);

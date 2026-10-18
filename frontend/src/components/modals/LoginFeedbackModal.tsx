@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTheme } from '../../Context/ThemeContext';
 
 interface LoginFeedbackModalProps {
@@ -11,6 +11,24 @@ interface LoginFeedbackModalProps {
 export const LoginFeedbackModal: React.FC<LoginFeedbackModalProps> = ({ mostrar, tipo, mensaje, onAceptar }) => {
   const { theme } = useTheme();
   const esOscuro = theme === 'dark';
+  const botonRef = useRef<HTMLButtonElement>(null);
+
+  // Al abrirse, el cartel toma el foco: antes el cursor seguía en el campo de contraseña y cada
+  // Enter volvía a enviar el formulario (iniciaba sesión otra vez). Ahora Enter o Esc lo cierran.
+  useEffect(() => {
+    if (!mostrar || !tipo) return;
+    (document.activeElement as HTMLElement | null)?.blur();
+    botonRef.current?.focus();
+    const alTeclear = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onAceptar();
+      }
+    };
+    document.addEventListener('keydown', alTeclear, true);
+    return () => document.removeEventListener('keydown', alTeclear, true);
+  }, [mostrar, tipo, onAceptar]);
 
   if (!mostrar || !tipo) return null;
 
@@ -52,6 +70,8 @@ export const LoginFeedbackModal: React.FC<LoginFeedbackModalProps> = ({ mostrar,
 
           <div className="d-flex justify-content-center">
             <button
+              ref={botonRef}
+              type="button"
               className="btn btn-sm px-4 fw-bold"
               style={{
                 backgroundColor: '#8e45e0',

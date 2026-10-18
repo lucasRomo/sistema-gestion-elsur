@@ -9,7 +9,7 @@ import { confirmarAccion } from '../../../../config/dialogStore';
 interface ModalGestionMermasProps {
   pedido: any;
   onClose: () => void;
-  onExito?: () => void;
+  onExito?: () => void | Promise<void>;
   onConfirm?: () => void;
 }
 
@@ -106,7 +106,7 @@ export const ModalGestionMermas: React.FC<ModalGestionMermasProps> = ({ pedido, 
       limpiar();
       await cargarHistorialMermas();
       setTabActiva('historial');
-      if (onExito) onExito();
+      if (onExito) await onExito();
     } catch (error: any) {
       setMensajeAlerta(error.message || 'Error al guardar la merma');
       setMostrarAlerta(true);

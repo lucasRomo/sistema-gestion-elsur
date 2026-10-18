@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { API_BASE_URL } from '../../../config/api'; 
 import { conCargaDeArranque } from '../../../config/loadingStore';
 
@@ -23,8 +23,14 @@ export const useLogin = ({ onLoginExitoso }: UseLoginProps) => {
 
   const toggleVerPassword = () => setVerPassword((prev) => !prev);
 
+  // Evita iniciar sesión dos veces: mientras hay un pedido en curso o el cartel de resultado
+  // está abierto, un nuevo envío del formulario (Enter) no hace nada.
+  const enviando = useRef(false);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (enviando.current || modalFeedback.mostrar) return;
+    enviando.current = true;
     try {
       const response = await conCargaDeArranque('Iniciando sesión...', () =>
         fetch(`${API_BASE_URL}/usuarios/login`, {
@@ -73,6 +79,8 @@ export const useLogin = ({ onLoginExitoso }: UseLoginProps) => {
         tipo: 'error',
         mensaje: 'No se pudo establecer conexión con el servidor de El Sur. Intente más tarde.'
       });
+    } finally {
+      enviando.current = false;
     }
   };
 

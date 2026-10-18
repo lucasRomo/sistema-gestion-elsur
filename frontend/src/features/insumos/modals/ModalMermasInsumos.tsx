@@ -6,11 +6,12 @@ import { useTheme } from '../../../Context/ThemeContext';
 import { getMermas } from '../services/insumoService';
 
 import { normalizarTexto } from '../../../utils/formato';
+import { showLoading, hideLoading } from '../../../config/loadingStore';
 interface ModalMermasInsumosProps {
   show: boolean;
   insumos: Insumo[];
   onClose: () => void;
-  onExito: () => void;
+  onExito: () => void | Promise<void>;
 }
 
 interface SelectionState {
@@ -128,17 +129,21 @@ export const ModalMermasInsumos: React.FC<ModalMermasInsumosProps> = ({ show, in
     
     if (!(await confirmarAccion(`¿Registrar ${payload.length} merma(s) de insumos? Se descontará el stock correspondiente.`, { titulo: 'Registrar mermas', textoConfirmar: 'Registrar' }))) return;
     setGuardando(true);
+    showLoading('Registrando merma...');
     try {
       await mermaService.registrarMermas(payload);
       setSelections({});
       setBusqueda('');
       await cargarHistorial();
-      onExito();
+      // Se espera a que la pantalla de origen termine (recargar la lista y preparar el cartel
+      // de éxito) antes de sacar la pantalla de carga: antes se volvía a ver el formulario.
+      await onExito();
     } catch (err: any) {
       setMensajeAlerta(err.message || 'Error al guardar la merma');
       setMostrarAlerta(true);
     } finally {
       setGuardando(false);
+      hideLoading();
     }
   };
 
