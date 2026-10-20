@@ -71,24 +71,16 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
 
   const nombreEmpleado = resolverEmpleadoGestion(p);
 
-  const aplicarDesfaseTresHoras = (fechaStr: string | null | undefined): Date | null => {
-    if (!fechaStr) return null;
-    const d = new Date(fechaStr);
-    if (isNaN(d.getTime())) return null;
-    return new Date(d.getTime() - (3 * 60 * 60 * 1000));
+  // Todas las fechas de un pedido llegan del servidor en hora de Argentina: se muestran tal cual.
+  const aFecha = (fechaIso: string | null | undefined): Date | null => {
+    if (!fechaIso) return null;
+    const d = new Date(fechaIso);
+    return isNaN(d.getTime()) ? null : d;
   };
 
-  const formatearFechaString = (fechaIso: string | null | undefined, incluirHora = true, restar3hs = false) => {
+  const formatearFechaString = (fechaIso: string | null | undefined, incluirHora = true) => {
     if (!fechaIso) return '-';
-    
-    let dateObj: Date | null = null;
-    if (restar3hs) {
-      dateObj = aplicarDesfaseTresHoras(fechaIso);
-    } else {
-      const d = new Date(fechaIso);
-      if (!isNaN(d.getTime())) dateObj = d;
-    }
-
+    const dateObj = aFecha(fechaIso);
     if (!dateObj) return fechaIso;
 
     if (!incluirHora) {
@@ -98,17 +90,9 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
     return formatearFechaHora(dateObj);
   };
 
-  const formatearHoraOCorta = (fechaIso: string | null | undefined, restar3hs = false) => {
+  const formatearHoraOCorta = (fechaIso: string | null | undefined) => {
     if (!fechaIso) return '';
-    
-    let dateObj: Date | null = null;
-    if (restar3hs) {
-      dateObj = aplicarDesfaseTresHoras(fechaIso);
-    } else {
-      const d = new Date(fechaIso);
-      if (!isNaN(d.getTime())) dateObj = d;
-    }
-
+    const dateObj = aFecha(fechaIso);
     if (!dateObj) return fechaIso;
 
     const dia = pad(dateObj.getDate());
@@ -131,8 +115,8 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
     primerHistorialFecha ||
     ultimaAsignacion?.fecha_asignacion;
 
-  const fechaCreacionFormateada = formatearFechaString(fechaCreacionRaw, true, true);
-  const fechaEntregaFormateada = formatearFechaString(p.fecha_entrega_estimada, true, false);
+  const fechaCreacionFormateada = formatearFechaString(fechaCreacionRaw, true);
+  const fechaEntregaFormateada = formatearFechaString(p.fecha_entrega_estimada, true);
 
   const parseToTimestamp = (dateStr: any): number => {
     if (!dateStr) return 0;
@@ -178,7 +162,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
       items.push({
         id: 'ev-creacion-estatica',
         fechaRaw: fechaCreacionRaw,
-        fechaFormateada: formatearHoraOCorta(fechaCreacionRaw, true), 
+        fechaFormateada: formatearHoraOCorta(fechaCreacionRaw), 
         tipo: 'CREACION',
         titulo: 'Pedido Creado',
         subtitulo: subtituloEstatico,
@@ -215,7 +199,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
       items.push({
         id: `ev-hist-${idx}`,
         fechaRaw: f,
-        fechaFormateada: formatearHoraOCorta(f, false),
+        fechaFormateada: formatearHoraOCorta(f),
         tipo: tipoEvento,
         titulo,
         subtitulo: h.observaciones || h.observacion || undefined
@@ -230,7 +214,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
       items.push({
         id: `ev-pago-${idx + 1}`,
         fechaRaw: f,
-        fechaFormateada: formatearHoraOCorta(f, false),
+        fechaFormateada: formatearHoraOCorta(f),
         tipo: 'PAGO',
         titulo: pago.tipoPago ? `Pago (${pago.tipoPago})` : 'Ingreso de Monto',  
         monto: `+$${montoVal}`
@@ -250,7 +234,7 @@ export const TarjetaPedido: React.FC<TarjetaPedidoProps> = ({
       items.push({
         id: `ev-merma-${idx}`,
         fechaRaw: f,
-        fechaFormateada: formatearHoraOCorta(f, false),
+        fechaFormateada: formatearHoraOCorta(f),
         tipo: 'MERMA',
         titulo: `Merma: ${nombreItem}`,
         subtitulo: `Cantidad: ${merma.cantidad}${merma.motivo ? ` - ${merma.motivo}` : ''}`

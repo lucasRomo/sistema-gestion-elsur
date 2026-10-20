@@ -278,8 +278,10 @@ public class PedidoServiceImpl implements PedidoService {
             throw new SolicitudInvalidaException("La Caja No está Abierta. Por favor, inicie turno antes de continuar.");
         }
         LocalDateTime ahora = LocalDateTime.now();
-        if (pedido.getFecha_creacion() == null) {
-        pedido.setFecha_creacion(ahora);
+        // La fecha de creación la pone siempre el servidor (hora de Argentina): el navegador la mandaba en UTC
+        // y los pedidos quedaban 3 horas adelantados.
+        if (pedido.getId_pedido() == null || pedido.getFecha_creacion() == null) {
+            pedido.setFecha_creacion(ahora);
         }
         if (pedido.getFecha_entrega_estimada() == null) {
         pedido.setFecha_entrega_estimada(ahora);

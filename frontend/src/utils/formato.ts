@@ -4,6 +4,15 @@
  * (ver auditoría de duplicación de código).
  */
 
+/**
+ * Fecha y hora actual en hora local (Argentina), en formato ISO sin zona: "2026-10-19T14:05:00".
+ * Es lo que espera el backend (LocalDateTime). No usar toISOString(): devuelve UTC y corre la hora 3 horas.
+ */
+export const ahoraLocalISO = (): string => {
+  const ahora = new Date();
+  return new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
+};
+
 /** Rellena con un cero a la izquierda un número de un solo dígito. */
 export const pad = (n: number): string => String(n).padStart(2, '0');
 

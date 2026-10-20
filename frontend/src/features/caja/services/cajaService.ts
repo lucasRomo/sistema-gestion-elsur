@@ -1,4 +1,5 @@
 import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
+import { ahoraLocalISO } from '../../../utils/formato';
 import type {
   UsuarioCaja,
   MovimientoCaja,
@@ -145,7 +146,7 @@ export const cajaService = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        fechaApertura: new Date().toISOString(),
+        fechaApertura: ahoraLocalISO(),
         montoInicial,
         estado: 'ABIERTO'
       })
@@ -180,7 +181,7 @@ export const cajaService = {
       descripcion: movimiento.descripcion || movimiento.concepto,
       metodoPago: movimiento.metodoPago || 'EFECTIVO',
       comprobanteImagen: movimiento.comprobanteImagen || null,
-      fecha: movimiento.fecha || new Date().toISOString(),
+      fecha: movimiento.fecha || ahoraLocalISO(),
       pedido: movimiento.pedido || (movimiento.idPedido ? { idPedido: Number(movimiento.idPedido) } : null),
       usuario: movimiento.usuario || { idUsuario }
     };

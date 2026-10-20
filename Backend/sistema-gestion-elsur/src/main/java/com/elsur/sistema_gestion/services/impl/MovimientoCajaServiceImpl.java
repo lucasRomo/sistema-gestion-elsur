@@ -45,6 +45,10 @@ public class MovimientoCajaServiceImpl implements MovimientoCajaService {
     @Override
     @Transactional
     public MovimientoCaja guardar(MovimientoCaja movimientoCaja) {
+        // Igual que en los demás movimientos, la fecha la pone el servidor: la del navegador venía en UTC.
+        if (movimientoCaja.getId_movimiento() == null) {
+            movimientoCaja.setFecha(LocalDateTime.now());
+        }
 
         if (movimientoCaja.getTurno() == null) {
             Turno turnoAbierto = turnoRepository.findFirstByEstado(EstadoTurno.ABIERTO)

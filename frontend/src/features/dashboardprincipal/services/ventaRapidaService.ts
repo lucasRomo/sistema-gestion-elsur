@@ -3,6 +3,7 @@ import type { CategoriaCliente } from '../../clientes/types/CategoriaCliente';
 import type { Maquina } from '../../maquinas/types/Maquina';
 import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 
+import { ahoraLocalISO } from '../../../utils/formato';
 export interface EstadoCajaNotificacion {
   cajaAbierta: boolean;
   datosTurno: any | null;
@@ -69,7 +70,7 @@ export const ventaRapidaService = {
     tipoPago?: string;
     comprobanteFile?: File | null;
   }) {
-    const fechaActualIso = new Date().toISOString().slice(0, 19);
+    const fechaActualIso = ahoraLocalISO();
 
     const payloadPedido = {
       pedido: {

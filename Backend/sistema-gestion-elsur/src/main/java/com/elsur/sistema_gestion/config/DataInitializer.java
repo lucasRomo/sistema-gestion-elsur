@@ -143,6 +143,19 @@ public class DataInitializer implements CommandLineRunner {
                     + contrasenasSinHashear.size() + " usuario(s) que estaban en texto plano.");
         }
 
+        // Pedidos creados desde "Crear Pedido" antes de la corrección de horarios: el navegador mandaba la fecha en UTC
+        // y quedaron 3 horas adelantados. Se corrigen comparando con la asignación del empleado, que el servidor guarda
+        // en la misma operación con hora de Argentina. Solo se tocan los que tienen esa diferencia, así que es idempotente.
+        int pedidosCorregidos = jdbcTemplate.update(
+                "UPDATE pedido p SET fecha_creacion = p.fecha_creacion - INTERVAL '3 hours' " +
+                "FROM (SELECT id_pedido, MIN(fecha_asignacion) AS primera FROM asignacion_pedido GROUP BY id_pedido) a " +
+                "WHERE a.id_pedido = p.id_pedido " +
+                "AND p.fecha_creacion - a.primera BETWEEN INTERVAL '2 hours 50 minutes' AND INTERVAL '3 hours 10 minutes'");
+        if (pedidosCorregidos > 0) {
+            System.out.println("[DataInitializer] -> Se corrigió la fecha de creación (UTC -> Argentina) de "
+                    + pedidosCorregidos + " pedido(s).");
+        }
+
         System.out.println("[DataInitializer] Sincronización completada con éxito.");
     }
 }

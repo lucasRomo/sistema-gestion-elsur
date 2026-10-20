@@ -4,7 +4,7 @@ import { VistaTicketPagoModal } from '../../../../components/modals/VistaTicketP
 import { PedidoPendienteService } from '../../pedidospendientes/service/pedidoPendienteService';
 import { mostrarAviso } from '../../../../config/dialogStore';
 
-import { formatearMonto } from '../../../../utils/formato';
+import { formatearMonto, ahoraLocalISO } from '../../../../utils/formato';
 import { BuscadorCliente } from './BuscadorCliente';
 import { RegistroClienteModal } from '../../../clientes/components/RegistroClienteModal';
 interface Props {
@@ -161,7 +161,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
     if (fechaEntrega) {
       fechaFinalEntrega = fechaEntrega.length === 16 ? `${fechaEntrega}:00` : fechaEntrega;
     } else {
-      fechaFinalEntrega = new Date().toISOString().substring(0, 19);
+      fechaFinalEntrega = ahoraLocalISO();
     }
 
     const textoDescuento = porcentajeDescuento > 0
@@ -174,7 +174,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
     const nuevoPedido: Pedido = {
       cliente: { id_cliente: Number(clienteId) },
       detalles: detallesFormateados,
-      fecha_creacion: new Date().toISOString().substring(0, 19),
+      fecha_creacion: ahoraLocalISO(),
       fecha_entrega_estimada: fechaFinalEntrega,
       estado: estado,
       monto_total: total,
@@ -328,7 +328,7 @@ export const DetallesPedidoForm: React.FC<Props> = ({
               precioUnitario: item.producto.precioBase,
               subtotal: item.subtotal
             })),
-            fecha_entrega_estimada: fechaEntrega || new Date().toISOString(),
+            fecha_entrega_estimada: fechaEntrega || ahoraLocalISO(),
             estado: estado,
             monto_total: total,
             monto_pago_adelantado: Number(montoEntregado),

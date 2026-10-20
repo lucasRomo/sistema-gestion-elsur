@@ -6,7 +6,7 @@ import type { Maquina } from '../../maquinas/types/Maquina';
 import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api';
 import { showLoading, hideLoading } from '../../../config/loadingStore';
 
-import { formatearMonto } from '../../../utils/formato';
+import { formatearMonto, ahoraLocalISO } from '../../../utils/formato';
 const MARGEN_MERMA_RESPALDO = 5;
 const TOLERANCIA_PRODUCTO_DIRECTO = 3;
 
@@ -499,7 +499,7 @@ export const useVentaRapida = () => {
     })();
 
     const idUsuario = idUsuarioLogueado || 1;
-    const fechaActualIso = new Date().toISOString().slice(0, 19);
+    const fechaActualIso = ahoraLocalISO();
 
     const payloadParaBackend = {
       pedido: {
