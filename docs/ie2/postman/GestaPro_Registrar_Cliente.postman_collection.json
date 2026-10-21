@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "GestaPro - Registrar cliente (IE2 Equipo 5)",
-    "description": "Una sola petición: POST /api/clientes. Es exactamente el mismo caso que la clase RegistrarClienteRestAssuredTest (REST Assured + JUnit 5): mismas cabeceras, mismo body JSON y mismas comprobaciones.\n\nTodo está en la misma petición: la pestaña Scripts > Pre-request hace el login (seguridad), Headers lleva el token, Body el JSON y Scripts > Post-response las comprobaciones; al final el cliente de prueba se borra, así se puede correr en local o contra la app publicada sin dejar datos.",
+    "description": "Una sola petición: POST /api/clientes. Es exactamente el mismo caso que la clase RegistrarClienteRestAssuredTest (REST Assured + JUnit 5): mismas cabeceras, mismo body JSON y mismas comprobaciones.\n\nTodo está en la misma petición: la pestaña Scripts > Pre-request hace el login (seguridad), Headers lleva el token, Body el JSON y Scripts > Post-response las comprobaciones; al final el cliente de prueba se borra, así se puede correr contra la app publicada (Vercel) sin dejar datos.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

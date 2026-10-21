@@ -15,7 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * Datos mínimos para las pruebas de API (Postman y REST Assured) sobre la base H2 en memoria:
+ * Datos mínimos para la prueba de API con REST Assured sobre la base H2 en memoria:
  * rol ADMIN, tipos de documento/persona y el usuario administrador de prueba.
  * Solo existe en el classpath de test y solo se activa con el perfil "api": nunca corre en producción.
  * (DataInitializer no corre en el perfil "test", por eso se cargan acá.)
@@ -27,7 +27,7 @@ public class UsuarioApiPruebaInicializador {
     public static final String USUARIO = "admin.api";
     public static final String PASSWORD = "ApiTest2026";
 
-    /** Ids reales de los tipos cargados (en una base nueva son 1 y 1, como usa la colección de Postman). */
+    /** Ids reales de los tipos cargados (en una base nueva son 1 y 1, los que usa el test). */
     public static volatile Integer idTipoDocumento;
     public static volatile Integer idTipoPersona;
 
@@ -84,6 +84,6 @@ public class UsuarioApiPruebaInicializador {
         usuario.setRol(admin);
         usuario.setEstado("Activo");
         usuarioRepository.save(usuario);
-        System.out.println("[API de prueba] Usuario '" + USUARIO + "' listo para Postman / REST Assured.");
+        System.out.println("[API de prueba] Usuario '" + USUARIO + "' listo para REST Assured.");
     }
 }

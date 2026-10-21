@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.*;
  *
  * Dónde corre:
  *  - Por defecto, contra un backend que el propio test levanta (base H2 en memoria, sin tocar datos reales).
- *  - Contra la app publicada, agregando -Dapi.url=https://sistema-gestion-elsur.onrender.com y las
+ *  - Contra la app publicada, agregando -Dapi.url=https://sistema-gestion-elsur.vercel.app y las
  *    credenciales en las variables de entorno API_USUARIO y API_PASSWORD (nunca escritas en el código).
  *
  * Estructura de REST Assured: given() = lo que preparo, when() = la acción, then() = lo que espero.
