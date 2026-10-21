@@ -5,6 +5,8 @@ import { useIsMobile } from '../../hook/useIsMobile';
 // arriba de la barra de pestañas, para no pisar el título de la pantalla.
 export const CartelDemo: React.FC = () => {
   const isMobile = useIsMobile();
+  // En la pantalla de entrada no hace falta: ya dice que es la demo (y en el celular taparía el botón).
+  if (window.location.pathname === '/') return null;
   const posicion: React.CSSProperties = isMobile
     ? { bottom: 'calc(78px + env(safe-area-inset-bottom))', right: 10 }
     : { top: 6, left: '50%', transform: 'translateX(-50%)' };
