@@ -14,11 +14,22 @@ const BORDE = '1px solid rgba(201,182,245,0.22)';
 
 // Lo que se puede probar en la demo, para que el visitante sepa por dónde arrancar.
 const PARA_PROBAR = [
-  { icono: 'bi-cash-coin', texto: 'La caja y las ventas del día' },
-  { icono: 'bi-kanban', texto: 'Los pedidos que están en el taller' },
-  { icono: 'bi-bar-chart-line', texto: 'Los informes del negocio' },
-  { icono: 'bi-printer', texto: 'El estado de las máquinas' }
+  { icono: 'bi-cash-coin', texto: 'La caja y las ventas del día', color: '#34d399' },
+  { icono: 'bi-kanban', texto: 'Los pedidos que están en el taller', color: '#a78bfa' },
+  { icono: 'bi-bar-chart-line', texto: 'Los informes del negocio', color: '#60a5fa' },
+  { icono: 'bi-printer', texto: 'El estado de las máquinas', color: '#fbbf24' }
 ];
+
+// Animaciones de la entrada en el celular: los bloques suben de a uno y el botón "late" suave.
+const ANIMACIONES = `
+@keyframes demoSube { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes demoLatido { 0%, 100% { box-shadow: 0 8px 24px rgba(10,4,30,.45), 0 0 0 0 rgba(255,255,255,.45); }
+                        50% { box-shadow: 0 8px 24px rgba(10,4,30,.45), 0 0 0 10px rgba(255,255,255,0); } }
+.demo-sube { animation: demoSube .55s ease-out both; }
+.demo-latido { animation: demoLatido 2.4s ease-in-out 1.2s infinite; }
+@media (prefers-reduced-motion: reduce) { .demo-sube, .demo-latido { animation: none; } }
+`;
+const retraso = (i: number): React.CSSProperties => ({ animationDelay: `${0.08 * i}s` });
 
 const PERFILES: { perfil: Perfil; icono: string; titulo: string; detalle: string }[] = [
   { perfil: 'duenio', icono: 'bi-person-badge', titulo: 'Entrar como Dueño',
@@ -57,18 +68,6 @@ export const DemoEntrada: React.FC = () => {
 
   const avisoError = error && <div className="alert alert-warning mt-3 mb-0 small">{error}</div>;
 
-  const listaParaProbar = (
-    <div className="d-flex flex-column gap-2">
-      {PARA_PROBAR.map(({ icono, texto }) => (
-        <div key={texto} className="d-flex align-items-center gap-3 rounded-3 px-3 py-2"
-             style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: BORDE }}>
-          <i className={`bi ${icono}`} style={{ color: LILA, fontSize: '1.15rem' }} />
-          <span style={{ fontSize: '0.95rem' }}>{texto}</span>
-        </div>
-      ))}
-    </div>
-  );
-
   const pie = (
     <p className="text-center small mb-0" style={{ color: '#b9a9e6' }}>
       Desarrollado por <b className="text-white">Geekers</b> · ISAUI – Universidad Provincial de Córdoba
@@ -79,24 +78,42 @@ export const DemoEntrada: React.FC = () => {
   if (isMobile) {
     return (
       <div className="min-vh-100 d-flex flex-column text-white"
-           style={{ background: FONDO, padding: '64px 24px calc(28px + env(safe-area-inset-bottom))' }}>
-        <img src={logoGesta} alt="GestaPro" style={{ width: '62%', maxWidth: 240, alignSelf: 'center' }} />
+           style={{ background: FONDO, padding: '56px 22px calc(26px + env(safe-area-inset-bottom))' }}>
+        <style>{ANIMACIONES}</style>
+        <img src={logoGesta} alt="GestaPro" className="demo-sube" style={{ width: '58%', maxWidth: 230, alignSelf: 'center' }} />
 
-        <h1 className="fw-bold mt-4 mb-2" style={{ fontSize: '1.9rem', lineHeight: 1.15 }}>
-          Probá GestaPro<br />desde tu celular
+        <span className="badge rounded-pill align-self-start mt-4 mb-2 demo-sube"
+              style={{ ...retraso(1), backgroundColor: 'rgba(255,255,255,0.12)', color: LILA, border: BORDE, fontWeight: 600 }}>
+          <i className="bi bi-stars me-1" />Demo en vivo · Muestra 2026
+        </span>
+        <h1 className="fw-bold mb-2 demo-sube" style={{ ...retraso(2), fontSize: '2rem', lineHeight: 1.12 }}>
+          Tu centro de copiado<br /><span style={{ color: '#ffc59a' }}>en la palma de la mano</span>
         </h1>
-        <p className="mb-4" style={{ color: LILA_SUAVE, fontSize: '1rem' }}>
-          El sistema de gestión para centros de copiado, funcionando con datos de prueba.
+        <p className="mb-4 demo-sube" style={{ ...retraso(3), color: LILA_SUAVE, fontSize: '1rem' }}>
+          Entrá como si fueras el dueño de un centro de copiado y recorré el sistema con datos de prueba.
           Tocá lo que quieras: no afecta a ningún negocio real.
         </p>
 
-        <div className="mb-4">{listaParaProbar}</div>
+        <div className="row g-2 mb-4">
+          {PARA_PROBAR.map(({ icono, texto, color }, i) => (
+            <div key={texto} className="col-6 demo-sube" style={retraso(4 + i)}>
+              <div className="h-100 rounded-4 p-3 d-flex flex-column gap-2"
+                   style={{ backgroundColor: 'rgba(255,255,255,0.07)', border: BORDE }}>
+                <span className="d-inline-flex align-items-center justify-content-center rounded-3"
+                      style={{ width: 38, height: 38, backgroundColor: `${color}26`, color, fontSize: '1.2rem' }}>
+                  <i className={`bi ${icono}`} />
+                </span>
+                <span style={{ fontSize: '0.88rem', lineHeight: 1.3 }}>{texto}</span>
+              </div>
+            </div>
+          ))}
+        </div>
 
         <button
-          className="btn w-100 fw-bold mt-auto"
+          className="btn w-100 fw-bold mt-auto demo-sube demo-latido"
           onClick={() => entrar('duenio')}
-          style={{ backgroundColor: '#ffffff', color: '#2e1760', borderRadius: 14, padding: '16px', fontSize: '1.1rem',
-                   boxShadow: '0 8px 24px rgba(10, 4, 30, 0.45)' }}
+          style={{ ...retraso(8), backgroundColor: '#ffffff', color: '#2e1760', borderRadius: 16, padding: '17px',
+                   fontSize: '1.12rem' }}
         >
           Entrar a la demo <i className="bi bi-arrow-right ms-1" />
         </button>
