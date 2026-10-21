@@ -1,0 +1,1198 @@
+{
+ "GP.01": [
+  {
+   "archivo": "GP01_01.png",
+   "leyenda": "Portón de acceso: clave del local"
+  },
+  {
+   "archivo": "GP01_02.png",
+   "leyenda": "Clave incorrecta: no se habilita el ingreso"
+  }
+ ],
+ "GP.02": [
+  {
+   "archivo": "GP02_01.png",
+   "leyenda": "Pantalla de bienvenida: opción Registrarse"
+  },
+  {
+   "archivo": "GP02_02.png",
+   "leyenda": "Paso 1: datos personales, de contacto y dirección"
+  }
+ ],
+ "GP.03": [
+  {
+   "archivo": "GP03_01.png",
+   "leyenda": "Inicio de sesión con usuario y contraseña"
+  },
+  {
+   "archivo": "GP03_02.png",
+   "leyenda": "Credenciales incorrectas"
+  }
+ ],
+ "GP.04": [
+  {
+   "archivo": "GP04_01.png",
+   "leyenda": "Opción Cerrar Sesión en el menú lateral"
+  }
+ ],
+ "GP.05": [
+  {
+   "archivo": "GP05_01.png",
+   "leyenda": "Aviso de sesión expirada"
+  }
+ ],
+ "GP.06": [
+  {
+   "archivo": "GP06_01.png",
+   "leyenda": "Usuario en estado Pendiente en Gestión de Usuarios"
+  },
+  {
+   "archivo": "GP06_02.png",
+   "leyenda": "Cambio de estado a Activo y confirmación"
+  }
+ ],
+ "GP.07": [
+  {
+   "archivo": "GP07_01.png",
+   "leyenda": "Rechazo de la solicitud: estado Desactivado"
+  }
+ ],
+ "GP.08": [
+  {
+   "archivo": "GP08_01.png",
+   "leyenda": "Selección del perfil del usuario"
+  }
+ ],
+ "GP.09": [
+  {
+   "archivo": "GP09_01.png",
+   "leyenda": "Botón para registrar un nuevo empleado"
+  },
+  {
+   "archivo": "GP09_02.png",
+   "leyenda": "Formulario de alta de empleado"
+  }
+ ],
+ "GP.10": [
+  {
+   "archivo": "GP10_01.png",
+   "leyenda": "Acción de edición del empleado"
+  },
+  {
+   "archivo": "GP10_02.png",
+   "leyenda": "Modificación de datos, cargo y salario"
+  }
+ ],
+ "GP.11": [
+  {
+   "archivo": "GP11_01.png",
+   "leyenda": "Filtro por estado para ver empleados dados de baja"
+  },
+  {
+   "archivo": "GP11_02.png",
+   "leyenda": "Baja lógica: estado Desactivado (se conserva el historial)"
+  }
+ ],
+ "GP.12": [
+  {
+   "archivo": "GP12_01.png",
+   "leyenda": "Botón Nuevo Perfil en la Matriz de Permisos"
+  },
+  {
+   "archivo": "GP12_02.png",
+   "leyenda": "Creación del perfil personalizado"
+  }
+ ],
+ "GP.13": [
+  {
+   "archivo": "GP13_01.png",
+   "leyenda": "Módulos habilitados por perfil y Guardar Cambios"
+  }
+ ],
+ "GP.14": [
+  {
+   "archivo": "GP14_01.png",
+   "leyenda": "Panel de usuarios: asignación de cada usuario a un perfil"
+  }
+ ],
+ "GP.15": [
+  {
+   "archivo": "GP15_01.png",
+   "leyenda": "Menú del perfil Operario: solo los módulos habilitados"
+  },
+  {
+   "archivo": "GP15_02.png",
+   "leyenda": "Acceso directo por URL a un módulo no habilitado"
+  }
+ ],
+ "GP.16": [
+  {
+   "archivo": "GP16_01.png",
+   "leyenda": "Historial de Actividad: fecha, usuario, tabla, columna, dato previo y nuevo"
+  }
+ ],
+ "GP.17": [
+  {
+   "archivo": "GP17_01.png",
+   "leyenda": "Filtro por tabla y por usuario"
+  }
+ ],
+ "GP.18": [
+  {
+   "archivo": "GP18_01.png",
+   "leyenda": "Exportación del historial a Excel y PDF"
+  }
+ ],
+ "GP.19": [
+  {
+   "archivo": "GP19_01.png",
+   "leyenda": "Cambio de contraseña propia"
+  }
+ ],
+ "GP.21": [
+  {
+   "archivo": "GP21_01.png",
+   "leyenda": "Acción Ver / Restablecer contraseña"
+  },
+  {
+   "archivo": "GP21_02.png",
+   "leyenda": "Ver o restablecer la contraseña del usuario"
+  }
+ ],
+ "GP.22": [
+  {
+   "archivo": "GP22_01.png",
+   "leyenda": "Generar respaldo e historial de respaldos generados"
+  }
+ ],
+ "GP.23": [
+  {
+   "archivo": "GP23_01.png",
+   "leyenda": "Restauración desde un archivo de respaldo"
+  }
+ ],
+ "GP.24": [
+  {
+   "archivo": "GP24_01.png",
+   "leyenda": "Descarga de un respaldo generado"
+  }
+ ],
+ "GP.25": [
+  {
+   "archivo": "GP25_01.png",
+   "leyenda": "Eliminación de un respaldo"
+  },
+  {
+   "archivo": "GP25_02.png",
+   "leyenda": "Confirmación antes de eliminar"
+  }
+ ],
+ "GP.20": [
+  {
+   "archivo": "GP20_01.png",
+   "leyenda": "Cambio de nombre de usuario"
+  },
+  {
+   "archivo": "GP20_02.png",
+   "leyenda": "Cambio de email"
+  }
+ ],
+ "GP.28": [
+  {
+   "archivo": "GP28_01.png",
+   "leyenda": "Acción Modificar Cliente"
+  },
+  {
+   "archivo": "GP28_02.png",
+   "leyenda": "Modificación de los datos del cliente"
+  }
+ ],
+ "GP.31": [
+  {
+   "archivo": "GP31_01.png",
+   "leyenda": "Búsqueda y filtro de clientes"
+  }
+ ],
+ "GP.33": [
+  {
+   "archivo": "GP33_01.png",
+   "leyenda": "Botón Categorías"
+  },
+  {
+   "archivo": "GP33_02.png",
+   "leyenda": "Alta de categoría con porcentaje de descuento"
+  }
+ ],
+ "GP.34": [
+  {
+   "archivo": "GP34_01.png",
+   "leyenda": "Edición de una categoría existente"
+  }
+ ],
+ "GP.35": [
+  {
+   "archivo": "GP35_01.png",
+   "leyenda": "Eliminación de una categoría"
+  }
+ ],
+ "GP.36": [
+  {
+   "archivo": "GP36_01.png",
+   "leyenda": "Límite de crédito permitido y Actualizar Límite"
+  }
+ ],
+ "GP.37": [
+  {
+   "archivo": "GP37_01.png",
+   "leyenda": "Acción Gestionar Cuenta Corriente"
+  },
+  {
+   "archivo": "GP37_02.png",
+   "leyenda": "Saldo deudor e histórico de compras y pagos"
+  }
+ ],
+ "GP.38": [
+  {
+   "archivo": "GP38_01.png",
+   "leyenda": "Registrar cobro: monto, medio de pago e Imputar Pago"
+  }
+ ],
+ "GP.39": [
+  {
+   "archivo": "GP39_01.png",
+   "leyenda": "Botón Cuentas Corrientes"
+  },
+  {
+   "archivo": "GP39_02.png",
+   "leyenda": "Resumen general de cuentas corrientes"
+  }
+ ],
+ "GP.40": [
+  {
+   "archivo": "GP40_01.png",
+   "leyenda": "Botón Registrar Nuevo Proveedor"
+  },
+  {
+   "archivo": "GP40_02.png",
+   "leyenda": "Formulario de alta de proveedor"
+  }
+ ],
+ "GP.41": [
+  {
+   "archivo": "GP41_01.png",
+   "leyenda": "Acción Modificar Proveedor"
+  },
+  {
+   "archivo": "GP41_02.png",
+   "leyenda": "Modificación del proveedor"
+  }
+ ],
+ "GP.44": [
+  {
+   "archivo": "GP44_01.png",
+   "leyenda": "Búsqueda y filtro de proveedores"
+  }
+ ],
+ "GP.46": [
+  {
+   "archivo": "GP46_01.png",
+   "leyenda": "Botón Registrar Nuevo Insumo"
+  },
+  {
+   "archivo": "GP46_02.png",
+   "leyenda": "Alta de insumo: unidades, factor de conversión, stock y mínimo"
+  }
+ ],
+ "GP.47": [
+  {
+   "archivo": "GP47_01.png",
+   "leyenda": "Acción Editar Insumo"
+  },
+  {
+   "archivo": "GP47_02.png",
+   "leyenda": "Modificación de datos, precio y stock mínimo"
+  }
+ ],
+ "GP.50": [
+  {
+   "archivo": "GP50_01.png",
+   "leyenda": "Búsqueda y filtro de insumos"
+  }
+ ],
+ "GP.26": [
+  {
+   "archivo": "GP26_01.png",
+   "leyenda": "Botón Registrar Nuevo Cliente"
+  },
+  {
+   "archivo": "GP26_02.png",
+   "leyenda": "Paso 1: datos personales, de contacto y dirección"
+  }
+ ],
+ "GP.29": [
+  {
+   "archivo": "GP29_01.png",
+   "leyenda": "Baja lógica del cliente: estado inactivo"
+  }
+ ],
+ "GP.32": [
+  {
+   "archivo": "GP32_01.png",
+   "leyenda": "Acción Ver Ubicación del cliente"
+  },
+  {
+   "archivo": "GP32_02.png",
+   "leyenda": "Dirección registrada (con opción de habilitar la edición)"
+  }
+ ],
+ "GP.42": [
+  {
+   "archivo": "GP42_01.png",
+   "leyenda": "Baja lógica del proveedor: estado inactivo"
+  }
+ ],
+ "GP.45": [
+  {
+   "archivo": "GP45_01.png",
+   "leyenda": "Acción Ver Ubicación del proveedor"
+  },
+  {
+   "archivo": "GP45_02.png",
+   "leyenda": "Dirección registrada (con opción de habilitar la edición)"
+  }
+ ],
+ "GP.48": [
+  {
+   "archivo": "GP48_01.png",
+   "leyenda": "Baja lógica del insumo: estado inactivo"
+  }
+ ],
+ "GP.27": [
+  {
+   "archivo": "GP27_01.png",
+   "leyenda": "Paso 2: datos comerciales y límite de crédito"
+  }
+ ],
+ "GP.30": [
+  {
+   "archivo": "GP30_01.png",
+   "leyenda": "Filtro por estado para ubicar clientes dados de baja"
+  },
+  {
+   "archivo": "GP30_02.png",
+   "leyenda": "Reactivación del cliente: estado Activo"
+  }
+ ],
+ "GP.43": [
+  {
+   "archivo": "GP43_01.png",
+   "leyenda": "Filtro por estado para ubicar proveedores dados de baja"
+  },
+  {
+   "archivo": "GP43_02.png",
+   "leyenda": "Reactivación del proveedor: estado Activo"
+  }
+ ],
+ "GP.49": [
+  {
+   "archivo": "GP49_01.png",
+   "leyenda": "Filtro por estado para ubicar insumos dados de baja"
+  },
+  {
+   "archivo": "GP49_02.png",
+   "leyenda": "Reactivación del insumo: estado Activo"
+  }
+ ],
+ "GP.51": [
+  {
+   "archivo": "GP51_01.png",
+   "leyenda": "Panel principal: pedidos pendientes, estado de caja y falta de stock"
+  }
+ ],
+ "GP.53": [
+  {
+   "archivo": "GP53_01.png",
+   "leyenda": "Atajos de teclado: Enter elegir/agregar, F2 cobrar, Esc cancelar"
+  }
+ ],
+ "GP.54": [
+  {
+   "archivo": "GP54_01.png",
+   "leyenda": "Botón Cancelar de la venta en curso"
+  },
+  {
+   "archivo": "GP54_02.png",
+   "leyenda": "Confirmación para cancelar la venta"
+  }
+ ],
+ "GP.55": [
+  {
+   "archivo": "GP55_01.png",
+   "leyenda": "Categoría de cliente con descuento aplicado al total"
+  }
+ ],
+ "GP.56": [
+  {
+   "archivo": "GP56_01.png",
+   "leyenda": "Paso 1: productos y cantidades del pedido"
+  },
+  {
+   "archivo": "GP56_02.png",
+   "leyenda": "Paso 2: cliente, empleado, estado, método de pago, entrega, seña y notas"
+  }
+ ],
+ "GP.57": [
+  {
+   "archivo": "GP57_01.png",
+   "leyenda": "Impacto estimado en el stock de insumos y productos"
+  }
+ ],
+ "GP.61": [
+  {
+   "archivo": "GP61_01.png",
+   "leyenda": "Seña / adelanto recibido"
+  }
+ ],
+ "GP.62": [
+  {
+   "archivo": "GP62_01.png",
+   "leyenda": "Pago por transferencia: adjuntar comprobante"
+  }
+ ],
+ "GP.63": [
+  {
+   "archivo": "GP63_01.png",
+   "leyenda": "Detalle del pedido: Cobrar / Pago"
+  },
+  {
+   "archivo": "GP63_02.png",
+   "leyenda": "Registrar pago: total, abonado, saldo y monto"
+  }
+ ],
+ "GP.64": [
+  {
+   "archivo": "GP64_01.png",
+   "leyenda": "Medios de pago disponibles"
+  }
+ ],
+ "GP.71": [
+  {
+   "archivo": "GP71_01.png",
+   "leyenda": "Acción Devolución de Pedido en el historial"
+  },
+  {
+   "archivo": "GP71_02.png",
+   "leyenda": "Devolución: motivo, Volver a Hacer o Marcar como Devuelto"
+  }
+ ],
+ "GP.72": [
+  {
+   "archivo": "GP72_01.png",
+   "leyenda": "Historial de pedidos con búsqueda y filtros"
+  }
+ ],
+ "GP.73": [
+  {
+   "archivo": "GP73_01.png",
+   "leyenda": "Acción Ver Auditoría de Pagos"
+  },
+  {
+   "archivo": "GP73_02.png",
+   "leyenda": "Auditoría integral: cobros y estados del pedido"
+  }
+ ],
+ "GP.74": [
+  {
+   "archivo": "GP74_01.png",
+   "leyenda": "Reimpresión del ticket desde el historial"
+  },
+  {
+   "archivo": "GP74_02.png",
+   "leyenda": "Ticket del pedido"
+  }
+ ],
+ "GP.115": [
+  {
+   "archivo": "GP115_01.png",
+   "leyenda": "Caja sin turno: botón Iniciar Caja del Día"
+  },
+  {
+   "archivo": "GP115_02.png",
+   "leyenda": "Apertura del turno con el monto inicial"
+  }
+ ],
+ "GP.52": [
+  {
+   "archivo": "GP52_01.png",
+   "leyenda": "Venta rápida: búsqueda, cantidades y total"
+  },
+  {
+   "archivo": "GP52_02.png",
+   "leyenda": "Método de pago y cobro a Consumidor Final"
+  },
+  {
+   "archivo": "GP52_03.png",
+   "leyenda": "Venta registrada"
+  }
+ ],
+ "GP.67": [
+  {
+   "archivo": "GP67_01.png",
+   "leyenda": "Accesos de WhatsApp y mail del cliente en cada pedido"
+  }
+ ],
+ "GP.58": [
+  {
+   "archivo": "GP58_01.png",
+   "leyenda": "Destino PRESUPUESTO (solo guardar)"
+  },
+  {
+   "archivo": "GP58_02.png",
+   "leyenda": "Presupuesto guardado"
+  }
+ ],
+ "GP.59": [
+  {
+   "archivo": "GP59_01.png",
+   "leyenda": "Pestaña Presupuestos con su contador"
+  }
+ ],
+ "GP.60": [
+  {
+   "archivo": "GP60_01.png",
+   "leyenda": "Detalle del presupuesto: Modificar Estado Proceso"
+  },
+  {
+   "archivo": "GP60_02.png",
+   "leyenda": "Cambio a Pendiente con motivo (auditoría)"
+  }
+ ],
+ "GP.66": [
+  {
+   "archivo": "GP66_01.png",
+   "leyenda": "Tablero: arrastrar el pedido finalizado a Entregar"
+  }
+ ],
+ "GP.70": [
+  {
+   "archivo": "GP70_01.png",
+   "leyenda": "Estado del pedido: opción CANCELADO"
+  },
+  {
+   "archivo": "GP70_02.png",
+   "leyenda": "Anulación con motivo registrado en la línea de tiempo"
+  }
+ ],
+ "GP.68": [
+  {
+   "archivo": "GP68_01.png",
+   "leyenda": "Botón Ticket del pedido"
+  },
+  {
+   "archivo": "GP68_02.png",
+   "leyenda": "Previsualización del ticket del cliente"
+  }
+ ],
+ "GP.69": [
+  {
+   "archivo": "GP69_01.png",
+   "leyenda": "Cobro registrado: acceso al ticket del pago"
+  },
+  {
+   "archivo": "GP69_02.png",
+   "leyenda": "Comprobante de pago para imprimir o guardar en PDF"
+  }
+ ],
+ "GP.75": [
+  {
+   "archivo": "GP75_01.png",
+   "leyenda": "Cola de producción ordenada por urgencia o por número de pedido"
+  }
+ ],
+ "GP.76": [
+  {
+   "archivo": "GP76_01.png",
+   "leyenda": "Tablero con una columna por estado"
+  }
+ ],
+ "GP.77": [
+  {
+   "archivo": "GP77_01.png",
+   "leyenda": "Filtros por cliente, estado operativo y empleado asignado"
+  }
+ ],
+ "GP.78": [
+  {
+   "archivo": "GP78_01.png",
+   "leyenda": "Pestaña Atrasados: pedidos que superaron su fecha de entrega"
+  }
+ ],
+ "GP.79": [
+  {
+   "archivo": "GP79_01.png",
+   "leyenda": "Columna Finalizado: trabajos terminados sin retirar"
+  }
+ ],
+ "GP.80": [
+  {
+   "archivo": "GP80_01.png",
+   "leyenda": "Modificar Estado Proceso en el detalle del pedido"
+  },
+  {
+   "archivo": "GP80_02.png",
+   "leyenda": "Cambio de estado con motivo (auditoría)"
+  }
+ ],
+ "GP.81": [
+  {
+   "archivo": "GP81_01.png",
+   "leyenda": "Tarjetas arrastrables entre columnas (o menú Mover a…)"
+  }
+ ],
+ "GP.82": [
+  {
+   "archivo": "GP82_01.png",
+   "leyenda": "Línea de tiempo del pedido: cambios, fecha, usuario y motivo"
+  }
+ ],
+ "GP.83": [
+  {
+   "archivo": "GP83_01.png",
+   "leyenda": "Empleado asignado al pedido"
+  }
+ ],
+ "GP.84": [
+  {
+   "archivo": "GP84_01.png",
+   "leyenda": "Ubicación física del pedido en el local"
+  }
+ ],
+ "GP.85": [
+  {
+   "archivo": "GP85_01.png",
+   "leyenda": "Comanda de taller con las especificaciones técnicas (sin importes)"
+  }
+ ],
+ "GP.86": [
+  {
+   "archivo": "GP86_01.png",
+   "leyenda": "Botón Agregar Documento"
+  },
+  {
+   "archivo": "GP86_02.png",
+   "leyenda": "Carga del archivo con título, docente, cátedra y precio base"
+  }
+ ],
+ "GP.87": [
+  {
+   "archivo": "GP87_01.png",
+   "leyenda": "Botón Modificar Detalles"
+  },
+  {
+   "archivo": "GP87_02.png",
+   "leyenda": "Modificación de los datos del archivo"
+  }
+ ],
+ "GP.88": [
+  {
+   "archivo": "GP88_01.png",
+   "leyenda": "Acción Eliminar del repositorio"
+  },
+  {
+   "archivo": "GP88_02.png",
+   "leyenda": "Confirmación de la eliminación"
+  }
+ ],
+ "GP.89": [
+  {
+   "archivo": "GP89_01.png",
+   "leyenda": "Búsqueda por título, autor o materia y filtros por cátedra e institución"
+  }
+ ],
+ "GP.90": [
+  {
+   "archivo": "GP90_01.png",
+   "leyenda": "Vista previa del archivo y botón Ver (Pantalla Completa)"
+  }
+ ],
+ "GP.91": [
+  {
+   "archivo": "GP91_01.png",
+   "leyenda": "Botón Crear Pedido de Impresión"
+  },
+  {
+   "archivo": "GP91_02.png",
+   "leyenda": "Pedido iniciado con el apunte y su precio"
+  }
+ ],
+ "GP.92": [
+  {
+   "archivo": "GP92_01.png",
+   "leyenda": "Stock de insumos: empaquetado, suelto y mínimo"
+  }
+ ],
+ "GP.93": [
+  {
+   "archivo": "GP93_01.png",
+   "leyenda": "Alerta de falta de stock en el panel principal"
+  },
+  {
+   "archivo": "GP93_02.png",
+   "leyenda": "Insumos bajo el mínimo marcados y botón Stock Crítico"
+  },
+  {
+   "archivo": "GP93_03.png",
+   "leyenda": "Listado de stock crítico"
+  }
+ ],
+ "GP.94": [
+  {
+   "archivo": "GP94_01.png",
+   "leyenda": "Acción Abrir / Convertir Bulto"
+  },
+  {
+   "archivo": "GP94_02.png",
+   "leyenda": "Apertura de bultos y conversión a unidades sueltas"
+  }
+ ],
+ "GP.95": [
+  {
+   "archivo": "GP95_01.png",
+   "leyenda": "Botón Ver Relaciones"
+  },
+  {
+   "archivo": "GP95_02.png",
+   "leyenda": "Productos que usan cada insumo"
+  }
+ ],
+ "GP.96": [
+  {
+   "archivo": "GP96_01.png",
+   "leyenda": "Registro de compra: ítems, cantidades y precios"
+  },
+  {
+   "archivo": "GP96_02.png",
+   "leyenda": "Proveedor, método de pago, total y Confirmar Compra"
+  }
+ ],
+ "GP.98": [
+  {
+   "archivo": "GP98_01.png",
+   "leyenda": "Botón Registrar Nuevo Producto"
+  },
+  {
+   "archivo": "GP98_02.png",
+   "leyenda": "Alta de producto: precio, stock, categoría y máquina necesaria"
+  }
+ ],
+ "GP.99": [
+  {
+   "archivo": "GP99_01.png",
+   "leyenda": "Acción Editar Producto"
+  },
+  {
+   "archivo": "GP99_02.png",
+   "leyenda": "Modificación del producto"
+  }
+ ],
+ "GP.100": [
+  {
+   "archivo": "GP100_01.png",
+   "leyenda": "Baja lógica del producto: estado inactivo"
+  }
+ ],
+ "GP.101": [
+  {
+   "archivo": "GP101_01.png",
+   "leyenda": "Búsqueda y filtro de productos"
+  }
+ ],
+ "GP.102": [
+  {
+   "archivo": "GP102_01.png",
+   "leyenda": "Acción Configurar Receta / Insumos"
+  },
+  {
+   "archivo": "GP102_02.png",
+   "leyenda": "Receta: insumos y cantidad por unidad"
+  },
+  {
+   "archivo": "GP102_03.png",
+   "leyenda": "Productos con receta configurada"
+  }
+ ],
+ "GP.103": [
+  {
+   "archivo": "GP103_01.png",
+   "leyenda": "Interruptor de stock vinculado a insumos"
+  },
+  {
+   "archivo": "GP103_02.png",
+   "leyenda": "Confirmación del cambio de vínculo"
+  }
+ ],
+ "GP.105": [
+  {
+   "archivo": "GP105_01.png",
+   "leyenda": "Botón Mermas"
+  },
+  {
+   "archivo": "GP105_02.png",
+   "leyenda": "Registro de merma: producto o insumo, cantidad y motivo"
+  },
+  {
+   "archivo": "GP105_03.png",
+   "leyenda": "Merma asociada a un pedido"
+  }
+ ],
+ "GP.106": [
+  {
+   "archivo": "GP106_01.png",
+   "leyenda": "Historial de mermas registradas"
+  }
+ ],
+ "GP.107": [
+  {
+   "archivo": "GP107_01.png",
+   "leyenda": "Botón Nuevo Equipo"
+  },
+  {
+   "archivo": "GP107_02.png",
+   "leyenda": "Alta de equipo: nombre, estado operativo y disponibilidad"
+  }
+ ],
+ "GP.108": [
+  {
+   "archivo": "GP108_01.png",
+   "leyenda": "Acción Modificar Equipo"
+  },
+  {
+   "archivo": "GP108_02.png",
+   "leyenda": "Modificación del equipo"
+  }
+ ],
+ "GP.97": [
+  {
+   "archivo": "GP97_01.png",
+   "leyenda": "Botón Cargar con IA"
+  },
+  {
+   "archivo": "GP97_02.png",
+   "leyenda": "Subida de la foto del remito"
+  },
+  {
+   "archivo": "GP97_03.png",
+   "leyenda": "Ítems detectados por la IA para revisar antes de confirmar"
+  }
+ ],
+ "GP.109": [
+  {
+   "archivo": "GP109_01.png",
+   "leyenda": "Botón Reportar Falla"
+  },
+  {
+   "archivo": "GP109_02.png",
+   "leyenda": "Reporte de falla: equipo, urgencia y descripción"
+  },
+  {
+   "archivo": "GP109_03.png",
+   "leyenda": "Confirmación del reporte"
+  },
+  {
+   "archivo": "GP109_04.png",
+   "leyenda": "El equipo queda Fuera de Servicio"
+  }
+ ],
+ "GP.112": [
+  {
+   "archivo": "GP112_01.png",
+   "leyenda": "Incidencia pendiente: Pasar a Mantenimiento"
+  },
+  {
+   "archivo": "GP112_02.png",
+   "leyenda": "Detalle del trabajo técnico"
+  },
+  {
+   "archivo": "GP112_03.png",
+   "leyenda": "Confirmación del paso a mantenimiento"
+  },
+  {
+   "archivo": "GP112_04.png",
+   "leyenda": "Equipo en mantenimiento"
+  }
+ ],
+ "GP.111": [
+  {
+   "archivo": "GP111_01.png",
+   "leyenda": "Acción Pagar Arreglo"
+  },
+  {
+   "archivo": "GP111_02.png",
+   "leyenda": "Pago al técnico: egreso de mantenimiento en caja"
+  }
+ ],
+ "GP.110": [
+  {
+   "archivo": "GP110_01.png",
+   "leyenda": "Aviso al vender un producto cuyo equipo está fuera de servicio (pide confirmación)"
+  }
+ ],
+ "GP.113": [
+  {
+   "archivo": "GP113_01.png",
+   "leyenda": "Alta operativa con el detalle de la solución"
+  },
+  {
+   "archivo": "GP113_02.png",
+   "leyenda": "El equipo vuelve a estar Operativo"
+  }
+ ],
+ "GP.114": [
+  {
+   "archivo": "GP114_01.png",
+   "leyenda": "Acción Ver Historial de Incidencias"
+  },
+  {
+   "archivo": "GP114_02.png",
+   "leyenda": "Historial: reporte, mantenimiento, alta y pago"
+  }
+ ],
+ "GP.116": [
+  {
+   "archivo": "GP116_01.png",
+   "leyenda": "Flujo de caja del turno: saldo, ingresos, egresos, gráfico y movimientos"
+  }
+ ],
+ "GP.117": [
+  {
+   "archivo": "GP117_01.png",
+   "leyenda": "Filtros por tipo (ingreso/egreso) y por medio de pago"
+  }
+ ],
+ "GP.118": [
+  {
+   "archivo": "GP118_01.png",
+   "leyenda": "Botón Crear Nuevo Movimiento"
+  },
+  {
+   "archivo": "GP118_02.png",
+   "leyenda": "Movimiento manual: tipo, monto, categoría, medio de pago y descripción"
+  }
+ ],
+ "GP.119": [
+  {
+   "archivo": "GP119_01.png",
+   "leyenda": "Acción Ver Ticket de Comprobante"
+  },
+  {
+   "archivo": "GP119_02.png",
+   "leyenda": "Comprobante del movimiento de caja"
+  }
+ ],
+ "GP.120": [
+  {
+   "archivo": "GP120_01.png",
+   "leyenda": "Descarga de movimientos en Excel y PDF"
+  }
+ ],
+ "GP.121": [
+  {
+   "archivo": "GP121_01.png",
+   "leyenda": "Botón Consultar Arqueo"
+  },
+  {
+   "archivo": "GP121_02.png",
+   "leyenda": "Arqueo: esperado en efectivo y en medios digitales"
+  }
+ ],
+ "GP.122": [
+  {
+   "archivo": "GP122_01.png",
+   "leyenda": "Botón Cerrar Turno y Arqueo"
+  },
+  {
+   "archivo": "GP122_02.png",
+   "leyenda": "Cierre del turno: efectivo real contado"
+  }
+ ],
+ "GP.124": [
+  {
+   "archivo": "GP124_01.png",
+   "leyenda": "Registros de Arqueo (solo administradores)"
+  },
+  {
+   "archivo": "GP124_02.png",
+   "leyenda": "Turnos cerrados: incluye los cerrados automáticamente por el sistema"
+  }
+ ],
+ "GP.125": [
+  {
+   "archivo": "GP125_01.png",
+   "leyenda": "Registros de Arqueo (solo administradores)"
+  },
+  {
+   "archivo": "GP125_02.png",
+   "leyenda": "Cierres de caja por turno con movimientos y diferencias"
+  }
+ ],
+ "GP.126": [
+  {
+   "archivo": "GP126_01.png",
+   "leyenda": "Métricas generales y selector de período"
+  }
+ ],
+ "GP.127": [
+  {
+   "archivo": "GP127_01.png",
+   "leyenda": "Finanzas y Caja: evolución de ingresos y medios de pago"
+  },
+  {
+   "archivo": "GP127_02.png",
+   "leyenda": "Egresos y salidas de caja detallados"
+  }
+ ],
+ "GP.128": [
+  {
+   "archivo": "GP128_01.png",
+   "leyenda": "Ranking de productos y categorías más vendidos"
+  }
+ ],
+ "GP.129": [
+  {
+   "archivo": "GP129_01.png",
+   "leyenda": "Desempeño de empleados y estado de los pedidos"
+  }
+ ],
+ "GP.130": [
+  {
+   "archivo": "GP130_01.png",
+   "leyenda": "Mejores clientes y comportamiento por categoría"
+  }
+ ],
+ "GP.131": [
+  {
+   "archivo": "GP131_01.png",
+   "leyenda": "Diferencias de arqueo, mermas y fallas registradas"
+  }
+ ],
+ "GP.132": [
+  {
+   "archivo": "GP132_01.png",
+   "leyenda": "Botón Comparar en cada gráfico"
+  },
+  {
+   "archivo": "GP132_02.png",
+   "leyenda": "Comparación entre dos períodos"
+  }
+ ],
+ "GP.133": [
+  {
+   "archivo": "GP133_01.png",
+   "leyenda": "Exportar el informe a PDF"
+  }
+ ],
+ "GP.134": [
+  {
+   "archivo": "GP134_01.png",
+   "leyenda": "Botón Modificar Varios Precios"
+  },
+  {
+   "archivo": "GP134_02.png",
+   "leyenda": "Aumento o descuento porcentual: todos, por categoría o selección"
+  }
+ ],
+ "GP.135": [
+  {
+   "archivo": "GP135_01.png",
+   "leyenda": "Resumen del día en el celular"
+  },
+  {
+   "archivo": "GP135_02.png",
+   "leyenda": "Pedidos, stock bajo y máquinas"
+  }
+ ],
+ "GP.140": [
+  {
+   "archivo": "GP140_01.png",
+   "leyenda": "Interruptor de modo Claro / Oscuro"
+  },
+  {
+   "archivo": "GP140_02.png",
+   "leyenda": "Sistema en modo claro"
+  }
+ ],
+ "GP.123": [
+  {
+   "archivo": "GP123_01.png",
+   "leyenda": "Diferencia entre lo esperado y lo contado"
+  },
+  {
+   "archivo": "GP123_02.png",
+   "leyenda": "Justificación obligatoria de la diferencia"
+  }
+ ],
+ "GP.136": [
+  {
+   "archivo": "GP136_01.png",
+   "leyenda": "Notificaciones en el celular"
+  }
+ ],
+ "GP.137": [
+  {
+   "archivo": "GP137_01.png",
+   "leyenda": "Pedidos desde el celular"
+  }
+ ],
+ "GP.138": [
+  {
+   "archivo": "GP138_01.png",
+   "leyenda": "Informes y métricas desde el celular"
+  }
+ ],
+ "GP.139": [
+  {
+   "archivo": "GP139_01.png",
+   "leyenda": "Estado de máquinas y fallas desde el celular"
+  }
+ ],
+ "GP.141": [
+  {
+   "archivo": "GP141_01.png",
+   "leyenda": "Manual de Usuario: Ver manual y Descargar"
+  }
+ ],
+ "GP.142": [
+  {
+   "archivo": "GP142_01.png",
+   "leyenda": "Asistente de ayuda con IA"
+  },
+  {
+   "archivo": "GP142_02.png",
+   "leyenda": "Respuesta del asistente basada en el manual"
+  }
+ ],
+ "GP.65": [
+  {
+   "archivo": "GP65_01.png",
+   "leyenda": "Pedido finalizado con saldo pendiente (columna Finalizado y zona Entregar)"
+  },
+  {
+   "archivo": "GP65_02.png",
+   "leyenda": "Saldo que supera el límite de crédito: autorizar, actualizar el límite o cobrar"
+  }
+ ],
+ "GP.104": [
+  {
+   "archivo": "GP104_01.png",
+   "leyenda": "Stock antes de finalizar el pedido (espiral y tapas)"
+  },
+  {
+   "archivo": "GP104_02.png",
+   "leyenda": "El pedido pasa a Finalizado"
+  },
+  {
+   "archivo": "GP104_03.png",
+   "leyenda": "Stock descontado automáticamente según la receta"
+  }
+ ]
+}

@@ -101,6 +101,14 @@
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Pruebas de API como código (REST Assured + JUnit 5): levantan el backend real en un puerto
+		     aleatorio y le hacen peticiones HTTP de verdad (ver src/test/java/.../api). -->
+		<dependency>
+			<groupId>io.rest-assured</groupId>
+			<artifactId>rest-assured</artifactId>
+			<version>6.0.1</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
     		<groupId>com.fasterxml.jackson.core</groupId>
     		<artifactId>jackson-databind</artifactId>
