@@ -1,15 +1,26 @@
 package com.elsur.sistema_gestion.api;
 
+// ============================================================================================
+//  CÓMO LEER ESTE ARCHIVO EN LA PRESENTACIÓN
+//  Seguir los comentarios "PASO 1" a "PASO 6" en orden. Cada paso dice qué hace el código y
+//  a qué parte de Postman equivale, porque es EXACTAMENTE el mismo caso de prueba.
+// ============================================================================================
+
+// --- Imports: las herramientas que usamos ---
+// REST Assured: la librería que manda peticiones HTTP y revisa las respuestas (como Postman, pero en código).
 import io.restassured.RestAssured;
 import io.restassured.config.LogConfig;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
+// Hamcrest: la librería de las "comprobaciones" (equalTo = igual a, notNullValue = que exista, etc.).
 import org.hamcrest.CustomMatcher;
 import org.hamcrest.Matcher;
+// JUnit 5: el framework que ejecuta los tests y los marca en verde (pasa) o rojo (falla).
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+// Spring Boot Test: permite levantar nuestro backend real dentro del test.
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
@@ -18,105 +29,117 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
+// "given", "equalTo", "notNullValue", etc. se escriben sin prefijo gracias a estos imports estáticos.
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
 /**
- * Prueba de API con REST Assured + JUnit 5.
+ * QUÉ ES ESTE ARCHIVO
+ * Una prueba de API escrita en Java con REST Assured y ejecutada con JUnit 5.
+ * Prueba el alta de un cliente: POST /api/clientes.
  *
  * Es EXACTAMENTE el mismo caso que la petición "Registrar cliente (POST /api/clientes)" de Postman
  * (docs/ie2/postman): misma URL, mismas cabeceras, mismo body JSON y mismas 10 comprobaciones.
  *
- * Caso de negocio: el Dueño de El Sur registra a un cliente habitual con cuenta corriente y un
+ * CASO DE NEGOCIO: el Dueño de El Sur registra a un cliente habitual con cuenta corriente y un
  * límite de crédito de $15.000 para poder venderle a cuenta.
  *
- * Dónde corre:
- *  - Por defecto, contra un backend que el propio test levanta (base H2 en memoria, sin tocar datos reales).
- *  - Contra la app publicada, agregando -Dapi.url=https://sistema-gestion-elsur.vercel.app y las
- *    credenciales en las variables de entorno API_USUARIO y API_PASSWORD (nunca escritas en el código).
+ * DÓNDE CORRE: el propio test levanta nuestro backend con una base de datos en memoria (H2).
+ * No necesita internet, ni tener nada prendido antes, ni toca datos reales.
  *
- * Estructura de REST Assured: given() = lo que preparo, when() = la acción, then() = lo que espero.
+ * LA IDEA DE REST ASSURED (se lee como una frase):
+ *    given()  = "dado que"  -> lo que preparo: cabeceras, token, body JSON
+ *    when()   = "cuando"    -> la acción: mando el POST
+ *    then()   = "entonces"  -> lo que espero: status, cabeceras, datos del JSON
  */
-// Levanta la aplicación Spring Boot completa en un puerto libre, como si fuera el servidor real.
+// PASO 1 — LEVANTAR EL BACKEND
+// @SpringBootTest arranca la aplicación completa (controladores, seguridad, base de datos) en un
+// puerto libre, como si fuera el servidor de verdad. Por eso en la consola se ve el logo de Spring.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-// Perfil "test": base H2 en memoria. Perfil "api": crea el usuario de prueba admin.api (UsuarioApiPruebaInicializador).
+// Perfiles: "test" usa la base H2 en memoria; "api" crea el usuario de prueba admin.api
+// (lo hace la clase UsuarioApiPruebaInicializador, que solo existe en los tests).
 @ActiveProfiles({"test", "api"})
-// Nombre que se ve en el árbol de tests de IntelliJ.
+// Nombre que aparece en el árbol de tests de IntelliJ.
 @DisplayName("POST /api/clientes - Registrar cliente (REST Assured)")
 class RegistrarClienteRestAssuredTest {
 
-    // Puerto que eligió Spring al levantar la app (cambia en cada corrida).
+    // Spring elige un puerto libre distinto en cada corrida y lo guarda acá.
     @LocalServerPort
     private int puerto;
 
-    // Token JWT que devuelve el login: va en la cabecera Authorization del POST.
+    // El token JWT que devuelve el login. Es la "llave" para usar la API: va en la cabecera Authorization.
     private String token;
 
-    // Id del cliente que crea la prueba, para borrarlo al final.
+    // El id del cliente que crea la prueba; lo guardamos para borrarlo al final.
     private Integer idClienteCreado;
 
     /**
-     * SEGURIDAD / PREPARACIÓN (en Postman: pestaña Scripts > Pre-request de la misma petición).
-     * JUnit corre este método antes de cada @Test: configura a dónde se le pega y hace el login.
+     * PASO 2 — SEGURIDAD: INICIAR SESIÓN Y CONSEGUIR EL TOKEN
+     * (en Postman: pestaña Scripts > Pre-request de la petición).
+     * @BeforeEach significa que JUnit corre este método ANTES de la prueba. Es preparación, no la prueba.
      */
     @BeforeEach
     void iniciarSesion() {
+        // Arranca la configuración de REST Assured de cero.
         RestAssured.reset();
 
-        // ¿Contra qué servidor? Si se pasa -Dapi.url, contra la app publicada; si no, contra el backend local del test.
-        String url = System.getProperty("api.url");
-        String usuario = UsuarioApiPruebaInicializador.USUARIO;      // admin.api (solo existe en test)
-        String password = UsuarioApiPruebaInicializador.PASSWORD;
-        if (url != null && !url.isBlank()) {
-            RestAssured.baseURI = url;
-            usuario = System.getenv("API_USUARIO");                // credenciales reales: solo por variables de entorno
-            password = System.getenv("API_PASSWORD");
-        } else {
-            RestAssured.port = puerto;
-        }
+        // Le decimos a REST Assured a qué servidor pegarle: al backend que levantó el test.
+        RestAssured.port = puerto;
 
-        // Todas las rutas empiezan con /api (igual que {{baseUrl}}/api/... en Postman).
+        // Todas las rutas empiezan con /api (en Postman: {{baseUrl}}/api/...).
         RestAssured.basePath = "/api";
 
-        // En la consola el token aparece oculto ([ BLACKLISTED ]) para que no se vea en el proyector;
-        // si alguna comprobación falla, se imprime la petición y la respuesta completas para ver el motivo.
+        // Configuración de lo que se muestra en la consola:
+        //  - el token aparece oculto como [ BLACKLISTED ] para que no se vea en el proyector;
+        //  - si algo falla, se imprime la petición y la respuesta completas para ver el motivo.
         RestAssured.config = RestAssured.config().logConfig(LogConfig.logConfig()
                 .blacklistHeader("Authorization")
                 .enableLoggingOfRequestAndResponseIfValidationFails(LogDetail.ALL));
 
-        // Login: POST /api/usuarios/login con usuario y contraseña -> devuelve el token JWT.
+        // El login: POST /api/usuarios/login con usuario y contraseña. El backend responde con el token.
         token = given()
-                    .contentType(ContentType.JSON)                             // cabecera Content-Type: application/json
-                    .body(Map.of("nombreUsuario", usuario, "password", password)) // body JSON del login
+                    // Cabecera: lo que mandamos es JSON.
+                    .contentType(ContentType.JSON)
+                    // Body del login: usuario y contraseña del usuario de prueba admin.api.
+                    .body(Map.of("nombreUsuario", UsuarioApiPruebaInicializador.USUARIO,
+                                 "password", UsuarioApiPruebaInicializador.PASSWORD))
                 .when()
                     .post("/usuarios/login")
                 .then()
-                    .statusCode(200)                                           // el login tiene que salir bien
-                    .extract().path("token");                                  // saca el campo "token" del JSON
+                    // El login tiene que salir bien (200 OK)...
+                    .statusCode(200)
+                    // ...y del JSON de respuesta sacamos el campo "token" y lo guardamos.
+                    .extract().path("token");
     }
 
     /**
-     * EL CASO DE PRUEBA: POST /api/clientes.
-     * Mismo request y mismas 10 comprobaciones que la petición de Postman.
+     * EL CASO DE PRUEBA: registrar un cliente con POST /api/clientes.
+     * @Test le dice a JUnit "esto es una prueba": si todas las comprobaciones se cumplen, queda en verde.
      */
     @Test
     @DisplayName("Registrar cliente con cuenta corriente: 201 Created y el JSON del cliente creado")
     void registrarCliente() {
-        // DATOS: documento al azar en cada corrida, así el cliente nunca se repite (si no, daría 409).
+        // Número de documento al azar en cada corrida: así el cliente nunca se repite
+        // (si se repitiera, el backend respondería 409 Conflict porque ya existe).
         String documento = String.valueOf(ThreadLocalRandom.current().nextInt(30_000_000, 46_000_000));
 
         idClienteCreado =
-            // ---------- GIVEN: lo que preparo (pestañas Headers y Body de Postman) ----------
+            // PASO 3 — GIVEN ("dado que"): ARMO LA PETICIÓN
+            // (en Postman: pestañas Headers y Body)
             given()
-                .header("Authorization", "Bearer " + token)   // SEGURIDAD: sin este token el backend responde 401
-                .contentType(ContentType.JSON)                  // cabecera Content-Type: application/json
-                .body(Map.of(                                   // BODY JSON: el cliente con su persona y su dirección
+                // Cabecera de SEGURIDAD: "Bearer" + el token del login. Sin esto el backend responde 401.
+                .header("Authorization", "Bearer " + token)
+                // Cabecera Content-Type: el body va en formato JSON.
+                .contentType(ContentType.JSON)
+                // BODY JSON: los datos del cliente. Map.of arma el JSON {"clave": valor, ...}.
+                .body(Map.of(
                         "razonSocial", "Cliente API " + documento,
-                        "saldoDeudor", 0,
-                        "limiteCredito", 15000,                 // cuenta corriente con límite de $15.000
+                        "saldoDeudor", 0,                        // arranca sin deuda
+                        "limiteCredito", 15000,                  // puede comprar a cuenta hasta $15.000
                         "estado", "Activo",
                         "personaDeContacto", "Sofía Demo",
                         "condicionDePago", "Cuenta corriente",
+                        // Los datos de la persona, con su documento y su dirección.
                         "persona", Map.of(
                                 "nombre", "Sofía",
                                 "apellido", "Demo",
@@ -128,34 +151,39 @@ class RegistrarClienteRestAssuredTest {
                                 "direccion", Map.of(
                                         "calle", "Bv. Pellegrini", "numero", "2350", "codigoPostal", "3000",
                                         "ciudad", "Santa Fe", "provincia", "Santa Fe", "pais", "Argentina"))))
-                // Muestra en la consola el método, la URL, las cabeceras y el body que se envían.
+                // Muestra en la consola lo que se manda: método, URL, cabeceras y body.
                 .log().method().log().uri().log().headers().log().body()
 
-            // ---------- WHEN: la acción (botón Send de Postman) ----------
+            // PASO 4 — WHEN ("cuando"): MANDO LA PETICIÓN
+            // (en Postman: el botón Send)
             .when()
                 .post("/clientes")
 
-            // ---------- THEN: lo que espero (pestaña Scripts > Post-response / Test Results de Postman) ----------
+            // PASO 5 — THEN ("entonces"): COMPRUEBO LA RESPUESTA
+            // (en Postman: pestaña Scripts > Post-response y el resultado en Test Results)
+            // Si UNA sola de estas 10 comprobaciones no se cumple, el test queda en rojo y dice cuál falló.
             .then()
-                // Muestra en la consola el estado, las cabeceras y el JSON que devolvió el servidor.
+                // Muestra en la consola lo que respondió el servidor: estado, cabeceras y JSON.
                 .log().status().log().headers().log().body()
-                .statusCode(201)                                             // 1. Status 201 Created (se creó un recurso)
-                .header("Content-Type", containsString("application/json")) // 2. Responde JSON
-                .time(lessThan(3000L))                                       // 3. Responde en menos de 3 segundos
-                .body("id_cliente", notNullValue())                          // 4. Trae el id del cliente creado
-                .body("razonSocial", equalTo("Cliente API " + documento))    // 5. Razón social enviada
-                .body("estado", equalTo("Activo"))                           // 6. Queda activo
+                .statusCode(201)                                             // 1. Status 201 Created: se creó un recurso nuevo
+                .header("Content-Type", containsString("application/json")) // 2. La respuesta viene en JSON
+                .time(lessThan(3000L))                                       // 3. Respondió en menos de 3 segundos
+                .body("id_cliente", notNullValue())                          // 4. El backend le asignó un id al cliente
+                .body("razonSocial", equalTo("Cliente API " + documento))    // 5. Guardó la razón social que mandamos
+                .body("estado", equalTo("Activo"))                           // 6. Quedó activo
                 .body("condicionDePago", equalTo("Cuenta corriente"))        // 7. Habilitado para cuenta corriente
-                .body("limiteCredito", monto(15000))                         // 8. Límite de $15.000
-                .body("saldoDeudor", monto(0))                               // 9. Arranca sin deuda
-                .body("persona.numeroDocumento", equalTo(documento))         // 10. Documento enviado
-                // Guarda el id para la limpieza.
+                .body("limiteCredito", monto(15000))                         // 8. Con límite de $15.000
+                .body("saldoDeudor", monto(0))                               // 9. Sin deuda
+                .body("persona.numeroDocumento", equalTo(documento))         // 10. Con el documento que mandamos
+                // Del JSON de respuesta sacamos el id del cliente, para borrarlo en el paso 6.
                 .extract().path("id_cliente");
     }
 
     /**
-     * LIMPIEZA (en Postman: final del script Post-response). No es parte de la prueba:
-     * JUnit lo corre después de cada @Test y borra el cliente creado para no dejar datos.
+     * PASO 6 — LIMPIEZA: BORRAR EL CLIENTE DE PRUEBA
+     * (en Postman: el final del script Post-response).
+     * @AfterEach significa que JUnit corre este método DESPUÉS de la prueba. No es parte del caso:
+     * solo deja la base como estaba, para poder repetir la prueba las veces que haga falta.
      */
     @AfterEach
     void borrarClienteDePrueba() {
@@ -167,8 +195,9 @@ class RegistrarClienteRestAssuredTest {
     }
 
     /**
-     * Comparador de montos: el backend guarda los importes con 2 decimales, así que el JSON puede traer
-     * 15000 o 15000.00. Este matcher los considera iguales (en Postman se resuelve con Number(...)).
+     * Comprobación auxiliar para montos de dinero: el backend guarda los importes con 2 decimales,
+     * así que el JSON puede traer 15000 o 15000.00. Esta comprobación los toma como iguales.
+     * (En Postman se resuelve con Number(...)).
      */
     private static Matcher<Object> monto(long esperado) {
         return new CustomMatcher<>("un monto igual a " + esperado) {
