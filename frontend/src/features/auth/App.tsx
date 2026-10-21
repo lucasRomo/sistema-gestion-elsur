@@ -16,6 +16,9 @@ import { BannerSinConexion } from '../../components/common/BannerSinConexion';
 import { CerrarModalConEscape } from '../../components/common/CerrarModalConEscape';
 import { BackupReminderModal } from '../../components/common/BackupReminderModal';
 import { API_BASE_URL } from '../../config/api';
+import { ES_DEMO } from '../../config/demo';
+import { DemoEntrada } from '../demo/DemoEntrada';
+import { CartelDemo } from '../demo/CartelDemo';
 
 // El backend (plan gratis de Render) se apaga tras un rato sin uso y tarda en arrancar: apenas se
 // abre la página se lo "despierta" con un pedido liviano, así arranca mientras el usuario escribe
@@ -67,19 +70,19 @@ function App() {
         <BrowserRouter>
           <Suspense fallback={<CargandoPantalla />}>
           <Routes>
-            <Route path="/" element={
+            <Route path="/" element={ES_DEMO ? <DemoEntrada /> :
               <PortonGate>
                 <WelcomeView onIrARegistro={() => window.location.href='/registro'} onIrALogin={() => window.location.href='/login'} />
               </PortonGate>
             } />
 
-            <Route path="/registro" element={
+            <Route path="/registro" element={ES_DEMO ? <Navigate to="/" /> :
               <PortonGate>
                 <RegisterView onVolver={() => window.location.href='/'} />
               </PortonGate>
             } />
             
-            <Route path="/login" element={
+            <Route path="/login" element={ES_DEMO ? <Navigate to="/" /> :
               <PortonGate>
                 <LoginView 
                   onLoginExitoso={() => {
@@ -207,6 +210,7 @@ function App() {
           <DialogHost />
           <ToastHost />
           <BannerSinConexion />
+          {ES_DEMO && <CartelDemo />}
           <CerrarModalConEscape />
           <BackupReminderModal />
         </BrowserRouter>

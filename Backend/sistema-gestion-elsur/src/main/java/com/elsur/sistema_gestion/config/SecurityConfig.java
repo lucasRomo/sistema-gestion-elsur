@@ -62,6 +62,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/usuarios/login", "/error", "/api/acceso/validar", "/actuator/health").permitAll()
+                // Entrada de la demo pública: solo existe con el perfil "demo" (en producción da 404).
+                .requestMatchers(HttpMethod.POST, "/api/demo/entrar").permitAll()
                 .anyRequest().access(matrizSeguridadValidator)
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
