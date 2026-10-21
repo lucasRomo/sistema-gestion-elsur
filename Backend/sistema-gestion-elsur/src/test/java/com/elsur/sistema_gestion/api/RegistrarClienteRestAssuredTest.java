@@ -20,6 +20,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.TestWatcher;
 // Spring Boot Test: permite levantar nuestro backend real dentro del test.
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -61,6 +64,8 @@ import static org.hamcrest.Matchers.*;
 @ActiveProfiles({"test", "api"})
 // Nombre que aparece en el árbol de tests de IntelliJ.
 @DisplayName("POST /api/clientes - Registrar cliente (REST Assured)")
+// Al terminar, imprime en la consola un cartel bien visible: PRUEBA APROBADA o PRUEBA FALLIDA (ver la clase Resultado al final).
+@ExtendWith(RegistrarClienteRestAssuredTest.Resultado.class)
 class RegistrarClienteRestAssuredTest {
 
     // Spring elige un puerto libre distinto en cada corrida y lo guarda acá.
@@ -206,5 +211,32 @@ class RegistrarClienteRestAssuredTest {
                 return valor instanceof Number n && new BigDecimal(n.toString()).compareTo(BigDecimal.valueOf(esperado)) == 0;
             }
         };
+    }
+
+    /**
+     * CARTEL DEL RESULTADO (no es parte de la prueba): JUnit avisa si el test pasó o falló y acá lo
+     * mostramos bien grande al final de la consola. En IntelliJ, además, el test queda con un tilde
+     * verde (o una cruz roja) en el panel izquierdo de la ventana Run.
+     */
+    static class Resultado implements TestWatcher {
+        private static final String VERDE = "\u001B[1;32m";
+        private static final String ROJO = "\u001B[1;31m";
+        private static final String NORMAL = "\u001B[0m";
+        private static final String LINEA = "=================================================================";
+
+        @Override
+        public void testSuccessful(ExtensionContext context) {
+            System.out.println(VERDE + "\n" + LINEA
+                    + "\n   PRUEBA APROBADA: POST /api/clientes -> 201 Created"
+                    + "\n   Las 10 comprobaciones se cumplieron."
+                    + "\n" + LINEA + NORMAL);
+        }
+
+        @Override
+        public void testFailed(ExtensionContext context, Throwable causa) {
+            System.out.println(ROJO + "\n" + LINEA
+                    + "\n   PRUEBA FALLIDA: " + causa.getMessage()
+                    + "\n" + LINEA + NORMAL);
+        }
     }
 }

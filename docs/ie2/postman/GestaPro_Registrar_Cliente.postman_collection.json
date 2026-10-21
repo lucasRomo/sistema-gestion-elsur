@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "GestaPro - Registrar cliente (IE2 Equipo 5)",
-    "description": "Una sola petición: POST /api/clientes. Es exactamente el mismo caso que la clase RegistrarClienteRestAssuredTest (REST Assured + JUnit 5): mismas cabeceras, mismo body JSON y mismas comprobaciones.\n\nTodo está en la misma petición: la pestaña Scripts > Pre-request hace el login (seguridad), Headers lleva el token, Body el JSON y Scripts > Post-response las comprobaciones; al final el cliente de prueba se borra, así se puede correr contra la app publicada (Vercel) sin dejar datos.",
+    "description": "Una sola petición: POST /api/clientes. Es exactamente el mismo caso que la clase RegistrarClienteRestAssuredTest (REST Assured + JUnit 5): mismas cabeceras, mismo body JSON y mismas comprobaciones.\n\nTodo está en la misma petición: Scripts > Pre-request hace el login, Authorization (Bearer Token) lleva el token, Headers el Content-Type, Body el JSON y Scripts > Post-response las comprobaciones; al final el cliente de prueba se borra, así se puede correr contra la app publicada (Vercel) sin dejar datos.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -25,7 +25,7 @@
             "exec": [
               "// SEGURIDAD (igual que el @BeforeEach de REST Assured):",
               "// antes de mandar el POST, hace el login con el usuario y la contraseña del entorno",
-              "// y guarda el token JWT en la variable {{token}}, que va en la cabecera Authorization.",
+              "// y guarda el token JWT en la variable {{token}}, que usa la pestaña Authorization (Bearer Token).",
               "pm.sendRequest({",
               "  url: pm.environment.get('baseUrl') + '/api/usuarios/login',",
               "  method: 'POST',",
@@ -74,11 +74,17 @@
       ],
       "request": {
         "method": "POST",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
         "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
-          },
           {
             "key": "Content-Type",
             "value": "application/json"
