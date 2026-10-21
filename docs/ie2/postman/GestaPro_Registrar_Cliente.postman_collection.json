@@ -1,0 +1,107 @@
+{
+  "info": {
+    "name": "GestaPro - Registrar cliente (IE2 Equipo 5)",
+    "description": "Una sola petición: POST /api/clientes. Es exactamente el mismo caso que la clase RegistrarClienteRestAssuredTest (REST Assured + JUnit 5): mismas cabeceras, mismo body JSON y mismas comprobaciones.\n\nEl login se hace solo (script de la colección) y al final el cliente de prueba se borra, así se puede correr en local o contra la app publicada sin dejar datos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Preparación (igual que el @BeforeEach de REST Assured): login automático para obtener el token JWT.",
+          "pm.sendRequest({",
+          "  url: pm.environment.get('baseUrl') + '/api/usuarios/login',",
+          "  method: 'POST',",
+          "  header: { 'Content-Type': 'application/json' },",
+          "  body: { mode: 'raw', raw: JSON.stringify({ nombreUsuario: pm.environment.get('usuario'), password: pm.environment.get('password') }) }",
+          "}, (err, res) => {",
+          "  if (err || res.code !== 200) { console.error('No se pudo iniciar sesión: revisá usuario y contraseña del entorno'); return; }",
+          "  pm.collectionVariables.set('token', res.json().token);",
+          "});",
+          "// Documento nuevo en cada corrida (no se repite el cliente)",
+          "pm.collectionVariables.set('documento', String(Math.floor(30000000 + Math.random() * 16000000)));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "documento",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Registrar cliente (POST /api/clientes)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const doc = pm.collectionVariables.get('documento');",
+              "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+              "pm.test('Content-Type JSON', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+              "pm.test('Responde en menos de 3 s', () => pm.expect(pm.response.responseTime).to.be.below(3000));",
+              "const json = pm.response.json();",
+              "pm.test('Tiene id_cliente', () => pm.expect(json.id_cliente).to.exist);",
+              "pm.test('razonSocial', () => pm.expect(json.razonSocial).to.eql('Cliente API ' + doc));",
+              "pm.test('estado Activo', () => pm.expect(json.estado).to.eql('Activo'));",
+              "pm.test('condicionDePago Cuenta corriente', () => pm.expect(json.condicionDePago).to.eql('Cuenta corriente'));",
+              "pm.test('limiteCredito 15000', () => pm.expect(Number(json.limiteCredito)).to.eql(15000));",
+              "pm.test('saldoDeudor 0', () => pm.expect(Number(json.saldoDeudor)).to.eql(0));",
+              "pm.test('persona.numeroDocumento', () => pm.expect(json.persona.numeroDocumento).to.eql(doc));",
+              "",
+              "// Limpieza (igual que el @AfterEach de REST Assured): borra el cliente de prueba para no dejar datos.",
+              "if (json.id_cliente) {",
+              "  pm.sendRequest({",
+              "    url: pm.environment.get('baseUrl') + '/api/clientes/' + json.id_cliente,",
+              "    method: 'DELETE',",
+              "    header: { 'Authorization': 'Bearer ' + pm.collectionVariables.get('token') }",
+              "  }, (err, res) => console.log('Limpieza: cliente de prueba borrado ->', err ? err : res.code));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"razonSocial\": \"Cliente API {{documento}}\",\n  \"saldoDeudor\": 0,\n  \"limiteCredito\": 15000,\n  \"estado\": \"Activo\",\n  \"personaDeContacto\": \"Sofía Demo\",\n  \"condicionDePago\": \"Cuenta corriente\",\n  \"persona\": {\n    \"nombre\": \"Sofía\",\n    \"apellido\": \"Demo\",\n    \"numeroDocumento\": \"{{documento}}\",\n    \"telefono\": \"3424000099\",\n    \"email\": \"sofia.{{documento}}@gestapro.test\",\n    \"tipoDocumento\": {\n      \"idTipoDocumento\": 1\n    },\n    \"tipoPersona\": {\n      \"idTipoPersona\": 1\n    },\n    \"direccion\": {\n      \"calle\": \"Bv. Pellegrini\",\n      \"numero\": \"2350\",\n      \"codigoPostal\": \"3000\",\n      \"ciudad\": \"Santa Fe\",\n      \"provincia\": \"Santa Fe\",\n      \"pais\": \"Argentina\"\n    }\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/clientes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "clientes"
+          ]
+        }
+      }
+    }
+  ]
+}

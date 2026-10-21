@@ -4,6 +4,8 @@ import com.elsur.sistema_gestion.models.Cliente;
 import com.elsur.sistema_gestion.services.ClienteService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -20,11 +22,14 @@ public class ClienteController {
         return clienteService.listarTodos();
     }
 
+    /** Alta (sin id) responde 201 Created; modificación (con id) responde 200 OK. */
     @PostMapping
-    public Cliente crear(
+    public ResponseEntity<Cliente> crear(
             @Valid @RequestBody Cliente cliente,
             @RequestParam(value = "idUsuario", required = false) Integer idUsuario) {
-        return clienteService.guardar(cliente, idUsuario);
+        boolean esAlta = cliente.getIdCliente() == null;
+        Cliente guardado = clienteService.guardar(cliente, idUsuario);
+        return ResponseEntity.status(esAlta ? HttpStatus.CREATED : HttpStatus.OK).body(guardado);
     }
 
     @GetMapping("/{id}")
