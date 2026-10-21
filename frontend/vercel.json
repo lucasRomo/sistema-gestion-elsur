@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    { "source": "/demo", "destination": "https://gestapro-demo.vercel.app", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/api/:ruta*", "destination": "https://sistema-gestion-elsur.onrender.com/api/:ruta*" },
     { "source": "/(.*)", "destination": "/index.html" }
