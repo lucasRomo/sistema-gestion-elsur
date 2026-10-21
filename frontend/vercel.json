@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/api/:ruta*", "destination": "https://sistema-gestion-elsur.onrender.com/api/:ruta*" },
+    { "source": "/api/:ruta*", "destination": "https://gestapro-demo.onrender.com/api/:ruta*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
