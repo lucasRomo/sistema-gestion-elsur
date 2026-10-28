@@ -1,6 +1,7 @@
-# Muestra IE2 (Equipo 5): levanta el entorno local con datos de prueba y abre Playwright UI y Cypress lado a lado.
+﻿# Muestra IE2 (Equipo 5): levanta el entorno local con datos de prueba y abre Playwright UI y Cypress lado a lado.
 # Entorno: PostgreSQL + backend en perfil demo (8091, recarga los datos de prueba al arrancar) + frontend (5173).
 # Necesita uat\entorno.local.properties y uat\datos.json (no están en git; ver los archivos *.ejemplo.*).
+# La primera vez también instala lo que falte: dependencias de npm, el programa de Cypress y la base de datos vacía.
 $ErrorActionPreference = 'Stop'
 $uat = $PSScriptRoot
 $raiz = Split-Path $uat -Parent
@@ -11,14 +12,20 @@ function Escucha($puerto) { [bool](Get-NetTCPConnection -LocalPort $puerto -Stat
 
 function Esperar($nombre, $url) {
     Write-Host "Esperando $nombre..." -NoNewline
-    for ($i = 0; $i -lt 120; $i++) {
+    for ($i = 0; $i -lt 300; $i++) {
         try { Invoke-WebRequest $url -UseBasicParsing -TimeoutSec 3 | Out-Null; Write-Host ' listo'; return } catch { Start-Sleep 2; Write-Host '.' -NoNewline }
     }
-    throw "$nombre no respondió en $url"
+    throw "$nombre no arrancó. Cerrá todas las ventanas negras y volvé a abrir muestra.cmd."
 }
 
+function Falta($programa, $donde) {
+    if (-not (Get-Command $programa -ErrorAction SilentlyContinue)) { throw "No está instalado $donde (o hay que reiniciar la PC después de instalarlo)." }
+}
+
+Falta 'node' 'Node.js'
+Falta 'java' 'Java'
 foreach ($archivo in 'entorno.local.properties', 'datos.json') {
-    if (-not (Test-Path (Join-Path $uat $archivo))) { throw "Falta uat\$archivo. Copiá el archivo de ejemplo y completalo." }
+    if (-not (Test-Path (Join-Path $uat $archivo))) { throw "Falta el archivo uat\$archivo. Pedíselo a Lucas y pegalo en la carpeta uat." }
 }
 
 $cfg = @{}
@@ -26,14 +33,42 @@ Get-Content (Join-Path $uat 'entorno.local.properties') -Encoding UTF8 | ForEach
     Where-Object { $_ -match '^[^#].*=' } | ForEach-Object { $k, $v = $_ -split '=', 2; $cfg[$k.Trim()] = $v.Trim() }
 $datos = Get-Content (Join-Path $uat 'datos.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 
+# Primera vez: dependencias y programa de Cypress.
+foreach ($carpeta in $frontend, $uat) {
+    if (-not (Test-Path (Join-Path $carpeta 'node_modules'))) {
+        Write-Host "Primera vez: instalando dependencias en $(Split-Path $carpeta -Leaf) (tarda unos minutos)..."
+        Push-Location $carpeta; npm install --no-audit --no-fund; Pop-Location
+    }
+}
+# Los programas externos escriben avisos en stderr; que eso no corte el script.
+$ErrorActionPreference = 'Continue'
+Push-Location $uat
+npx cypress verify *> $null
+if ($LASTEXITCODE -ne 0) { Write-Host 'Primera vez: instalando Cypress (baja unos 200 MB)...'; npx cypress install }
+Pop-Location
+
 # PostgreSQL portátil: solo si se configuró pg.data (si Postgres corre como servicio de Windows, dejarlo vacío).
 if ($cfg['pg.data'] -and -not (Escucha $cfg['pg.puerto'])) {
     Write-Host "Iniciando PostgreSQL ($($cfg['pg.puerto']))..."
     & (Join-Path $cfg['pg.bin'] 'pg_ctl.exe') -D $cfg['pg.data'] -o "-p $($cfg['pg.puerto'])" -l (Join-Path $cfg['pg.data'] '..\postgres.log') start | Out-Null
 }
+if (-not (Escucha $cfg['pg.puerto'])) { throw "PostgreSQL no está andando en el puerto $($cfg['pg.puerto']). Reiniciá la PC o revisá que esté instalado." }
+
+# Primera vez: base de datos vacía (las tablas y los datos los carga el backend al arrancar).
+if ($cfg['db.url'] -match '//[^:/]+:(\d+)/([^?]+)') {
+    $env:PGPASSWORD = $cfg['db.password']
+    $psql = Join-Path $cfg['pg.bin'] 'psql.exe'
+    $existe = & $psql -h localhost -p $Matches[1] -U $cfg['db.usuario'] -d postgres -tAc "select 1 from pg_database where datname = '$($Matches[2])'"
+    if ($LASTEXITCODE -ne 0) { throw 'No se pudo entrar a PostgreSQL: revisá la contraseña (db.password) en uat\entorno.local.properties.' }
+    if (-not $existe) {
+        Write-Host "Primera vez: creando la base $($Matches[2])..."
+        & $psql -h localhost -p $Matches[1] -U $cfg['db.usuario'] -d postgres -c "create database $($Matches[2])" | Out-Null
+    }
+}
+$ErrorActionPreference = 'Stop'
 
 if (-not (Escucha 8091)) {
-    Write-Host 'Iniciando backend en perfil demo (8091)...'
+    Write-Host 'Iniciando backend en perfil demo (8091; la primera vez baja dependencias y tarda varios minutos)...'
     $env:SPRING_PROFILES_ACTIVE = 'demo'
     $env:DB_URL = $cfg['db.url']
     $env:DB_USERNAME = $cfg['db.usuario']
