@@ -6,7 +6,7 @@
     "pw": "playwright test",
     "pw:ui": "playwright test --ui",
     "pw:reporte": "playwright show-report reportes/playwright",
-    "cy": "cypress run",
+    "cy": "cypress run --browser chrome",
     "cy:ui": "cypress open --e2e --browser chrome"
   },
   "devDependencies": {
