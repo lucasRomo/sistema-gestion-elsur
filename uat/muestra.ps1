@@ -42,6 +42,7 @@ foreach ($carpeta in $frontend, $uat) {
 }
 # Los programas externos escriben avisos en stderr; que eso no corte el script.
 $ErrorActionPreference = 'Continue'
+Write-Host 'Revisando Cypress...'
 Push-Location $uat
 npx cypress verify *> $null
 if ($LASTEXITCODE -ne 0) { Write-Host 'Primera vez: instalando Cypress (baja unos 200 MB)...'; npx cypress install }
@@ -50,19 +51,28 @@ Pop-Location
 # PostgreSQL portátil: solo si se configuró pg.data (si Postgres corre como servicio de Windows, dejarlo vacío).
 if ($cfg['pg.data'] -and -not (Escucha $cfg['pg.puerto'])) {
     Write-Host "Iniciando PostgreSQL ($($cfg['pg.puerto']))..."
-    & (Join-Path $cfg['pg.bin'] 'pg_ctl.exe') -D $cfg['pg.data'] -o "-p $($cfg['pg.puerto'])" -l (Join-Path $cfg['pg.data'] '..\postgres.log') start | Out-Null
+    # En su propia ventana oculta: así un Ctrl+C o cerrar esta ventana no corta la base a la mitad.
+    $pgArgs = "-D `"$($cfg['pg.data'])`" -o `"-p $($cfg['pg.puerto'])`" -l `"$(Join-Path $cfg['pg.data'] '..\postgres.log')`" -w start"
+    Start-Process -FilePath (Join-Path $cfg['pg.bin'] 'pg_ctl.exe') -ArgumentList $pgArgs -WindowStyle Hidden
+    for ($i = 0; $i -lt 30 -and -not (Escucha $cfg['pg.puerto'])) { Start-Sleep 1 }
 }
 if (-not (Escucha $cfg['pg.puerto'])) { throw "PostgreSQL no está andando en el puerto $($cfg['pg.puerto']). Reiniciá la PC o revisá que esté instalado." }
 
 # Primera vez: base de datos vacía (las tablas y los datos los carga el backend al arrancar).
+Write-Host 'Revisando la base de datos...'
 if ($cfg['db.url'] -match '//[^:/]+:(\d+)/([^?]+)') {
     $env:PGPASSWORD = $cfg['db.password']
+    $env:PGCONNECT_TIMEOUT = '10'
     $psql = Join-Path $cfg['pg.bin'] 'psql.exe'
-    $existe = & $psql -h localhost -p $Matches[1] -U $cfg['db.usuario'] -d postgres -tAc "select 1 from pg_database where datname = '$($Matches[2])'"
-    if ($LASTEXITCODE -ne 0) { throw 'No se pudo entrar a PostgreSQL: revisá la contraseña (db.password) en uat\entorno.local.properties.' }
-    if (-not $existe) {
+    # -w: nunca pedir la contraseña por teclado (si falta, falla en vez de quedarse esperando).
+    $existe = & $psql -w -h localhost -p $Matches[1] -U $cfg['db.usuario'] -d postgres -tAc "select 1 from pg_database where datname = '$($Matches[2])'" 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) {
+        if ($existe -match 'password|contrase') { throw 'No se pudo entrar a PostgreSQL: revisá la contraseña (db.password) en uat\entorno.local.properties.' }
+        throw 'PostgreSQL no responde. Reiniciá la PC y volvé a abrir INICIAR_MUESTRA.'
+    }
+    if (-not $existe.Trim()) {
         Write-Host "Primera vez: creando la base $($Matches[2])..."
-        & $psql -h localhost -p $Matches[1] -U $cfg['db.usuario'] -d postgres -c "create database $($Matches[2])" | Out-Null
+        & $psql -w -h localhost -p $Matches[1] -U $cfg['db.usuario'] -d postgres -c "create database $($Matches[2])" | Out-Null
     }
 }
 $ErrorActionPreference = 'Stop'
