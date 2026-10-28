@@ -47,8 +47,18 @@ public class DemoDatos {
         this.claveServicio = claveServicio;
     }
 
+    /**
+     * Se sube en otro hilo: si se hiciera acá, el servidor no se declara "listo" hasta terminar de subir los ~40
+     * archivos y mientras tanto /actuator/health responde 503 (OUT_OF_SERVICE), aunque la demo ya funcione.
+     */
     @EventListener(ApplicationReadyEvent.class)
-    public void subirArchivosDePrueba() {
+    public void alArrancar() {
+        Thread hilo = new Thread(this::subirArchivosDePrueba, "demo-archivos");
+        hilo.setDaemon(true);
+        hilo.start();
+    }
+
+    void subirArchivosDePrueba() {
         try {
             for (String bucket : BUCKETS) {
                 crearBucket(bucket);
