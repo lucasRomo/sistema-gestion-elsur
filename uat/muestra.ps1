@@ -15,7 +15,7 @@ function Esperar($nombre, $url) {
     for ($i = 0; $i -lt 300; $i++) {
         try { Invoke-WebRequest $url -UseBasicParsing -TimeoutSec 3 | Out-Null; Write-Host ' listo'; return } catch { Start-Sleep 2; Write-Host '.' -NoNewline }
     }
-    throw "$nombre no arrancó. Cerrá todas las ventanas negras y volvé a abrir muestra.cmd."
+    throw "$nombre no arrancó. Cerrá todas las ventanas negras y volvé a abrir INICIAR_MUESTRA.cmd."
 }
 
 function Falta($programa, $donde) {
