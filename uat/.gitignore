@@ -1,0 +1,8 @@
+reportes/
+test-results/
+playwright-report/
+cypress/screenshots/
+cypress/videos/
+# Datos de prueba y configuración local: tienen claves, no van a git.
+datos.json
+entorno.local.properties

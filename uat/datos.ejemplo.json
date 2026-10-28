@@ -1,0 +1,6 @@
+{
+  "comentario": "Copiar como datos.json y completar con los datos de prueba de la demo (pedírselos a Lucas). datos.json no se sube a git.",
+  "clavePorton": "<clave de acceso de la demo>",
+  "duenio": { "usuario": "dueno.demo", "password": "<contraseña de prueba>", "nombre": "Lucía" },
+  "operario": { "usuario": "operario.demo", "password": "<contraseña de prueba>", "nombre": "Tomás" }
+}

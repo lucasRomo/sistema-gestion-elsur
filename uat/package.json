@@ -1,0 +1,18 @@
+{
+  "name": "gestapro-uat",
+  "private": true,
+  "description": "Pruebas de aceptación (UAT) de GestaPro: la misma suite en Playwright y en Cypress (IE2 complementaria, Equipo 5).",
+  "scripts": {
+    "pw": "playwright test",
+    "pw:ui": "playwright test --ui",
+    "pw:reporte": "playwright show-report reportes/playwright",
+    "cy": "cypress run",
+    "cy:ui": "cypress open --e2e --browser chrome"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "cypress": "^15.5.0",
+    "cypress-mochawesome-reporter": "^3.8.4",
+    "typescript": "^5.9.3"
+  }
+}
