@@ -65,7 +65,12 @@ if ($cfg['db.url'] -match '//[^:/]+:(\d+)/([^?]+)') {
     $env:PGCONNECT_TIMEOUT = '10'
     $psql = Join-Path $cfg['pg.bin'] 'psql.exe'
     # -w: nunca pedir la contraseña por teclado (si falta, falla en vez de quedarse esperando).
-    $existe = & $psql -w -h localhost -p $Matches[1] -U $cfg['db.usuario'] -d postgres -tAc "select 1 from pg_database where datname = '$($Matches[2])'" 2>&1 | Out-String
+    # Recién arrancada (o recuperándose de un corte), la base rechaza conexiones unos segundos: reintentar antes de rendirse.
+    for ($intento = 1; $intento -le 6; $intento++) {
+        $existe = & $psql -w -h localhost -p $Matches[1] -U $cfg['db.usuario'] -d postgres -tAc "select 1 from pg_database where datname = '$($Matches[2])'" 2>&1 | Out-String
+        if ($LASTEXITCODE -eq 0 -or $existe -match 'password|contrase') { break }
+        Start-Sleep 5
+    }
     if ($LASTEXITCODE -ne 0) {
         if ($existe -match 'password|contrase') { throw 'No se pudo entrar a PostgreSQL: revisá la contraseña (db.password) en uat\entorno.local.properties.' }
         throw 'PostgreSQL no responde. Reiniciá la PC y volvé a abrir INICIAR_MUESTRA.'
