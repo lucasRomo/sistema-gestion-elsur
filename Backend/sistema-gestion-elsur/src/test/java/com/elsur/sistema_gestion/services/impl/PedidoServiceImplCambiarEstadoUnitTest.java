@@ -119,6 +119,29 @@ class PedidoServiceImplCambiarEstadoUnitTest {
     }
 
     @Test
+    @DisplayName("TC_HP - Entregar un pedido cuya máquina quedó FUERA DE SERVICIO no se bloquea: el trabajo ya está hecho")
+    void cambiarEstadoPedido_aEntregadoConMaquinaFueraDeServicio_noBloquea() {
+        Producto producto = productoDirecto(61, "Ploteo A1 color", 20);
+        Maquina plotter = new Maquina();
+        plotter.setNombre("Plotter HP T830");
+        plotter.setEstado("FUERA DE SERVICIO");
+        producto.setMaquinaNecesaria(plotter);
+        Pedido pedido = new Pedido();
+        pedido.setId_pedido(707);
+        pedido.setEstado("EN PROCESO");
+        pedido.setDetalles(List.of(detalle(producto, 3)));
+
+        when(pedidoRepository.findById(707)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuario(1)));
+        when(pedidoRepository.save(any(Pedido.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Pedido resultado = pedidoService.cambiarEstadoPedido(707, "ENTREGADO", "Retira el cliente", 1, false);
+
+        assertEquals("ENTREGADO", resultado.getEstado());
+        assertEquals(17, producto.getStock());
+    }
+
+    @Test
     @DisplayName("TC_HP - Cambiar a FINALIZADO cuando el pedido YA estaba en un estado final no vuelve a descontar stock")
     void cambiarEstadoPedido_yaFinalizado_noVuelveADescontar() {
         Pedido pedido = pedidoEntregadoConStockDescontado(703); 
