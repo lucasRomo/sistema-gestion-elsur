@@ -261,7 +261,8 @@ private boolean evaluarPermisoPorton(String path, String metodo) {
             }
         }
 
-        if ("PUT".equalsIgnoreCase(metodo) && pathMatcher.match("/api/clientes/*/limite-credito", path)) {
+        // Actualizar el límite de crédito al entregar (Pedidos Pendientes) o desde la cuenta corriente.
+        if ("PUT".equalsIgnoreCase(metodo) && pathMatcher.match("/api/cuentas-corrientes/cliente/*/limite", path)) {
             if (tieneAlgunPermiso(permisosUsuario, "HISTORIAL DE PEDIDOS", "PEDIDOS PENDIENTES", "CLIENTES", "CAJA")) {
                 return true;
             }

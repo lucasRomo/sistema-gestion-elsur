@@ -158,8 +158,10 @@ export const PedidoPendienteService = {
     return text ? JSON.parse(text) : null;
   },
 
-  actualizarLimiteCredito: async (idCliente: number, nuevoLimite: number): Promise<any> => {
-    const response = await apiFetch(`${API_BASE_URL}/clientes/${idCliente}/limite-credito`, {
+  // Mismo endpoint que Clientes y Crear Pedido. Antes apuntaba a /clientes/{id}/limite-credito,
+  // que no existe en el backend: "Actualizar Límite y Entregar" siempre terminaba en error 500.
+  actualizarLimiteCredito: async (idCliente: number, nuevoLimite: number): Promise<void> => {
+    const response = await apiFetch(`${API_BASE_URL}/cuentas-corrientes/cliente/${idCliente}/limite`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ limiteCredito: nuevoLimite })
@@ -168,7 +170,5 @@ export const PedidoPendienteService = {
     if (!response.ok) {
       throw new Error(await extraerMensajeError(response, 'No se pudo actualizar el límite de crédito del cliente.'));
     }
-
-    return await response.json();
   }
 };

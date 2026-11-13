@@ -152,12 +152,16 @@ export const PedidosPendientesView: React.FC = () => {
     } catch (error: any) {
       console.error("Error al cambiar estado:", error);
       const mensajeOriginal = error.message || "";
-      const mensajeAmigable = mensajeOriginal.toLowerCase().includes("stock") || mensajeOriginal.toLowerCase().includes("insuficiente")
+      const esStock = mensajeOriginal.toLowerCase().includes("stock") || mensajeOriginal.toLowerCase().includes("insuficiente");
+      const mensajeAmigable = esStock
         ? "No hay Suficiente Stock para Completar o Entregar el Pedido, Por Favor Modifique el stock en la Ventana Productos para Continuar"
         : mensajeOriginal;
+      // El modal titula "Error por Falta de Stock" por defecto: una máquina fuera de servicio salía con ese título.
+      const titulo = esStock ? undefined
+        : mensajeOriginal.toLowerCase().includes("máquina") ? 'Máquina no disponible' : 'No se pudo cambiar el estado';
 
       hideLoading();
-      setSucesoError({ show: true, mensaje: mensajeAmigable });
+      setSucesoError({ show: true, titulo, mensaje: mensajeAmigable });
     } finally {
       setPedidoEstadoSel(null);
       setNuevoEstadoPendiente('');
@@ -237,6 +241,8 @@ export const PedidosPendientesView: React.FC = () => {
       );
     } catch (error: any) {
       console.error("Error actualizando límite de crédito:", error);
+      // Cerrar el modal de límite: si quedaba abierto, tapaba el cartel de error y parecía que no pasaba nada.
+      setModalAdvertenciaDeuda(prev => ({ ...prev, show: false }));
       setSucesoError({ show: true, titulo: 'Error', mensaje: error.message || "No se pudo actualizar el límite de crédito." });
     }
   };
