@@ -7,6 +7,8 @@ import { API_BASE_URL, apiFetch, extraerMensajeError } from '../../../config/api
 import { showLoading, hideLoading } from '../../../config/loadingStore';
 
 import { formatearMonto, ahoraLocalISO } from '../../../utils/formato';
+// Respaldo por merma: 5 unidades del producto, pasadas a la unidad de cada insumo con su consumo de la receta
+// (igual que en Crear Pedido). Antes se restaban 5 en la unidad del insumo: 5 cartuchos de tinta.
 const MARGEN_MERMA_RESPALDO = 5;
 const TOLERANCIA_PRODUCTO_DIRECTO = 3;
 
@@ -160,6 +162,7 @@ export const useVentaRapida = () => {
       cantTotalRequerida: number;
       stockActual: number;
       stockMinimo: number;
+      respaldoMerma: number;
       tipo: 'Insumo' | 'Producto Directo';
     }>();
 
@@ -199,6 +202,7 @@ export const useVentaRapida = () => {
             if (esPedidoActual) item.cantPedidoActual += totalRequerido;
             else item.cantReservadaPendientes += totalRequerido;
             item.cantTotalRequerida += totalRequerido;
+            item.respaldoMerma = Math.max(item.respaldoMerma, MARGEN_MERMA_RESPALDO * cantUnitaria);
           } else {
             mapaElementos.set(key, {
               key,
@@ -210,6 +214,7 @@ export const useVentaRapida = () => {
               cantTotalRequerida: totalRequerido,
               stockActual,
               stockMinimo,
+              respaldoMerma: MARGEN_MERMA_RESPALDO * cantUnitaria,
               tipo: 'Insumo'
             });
           }
@@ -246,6 +251,7 @@ export const useVentaRapida = () => {
           if (esPedidoActual) item.cantPedidoActual += cantidadReq;
           else item.cantReservadaPendientes += cantidadReq;
           item.cantTotalRequerida += cantidadReq;
+          item.respaldoMerma = Math.max(item.respaldoMerma, MARGEN_MERMA_RESPALDO);
         } else {
           mapaElementos.set(key, {
             key,
@@ -257,6 +263,7 @@ export const useVentaRapida = () => {
             cantTotalRequerida: cantidadReq,
             stockActual,
             stockMinimo,
+            respaldoMerma: MARGEN_MERMA_RESPALDO,
             tipo: insumoCoincidente ? 'Insumo' : 'Producto Directo'
           });
         }
@@ -375,7 +382,7 @@ export const useVentaRapida = () => {
     for (const item of elementosAfectados) {
       const saldoFisico = item.stockActual - item.cantTotalRequerida;
       if (saldoFisico < 0) {
-        const faltante = Math.abs(saldoFisico);
+        const faltante = Math.round(Math.abs(saldoFisico) * 1000) / 1000;
         setSuceso({
           show: true,
           titulo: 'Stock Insuficiente',
@@ -390,7 +397,7 @@ export const useVentaRapida = () => {
 
     for (const item of elementosAfectados) {
       const saldoFisico = item.stockActual - item.cantTotalRequerida;
-      const stockResultante = saldoFisico - MARGEN_MERMA_RESPALDO;
+      const stockResultante = Math.round((saldoFisico - item.respaldoMerma) * 1000) / 1000;
 
       if (saldoFisico >= 0 && stockResultante <= item.stockMinimo) {
         criticos.push({
