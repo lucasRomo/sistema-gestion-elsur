@@ -434,7 +434,8 @@ public class PedidoServiceImpl implements PedidoService {
         boolean nacioEnEstadoFinal = "ENTREGADO".equalsIgnoreCase(p.getEstado())
                 || "FINALIZADO".equalsIgnoreCase(p.getEstado());
 
-        if ((p.isEs_cuenta_corriente() || nacioEnEstadoFinal) && idCliente != 1) {
+        // Un presupuesto es una cotización: la deuda se registra recién cuando se entrega.
+        if ((p.isEs_cuenta_corriente() || nacioEnEstadoFinal) && idCliente != 1 && !p.isEs_presupuesto()) {
             BigDecimal total = p.getMonto_total() != null ? p.getMonto_total() : BigDecimal.ZERO;
             BigDecimal adelanto = seña != null ? seña : BigDecimal.ZERO;
             BigDecimal saldoPendienteGenerado = total.subtract(adelanto);
@@ -732,70 +733,40 @@ public class PedidoServiceImpl implements PedidoService {
 
         boolean esEstadoFinal ="FINALIZADO".equalsIgnoreCase(nuevoEstado) || "ENTREGADO".equalsIgnoreCase(nuevoEstado);
         boolean yaEstabaFinalizado = "FINALIZADO".equalsIgnoreCase(estadoAnterior) || "ENTREGADO".equalsIgnoreCase(estadoAnterior) || "VENTA_RAPIDA".equalsIgnoreCase(estadoAnterior);
+        // Finalizado = el trabajo está terminado; Entregado = se lo llevó el cliente. El cobro (Consumidor Final)
+        // y la deuda en cuenta corriente corresponden a la entrega, también si el pedido ya estaba Finalizado.
+        boolean esEntrega = "ENTREGADO".equalsIgnoreCase(nuevoEstado)
+                && !"ENTREGADO".equalsIgnoreCase(estadoAnterior) && !"VENTA_RAPIDA".equalsIgnoreCase(estadoAnterior);
 
-        if (esEstadoFinal && !yaEstabaFinalizado) {
+        if (esEntrega) {
             Cliente clienteAntesDeEntregar = pedido.getCliente();
             if (clienteAntesDeEntregar != null && clienteAntesDeEntregar.getIdCliente() == 1) {
-                BigDecimal totalAntesDeEntregar = pedido.getMonto_total() != null ? pedido.getMonto_total() : BigDecimal.ZERO;
-                BigDecimal pagadoAntesDeEntregar = pedido.getMonto_pago_adelantado() != null ? pedido.getMonto_pago_adelantado() : BigDecimal.ZERO;
-                BigDecimal saldoPendienteAntesDeEntregar = totalAntesDeEntregar.subtract(pagadoAntesDeEntregar);
-
+                BigDecimal saldoPendienteAntesDeEntregar = saldoPendiente(pedido);
                 if (saldoPendienteAntesDeEntregar.compareTo(BigDecimal.ZERO) > 0) {
                     throw new SolicitudInvalidaException(
-                        "No se puede entregar/finalizar este pedido: el Consumidor Final tiene un saldo pendiente de $"
+                        "No se puede entregar este pedido: el Consumidor Final tiene un saldo pendiente de $"
                             + saldoPendienteAntesDeEntregar
                             + ". Cobre el total antes de continuar -- el Consumidor Final no opera con Cuenta Corriente.");
                 }
             }
+        }
 
+        if (esEstadoFinal && !yaEstabaFinalizado) {
             // La máquina no se controla al finalizar o entregar: si el pedido llega a este estado, el trabajo ya
             // se hizo. El aviso de máquina fuera de servicio se da al cargar el pedido (Crear Pedido / Venta Rápida),
             // con la opción de continuar igual. confirmarMaquinaNoDisponible queda solo por compatibilidad del endpoint.
             this.procesarDescuentoStock(idPedido, true);
             pedido = buscarPorId(idPedido);
+        }
 
-            pedido.setEstado(nuevoEstado);
-            if ("FINALIZADO".equalsIgnoreCase(nuevoEstado)) {
-                pedido.setFecha_finalizacion(LocalDateTime.now());
-            }
+        pedido.setEstado(nuevoEstado);
+        if (esEstadoFinal) {
+            pedido.setFecha_finalizacion(LocalDateTime.now());
+        }
+        pedidoRepository.save(pedido);
 
-            pedidoRepository.save(pedido);
-
-            Cliente clienteDelPedido = pedido.getCliente();
-            if (clienteDelPedido != null && clienteDelPedido.getIdCliente() != 1) {
-                BigDecimal totalPedido = pedido.getMonto_total() != null ? pedido.getMonto_total() : BigDecimal.ZERO;
-                BigDecimal pagadoPedido = pedido.getMonto_pago_adelantado() != null ? pedido.getMonto_pago_adelantado() : BigDecimal.ZERO;
-                BigDecimal saldoPendienteEntrega = totalPedido.subtract(pagadoPedido);
-
-                if (saldoPendienteEntrega.compareTo(BigDecimal.ZERO) > 0) {
-                    pedido.setEs_cuenta_corriente(true);
-
-                    BigDecimal saldoActualCliente = clienteDelPedido.getSaldoDeudor() != null
-                            ? clienteDelPedido.getSaldoDeudor() : BigDecimal.ZERO;
-                    clienteDelPedido.setSaldoDeudor(saldoActualCliente.add(saldoPendienteEntrega));
-                    clienteRepository.save(clienteDelPedido);
-
-                    try {
-                        MovimientoCuentaCorriente movCC = new MovimientoCuentaCorriente();
-                        movCC.setCliente(clienteDelPedido);
-                        movCC.setTipo("COMPRA");
-                        movCC.setMonto(saldoPendienteEntrega);
-                        movCC.setDescripcion("Entrega con saldo pendiente - Pedido #" + pedido.getId_pedido());
-                        movCC.setFecha(LocalDateTime.now());
-                        movimientoCCRepository.save(movCC);
-                    } catch (Exception e) {
-                        System.err.println("Error al registrar historial de Cuenta Corriente en la entrega: " + e.getMessage());
-                    }
-
-                    pedido = pedidoRepository.save(pedido);
-                }
-            }
-        } else {
-            pedido.setEstado(nuevoEstado);
-            if (esEstadoFinal) {
-                pedido.setFecha_finalizacion(LocalDateTime.now());
-            }
-            pedidoRepository.save(pedido);
+        if (esEntrega) {
+            pedido = registrarDeudaDeLaEntrega(pedido);
         }
 
         HistorialEstadoPedido historial = new HistorialEstadoPedido();
@@ -809,6 +780,51 @@ public class PedidoServiceImpl implements PedidoService {
         historialRepository.save(historial);
 
         return pedido;
+    }
+
+    private BigDecimal saldoPendiente(Pedido pedido) {
+        BigDecimal total = pedido.getMonto_total() != null ? pedido.getMonto_total() : BigDecimal.ZERO;
+        BigDecimal pagado = pedido.getMonto_pago_adelantado() != null ? pedido.getMonto_pago_adelantado() : BigDecimal.ZERO;
+        return total.subtract(pagado);
+    }
+
+    /**
+     * Al entregar con saldo pendiente, el saldo pasa a la cuenta corriente del cliente. Si la compra de este pedido ya
+     * está registrada (se tomó a Cuenta Corriente, o se finalizó antes de este cambio), no se vuelve a sumar: antes
+     * la deuda quedaba duplicada.
+     */
+    private Pedido registrarDeudaDeLaEntrega(Pedido pedido) {
+        Cliente cliente = pedido.getCliente();
+        if (cliente == null || cliente.getIdCliente() == null || cliente.getIdCliente() == 1) {
+            return pedido;
+        }
+        BigDecimal saldo = saldoPendiente(pedido);
+        if (saldo.compareTo(BigDecimal.ZERO) <= 0) {
+            return pedido;
+        }
+        String sufijo = "Pedido #" + pedido.getId_pedido();
+        if (movimientoCCRepository.existsByCliente_IdClienteAndTipoAndDescripcionEndingWith(cliente.getIdCliente(), "COMPRA", sufijo)) {
+            return pedido;
+        }
+
+        pedido.setEs_cuenta_corriente(true);
+        BigDecimal saldoActualCliente = cliente.getSaldoDeudor() != null ? cliente.getSaldoDeudor() : BigDecimal.ZERO;
+        cliente.setSaldoDeudor(saldoActualCliente.add(saldo));
+        clienteRepository.save(cliente);
+
+        try {
+            MovimientoCuentaCorriente movCC = new MovimientoCuentaCorriente();
+            movCC.setCliente(cliente);
+            movCC.setTipo("COMPRA");
+            movCC.setMonto(saldo);
+            movCC.setDescripcion("Entrega con saldo pendiente - " + sufijo);
+            movCC.setFecha(LocalDateTime.now());
+            movimientoCCRepository.save(movCC);
+        } catch (Exception e) {
+            System.err.println("Error al registrar historial de Cuenta Corriente en la entrega: " + e.getMessage());
+        }
+
+        return pedidoRepository.save(pedido);
     }
 
     @Override
