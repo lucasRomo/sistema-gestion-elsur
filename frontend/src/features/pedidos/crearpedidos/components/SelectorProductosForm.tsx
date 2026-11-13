@@ -22,7 +22,12 @@ interface Props {
 
 const MARGEN_SEGURIDAD_FALLBACK = 0;
 const TOLERANCIA_PRODUCTO_DIRECTO = 3;
+// Respaldo por merma: 5 unidades del producto, pasadas a la unidad de cada insumo con su consumo de la receta
+// (5 copias = 5 hojas, pero 5 impresiones color = 0,01 cartucho). Antes se restaban 5 en la unidad del insumo:
+// 5 cartuchos de tinta dejaban el stock resultante en negativo aunque alcanzara.
 const MARGEN_MERMA_RESPALDO = 5;
+// Los consumos de insumos son decimales (0,002 cartuchos por hoja): sin redondear se ven cosas como 0.30400000000000005.
+const redondear = (n: number) => Math.round(n * 1000) / 1000;
 
 export const SelectorProductosForm: React.FC<Props> = ({ 
   productos, 
@@ -138,6 +143,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
       cantTotalRequerida: number;
       stockActual: number;
       stockMinimo: number;
+      respaldoMerma: number;
       tipo: 'Insumo' | 'Producto Directo';
     }>();
 
@@ -171,6 +177,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
             if (esPedidoActual) item.cantPedidoActual += totalRequerido;
             else item.cantReservadaPendientes += totalRequerido;
             item.cantTotalRequerida += totalRequerido;
+            item.respaldoMerma = Math.max(item.respaldoMerma, MARGEN_MERMA_RESPALDO * cantUnitaria);
           } else {
             mapaElementos.set(key, {
               key,
@@ -182,6 +189,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
               cantTotalRequerida: totalRequerido,
               stockActual,
               stockMinimo,
+              respaldoMerma: MARGEN_MERMA_RESPALDO * cantUnitaria,
               tipo: 'Insumo'
             });
           }
@@ -212,6 +220,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
             cantTotalRequerida: cantidadReq,
             stockActual,
             stockMinimo,
+            respaldoMerma: MARGEN_MERMA_RESPALDO,
             tipo: 'Producto Directo'
           });
         }
@@ -241,7 +250,7 @@ export const SelectorProductosForm: React.FC<Props> = ({
       const resultante = elementoDeficiente.stockActual - elementoDeficiente.cantTotalRequerida;
       setInsumoFaltante({
         nombre: elementoDeficiente.nombre,
-        faltante: Math.abs(resultante),
+        faltante: redondear(Math.abs(resultante)),
         unidad: elementoDeficiente.unidad,
         tipo: elementoDeficiente.tipo,
       });
@@ -252,12 +261,12 @@ export const SelectorProductosForm: React.FC<Props> = ({
     const elementosBajos = elementosAfectados
       .filter((el) => {
         const saldoReal = el.stockActual - el.cantTotalRequerida;
-        const saldoConMerma = saldoReal - MARGEN_MERMA_RESPALDO;
+        const saldoConMerma = saldoReal - el.respaldoMerma;
         return saldoReal >= 0 && saldoConMerma <= el.stockMinimo;
       })
       .map((el) => ({
         nombre: el.nombre,
-        stockResultante: el.stockActual - el.cantTotalRequerida - MARGEN_MERMA_RESPALDO,
+        stockResultante: redondear(el.stockActual - el.cantTotalRequerida - el.respaldoMerma),
         stockMinimo: el.stockMinimo,
         unidad: el.unidad,
         tipo: el.tipo,
@@ -517,10 +526,10 @@ export const SelectorProductosForm: React.FC<Props> = ({
 
         <div className="d-flex border-bottom pb-2 mb-2 small fw-bold text-muted" style={{ borderColor: borderTheme }}>
           <div style={{ width: '25%' }}>Insumo / Producto:</div>
-          <div style={{ width: '18%' }}>Unidad de Medida:</div>
+          <div style={{ width: '18%' }}>Este Pedido:</div>
           <div style={{ width: '18%' }}>Reservados:</div>
           <div style={{ width: '18%' }}>Stock Actual:</div>
-          <div style={{ width: '21%' }}>Stock Resultante (+5 Respaldo por Merma):</div>
+          <div style={{ width: '21%' }}>Stock Resultante (Respaldo de 5 unid. por Merma):</div>
         </div>
 
         <div style={{ height: '100px', overflowY: 'auto' }}>
@@ -530,8 +539,8 @@ export const SelectorProductosForm: React.FC<Props> = ({
             </div>
           ) : (
             elementosAfectados.map((item) => {
-              const saldoFisico = item.stockActual - item.cantTotalRequerida;
-              const stockResultante = saldoFisico - MARGEN_MERMA_RESPALDO;
+              const saldoFisico = redondear(item.stockActual - item.cantTotalRequerida);
+              const stockResultante = redondear(saldoFisico - item.respaldoMerma);
               
               const esInsuficiente = saldoFisico < 0; 
               const esMargenBajo = saldoFisico >= 0 && stockResultante <= item.stockMinimo;
@@ -552,9 +561,9 @@ export const SelectorProductosForm: React.FC<Props> = ({
                   <div style={{ width: '25%' }} className="fw-semibold text-truncate">
                     {item.nombre} <span className="text-muted" style={{ fontSize: '0.75rem' }}>({item.tipo})</span>
                   </div>
-                  <div style={{ width: '18%', color: '#27ace6' }} className="fw-bold">{item.cantPedidoActual} {item.unidad}</div>
-                  <div style={{ width: '18%' }} className="text-warning">{item.cantReservadaPendientes} {item.unidad}</div>
-                  <div style={{ width: '18%' }}>{item.stockActual} {item.unidad}</div>
+                  <div style={{ width: '18%', color: '#27ace6' }} className="fw-bold">{redondear(item.cantPedidoActual)} {item.unidad}</div>
+                  <div style={{ width: '18%' }} className="text-warning">{redondear(item.cantReservadaPendientes)} {item.unidad}</div>
+                  <div style={{ width: '18%' }}>{redondear(item.stockActual)} {item.unidad}</div>
                   <div style={{ width: '21%' }}>
                     <span className={`badge ${badgeClass}`}>{badgeTexto}</span>
                   </div>
