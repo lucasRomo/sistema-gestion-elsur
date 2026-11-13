@@ -748,7 +748,10 @@ public class PedidoServiceImpl implements PedidoService {
                 }
             }
 
-            this.procesarDescuentoStock(idPedido, confirmarMaquinaNoDisponible);
+            // La máquina no se controla al finalizar o entregar: si el pedido llega a este estado, el trabajo ya
+            // se hizo. El aviso de máquina fuera de servicio se da al cargar el pedido (Crear Pedido / Venta Rápida),
+            // con la opción de continuar igual. confirmarMaquinaNoDisponible queda solo por compatibilidad del endpoint.
+            this.procesarDescuentoStock(idPedido, true);
             pedido = buscarPorId(idPedido);
 
             pedido.setEstado(nuevoEstado);
