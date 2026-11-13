@@ -28,6 +28,8 @@ class PedidoServiceImplCambiarEstadoUnitTest {
     @Mock private ProductoInsumoRepository productoInsumoRepository;
     @Mock private DetallePedidoRepository detallePedidoRepository;
     @Mock private ProductoRepository productoRepository;
+    @Mock private ClienteRepository clienteRepository;
+    @Mock private MovimientoCuentaCorrienteRepository movimientoCCRepository;
 
     @InjectMocks
     private PedidoServiceImpl pedidoService;
@@ -201,5 +203,101 @@ class PedidoServiceImplCambiarEstadoUnitTest {
         assertThrows(com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException.class,
                 () -> pedidoService.cambiarEstadoPedido(706, "PENDIENTE", "obs", 1, false));
         verifyNoInteractions(historialRepository);
+    }
+
+    private Cliente cliente(int id, String saldoDeudor) {
+        Cliente c = new Cliente();
+        c.setIdCliente(id);
+        c.setSaldoDeudor(new BigDecimal(saldoDeudor));
+        return c;
+    }
+
+    /** Pedido de 2 unidades a $10 (total $20) sin nada pagado. */
+    private Pedido pedidoConSaldo(int idPedido, String estado, Cliente cliente) {
+        Pedido p = new Pedido();
+        p.setId_pedido(idPedido);
+        p.setEstado(estado);
+        p.setCliente(cliente);
+        p.setMonto_total(BigDecimal.valueOf(20));
+        p.setMonto_pago_adelantado(BigDecimal.ZERO);
+        p.setDetalles(List.of(detalle(productoDirecto(80 + idPedido % 10, "Anillado", 50), 2)));
+        return p;
+    }
+
+    private void mockearGuardadoYUsuario(int idPedido, Pedido pedido) {
+        when(pedidoRepository.findById(idPedido)).thenReturn(Optional.of(pedido));
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuario(1)));
+        when(pedidoRepository.save(any(Pedido.class))).thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    @Test
+    @DisplayName("TC_HP - FINALIZAR un pedido del Consumidor Final con saldo pendiente se permite: se cobra al entregar")
+    void cambiarEstadoPedido_finalizarConsumidorFinalConSaldo_sePermite() {
+        Pedido pedido = pedidoConSaldo(710, "EN PROCESO", cliente(1, "0"));
+        mockearGuardadoYUsuario(710, pedido);
+
+        Pedido resultado = pedidoService.cambiarEstadoPedido(710, "FINALIZADO", "Terminado en el taller", 1, false);
+
+        assertEquals("FINALIZADO", resultado.getEstado());
+        assertTrue(resultado.isStockDescontado());
+    }
+
+    @Test
+    @DisplayName("TC_HP - ENTREGAR un pedido del Consumidor Final con saldo pendiente se rechaza, aunque ya esté FINALIZADO")
+    void cambiarEstadoPedido_entregarConsumidorFinalConSaldo_seRechaza() {
+        Pedido pedido = pedidoConSaldo(711, "FINALIZADO", cliente(1, "0"));
+        when(pedidoRepository.findById(711)).thenReturn(Optional.of(pedido));
+
+        assertThrows(com.elsur.sistema_gestion.exceptions.SolicitudInvalidaException.class,
+                () -> pedidoService.cambiarEstadoPedido(711, "ENTREGADO", "obs", 1, false));
+        verifyNoInteractions(historialRepository);
+    }
+
+    @Test
+    @DisplayName("TC_HP - FINALIZAR con saldo pendiente no carga deuda en la cuenta corriente: eso pasa al entregar")
+    void cambiarEstadoPedido_finalizarConSaldo_noCargaDeuda() {
+        Cliente martina = cliente(2, "2520");
+        Pedido pedido = pedidoConSaldo(712, "EN PROCESO", martina);
+        mockearGuardadoYUsuario(712, pedido);
+
+        pedidoService.cambiarEstadoPedido(712, "FINALIZADO", "Terminado", 1, false);
+
+        assertEquals(new BigDecimal("2520"), martina.getSaldoDeudor());
+        verifyNoInteractions(clienteRepository, movimientoCCRepository);
+    }
+
+    @Test
+    @DisplayName("TC_HP - ENTREGAR un pedido FINALIZADO con saldo pendiente carga la deuda en la cuenta corriente")
+    void cambiarEstadoPedido_entregarDesdeFinalizado_cargaDeuda() {
+        Cliente martina = cliente(2, "2520");
+        Pedido pedido = pedidoConSaldo(713, "FINALIZADO", martina);
+        mockearGuardadoYUsuario(713, pedido);
+        when(movimientoCCRepository.existsByCliente_IdClienteAndTipoAndDescripcionEndingWith(2, "COMPRA", "Pedido #713"))
+                .thenReturn(false);
+
+        Pedido resultado = pedidoService.cambiarEstadoPedido(713, "ENTREGADO", "Retira el cliente", 1, false);
+
+        assertEquals("ENTREGADO", resultado.getEstado());
+        assertEquals(new BigDecimal("2540"), martina.getSaldoDeudor());
+        assertTrue(resultado.isEs_cuenta_corriente());
+        verify(movimientoCCRepository).save(any(MovimientoCuentaCorriente.class));
+    }
+
+    @Test
+    @DisplayName("TC_HP - Si la compra del pedido ya está en la cuenta corriente (tomado a Cuenta Corriente), " +
+                 "ENTREGAR no vuelve a sumar la deuda")
+    void cambiarEstadoPedido_entregarConDeudaYaRegistrada_noDuplica() {
+        Cliente martina = cliente(2, "2540");
+        Pedido pedido = pedidoConSaldo(714, "EN PROCESO", martina);
+        pedido.setEs_cuenta_corriente(true);
+        mockearGuardadoYUsuario(714, pedido);
+        when(movimientoCCRepository.existsByCliente_IdClienteAndTipoAndDescripcionEndingWith(2, "COMPRA", "Pedido #714"))
+                .thenReturn(true);
+
+        pedidoService.cambiarEstadoPedido(714, "ENTREGADO", "Retira el cliente", 1, false);
+
+        assertEquals(new BigDecimal("2540"), martina.getSaldoDeudor());
+        verify(clienteRepository, never()).save(any());
+        verify(movimientoCCRepository, never()).save(any());
     }
 }

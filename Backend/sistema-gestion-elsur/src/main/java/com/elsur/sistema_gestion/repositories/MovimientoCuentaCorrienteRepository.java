@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 @Repository
 public interface MovimientoCuentaCorrienteRepository extends JpaRepository<MovimientoCuentaCorriente, Integer> {
     List<MovimientoCuentaCorriente> findByCliente_IdClienteOrderByFechaDesc(Integer idCliente);
+    // Las compras de un pedido se registran con la descripción "... - Pedido #<id>".
+    boolean existsByCliente_IdClienteAndTipoAndDescripcionEndingWith(Integer idCliente, String tipo, String sufijo);
     @Query("SELECT m.cliente.idCliente, COALESCE(SUM(m.monto), 0) " +
            "FROM MovimientoCuentaCorriente m " +
            "WHERE m.tipo = 'PAGO' " +

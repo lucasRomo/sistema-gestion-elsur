@@ -180,11 +180,15 @@ export const PedidosPendientesView: React.FC = () => {
     const saldoPendientePedido = Math.max(0, totalPedido - pagadoPedido);
     const deudaPreviaCliente = Number(cliente.saldoDeudor ?? cliente.saldo_deudor ?? 0);
     const limiteCredito = Number(cliente.limiteCredito ?? cliente.limite_credito ?? 0);
-    const deudaTotalProyectada = deudaPreviaCliente + saldoPendientePedido;
+    // Un pedido tomado a Cuenta Corriente ya sumó su saldo a la deuda del cliente: no se cuenta dos veces.
+    const saldoQueVaALaCuenta = pedidoEstadoSel.es_cuenta_corriente ? 0 : saldoPendientePedido;
+    const deudaTotalProyectada = deudaPreviaCliente + saldoQueVaALaCuenta;
 
+    // El cobro y el límite de crédito se controlan al entregar. Finalizar es solo "el trabajo está terminado":
+    // el taller puede marcarlo aunque el cliente todavía no haya pagado.
     const estadoNormalizado = (nuevoEstadoPendiente || '').toUpperCase().trim();
-    const esEntregaOFinalizacion = ['ENTREGADO', 'FINALIZADO', 'COMPLETADO', 'TERMINADO', 'LISTO PARA ENTREGAR'].includes(estadoNormalizado);
-    const superaLimite = limiteCredito > 0 ? deudaTotalProyectada > limiteCredito : saldoPendientePedido > 0;
+    const esEntrega = estadoNormalizado === 'ENTREGADO';
+    const superaLimite = limiteCredito > 0 ? deudaTotalProyectada > limiteCredito : saldoQueVaALaCuenta > 0;
 
     // NUEVO (consulta: "¿qué pasa si el Consumidor Final tiene saldo
     // pendiente?"): Consumidor Final (id 1) no opera con Cuenta Corriente, así
@@ -194,7 +198,7 @@ export const PedidosPendientesView: React.FC = () => {
     // PedidoServiceImpl.cambiarEstadoPedido). Se corta acá con un aviso claro,
     // en vez de abrir un modal cuyas dos opciones van a terminar en el mismo
     // error del backend.
-    if (esEntregaOFinalizacion && superaLimite && idClientePedido === 1) {
+    if (esEntrega && superaLimite && idClientePedido === 1) {
       setSucesoError({
         show: true,
         titulo: 'No se puede entregar',
@@ -204,7 +208,7 @@ export const PedidosPendientesView: React.FC = () => {
       return;
     }
 
-    if (esEntregaOFinalizacion && superaLimite) {
+    if (esEntrega && superaLimite) {
       setModalAdvertenciaDeuda({
         show: true,
         pedido: pedidoEstadoSel,
